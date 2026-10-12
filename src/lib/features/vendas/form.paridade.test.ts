@@ -360,7 +360,7 @@ const produtos = [
   { id: 'p1', nome: 'LATAM', tipo_produto: 't1', todas_as_cidades: true },
   { id: 'p2', nome: 'Hotel Rio', tipo_produto: 't2', cidade_id: 'c1' },
   { id: 'p3', nome: 'Hotel SP', tipo_produto: 't2', cidade_id: 'c2' },
-  { id: 'p4', nome: 'Vale  Viagem CVC', tipo_produto: 'x' },
+  { id: 'p4', nome: 'Vale  Viagem Agência', tipo_produto: 'x' },
   { id: 'p5', nome: 'Pacote Nordeste', tipo: 'pacote', cidade_id: 'c1' },
   { id: 'p6', nome: 'Seguro', tipo_produto: 'SEGURO', todas_as_cidades: false },
   { id: 'p7', nome: 'Hotel sem cidade', tipo_produto: 't2' },

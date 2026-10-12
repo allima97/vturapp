@@ -1,3 +1,4 @@
+import { VTUR_LOGO_URL } from "$lib/brand";
 // Migrado para Hono de src/routes/api/v1/cards/aniversario.svg/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
@@ -52,7 +53,7 @@ export const handleCardsAniversarioSvgGet = async ({ request, getClientAddress }
 
   const url = new URL(request.url);
   const nome = clampText(url.searchParams.get("nome"), "Cliente", 80);
-  const assinatura = clampText(url.searchParams.get("assinatura"), "André Lima", 80);
+  const assinatura = clampText(url.searchParams.get("assinatura"), "Sua agência de viagens", 80);
 
   const nomeEsc = escapeXml(nome);
   const assinaturaEsc = escapeXml(assinatura);
@@ -86,11 +87,7 @@ export const handleCardsAniversarioSvgGet = async ({ request, getClientAddress }
     <circle cx="20" cy="585" r="122"/>
     <circle cx="20" cy="585" r="146"/>
   </g>
-  <g fill="none" stroke="#8BCBB2" stroke-width="4">
-    <path d="M142 74c8-11 21-19 35-21 23-4 46 5 61 23"/>
-    <path d="M238 138c-8 11-21 19-35 21-23 4-46-5-61-23"/>
-  </g>
-  <text x="188" y="118" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="54" font-weight="700" fill="url(#logoGrad)">CVC</text>
+  <image x="138" y="45" width="100" height="100" href="${VTUR_LOGO_URL}" />
 
   <g fill="#7FB5CE" stroke="#7FB5CE" stroke-width="2.5" opacity="0.85">
     <path d="M20 199l20 10m-11-26l9 11m-22 6l30-1m-23 13l18-8" />

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { VTUR_LOGO_URL } from "$lib/brand";
   import { onMount } from 'svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
@@ -126,15 +127,15 @@
     <Card title="Identidade Visual" color="financeiro">
       <div class="flex items-center gap-6">
         <div class="flex h-20 w-20 items-center justify-center rounded-xl bg-financeiro-100">
-          {#if empresa?.logo_url}
-            <img src={empresa.logo_url} alt="Logo" class="h-full w-full rounded-xl object-contain" />
+          {#if VTUR_LOGO_URL}
+            <img src={VTUR_LOGO_URL} alt="VTur" class="h-full w-full rounded-xl object-contain" />
           {:else}
             <Building2 size={36} class="text-financeiro-600" />
           {/if}
         </div>
         <div>
-          <p class="text-sm font-medium text-slate-700">Logo da Empresa</p>
-          <p class="mt-1 text-xs text-slate-500">Para alterar o logo, entre em contato com o administrador do sistema.</p>
+          <p class="text-sm font-medium text-slate-700">Logo VTur</p>
+          <p class="mt-1 text-xs text-slate-500">Identidade padrão desta versão do CRM.</p>
         </div>
       </div>
     </Card>

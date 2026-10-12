@@ -324,7 +324,7 @@
       label="Título"
       bind:value={form.title}
       required={true}
-      placeholder="Ex.: Como importar venda CVC"
+      placeholder="Ex.: Como cadastrar uma venda"
     />
     <FieldInput
       id="doc-module-key"
@@ -352,7 +352,7 @@
       id="doc-route-pattern"
       label="Rota relacionada"
       bind:value={form.route_pattern}
-      placeholder="/vendas/importar"
+      placeholder="/vendas/nova"
     />
     <FieldSelect
       id="doc-tone"

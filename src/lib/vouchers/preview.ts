@@ -1,3 +1,4 @@
+import { VTUR_LOGO_URL } from "$lib/brand";
 import { normalizeVoucherExtraData, splitLinesFromMultilineText } from "./extraData";
 import { addDaysISODate } from '$lib/date';
 import type {
@@ -146,18 +147,6 @@ function sortAssets(items: VoucherAssetRecord[]) {
       if (firstOrder !== secondOrder) return firstOrder - secondOrder;
       return String(a.created_at || "").localeCompare(String(b.created_at || ""));
     });
-}
-
-function pickAssetUrl(assets: VoucherAssetRecord[], provider: string, kind: "logo" | "image") {
-  const preferred = sortAssets(
-    assets.filter((asset) => asset.asset_kind === kind && asset.provider === provider && textValue(asset.preview_url)),
-  )[0];
-  if (preferred?.preview_url) return preferred.preview_url;
-
-  const generic = sortAssets(
-    assets.filter((asset) => asset.asset_kind === kind && asset.provider === "generic" && textValue(asset.preview_url)),
-  )[0];
-  return generic?.preview_url || "";
 }
 
 function pickAssetUrls(assets: VoucherAssetRecord[], provider: string, kind: "image") {
@@ -445,8 +434,6 @@ function buildAppPrintUnits(app: VoucherAppInfo) {
 
 function renderProgramSections(params: {
   providerName: string;
-  cvcLogo: string;
-  providerLogo: string;
   routeTitle: string;
   referenceLabel?: string | null;
   referenceValue?: string | null;
@@ -461,7 +448,7 @@ function renderProgramSections(params: {
     .map(
       (pageBlocks, pageIndex) => `
         <section class="sheet">
-          ${buildSpecialHeader(params.cvcLogo, params.providerLogo, params.providerName)}
+          ${buildSpecialHeader(params.providerName)}
           ${buildBand("PROGRAMA DE VIAGEM")}
           ${
             pageIndex === 0
@@ -493,8 +480,6 @@ function renderProgramSections(params: {
 
 function renderHotelSections(params: {
   providerName: string;
-  cvcLogo: string;
-  providerLogo: string;
   hoteis: VoucherHotel[];
   renderCard: (hotel: VoucherHotel) => string;
 }) {
@@ -510,7 +495,7 @@ function renderHotelSections(params: {
     .map(
       (pageHotels) => `
         <section class="sheet">
-          ${buildSpecialHeader(params.cvcLogo, params.providerLogo, params.providerName)}
+          ${buildSpecialHeader(params.providerName)}
           ${buildBand("LISTA DE HOTÉIS")}
           <div class="voucher-hotel-list hotel-list-standalone">
             ${pageHotels.map((hotel) => params.renderCard(hotel)).join("")}
@@ -521,8 +506,6 @@ function renderHotelSections(params: {
 }
 
 function renderEuropamundoPassengerSections(params: {
-  cvcLogo: string;
-  providerLogo: string;
   routeTitle: string;
   infoTable: string;
   passageiros: VoucherPassengerDetail[];
@@ -538,7 +521,7 @@ function renderEuropamundoPassengerSections(params: {
   if (!pages.length) {
     return `
       <section class="sheet">
-        ${buildSpecialHeader(params.cvcLogo, params.providerLogo, "Europamundo")}
+        ${buildSpecialHeader("Europamundo")}
         ${buildBand("DADOS DE SUA VIAGEM")}
         <div class="sheet-card sheet-card-center">
           <div class="route-title">${escapeHtml(params.routeTitle)}</div>
@@ -553,7 +536,7 @@ function renderEuropamundoPassengerSections(params: {
     .map(
       (pageRows, pageIndex) => `
         <section class="sheet">
-          ${buildSpecialHeader(params.cvcLogo, params.providerLogo, "Europamundo")}
+          ${buildSpecialHeader("Europamundo")}
           ${buildBand("DADOS DE SUA VIAGEM")}
           ${
             pageIndex === 0
@@ -633,8 +616,6 @@ function buildEuropamundoTransferBlocks(
 }
 
 function renderEuropamundoTransferSections(params: {
-  cvcLogo: string;
-  providerLogo: string;
   providerName?: string;
   transferIn?: VoucherTransferInfo | null;
   transferOut?: VoucherTransferInfo | null;
@@ -651,7 +632,7 @@ function renderEuropamundoTransferSections(params: {
     .map(
       (pageBlocks) => `
         <section class="sheet">
-          ${buildSpecialHeader(params.cvcLogo, params.providerLogo, params.providerName || "Europamundo")}
+          ${buildSpecialHeader(params.providerName || "Europamundo")}
           ${buildBand("TRASLADOS")}
           <div class="europa-transfer-grid europa-transfer-grid--print-safe">
             ${pageBlocks
@@ -681,8 +662,6 @@ function renderEuropamundoTransferSections(params: {
 
 function renderBulletListSections(params: {
   providerName: string;
-  cvcLogo: string;
-  providerLogo: string;
   title: string;
   content?: string | null;
   cardClass?: string;
@@ -694,7 +673,7 @@ function renderBulletListSections(params: {
     .map(
       (group, pageIndex) => `
         <section class="sheet">
-          ${buildSpecialHeader(params.cvcLogo, params.providerLogo, params.providerName)}
+          ${buildSpecialHeader(params.providerName)}
           ${buildBand(params.title)}
           <div class="sheet-card ${escapeHtml(params.cardClass || "").trim()}">
             ${pageIndex > 0 ? `<div class="europa-section-continuation">Continuação</div>` : ""}
@@ -706,8 +685,6 @@ function renderBulletListSections(params: {
 }
 
 function renderEuropamundoAppSections(params: {
-  cvcLogo: string;
-  providerLogo: string;
   apps: VoucherAppInfo[];
   assets?: VoucherAssetRecord[];
 }) {
@@ -719,7 +696,7 @@ function renderEuropamundoAppSections(params: {
     .map(
       (pageApps) => `
         <section class="sheet">
-          ${buildSpecialHeader(params.cvcLogo, params.providerLogo, "Europamundo")}
+          ${buildSpecialHeader("Europamundo")}
           ${buildBand("APPS RECOMENDADOS")}
           <div class="europa-apps-grid">
             ${pageApps
@@ -731,25 +708,21 @@ function renderEuropamundoAppSections(params: {
     .join("");
 }
 
-function buildSpecialHeader(cvcLogo: string, providerLogo: string, providerName: string) {
+function buildSpecialHeader(providerName: string) {
   const isEuropamundo = textValue(providerName).toLowerCase() === "europamundo";
   const providerClass = isEuropamundo ? " voucher-header--europamundo" : "";
   const providerLogoClass = isEuropamundo ? " voucher-header-logo--europamundo" : "";
   return `
     <div class="voucher-header${providerClass}">
       <div class="voucher-header-logo">
-        ${cvcLogo ? `<img src="${escapeHtml(cvcLogo)}" alt="CVC" />` : `<div class="voucher-header-placeholder">CVC</div>`}
+        <img src="${VTUR_LOGO_URL}" alt="VTur" />
       </div>
       <div class="voucher-header-center">
         <div class="voucher-header-title">VOUCHER</div>
         <div class="voucher-header-subtitle">Documentação da Viagem</div>
       </div>
       <div class="voucher-header-logo voucher-header-logo-right${providerLogoClass}">
-        ${
-          providerLogo
-            ? `<img src="${escapeHtml(providerLogo)}" alt="${escapeHtml(providerName)}" />`
-            : `<div class="voucher-header-placeholder">${escapeHtml(providerName)}</div>`
-        }
+        ${`<div class="voucher-header-placeholder">${escapeHtml(providerName)}</div>`}
       </div>
     </div>`;
 }
@@ -773,8 +746,6 @@ function buildSpecialToursPreviewDocument(
 ) {
   const providerAsset = options?.providerAsset || "special_tours";
   const providerName = options?.providerName || "Special Tours";
-  const cvcLogo = pickAssetUrl(assets, "cvc", "logo");
-  const providerLogo = pickAssetUrl(assets, providerAsset, "logo");
   const providerImages = pickAssetUrls(assets, providerAsset, "image");
   const routeTitle = buildRouteTitle(voucher);
   const extraData = normalizeVoucherExtraData(voucher.extra_data, voucher.provider);
@@ -809,8 +780,6 @@ function buildSpecialToursPreviewDocument(
 
   const programSection = renderProgramSections({
     providerName,
-    cvcLogo,
-    providerLogo,
     routeTitle,
     referenceLabel: voucher.reserva_online ? "S/REF" : "",
     referenceValue: voucher.reserva_online || "",
@@ -818,8 +787,6 @@ function buildSpecialToursPreviewDocument(
   });
 
   const transfersSection = renderEuropamundoTransferSections({
-    cvcLogo,
-    providerLogo,
     providerName,
     transferIn: extraData.traslado_chegada,
     transferOut: extraData.traslado_saida,
@@ -827,8 +794,6 @@ function buildSpecialToursPreviewDocument(
 
   const hotelSection = renderHotelSections({
     providerName,
-    cvcLogo,
-    providerLogo,
     hoteis,
     renderCard: (hotel) =>
       buildUnifiedHotelCard(hotel, {
@@ -841,7 +806,7 @@ function buildSpecialToursPreviewDocument(
   const appSection = providerImages.length
     ? `
       <section class="sheet sheet-keep-together">
-        ${buildSpecialHeader(cvcLogo, providerLogo, providerName)}
+        ${buildSpecialHeader(providerName)}
         <div class="sheet-keep-together-block">
           ${buildBand("BAIXE O APLICATIVO CONQUISTA")}
           <div class="provider-images">
@@ -867,7 +832,7 @@ function buildSpecialToursPreviewDocument(
 
   const emergencySection = `
     <section class="sheet">
-      ${buildSpecialHeader(cvcLogo, providerLogo, providerName)}
+      ${buildSpecialHeader(providerName)}
       ${buildBand("TELEFONE DE EMERGÊNCIA")}
       <div class="sheet-card emergency-card">
         <p>Nos adicione no seu WhatsApp e em caso de emergência durante a sua viagem,<br/>ou qualquer outra dúvida, entre em contato conosco.</p>
@@ -1320,7 +1285,7 @@ function buildSpecialToursPreviewDocument(
   <body>
     <main class="document">
       <section class="sheet">
-        ${buildSpecialHeader(cvcLogo, providerLogo, providerName)}
+        ${buildSpecialHeader(providerName)}
         ${buildBand("DADOS DE SUA VIAGEM")}
         ${buildBand(routeTitle)}
         <div class="sheet-card">
@@ -1338,8 +1303,6 @@ function buildSpecialToursPreviewDocument(
 }
 
 function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: VoucherAssetRecord[]) {
-  const cvcLogo = pickAssetUrl(assets, "cvc", "logo");
-  const providerLogo = pickAssetUrl(assets, "europamundo", "logo");
   const extraData = normalizeVoucherExtraData(voucher.extra_data, "europamundo");
   const passageiros = (extraData.passageiros_detalhes || []).slice().sort((a, b) => a.ordem - b.ordem);
   const dias = normalizePreviewDays((voucher.voucher_dias || []) as VoucherDia[], voucher.data_inicio);
@@ -1363,24 +1326,18 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
     </div>`;
 
   const tripDataSections = renderEuropamundoPassengerSections({
-    cvcLogo,
-    providerLogo,
     routeTitle,
     infoTable,
     passageiros,
   });
 
   const transfersSection = renderEuropamundoTransferSections({
-    cvcLogo,
-    providerLogo,
     transferIn: extraData.traslado_chegada,
     transferOut: extraData.traslado_saida,
   });
 
   const programSection = renderProgramSections({
     providerName: "Europamundo",
-    cvcLogo,
-    providerLogo,
     routeTitle,
     referenceLabel: voucher.reserva_online ? "LOCALIZADOR" : "",
     referenceValue: voucher.reserva_online || "",
@@ -1389,8 +1346,6 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
 
   const hotelsSection = renderHotelSections({
     providerName: "Europamundo",
-    cvcLogo,
-    providerLogo,
     hoteis,
     renderCard: (hotel) =>
       buildUnifiedHotelCard(hotel, {
@@ -1402,16 +1357,12 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
 
   const importantInfoSection = renderBulletListSections({
     providerName: "Europamundo",
-    cvcLogo,
-    providerLogo,
     title: "INFORMAÇÕES IMPORTANTES",
     content: extraData.informacoes_importantes,
     cardClass: "europa-info-card",
   });
 
   const appsSection = renderEuropamundoAppSections({
-    cvcLogo,
-    providerLogo,
     apps,
     assets,
   });
@@ -1422,7 +1373,7 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
     textValue(extraData.emergencia?.whatsapp)
       ? `
         <section class="sheet">
-          ${buildSpecialHeader(cvcLogo, providerLogo, "Europamundo")}
+          ${buildSpecialHeader("Europamundo")}
           ${buildBand("TELEFONE DE EMERGÊNCIA")}
           <div class="sheet-card emergency-card">
             <p>Apenas para passageiros em viagem:</p>
@@ -1885,8 +1836,6 @@ function buildGenericVoucherPreviewDocument(voucher: VoucherRecord, assets: Vouc
   const hoteis = (voucher.voucher_hoteis || [])
     .slice()
     .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
-  const cvcLogo = pickAssetUrl(assets, "cvc", "logo");
-  const providerLogo = pickAssetUrl(assets, voucher.provider, "logo");
   const routeTitle = buildRouteTitle(voucher);
 
   return `<!doctype html>
@@ -1987,12 +1936,12 @@ function buildGenericVoucherPreviewDocument(voucher: VoucherRecord, assets: Vouc
     <main class="document">
       <section class="card">
         <div class="top">
-          <div>${cvcLogo ? `<img src="${escapeHtml(cvcLogo)}" alt="CVC" />` : ""}</div>
+          <div><img src="${VTUR_LOGO_URL}" alt="VTur" /></div>
           <div>
             <div class="title">VOUCHER</div>
             <div class="subtitle">Documentação da Viagem</div>
           </div>
-          <div style="text-align:right;">${providerLogo ? `<img src="${escapeHtml(providerLogo)}" alt="${escapeHtml(providerLabel(voucher.provider))}" />` : ""}</div>
+          <div style="text-align:right;"></div>
         </div>
       </section>
       <section class="card">

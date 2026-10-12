@@ -1,4 +1,4 @@
-<!-- Medidor em meia-lua (0% a 100%), como o "% ICM" do relatório da CVC. -->
+<!-- Medidor em meia-lua (0% a 100%), para o percentual de atingimento da meta. -->
 <script lang="ts">
   import { percentual } from './formato';
   export let titulo: string;

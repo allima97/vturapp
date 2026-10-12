@@ -73,7 +73,7 @@ export async function handleClientesResolveImportPost(event: RequestEvent) {
     if (!scope.isAdmin) {
       ensureModuloAccess(
         scope,
-        ['clientes', 'clientes_consulta', 'vendas_importar', 'Importar Contratos', 'vendas_cadastro', 'vendas'],
+        ['clientes', 'clientes_consulta', 'vendas_cadastro', 'vendas'],
         2,
         'Sem permissão para criar cliente pela importação.'
       );

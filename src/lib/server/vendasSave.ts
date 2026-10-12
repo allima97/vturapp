@@ -830,7 +830,7 @@ export async function markRankingReadModelDirty(params: {
     }
     await params.client.from("ranking_read_model_status").insert(statusPayload);
   } catch {
-    // A ausência do read model não deve bloquear criação/importação de venda.
+    // A ausência do read model não deve bloquear cadastro de venda.
   }
 }
 

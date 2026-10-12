@@ -47,9 +47,9 @@
     }
   ];
 
-  // Relatório de Performance por franquia: master e gestor (e admin do sistema).
+  // Relatório de Performance por agência: master e gestor (e admin do sistema).
   const relatorioPerformance = {
-    titulo: 'Performance da franquia',
+    titulo: 'Performance da agência',
     descricao: 'Resumo do mês por empresa: vendas, meta, produtos, destinos e orçamentos (com PDF).',
     icone: FileText,
     rota: '/relatorios/performance'

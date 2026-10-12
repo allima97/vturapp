@@ -440,7 +440,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               {#if voucher.codigo_systur}
                 <div>
-                  <p class="text-sm text-slate-500 mb-1">Código SYSTUR</p>
+                  <p class="text-sm text-slate-500 mb-1">Código interno</p>
                   <p class="font-medium text-slate-900">
                     {voucher.codigo_systur}
                   </p>

@@ -253,7 +253,7 @@ export function pickConciliacaoSourceRow(rows: ConciliacaoSourceRow[]) {
   );
 
   // Priority: BAIXA with value > OPFAX with value (when BAIXA exists but is R$0) > first BAIXA
-  // We deliberately prefer valuedOpfax over a zero-value BAIXA row, since CVC sometimes
+  // We deliberately prefer valuedOpfax over a zero-value BAIXA row, since source files sometimes
   // sends BAIXA confirmation files with R$0 monetary values for receipts that were correctly
   // valued in the prior OPFAX entry. The ranking should still use that valued OPFAX entry
   // as the financial source when the BAIXA provides no useful value.

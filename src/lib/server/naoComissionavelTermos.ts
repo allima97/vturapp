@@ -7,7 +7,7 @@ import { uniqueCleanStrings } from '$lib/utils/array';
  * Carregamento ÚNICO (servidor) dos termos de formas de pagamento não
  * comissionáveis — Fase 2.3.
  *
- * Substitui 6 cópias quase idênticas (vendas/merge, vendas/importar-contrato,
+ * Substitui 6 cópias quase idênticas (vendas/merge,
  * conciliacao/list, lib/conciliacao/source, server/vendas-kpis e
  * relatorios/vendas). Regra preservada de todas elas:
  *  - lê `parametros_pagamentos_nao_comissionaveis` com `ativo = true`,

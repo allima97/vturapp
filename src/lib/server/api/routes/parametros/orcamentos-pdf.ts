@@ -1,3 +1,4 @@
+import { VTUR_LOGO_PATH } from "$lib/brand";
 // Migrado para Hono de src/routes/api/v1/parametros/orcamentos-pdf/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import { registrarLog } from '$lib/server/auditLog';
@@ -35,7 +36,7 @@ export async function handleParametrosOrcamentosPdfGet(event: RequestEvent) {
 
     const { data, error: queryError } = await client
       .from('quote_print_settings')
-      .select('id, owner_user_id, company_id, logo_url, logo_path, imagem_complementar_url, imagem_complementar_path, consultor_nome, filial_nome, endereco_linha1, endereco_linha2, endereco_linha3, telefone, whatsapp, whatsapp_codigo_pais, email, rodape_texto')
+      .select('id, owner_user_id, company_id, imagem_complementar_url, imagem_complementar_path, consultor_nome, filial_nome, endereco_linha1, endereco_linha2, endereco_linha3, telefone, whatsapp, whatsapp_codigo_pais, email, rodape_texto')
       .eq('owner_user_id', user.id)
       .maybeSingle();
 
@@ -48,8 +49,8 @@ export async function handleParametrosOrcamentosPdfGet(event: RequestEvent) {
         id: data?.id || null,
         owner_user_id: data?.owner_user_id || user.id,
         company_id: data?.company_id || userRow?.company_id || null,
-        logo_url: data?.logo_url || null,
-        logo_path: data?.logo_path || null,
+        logo_url: VTUR_LOGO_PATH,
+        logo_path: null,
         imagem_complementar_url: data?.imagem_complementar_url || null,
         imagem_complementar_path: data?.imagem_complementar_path || null,
         consultor_nome: data?.consultor_nome || userRow?.nome_completo || '',
@@ -109,8 +110,8 @@ export async function handleParametrosOrcamentosPdfPost(event: RequestEvent) {
     };
 
     // Inclui campos de imagem apenas quando presentes no body (para não sobrescrever com null)
-    if ('logo_url' in (settings || {})) payload.logo_url = String(settings.logo_url || '').trim() || null;
-    if ('logo_path' in (settings || {})) payload.logo_path = String(settings.logo_path || '').trim() || null;
+    payload.logo_url = VTUR_LOGO_PATH;
+    payload.logo_path = null;
     if ('imagem_complementar_url' in (settings || {})) payload.imagem_complementar_url = String(settings.imagem_complementar_url || '').trim() || null;
     if ('imagem_complementar_path' in (settings || {})) payload.imagem_complementar_path = String(settings.imagem_complementar_path || '').trim() || null;
 

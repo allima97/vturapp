@@ -1,3 +1,4 @@
+import { VTUR_LOGO_PATH } from "$lib/brand";
 // Migrado para Hono de src/routes/api/v1/crm/library/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -12,10 +13,7 @@ import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { toUserMessage } from '$lib/utils/errors';
 
 type ScopeValue = "system" | "master" | "gestor" | "user";
-const LOGO_BUCKET = "quotes";
-const THEME_SELECT_WITH_LOGO =
-  "id, user_id, nome, categoria, categoria_id, asset_url, storage_path, logo_url, logo_path, width_px, height_px, greeting_text, mensagem_max_linhas, mensagem_max_palavras, assinatura_max_linhas, assinatura_max_palavras, title_style, body_style, signature_style, scope, company_id, ativo";
-const THEME_SELECT_LEGACY =
+const THEME_SELECT =
   "id, user_id, nome, categoria, categoria_id, asset_url, storage_path, width_px, height_px, greeting_text, mensagem_max_linhas, mensagem_max_palavras, assinatura_max_linhas, assinatura_max_palavras, title_style, body_style, signature_style, scope, company_id, ativo";
 
 type ThemeRow = {
@@ -61,16 +59,7 @@ type MessageRow = {
   ativo: boolean | null;
 };
 
-type BrandingSettingsRow = {
-  logo_url?: string | null;
-  logo_path?: string | null;
-  consultor_nome?: string | null;
-} | null;
 
-type BrandingLogoSource = {
-  logo_url?: string | null;
-  logo_path?: string | null;
-} | null;
 
 type LegacyThemeRow = Omit<ThemeRow, "logo_url" | "logo_path">;
 
@@ -90,44 +79,6 @@ function normalizeScope(value?: string | null): ScopeValue {
 function inCompany(companyId: string | null, allowed: Set<string>) {
   const key = String(companyId || "").trim();
   return key ? allowed.has(key) : false;
-}
-
-function extractStoragePath(value?: string | null) {
-  const raw = String(value || "").trim();
-  if (!raw) return null;
-  const withoutQuery = raw.split("#")[0].split("?")[0];
-  const markers = [
-    "/storage/v1/object/public/quotes/",
-    "/storage/v1/object/sign/quotes/",
-    "/quotes/",
-  ];
-
-  for (const marker of markers) {
-    const index = withoutQuery.indexOf(marker);
-    if (index === -1) continue;
-    return withoutQuery
-      .slice(index + marker.length)
-      .replace(/^\/+/, "")
-      .replace(/^quotes\//, "") || null;
-  }
-
-  if (/^[a-z][a-z0-9+.-]*:/i.test(withoutQuery)) return null;
-
-  return withoutQuery
-    .replace(/^\/+/, "")
-    .replace(/^quotes\//, "") || null;
-}
-
-function cleanUrl(value?: string | null) {
-  const raw = String(value || "").trim();
-  if (!raw) return null;
-  const lowered = raw.toLowerCase();
-  if (lowered === "null" || lowered === "undefined") return null;
-  return raw;
-}
-
-function hasLogoSource(value?: BrandingLogoSource) {
-  return Boolean(String(value?.logo_path || value?.logo_url || "").trim());
 }
 
 function normalizeLibraryKey(value?: string | null) {
@@ -158,7 +109,7 @@ function mergeThemesWithOfficial(userId: string, companyId: string | null, rows:
       categoria_id: null,
       asset_url: theme.asset_url,
       storage_path: theme.storage_path,
-      logo_url: null,
+      logo_url: VTUR_LOGO_PATH,
       logo_path: null,
       width_px: theme.width_px,
       height_px: theme.height_px,
@@ -231,126 +182,14 @@ function mergeMessagesWithOfficial(userId: string, companyId: string | null, the
   return Array.from(merged.values());
 }
 
-function isThemeLogoColumnMissingError(error: unknown) {
-  const message = toUserMessage(error, "").toLowerCase();
-  if (!message) return false;
-  return (
-    (message.includes("column") && message.includes("logo_url")) ||
-    (message.includes("column") && message.includes("logo_path")) ||
-    message.includes("logo_url does not exist") ||
-    message.includes("logo_path does not exist")
-  );
-}
-
-function isColumnMissingError(error: unknown, column: string) {
-  const message = toUserMessage(error, "").toLowerCase();
-  const needle = column.toLowerCase();
-  return (
-    (message.includes("column") && message.includes(needle)) ||
-    message.includes(`${needle} does not exist`)
-  );
-}
-
-async function fetchThemesWithLogoFallback(client: SupabaseClient): Promise<ThemeFetchResult> {
-  const withLogoResp = await client
-    .from("user_message_template_themes")
-    .select(THEME_SELECT_WITH_LOGO)
-    .order("nome");
-  if (!withLogoResp.error) {
-    return {
-      data: (withLogoResp.data || []) as ThemeRow[],
-      error: null,
-      logoColumnsAvailable: true,
-    };
-  }
-
-  if (!isThemeLogoColumnMissingError(withLogoResp.error)) {
-    return {
-      data: [] as ThemeRow[],
-      error: withLogoResp.error,
-      logoColumnsAvailable: false,
-    };
-  }
-
-  const legacyResp = await client
-    .from("user_message_template_themes")
-    .select(THEME_SELECT_LEGACY)
-    .order("nome");
-  if (legacyResp.error) {
-    return {
-      data: [] as ThemeRow[],
-      error: legacyResp.error,
-      logoColumnsAvailable: false,
-    };
-  }
-
-  const normalized = ((legacyResp.data || []) as LegacyThemeRow[]).map((row) => ({
-    ...row,
-    storage_path: row.storage_path ?? null,
-    logo_url: null,
-    logo_path: null,
-  })) as ThemeRow[];
-
+async function fetchThemes(client: SupabaseClient): Promise<ThemeFetchResult> {
+  const result = await client.from("user_message_template_themes").select(THEME_SELECT).order("nome");
   return {
-    data: normalized,
-    error: null,
+    data: ((result.data || []) as LegacyThemeRow[]).map((row) => ({
+      ...row, logo_url: VTUR_LOGO_PATH, logo_path: null,
+    })),
+    error: result.error,
     logoColumnsAvailable: false,
-  };
-}
-
-async function fetchCompanyBrandingLogo(client: SupabaseClient, companyId: string | null): Promise<BrandingLogoSource> {
-  if (!companyId) return null;
-
-  const { data, error } = await client
-    .from("companies")
-    .select("logo_url")
-    .eq("id", companyId)
-    .maybeSingle();
-
-  if (error) {
-    if (!isColumnMissingError(error, "logo_url")) {
-      logServerError("[crm/library] erro ao carregar logo da empresa", error);
-    }
-    return null;
-  }
-
-  return {
-    logo_url: cleanUrl(data?.logo_url) || null,
-    logo_path: null,
-  };
-}
-
-async function resolveBrandingLogo(
-  client: SupabaseClient,
-  settings: BrandingSettingsRow,
-  fallbackLogo: BrandingLogoSource = null,
-) {
-  if (!settings && !fallbackLogo) return null;
-  const logoSource = hasLogoSource(settings) ? settings : fallbackLogo;
-  const rawUrl = cleanUrl(logoSource?.logo_url);
-  const logoPath = String(logoSource?.logo_path || extractStoragePath(rawUrl) || "").trim();
-  const baseSettings = settings || {};
-
-  if (logoPath) {
-    try {
-      const signed = await client.storage.from(LOGO_BUCKET).createSignedUrl(logoPath, 3600);
-      const signedUrl = cleanUrl(signed.data?.signedUrl);
-      if (signedUrl) {
-        return {
-          ...baseSettings,
-          logo_url: signedUrl,
-          logo_path: logoPath,
-        };
-      }
-    } catch {
-      // Fallback silencioso para URL já persistida.
-    }
-  }
-
-  return {
-    ...baseSettings,
-    logo_url: logoPath ? null : rawUrl,
-    logo_path: logoPath || null,
   };
 }
 
@@ -382,13 +221,13 @@ export async function handleCrmLibraryGet(event: import('@sveltejs/kit').Request
 
     const dataClient: SupabaseClient = getAdminClient();
 
-    const [catsResp, themesResp, messagesResp, sigResp, settingsResp, companyLogo] = await Promise.all([
+    const [catsResp, themesResp, messagesResp, sigResp, settingsResp] = await Promise.all([
       dataClient
         .from("crm_template_categories")
         .select("id, nome, icone, sort_order")
         .eq("ativo", true)
         .order("sort_order"),
-      fetchThemesWithLogoFallback(dataClient),
+      fetchThemes(dataClient),
       dataClient
         .from("user_message_templates")
         .select("id, user_id, nome, assunto, titulo, corpo, assinatura, theme_id, title_style, body_style, signature_style, categoria, scope, company_id, ativo")
@@ -401,10 +240,9 @@ export async function handleCrmLibraryGet(event: import('@sveltejs/kit').Request
         .maybeSingle(),
       authClient
         .from("quote_print_settings")
-        .select("logo_url, logo_path, consultor_nome")
+        .select("consultor_nome")
         .eq("owner_user_id", userId)
         .maybeSingle(),
-      fetchCompanyBrandingLogo(dataClient, currentCompanyId),
     ]);
 
     if (catsResp.error) {
@@ -462,22 +300,11 @@ export async function handleCrmLibraryGet(event: import('@sveltejs/kit').Request
     const libraryThemes = mergeThemesWithOfficial(userId, currentCompanyId, visibleThemes);
     const libraryMessages = mergeMessagesWithOfficial(userId, currentCompanyId, libraryThemes, visibleMessages);
 
-    let settingsRow = (settingsResp.data || null) as BrandingSettingsRow;
-    if (settingsResp.error) {
-      const legacySettingsResp = await authClient
-        .from("quote_print_settings")
-        .select("logo_url, consultor_nome")
-        .eq("owner_user_id", userId)
-        .maybeSingle();
-      if (!legacySettingsResp.error && legacySettingsResp.data) {
-        settingsRow = {
-          ...legacySettingsResp.data,
-          logo_path: null,
-        };
-      }
-    }
-
-    const resolvedSettings = await resolveBrandingLogo(authClient, settingsRow, companyLogo);
+    const resolvedSettings = {
+      consultor_nome: settingsResp.data?.consultor_nome || null,
+      logo_url: VTUR_LOGO_PATH,
+      logo_path: null,
+    };
 
     return new Response(
       JSON.stringify({

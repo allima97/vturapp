@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { parseSpecialToursCircuitPasteText, parseSpecialToursHotelPaste, parseVoucherImportText } from "./import";
 
 const CONFIRMED_HOTELS_TEXT = `HOTEIS CONFIRMADOS
-Para obter a lista com a hotelaria confirmada, acesse o link: www.cvc.com.br/minhascompras 48 horas antes do seu embarque.
+Para obter a lista com a hotelaria confirmada, acesse o link: www.example.com/minhascompras 48 horas antes do seu embarque.
 Hotel EVORA HOTEL Bed and Breakfast - EXPDTE
 Endereco /Address Av. Tulio Espanca Apart. 93
 Telefone +351/266748800

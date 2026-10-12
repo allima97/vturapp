@@ -318,7 +318,7 @@ function numeroReciboMatches(left?: string | null, right?: string | null) {
   return true;
 }
 
-function isCvcReceiptLike(value?: string | null) {
+function isNumericReceiptLike(value?: string | null) {
   const digits = onlyDigits(value);
   const prefix = extractReciboPrefix(value);
   return prefix === '5630' || digits.length >= 10;
@@ -657,12 +657,12 @@ export async function handleConciliacaoFixVinculosPost(event: RequestEvent) {
             uniqueCandidates.length,
             null
           ));
-        } else if (isCvcReceiptLike(documento)) {
+        } else if (isNumericReceiptLike(documento)) {
           issues.push(issue(
-            'SEM_VINCULO_CVC',
+            'SEM_VINCULO_RECIBO',
             'warning',
-            'Recibo CVC sem vinculo de venda',
-            'O documento parece ser um recibo CVC, mas nao esta ligado a vendas_recibos.',
+            'Recibo sem vínculo de venda',
+            'O documento parece ser um recibo numérico, mas nao esta ligado a vendas_recibos.',
             documento,
             null
           ));

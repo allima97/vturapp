@@ -34,14 +34,14 @@ export function exemplo() {
   const passageiros = atual.flatMap((c, i) => [{ vendaId: c.vendaId!, clienteId: `k${i}a`, nascimento: `19${50 + (i % 45)}-03-01` }, { vendaId: c.vendaId!, clienteId: `k${i}b`, nascimento: `19${60 + (i % 35)}-07-01` }]);
   const orc = (i: number) => ({ id: `q${i}`, status: (i % 9 === 0 ? 'fechado' : 'enviado') as any, produtos: [['Hotel', 'Aéreo', 'Aéreo + Hotel', 'Fretamento'][i % 4]], destinoPais: i % 3 ? 'Brasil' : 'Chile', destinoCidade: ['Maceió', 'Porto Seguro', 'Natal', 'Santiago'][i % 4], embarque: `2026-${String(10 + (i % 3)).padStart(2, '0')}-01` });
   return {
-    empresa: { id: 'c1', nome: '5630 - LOJA SHOPPING CENTER NORTE', franqueado: 'KATIA NISHIDA' },
+    empresa: { id: 'c1', nome: '5630 - LOJA SHOPPING CENTER NORTE', responsavel: 'KATIA NISHIDA' },
     mes: '2026-08',
     dadosAte: '2026-08-30',
     ...montarRelatorioPerformance({
       corte: '2026-08-30', diasNoMes: 31, diasAteCorte: 30, meta: 3_000_000, focoLiquido: false, usarTaxasNaMeta: true,
       nomesVendedores: Object.fromEntries(vendedores.map((v) => [v, v.toUpperCase()])),
       atual, anoAnterior: atual.map((c) => ({ ...c, bruto: c.bruto * 1.4 })), passageiros, passageirosAnoAnterior: passageiros,
-      pagamentos: atual.map((c, i) => ({ vendaId: c.vendaId!, forma: ['MASTERCARD', 'VISA', 'MSC CARTÃO', 'DEPÓSITO FRANQUEADO', 'BOLETO CVC'][i % 5], valor: c.bruto })),
+      pagamentos: atual.map((c, i) => ({ vendaId: c.vendaId!, forma: ['MASTERCARD', 'VISA', 'MSC CARTÃO', 'DEPÓSITO DA AGÊNCIA', 'BOLETO Agência'][i % 5], valor: c.bruto })),
       orcamentos: Array.from({ length: 60 }, (_, i) => orc(i)), orcamentosMesAnterior: Array.from({ length: 50 }, (_, i) => orc(i)),
     }),
   };
@@ -77,7 +77,7 @@ describe('Relatório de Performance (tela)', () => {
     const chamada = st.fetch.mock.calls.find((c) => String(c[0]).includes('/performance'))!;
     expect(chamada[1].query).toMatchObject({ company_id: 'c1' });
     const texto = document.body.textContent || '';
-    for (const t of ['Filial:', 'Franqueado:', 'Venda Mês', 'Meta Mês (até D-1)', '% ICM Mês (total)', 'Passageiros Mês', 'Top 10 Vendedores', 'Faixa Etária', 'Top 5 Formas de Pagamento', 'Business Venda', 'Antecipação de Compra (Nacional)', 'Orçamentos']) {
+    for (const t of ['Filial:', 'Responsável:', 'Venda Mês', 'Meta Mês (até D-1)', '% ICM Mês (total)', 'Passageiros Mês', 'Top 10 Vendedores', 'Faixa Etária', 'Top 5 Formas de Pagamento', 'Business Venda', 'Antecipação de Compra (Nacional)', 'Orçamentos']) {
       expect(texto).toContain(t);
     }
     expect(document.querySelector('#perf-empresa')).toBeTruthy();

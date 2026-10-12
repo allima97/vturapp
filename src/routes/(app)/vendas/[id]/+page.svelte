@@ -468,9 +468,8 @@
 
   async function carregarVenda(opts: { preserveData?: boolean } = {}) {
     const preserveData = opts.preserveData ?? false;
-    const fromImport = $page.url.searchParams.get('imported') === '1';
     const fromSave = $page.url.searchParams.get('saved') === '1';
-    const fromRecentWrite = fromImport || fromSave;
+    const fromRecentWrite = fromSave;
     const isInitialLoad = !preserveData && !venda;
     const maxAttempts = isInitialLoad && fromRecentWrite ? 6 : 2;
     let lastError: unknown = null;
@@ -478,9 +477,7 @@
     refreshing = preserveData && Boolean(venda);
     if (!preserveData || !venda) loading = true;
     if (!preserveData) vendaCompletaLoaded = false;
-    loadingHint = fromImport
-      ? 'Finalizando a abertura da venda importada...'
-      : 'Carregando os dados da venda...';
+    loadingHint = 'Carregando os dados da venda...';
     error = null;
 
     if (isInitialLoad) {
@@ -489,7 +486,7 @@
 
     if (isInitialLoad) {
       try {
-        loadingHint = fromImport ? 'Abrindo a venda importada...' : 'Abrindo a venda...';
+        loadingHint = 'Abrindo a venda...';
         const liteData = await apiFetch<VendaDetalheView>(`/api/v1/vendas/${vendaId}`, {
           redirectOnForbidden: false,
           redirectOnUnauthorized: false,
@@ -506,9 +503,7 @@
       } catch (err) {
         lastError = err;
         loading = true;
-        loadingHint = fromImport
-          ? 'A venda foi importada. Estamos tentando abrir a ficha completa...'
-          : fromSave
+        loadingHint = fromSave
             ? 'Atualizando os dados da venda...'
             : 'Carregando a ficha completa da venda...';
         startLoadingRecoveryGuard(3500);
@@ -533,9 +528,7 @@
       } catch (err: unknown) {
         lastError = err;
         if (attempt < maxAttempts - 1 && shouldRetryInitialLoad(err)) {
-          loadingHint = fromImport
-            ? 'A venda foi importada. Estamos sincronizando os dados para abrir a ficha...'
-            : fromSave
+          loadingHint = fromSave
             ? 'Atualizando os dados da venda...'
             : 'Ainda estamos carregando a venda. Tentando novamente...';
           await sleep(450 * (attempt + 1));
@@ -562,9 +555,7 @@
       error = 'Você não tem permissão para acessar esta venda';
       await goto('/vendas');
     } else if (err instanceof ApiError && err.status === 404) {
-      error = fromImport
-        ? 'Venda importada, mas ainda não foi possível abrir a ficha. Volte para Vendas e atualize a lista.'
-        : fromSave
+      error = fromSave
         ? 'Não foi possível carregar a venda após salvar. Volte para a lista e abra novamente.'
         : 'Venda não encontrada';
     } else {

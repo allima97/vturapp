@@ -62,7 +62,6 @@ export const MAPA_MODULOS: Record<string, string> = {
   'Controle de SAC': 'operacao_controle_sac',
   Comissionamento: 'comissionamento',
   'Ranking de vendas': 'relatorios_ranking_vendas',
-  'Importar Contratos': 'vendas_importar',
   Perfil: 'perfil'
 };
 
@@ -172,8 +171,6 @@ export const ROTAS_MODULOS: Record<string, string> = {
   '/operacao/comissionamento': 'Comissionamento',
   '/chat': 'Mural de Recados',
   '/operacao/controle-sac': 'Controle de SAC',
-  '/vendas/importar': 'Importar Contratos',
-  '/gestor/importar-vendas': 'Vendas',
   '/metas/vendedor': 'Metas',
   '/comissoes/fechamento': 'Comissionamento',
   '/perfil': 'Perfil',
@@ -197,7 +194,6 @@ export const MODULO_HERANCA: Record<string, string[]> = {
   ParametrosAvisos: ['Parametros'],
   Avisos: ['Parametros'],
   'Ranking de vendas': ['Relatorios'],
-  'Importar Contratos': ['Vendas']
 };
 
 export type ModuloSecaoPermissoes = {
@@ -226,7 +222,6 @@ export const SECOES_PERMISSOES: ModuloSecaoPermissoes[] = [
       'Clientes',
       'Circuitos',
       'Comissionamento',
-      'Importar Contratos',
       'Operacao'
     ]
   },
@@ -313,7 +308,7 @@ export const SECOES_PERMISSOES: ModuloSecaoPermissoes[] = [
 ];
 
 const GLOBAL_MODULE_GROUPS: Record<string, string[]> = {
-  Vendas: ['Orcamentos', 'Importar Contratos'],
+  Vendas: ['Orcamentos'],
   Financeiro: [
     'NotasFiscais',
     'Conciliação',

@@ -16,7 +16,7 @@ import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/reque
 const MAX_SYSTEM_MODULES_BODY_BYTES = 64 * 1024;
 
 const SYSTEM_MODULES_CATALOG = [
-  'dashboard', 'vendas', 'vendas_consulta', 'vendas_importar', 'orcamentos',
+  'dashboard', 'vendas', 'vendas_consulta', 'orcamentos',
   'clientes', 'consultoria_online', 'cadastros', 'cadastros_paises',
   'cadastros_estados', 'cadastros_cidades', 'cadastros_destinos',
   'cadastros_produtos', 'circuitos', 'cadastros_lote', 'cadastros_fornecedores',
@@ -29,7 +29,7 @@ const SYSTEM_MODULES_CATALOG = [
   'operacao_vouchers', 'operacao_viagens', 'operacao_controle_sac',
   'operacao_campanhas', 'operacao_conciliacao', 'comissionamento',
   'agenda', 'todo', 'chat', 'vouchers', 'viagens', 'controle de sac',
-  'campanhas', 'conciliacao', 'ranking de vendas', 'importar contratos',
+  'campanhas', 'conciliacao', 'ranking de vendas',
   'relatoriovendas', 'relatoriodestinos', 'relatorioprodutos', 'relatorioclientes',
   'vendas', 'orcamentos', 'consultoria online', 'paises', 'subdivisoes',
   'cidades', 'destinos', 'produtos', 'produtoslote', 'fornecedores',

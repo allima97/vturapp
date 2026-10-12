@@ -54,7 +54,6 @@ import { debugComissaoRoutes } from './routes/debug-comissao';
 import { documentacaoRoutes } from './routes/documentacao';
 import { enderecosRoutes } from './routes/enderecos';
 import { equipeRoutes } from './routes/equipe';
-import { importarVendasRoutes } from './routes/importar-vendas';
 import { menuRoutes } from './routes/menu';
 import { paisesRoutes } from './routes/paises';
 import { profileRoutes } from './routes/profile';
@@ -114,7 +113,6 @@ export function createApiApp() {
   app.route('/documentacao', documentacaoRoutes);
   app.route('/enderecos', enderecosRoutes);
   app.route('/equipe', equipeRoutes);
-  app.route('/importar-vendas', importarVendasRoutes);
   app.route('/menu', menuRoutes);
   app.route('/paises', paisesRoutes);
   app.route('/profile', profileRoutes);

@@ -1,6 +1,6 @@
 // Testes de caracterização: pagamentos não comissionáveis (Fase 1).
 // Desde a Fase 2.3 esta é a ÚNICA implementação da regra (antes havia cópias
-// em vendas-kpis, relatorios/vendas, vendas/merge, vendas/importar-contrato,
+// em vendas-kpis, relatorios/vendas, vendas/merge,
 // conciliacao/_legacy e pagamentoUtils). O carregamento dos termos no servidor
 // está em $lib/server/naoComissionavelTermos.
 import { describe, expect, it } from 'vitest';
@@ -23,8 +23,8 @@ const TERMOS = [
   'credito diversos',
   'credito passageiro',
   'credito pax',
-  'ficha cvc',
-  'ficha cvc-recadastro',
+  'ficha agencia',
+  'ficha agencia-recadastro',
   'vale viagem',
 ];
 
@@ -32,7 +32,7 @@ describe('isFormaNaoComissionavel', () => {
   it('casa por "contém", sem acento e sem diferença de caixa', () => {
     expect(isFormaNaoComissionavel('Crédito Pax', TERMOS)).toBe(true);
     expect(isFormaNaoComissionavel('VALE VIAGEM 2024', TERMOS)).toBe(true);
-    expect(isFormaNaoComissionavel('Ficha CVC', TERMOS)).toBe(true);
+    expect(isFormaNaoComissionavel('Ficha Agência', TERMOS)).toBe(true);
   });
 
   it('cartão de crédito NUNCA é não comissionável, mesmo contendo "credito"', () => {

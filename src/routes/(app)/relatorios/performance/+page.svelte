@@ -1,5 +1,5 @@
 <!--
-  Relatório de Performance por franquia (pedido do usuário em 25/09/2026; modelo: PDF da CVC por filial).
+  Relatório de performance da agência.
   Dados: GET /api/v1/relatorios/performance (regras em $lib/server/performance/performance.ts).
   Quem vê: admin do sistema e master (escolhem a empresa) e gestor (a própria empresa).
   "Baixar PDF": abre a impressão do navegador já formatada em A4 (Salvar como PDF).
@@ -23,7 +23,7 @@
   import type { RelatorioPerformance } from '$lib/server/performance/performance';
 
   type Resposta = RelatorioPerformance & {
-    empresa: { id: string; nome: string; franqueado: string | null };
+    empresa: { id: string; nome: string; responsavel: string | null };
     mes: string;
     dadosAte: string | null;
   };
@@ -128,7 +128,7 @@
 <div class="performance-controles" data-print-hide>
   <PageHeader
     title="Relatório de Performance"
-    subtitle="Resumo do mês por franquia: vendas, metas, produtos, destinos e orçamentos."
+    subtitle="Resumo do mês por agência: vendas, metas, produtos, destinos e orçamentos."
     color="financeiro"
     actions={[{ label: 'Relatórios', href: '/relatorios', variant: 'secondary', icon: ArrowLeft }]}
     breadcrumbs={[{ label: 'Relatórios', href: '/relatorios' }, { label: 'Performance' }]}
@@ -139,7 +139,7 @@
       {#if escolheEmpresa}
         <FieldSelect
           id="perf-empresa"
-          label="Empresa (franquia)"
+          label="Empresa (agência)"
           bind:value={empresaId}
           placeholder={null}
           options={empresas.map((e) => ({ value: e.id, label: e.nome }))}
@@ -171,10 +171,10 @@
 {:else if dados}
   {@const v = dados.vendas}
   <article class="performance space-y-5" aria-busy={loading ? 'true' : undefined} aria-labelledby="perf-titulo">
-    <!-- Cabeçalho (como a faixa azul do relatório da CVC) -->
+    <!-- Cabeçalho do relatório -->
     <header class="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-[#1c16a8] px-5 py-3 text-white">
       <p class="text-sm"><span class="font-semibold">Filial:</span> {dados.empresa.nome}</p>
-      {#if dados.empresa.franqueado}<p class="text-sm"><span class="font-semibold">Franqueado:</span> {dados.empresa.franqueado}</p>{/if}
+      {#if dados.empresa.responsavel}<p class="text-sm"><span class="font-semibold">Responsável:</span> {dados.empresa.responsavel}</p>{/if}
       <p class="text-right text-xs">Dados até<br /><span class="text-sm font-semibold">{dados.dadosAte ? formatISODateBR(dados.dadosAte) : '—'}</span></p>
     </header>
 
@@ -325,7 +325,7 @@
     <h2 class="pt-2 text-xl font-bold text-slate-900">Orçamentos</h2>
     {#if dados.orcamentos.total === 0}
       <div class="vtur-card p-6 text-sm text-slate-600">
-        Nenhum orçamento importado neste mês. Os orçamentos vêm da importação do PDF de orçamento da CVC (Orçamentos › Importar).
+        Nenhum orçamento cadastrado neste mês. Cadastre uma proposta em Orçamentos › Novo Orçamento.
       </div>
     {:else}
       <section class="vtur-card p-4" aria-label="Orçamentos por produto">
@@ -393,7 +393,7 @@
 
     <p class="text-xs text-slate-500">
       Valores lançados no VTUR (mesma base do Ranking e do Dashboard). Venda RA = REXTUR. Meta até D-1 proporcional aos dias corridos.
-      Passageiros: os da venda, sem repetir. Orçamentos: os importados no VTUR; conversão = aprovados + fechados.
+      Passageiros: os da venda, sem repetir. Orçamentos: os cadastrados no VTUR; conversão = aprovados + fechados.
     </p>
   </article>
 {/if}

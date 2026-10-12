@@ -1,5 +1,5 @@
 /**
- * Relatório de Performance por franquia (pedido do usuário em 25/09/2026, modelo: PDF da CVC por filial).
+ * Relatório de performance da agência.
  *
  * Só agrega; não busca dados. Definições confirmadas pelo usuário:
  * - Venda: as mesmas contribuições por recibo do Ranking/Dashboard (`fetchVendasKpiReciboContributions`), valor bruto.
@@ -8,8 +8,8 @@
  * - Marítimo = produto do tipo Cruzeiro.
  * - Produto = o tipo do produto no cadastro (tipo_produtos), como nas vendas.
  * - Meta até D-1 = meta do mês proporcional aos dias corridos até o dia de corte.
- * - Passageiros = passageiros da venda (importados com a venda), sem repetir na mesma venda.
- * - Orçamentos = orçamentos importados no VTUR (tabela quote); conversão igual à da tela de Orçamentos
+ * - Passageiros = passageiros cadastrados na venda, sem repetir na mesma venda.
+ * - Orçamentos = orçamentos cadastrados no VTUR (tabela quote); conversão igual à da tela de Orçamentos
  *   (aprovados + fechados ÷ total).
  */
 

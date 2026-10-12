@@ -75,8 +75,6 @@
 
   type CrmSettings = {
     consultor_nome?: string | null;
-    logo_url?: string | null;
-    logo_path?: string | null;
   };
 
   type CrmLibraryResponse = {
@@ -180,8 +178,6 @@
     mensagem: string;
     assinaturaNome: string;
     assinaturaCargo: string;
-    logoUrl: string | null;
-    logoPath?: string | null;
     textColor?: string;
   }): string {
     const q = new URLSearchParams();
@@ -199,8 +195,6 @@
     q.set('footer_lead', '');
     if (params.assinaturaNome) q.set('assinatura', params.assinaturaNome);
     q.set('cargo_consultor', params.assinaturaCargo || '');
-    if (params.logoPath) q.set('logo_path', params.logoPath);
-    if (params.logoUrl) q.set('logo_url', params.logoUrl);
     if (params.textColor) q.set('text_color', params.textColor);
 
     return `/api/v1/cards/render.svg?${q.toString()}`;
@@ -666,8 +660,6 @@
         mensagem: mensagemPersonalizada,
         assinaturaNome,
         assinaturaCargo,
-        logoUrl: String(crmSettings?.logo_url || '').trim() || null,
-        logoPath: String(crmSettings?.logo_path || '').trim() || null,
         textColor: previewTextColor
       });
     }

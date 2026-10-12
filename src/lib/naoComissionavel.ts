@@ -42,8 +42,6 @@ export const DEFAULT_NAO_COMISSIONAVEIS: readonly string[] = [
   "credipax",
   "vale viagem",
   "carta de credito",
-  "ficha cvc",
-  "cvc ficha",
   "credito",
 ];
 

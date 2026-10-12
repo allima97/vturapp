@@ -1,3 +1,4 @@
+import { VTUR_LOGO_URL } from "$lib/brand";
 import type { RequestEvent } from '@sveltejs/kit';
 import { env as publicEnv } from '$env/dynamic/public';
 import { buildCardFontFaceCss } from '$lib/cards/cardFonts';
@@ -14,7 +15,7 @@ import {
   buildCardClientGreeting,
   DEFAULT_CARD_FOOTER_LEAD,
 } from '$lib/cards/templateRuntime';
-import { getAdminClient, isUuid } from '$lib/server/v1';
+import { isUuid } from '$lib/server/v1';
 
 export type CardStyle = {
   x?: number;
@@ -45,10 +46,9 @@ const MAX_CARD_DIMENSION = 2160;
 const MAX_TEXT_PARAM_LENGTH = 900;
 const MAX_SHORT_TEXT_PARAM_LENGTH = 180;
 const MAX_URL_PARAM_LENGTH = 2048;
-// Deve acompanhar o limite aceito no upload de logos em Parametros > Orcamentos.
+// Limite para imagens de fundo incorporadas aos cartões.
 const MAX_INLINE_IMAGE_BYTES = 5 * 1024 * 1024;
 const INLINE_IMAGE_FETCH_TIMEOUT_MS = 2500;
-const LOGO_BUCKET = "quotes";
 const DEFAULT_LOGO_SLOT_MASTER = {
   x: 848,
   y: 848,
@@ -410,26 +410,10 @@ type ThemeRow = {
   nome?: string | null;
   asset_url?: string | null;
   storage_path?: string | null;
-  logo_url?: string | null;
-  logo_path?: string | null;
   width_px?: number | null;
   height_px?: number | null;
   signature_style?: unknown;
 };
-
-function isThemeLogoColumnMissingError(error: unknown) {
-  const message = String(
-    (error && typeof error === "object" && "message" in error
-      ? (error as { message?: unknown }).message
-      : error) || "",
-  ).toLowerCase();
-  return (
-    (message.includes("column") && message.includes("logo_url")) ||
-    (message.includes("column") && message.includes("logo_path")) ||
-    message.includes("logo_url does not exist") ||
-    message.includes("logo_path does not exist")
-  );
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value);
@@ -496,38 +480,6 @@ function absoluteAssetUrl(origin: string, assetUrl: string) {
   if (!raw) return "";
   if (/^(https?:|data:)/i.test(raw) || raw.startsWith("/")) return sanitizeImageUrl(raw, origin);
   return sanitizeImageUrl(`/${raw.replace(/^\.?\//, "")}`, origin);
-}
-
-function sanitizeStoragePath(value?: string | null) {
-  const raw = limitText(value, 512)
-    .split("#")[0]
-    .split("?")[0]
-    .replace(/\\/g, "/")
-    .replace(/^\/+/, "")
-    .replace(/^storage\/v1\/object\/public\/quotes\//, "")
-    .replace(/^storage\/v1\/object\/sign\/quotes\//, "")
-    .replace(/^quotes\//, "");
-  if (!raw || raw.includes("..") || /^[a-z][a-z0-9+.-]*:/i.test(raw)) return "";
-  return raw;
-}
-
-function extractQuoteStoragePath(value?: string | null) {
-  const raw = limitText(value, MAX_URL_PARAM_LENGTH);
-  if (!raw) return "";
-  const withoutQuery = raw.split("#")[0].split("?")[0];
-  const markers = [
-    "/storage/v1/object/public/quotes/",
-    "/storage/v1/object/sign/quotes/",
-    "/quotes/",
-  ];
-
-  for (const marker of markers) {
-    const index = withoutQuery.indexOf(marker);
-    if (index === -1) continue;
-    return sanitizeStoragePath(withoutQuery.slice(index + marker.length));
-  }
-
-  return sanitizeStoragePath(withoutQuery);
 }
 
 function guessImageMimeFromPath(path?: string | null) {
@@ -598,44 +550,6 @@ async function resolveInlineImageHref(sourceUrl: string, appOrigin: string) {
   }
 }
 
-async function resolveStorageImageHref(params: {
-  client: RequestEvent["locals"]["supabase"];
-  storagePath?: string | null;
-  fallbackUrl?: string | null;
-  appOrigin: string;
-}) {
-  const fallbackUrl = params.fallbackUrl || "";
-  const storagePath =
-    sanitizeStoragePath(params.storagePath) ||
-    extractQuoteStoragePath(fallbackUrl);
-  if (storagePath) {
-    try {
-      const { data, error } = await getAdminClient().storage
-        .from(LOGO_BUCKET)
-        .download(storagePath);
-      if (!error && data) {
-        const dataUrl = await blobToImageDataUrl(
-          data as Blob,
-          guessImageMimeFromPath(storagePath),
-        );
-        if (dataUrl) return dataUrl;
-      }
-    } catch {
-      // Fallback para URL assinada/publica quando o download via storage nao estiver disponivel.
-    }
-  }
-
-  const fallbackHref = await resolveInlineImageHref(fallbackUrl, params.appOrigin);
-  if (!fallbackHref) return "";
-  if (fallbackHref.startsWith("data:")) return fallbackHref;
-  try {
-    const parsed = new URL(fallbackHref);
-    return parsed.origin === params.appOrigin ? fallbackHref : "";
-  } catch {
-    return fallbackHref.startsWith("/") ? fallbackHref : "";
-  }
-}
-
 export async function renderCardSvg(event: RequestEvent): Promise<CardRenderResult> {
   const url = new URL(event.request.url);
   const client = event.locals.supabase;
@@ -678,8 +592,6 @@ export async function renderCardSvg(event: RequestEvent): Promise<CardRenderResu
   const ctaRaw = limitText(url.searchParams.get("cta"), MAX_SHORT_TEXT_PARAM_LENGTH);
   const mensagemRaw = limitText(url.searchParams.get("mensagem"), MAX_TEXT_PARAM_LENGTH);
   const photoUrlRaw = sanitizeImageUrl(String(url.searchParams.get("photo_url") || url.searchParams.get("photo") || ""), url.origin);
-  const logoUrlRaw = sanitizeImageUrl(String(url.searchParams.get("logo_url") || url.searchParams.get("logo") || ""), url.origin);
-  const logoPathRaw = sanitizeStoragePath(url.searchParams.get("logo_path"));
   const templateIdRaw = limitText(url.searchParams.get("template_id"), 80);
   const templateId = isUuid(templateIdRaw) ? templateIdRaw : "";
   const themeIdRaw = limitText(url.searchParams.get("theme_id"), 80);
@@ -702,33 +614,19 @@ export async function renderCardSvg(event: RequestEvent): Promise<CardRenderResu
 
   let themeRow: ThemeRow | null = null;
   if (canReadStoredRows && (themeId || themeName)) {
-    const themeSelectWithLogo = "id, nome, asset_url, storage_path, logo_url, logo_path, width_px, height_px, title_style, body_style, signature_style";
     const themeSelectLegacy = "id, nome, asset_url, storage_path, width_px, height_px, title_style, body_style, signature_style";
     let themeResp = themeId
       ? await client
           .from("user_message_template_themes")
-          .select(themeSelectWithLogo)
+          .select(themeSelectLegacy)
           .eq("id", themeId)
           .maybeSingle()
       : await client
           .from("user_message_template_themes")
-          .select(themeSelectWithLogo)
+          .select(themeSelectLegacy)
           .eq("nome", themeName)
           .maybeSingle();
 
-    if (themeResp.error && isThemeLogoColumnMissingError(themeResp.error)) {
-      themeResp = themeId
-        ? await client
-            .from("user_message_template_themes")
-            .select(themeSelectLegacy)
-            .eq("id", themeId)
-            .maybeSingle()
-        : await client
-            .from("user_message_template_themes")
-            .select(themeSelectLegacy)
-            .eq("nome", themeName)
-            .maybeSingle();
-    }
 
     if (!themeResp.error && themeResp.data) themeRow = themeResp.data as ThemeRow;
     if (!themeId && themeRow?.id) themeId = String(themeRow.id);
@@ -880,13 +778,7 @@ export async function renderCardSvg(event: RequestEvent): Promise<CardRenderResu
   const hideClientName = Boolean(showPhoto && themeLayout?.photo?.hideClientNameWhenPhoto);
   const hideBody = Boolean(showPhoto && themeLayout?.photo?.hideBodyWhenPhoto);
   const visibility = themeLayout?.visibility;
-  const themeLogoUrlRaw = sanitizeImageUrl(String(themeRow?.logo_url || ""), url.origin);
-  const logoUrl = await resolveStorageImageHref({
-    client,
-    storagePath: logoPathRaw || themeRow?.logo_path || "",
-    fallbackUrl: absoluteAssetUrl(url.origin, logoUrlRaw || themeLogoUrlRaw),
-    appOrigin: url.origin,
-  });
+  const logoUrl = VTUR_LOGO_URL;
   const backgroundUrl = await resolveInlineImageHref(
     absoluteAssetUrl(
       url.origin,

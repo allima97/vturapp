@@ -91,7 +91,6 @@ export const MAPA_MODULOS: Record<string, string> = {
   Comissionamento: 'comissionamento',
 
   'Ranking de vendas': 'relatorios_ranking_vendas',
-  'Importar Contratos': 'vendas_importar',
   Perfil: 'perfil',
 };
 
@@ -147,8 +146,6 @@ export const ROTAS_MODULOS: Record<string, string> = {
   // Vendas
   '/vendas': 'Vendas',
   '/vendas/nova': 'Vendas',
-  '/vendas/importar': 'Importar Contratos',
-  '/gestor/importar-vendas': 'Importar Contratos',
 
   // Orçamentos / Clientes
   '/orcamentos': 'Orcamentos',
@@ -252,7 +249,6 @@ export const MODULO_HERANCA: Record<string, string[]> = {
   CRM: ['Parametros'],
   ParametrosAvisos: ['Parametros'],
   Avisos: ['Parametros'],
-  'Importar Contratos': ['Vendas'],
   'Formas de Pagamento': ['Financeiro'],
 };
 
@@ -345,7 +341,6 @@ export const SECOES_PERMISSOES: ModuloSecaoPermissoes[] = [
       'Clientes',
       'Circuitos',
       'Comissionamento',
-      'Importar Contratos',
       'Operacao',
     ],
   },

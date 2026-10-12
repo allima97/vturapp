@@ -4,7 +4,7 @@
   import DataTable from '$lib/components/ui/DataTable.svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Button from '$lib/components/ui/Button.svelte';
-  import { Plus, FileText, Send, ShoppingCart, AlertCircle, FileSpreadsheet } from '$lib/icons';
+  import { Plus, FileText, Send, ShoppingCart, AlertCircle } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { diffDaysISODate, todayISODateLocal } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
@@ -358,12 +358,6 @@
   color="orcamentos"
   breadcrumbs={[{ label: 'Orçamentos' }]}
   actions={[
-    {
-      label: 'Importar',
-      href: '/orcamentos/importar',
-      variant: 'secondary',
-      icon: FileSpreadsheet
-    },
     {
       label: 'Novo Orçamento',
       href: '/orcamentos/novo',

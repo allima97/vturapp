@@ -8,7 +8,6 @@ import { handleOrcamentosClienteCreatePost } from './cliente-create';
 import { handleOrcamentosClientesGet } from './clientes';
 import { handleOrcamentosCreatePost } from './create';
 import { handleOrcamentosDeletePost } from './delete';
-import { handleOrcamentosImportarPost } from './importar';
 import { handleOrcamentosInteracaoPost, handleOrcamentosInteracaoGet } from './interacao';
 import { handleOrcamentosListGet } from './list';
 import { handleOrcamentosProdutosGet } from './produtos';
@@ -23,7 +22,6 @@ export const orcamentosRoutes = new Hono<ApiEnv>()
   .get('/clientes', (c) => handleOrcamentosClientesGet(c.env.event))
   .post('/create', (c) => handleOrcamentosCreatePost(c.env.event))
   .post('/delete', (c) => handleOrcamentosDeletePost(c.env.event))
-  .post('/importar', (c) => handleOrcamentosImportarPost(c.env.event))
   .post('/interacao', (c) => handleOrcamentosInteracaoPost(c.env.event))
   .get('/interacao', (c) => handleOrcamentosInteracaoGet(c.env.event))
   // apelido: orcamentos/interaction/+server.ts reexportava GET e POST de ../interacao

@@ -620,7 +620,7 @@
 
               <FieldInput
                 id="voucher-codigo-systur"
-                label="Código SYSTUR"
+                label="Código interno"
                 bind:value={form.codigo_systur}
                 placeholder="Código interno"
               />

@@ -24,7 +24,6 @@ vi.mock('./cidades-busca', () => ({ handleVendasCidadesBuscaGet: spy("handleVend
 vi.mock('./complementares', () => ({ handleVendasComplementaresGet: spy("handleVendasComplementaresGet") }));
 vi.mock('./create', () => ({ handleVendasCreatePost: spy("handleVendasCreatePost") }));
 vi.mock('./gestor-equipe', () => ({ handleVendasGestorEquipeGet: spy("handleVendasGestorEquipeGet") }));
-vi.mock('./importar-contrato', () => ({ handleVendasImportarContratoPost: spy("handleVendasImportarContratoPost") }));
 vi.mock('./list', () => ({ handleVendasListGet: spy("handleVendasListGet") }));
 vi.mock('./merge', () => ({ handleVendasMergePost: spy("handleVendasMergePost") }));
 vi.mock('./merge-candidates', () => ({ handleVendasMergeCandidatesGet: spy("handleVendasMergeCandidatesGet") }));
@@ -55,6 +54,13 @@ beforeEach(() => {
 });
 
 describe('rotas /api/v1/vendas no Hono', () => {
+  it.each(['/api/v1/vendas/importar-contrato', '/api/v1/importar-vendas', '/api/v1/orcamentos/importar'])(
+    'recusa POST no endpoint removido %s', async (path) => {
+      const res = await call('POST', path);
+      expect(res.status).toBe(404);
+      expect(calls).toHaveLength(0);
+    }
+  );
   it.each([
   ["GET", "/api/v1/vendas", "handleVendasGet"],
   ["GET", "/api/v1/vendas/cadastro-base", "handleVendasCadastroBaseGet"],
@@ -64,7 +70,6 @@ describe('rotas /api/v1/vendas no Hono', () => {
   ["GET", "/api/v1/vendas/complementares", "handleVendasComplementaresGet"],
   ["POST", "/api/v1/vendas/create", "handleVendasCreatePost"],
   ["GET", "/api/v1/vendas/gestor-equipe", "handleVendasGestorEquipeGet"],
-  ["POST", "/api/v1/vendas/importar-contrato", "handleVendasImportarContratoPost"],
   ["GET", "/api/v1/vendas/list", "handleVendasListGet"],
   ["POST", "/api/v1/vendas/merge", "handleVendasMergePost"],
   ["GET", "/api/v1/vendas/merge-candidates", "handleVendasMergeCandidatesGet"],

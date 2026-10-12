@@ -1,3 +1,4 @@
+import { VTUR_LOGO_PATH } from "$lib/brand";
 // Migrado para Hono de src/routes/api/v1/parametros/empresa/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
@@ -19,19 +20,6 @@ type EmpresaUpdateField = (typeof EMPRESA_ALLOWED_UPDATE_FIELDS)[number];
 type EmpresaRequestBody = Partial<Record<EmpresaUpdateField, unknown>>;
 type EmpresaUpdatePayload = Partial<Record<EmpresaUpdateField, unknown | null>>;
 
-function isColumnMissingError(error: unknown, column: string) {
-  const message = String(
-    error && typeof error === 'object' && 'message' in error
-      ? (error as { message?: unknown }).message || ''
-      : error || ''
-  ).toLowerCase();
-  const needle = column.toLowerCase();
-  return (
-    (message.includes('column') && message.includes(needle)) ||
-    message.includes(`${needle} does not exist`)
-  );
-}
-
 export async function handleParametrosEmpresaGet(event: RequestEvent) {
   try {
     const client = getAdminClient();
@@ -45,27 +33,18 @@ export async function handleParametrosEmpresaGet(event: RequestEvent) {
     const companyId = scope.companyId;
     if (!companyId) return json({ error: 'Usuário não vinculado a uma empresa.' }, { status: 400, headers: NO_STORE_HEADERS });
 
-    // Tenta incluir logo_url quando a base tiver a coluna, sem quebrar bases legadas.
-    let { data, error: queryError } = await client
+    // Identidade visual padronizada independentemente das configurações antigas.
+    const { data, error: queryError } = await client
       .from('companies')
-      .select('id, nome_empresa, nome_fantasia, cnpj, telefone, endereco, cidade, estado, active, logo_url')
+      .select('id, nome_empresa, nome_fantasia, cnpj, telefone, endereco, cidade, estado, active')
       .eq('id', companyId)
       .maybeSingle();
 
-    if (queryError && isColumnMissingError(queryError, 'logo_url')) {
-      const fallbackResp = await client
-        .from('companies')
-        .select('id, nome_empresa, nome_fantasia, cnpj, telefone, endereco, cidade, estado, active')
-        .eq('id', companyId)
-        .maybeSingle();
-      data = fallbackResp.data ? { ...fallbackResp.data, logo_url: null } : fallbackResp.data;
-      queryError = fallbackResp.error;
-    }
 
     if (queryError) throw queryError;
     if (!data) return json({ error: 'Empresa não encontrada.' }, { status: 404, headers: NO_STORE_HEADERS });
 
-    return json(data, { headers: DYNAMIC_READ_HEADERS });
+    return json({ ...data, logo_url: VTUR_LOGO_PATH }, { headers: DYNAMIC_READ_HEADERS });
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar dados da empresa.');
   }

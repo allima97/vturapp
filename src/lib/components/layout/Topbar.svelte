@@ -96,7 +96,7 @@
         {#if !$isMobile}
           <div class="vtur-topbar__brand-copy">
             <span class="vtur-topbar__brand-wordmark">VTUR</span>
-            <span class="vtur-topbar__brand-tagline">CRM para Franquias CVC</span>
+            <span class="vtur-topbar__brand-tagline">CRM para agências de viagens</span>
           </div>
         {/if}
       </a>

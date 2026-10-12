@@ -166,7 +166,7 @@ describe('auditoria (formato do histórico da tabela logs)', () => {
     expect(log.acao).toBe('quote_print_settings_salvos');
     expect(log.detalhes).not.toHaveProperty('owner_user_id');
     expect(log.detalhes).not.toHaveProperty('company_id');
-    expect(log.detalhes).toMatchObject({ consultor_nome: 'Ana', logo_url: 'https://x/logo.png' });
+    expect(log.detalhes).toMatchObject({ consultor_nome: 'Ana', logo_url: '/brand/vtur-symbol.png', logo_path: null });
   });
 
   it('escala_dia_salva: operação insert com empresa e gestor do mês', async () => {

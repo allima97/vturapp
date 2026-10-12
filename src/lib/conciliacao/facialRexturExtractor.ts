@@ -12,10 +12,10 @@
  *  - Reserva          = LOC
  *  - Forma pagamento  = "CARTÃO DE CRÉDITO 1X"
  *  - valor_total      = total das tarifas
- *  - Sem CPF — a importação de vendas coleta CPF em etapa própria
+ *  - Sem CPF — a conciliação utiliza o localizador da reserva
  */
 
-import type { ContratoDraft, PassageiroDraft, PagamentoDraft } from './contratoCvcExtractor';
+import type { ContratoDraft, PassageiroDraft, PagamentoDraft } from './reservaTypes';
 
 const SSR_MONTH_MAP: Record<string, string> = {
   JAN: '01',
@@ -255,7 +255,7 @@ export function extractRexturFromText(text: string): { contratos: ContratoDraft[
     produto_tipo: 'Aéreo',
     contratante: {
       nome: passageiros[0]?.nome || '',
-      cpf: '',  // ausente — modal solicitará
+      cpf: '',  // ausente no documento
     },
     passageiros,
     pagamentos: [pagamento],

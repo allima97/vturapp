@@ -1,6 +1,10 @@
 # VTUR Svelte
 
-Nova versão do sistema VTUR migrada para SvelteKit + Flowbite-Svelte.
+CRM de vendas para agências de viagens, com identidade VTur, desenvolvido em SvelteKit + Flowbite-Svelte.
+
+Vendas e orçamentos são cadastrados manualmente. Esta versão não oferece importação de contratos, reservas ou orçamentos para criar vendas. A conciliação financeira de extratos permanece separada do cadastro de vendas.
+
+A identidade visual dos documentos é fixa: orçamentos, roteiros, circuitos, vouchers e cartões usam o logo VTur incorporado. Logos antigos de empresas, fornecedores e modelos não são utilizados nas novas emissões.
 
 ## Stack Tecnológica
 

@@ -11,7 +11,6 @@ import { handleVendasCidadesBuscaGet } from './cidades-busca';
 import { handleVendasComplementaresGet } from './complementares';
 import { handleVendasCreatePost } from './create';
 import { handleVendasGestorEquipeGet } from './gestor-equipe';
-import { handleVendasImportarContratoPost } from './importar-contrato';
 import { handleVendasListGet } from './list';
 import { handleVendasMergePost } from './merge';
 import { handleVendasMergeCandidatesGet } from './merge-candidates';
@@ -37,7 +36,6 @@ export const vendasRoutes = new Hono<ApiEnv>()
   .get('/complementares', (c) => handleVendasComplementaresGet(c.env.event))
   .post('/create', (c) => handleVendasCreatePost(c.env.event))
   .get('/gestor-equipe', (c) => handleVendasGestorEquipeGet(c.env.event))
-  .post('/importar-contrato', (c) => handleVendasImportarContratoPost(c.env.event))
   .get('/list', (c) => handleVendasListGet(c.env.event))
   .post('/merge', (c) => handleVendasMergePost(c.env.event))
   .get('/merge-candidates', (c) => handleVendasMergeCandidatesGet(c.env.event))

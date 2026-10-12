@@ -100,7 +100,7 @@ export async function handleVendasCidadesBuscaGet(event: RequestEvent) {
     if (!scope.isAdmin && !scope.isMaster) {
       ensureModuloAccess(
         scope,
-        ['vendas_consulta', 'vendas', 'vendas_cadastro', 'vendas_importar'],
+        ['vendas_consulta', 'vendas', 'vendas_cadastro'],
         1,
         'Sem acesso a Vendas.'
       );

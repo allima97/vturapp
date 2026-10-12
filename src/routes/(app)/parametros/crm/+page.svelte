@@ -43,8 +43,6 @@
     categoria: string | null;
     categoria_id: string | null;
     asset_url: string;
-    logo_url?: string | null;
-    logo_path?: string | null;
     greeting_text: string | null;
     mensagem_max_linhas: number | null;
     mensagem_max_palavras: number | null;
@@ -96,7 +94,7 @@
     themes: Theme[];
     messages: MessageTemplate[];
     signature: AssinaturaForm | null;
-    settings: { logo_url?: string | null; logo_path?: string | null; consultor_nome?: string | null } | null;
+    settings: { consultor_nome?: string | null } | null;
     themeLogoColumnsAvailable: boolean;
   };
 
@@ -190,8 +188,6 @@
     nomeCompleto: string;
     mensagem: string;
     assinatura: AssinaturaForm;
-    logoUrl: string | null;
-    logoPath?: string | null;
     textColor?: string;
   }): string {
     const q = new URLSearchParams();
@@ -213,8 +209,6 @@
     q.set('consultant_italic', params.assinatura.linha2_italic ? '1' : '0');
     q.set('consultant_role_italic', params.assinatura.linha3_italic ? '1' : '0');
     q.set('signature_font_size', String(params.assinatura.linha2_font_size || 40));
-    if (params.logoPath) q.set('logo_path', params.logoPath);
-    if (params.logoUrl) q.set('logo_url', params.logoUrl);
     if (params.textColor) q.set('text_color', params.textColor);
     return `/api/v1/cards/render.svg?${q.toString()}`;
   }
@@ -237,8 +231,6 @@
   let categories: Category[] = [];
   let themes: Theme[] = [];
   let messages: MessageTemplate[] = [];
-  let companyLogoUrl: string | null = null;
-  let companyLogoPath: string | null = null;
   let savedSignature: AssinaturaForm | null = null;
   let userRole = '';
   let isAdmin = false;
@@ -461,8 +453,6 @@
       messages = data.messages || [];
       userRole = data.userRole || '';
       isAdmin = Boolean(data.isAdmin);
-      companyLogoUrl = data.settings?.logo_url || null;
-      companyLogoPath = data.settings?.logo_path || null;
       savedSignature = data.signature;
 
       // Pré-preenche assinatura com dados salvos
@@ -598,8 +588,6 @@
         nomeCompleto: clienteNome || primeiroNome,
         mensagem,
         assinatura,
-        logoUrl: selectedTheme.logo_url || companyLogoUrl,
-        logoPath: selectedTheme.logo_path || companyLogoPath,
         textColor,
       });
     }, 600);

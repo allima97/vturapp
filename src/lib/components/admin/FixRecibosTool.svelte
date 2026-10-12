@@ -331,7 +331,7 @@
         label="Documentos"
         bind:value={docs}
         placeholder="Ex.: 5630-0000084181, 084181 ou 84181"
-        helper="Use recibos completos ou apenas os números. A busca normaliza os formatos CVC."
+        helper="Use recibos completos ou apenas os números. A busca normaliza a formatação dos recibos."
       />
       <Button variant="primary" color="financeiro" loading={loading} on:click={() => fetchDocs()}>
         <Search size={16} class="mr-2" />

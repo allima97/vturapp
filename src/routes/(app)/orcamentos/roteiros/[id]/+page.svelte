@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { VTUR_LOGO_URL } from "$lib/brand";
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { browser } from '$app/environment';
@@ -64,14 +65,11 @@
     whatsapp_codigo_pais?: string;
     email?: string;
     rodape_texto?: string;
-    logo_url?: string;
-    logo_path?: string;
     imagem_complementar_url?: string;
     imagem_complementar_path?: string;
   };
 
   type PreviewPdfAssets = {
-    logoUrl: string | null;
     qrUrl: string | null;
     complementUrl: string | null;
   };
@@ -911,16 +909,15 @@
       ? `/api/v1/qr?size=200&margin=1&text=${encodeURIComponent(whatsappLink)}`
       : null;
 
-    const [logoUrl, complementUrl, qrUrl] = await Promise.all([
-      storageImageToDataUrl(pdfSettings.logo_path, pdfSettings.logo_url),
+    const [complementUrl, qrUrl] = await Promise.all([
       storageImageToDataUrl(pdfSettings.imagem_complementar_path, pdfSettings.imagem_complementar_url),
       qrSource ? fetchImageAsDataUrl(qrSource) : Promise.resolve(null),
     ]);
 
-    return { logoUrl, complementUrl, qrUrl };
+    return { complementUrl, qrUrl };
   }
 
-  function buildRoteiroPreviewHtml(assets: PreviewPdfAssets = { logoUrl: null, qrUrl: null, complementUrl: null }) {
+  function buildRoteiroPreviewHtml(assets: PreviewPdfAssets = { qrUrl: null, complementUrl: null }) {
     const diasItems = dias.filter((dia) => dia.cidade || dia.percurso || dia.data || dia.descricao);
     const diasHtml = diasItems.length > 0
       ? buildPreviewCards(
@@ -1038,7 +1035,7 @@
           <tbody>
             <tr>
               <td class="preview-header-left">
-                ${assets.logoUrl ? `<img src="${escapePreviewHtml(assets.logoUrl)}" class="preview-logo" alt="Logo" />` : ''}
+                <img src="${VTUR_LOGO_URL}" class="preview-logo" alt="VTur" />
                 <div class="preview-header-copy">
                   ${pdfSettings.filial_nome ? `<div>${escapePreviewHtml(`Filial: ${pdfSettings.filial_nome}`)}</div>` : ''}
                   ${pdfSettings.endereco_linha1 ? `<div>${escapePreviewHtml(pdfSettings.endereco_linha1)}</div>` : ''}

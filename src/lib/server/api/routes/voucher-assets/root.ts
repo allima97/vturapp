@@ -21,8 +21,8 @@ import { cleanStringSet, chunkArray, dedupeById, SUPABASE_IN_BATCH_SIZE } from '
 const VOUCHER_ASSET_BUCKET = 'voucher-assets';
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const BOOLEAN_TRUE_VALUES = new Set(['1', 'true', 'on', 'yes', 'sim']);
-const VALID_PROVIDERS = new Set(['cvc', 'special_tours', 'europamundo', 'sato_tours', 'generic']);
-const VALID_ASSET_KINDS = new Set(['logo', 'image', 'app_icon']);
+const VALID_PROVIDERS = new Set(['vtur', 'special_tours', 'europamundo', 'sato_tours', 'generic']);
+const VALID_ASSET_KINDS = new Set(['image', 'app_icon']);
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 const MAX_REQUEST_SIZE_BYTES = MAX_FILE_SIZE_BYTES + 512 * 1024;
 const PT_BR_COLLATOR = new Intl.Collator('pt-BR');
@@ -192,7 +192,9 @@ export async function handleVoucherAssetsGet(event: RequestEvent) {
     if (error) throw error;
 
     // Gera URLs assinadas para preview
-    const assets = (data || []) as unknown as VoucherAssetRow[];
+    const assets = ((data || []) as unknown as VoucherAssetRow[]).filter((asset) =>
+      VALID_PROVIDERS.has(String(asset.provider || "")) && VALID_ASSET_KINDS.has(String(asset.asset_kind || ""))
+    );
     const withUrls = await Promise.all(assets.map((asset) => withPreviewUrl(client, asset)));
 
     return json({ success: true, items: withUrls }, { headers: DYNAMIC_READ_HEADERS });

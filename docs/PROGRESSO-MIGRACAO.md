@@ -47,7 +47,7 @@ _Última atualização: 25/09/2026, 21:00._
 | 4: design system | ✅ commit | Tailwind 4, Flowbite 1.33 (componentes do 0.48 copiados), ícones Flowbite. `!important`: fica como está (ver 4.4). |
 | 5: UX e navegação | ✅ commit | Ctrl+K, acessibilidade, placar, ficha do cliente, revisão do `/negado`. |
 | 6: tempo real | ✅ 6.1 com commit | Recados em tempo real. Próximos: vendas por empresa, placar ao vivo. |
-| Relatório de Performance por franquia | ⏳ implementado, sem commit | Tela `/relatorios/performance` + PDF. Ver a seção abaixo. |
+| Relatório de Performance por agência | ⏳ implementado, sem commit | Tela `/relatorios/performance` + PDF. Ver a seção abaixo. |
 
 ## API no Hono
 Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os routers em `src/lib/server/api/routes/<dominio>/index.ts` e o registro em `src/lib/server/api/app.ts`.
@@ -284,7 +284,6 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
 ## Problemas conhecidos (não corrigidos, fora do escopo atual)
 - Tabela `push_subscriptions` não existe no banco (`push/subscribe` e `push/unsubscribe`).
 - Auditoria em `logs` só cobre Vendas. Faltam login, Clientes, Cadastros, Parâmetros, Escalas, Admin e perfil.
-- `importar-vendas` responde 410 (descontinuado) desde antes da migração.
 
 ### Dashboard lento ao trocar de mês (25/09)
 - Causa: `syncUrl()` do `UnifiedDashboard.svelte` fazia `goto('/dashboard/geral?...')` fixo. Vendedor fica em `/dashboard/vendedor` (ou `/`), então cada troca de mês mudava de rota: o SvelteKit desmontava o dashboard, montava outro e o `onMount` refazia tudo (loadBase + summary + operacional + assinatura), além do `atualizar()` já disparado. Resultado: requisições em dobro, tela "piscando" e título trocando para "Dashboard geral".
@@ -568,9 +567,8 @@ Plano (da revisão estrutural): Ctrl+K, dashboards por perfil, placar, cards no 
 ### Verificação 5.5 e 6.1
 - 722 testes, `svelte-check` 0/0, build OK.
 
-## Relatório de Performance por franquia (pedido em 25/09). Gravado no Mac, falta o commit
-- **Modelo:** PDF "5630 - LOJA SHOPPING CENTER NORTE" (Relatório de Performance da CVC, por filial).
-- **Onde:** `/relatorios/performance` (cartão "Performance da franquia" em Relatórios). Botão **Baixar PDF**: abre a impressão do navegador já montada em 1 folha A4 (Salvar como PDF).
+## Relatório de Performance por agência (pedido em 25/09). Gravado no Mac, falta o commit
+- **Onde:** `/relatorios/performance` (cartão "Performance da agência" em Relatórios). Botão **Baixar PDF**: abre a impressão do navegador já montada em 1 folha A4 (Salvar como PDF).
 - **Quem vê:** admin do sistema e master escolhem a empresa (só as do seu escopo); gestor vê a própria. Vendedor não vê (a API responde 403 e a tela nem chama).
 - **API:** `GET /api/v1/relatorios/performance?company_id=&mes=AAAA-MM`. Agregação em `src/lib/server/performance/performance.ts` (testada); busca em `src/lib/server/api/routes/relatorios/performance.ts` (teste de contrato com banco falso).
 - **Definições (confirmadas pelo usuário em 25/09):**
@@ -582,7 +580,5 @@ Plano (da revisão estrutural): Ctrl+K, dashboards por perfil, placar, cards no 
   - Passageiros = os passageiros da venda (vêm na importação), sem repetir a mesma pessoa na mesma venda. Faixa etária pela data de nascimento no dia do corte.
   - Formas de pagamento: `vendas_pagamentos` das vendas do mês (Top 5 por valor).
   - Antecipação: % da venda por mês de embarque (ano atual / próximo ano).
-  - **Orçamentos:** os importados no VTUR pelo PDF de orçamento da CVC (Orçamentos › Importar; exemplo "Impressão de Orçamento"). Empresa = do usuário que importou. Produto = tipo dos itens do orçamento. Conversão = aprovados + fechados ÷ total (a mesma da tela de Orçamentos, `deriveStatus` agora exportado de `orcamentos/list.ts`). "% Mês anterior" compara com o mês anterior inteiro.
 - **Hoje no banco:** só 6 orçamentos importados. A parte de Orçamentos vai ganhar volume conforme os PDFs forem importados.
 - **Verificação:** 734 testes (12 novos: regras, contrato da API, tela), `svelte-check` 0/0, build OK. Layout conferido em 1440 px, celular (390 px, sem rolagem lateral) e no PDF (1 folha A4).
-- **Conferir em produção:** abrir o relatório de uma loja num mês fechado e comparar com o PDF da CVC do mesmo mês. Diferenças esperadas vêm de vendas não lançadas no VTUR.

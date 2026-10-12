@@ -1,7 +1,7 @@
 /**
  * GET /api/v1/relatorios/performance?company_id=&mes=AAAA-MM
  *
- * Relatório de Performance por franquia (modelo: PDF da CVC por filial). Pedido do usuário em 25/09/2026.
+ * Relatório de performance da agência. Pedido do usuário em 25/09/2026.
  * Quem vê: admin do sistema e master (empresas do seu escopo) e gestor (a própria empresa).
  * As vendas vêm das mesmas contribuições por recibo do Ranking/Dashboard; as regras de agregação
  * estão em `$lib/server/performance/performance.ts` (com testes).
@@ -286,7 +286,7 @@ export async function handleRelatoriosPerformanceGet(event: RequestEvent) {
         empresa: {
           id: companyId,
           nome: str(company.nome_fantasia) || str(company.nome_empresa) || 'Empresa',
-          franqueado: str(owner[0]?.nome_completo) || str(owner[0]?.email) || null,
+          responsavel: str(owner[0]?.nome_completo) || str(owner[0]?.email) || null,
         },
         mes,
         dadosAte: diasAteCorte > 0 ? corte : null,

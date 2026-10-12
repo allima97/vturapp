@@ -1,3 +1,4 @@
+import { VTUR_LOGO_URL } from "$lib/brand";
 /**
  * exportQuotePdfClient.ts — vtur-svelte
  *
@@ -18,8 +19,6 @@ import type { User } from '@supabase/supabase-js';
 // ---------------------------------------------------------------------------
 
 export type QuotePdfSettings = {
-  logo_url?: string | null;
-  logo_path?: string | null;
   imagem_complementar_url?: string | null;
   imagem_complementar_path?: string | null;
   consultor_nome?: string | null;
@@ -543,11 +542,10 @@ function renderAllItemsTableHtml(items: QuoteItemForPdf[], showItemValues: boole
 // BUILDER DO HTML
 // ---------------------------------------------------------------------------
 
-function buildQuotePreviewHtmlSync(params: {
+export function buildQuotePreviewHtmlSync(params: {
   quote: QuoteForPdf;
   items: QuoteItemForPdf[];
   settings: QuotePdfSettings;
-  logoUrl: string | null;
   qrUrl: string | null;
   complementUrl: string | null;
   showBudgetItems: boolean;
@@ -559,7 +557,6 @@ function buildQuotePreviewHtmlSync(params: {
     quote,
     items,
     settings,
-    logoUrl,
     qrUrl,
     complementUrl,
     showBudgetItems,
@@ -615,7 +612,7 @@ function buildQuotePreviewHtmlSync(params: {
         <tbody>
           <tr>
             <td class="orc-header-left">
-              ${logoUrl ? `<img src="${escHtml(logoUrl)}" class="orc-logo" alt="Logo" />` : ''}
+              <img src="${VTUR_LOGO_URL}" class="orc-logo" alt="VTur" />
               <div class="orc-header-copy">
                 ${settings.filial_nome ? `<div>${escHtml('Filial: ' + settings.filial_nome)}</div>` : ''}
                 ${settings.endereco_linha1 ? `<div>${escHtml(settings.endereco_linha1)}</div>` : ''}
@@ -885,14 +882,13 @@ export async function openQuotePreview(params: {
   // 4. Parâmetros PDF
   const { data: settings } = await supabase
     .from('quote_print_settings')
-    .select('logo_url, logo_path, imagem_complementar_url, imagem_complementar_path, consultor_nome, filial_nome, endereco_linha1, endereco_linha2, endereco_linha3, telefone, whatsapp, whatsapp_codigo_pais, email, rodape_texto')
+    .select('imagem_complementar_url, imagem_complementar_path, consultor_nome, filial_nome, endereco_linha1, endereco_linha2, endereco_linha3, telefone, whatsapp, whatsapp_codigo_pais, email, rodape_texto')
     .eq('owner_user_id', userId)
     .maybeSingle();
 
   const pdfSettings: QuotePdfSettings = settings ?? {};
 
   // 5. Resolve URLs assinadas (token na query string — funciona sem cookie)
-  const logoSignedUrl = await resolveStorageUrl(supabase, pdfSettings.logo_url, pdfSettings.logo_path);
   const complementSignedUrl = await resolveStorageUrl(supabase, pdfSettings.imagem_complementar_url, pdfSettings.imagem_complementar_path);
 
   // 6. QR Code
@@ -904,8 +900,7 @@ export async function openQuotePreview(params: {
   // 7. Converte todas as imagens para data URL antes de montar o HTML
   // Necessário porque o blob: HTML abre em origem isolada (null) e imagens
   // externas com token na URL seriam bloqueadas pelo browser
-  const [logoUrl, complementUrl, qrUrl] = await Promise.all([
-    storageImageToDataUrl(supabase, pdfSettings.logo_path || extractStoragePath(pdfSettings.logo_url), logoSignedUrl),
+  const [complementUrl, qrUrl] = await Promise.all([
     storageImageToDataUrl(supabase, pdfSettings.imagem_complementar_path || extractStoragePath(pdfSettings.imagem_complementar_url), complementSignedUrl),
     qrSignedUrl ? externalImageToDataUrl(qrSignedUrl) : Promise.resolve(null),
   ]);
@@ -922,7 +917,6 @@ export async function openQuotePreview(params: {
     },
     items: itemRows,
     settings: pdfSettings,
-    logoUrl,
     qrUrl,
     complementUrl,
     showBudgetItems,

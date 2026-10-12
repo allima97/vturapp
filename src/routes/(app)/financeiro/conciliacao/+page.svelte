@@ -17,7 +17,7 @@
   import { toast } from '$lib/stores/ui';
   import { buildConciliacaoMetrics } from '$lib/conciliacao/business';
   import { parseConciliacaoImportFile, parseConciliacaoImportText } from '$lib/conciliacao/importParser';
-  import { extractRexturFromText } from '$lib/vendas/facialRexturExtractor';
+  import { extractRexturFromText } from '$lib/conciliacao/facialRexturExtractor';
   import { todayISODateLocal } from '$lib/date';
   import {
     auditExpectedActual,

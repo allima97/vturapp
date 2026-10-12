@@ -30,7 +30,6 @@
   };
 
   const providerOptions = [
-    { value: 'cvc', label: 'CVC' },
     { value: 'special_tours', label: 'Special Tours' },
     { value: 'europamundo', label: 'Europamundo' },
     { value: 'sato_tours', label: 'Sato Tours' },
@@ -38,7 +37,6 @@
   ];
 
   const assetKindOptions = [
-    { value: 'logo', label: 'Logo' },
     { value: 'image', label: 'Imagem' },
     { value: 'app_icon', label: 'Ícone de app' }
   ];
@@ -326,7 +324,7 @@
           id="voucher-asset-label"
           label="Descrição"
           value={form.label}
-          placeholder="Ex: Logo horizontal, imagem de capa"
+          placeholder="Ex: Imagem de capa"
           disabled={!canEdit || saving}
           on:input={(event) => (form.label = (event.currentTarget as HTMLInputElement).value)}
         />

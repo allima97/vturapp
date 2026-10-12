@@ -1,6 +1,6 @@
 {
   "generatedBy": "scripts/api-inventory.mjs",
-  "count": 261,
+  "count": 258,
   "endpoints": [
     {
       "route": "/api/auth/convite/activate",
@@ -892,12 +892,13 @@
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/auditLog",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 158
+      "lines": 174
     },
     {
       "route": "/api/v1/admin/permissoes",
@@ -923,6 +924,9 @@
       "tables": {
         "modulo_acesso": [
           "select"
+        ],
+        "system_module_settings": [
+          "select"
         ]
       },
       "rpcs": [],
@@ -933,6 +937,7 @@
         "$lib/admin/modules",
         "$lib/server/admin",
         "$lib/server/api/sveltekit",
+        "$lib/server/auditLog",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
@@ -940,7 +945,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 175
+      "lines": 204
     },
     {
       "route": "/api/v1/admin/permissoes/[id]",
@@ -970,13 +975,14 @@
         "$lib/admin/modules",
         "$lib/server/admin",
         "$lib/server/api/sveltekit",
+        "$lib/server/auditLog",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 134
+      "lines": 149
     },
     {
       "route": "/api/v1/admin/planos",
@@ -1093,12 +1099,13 @@
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/auditLog",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 235
+      "lines": 243
     },
     {
       "route": "/api/v1/admin/tipos-usuario",
@@ -1632,13 +1639,14 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/auditLog",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 197
+      "lines": 201
     },
     {
       "route": "/api/v1/cidades/[id]",
@@ -1675,13 +1683,14 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/auditLog",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 150
+      "lines": 158
     },
     {
       "route": "/api/v1/circuitos",
@@ -1872,6 +1881,7 @@
       "imports": [
         "$lib/features/clientes/form",
         "$lib/server/api/sveltekit",
+        "$lib/server/auditLog",
         "$lib/server/clientes",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
@@ -1880,7 +1890,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 347
+      "lines": 352
     },
     {
       "route": "/api/v1/clientes/[id]/acompanhantes",
@@ -2118,6 +2128,7 @@
       "imports": [
         "$lib/features/clientes/form",
         "$lib/server/api/sveltekit",
+        "$lib/server/auditLog",
         "$lib/server/clientes",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
@@ -2126,7 +2137,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 135
+      "lines": 143
     },
     {
       "route": "/api/v1/clientes/delete",
@@ -2179,13 +2190,16 @@
         "cidades": [
           "select"
         ],
-        "users": [
+        "quote": [
           "select"
         ],
         "vendas": [
           "select"
         ],
         "vendas_recibos": [
+          "select"
+        ],
+        "viagem_passageiros": [
           "select"
         ],
         "viagens": [
@@ -2203,7 +2217,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 384
+      "lines": 411
     },
     {
       "route": "/api/v1/clientes/list",
@@ -5078,35 +5092,6 @@
       "lines": 15
     },
     {
-      "route": "/api/v1/importar-vendas",
-      "file": "src/routes/api/v1/importar-vendas/+server.ts",
-      "hono": "src/lib/server/api/routes/importar-vendas/root.ts",
-      "methods": [
-        "POST"
-      ],
-      "guards": {
-        "requireAuthenticatedUser": false,
-        "resolveUserScope": false,
-        "roles": [],
-        "rejectCrossOrigin": true,
-        "bodyLimit": false,
-        "cronSecret": false,
-        "turnstile": false,
-        "adminClient": false,
-        "debugOnly": false
-      },
-      "tables": {},
-      "rpcs": [],
-      "invalidations": [],
-      "imports": [
-        "$lib/server/api/sveltekit",
-        "$lib/server/httpCache",
-        "$lib/server/requestGuards"
-      ],
-      "mutates": false,
-      "lines": 25
-    },
-    {
       "route": "/api/v1/menu/prefs",
       "file": "src/routes/api/v1/menu/prefs/+server.ts",
       "hono": "src/lib/server/api/routes/menu/prefs.ts",
@@ -5810,59 +5795,6 @@
       ],
       "mutates": false,
       "lines": 80
-    },
-    {
-      "route": "/api/v1/orcamentos/importar",
-      "file": "src/routes/api/v1/orcamentos/importar/+server.ts",
-      "hono": "src/lib/server/api/routes/orcamentos/importar.ts",
-      "methods": [
-        "POST"
-      ],
-      "guards": {
-        "requireAuthenticatedUser": true,
-        "resolveUserScope": true,
-        "roles": [
-          "isAdmin"
-        ],
-        "rejectCrossOrigin": true,
-        "bodyLimit": true,
-        "cronSecret": false,
-        "turnstile": false,
-        "adminClient": true,
-        "debugOnly": false
-      },
-      "tables": {
-        "clientes": [
-          "select"
-        ],
-        "produtos": [
-          "select",
-          "update"
-        ],
-        "quote": [
-          "insert",
-          "update"
-        ],
-        "quote_item": [
-          "insert"
-        ],
-        "quote_item_segment": [
-          "insert"
-        ]
-      },
-      "rpcs": [],
-      "invalidations": [
-        "invalidateQuoteReadModels"
-      ],
-      "imports": [
-        "$lib/server/api/sveltekit",
-        "$lib/server/httpCache",
-        "$lib/server/readModelCache",
-        "$lib/server/requestGuards",
-        "$lib/server/v1"
-      ],
-      "mutates": true,
-      "lines": 290
     },
     {
       "route": "/api/v1/orcamentos/interacao",
@@ -6581,8 +6513,8 @@
       "tables": {
         "escala_dia": [
           "delete",
-          "insert",
           "select",
+          "update",
           "upsert"
         ],
         "escala_horario_usuario": [
@@ -6608,6 +6540,7 @@
       "imports": [
         "$lib/date",
         "$lib/server/api/sveltekit",
+        "$lib/server/auditLog",
         "$lib/server/fetchWithTimeout",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
@@ -6616,7 +6549,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 603
+      "lines": 679
     },
     {
       "route": "/api/v1/parametros/metas",
@@ -6752,13 +6685,14 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/auditLog",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 141
+      "lines": 147
     },
     {
       "route": "/api/v1/parametros/regras-produto-pacote",
@@ -6882,6 +6816,7 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/auditLog",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
@@ -6889,7 +6824,7 @@
         "$lib/utils/conciliacao"
       ],
       "mutates": true,
-      "lines": 466
+      "lines": 472
     },
     {
       "route": "/api/v1/parametros/tipo-pacotes",
@@ -7584,7 +7519,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 137
+      "lines": 156
     },
     {
       "route": "/api/v1/relatorios/base",
@@ -8986,12 +8921,13 @@
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/auditLog",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 101
+      "lines": 104
     },
     {
       "route": "/api/v1/users/aniversariantes",
@@ -9416,7 +9352,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 416
+      "lines": 455
     },
     {
       "route": "/api/v1/vendas/create",
@@ -9500,89 +9436,6 @@
       ],
       "mutates": false,
       "lines": 75
-    },
-    {
-      "route": "/api/v1/vendas/importar-contrato",
-      "file": "src/routes/api/v1/vendas/importar-contrato/+server.ts",
-      "hono": "src/lib/server/api/routes/vendas/importar-contrato.ts",
-      "methods": [
-        "POST"
-      ],
-      "guards": {
-        "requireAuthenticatedUser": true,
-        "resolveUserScope": true,
-        "roles": [
-          "isAdmin",
-          "isFinanceiro",
-          "isGestor",
-          "isMaster"
-        ],
-        "rejectCrossOrigin": true,
-        "bodyLimit": true,
-        "cronSecret": false,
-        "turnstile": false,
-        "adminClient": true,
-        "debugOnly": false
-      },
-      "tables": {
-        "cidades": [
-          "select"
-        ],
-        "cliente_acompanhantes": [
-          "select"
-        ],
-        "clientes": [
-          "insert",
-          "select",
-          "update"
-        ],
-        "formas_pagamento": [
-          "select"
-        ],
-        "produtos": [
-          "insert",
-          "select"
-        ],
-        "users": [
-          "select"
-        ],
-        "vendas": [
-          "insert",
-          "update"
-        ],
-        "vendas_pagamentos": [
-          "insert"
-        ],
-        "vendas_recibos": [
-          "insert"
-        ],
-        "viagens": [
-          "insert"
-        ]
-      },
-      "rpcs": [],
-      "invalidations": [
-        "invalidateSalesReadModels",
-        "markRankingReadModelDirty"
-      ],
-      "imports": [
-        "$lib/date",
-        "$lib/features/clientes/form",
-        "$lib/naoComissionavel",
-        "$lib/normalizeText",
-        "$lib/server/api/sveltekit",
-        "$lib/server/httpCache",
-        "$lib/server/naoComissionavelTermos",
-        "$lib/server/readModelCache",
-        "$lib/server/requestGuards",
-        "$lib/server/v1",
-        "$lib/server/vendasSave",
-        "$lib/utils/array",
-        "$lib/utils/errors",
-        "$lib/vendas/contratoCvcExtractor"
-      ],
-      "mutates": true,
-      "lines": 1105
     },
     {
       "route": "/api/v1/vendas/kpis",
@@ -10199,7 +10052,7 @@
         "$lib/viagens/status"
       ],
       "mutates": true,
-      "lines": 608
+      "lines": 616
     },
     {
       "route": "/api/v1/viagens/cidades-busca",
@@ -10574,7 +10427,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 446
+      "lines": 448
     },
     {
       "route": "/api/v1/vouchers",

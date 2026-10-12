@@ -110,7 +110,7 @@ describe('GET /api/v1/relatorios/performance', () => {
       ['2026-09-01', '2026-09-24', [C1]],
       ['2025-09-01', '2025-09-24', [C1]],
     ]);
-    expect(body.empresa).toEqual({ id: C1, nome: 'LOJA SHOPPING CENTER NORTE', franqueado: 'Katia Nishida' });
+    expect(body.empresa).toEqual({ id: C1, nome: 'LOJA SHOPPING CENTER NORTE', responsavel: 'Katia Nishida' });
     expect(body.dadosAte).toBe('2026-09-24');
     expect(body.vendas).toMatchObject({ vendaMes: 10000, metaMes: 30000, metaAteCorte: 24000, passageiros: 3, vendaRA: 4000, variacaoAnoAnterior: 25 });
     expect(body.business.map((b: any) => [b.nome, b.pct])).toEqual([['Nacional', 60], ['Internacional', 0], ['Marítimo', 0], ['Consolidadora', 40]]);

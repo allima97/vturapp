@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { VTUR_LOGO_URL } from "$lib/brand";
   import { onMount } from 'svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
@@ -29,20 +30,15 @@
     whatsapp_codigo_pais: '55',
     email: '',
     rodape_texto: '',
-    logo_url: null as string | null,
-    logo_path: null as string | null,
     imagem_complementar_url: null as string | null,
     imagem_complementar_path: null as string | null
   };
 
   // Arquivos selecionados para upload
-  let logoFile: File | null = null;
   let complementoFile: File | null = null;
-  let logoFiles: FileList | undefined = undefined;
   let complementoFiles: FileList | undefined = undefined;
 
   // URLs de preview (signed URL ou blob URL)
-  let logoPreview: string | null = null;
   let complementoPreview: string | null = null;
 
   function getFileExtension(file: File): string {
@@ -74,20 +70,6 @@
     return value.slice(index + marker.length);
   }
 
-  function onLogoChange(e: Event) {
-    const input = e.target as HTMLInputElement;
-    const file = validateImageFile(input.files?.[0] || null);
-    if (!file) {
-      logoFiles = undefined;
-      input.value = '';
-    }
-    logoFile = file;
-    if (file) {
-      if (logoPreview && logoPreview.startsWith('blob:')) URL.revokeObjectURL(logoPreview);
-      logoPreview = URL.createObjectURL(file);
-    }
-  }
-
   function onComplementoChange(e: Event) {
     const input = e.target as HTMLInputElement;
     const file = validateImageFile(input.files?.[0] || null);
@@ -100,15 +82,6 @@
       if (complementoPreview && complementoPreview.startsWith('blob:')) URL.revokeObjectURL(complementoPreview);
       complementoPreview = URL.createObjectURL(file);
     }
-  }
-
-  function removeLogo() {
-    logoFile = null;
-    if (logoPreview && logoPreview.startsWith('blob:')) URL.revokeObjectURL(logoPreview);
-    logoPreview = null;
-    settings.logo_url = null;
-    settings.logo_path = null;
-    logoFiles = undefined;
   }
 
   function removeComplemento() {
@@ -144,22 +117,12 @@
           whatsapp_codigo_pais: s.whatsapp_codigo_pais || '55',
           email: s.email || '',
           rodape_texto: s.rodape_texto || '',
-          logo_url: s.logo_url || null,
-          logo_path: s.logo_path || null,
           imagem_complementar_url: s.imagem_complementar_url || null,
           imagem_complementar_path: s.imagem_complementar_path || null
         };
 
         // Gera URLs assinadas para preview (imagens privadas no storage)
         const supabase = createSupabaseBrowserClient();
-
-        if (s.logo_path) {
-          const { data } = await supabase.storage.from(LOGO_BUCKET).createSignedUrl(s.logo_path, 3600);
-          if (!loadGuard.isCurrent(request.seq)) return;
-          logoPreview = data?.signedUrl || s.logo_url || null;
-        } else if (s.logo_url) {
-          logoPreview = s.logo_url;
-        }
 
         if (s.imagem_complementar_path) {
           const { data } = await supabase.storage.from(LOGO_BUCKET).createSignedUrl(s.imagem_complementar_path, 3600);
@@ -183,7 +146,7 @@
     file: File | null,
     existingUrl: string | null,
     existingPath: string | null,
-    storageName: 'logo' | 'imagem-complementar'
+    storageName: 'imagem-complementar'
   ): Promise<{ url: string | null; path: string | null }> {
     if (!file) {
       return {
@@ -218,39 +181,28 @@
       if (!userId) throw new Error('Usuário não autenticado.');
 
       // Faz upload das imagens se houver arquivo novo
-      const logoInfo = await uploadImagem(supabase, userId, logoFile, settings.logo_url, settings.logo_path, 'logo');
       const complementoInfo = await uploadImagem(supabase, userId, complementoFile, settings.imagem_complementar_url, settings.imagem_complementar_path, 'imagem-complementar');
 
       await apiPost('/api/v1/parametros/orcamentos-pdf', {
         settings: {
           ...settings,
-          logo_url: logoInfo.url,
-          logo_path: logoInfo.path,
           imagem_complementar_url: complementoInfo.url,
           imagem_complementar_path: complementoInfo.path
         }
       });
 
       // Atualiza preview com URL assinada após salvar
-      if (logoInfo.path) {
-        const { data } = await supabase.storage.from(LOGO_BUCKET).createSignedUrl(logoInfo.path, 3600);
-        logoPreview = data?.signedUrl || logoInfo.url || null;
-      }
       if (complementoInfo.path) {
         const { data } = await supabase.storage.from(LOGO_BUCKET).createSignedUrl(complementoInfo.path, 3600);
         complementoPreview = data?.signedUrl || complementoInfo.url || null;
       }
 
       // Atualiza settings com os paths salvos
-      settings.logo_url = logoInfo.url;
-      settings.logo_path = logoInfo.path;
       settings.imagem_complementar_url = complementoInfo.url;
       settings.imagem_complementar_path = complementoInfo.path;
 
       // Limpa arquivos selecionados
-      logoFile = null;
       complementoFile = null;
-      logoFiles = undefined;
       complementoFiles = undefined;
 
       toast.success('Parâmetros de orçamento salvos.');
@@ -290,50 +242,10 @@
     <Card title="Imagens do PDF" color="financeiro">
       <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
 
-        <!-- Logo -->
         <div class="space-y-3">
-          <div class="flex items-center gap-2">
-            <ImageIcon size={16} class="text-slate-400" />
-            <p class="text-sm font-medium text-slate-700">Logo da Empresa</p>
-          </div>
-          <p class="text-xs text-slate-500">Aparece no cabeçalho do PDF. Formatos aceitos: PNG, JPG, WEBP.</p>
-
-          {#if logoPreview}
-            <div class="relative inline-block">
-              <img
-                src={logoPreview}
-                alt="Logo do orçamento"
-                class="max-h-20 max-w-full rounded-sm border border-slate-200 bg-white object-contain p-1"
-              />
-              <Button
-                type="button"
-                variant="unstyled"
-                on:click={removeLogo}
-                class_name="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 p-0 text-white shadow-sm hover:bg-red-600"
-                title="Remover logo"
-                ariaLabel="Remover logo"
-              >
-                <X size={12} />
-              </Button>
-            </div>
-          {:else}
-            <div class="flex h-20 w-full items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 text-slate-400">
-              <div class="flex flex-col items-center gap-1 text-xs">
-                <ImageIcon size={20} />
-                <span>Nenhum logo definido</span>
-              </div>
-            </div>
-          {/if}
-
-          <FileDropzone
-            id="orcamento-logo-file"
-            title={logoFile ? logoFile.name : 'Escolher imagem'}
-            accept="image/jpeg,image/png,image/webp"
-            icon={Upload}
-            bind:files={logoFiles}
-            class_name="w-fit"
-            on:change={onLogoChange}
-          />
+          <p class="text-sm font-medium text-slate-700">Logo VTur</p>
+          <img src={VTUR_LOGO_URL} alt="VTur" class="h-20 w-20 object-contain" />
+          <p class="text-xs text-slate-500">Identidade padrão dos orçamentos, roteiros, circuitos e vouchers.</p>
         </div>
 
         <!-- Imagem Complementar -->

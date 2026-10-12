@@ -41,7 +41,7 @@
         { de: 11, ate: 12, desconto: 0 },
       ]
     },
-    { id: 'deposito', label: 'Depósito Franqueado', tipo: 'simples', desconto: 3 },
+    { id: 'deposito', label: 'Depósito da agência', tipo: 'simples', desconto: 3 },
     { id: 'boleto', label: 'Boleto à Vista', tipo: 'simples', desconto: 3 },
   ];
 
@@ -58,7 +58,7 @@
         { de: 7, ate: 8, desconto: 0 },
       ]
     },
-    { id: 'deposito', label: 'Depósito Franqueado', tipo: 'simples', desconto: 3 },
+    { id: 'deposito', label: 'Depósito da agência', tipo: 'simples', desconto: 3 },
     { id: 'boleto', label: 'Boleto à Vista', tipo: 'simples', desconto: 3 },
   ];
 
@@ -79,7 +79,7 @@
   let mostrarConfig = false;
 
   let calc = {
-    valorCVC: 0,
+    valorAgencia: 0,
     valorConcorrente: 0,
     descontoAutorizadoPct: 0, // entrada manual do usuário
     tipoPacote: '',
@@ -142,15 +142,15 @@
       ]
     : [{ value: '1', label: 'À vista' }];
 
-  // Diferença CVC vs Concorrente
-  $: diferencaReais = calc.valorCVC - calc.valorConcorrente;
-  $: diferencaPct = calc.valorCVC > 0 ? (diferencaReais / calc.valorCVC) * 100 : 0;
+  // Diferença Agência vs Concorrente
+  $: diferencaReais = calc.valorAgencia - calc.valorConcorrente;
+  $: diferencaPct = calc.valorAgencia > 0 ? (diferencaReais / calc.valorAgencia) * 100 : 0;
 
   // Desconto autorizado — informado manualmente pelo usuário
-  $: descontoAutorizadoReais = calc.valorCVC * (calc.descontoAutorizadoPct / 100);
+  $: descontoAutorizadoReais = calc.valorAgencia * (calc.descontoAutorizadoPct / 100);
 
   // Valor final após concorrência
-  $: valorFinalConcorrencia = calc.valorCVC - descontoAutorizadoReais;
+  $: valorFinalConcorrencia = calc.valorAgencia - descontoAutorizadoReais;
 
   // Desconto da forma de pagamento
   $: descontoFormaPct = (() => {
@@ -193,7 +193,7 @@
   function limpar() {
     tipoPacoteAnterior = '';
     calc = {
-      valorCVC: 0,
+      valorAgencia: 0,
       valorConcorrente: 0,
       descontoAutorizadoPct: 0,
       tipoPacote: '',
@@ -414,13 +414,13 @@
     <!-- ════ Coluna 1 — Entradas ════ -->
     <div class="space-y-4">
 
-      <!-- Valores CVC e Concorrente lado a lado -->
+      <!-- Valores Agência e Concorrente lado a lado -->
       <div class="grid grid-cols-1 gap-3 2xl:grid-cols-2">
         <FieldInput
-          id="conc-valor-cvc"
-          label="Valor CVC (R$)"
+          id="conc-valor-agencia"
+          label="Valor da agência (R$)"
           type="number"
-          bind:value={calc.valorCVC}
+          bind:value={calc.valorAgencia}
           min="0"
           step="0.01"
           placeholder="0,00"
@@ -442,7 +442,7 @@
 
       <FieldInput
         id="conc-desconto-autorizado"
-        label="Desconto Autorizado CVC (%)"
+        label="Desconto autorizado pela agência (%)"
         type="number"
         bind:value={calc.descontoAutorizadoPct}
         min="0"
@@ -555,15 +555,15 @@
         <h5 class="text-xs font-bold text-slate-500 uppercase tracking-wider">Resumo</h5>
 
         <div class="flex justify-between items-center py-2 border-b border-slate-100">
-          <span class="text-base text-slate-600">Valor CVC</span>
-          <span class="text-base font-semibold text-slate-800">{fmt(calc.valorCVC)}</span>
+          <span class="text-base text-slate-600">Valor da agência</span>
+          <span class="text-base font-semibold text-slate-800">{fmt(calc.valorAgencia)}</span>
         </div>
         <div class="flex justify-between items-center py-2 border-b border-slate-100">
           <span class="text-base text-slate-600">Concorrente</span>
           <span class="text-base font-semibold text-slate-800">{fmt(calc.valorConcorrente)}</span>
         </div>
 
-        {#if calc.valorCVC > 0 && calc.valorConcorrente > 0}
+        {#if calc.valorAgencia > 0 && calc.valorConcorrente > 0}
           <div class="flex justify-between items-center py-2 border-b border-slate-100">
             <span class="text-base text-red-600">Diferença ({fmtPct(diferencaPct)})</span>
             <span class="text-base font-semibold text-red-600">{fmt(diferencaReais)}</span>
@@ -579,13 +579,13 @@
         {:else}
           <div class="rounded-lg bg-slate-100 px-3 py-3 flex items-center gap-2 text-slate-400">
             <AlertTriangle size={16} />
-            <span class="text-sm">Informe os valores CVC e Concorrente</span>
+            <span class="text-sm">Informe os valores da agência e do concorrente</span>
           </div>
         {/if}
       </div>
 
       <!-- Total a Pagar -->
-      {#if calc.formaPagamentoId && calc.valorCVC > 0 && calc.valorConcorrente > 0}
+      {#if calc.formaPagamentoId && calc.valorAgencia > 0 && calc.valorConcorrente > 0}
         <div class="space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-5">
           <h5 class="text-xs font-bold text-slate-500 uppercase tracking-wider">
             {formaSelecionada?.label}{ehCredito && calc.parcelas > 1 ? ` · ${calc.parcelas}x` : ''}
@@ -638,13 +638,13 @@
             </div>
           </div>
 
-          {#if calc.valorCVC > totalAPagar}
+          {#if calc.valorAgencia > totalAPagar}
             <div class="flex items-center gap-2 rounded-lg bg-emerald-50 border border-emerald-100 px-3 py-2.5">
               <CheckCircle size={17} class="text-emerald-600 shrink-0" />
               <div>
                 <p class="text-sm font-semibold text-emerald-700">Economia do cliente</p>
-                <p class="text-base font-bold text-emerald-600">{fmt(calc.valorCVC - totalAPagar)}</p>
-                <p class="text-xs text-emerald-500">{fmtPct((calc.valorCVC - totalAPagar) / calc.valorCVC * 100)} sobre o preço CVC</p>
+                <p class="text-base font-bold text-emerald-600">{fmt(calc.valorAgencia - totalAPagar)}</p>
+                <p class="text-xs text-emerald-500">{fmtPct((calc.valorAgencia - totalAPagar) / calc.valorAgencia * 100)} sobre o preço da agência</p>
               </div>
             </div>
           {/if}

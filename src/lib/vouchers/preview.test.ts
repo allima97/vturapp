@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildVoucherPreviewDocument } from "./preview";
-import type { VoucherProvider, VoucherRecord } from "./types";
+import type { VoucherProvider, VoucherRecord, VoucherAssetRecord } from "./types";
 
 function voucher(provider: VoucherProvider): VoucherRecord {
   return {
@@ -38,6 +38,26 @@ function voucher(provider: VoucherProvider): VoucherRecord {
 }
 
 describe("buildVoucherPreviewDocument", () => {
+  it.each(["special_tours", "europamundo", "sato_tours"] as const)(
+    "ignora logos antigos de empresa e fornecedor em %s",
+    (provider) => {
+      const assets = [
+        { provider: "vtur", asset_kind: "logo", preview_url: "https://example.com/old-company.png", ativo: true },
+        { provider, asset_kind: "logo", preview_url: "https://example.com/old-provider.png", ativo: true },
+      ] as VoucherAssetRecord[];
+      const html = buildVoucherPreviewDocument(voucher(provider), assets);
+      expect(html).toContain('alt="VTur"');
+      expect(html).not.toContain('https://example.com/old-');
+    }
+  );
+  it.each(["special_tours", "europamundo", "sato_tours"] as const)(
+    "inclui a identidade VTur sem configurar assets para %s",
+    (provider) => {
+      const html = buildVoucherPreviewDocument(voucher(provider));
+      expect(html).toContain('alt="VTur"');
+      expect(html).toContain('data:image/png;base64,');
+    }
+  );
   it("inclui traslados no PDF de Special Tours", () => {
     const html = buildVoucherPreviewDocument(voucher("special_tours"));
 

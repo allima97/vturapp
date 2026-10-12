@@ -1,6 +1,6 @@
 export type VoucherProvider = "special_tours" | "europamundo" | "sato_tours";
 
-export type VoucherAssetProvider = "cvc" | VoucherProvider | "generic";
+export type VoucherAssetProvider = "vtur" | VoucherProvider | "generic";
 
 export type VoucherAssetKind = "logo" | "image" | "app_icon";
 

@@ -23,7 +23,6 @@ vi.mock('./cliente-create', () => ({ handleOrcamentosClienteCreatePost: spy('han
 vi.mock('./clientes', () => ({ handleOrcamentosClientesGet: spy('handleOrcamentosClientesGet') }));
 vi.mock('./create', () => ({ handleOrcamentosCreatePost: spy('handleOrcamentosCreatePost') }));
 vi.mock('./delete', () => ({ handleOrcamentosDeletePost: spy('handleOrcamentosDeletePost') }));
-vi.mock('./importar', () => ({ handleOrcamentosImportarPost: spy('handleOrcamentosImportarPost') }));
 vi.mock('./interacao', () => ({ handleOrcamentosInteracaoPost: spy('handleOrcamentosInteracaoPost'), handleOrcamentosInteracaoGet: spy('handleOrcamentosInteracaoGet') }));
 vi.mock('./list', () => ({ handleOrcamentosListGet: spy('handleOrcamentosListGet') }));
 vi.mock('./produtos', () => ({ handleOrcamentosProdutosGet: spy('handleOrcamentosProdutosGet') }));
@@ -44,7 +43,6 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/orcamentos/clientes', 'handleOrcamentosClientesGet', {}],
   ['POST', '/api/v1/orcamentos/create', 'handleOrcamentosCreatePost', {}],
   ['POST', '/api/v1/orcamentos/delete', 'handleOrcamentosDeletePost', {}],
-  ['POST', '/api/v1/orcamentos/importar', 'handleOrcamentosImportarPost', {}],
   ['POST', '/api/v1/orcamentos/interacao', 'handleOrcamentosInteracaoPost', {}],
   ['GET', '/api/v1/orcamentos/interacao', 'handleOrcamentosInteracaoGet', {}],
   // apelido (antes: orcamentos/interaction/+server.ts reexportava ../interacao)
@@ -65,7 +63,6 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/orcamentos/clientes'],
   ['PUT', '/api/v1/orcamentos/create'],
   ['PUT', '/api/v1/orcamentos/delete'],
-  ['PUT', '/api/v1/orcamentos/importar'],
   ['PUT', '/api/v1/orcamentos/interacao'],
   ['PUT', '/api/v1/orcamentos/list'],
   ['PUT', '/api/v1/orcamentos/produtos'],

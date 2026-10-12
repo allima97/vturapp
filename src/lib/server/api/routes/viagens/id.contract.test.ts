@@ -86,7 +86,7 @@ function tables() {
       { id: 'p-1', nome: 'Hotel Lisboa' },
     ],
     vouchers: [
-      { id: 'vo-1', viagem_id: 'v-1', nome: 'Voucher 1', provider: 'cvc', codigo_systur: 'S1', codigo_fornecedor: 'F1', data_inicio: '2026-01-10', data_fim: '2026-01-20', ativo: true },
+      { id: 'vo-1', viagem_id: 'v-1', nome: 'Voucher 1', provider: 'vtur', codigo_systur: 'S1', codigo_fornecedor: 'F1', data_inicio: '2026-01-10', data_fim: '2026-01-20', ativo: true },
     ],
     viagem_passageiros: [
       { id: 'pa-1', viagem_id: 'v-1', cliente_id: 'cli-1', papel: 'titular', observacoes: null, created_at: '2025-12-01T00:00:00Z', cliente: { id: 'cli-1', nome: 'Maria', cpf: '1', telefone: '11', data_nascimento: '1990-01-01' } },

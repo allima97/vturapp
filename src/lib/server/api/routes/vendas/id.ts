@@ -288,7 +288,7 @@ export async function handleVendasIdGet(event: RequestEvent) {
     if (!scope.isAdmin && !scope.isMaster)
       ensureModuloAccess(
         scope,
-        ["vendas_consulta", "vendas", "vendas_importar", "Importar Contratos"],
+        ["vendas_consulta", "vendas"],
         1,
         "Sem acesso a Vendas.",
       );

@@ -1,4 +1,4 @@
-/** Formatação do Relatório de Performance (igual ao PDF da CVC: R$ 1.9M, R$ 62.1K, 28.6%). */
+/** Formatação do Relatório de Performance (valores compactos: R$ 1.9M, R$ 62.1K, 28.6%). */
 const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
 
 export function moedaCurta(valor: number) {
