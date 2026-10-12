@@ -18,7 +18,6 @@ const spy = vi.hoisted(
 
 vi.mock('./root', () => ({ handlePagamentosGet: spy('handlePagamentosGet'), handlePagamentosPost: spy('handlePagamentosPost') }));
 vi.mock('./id', () => ({ handlePagamentosIdGet: spy('handlePagamentosIdGet'), handlePagamentosIdPatch: spy('handlePagamentosIdPatch'), handlePagamentosIdDelete: spy('handlePagamentosIdDelete') }));
-vi.mock('./id-conciliar', () => ({ handlePagamentosIdConciliarPost: spy('handlePagamentosIdConciliarPost') }));
 vi.mock('./upload', () => ({ handlePagamentosUploadPost: spy('handlePagamentosUploadPost') }));
 
 import { apiApp } from '../../app';
@@ -30,14 +29,12 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/pagamentos/id-123', 'handlePagamentosIdGet', {"id": "id-123"}],
   ['PATCH', '/api/v1/pagamentos/id-123', 'handlePagamentosIdPatch', {"id": "id-123"}],
   ['DELETE', '/api/v1/pagamentos/id-123', 'handlePagamentosIdDelete', {"id": "id-123"}],
-  ['POST', '/api/v1/pagamentos/id-123/conciliar', 'handlePagamentosIdConciliarPost', {"id": "id-123"}],
   ['POST', '/api/v1/pagamentos/upload', 'handlePagamentosUploadPost', {}],
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/pagamentos'],
   ['PUT', '/api/v1/pagamentos/id-123'],
-  ['PUT', '/api/v1/pagamentos/id-123/conciliar'],
   ['PUT', '/api/v1/pagamentos/upload'],
 ];
 

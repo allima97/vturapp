@@ -825,17 +825,6 @@
       </div>
     </Button>
 
-    <Button
-      variant="unstyled"
-      class_name="vtur-kpi-card w-full text-left"
-      on:click={() => goto('/financeiro/conciliacao')}
-    >
-      <div class={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${conciliacaoPendente ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'}`}><Shield size={18} /></div>
-      <div class="min-w-0 flex-1">
-        <p class="text-xs font-medium text-slate-500 sm:text-sm">Conciliacao</p>
-        <p class="text-lg font-bold text-slate-900 sm:text-2xl">{conciliacaoPendente ? 'Pendente' : 'OK'}</p>
-      </div>
-    </Button>
 
     <Button
       variant="unstyled"

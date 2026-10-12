@@ -397,18 +397,6 @@
   </div>
 
   <KPIGrid className="mb-6" columns={4}>
-    <Button
-      type="button"
-      variant="unstyled"
-      class_name="vtur-kpi-card flex! w-full! hover:shadow-lg transition-all duration-200"
-      on:click={() => goto('/financeiro/conciliacao')}
-    >
-      <div class={`flex h-10 w-10 items-center justify-center rounded-xl ${temBacklogFinanceiro ? 'bg-amber-50 text-amber-500' : 'bg-green-50 text-green-500'}`}><AlertCircle size={20} /></div>
-      <div>
-        <p class="text-sm font-medium text-slate-500">Backlog financeiro</p>
-        <p class="text-2xl font-bold text-slate-900">{formatCurrency(backlogFinanceiroValor)}</p>
-      </div>
-    </Button>
 
     <Button
       type="button"
@@ -576,16 +564,6 @@
   </div>
 
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-    <Button
-      type="button"
-      variant="unstyled"
-      class_name="vtur-card block! w-full! p-5! text-left! hover:shadow-lg transition-all duration-200"
-      on:click={() => goto('/financeiro/conciliacao')}
-    >
-      <p class="text-sm text-slate-500 mb-1">Fechamento</p>
-      <p class="text-lg font-semibold text-slate-900">Ir para Conciliação</p>
-      <p class="mt-2 text-sm text-slate-600">Atalhe para tratar pendências e divergências financeiras.</p>
-    </Button>
     <div class="vtur-card p-5 text-left">
       <p class="text-sm text-slate-500 mb-1">Movimento no período</p>
       <p class="text-lg font-semibold text-slate-900">{entradasRecentes} entradas · {saidasRecentes} saídas</p>

@@ -18,7 +18,7 @@ import { handleApiError, handleNotFound, requestContext } from './middleware';
 import type { ApiEnv } from './types';
 import { healthRoutes } from './routes/health';
 import { vendasRoutes } from './routes/vendas';
-import { conciliacaoRoutes } from './routes/conciliacao';
+
 import { dashboardRoutes } from './routes/dashboard';
 import { relatoriosRoutes } from './routes/relatorios';
 import { clientesRoutes } from './routes/clientes';
@@ -77,7 +77,6 @@ export function createApiApp() {
 
   app.route('/health', healthRoutes);
   app.route('/vendas', vendasRoutes);
-  app.route('/conciliacao', conciliacaoRoutes);
   app.route('/dashboard', dashboardRoutes);
   app.route('/relatorios', relatoriosRoutes);
   app.route('/clientes', clientesRoutes);

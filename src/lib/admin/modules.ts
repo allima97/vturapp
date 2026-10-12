@@ -55,8 +55,6 @@ export const MAPA_MODULOS: Record<string, string> = {
   'Minhas Preferencias': 'operacao_preferencias',
   'Documentos Viagens': 'operacao_documentos_viagens',
   Vouchers: 'operacao_vouchers',
-  'Conciliação': 'operacao_conciliacao',
-  Conciliacao: 'operacao_conciliacao',
   Campanhas: 'operacao_campanhas',
   Viagens: 'operacao_viagens',
   'Controle de SAC': 'operacao_controle_sac',
@@ -85,7 +83,6 @@ const MODULO_REVERSE: Record<string, string> = Object.entries(MAPA_MODULOS).redu
 const MODULO_PREFERENCIAS: Record<string, string> = {
   consultoria_online: 'Consultoria Online',
   operacao_todo: 'Tarefas',
-  operacao_conciliacao: 'Conciliação',
   parametros_avisos: 'Avisos',
   parametros_crm: 'CRM',
   financeiro_notas_fiscais: 'NotasFiscais'
@@ -149,7 +146,6 @@ export const ROTAS_MODULOS: Record<string, string> = {
   '/financeiro': 'Financeiro',
   '/financeiro/caixa': 'Financeiro',
   '/financeiro/notas-fiscais': 'NotasFiscais',
-  '/financeiro/conciliacao': 'Conciliação',
   '/financeiro/comissoes': 'Comissionamento',
   '/financeiro/comissoes/regras': 'RegrasComissao',
   '/financeiro/regras': 'RegrasComissao',
@@ -165,8 +161,7 @@ export const ROTAS_MODULOS: Record<string, string> = {
   '/operacao/documentos-viagens': 'Documentos Viagens',
   '/operacao/vouchers': 'Vouchers',
   '/operacao/viagens': 'Viagens',
-  '/operacao/conciliacao': 'Conciliação',
-  '/financeiro/ajustes-vendas': 'Conciliação',
+  '/financeiro/ajustes-vendas': 'Financeiro',
   '/operacao/campanhas': 'Campanhas',
   '/operacao/comissionamento': 'Comissionamento',
   '/chat': 'Mural de Recados',
@@ -188,8 +183,6 @@ export const MODULO_HERANCA: Record<string, string[]> = {
   Vouchers: ['Operacao', 'Viagens'],
   'Controle de SAC': ['Operacao'],
   Campanhas: ['Operacao'],
-  'Conciliação': ['Operacao'],
-  Conciliacao: ['Operacao'],
   CRM: ['Parametros'],
   ParametrosAvisos: ['Parametros'],
   Avisos: ['Parametros'],
@@ -253,7 +246,6 @@ export const SECOES_PERMISSOES: ModuloSecaoPermissoes[] = [
     modulos: [
       'Financeiro',
       'NotasFiscais',
-      'Conciliação',
       'Comissionamento',
       'Vendas',
       'Formas de Pagamento',
@@ -263,7 +255,7 @@ export const SECOES_PERMISSOES: ModuloSecaoPermissoes[] = [
   {
     id: 'gestor',
     titulo: 'Gestor',
-    modulos: ['Ranking de vendas', 'Controle de SAC', 'Conciliação', 'Metas', 'Equipe', 'Escalas']
+    modulos: ['Ranking de vendas', 'Controle de SAC', 'Metas', 'Equipe', 'Escalas']
   },
   {
     id: 'master',
@@ -311,7 +303,6 @@ const GLOBAL_MODULE_GROUPS: Record<string, string[]> = {
   Vendas: ['Orcamentos'],
   Financeiro: [
     'NotasFiscais',
-    'Conciliação',
     'Comissionamento',
     'Vendas',
     'Formas de Pagamento',
@@ -342,7 +333,6 @@ const GLOBAL_MODULE_GROUPS: Record<string, string[]> = {
     'Campanhas',
     'Viagens',
     'Controle de SAC',
-    'Conciliação',
     'Comissionamento'
   ],
   Admin: [

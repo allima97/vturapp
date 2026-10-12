@@ -13,7 +13,6 @@
     Banknote,
     CreditCard,
     FileCheck2,
-    FileSpreadsheet,
     FileText,
     ReceiptText,
     RefreshCw,
@@ -34,15 +33,6 @@
     movimentacoes?: Array<{ descricao?: string; valor?: number; data?: string; tipo?: string }>;
   };
 
-  type ConciliacaoSummary = {
-    total?: number;
-    efetivados?: number;
-    pendentes?: number;
-    semRanking?: number;
-    baixaRac?: number;
-    totalValor?: number;
-  };
-
   type EmpresaOption = {
     id: string;
     nome?: string | null;
@@ -59,7 +49,6 @@
   let loading = true;
   let mounted = false;
   let caixa: CaixaSummary | null = null;
-  let conciliacao: ConciliacaoSummary | null = null;
   let empresas: EmpresaOption[] = [];
   let empresaId = '';
   let contextRequestSeq = 0;
@@ -131,20 +120,13 @@
     dashboardAbortController = controller;
     loading = true;
     try {
-      const [caixaPayload, conciliacaoPayload] = await Promise.all([
-        apiGet<CaixaSummary>('/api/v1/financeiro/caixa', {
+      const caixaPayload = await apiGet<CaixaSummary>('/api/v1/financeiro/caixa', {
           data_inicio: periodo.inicio,
           data_fim: periodo.fim,
           empresa_id: empresaId || undefined
-        }, controller.signal, 60_000),
-        apiGet<ConciliacaoSummary>('/api/v1/conciliacao/summary', {
-          mes,
-          company_id: empresaId || undefined
-        }, controller.signal, 60_000)
-      ]);
+        }, controller.signal, 60_000);
       if (requestSeq !== dashboardRequestSeq) return;
       caixa = caixaPayload;
-      conciliacao = conciliacaoPayload;
     } catch (error: unknown) {
       if (isCanceledApiError(error)) return;
       if (requestSeq !== dashboardRequestSeq) return;
@@ -229,21 +211,11 @@
       color="financeiro"
       icon={Wallet}
     />
-    <KPICard
-      title="Conciliação pendente"
-      value={conciliacao?.pendentes || 0}
-      subtitle={`${conciliacao?.semRanking || 0} sem ranking`}
-      color="financeiro"
-      icon={FileSpreadsheet}
-    />
   </KPIGrid>
 
   <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
     <Card title="Fila financeira" subtitle="Atalhos do fluxo operacional" color="financeiro">
       <div class="grid gap-3 md:grid-cols-2">
-        <Button href="/financeiro/conciliacao" variant="outline" color="financeiro" class_name="justify-start! rounded-xl! p-4!">
-          <FileSpreadsheet size={18} class="mr-3 text-orange-600" /> Conciliação
-        </Button>
         <Button href="/financeiro/ajustes-vendas" variant="outline" color="financeiro" class_name="justify-start! rounded-xl! p-4!">
           <Settings size={18} class="mr-3 text-orange-600" /> Ajustes de vendas
         </Button>
@@ -269,14 +241,14 @@
             <FileCheck2 size={18} class="text-orange-600" />
             <span class="font-medium text-slate-800">Recibos conciliados</span>
           </div>
-          <strong class="text-slate-950">{conciliacao?.efetivados || 0}</strong>
+          <strong class="text-slate-950">—</strong>
         </div>
         <div class="flex items-center justify-between rounded-xl border border-slate-200 p-4">
           <div class="flex items-center gap-3">
             <Banknote size={18} class="text-orange-600" />
             <span class="font-medium text-slate-800">Valor conciliado</span>
           </div>
-          <strong class="text-slate-950">{money(conciliacao?.totalValor)}</strong>
+          <strong class="text-slate-950">—</strong>
         </div>
         <div class="flex items-center justify-between rounded-xl border border-slate-200 p-4">
           <div class="flex items-center gap-3">

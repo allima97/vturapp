@@ -474,7 +474,6 @@
     ]},
     { key: 'financeiro', label: 'Financeiro', items: [
       { key: 'caixa', label: 'Caixa', href: '/financeiro/caixa' },
-      { key: 'conciliacao', label: 'Conciliação', href: '/financeiro/conciliacao' },
       { key: 'comissoes', label: 'Comissões', href: '/financeiro/comissoes' },
       { key: 'fechamento', label: 'Fechamento', href: '/comissoes/fechamento' },
       { key: 'ajustes_vendas', label: 'Ajustes Vendas', href: '/financeiro/ajustes-vendas' },

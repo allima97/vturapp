@@ -233,7 +233,6 @@ const PUBLIC_API_RATE_LIMITS: RateLimitRule[] = [
 ];
 
 const SYSTEM_ADMIN_BLOCKED_API_PREFIXES = [
-	'/api/v1/conciliacao',
 	'/api/v1/financeiro/ajustes-vendas',
 	'/api/v1/parametros/escalas'
 ];

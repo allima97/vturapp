@@ -5,7 +5,6 @@ const itens = [
   { secao: 'OPERAÇÃO', nome: 'Vendas', href: '/vendas' },
   { secao: 'OPERAÇÃO', nome: 'Clientes', href: '/clientes' },
   { secao: 'FINANCEIRO', nome: 'Vendas / Pagamentos', href: '/vendas' },
-  { secao: 'FINANCEIRO', nome: 'Conciliação', href: '/financeiro/conciliacao' },
   { secao: 'FINANCEIRO', nome: 'Comissionamento', href: '/financeiro/comissoes' },
   { secao: 'CADASTROS', nome: 'Cidades', href: '/cadastros/cidades' },
   { secao: 'OPERAÇÃO', nome: 'Últimas Compras', href: '/operacao/ultimas-compras' },
@@ -13,9 +12,9 @@ const itens = [
 
 describe('busca rápida (Ctrl+K)', () => {
   it('ignora acentos e maiúsculas', () => {
-    expect(normalizarBusca('  Conciliação ')).toBe('conciliacao');
+    expect(normalizarBusca('  ComissÃo ')).toBe('comissao');
     expect(filtrarItens(itens, 'ULTIMAS').map((i) => i.nome)).toEqual(['Últimas Compras']);
-    expect(filtrarItens(itens, 'conciliacao').map((i) => i.nome)).toEqual(['Conciliação']);
+    expect(filtrarItens(itens, 'conciliacao').map((i) => i.nome)).toEqual([]);
   });
 
   it('sem texto mostra o menu inteiro, sem endereços repetidos', () => {
@@ -24,8 +23,8 @@ describe('busca rápida (Ctrl+K)', () => {
   });
 
   it('nome que começa com o texto vem antes; a seção também conta', () => {
-    expect(filtrarItens(itens, 'c').map((i) => i.nome).slice(0, 4)).toEqual(['Clientes', 'Conciliação', 'Comissionamento', 'Cidades']);
-    expect(filtrarItens(itens, 'financeiro').map((i) => i.nome)).toEqual(['Conciliação', 'Comissionamento']);
+    expect(filtrarItens(itens, 'c').map((i) => i.nome).slice(0, 3)).toEqual(['Clientes', 'Comissionamento', 'Cidades']);
+    expect(filtrarItens(itens, 'financeiro').map((i) => i.nome)).toEqual(['Comissionamento']);
     expect(filtrarItens(itens, 'financeiro com').map((i) => i.nome)).toEqual(['Comissionamento']);
   });
 

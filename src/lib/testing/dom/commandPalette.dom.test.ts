@@ -20,7 +20,6 @@ async function montar() {
     { secao: 'INFORMATIVOS', nome: 'Dashboard', href: '/dashboard' },
     { secao: 'OPERAÇÃO', nome: 'Vendas', href: '/vendas' },
     { secao: 'OPERAÇÃO', nome: 'Clientes', href: '/clientes' },
-    { secao: 'FINANCEIRO', nome: 'Conciliação', href: '/financeiro/conciliacao' },
   ]);
   target = document.createElement('div');
   document.body.appendChild(target);
@@ -54,7 +53,7 @@ describe('busca rápida (Ctrl+K)', () => {
     expect(campo()).toBeTruthy();
     expect(document.activeElement).toBe(campo());
     expect([...document.querySelectorAll('[role="option"]')].map((o) => o.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
-      'Dashboard INFORMATIVOS', 'Vendas OPERAÇÃO', 'Clientes OPERAÇÃO', 'Conciliação FINANCEIRO',
+      'Dashboard INFORMATIVOS', 'Vendas OPERAÇÃO', 'Clientes OPERAÇÃO',
     ]);
   });
 
@@ -67,13 +66,12 @@ describe('busca rápida (Ctrl+K)', () => {
     flushSync();
     await tick();
     const opcoes = () => [...document.querySelectorAll('[role="option"]')];
-    expect(opcoes().map((o) => o.querySelector('span')?.textContent)).toEqual(['Clientes', 'Conciliação', 'Vendas']); // Vendas entra pela seção (OPERAÇÃO)
+    expect(opcoes().map((o) => o.querySelector('span')?.textContent)).toEqual(['Clientes', 'Vendas']); // Vendas entra pela seção (OPERAÇÃO)
     expect(input.getAttribute('aria-activedescendant')).toBe(opcoes()[0].id);
     await tecla(input, 'ArrowDown');
     expect(opcoes()[1].getAttribute('aria-selected')).toBe('true');
     expect(input.getAttribute('aria-activedescendant')).toBe(opcoes()[1].id);
     await tecla(input, 'Enter');
-    expect(nav.goto).toHaveBeenCalledWith('/financeiro/conciliacao');
     expect(campo()).toBeNull();
   });
 
