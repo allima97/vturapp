@@ -1,5 +1,7 @@
-// Migrado para Hono de src/routes/api/v1/vendas/cidades-busca/+server.ts — corpo IDÊNTICO ao original
-// (só o nome/assinatura do handler mudou). Ver src/lib/server/api/app.ts.
+// Busca cidades via geocoding automático (Nominatim) — sem dependência de catálogo interno.
+// Mesmo princípio do astrologiapessoal.
+// Para vendas: as cidades encontradas são auto-inseridas na tabela `cidades`
+// (com subdivisao_id = null) para preservar a referência por UUID que o módulo usa.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
 import {
@@ -8,87 +10,103 @@ import {
   isUuid,
   requireAuthenticatedUser,
   resolveUserScope,
-  sanitizePostgrestSearchTerm,
   toErrorResponse
 } from '$lib/server/v1';
-import {
-  buildReadModelCacheKey,
-  getCachedReadModel,
-  READ_MODEL_TAGS
-} from '$lib/server/readModelCache';
+import { buscarCidadesGeo, type CidadeGeoResult } from '$lib/server/geocoding';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
-
-const PT_BR_BASE_COLLATOR = new Intl.Collator('pt-BR', { sensitivity: 'base' });
-
-type CidadeSubdivisaoRow = {
-  nome?: string | null;
-  codigo_admin1?: string | null;
-};
-
-type CidadeBuscaRow = {
-  id?: string | null;
-  nome?: string | null;
-  grau_importancia?: number | string | null;
-  subdivisao_nome?: string | null;
-  pais_nome?: string | null;
-  subdivisao?: CidadeSubdivisaoRow | CidadeSubdivisaoRow[] | null;
-};
 
 function parseLimit(value: string | null) {
   const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return 20;
+  if (!Number.isFinite(parsed)) return 10;
   const intVal = Math.trunc(parsed);
-  if (intVal <= 0) return 20;
+  if (intVal <= 0) return 10;
   return Math.min(50, intVal);
 }
 
-function normalizeText(value?: string | null) {
-  return String(value || '')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim();
-}
+type CidadeRow = {
+  id: string;
+  nome: string;
+  estado_nome?: string | null;
+  pais_nome?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  grau_importancia?: number | null;
+};
 
-function getImportanceRank(value: unknown) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 9999;
-}
-
-function getCidadeSearchScore(item: ReturnType<typeof mapCidade>, normalizedQuery: string) {
-  const nome = normalizeText(item.nome);
-  const label = normalizeText(item.label);
-  const subdivisao = normalizeText(item.subdivisao_nome);
-  const pais = normalizeText(item.pais_nome);
-  const full = `${nome} ${subdivisao} ${pais}`.trim();
-
-  if (!normalizedQuery) return 100;
-  if (nome === normalizedQuery) return 0;
-  if (label === normalizedQuery) return 1;
-  if (nome.startsWith(normalizedQuery)) return 2;
-  if (label.startsWith(normalizedQuery)) return 3;
-  if (subdivisao && subdivisao.startsWith(normalizedQuery)) return 4;
-  if (full.includes(normalizedQuery)) return 5;
-  return 10;
-}
-
-function mapCidade(row: CidadeBuscaRow) {
-  const nome = String(row?.nome || '').trim();
-  const subdivisaoNome = String(row?.subdivisao_nome || '').trim();
-  const subdivisao = Array.isArray(row?.subdivisao) ? row.subdivisao[0] : row?.subdivisao;
-  const subdivisaoSigla = String(subdivisao?.codigo_admin1 || '').trim();
-  const subdivisaoLabel = subdivisaoNome || subdivisaoSigla || String(subdivisao?.nome || '').trim();
-  const paisNome = String(row?.pais_nome || '').trim();
-
+function toResponseItem(row: CidadeRow) {
+  const estado = row.estado_nome ?? null;
+  const label = estado ? `${row.nome} (${estado})` : row.nome;
   return {
-    id: String(row?.id || ''),
-    nome,
-    subdivisao_nome: subdivisaoNome || null,
-    pais_nome: paisNome || null,
-    estado: subdivisaoLabel || null,
-    grau_importancia: row?.grau_importancia == null ? null : Number(row.grau_importancia),
-    label: subdivisaoLabel ? `${nome} (${subdivisaoLabel})` : nome
+    id: row.id,
+    nome: row.nome,
+    estado,
+    subdivisao_nome: estado,
+    pais_nome: row.pais_nome ?? null,
+    grau_importancia: row.grau_importancia ?? null,
+    label,
   };
+}
+
+/**
+ * Encontra ou cria uma cidade no banco a partir de um resultado de geocoding.
+ * Busca primeiro por coordenadas próximas + nome; se não encontrar, insere.
+ */
+async function findOrCreateCidade(
+  client: ReturnType<typeof getAdminClient>,
+  result: CidadeGeoResult
+): Promise<CidadeRow | null> {
+  try {
+    // 1. Tentar encontrar por coords próximas + nome
+    const { data: existing } = await client
+      .from('cidades')
+      .select('id, nome, estado_nome, pais_nome, latitude, longitude, grau_importancia')
+      .gte('latitude', result.lat - 0.15)
+      .lte('latitude', result.lat + 0.15)
+      .gte('longitude', result.lng - 0.15)
+      .lte('longitude', result.lng + 0.15)
+      .ilike('nome', result.nome)
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) return existing as CidadeRow;
+
+    // 2. Não encontrou — inserir. Usar INSERT ... ON CONFLICT DO NOTHING
+    //    e depois re-selecionar se houver conflito (condição de corrida).
+    const { data: inserted, error } = await client
+      .from('cidades')
+      .insert({
+        nome: result.nome,
+        estado_nome: result.estado ?? null,
+        pais_nome: result.pais ?? null,
+        latitude: result.lat,
+        longitude: result.lng,
+        // subdivisao_id omitido → null (agora nullable após migração)
+      })
+      .select('id, nome, estado_nome, pais_nome, latitude, longitude, grau_importancia')
+      .maybeSingle();
+
+    if (!error && inserted) return inserted as CidadeRow;
+
+    // 3. Conflito de unicidade (outra instância inseriu ao mesmo tempo): busca novamente
+    if (error?.code === '23505') {
+      const { data: retry } = await client
+        .from('cidades')
+        .select('id, nome, estado_nome, pais_nome, latitude, longitude, grau_importancia')
+        .gte('latitude', result.lat - 0.15)
+        .lte('latitude', result.lat + 0.15)
+        .gte('longitude', result.lng - 0.15)
+        .lte('longitude', result.lng + 0.15)
+        .ilike('nome', result.nome)
+        .limit(1)
+        .maybeSingle();
+      if (retry) return retry as CidadeRow;
+    }
+
+    return null;
+  } catch (err) {
+    console.warn('[vendas/cidades-busca] falha ao find-or-create cidade:', result.nome, err);
+    return null;
+  }
 }
 
 export async function handleVendasCidadesBuscaGet(event: RequestEvent) {
@@ -107,121 +125,41 @@ export async function handleVendasCidadesBuscaGet(event: RequestEvent) {
     }
 
     const cidadeId = String(event.url.searchParams.get('id') || '').trim();
-    const query = sanitizePostgrestSearchTerm(
-      event.url.searchParams.get('q') || event.url.searchParams.get('search'),
-      120
-    );
+    const query = String(event.url.searchParams.get('q') || event.url.searchParams.get('search') || '').trim();
     const limite = parseLimit(event.url.searchParams.get('limite'));
 
+    // Busca por ID (para pré-carregar cidade já selecionada)
     if (cidadeId) {
       if (!isUuid(cidadeId)) {
         return json({ error: 'id inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
       }
 
-      const item = await getCachedReadModel<ReturnType<typeof mapCidade> | null>({
-        key: buildReadModelCacheKey('vendas:cidades-busca:id', { cidadeId }),
-        tags: [READ_MODEL_TAGS.catalog],
-        ttlMs: 600_000,
-        staleTtlMs: 3_600_000,
-        loader: async () => {
-          let data: CidadeBuscaRow | null = null;
-          const detailed = await client
-            .from('cidades')
-            .select('id, nome, grau_importancia, subdivisao:subdivisoes(nome, codigo_admin1)')
-            .eq('id', cidadeId)
-            .maybeSingle();
+      const { data, error } = await client
+        .from('cidades')
+        .select('id, nome, estado_nome, pais_nome, latitude, longitude, grau_importancia')
+        .eq('id', cidadeId)
+        .maybeSingle();
 
-          if (detailed.error) {
-            const fallback = await client
-              .from('cidades')
-              .select('id, nome, grau_importancia')
-              .eq('id', cidadeId)
-              .maybeSingle();
-            if (fallback.error) throw fallback.error;
-            data = fallback.data;
-          } else {
-            data = detailed.data;
-          }
-
-          return data ? mapCidade(data) : null;
-        }
-      });
-
-      return json(item, { headers: DYNAMIC_READ_HEADERS });
+      if (error) throw error;
+      return json(data ? toResponseItem(data as CidadeRow) : null, { headers: DYNAMIC_READ_HEADERS });
     }
 
     if (query.length < 2) {
+      return json([], { headers: NO_STORE_HEADERS });
+    }
+
+    // Busca via geocoding externo (Nominatim)
+    const geoResults = await buscarCidadesGeo(query, limite);
+    if (!geoResults.length) {
       return json([], { headers: DYNAMIC_READ_HEADERS });
     }
 
-    const filtered = await getCachedReadModel<Array<ReturnType<typeof mapCidade>>>({
-      key: buildReadModelCacheKey('vendas:cidades-busca:query', { query, limite }),
-      tags: [READ_MODEL_TAGS.catalog],
-      ttlMs: 600_000,
-      staleTtlMs: 3_600_000,
-      loader: async () => {
-        let rows: CidadeBuscaRow[] = [];
+    // Find-or-create no DB para preservar UUIDs (FK de vendas)
+    const rows = (
+      await Promise.all(geoResults.map((r) => findOrCreateCidade(client, r)))
+    ).filter((r): r is CidadeRow => r !== null);
 
-        try {
-          const { data, error } = await client.rpc('buscar_cidades', { q: query, limite });
-          if (error) throw error;
-          rows = Array.isArray(data) ? (data as CidadeBuscaRow[]) : [];
-        } catch {
-          const fallbackWithSubdivisao = await client
-            .from('cidades')
-            .select('id, nome, grau_importancia, subdivisao:subdivisoes(nome, codigo_admin1)')
-            .ilike('nome', `%${sanitizePostgrestSearchTerm(query)}%`)
-            .order('grau_importancia', { ascending: true, nullsFirst: false })
-            .order('nome', { ascending: true })
-            .limit(limite);
-
-          if (fallbackWithSubdivisao.error) {
-            const fallbackBase = await client
-              .from('cidades')
-              .select('id, nome, grau_importancia')
-              .ilike('nome', `%${sanitizePostgrestSearchTerm(query)}%`)
-              .order('grau_importancia', { ascending: true, nullsFirst: false })
-              .order('nome', { ascending: true })
-              .limit(limite);
-            if (fallbackBase.error) throw fallbackBase.error;
-            rows = fallbackBase.data || [];
-          } else {
-            rows = fallbackWithSubdivisao.data || [];
-          }
-        }
-
-        if (!rows.length) return [];
-
-	        const normalizedQuery = normalizeText(query);
-	        const dedup = new Map<string, ReturnType<typeof mapCidade>>();
-
-	        for (const row of rows) {
-	          const mapped = mapCidade(row);
-	          if (!mapped.id || !mapped.nome) continue;
-	          if (!dedup.has(mapped.id)) {
-	            dedup.set(mapped.id, mapped);
-	          }
-	        }
-
-	        return Array.from(dedup.values())
-          .filter((item) => normalizeText(`${item.nome} ${item.subdivisao_nome || ''} ${item.pais_nome || ''}`).includes(normalizedQuery))
-          .sort((a, b) => {
-            const scoreDiff = getCidadeSearchScore(a, normalizedQuery) - getCidadeSearchScore(b, normalizedQuery);
-            if (scoreDiff !== 0) return scoreDiff;
-
-            const importanceDiff = getImportanceRank(a.grau_importancia) - getImportanceRank(b.grau_importancia);
-            if (importanceDiff !== 0) return importanceDiff;
-
-            const nomeDiff = PT_BR_BASE_COLLATOR.compare(a.nome, b.nome);
-            if (nomeDiff !== 0) return nomeDiff;
-
-            return PT_BR_BASE_COLLATOR.compare(String(a.subdivisao_nome || ''), String(b.subdivisao_nome || ''));
-          })
-          .slice(0, limite);
-      }
-    });
-
-    return json(filtered, { headers: DYNAMIC_READ_HEADERS });
+    return json(rows.map(toResponseItem), { headers: DYNAMIC_READ_HEADERS });
   } catch (err) {
     return toErrorResponse(err, 'Erro ao buscar cidades.');
   }

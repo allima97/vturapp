@@ -1,30 +1,20 @@
-// Migrado para Hono de src/routes/api/v1/orcamentos/cidades-busca/+server.ts — corpo IDÊNTICO ao original
-// (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
+// Busca cidades via geocoding automático (Nominatim) — sem dependência de catálogo interno.
+// Mesmo princípio do astrologiapessoal.
 import { json, type RequestEvent } from '@sveltejs/kit';
 import {
   ensureModuloAccess,
   getAdminClient,
-  normalizeText,
   requireAuthenticatedUser,
   resolveUserScope,
-  sanitizePostgrestSearchTerm,
   toErrorResponse
 } from '$lib/server/v1';
-import {
-  buildReadModelCacheKey,
-  getCachedReadModel,
-  READ_MODEL_TAGS
-} from '$lib/server/readModelCache';
-import { DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
-
-type CidadeBuscaItem = {
-  nome?: string | null;
-};
+import { buscarCidadesGeo } from '$lib/server/geocoding';
+import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 
 function parseLimit(value: string | null, fallback: number) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
-  return Math.min(200, Math.max(1, Math.trunc(parsed)));
+  return Math.min(50, Math.max(1, Math.trunc(parsed)));
 }
 
 export async function handleOrcamentosCidadesBuscaGet(event: RequestEvent) {
@@ -42,50 +32,15 @@ export async function handleOrcamentosCidadesBuscaGet(event: RequestEvent) {
       );
     }
 
-    const query = sanitizePostgrestSearchTerm(event.url.searchParams.get('q'), 120);
-    const limite = parseLimit(event.url.searchParams.get('limite'), query ? 50 : 200);
+    const query = String(event.url.searchParams.get('q') || '').trim();
+    const limite = parseLimit(event.url.searchParams.get('limite'), 10);
 
-    if (!query) {
-      const items = await getCachedReadModel<CidadeBuscaItem[]>({
-        key: buildReadModelCacheKey('orcamentos:cidades-busca:iniciais', { limite }),
-        tags: [READ_MODEL_TAGS.catalog],
-        ttlMs: 300_000,
-        staleTtlMs: 1_800_000,
-        loader: async () => {
-          const { data, error } = await client.from('cidades').select('nome').order('nome').limit(limite);
-          if (error) throw error;
-          return ((data || []) as CidadeBuscaItem[]).map((item) => ({ nome: item.nome }));
-        }
-      });
-      return json(items, { headers: DYNAMIC_READ_HEADERS });
+    if (!query || query.length < 2) {
+      return json([], { headers: NO_STORE_HEADERS });
     }
 
-    const items = await getCachedReadModel<CidadeBuscaItem[]>({
-      key: buildReadModelCacheKey('orcamentos:cidades-busca:query', { query, limite }),
-      tags: [READ_MODEL_TAGS.catalog],
-      ttlMs: 300_000,
-      staleTtlMs: 1_800_000,
-      loader: async () => {
-        try {
-          const { data, error } = await client.rpc('buscar_cidades', { q: query, limite });
-          if (error) throw error;
-          return data || [];
-        } catch {
-          const normalizedQuery = normalizeText(query);
-          const { data, error } = await client
-            .from('cidades')
-            .select('nome')
-            .ilike('nome', `%${sanitizePostgrestSearchTerm(query)}%`)
-            .order('nome')
-            .limit(limite);
-          if (error) throw error;
-          const filtered = ((data || []) as CidadeBuscaItem[]).filter((item) =>
-            normalizeText(item?.nome || '').includes(normalizedQuery)
-          );
-          return filtered.map((item) => ({ nome: item.nome }));
-        }
-      }
-    });
+    const results = await buscarCidadesGeo(query, limite);
+    const items = results.map((r) => ({ nome: r.label || r.nome }));
 
     return json(items, { headers: DYNAMIC_READ_HEADERS });
   } catch (err) {

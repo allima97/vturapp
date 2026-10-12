@@ -1,15 +1,15 @@
-// Migrado para Hono de src/routes/api/v1/relatorios/cidades-busca/+server.ts — corpo IDÊNTICO ao original
-// (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
+// Busca cidades via geocoding automático (Nominatim) — sem dependência de catálogo interno.
+// Mesmo princípio do astrologiapessoal.
 import { json, type RequestEvent } from '@sveltejs/kit';
-import { ensureModuloAccess, getAdminClient, logServerError, requireAuthenticatedUser, resolveUserScope } from '$lib/server/v1';
-import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import {
-  buildReadModelCacheKey,
-  getCachedReadModel,
-  READ_MODEL_TAGS
-} from '$lib/server/readModelCache';
-
-type CidadeBuscaRow = Record<string, unknown>;
+  ensureModuloAccess,
+  getAdminClient,
+  logServerError,
+  requireAuthenticatedUser,
+  resolveUserScope
+} from '$lib/server/v1';
+import { buscarCidadesGeo } from '$lib/server/geocoding';
+import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 
 function parseLimit(value: string | null, fallback: number) {
   const parsed = Number(value);
@@ -41,19 +41,10 @@ export async function handleRelatoriosCidadesBuscaGet(event: RequestEvent) {
       return json([], { headers: DYNAMIC_READ_HEADERS });
     }
 
-    const data = await getCachedReadModel<CidadeBuscaRow[]>({
-      key: buildReadModelCacheKey('relatorios:cidades-busca:query', { query, limite }),
-      tags: [READ_MODEL_TAGS.catalog],
-      ttlMs: 600_000,
-      staleTtlMs: 3_600_000,
-      loader: async () => {
-        const { data, error } = await client.rpc('buscar_cidades', { q: query, limite });
-        if (error) throw error;
-        return data || [];
-      }
-    });
+    const results = await buscarCidadesGeo(query, limite);
+    const items = results.map((r) => ({ nome: r.label || r.nome }));
 
-    return json(data, { headers: DYNAMIC_READ_HEADERS });
+    return json(items, { headers: DYNAMIC_READ_HEADERS });
   } catch (err) {
     logServerError('[relatorios/cidades-busca] falha ao buscar cidades', err);
     return new Response('Erro ao buscar cidades.', { status: 500, headers: NO_STORE_HEADERS });
