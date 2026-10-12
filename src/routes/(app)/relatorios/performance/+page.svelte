@@ -189,9 +189,9 @@
           <VarPill valor={v.variacaoAnoAnterior} legenda="/Ano anterior" />
         </div>
         <div class="vtur-card p-4">
-          <p class="text-sm text-slate-500">Venda RA Mês <span class="text-xs">(REXTUR)</span></p>
-          <p class="text-3xl font-bold text-slate-900">{moedaCurta(v.vendaRA)}</p>
-          <VarPill valor={v.variacaoVendaRA} legenda="/Ano anterior" />
+          <p class="text-sm text-slate-500">Venda Consolidadora Mês</p>
+          <p class="text-3xl font-bold text-slate-900">{moedaCurta(v.vendaConsolidadora)}</p>
+          <VarPill valor={v.variacaoVendaConsolidadora} legenda="/Ano anterior" />
         </div>
       </div>
       <div class="grid gap-4">
@@ -392,7 +392,7 @@
     {/if}
 
     <p class="text-xs text-slate-500">
-      Valores lançados no VTUR (mesma base do Ranking e do Dashboard). Venda RA = REXTUR. Meta até D-1 proporcional aos dias corridos.
+      Valores lançados no VTUR (mesma base do Ranking e do Dashboard). Venda Consolidadora = recibos de operadoras consolidadoras. Meta até D-1 proporcional aos dias corridos.
       Passageiros: os da venda, sem repetir. Orçamentos: os cadastrados no VTUR; conversão = aprovados + fechados.
     </p>
   </article>

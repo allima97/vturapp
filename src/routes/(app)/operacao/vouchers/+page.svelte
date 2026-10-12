@@ -241,7 +241,7 @@
       const payload = {
         provider: item.provider,
         nome: buildDuplicateName(item.nome),
-        codigo_systur: item.codigo_systur || null,
+        codigo_sistema: item.codigo_sistema || null,
         codigo_fornecedor: item.codigo_fornecedor || null,
         reserva_online: item.reserva_online || null,
         passageiros: item.passageiros || null,
@@ -378,7 +378,7 @@
   {loading}
   title="Lista de Vouchers"
   searchable={true}
-  extraSearchKeys={['codigo_systur']}
+  extraSearchKeys={['codigo_sistema']}
   onRowClick={handleRowClick}
   emptyMessage="Nenhum voucher encontrado"
 />

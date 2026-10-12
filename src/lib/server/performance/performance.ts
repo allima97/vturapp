@@ -3,7 +3,7 @@
  *
  * Só agrega; não busca dados. Definições confirmadas pelo usuário:
  * - Venda: as mesmas contribuições por recibo do Ranking/Dashboard (`fetchVendasKpiReciboContributions`), valor bruto.
- * - Venda RA = vendas REXTUR (recibo "REXTUR"). Business "Consolidadora" = REXTUR.
+ * - Venda Consolidadora = vendas via consolidadora (recibo contém "REXTUR"). Business "Consolidadora" = consolidadora.
  * - Nacional = destino em cidade do Brasil; Internacional = destino fora do Brasil.
  * - Marítimo = produto do tipo Cruzeiro.
  * - Produto = o tipo do produto no cadastro (tipo_produtos), como nas vendas.
@@ -66,7 +66,7 @@ function semAcento(texto: string) {
   return texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 }
 
-export function isRextur(reciboNumero: string | null | undefined) {
+export function isConsolidadora(reciboNumero: string | null | undefined) {
   return String(reciboNumero || '').toUpperCase().includes('REXTUR');
 }
 
@@ -79,9 +79,9 @@ export function isCruzeiro(produto: string | null | undefined) {
   return semAcento(String(produto || '')).includes('cruzeiro');
 }
 
-/** Consolidadora (REXTUR) > Marítimo (cruzeiro) > Nacional/Internacional pelo país do destino. */
+/** Consolidadora (operadora consolidadora) > Marítimo (cruzeiro) > Nacional/Internacional pelo país do destino. */
 export function businessDaContribuicao(c: Pick<ContribuicaoPerformance, 'reciboNumero' | 'produtoNome' | 'destinoPais'>): Business {
-  if (isRextur(c.reciboNumero)) return 'Consolidadora';
+  if (isConsolidadora(c.reciboNumero)) return 'Consolidadora';
   if (isCruzeiro(c.produtoNome)) return 'Marítimo';
   if (!c.destinoPais) return 'Não informado';
   return isBrasil(c.destinoPais) ? 'Nacional' : 'Internacional';
@@ -182,8 +182,8 @@ export function montarRelatorioPerformance(e: EntradaPerformance) {
   const ticket = passageiros > 0 ? totalBruto / passageiros : 0;
   const ticketAnterior = passageirosAnoAnterior > 0 ? totalAnoAnterior / passageirosAnoAnterior : 0;
 
-  const rextur = e.atual.filter((c) => isRextur(c.reciboNumero)).reduce((s, c) => s + c.bruto, 0);
-  const rexturAnterior = e.anoAnterior.filter((c) => isRextur(c.reciboNumero)).reduce((s, c) => s + c.bruto, 0);
+  const consolidadora = e.atual.filter((c) => isConsolidadora(c.reciboNumero)).reduce((s, c) => s + c.bruto, 0);
+  const consolidadoraAnterior = e.anoAnterior.filter((c) => isConsolidadora(c.reciboNumero)).reduce((s, c) => s + c.bruto, 0);
 
   // Vendedores
   const porVendedor = somaPorChave(e.atual.filter((c) => c.vendedorId), (c) => String(c.vendedorId), (c) => c.bruto);
@@ -273,8 +273,8 @@ export function montarRelatorioPerformance(e: EntradaPerformance) {
       variacaoPassageiros: variacao(passageiros, passageirosAnoAnterior),
       ticketMedio: ticket,
       variacaoTicket: variacao(ticket, ticketAnterior),
-      vendaRA: rextur,
-      variacaoVendaRA: variacao(rextur, rexturAnterior)
+      vendaConsolidadora: consolidadora,
+      variacaoVendaConsolidadora: variacao(consolidadora, consolidadoraAnterior)
     },
     topVendedores,
     produtos,

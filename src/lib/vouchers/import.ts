@@ -251,7 +251,7 @@ export function createEmptyVoucherImport(provider: VoucherProvider): VoucherImpo
   return {
     provider,
     nome: "",
-    codigo_systur: "",
+    codigo_sistema: "",
     codigo_fornecedor: "",
     reserva_online: "",
     passageiros: "",
@@ -273,7 +273,7 @@ export function mergeVoucherImport(
   const merged: VoucherImportResult = {
     provider: incoming.provider || base.provider,
     nome: incoming.nome || base.nome,
-    codigo_systur: incoming.codigo_systur || base.codigo_systur,
+    codigo_sistema: incoming.codigo_sistema || base.codigo_sistema,
     codigo_fornecedor: incoming.codigo_fornecedor || base.codigo_fornecedor,
     reserva_online: incoming.reserva_online || base.reserva_online,
     passageiros: incoming.passageiros || base.passageiros,

@@ -1394,7 +1394,7 @@ export function collectImportedRoteiroAereoAliasValues(
   return Array.from(aliases);
 }
 
-function isRexturFormat(lines: string[]) {
+function isConsolidadoraFormat(lines: string[]) {
   if (lines.length < 10) return false;
   const normalized = lines.map((l) => normalizeText(l));
   const hasHeader = normalized.some((l) => l.includes("cia") && l.includes("voo") && l.includes("saida") && l.includes("chegada") && l.includes("origem") && l.includes("destino"));
@@ -1402,47 +1402,47 @@ function isRexturFormat(lines: string[]) {
   return hasHeader && hasSuaEscolha;
 }
 
-function isRexturFlightNumberLine(line: string) {
+function isConsolidadoraFlightNumberLine(line: string) {
   return /^[A-Z0-9]{1,3}\s*\d{1,4}$/i.test(normalizeLine(line));
 }
 
-function isRexturDateTimeLine(line: string) {
+function isConsolidadoraDateTimeLine(line: string) {
   return /^\d{2}\/\d{2}\/\d{4}\s*-\s*\d{2}:\d{2}$/.test(normalizeLine(line));
 }
 
-function parseRexturDateTime(line: string) {
+function parseConsolidadoraDateTime(line: string) {
   const match = normalizeLine(line).match(/^(\d{2})\/(\d{2})\/(\d{4})\s*-\s*(\d{2}:\d{2})$/);
   if (!match) return null;
   return { date: `${match[3]}-${match[2]}-${match[1]}`, time: match[4] };
 }
 
-function isRexturAirlineLine(line: string) {
+function isConsolidadoraAirlineLine(line: string) {
   const normalized = normalizeLine(line);
   if (!normalized) return false;
-  if (isRexturFlightNumberLine(normalized)) return false;
-  if (isRexturDateTimeLine(normalized)) return false;
+  if (isConsolidadoraFlightNumberLine(normalized)) return false;
+  if (isConsolidadoraDateTimeLine(normalized)) return false;
   if (/^\d+$/.test(normalized)) return false;
   return /^[a-zA-ZÀ-ÿ\s]+(\([A-Z0-9]{2,4}\))?$/.test(normalized);
 }
 
-function parseRexturAirline(line: string) {
+function parseConsolidadoraAirline(line: string) {
   const normalized = normalizeLine(line);
   const match = normalized.match(/^([a-zA-ZÀ-ÿ\s]+)\(([A-Z0-9]{2,4})\)$/i);
   if (match) return { cia: toTitleCase(match[1]), code: match[2].toUpperCase() };
   return { cia: toTitleCase(normalized), code: "" };
 }
 
-function isRexturAirportLabelLine(line: string) {
+function isConsolidadoraAirportLabelLine(line: string) {
   const normalized = normalizeLine(line);
   if (!normalized) return false;
-  if (isRexturFlightNumberLine(normalized)) return false;
-  if (isRexturDateTimeLine(normalized)) return false;
+  if (isConsolidadoraFlightNumberLine(normalized)) return false;
+  if (isConsolidadoraDateTimeLine(normalized)) return false;
   if (/^\d+$/.test(normalized)) return false;
   if (normalized.length < 5) return false;
   return /[a-zA-ZÀ-ÿ]/.test(normalized);
 }
 
-function takeRexturBlock(lines: string[], start: number, count: number, predicate: (line: string) => boolean) {
+function takeConsolidadoraBlock(lines: string[], start: number, count: number, predicate: (line: string) => boolean) {
   const values: string[] = [];
   let i = start;
   let consecutiveMisses = 0;
@@ -1460,7 +1460,7 @@ function takeRexturBlock(lines: string[], start: number, count: number, predicat
   return { values, nextIndex: i };
 }
 
-function parseRexturFormat(
+function parseConsolidadoraFormat(
   text: string,
   runtimeAliases: AirportAliasEntry[] = [],
   airportCodeCityLookup: Record<string, string> = {}
@@ -1471,7 +1471,7 @@ function parseRexturFormat(
     .map((line) => normalizeLine(line))
     .filter(Boolean);
 
-  if (!isRexturFormat(lines)) return [];
+  if (!isConsolidadoraFormat(lines)) return [];
 
   const headerIndex = lines.findIndex((line) => {
     const n = normalizeText(line);
@@ -1485,7 +1485,7 @@ function parseRexturFormat(
   let flightStartIdx = -1;
   let flightCount = 0;
   for (let i = 0; i < tail.length; i++) {
-    if (isRexturFlightNumberLine(tail[i])) {
+    if (isConsolidadoraFlightNumberLine(tail[i])) {
       if (flightStartIdx === -1) flightStartIdx = i;
       flightCount++;
     } else if (flightStartIdx !== -1) {
@@ -1497,23 +1497,23 @@ function parseRexturFormat(
   // Cias aéreas: antes do primeiro voo
   const airlineCandidates: string[] = [];
   for (let i = 0; i < flightStartIdx; i++) {
-    if (isRexturAirlineLine(tail[i])) {
+    if (isConsolidadoraAirlineLine(tail[i])) {
       airlineCandidates.push(tail[i]);
     }
   }
 
   let cursor = flightStartIdx + flightCount;
 
-  const departures = takeRexturBlock(tail, cursor, flightCount, isRexturDateTimeLine);
+  const departures = takeConsolidadoraBlock(tail, cursor, flightCount, isConsolidadoraDateTimeLine);
   cursor = departures.nextIndex;
 
-  const arrivals = takeRexturBlock(tail, cursor, flightCount, isRexturDateTimeLine);
+  const arrivals = takeConsolidadoraBlock(tail, cursor, flightCount, isConsolidadoraDateTimeLine);
   cursor = arrivals.nextIndex;
 
-  const origins = takeRexturBlock(tail, cursor, flightCount, isRexturAirportLabelLine);
+  const origins = takeConsolidadoraBlock(tail, cursor, flightCount, isConsolidadoraAirportLabelLine);
   cursor = origins.nextIndex;
 
-  const destinations = takeRexturBlock(tail, cursor, flightCount, isRexturAirportLabelLine);
+  const destinations = takeConsolidadoraBlock(tail, cursor, flightCount, isConsolidadoraAirportLabelLine);
   cursor = destinations.nextIndex;
 
   let totalValue = 0;
@@ -1532,9 +1532,9 @@ function parseRexturFormat(
 
   const imported: ImportedRoteiroAereo[] = [];
   for (let i = 0; i < flightCount; i++) {
-    const airline = parseRexturAirline(airlineCandidates[i] || airlineCandidates[0] || "");
-    const dep = parseRexturDateTime(departures.values[i] || "");
-    const arr = parseRexturDateTime(arrivals.values[i] || "");
+    const airline = parseConsolidadoraAirline(airlineCandidates[i] || airlineCandidates[0] || "");
+    const dep = parseConsolidadoraDateTime(departures.values[i] || "");
+    const arr = parseConsolidadoraDateTime(arrivals.values[i] || "");
     const origin = origins.values[i] || "";
     const dest = destinations.values[i] || "";
 
@@ -1595,8 +1595,8 @@ export function parseImportedRoteiroAereo(
   const providerCards = parseProviderCards(text, referenceDate, runtimeAliases, airportCodeCityLookup);
   if (providerCards.length > 0) return providerCards;
 
-  const rexturDetails = parseRexturFormat(text, runtimeAliases, airportCodeCityLookup);
-  if (rexturDetails.length > 0) return rexturDetails;
+  const consolidadoraDetails = parseConsolidadoraFormat(text, runtimeAliases, airportCodeCityLookup);
+  if (consolidadoraDetails.length > 0) return consolidadoraDetails;
 
   const lines = String(text || "")
     .replace(/\r/g, "\n")

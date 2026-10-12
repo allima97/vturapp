@@ -351,7 +351,7 @@ export async function handleViagensIdGet(event: RequestEvent) {
       client
         .from("vouchers")
         .select(
-          "id, nome, provider, codigo_systur, codigo_fornecedor, data_inicio, data_fim, ativo",
+          "id, nome, provider, codigo_sistema, codigo_fornecedor, data_inicio, data_fim, ativo",
         )
         .eq("viagem_id", id)
         .order("created_at", { ascending: false })

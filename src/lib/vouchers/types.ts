@@ -70,7 +70,7 @@ export type VoucherExtraData = {
 export type VoucherImportResult = {
   provider: VoucherProvider;
   nome: string;
-  codigo_systur: string;
+  codigo_sistema: string;
   codigo_fornecedor: string;
   reserva_online: string;
   passageiros: string;
@@ -91,7 +91,7 @@ export type VoucherRecord = {
   provider: VoucherProvider;
   nome: string;
   status?: 'rascunho' | 'finalizado' | 'cancelado' | null;
-  codigo_systur?: string | null;
+  codigo_sistema?: string | null;
   codigo_fornecedor?: string | null;
   reserva_online?: string | null;
   passageiros?: string | null;
@@ -112,7 +112,7 @@ export type VoucherForm = {
   id: string | null;
   provider: VoucherProvider;
   nome: string;
-  codigo_systur: string;
+  codigo_sistema: string;
   codigo_fornecedor: string;
   reserva_online: string;
   passageiros: string;

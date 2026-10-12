@@ -88,7 +88,7 @@
     id: string;
     nome: string;
     provider: string;
-    codigo_systur: string | null;
+    codigo_sistema: string | null;
     codigo_fornecedor: string | null;
     data_inicio: string | null;
     data_fim: string | null;

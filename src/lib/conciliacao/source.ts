@@ -149,7 +149,7 @@ function getConciliacaoReceiptKey(row: {
   return reserva ? `${documento}::${reserva}` : documento;
 }
 
-function isRexturDocumento(value?: unknown) {
+function isConsolidadoraDocumento(value?: unknown) {
   return toStr(value).toUpperCase() === "REXTUR";
 }
 
@@ -1135,7 +1135,7 @@ export async function fetchEffectiveConciliacaoReceipts(params: {
       const fallbackRecibo =
         !linkedReciboIdFromConc &&
         !numeroReserva &&
-        !isRexturDocumento(documento)
+        !isConsolidadoraDocumento(documento)
           ? reciboByNumeroMap.get(documento) || null
           : null;
       const linkedReciboId =

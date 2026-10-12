@@ -48,7 +48,7 @@ type VoucherHotelDraft = {
 type VoucherCreateBody = {
   provider?: string | null;
   nome?: string | null;
-  codigo_systur?: string | null;
+  codigo_sistema?: string | null;
   codigo_fornecedor?: string | null;
   reserva_online?: string | null;
   passageiros?: string | null;
@@ -80,7 +80,7 @@ export async function handleVouchersGet(event: RequestEvent) {
       let query = client
         .from('vouchers')
         .select(`
-          id, company_id, provider, nome, codigo_systur, codigo_fornecedor,
+          id, company_id, provider, nome, codigo_sistema, codigo_fornecedor,
           reserva_online, passageiros, tipo_acomodacao, operador, resumo,
           data_inicio, data_fim, ativo, extra_data, created_at, updated_at,
           voucher_dias(id, dia_numero, titulo, descricao, data_referencia, cidade, ordem),
@@ -169,7 +169,7 @@ export async function handleVouchersPost(event: RequestEvent) {
         viagem_id: viagemId,
         provider: body.provider || 'special_tours',
         nome: String(body.nome || '').trim(),
-        codigo_systur: body.codigo_systur || null,
+        codigo_sistema: body.codigo_sistema || null,
         codigo_fornecedor: body.codigo_fornecedor || null,
         reserva_online: body.reserva_online || null,
         passageiros: body.passageiros || null,

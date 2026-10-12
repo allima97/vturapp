@@ -546,7 +546,7 @@ export async function ensureAssignableActiveSeller(
   return null;
 }
 
-function isRexturRecibo(numeroRecibo?: string | null): boolean {
+function isConsolidadoraRecibo(numeroRecibo?: string | null): boolean {
   const key = normalizeReceiptKey(numeroRecibo);
   return key === "REXTUR" || key.includes("REXTUR");
 }
@@ -602,7 +602,7 @@ export async function ensureReciboReservaUnicos(params: {
 
   // REXTUR: recibos dessa operadora podem se repetir entre vendas
   const recibosParaValidar = recibos.filter(
-    (item) => !isRexturRecibo(item?.numero_recibo),
+    (item) => !isConsolidadoraRecibo(item?.numero_recibo),
   );
 
   const rawReceiptKeys = recibosParaValidar

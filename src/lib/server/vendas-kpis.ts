@@ -314,11 +314,11 @@ function calcularNaoComissionavelResumo(
 
 function buildReciboBusinessKey(recibo?: ReportReceiptRow | null) {
   if (!recibo) return "";
-  if (isRexturReceipt(recibo?.numero_recibo)) {
+  if (isConsolidadoraReceipt(recibo?.numero_recibo)) {
     const reciboId = toStr(recibo?.id);
-    if (reciboId) return `rextur:${reciboId}`;
+    if (reciboId) return `consolidadora:${reciboId}`;
   }
-  const numeroBase = isRexturReceipt(recibo?.numero_recibo)
+  const numeroBase = isConsolidadoraReceipt(recibo?.numero_recibo)
     ? String(recibo?.numero_reserva || recibo?.numero_recibo || "")
     : String(recibo?.numero_recibo || "");
   const numero = normalizeReceiptNumber(numeroBase);
@@ -330,7 +330,7 @@ function buildReciboBusinessKey(recibo?: ReportReceiptRow | null) {
   return `${numero}::${produtoId || "sem-produto"}::${data}`;
 }
 
-function isRexturReceipt(value?: string | null) {
+function isConsolidadoraReceipt(value?: string | null) {
   return normalizeReceiptNumber(value).includes("rextur");
 }
 

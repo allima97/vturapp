@@ -118,7 +118,7 @@
   let form: WizardForm = {
     provider: 'special_tours',
     nome: '',
-    codigo_systur: '',
+    codigo_sistema: '',
     codigo_fornecedor: '',
     reserva_online: '',
     passageiros: '',
@@ -263,7 +263,7 @@
       ...form,
       provider: imported.provider || form.provider,
       nome: imported.nome || form.nome,
-      codigo_systur: imported.codigo_systur || form.codigo_systur,
+      codigo_sistema: imported.codigo_sistema || form.codigo_sistema,
       codigo_fornecedor: imported.codigo_fornecedor || form.codigo_fornecedor,
       reserva_online: imported.reserva_online || form.reserva_online,
       passageiros: imported.passageiros || form.passageiros,
@@ -513,7 +513,7 @@
         company_id: companyId,
         provider: form.provider,
         nome: form.nome,
-        codigo_systur: form.codigo_systur || null,
+        codigo_sistema: form.codigo_sistema || null,
         codigo_fornecedor: form.codigo_fornecedor || null,
         reserva_online: form.reserva_online || null,
         passageiros: form.passageiros || null,
@@ -619,9 +619,9 @@
               />
 
               <FieldInput
-                id="voucher-codigo-systur"
+                id="voucher-codigo-sistema"
                 label="Código interno"
-                bind:value={form.codigo_systur}
+                bind:value={form.codigo_sistema}
                 placeholder="Código interno"
               />
 

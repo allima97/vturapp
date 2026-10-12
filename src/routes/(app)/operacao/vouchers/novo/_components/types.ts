@@ -10,7 +10,7 @@ import type {
 export interface WizardForm {
   provider: VoucherProvider;
   nome: string;
-  codigo_systur: string;
+  codigo_sistema: string;
   codigo_fornecedor: string;
   reserva_online: string;
   passageiros: string;

@@ -171,7 +171,7 @@ function pickAssetUrls(assets: VoucherAssetRecord[], provider: string, kind: "im
 }
 
 function buildRouteTitle(voucher: VoucherRecord) {
-  const code = textValue(voucher.codigo_fornecedor || voucher.codigo_systur);
+  const code = textValue(voucher.codigo_fornecedor || voucher.codigo_sistema);
   const name = textValue(voucher.nome || "Voucher");
   if (!code) return name;
   if (name.toLowerCase().startsWith(code.toLowerCase())) return name;

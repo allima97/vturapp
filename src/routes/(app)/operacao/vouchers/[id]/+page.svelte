@@ -247,7 +247,7 @@
       const payload = {
         provider: voucher.provider,
         nome: buildDuplicateName(voucher.nome),
-        codigo_systur: voucher.codigo_systur || null,
+        codigo_sistema: voucher.codigo_sistema || null,
         codigo_fornecedor: voucher.codigo_fornecedor || null,
         reserva_online: voucher.reserva_online || null,
         passageiros: voucher.passageiros || null,
@@ -438,11 +438,11 @@
           </div>
           <div class="p-6">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {#if voucher.codigo_systur}
+              {#if voucher.codigo_sistema}
                 <div>
                   <p class="text-sm text-slate-500 mb-1">Código interno</p>
                   <p class="font-medium text-slate-900">
-                    {voucher.codigo_systur}
+                    {voucher.codigo_sistema}
                   </p>
                 </div>
               {/if}

@@ -36,7 +36,7 @@ export async function handleVouchersCreatePost(event: RequestEvent) {
         created_by: user.id,
         provider: body.provider || 'generic',
         nome: body.nome || 'Voucher',
-        codigo_systur: body.codigo_systur || null,
+        codigo_sistema: body.codigo_sistema || null,
         codigo_fornecedor: body.codigo_fornecedor || null,
         reserva_online: body.reserva_online || null,
         operador: body.operador || null,
@@ -48,7 +48,7 @@ export async function handleVouchersCreatePost(event: RequestEvent) {
         tipo_acomodacao: body.tipo_acomodacao || null,
         extra_data: body.extra_data || {}
       }])
-      .select('id, company_id, created_by, provider, nome, codigo_systur, codigo_fornecedor, reserva_online, operador, resumo, data_inicio, data_fim, ativo, passageiros, tipo_acomodacao, extra_data, created_at, updated_at')
+      .select('id, company_id, created_by, provider, nome, codigo_sistema, codigo_fornecedor, reserva_online, operador, resumo, data_inicio, data_fim, ativo, passageiros, tipo_acomodacao, extra_data, created_at, updated_at')
       .single();
 
     if (error) throw error;

@@ -56,7 +56,7 @@
     id: string | null;
     provider: VoucherProvider;
     nome: string;
-    codigo_systur: string;
+    codigo_sistema: string;
     codigo_fornecedor: string;
     reserva_online: string;
     passageiros: string;
@@ -141,7 +141,7 @@
       id: null,
       provider: empty.provider,
       nome: empty.nome,
-      codigo_systur: empty.codigo_systur,
+      codigo_sistema: empty.codigo_sistema,
       codigo_fornecedor: empty.codigo_fornecedor,
       reserva_online: empty.reserva_online,
       passageiros: empty.passageiros,
@@ -165,7 +165,7 @@
       id: v.id,
       provider: v.provider,
       nome: v.nome || '',
-      codigo_systur: v.codigo_systur || '',
+      codigo_sistema: v.codigo_sistema || '',
       codigo_fornecedor: v.codigo_fornecedor || '',
       reserva_online: v.reserva_online || '',
       passageiros: v.passageiros || '',
@@ -346,7 +346,7 @@
       ...form,
       provider: imported.provider || form.provider,
       nome: imported.nome || form.nome,
-      codigo_systur: imported.codigo_systur || form.codigo_systur,
+      codigo_sistema: imported.codigo_sistema || form.codigo_sistema,
       codigo_fornecedor: imported.codigo_fornecedor || form.codigo_fornecedor,
       reserva_online: imported.reserva_online || form.reserva_online,
       passageiros: imported.passageiros || form.passageiros,
@@ -811,9 +811,9 @@
                 />
 
                 <FieldInput
-                  id="voucher-modal-codigo-systur"
+                  id="voucher-modal-codigo-sistema"
                   label="Código interno"
-                  bind:value={form.codigo_systur}
+                  bind:value={form.codigo_sistema}
                   placeholder="Código interno"
                 />
 

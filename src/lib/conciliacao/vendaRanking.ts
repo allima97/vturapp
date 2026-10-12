@@ -130,11 +130,11 @@ function reciboDocumentVariants(recibo: VendaRankingReciboInput) {
   return uniqueCleanStrings(values);
 }
 
-function normalizeRexturReserva(value?: string | null) {
+function normalizeConsolidadoraReserva(value?: string | null) {
   return toStr(value).replace(/^REXTUR[\s-]*/i, '').toUpperCase();
 }
 
-function isRexturRecibo(recibo: VendaRankingReciboInput) {
+function isConsolidadoraRecibo(recibo: VendaRankingReciboInput) {
   return normalizeReceiptKey(recibo.numero_recibo) === 'REXTUR' ||
     normalizeReceiptKey(recibo.numero_recibo_normalizado) === 'REXTUR';
 }
@@ -142,10 +142,10 @@ function isRexturRecibo(recibo: VendaRankingReciboInput) {
 function matchesRecibo(row: ConciliacaoRow, recibo: VendaRankingReciboInput) {
   const linkedReciboId = toStr(row?.venda_recibo_id);
   if (linkedReciboId && linkedReciboId === toStr(recibo.id)) return true;
-  if (isRexturRecibo(recibo)) {
+  if (isConsolidadoraRecibo(recibo)) {
     return normalizeReceiptKey(row?.documento) === 'REXTUR' &&
-      Boolean(normalizeRexturReserva(row?.numero_reserva)) &&
-      normalizeRexturReserva(row?.numero_reserva) === normalizeRexturReserva(recibo.numero_reserva);
+      Boolean(normalizeConsolidadoraReserva(row?.numero_reserva)) &&
+      normalizeConsolidadoraReserva(row?.numero_reserva) === normalizeConsolidadoraReserva(recibo.numero_reserva);
   }
   return numeroReciboMatches(row?.documento, recibo.numero_recibo) ||
     numeroReciboMatches(row?.documento, recibo.numero_recibo_normalizado);
