@@ -165,6 +165,12 @@
         </div>
       {/each}
     </div>
+    <div class="mt-3 flex flex-wrap gap-2">
+      <Button type="button" variant="secondary" size="sm" on:click={() => { passeios = addItem(passeios, newPasseio); }}>
+        <Plus size={13} class="mr-1" />
+        Adicionar passeio
+      </Button>
+    </div>
   {/if}
 
   <div class="mt-6 rounded-xl border border-dashed border-slate-300 p-4">

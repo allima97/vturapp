@@ -41,4 +41,9 @@
       </div>
     {/each}
   </div>
+  {#if opcionais.length > 0}
+    <div class="mt-3">
+      <Button type="button" variant="secondary" size="sm" on:click={() => { opcionais = [...opcionais, { cidade: '', passeios: [] }]; }}>Adicionar cidade</Button>
+    </div>
+  {/if}
 </Card>

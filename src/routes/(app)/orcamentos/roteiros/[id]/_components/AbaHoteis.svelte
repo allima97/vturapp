@@ -199,6 +199,12 @@
         </div>
       {/each}
     </div>
+    <div class="mt-3 flex flex-wrap gap-2">
+      <Button type="button" variant="secondary" size="sm" on:click={() => { hoteis = addItem(hoteis, newHotel); }}>
+        <Plus size={13} class="mr-1" />
+        Adicionar hotel
+      </Button>
+    </div>
   {/if}
 
   <!-- Import por texto -->

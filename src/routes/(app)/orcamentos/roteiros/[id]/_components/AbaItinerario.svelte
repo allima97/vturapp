@@ -102,5 +102,11 @@
         </div>
       {/each}
     </div>
+    <div class="mt-3 flex flex-wrap gap-2">
+      <Button type="button" variant="secondary" size="sm" on:click={() => { dias = addItem(dias, newDia); }}>
+        <Plus size={13} class="mr-1" />
+        Adicionar dia
+      </Button>
+    </div>
   {/if}
 </Card>
