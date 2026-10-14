@@ -133,6 +133,7 @@
   let saving = $state(false);
   let duplicating = $state(false);
   let previewingPdf = $state(false);
+  let incluirCabecalhoRodapePdf = $state(false);
   let abaAtiva: AbaId = $state('itinerario');
 
   // Form fields
@@ -904,6 +905,8 @@
   }
 
   async function resolvePreviewPdfAssets(): Promise<PreviewPdfAssets> {
+    if (!incluirCabecalhoRodapePdf) return { complementUrl: null, qrUrl: null };
+
     const whatsappLink = construirLinkWhatsApp(pdfSettings.whatsapp, pdfSettings.whatsapp_codigo_pais);
     const qrSource = whatsappLink
       ? `/api/v1/qr?size=200&margin=1&text=${encodeURIComponent(whatsappLink)}`
@@ -1177,7 +1180,7 @@
         <body>
           <div class="shell">
             <div class="toolbar"><a class="print-action" href="#" onclick="event.preventDefault(); window.print();">Imprimir / Salvar em PDF</a></div>
-            ${headerCardHtml}
+            ${incluirCabecalhoRodapePdf ? headerCardHtml : ''}
             ${titleCardHtml}
             ${buildPreviewSection('Itinerário Detalhado', diasHtml)}
             ${buildPreviewRawSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
@@ -1188,7 +1191,7 @@
             ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'))}
             ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'))}
             ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
-            ${mostrarRodapePdf ? footerHtml : ''}
+            ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}
           </div>
         </body>
       </html>`;
@@ -1279,6 +1282,15 @@
           placeholder="Ex: São Luís • Barreirinhas • Parnaíba • Teresina"
         />
       </div>
+    </div>
+
+    <div class="mt-4">
+      <FieldCheckbox
+        label="Incluir cabeçalho e rodapé no PDF"
+        helper="Inclui logo, contatos, QR Code e condições de preços (se habilitadas na aba Pagamento). Por padrão, o PDF é gerado sem esses dados."
+        bind:checked={incluirCabecalhoRodapePdf}
+        color="clientes"
+      />
     </div>
 
     <div class="mt-4 flex flex-wrap items-center gap-3">
@@ -1383,6 +1395,15 @@
       <p class="mt-1 text-xs text-slate-400">{informacoesImportantes.split('\n').filter(l => l.trim()).length} linha(s)</p>
     </Card>
   {/if}
+
+  <div class="mt-6">
+    <FieldCheckbox
+        label="Incluir cabeçalho e rodapé no PDF"
+        helper="Inclui logo, contatos, QR Code e condições de preços (se habilitadas na aba Pagamento). Por padrão, o PDF é gerado sem esses dados."
+        bind:checked={incluirCabecalhoRodapePdf}
+        color="clientes"
+      />
+  </div>
 
   <!-- ─── Botão salvar flutuante ─────────────────────────────────────────── -->
   <div class="mt-6 flex justify-end gap-3">
