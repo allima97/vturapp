@@ -1,3 +1,4 @@
+import { parseRoteiroOpcionais } from '$lib/roteiroOpcionais';
 // Migrado para Hono de src/routes/api/v1/roteiros/save/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import { json, type RequestEvent } from '@sveltejs/kit';
@@ -295,6 +296,15 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
     const nome = String(body.nome || '').trim();
     if (!nome) return new Response('Nome obrigatorio.', { status: 400, headers: NO_STORE_HEADERS });
 
+    let opcionais;
+    if (body.opcionais !== undefined) {
+      try {
+        opcionais = parseRoteiroOpcionais(body.opcionais);
+      } catch (err) {
+        return json({ error: err instanceof Error ? err.message : 'Opcionais inválidos.' }, { status: 400, headers: NO_STORE_HEADERS });
+      }
+    }
+
     const companyId = scope.companyId;
     const isNew = !body.id;
 
@@ -315,6 +325,7 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
         created_by: user.id,
         company_id: companyId,
         nome,
+        ...(opcionais !== undefined ? { opcionais } : {}),
         duracao: body.duracao || null,
         inicio_cidade: body.inicio_cidade || null,
         fim_cidade: body.fim_cidade || null,
@@ -347,6 +358,7 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
 
       const updatePayload: Record<string, unknown> = {
         nome,
+        ...(opcionais !== undefined ? { opcionais } : {}),
         duracao: body.duracao || null,
         inicio_cidade: body.inicio_cidade || null,
         fim_cidade: body.fim_cidade || null,

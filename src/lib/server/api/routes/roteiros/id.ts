@@ -27,7 +27,7 @@ export async function handleRoteirosIdGet(event: RequestEvent) {
 
     let query = client
       .from('roteiro_personalizado')
-      .select('id, nome, duracao, inicio_cidade, fim_cidade, inclui_texto, nao_inclui_texto, informacoes_importantes, mostrar_pagamento_pdf, mostrar_informacoes_pdf, mostrar_rodape_pdf, created_by, company_id, created_at, updated_at')
+      .select('id, nome, opcionais, duracao, inicio_cidade, fim_cidade, inclui_texto, nao_inclui_texto, informacoes_importantes, mostrar_pagamento_pdf, mostrar_informacoes_pdf, mostrar_rodape_pdf, created_by, company_id, created_at, updated_at')
       .eq('id', id);
 
     // Não-admin só vê os próprios roteiros

@@ -5,6 +5,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import { flushSync, mount, tick, unmount } from 'svelte';
+import OpcionaisHarness from './harness/RoteiroOpcionaisHarness.svelte';
 import InvestimentoHarness from './harness/RoteiroInvestimentoHarness.svelte';
 import ItinerarioHarness from './harness/RoteiroItinerarioHarness.svelte';
 
@@ -86,6 +87,41 @@ describe('roteiro: aba Itinerário', () => {
     t.botao('Remover dia').click();
     flushSync();
     expect(t.get().dias).toHaveLength(1);
+    t.fim();
+  });
+});
+
+
+describe('roteiro: aba Opcionais', () => {
+  it('edita cidades e passeios sem datas e mantém o vínculo com a página', () => {
+    const t = montar(OpcionaisHarness);
+    t.botao('Adicionar cidade').click();
+    flushSync();
+    const cidade = t.target.querySelector('input')!;
+    cidade.value = 'Barcelona';
+    cidade.dispatchEvent(new Event('input', { bubbles: true }));
+    t.botao('Adicionar passeio opcional').click();
+    flushSync();
+    const nome = t.target.querySelectorAll('input')[1];
+    nome.value = 'Bairro Gótico';
+    nome.dispatchEvent(new Event('input', { bubbles: true }));
+    const descricao = t.target.querySelector('textarea')!;
+    descricao.value = 'Passeio e jantar';
+    descricao.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+    expect(t.get()[0]).toEqual({ cidade: 'Barcelona', passeios: [{ nome: 'Bairro Gótico', descricao: 'Passeio e jantar' }] });
+    expect(t.target.querySelector('input[type="date"]')).toBeNull();
+    t.botao('Adicionar cidade').click();
+    flushSync();
+    t.botao('Descer cidade').click();
+    flushSync();
+    expect(t.get()[1].cidade).toBe('Barcelona');
+    t.botao('Remover opcional').click();
+    flushSync();
+    expect(t.get()[1].passeios).toEqual([]);
+    t.botao('Remover cidade', 1).click();
+    flushSync();
+    expect(t.get()).toHaveLength(1);
     t.fim();
   });
 });

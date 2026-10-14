@@ -48,6 +48,8 @@
   import AbaItinerario from './_components/AbaItinerario.svelte';
   import AbaTransporte from './_components/AbaTransporte.svelte';
   import AbaHoteis from './_components/AbaHoteis.svelte';
+  import AbaOpcionais from './_components/AbaOpcionais.svelte';
+  import { buildOpcionaisHtml, parseRoteiroOpcionais, type RoteiroOpcionalCidade } from '$lib/roteiroOpcionais';
   import AbaPasseios from './_components/AbaPasseios.svelte';
   import AbaPagamento from './_components/AbaPagamento.svelte';
   import AbaInvestimento from './_components/AbaInvestimento.svelte';
@@ -88,6 +90,7 @@
     dias?: RotDia[] | null;
     hoteis?: RotHotel[] | null;
     passeios?: RotPasseio[] | null;
+    opcionais?: RoteiroOpcionalCidade[] | null;
     transportes?: RotTransporte[] | null;
     investimentos?: RotInvestimento[] | null;
     pagamentos?: RotPagamento[] | null;
@@ -108,6 +111,7 @@
     { id: 'itinerario', label: 'Itinerário' },
     { id: 'hoteis', label: 'Hotéis' },
     { id: 'passeios', label: 'Passeios' },
+    { id: 'opcionais', label: 'Opcionais' },
     { id: 'transporte', label: 'Aéreo' },
     { id: 'investimento', label: 'Investimento' },
     { id: 'pagamento', label: 'Pagamento' },
@@ -161,6 +165,7 @@
   let dias: RotDia[] = $state([]);
   let hoteis: RotHotel[] = $state([]);
   let passeios: RotPasseio[] = $state([]);
+  let opcionais: RoteiroOpcionalCidade[] = $state([]);
   let transportes: RotTransporte[] = $state([]);
   let investimentos: RotInvestimento[] = $state([]);
   let pagamentos: RotPagamento[] = $state([]);
@@ -208,6 +213,7 @@
 
   // ─── Counts for tab badges ─────────────────────────────────────────────────
   let tabCounts = $derived({
+    opcionais: opcionais.reduce((total, cidade) => total + cidade.passeios.length, 0),
     itinerario: dias.filter(d => d.cidade || d.percurso || d.data || d.descricao).length,
     hoteis: hoteis.filter(h => h.cidade || h.hotel || h.data_inicio || h.apto || h.categoria).length,
     passeios: passeios.filter(p => p.cidade || p.passeio || p.data_inicio || p.tipo).length,
@@ -331,6 +337,7 @@
         descricao: d.descricao || '',
       }));
       hoteis = (r.hoteis || []).map((h) => ({ ...newHotel(h.ordem ?? 0), ...h }));
+      opcionais = r.opcionais || [];
       passeios = (r.passeios || []).map((p) => ({ ...newPasseio(p.ordem ?? 0), ...p }));
       transportes = (r.transportes || []).map((t) => ({ ...newTransporte(t.ordem ?? 0), ...t }));
       investimentos = (r.investimentos || []).map((i) => ({ ...newInvestimento(i.ordem ?? 0), ...i }));
@@ -390,6 +397,7 @@
         mostrar_rodape_pdf: mostrarRodapePdf,
         dias: dias.map((d, i) => ({ ...d, ordem: i })),
         hoteis: hoteis.map((h, i) => ({ ...h, ordem: i })),
+        opcionais: parseRoteiroOpcionais(opcionais),
         passeios: passeios.map((p, i) => ({ ...p, ordem: i })),
         transportes: transportes.map((t, i) => ({ ...t, ordem: i })),
         investimentos: investimentos.map((inv, i) => ({ ...inv, ordem: i })),
@@ -434,6 +442,7 @@
         mostrar_rodape_pdf: mostrarRodapePdf,
         dias: dias.map((d, i) => ({ ...d, ordem: i })),
         hoteis: hoteis.map((h, i) => ({ ...h, ordem: i })),
+        opcionais: parseRoteiroOpcionais(opcionais),
         passeios: passeios.map((p, i) => ({ ...p, ordem: i })),
         transportes: transportes.map((t, i) => ({ ...t, ordem: i })),
         investimentos: investimentos.map((inv, i) => ({ ...inv, ordem: i })),
@@ -1185,6 +1194,7 @@
             ${buildPreviewSection('Itinerário Detalhado', diasHtml)}
             ${buildPreviewRawSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
             ${buildPreviewRawSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
+            ${buildPreviewSection('Passeios Opcionais — sugestões sem data marcada, não incluídas no valor do roteiro', buildOpcionaisHtml(opcionais, escapePreviewHtml))}
             ${buildPreviewRawSection('Passagem Aérea', transportesHtml, 'preview-airfare-section')}
             ${buildPreviewRawSection('Investimento', investimentoHtml, 'preview-investimento-section')}
             ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
@@ -1334,6 +1344,8 @@
     <AbaHoteis {HOTEL_CATEGORIA_OPTIONS} {HOTEL_REGIME_OPTIONS} {handleImportHotelText} bind:hoteis {hotelImportError} {hotelImportMsg} bind:hotelImportText {onHotelDateChange} {sugestoes} />
 
   <!-- ──────────────────── ABA: PASSEIOS ────────────────────────────────── -->
+  {:else if abaAtiva === 'opcionais'}
+    <AbaOpcionais bind:opcionais />
   {:else if abaAtiva === 'passeios'}
     <AbaPasseios {PASSEIO_TIPO_OPTIONS} {handleImportPasseioText} {passeioImportError} {passeioImportMsg} bind:passeioImportText bind:passeios {sugestoes} />
 
