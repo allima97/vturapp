@@ -15,7 +15,7 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import { getAdminClient, logServerError } from '$lib/server/v1';
 
-export type AuditModulo = 'Vendas' | 'Clientes' | 'Cadastros' | 'Parametros' | 'Escalas' | 'Admin' | 'perfil';
+export type AuditModulo = 'Vendas' | 'Clientes' | 'Cadastros' | 'Parametros' | 'Escalas' | 'Admin' | 'perfil' | 'LGPD';
 
 /** Ações já existentes no histórico da tabela `logs` para o módulo Vendas. */
 export type AuditAcaoVendas =
@@ -49,7 +49,8 @@ export type AuditAcaoOutros =
   | 'escala_dia_lote_salvo' // Escalas
   | 'permissoes_atualizadas' // Admin: { permissoes: { modulo: permissao }, usuario_alterado_id }
   | 'modulos_globais_atualizados' // Admin: { disabled_modules: string[] }
-  | 'perfil_atualizado'; // perfil: payload gravado em users
+  | 'perfil_atualizado' // perfil: payload gravado em users
+  | 'lgpd_anonimizacao'; // LGPD: anonimização de titular (Art. 18)
 
 export type AuditAcao = AuditAcaoVendas | AuditAcaoOutros;
 

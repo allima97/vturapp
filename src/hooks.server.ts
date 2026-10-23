@@ -441,7 +441,8 @@ const authGuard: Handle = async ({ event, resolve }) => {
 		'/api/v1/client-error',
 		'/api/v1/health',
 		'/api/v1/cron/',
-		'/api/v1/read-model/rebuild'
+		'/api/v1/read-model/rebuild',
+		'/api/v1/lgpd/solicitar'
 	];
 
 	const rotasPublicas = [
@@ -466,7 +467,8 @@ const authGuard: Handle = async ({ event, resolve }) => {
 		'/assets',
 		'/public',
 		'/pdfs',
-		'/calculadora'
+		'/calculadora',
+		'/privacidade'
 	];
 
 	const isPublic = rotasPublicas.some((r) => pathMatchesPrefix(pathname, r));

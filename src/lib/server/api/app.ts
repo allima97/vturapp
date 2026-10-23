@@ -64,6 +64,7 @@ import { tipoProdutosRoutes } from './routes/tipo-produtos';
 import { usersRoutes } from './routes/users';
 import { voucherAssetsRoutes } from './routes/voucher-assets';
 import { welcomeEmailRoutes } from './routes/welcome-email';
+import { lgpdRoutes } from './routes/lgpd';
 
 export function createApiApp() {
   const app = new Hono<ApiEnv>().basePath('/api/v1');
@@ -122,6 +123,7 @@ export function createApiApp() {
   app.route('/users', usersRoutes);
   app.route('/voucher-assets', voucherAssetsRoutes);
   app.route('/welcome-email', welcomeEmailRoutes);
+  app.route('/lgpd', lgpdRoutes);
 
   return app;
 }
