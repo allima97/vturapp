@@ -2,7 +2,7 @@ import { createSupabaseServerClient } from '$lib/db/supabase';
 import { dev } from '$app/environment';
 import { env as publicEnv } from '$env/dynamic/public';
 import { sequence } from '@sveltejs/kit/hooks';
-import { redirect, type Handle } from '@sveltejs/kit';
+import { redirect, type Handle, type HandleServerError } from '@sveltejs/kit';
 import {
 	descobrirModulo,
 	listarModulosComHeranca,
@@ -903,3 +903,28 @@ const cacheControlHook: Handle = async ({ event, resolve }) => {
 };
 
 export const handle = sequence(supabaseHook, securityHeadersHook, authGuard, cacheControlHook);
+
+/**
+ * handleError — intercepta erros não tratados no servidor antes de chegarem ao cliente.
+ * Garante que stack traces, caminhos internos e detalhes técnicos NUNCA sejam
+ * enviados ao navegador (OWASP A05: Security Misconfiguration / information disclosure).
+ */
+export const handleError: HandleServerError = ({ error, status }) => {
+	// Logar detalhes completos apenas no servidor
+	logServerError(`[handleError] Erro não tratado HTTP ${status}`, error);
+
+	// Retornar mensagem genérica ao cliente — sem stack trace, sem paths internos
+	if (status >= 500) {
+		return {
+			message: 'Ocorreu um erro interno no servidor. Por favor, tente novamente.',
+		};
+	}
+
+	// Para erros 4xx: manter mensagem de negócio, descartar stack
+	return {
+		message:
+			error instanceof Error
+				? error.message
+				: 'Erro inesperado. Por favor, tente novamente.',
+	};
+};

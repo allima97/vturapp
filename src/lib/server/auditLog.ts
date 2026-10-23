@@ -61,6 +61,62 @@ type AuditEvent = Pick<RequestEvent, 'request' | 'getClientAddress'> & {
 
 const MAX_USER_AGENT = 500;
 
+// ─── Sanitização LGPD ────────────────────────────────────────────────────────
+
+/**
+ * Campos cujo valor é sempre substituído por '[REDACTED]' antes da gravação,
+ * independentemente do formato do valor (LGPD Art. 46 — segurança de dados).
+ */
+const SENSITIVE_KEYS = new Set([
+  'cpf', 'cpf_cnpj', 'documento', 'doc', 'num_doc', 'rg',
+  'senha', 'password', 'token', 'secret', 'api_key', 'authorization',
+]);
+
+// CPF formatado: 000.000.000-00
+const RE_CPF_FORMATTED = /\d{3}\.\d{3}\.\d{3}-\d{2}/g;
+// CPF sem formatação: exatamente 11 dígitos isolados (não parte de número maior)
+const RE_CPF_PLAIN = /(?<!\d)(\d{11})(?!\d)/g;
+
+function maskString(value: string): string {
+  return value
+    .replace(RE_CPF_FORMATTED, '***.***.***-**')
+    .replace(RE_CPF_PLAIN, '***.***.***-**');
+}
+
+/**
+ * Remove ou mascara dados sensíveis do objeto `detalhes` antes da gravação.
+ * Percorre recursivamente objetos aninhados (ex: payload completo de cliente).
+ */
+function sanitizeDetalhes(
+  obj: Record<string, unknown> | null,
+): Record<string, unknown> | null {
+  if (!obj || typeof obj !== 'object') return obj;
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    const keyLow = k.toLowerCase();
+    if (SENSITIVE_KEYS.has(keyLow) && (typeof v === 'string' || typeof v === 'number')) {
+      out[k] = '[REDACTED]';
+    } else if (typeof v === 'string') {
+      out[k] = maskString(v);
+    } else if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+      out[k] = sanitizeDetalhes(v as Record<string, unknown>);
+    } else if (Array.isArray(v)) {
+      out[k] = v.map((item) =>
+        typeof item === 'string'
+          ? maskString(item)
+          : item !== null && typeof item === 'object'
+          ? sanitizeDetalhes(item as Record<string, unknown>)
+          : item,
+      );
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 function resolveIp(event: AuditEvent): string | null {
   const cf = event.request.headers.get('cf-connecting-ip')?.trim();
   if (cf) return cf;
@@ -105,7 +161,10 @@ export function registrarLog(
       user_id: params.userId || null,
       modulo: params.modulo,
       acao: params.acao,
-      detalhes: typeof params.detalhes === 'function' ? null : (params.detalhes ?? null),
+      // sanitizeDetalhes remove CPF e campos sensíveis antes de gravar (LGPD Art. 46)
+      detalhes: sanitizeDetalhes(
+        typeof params.detalhes === 'function' ? null : (params.detalhes ?? null),
+      ),
       ip: resolveIp(event),
       user_agent: (event.request.headers.get('user-agent') || '').slice(0, MAX_USER_AGENT) || null,
     };
@@ -117,7 +176,7 @@ export function registrarLog(
   const task = (async () => {
     try {
       if (typeof params.detalhes === 'function') {
-        row.detalhes = (await params.detalhes()) ?? null;
+        row.detalhes = sanitizeDetalhes((await params.detalhes()) ?? null);
       }
       const { error } = await getAdminClient().from('logs').insert(row);
       if (error) throw error;
