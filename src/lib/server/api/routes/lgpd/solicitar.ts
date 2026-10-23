@@ -133,12 +133,12 @@ export async function handleLgpdSolicitarPost(event: RequestEvent) {
       return json({ error: 'Erro ao registrar solicitação. Tente novamente.' }, { status: 500, headers: NO_STORE_HEADERS });
     }
 
-    // Log de auditoria (best-effort)
-    registrarLog(event, 'Admin', 'lgpd_solicitacao_recebida' as never, {
-      id: solicitacao.id,
-      tipo,
-      titular_email: email
-    }).catch(() => {});
+    // Log de auditoria (best-effort, fire-and-forget)
+    registrarLog(event, {
+      modulo: 'LGPD',
+      acao: 'lgpd_solicitacao_recebida',
+      detalhes: { id: solicitacao.id, tipo, titular_email: email }
+    });
 
     return json({
       ok: true,

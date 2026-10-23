@@ -50,7 +50,8 @@ export type AuditAcaoOutros =
   | 'permissoes_atualizadas' // Admin: { permissoes: { modulo: permissao }, usuario_alterado_id }
   | 'modulos_globais_atualizados' // Admin: { disabled_modules: string[] }
   | 'perfil_atualizado' // perfil: payload gravado em users
-  | 'lgpd_anonimizacao'; // LGPD: anonimização de titular (Art. 18)
+  | 'lgpd_anonimizacao'   // LGPD: anonimização de titular (Art. 18)
+  | 'lgpd_solicitacao_recebida'; // LGPD: nova solicitação de direito (Art. 18)
 
 export type AuditAcao = AuditAcaoVendas | AuditAcaoOutros;
 

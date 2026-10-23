@@ -16,10 +16,10 @@ export async function handleLgpdMeusDadosGet(event: RequestEvent) {
     const client = getAdminClient();
     const user = await requireAuthenticatedUser(event);
 
-    // Dados do perfil do usuário
+    // Dados do perfil do usuário (email vem do objeto auth já autenticado)
     const { data: perfil } = await client
       .from('users')
-      .select('id, nome_completo, email: auth.users(email), telefone, cidade, estado, created_at, updated_at, use_individual, active')
+      .select('id, nome_completo, telefone, cidade, estado, created_at, updated_at, uso_individual, active')
       .eq('id', user.id)
       .maybeSingle();
 

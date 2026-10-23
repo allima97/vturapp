@@ -229,6 +229,7 @@ const PUBLIC_API_RATE_LIMITS: RateLimitRule[] = [
 	{ prefix: '/api/auth/turnstile/verify', methods: ['POST'], limit: 20, windowMs: 60_000 },
 	{ prefix: '/api/v1/cards', limit: 60, windowMs: 60_000 },
 	{ prefix: '/api/v1/client-error', methods: ['POST'], limit: 30, windowMs: 60_000 },
+	{ prefix: '/api/v1/lgpd/solicitar', methods: ['POST'], limit: 10, windowMs: 60_000 },
 	{ prefix: '/api/v1/cron/', limit: 30, windowMs: 60_000 }
 ];
 
