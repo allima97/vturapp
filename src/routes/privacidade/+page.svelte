@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { PUBLIC_ENVIRONMENT } from '$env/static/public';
+  import { PUBLIC_ENVIRONMENT, PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public';
 
   const DPO_EMAIL = 'dpo@vtur.com.br';
   const EMPRESA_NOME = 'Vtur Tecnologia Ltda';
@@ -254,9 +254,7 @@
               <!-- Turnstile widget -->
               <div
                 class="cf-turnstile"
-                data-sitekey={PUBLIC_ENVIRONMENT === 'production'
-                  ? '0x4AAAAAAAxxxxxx'
-                  : '1x00000000000000000000AA'}
+                data-sitekey={PUBLIC_TURNSTILE_SITE_KEY || (PUBLIC_ENVIRONMENT === 'production' ? '' : '1x00000000000000000000AA')}
                 data-callback="onTurnstileSuccess"
               ></div>
 

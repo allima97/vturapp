@@ -230,6 +230,7 @@
     { key: 'admin_permissoes', name: 'Permissões', href: '/admin/permissoes', icon: Shield },
     { key: 'admin_parametros_importacao', name: 'Parâmetros importação', href: '/admin/parametros-importacao', icon: Settings },
     { key: 'admin_fix_recibos', name: 'Correção de recibos', href: '/admin/fix-recibos', icon: RefreshCw },
+    { key: 'admin_lgpd', name: 'LGPD', href: '/admin/lgpd', icon: Shield, systemOnly: true },
     { key: 'admin_logs', name: 'Logs', href: '/dashboard/logs', icon: FileText, systemOnly: true },
     { key: 'admin_documentacao', name: 'Documentação', href: '/documentacao', icon: FileText, systemOnly: true }
   ];
@@ -771,6 +772,17 @@
 
     <!-- Footer -->
     <div class="vtur-sidebar__footer">
+      <a
+        href="/privacidade"
+        class="vtur-sidebar__item opacity-70 hover:opacity-100"
+        title="Política de privacidade e seus direitos (LGPD)"
+        on:click={handleItemClick}
+      >
+        <div class="vtur-sidebar__item-main">
+          <Shield size={18} class="vtur-sidebar__item-icon" />
+          <span class="vtur-sidebar__item-label text-xs">Privacidade & LGPD</span>
+        </div>
+      </a>
       <div class="vtur-sidebar__quick-actions">
         <Button
           type="button"
