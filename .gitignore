@@ -23,3 +23,7 @@ src/src/
 .env
 .env.*
 !.env.example
+
+# Wrangler dev secrets (nunca versionar)
+.dev.vars
+!.dev.vars.example

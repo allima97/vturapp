@@ -2,23 +2,31 @@ name = "vturapp"
 main = ".svelte-kit/cloudflare/_worker.js"
 compatibility_date = "2026-04-19"
 
-# Configure os bindings no Cloudflare, fora do repositorio:
-#   wrangler secret put PUBLIC_SUPABASE_URL
-#   wrangler secret put PUBLIC_SUPABASE_ANON_KEY
-#   wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+# ─────────────────────────────────────────────────────────────────────────────
+# SECRETS — configure via wrangler secret (nunca neste arquivo):
 #
-# Secrets para o Cron Trigger (rebuild do read model de ranking):
-#   wrangler secret put CRON_SECRET       # segredo validado pelo endpoint GET /api/v1/read-model/rebuild
-#   wrangler secret put WORKER_BASE_URL   # URL base do worker, ex: https://vtur-svelte.pages.dev
+#   Produção:
+#     wrangler secret put BETTER_AUTH_SECRET
+#     wrangler secret put RESEND_API_KEY
 #
-# Nao fixe credenciais/projetos de producao neste arquivo.
-
-# Fase 3.4 (velocidade): o banco (Supabase) fica em us-west-2 (Oregon). Sem esta
-# opção o Worker roda perto do usuário (São Paulo) e CADA consulta ao banco
-# atravessa o continente (~200 ms). Com ela, o Worker roda ao lado do banco:
-# o usuário paga uma ida até lá por requisição e as consultas ficam em poucos ms.
-# Arquivos estáticos (assets) continuam saindo do ponto mais próximo do usuário.
-# Para desfazer: remova este bloco e publique de novo.
+#   Staging (wrangler secret put --env staging ...):
+#     wrangler secret put BETTER_AUTH_SECRET --env staging
+#     wrangler secret put RESEND_API_KEY --env staging
+#
+#   Supabase (legado — manter enquanto aplicação antiga estiver ativa):
+#     wrangler secret put PUBLIC_SUPABASE_URL
+#     wrangler secret put PUBLIC_SUPABASE_ANON_KEY
+#     wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+#
+#   Cron (legado — substituído pelo handler scheduled() nativo em F1-02):
+#     wrangler secret put CRON_SECRET
+#     wrangler secret put WORKER_BASE_URL
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# PLACEMENT
+# Oregon (aws:us-west-2) era necessário pela proximidade com Supabase.
+# Com D1 (distribuído), avaliar remoção em F1-02 após medir latência.
+# Manter por enquanto para não afetar a aplicação legada.
 [placement]
 region = "aws:us-west-2"
 
@@ -26,17 +34,56 @@ region = "aws:us-west-2"
 directory = ".svelte-kit/cloudflare"
 binding = "ASSETS"
 
-# KV Cache: cache distribuído compartilhado entre todas as instâncias Workers.
-# Usado para broadcast de invalidação de cache cross-instance.
+# ─── KV ───────────────────────────────────────────────────────────────────────
 [[kv_namespaces]]
 binding = "KV_BINDING"
 id = "60fa423718914712bec4f489d41c3dd6"
 
-# Cron Trigger: reconstrói o read model de ranking a cada 5 minutos.
-# O endpoint GET /api/v1/read-model/rebuild valida o header x-cron-secret
-# (configurado via: wrangler secret put CRON_SECRET)
+# ─── D1 — banco relacional principal ─────────────────────────────────────────
+# Produção: criar com `wrangler d1 create vturapp-db` e substituir o database_id.
+[[d1_databases]]
+binding = "DB"
+database_name = "vturapp-db"
+database_id = "PLACEHOLDER_PROD_D1_ID"   # substituir após: wrangler d1 create vturapp-db
+
+# ─── R2 — arquivos privados ───────────────────────────────────────────────────
+# Produção: criar com `wrangler r2 bucket create vturapp-files`.
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "vturapp-files"
+
+# ─── CRON ─────────────────────────────────────────────────────────────────────
+# O handler scheduled() será implementado diretamente no Worker em F1-02,
+# eliminando o scripts/patch-worker-scheduled.js.
+# Crons mantidos com os mesmos horários; o handler de lógica muda.
 [triggers]
-# "7 6 * * *" = rodada noturna às 03:07 de Brasília (marca os meses anteriores para
-# refazer; o cron de 5 min reconstrói durante a madrugada). Ver NIGHTLY_READ_MODEL_CRON
-# em src/lib/server/readModelRebuild.ts — os dois valores precisam ser iguais.
+crons = ["*/5 * * * *", "7 6 * * *"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AMBIENTE: staging
+# ─────────────────────────────────────────────────────────────────────────────
+[env.staging]
+name = "vturapp-staging"
+
+[env.staging.placement]
+region = "aws:us-west-2"
+
+[env.staging.assets]
+directory = ".svelte-kit/cloudflare"
+binding = "ASSETS"
+
+[[env.staging.kv_namespaces]]
+binding = "KV_BINDING"
+id = "PLACEHOLDER_STAGING_KV_ID"   # criar com: wrangler kv namespace create vturapp-kv --env staging
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "vturapp-db-staging"
+database_id = "PLACEHOLDER_STAGING_D1_ID"   # criar com: wrangler d1 create vturapp-db-staging
+
+[[env.staging.r2_buckets]]
+binding = "R2"
+bucket_name = "vturapp-files-staging"
+
+[env.staging.triggers]
 crons = ["*/5 * * * *", "7 6 * * *"]

@@ -1,0 +1,25 @@
+# .dev.vars — segredos para `wrangler dev` (desenvolvimento local)
+# Copie para .dev.vars e preencha os valores. NÃO versionar .dev.vars.
+#
+# Variáveis públicas (VITE_* ou PUBLIC_*) vão em .env.local.
+# .dev.vars é lido APENAS pelo wrangler dev, não pelo vite dev.
+
+# Better Auth
+BETTER_AUTH_SECRET=gere-com-openssl-rand-base64-32
+
+# E-mail transacional (Resend)
+RESEND_API_KEY=re_test_sua_chave_aqui
+
+# Ambiente
+PUBLIC_ENVIRONMENT=development
+
+# Cloudflare Turnstile (chave de teste — sempre aprova)
+PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+
+# ── LEGADO (manter enquanto aplicação Supabase estiver ativa) ─────────────────
+PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
+PUBLIC_SUPABASE_ANON_KEY=sua-anon-key
+SUPABASE_SERVICE_ROLE_KEY=sua-service-role-key
+CRON_SECRET=segredo-do-cron-legado
+WORKER_BASE_URL=http://localhost:8787

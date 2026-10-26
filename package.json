@@ -15,7 +15,13 @@
 		"api:inventory:check": "node scripts/api-inventory.mjs --check",
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write .",
-		"test:watch": "vitest --dir src"
+		"test:watch": "vitest --dir src",
+		"d1:local:create": "wrangler d1 execute vturapp-db --local --command \"SELECT 1\"",
+		"d1:migrate:local": "wrangler d1 migrations apply vturapp-db --local",
+		"d1:migrate:staging": "wrangler d1 migrations apply vturapp-db-staging --env staging",
+		"d1:migrate:prod": "wrangler d1 migrations apply vturapp-db --env production",
+		"dev:cf": "wrangler dev --local",
+		"cf:deploy:staging": "npm run cf:build && npx wrangler deploy --env staging"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-cloudflare": "^7.2.8",
