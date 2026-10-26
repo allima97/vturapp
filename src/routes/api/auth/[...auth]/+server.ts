@@ -7,16 +7,18 @@
  *   POST /api/auth/sign-out
  *   GET  /api/auth/session
  *   POST /api/auth/two-factor/enable
+ *   POST /api/auth/verify-email
+ *   POST /api/auth/forgot-password
+ *   POST /api/auth/reset-password
  *   ...
  *
- * Em F2-02, o svelteKitHandler no hooks.server.ts poderá substituir
- * esta rota. Por ora, usamos o handler explícito aqui para manter
- * controle fino sobre as rotas auth vs rotas de negócio.
+ * F2-02: passa resendApiKey para habilitar verificação de e-mail e
+ *        redefinição de senha via Resend.
  *
  * Referência: docs/f1/F1-04-better-auth.md
  */
 
-import type { RequestHandler } from '.$types';
+import type { RequestHandler } from './$types';
 import { createAuth } from '$lib/auth';
 
 const handler: RequestHandler = async ({ request, platform }) => {
@@ -29,12 +31,16 @@ const handler: RequestHandler = async ({ request, platform }) => {
     return new Response('BETTER_AUTH_SECRET não configurado', { status: 503 });
   }
 
+  const baseURL =
+    env.PUBLIC_ENVIRONMENT === 'production'
+      ? 'https://vturapp.com.br'
+      : env.PUBLIC_APP_URL ?? 'http://localhost:5173';
+
   const auth = createAuth(
     env.DB,
     env.BETTER_AUTH_SECRET,
-    env.PUBLIC_ENVIRONMENT === 'production'
-      ? 'https://vturapp.com.br'  // TODO F2-02: configurar via PUBLIC_APP_URL env var
-      : undefined
+    baseURL,
+    env.RESEND_API_KEY   // F2-02: habilitado para verificação de e-mail
   );
 
   return auth.handler(request);
