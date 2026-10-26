@@ -22,7 +22,10 @@
     "d1:migrate:prod": "wrangler d1 migrations apply vturapp-db --env production",
     "dev:cf": "wrangler dev --local",
     "cf:deploy:staging": "npm run cf:build && npx wrangler deploy --env staging",
-    "legacy:patch-scheduled": "node scripts/patch-worker-scheduled.js"
+    "legacy:patch-scheduled": "node scripts/patch-worker-scheduled.js",
+    "drizzle:generate": "drizzle-kit generate",
+    "drizzle:push:local": "drizzle-kit push --config drizzle.config.ts",
+    "drizzle:studio": "drizzle-kit studio"
   },
   "devDependencies": {
     "@sveltejs/adapter-cloudflare": "^7.2.8",
@@ -47,7 +50,8 @@
     "vite": "^5.4.0",
     "vitest": "^2.0.4",
     "wrangler": "^4.87.0",
-    "yaml": "^2.8.4"
+    "yaml": "^2.8.4",
+    "drizzle-kit": "^0.31.11"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.8.0",
@@ -70,7 +74,8 @@
     "lucide-svelte": "^1.0.1",
     "pdfjs-dist": "^5.7.284",
     "svelte-bottom-sheet": "^2.3.0",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.0",
+    "drizzle-orm": "^0.45.4"
   },
   "type": "module",
   "overrides": {
