@@ -15,6 +15,7 @@ import { Hono } from 'hono';
 import type { ApiEnv } from './types';
 import { requestContext, handleApiError, handleNotFound } from './middleware';
 import { invitesV2Routes } from './routes/invites-v2';
+import { tenantProofRoutes } from './routes/tenant-proof';
 
 export function createApiAppV2() {
   const app = new Hono<ApiEnv>().basePath('/api/v2');
@@ -33,6 +34,9 @@ export function createApiAppV2() {
 
   // ── Invites (F2-02) ───────────────────────────────────────────────────────
   app.route('/invites', invitesV2Routes);
+
+  // ── F2-04 Tenant Isolation Proof (non-production only) ────────────────────
+  app.route('/f2-proof', tenantProofRoutes);
 
   return app;
 }
