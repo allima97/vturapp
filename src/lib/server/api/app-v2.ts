@@ -4,6 +4,11 @@
  * Rotas F2 usam Better Auth + D1 diretamente (sem Supabase).
  * Paralelo ao app-v1 existente; não altera as rotas /api/v1/*.
  *
+ * Middlewares globais (F2-05):
+ *   - securityHeaders  — CSP, HSTS, X-Content-Type-Options, X-Frame-Options
+ *   - rateLimitMiddleware — 120 req/min por IP
+ *   - csrfProtection   — verifica Origin em mutating requests
+ *
  * Rotas disponíveis:
  *   /api/v2/health     — health check (prova que o app v2 está ativo)
  *   /api/v2/invites    — fluxo completo de convite F2-02
@@ -16,11 +21,23 @@ import type { ApiEnv } from './types';
 import { requestContext, handleApiError, handleNotFound } from './middleware';
 import { invitesV2Routes } from './routes/invites-v2';
 import { tenantProofRoutes } from './routes/tenant-proof';
+import { securityHeaders, csrfProtection } from './middleware/security';
+import { rateLimitMiddleware } from './middleware/rate-limit';
 
 export function createApiAppV2() {
   const app = new Hono<ApiEnv>().basePath('/api/v2');
 
   app.use('*', requestContext);
+  app.use('*', securityHeaders);
+  app.use(
+    '*',
+    rateLimitMiddleware({
+      windowMs: 60_000,
+      maxRequests: 120,
+      excludePaths: ['/api/v2/health'],
+    })
+  );
+  app.use('*', csrfProtection());
   app.onError((err, c) => {
     const res = handleApiError(err, c.get('requestId'));
     return res;
