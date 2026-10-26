@@ -66,6 +66,7 @@ import { voucherAssetsRoutes } from './routes/voucher-assets';
 import { welcomeEmailRoutes } from './routes/welcome-email';
 import { lgpdRoutes } from './routes/lgpd';
 import { r2ProofRoutes } from './routes/r2-proof';
+import { emailProofRoutes } from './routes/email-proof';
 
 export function createApiApp() {
   const app = new Hono<ApiEnv>().basePath('/api/v1');
@@ -126,6 +127,7 @@ export function createApiApp() {
   app.route('/welcome-email', welcomeEmailRoutes);
   app.route('/lgpd', lgpdRoutes);
   app.route('/r2-proof', r2ProofRoutes); // F1-05 — remover em produção após F2-03
+  app.route('/email-proof', emailProofRoutes); // F1-07 — remover em produção após F2-03
 
   return app;
 }
