@@ -144,10 +144,10 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 
 | Fase | Objetivo | Dependência | Estado inicial |
 |---|---|---|---|
-| F0 | Inventário, regras, baseline e validação contínua | Nenhuma | PENDENTE; esta revisão é insumo parcial |
-| F1 | Prova de stack em ambiente isolado | F0 | PENDENTE |
-| F2 | Identidade, permissões e fundação de dados | F1 | PENDENTE |
-| F3 | Primeiro fluxo completo e base visual | F2 | PENDENTE |
+| F0 | Inventário, regras, baseline e validação contínua | Nenhuma | CONCLUÍDA (26/10/2026, commit `8aeaa5e0`; evidências em `docs/f0/`) |
+| F1 | Prova de stack em ambiente isolado | F0 | CONCLUÍDA (26/10/2026, commits `76b2b0dd`–`06dcbbf8`; evidências em `docs/f1/`) |
+| F2 | Identidade, permissões e fundação de dados | F1 | CONCLUÍDA (26/10/2026, commits `06cf08d7`–`b4a91f6b`; evidências em `docs/f2/`; baseline revalidada em `c8bb5a58`) |
+| F3 | Primeiro fluxo completo e base visual | F2 | EM ANDAMENTO |
 | F4 | Núcleo de vendas e financeiro | F3 | PENDENTE |
 | F5 | Demais módulos e tarefas | F4 para dependências comerciais | PENDENTE |
 | F6 | Operação, carga, recuperação e revisão final | F3–F5 | PENDENTE; medições começam antes |
@@ -156,36 +156,36 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 
 ### F0 — entender e estabelecer a referência
 
-- [ ] F0-01: registrar branch, SHA, alterações existentes, versões resolvidas e baseline de check/testes/build; manter falhas preexistentes identificadas e com destino, sem declará-las resolvidas.
-- [ ] F0-02: reconciliar inventário por **rota + método**, incluindo aliases, endpoints SvelteKit fora do Hono, auth, uploads, exports, debug, webhooks, crons e chamadas diretas ao Supabase no cliente.
-- [ ] F0-03: catalogar entidades, schema disponível e RPCs referenciadas. Se faltar informação, obter apenas o schema necessário com acesso de leitura; não exportar dados pessoais para documentação. Ao mapear entidades para o Drizzle, registrar a convenção de tipos para o SQLite: booleanos → INTEGER (0/1), datas sem hora → TEXT ISO 8601, timestamps → TEXT ISO 8601 UTC, UUIDs → TEXT, valores monetários → INTEGER (centavos). O SQLite usa tipagem por afinidade e não por declaração rígida; os tipos TypeScript gerados pelo Drizzle devem expressar essas convenções explicitamente para evitar inconsistências silenciosas em runtime — especialmente após a migração do PostgreSQL, onde booleano e timestamp têm tipos nativos distintos.
-- [ ] F0-04: montar mapa de regras e papéis com exemplos. Para cada função existente: manter, redesenhar ou excluir; remoções de conciliação/importadores entram como exclusão deliberada.
-- [ ] F0-05: preparar CI em modo de execução única: tipos, testes, inventário e build. Acrescentar testes D1/Worker e E2E à medida que os fluxos existirem; não depender de mocks Supabase para provar a camada nova. E2E com Playwright sobre 3–5 fluxos críticos (login, criação de venda, acesso negado); a correção do `npm test` para modo `run` está registrada na seção 9. Para testes que acessam D1/KV/R2, usar `@cloudflare/vitest-pool-workers` — integração oficial que roda sobre o Miniflare e simula o runtime Workers com fidelidade (o uso programático direto do Miniflare é desaconselhado; o pacote segue como motor do `wrangler dev`). O projeto usa `vitest.workspace.ts` com grupos `unit`/`dom`: o pool de Workers entra como terceiro grupo, sem migrar a suíte existente. Conferir a faixa de peer dependency do Vitest antes de instalar (projeto em Vitest 2.1.9).
-- [ ] F0-06: definir cenários de UX/performance e dados sintéticos; registrar requisitos de custo, volume, simultaneidade, disponibilidade e recuperação ainda desconhecidos. Estimar linhas lidas/escritas por rebuild do read model e o custo mensal projetado no D1 (cobrança por linha lida/escrita, limites diários no Free) antes de decidir onde as agregações vivem: consulta direta, tabela pré-agregada por escrita ou cron noturno.
-- [ ] F0-07: registrar decisões pendentes de login, papéis, UI e escopo mínimo do lançamento. Registrar que importação histórica está DISPENSADA por decisão do usuário. Criar `docs/adr/` com um arquivo por decisão (stack, autenticação, UI, tempo real, dinheiro/datas); decisão nova ou revertida vira arquivo novo, nunca edição retroativa.
+- [x] F0-01: registrar branch, SHA, alterações existentes, versões resolvidas e baseline de check/testes/build; manter falhas preexistentes identificadas e com destino, sem declará-las resolvidas.
+- [x] F0-02: reconciliar inventário por **rota + método**, incluindo aliases, endpoints SvelteKit fora do Hono, auth, uploads, exports, debug, webhooks, crons e chamadas diretas ao Supabase no cliente.
+- [x] F0-03: catalogar entidades, schema disponível e RPCs referenciadas. Se faltar informação, obter apenas o schema necessário com acesso de leitura; não exportar dados pessoais para documentação. Ao mapear entidades para o Drizzle, registrar a convenção de tipos para o SQLite: booleanos → INTEGER (0/1), datas sem hora → TEXT ISO 8601, timestamps → TEXT ISO 8601 UTC, UUIDs → TEXT, valores monetários → INTEGER (centavos). O SQLite usa tipagem por afinidade e não por declaração rígida; os tipos TypeScript gerados pelo Drizzle devem expressar essas convenções explicitamente para evitar inconsistências silenciosas em runtime — especialmente após a migração do PostgreSQL, onde booleano e timestamp têm tipos nativos distintos.
+- [x] F0-04: montar mapa de regras e papéis com exemplos. Para cada função existente: manter, redesenhar ou excluir; remoções de conciliação/importadores entram como exclusão deliberada.
+- [x] F0-05: preparar CI em modo de execução única: tipos, testes, inventário e build. Acrescentar testes D1/Worker e E2E à medida que os fluxos existirem; não depender de mocks Supabase para provar a camada nova. E2E com Playwright sobre 3–5 fluxos críticos (login, criação de venda, acesso negado); a correção do `npm test` para modo `run` está registrada na seção 9. Para testes que acessam D1/KV/R2, usar `@cloudflare/vitest-pool-workers` — integração oficial que roda sobre o Miniflare e simula o runtime Workers com fidelidade (o uso programático direto do Miniflare é desaconselhado; o pacote segue como motor do `wrangler dev`). O projeto usa `vitest.workspace.ts` com grupos `unit`/`dom`: o pool de Workers entra como terceiro grupo, sem migrar a suíte existente. Conferir a faixa de peer dependency do Vitest antes de instalar (projeto em Vitest 2.1.9).
+- [x] F0-06: definir cenários de UX/performance e dados sintéticos; registrar requisitos de custo, volume, simultaneidade, disponibilidade e recuperação ainda desconhecidos. Estimar linhas lidas/escritas por rebuild do read model e o custo mensal projetado no D1 (cobrança por linha lida/escrita, limites diários no Free) antes de decidir onde as agregações vivem: consulta direta, tabela pré-agregada por escrita ou cron noturno.
+- [x] F0-07: registrar decisões pendentes de login, papéis, UI e escopo mínimo do lançamento. Registrar que importação histórica está DISPENSADA por decisão do usuário. Criar `docs/adr/` com um arquivo por decisão (stack, autenticação, UI, tempo real, dinheiro/datas); decisão nova ou revertida vira arquivo novo, nunca edição retroativa.
 
 **Aceite:** catálogo rastreável, exclusões explícitas, baseline reproduzível, nenhum dado antigo alterado. Primeiro passo da execução é F0-01, não instalar pacotes.
 
 ### F1 — provar a combinação de ferramentas
 
-- [ ] F1-01: criar linha de trabalho isolada e ambientes local/staging/produção com bindings, secrets, buckets e bancos distintos; registrar recursos sem credenciais.
-- [ ] F1-02: testar conjunto estável de SvelteKit/Svelte/Vite/adapter/Hono/Wrangler e runtime. Validar SSR, assets, cookies, variáveis, ponte Hono e cron; guardar versões exatas e motivos em decisão técnica. Cron pelo handler `scheduled()` nativo do Worker, sem endpoint HTTP público nem segredo em header: `scripts/patch-worker-scheduled.js` e a rota `/api/v1/read-model/rebuild` não têm equivalente na aplicação nova.
-- [ ] F1-03: testar Drizzle + D1: criar banco vazio, aplicar migrations, inserir, consultar, editar condicionalmente, falhar e reverter um lote; validar constraints no runtime Cloudflare. Verificar que os tipos TypeScript do schema Drizzle expressam as convenções de tipo SQLite registradas na F0-03; confirmar inserção e leitura correta de booleanos, datas, UUIDs e valores monetários entre o modelo de domínio e o armazenamento D1 — inconsistência aqui propaga erros silenciosos para toda a camada de negócio.
-- [ ] F1-04: testar Better Auth em D1/Workers com sessão revogável, MFA/passkey e e-mail de teste. Validar dependências e adapters da versão escolhida, sem copiar imports antigos do plano. Plano B registrado desde já: se a prova falhar, implementar sessão própria sobre Drizzle (cookie HttpOnly com token gravado com hash no banco, expiração e revogação na aplicação — o modelo que a documentação do Lucia passou a ensinar como guia); o escopo de auth do VTUR (e-mail/senha, TOTP, passkeys, convites) é moderado e viável sem biblioteca.
-- [ ] F1-05: testar upload/download privado R2 com acesso negado para outra empresa e estratégia de falha/limpeza.
-- [ ] F1-06: comparar um formulário/modal representativo na base visual atual e na candidata. Registrar escolha e plano de substituição dos wrappers legados.
-- [ ] F1-07: provar envio de e-mail transacional no runtime por API HTTP (Resend ou equivalente). SMTP cru não é viável em Workers no fluxo normal, e o sistema atual aceita SMTP por empresa (`src/lib/server/emailSettings.ts`): decidir se a configuração por empresa passa a aceitar só provedores HTTP ou se o modelo de configuração muda.
+- [x] F1-01: criar linha de trabalho isolada e ambientes local/staging/produção com bindings, secrets, buckets e bancos distintos; registrar recursos sem credenciais.
+- [x] F1-02: testar conjunto estável de SvelteKit/Svelte/Vite/adapter/Hono/Wrangler e runtime. Validar SSR, assets, cookies, variáveis, ponte Hono e cron; guardar versões exatas e motivos em decisão técnica. Cron pelo handler `scheduled()` nativo do Worker, sem endpoint HTTP público nem segredo em header: `scripts/patch-worker-scheduled.js` e a rota `/api/v1/read-model/rebuild` não têm equivalente na aplicação nova.
+- [x] F1-03: testar Drizzle + D1: criar banco vazio, aplicar migrations, inserir, consultar, editar condicionalmente, falhar e reverter um lote; validar constraints no runtime Cloudflare. Verificar que os tipos TypeScript do schema Drizzle expressam as convenções de tipo SQLite registradas na F0-03; confirmar inserção e leitura correta de booleanos, datas, UUIDs e valores monetários entre o modelo de domínio e o armazenamento D1 — inconsistência aqui propaga erros silenciosos para toda a camada de negócio.
+- [x] F1-04: testar Better Auth em D1/Workers com sessão revogável, MFA/passkey e e-mail de teste. Validar dependências e adapters da versão escolhida, sem copiar imports antigos do plano. Plano B registrado desde já: se a prova falhar, implementar sessão própria sobre Drizzle (cookie HttpOnly com token gravado com hash no banco, expiração e revogação na aplicação — o modelo que a documentação do Lucia passou a ensinar como guia); o escopo de auth do VTUR (e-mail/senha, TOTP, passkeys, convites) é moderado e viável sem biblioteca.
+- [x] F1-05: testar upload/download privado R2 com acesso negado para outra empresa e estratégia de falha/limpeza.
+- [x] F1-06: comparar um formulário/modal representativo na base visual atual e na candidata. Registrar escolha e plano de substituição dos wrappers legados.
+- [x] F1-07: provar envio de e-mail transacional no runtime por API HTTP (Resend ou equivalente). SMTP cru não é viável em Workers no fluxo normal, e o sistema atual aceita SMTP por empresa (`src/lib/server/emailSettings.ts`): decidir se a configuração por empresa passa a aceitar só provedores HTTP ou se o modelo de configuração muda.
 
 **Aceite:** prova end-to-end em staging com recursos novos, evidências de falha e sucesso; stack escolhida por compatibilidade demonstrada. Se uma biblioteca não atender, trocar só a candidata e repetir os critérios, sem iniciar dois caminhos de implementação.
 
 ### F2 — identidade, autorização e estrutura de dados
 
-- [ ] F2-01: definir schema inicial por domínio, constraints, índices e dono único de migrations; criar seeds de referência permitidos e fixtures sintéticas.
-- [ ] F2-02: implementar conta, convite, verificação, recuperação, logout, revogação e gestão de sessões conforme seção 5. Bootstrap sem acesso público residual. E-mails de conta (verificação, recuperação, convite) são da plataforma, não da empresa: definir remetente e provedor próprios, separados das configurações de e-mail por empresa.
-- [ ] F2-03: implementar políticas centralizadas e contexto de acesso; incluir matriz de capacidades e escopos reais do VTUR, sem hierarquia inventada.
-- [ ] F2-04: provar isolamento entre empresas, equipes e uso individual em leitura, gravação e agregação; provar bloqueio imediato na próxima requisição após revogação, ressalvadas operações já iniciadas.
-- [ ] F2-05: validação de entrada, erros consistentes, CSRF/origem, CSP compatível com o framework, headers, auditoria e limitador de abuso com política de falhas.
-- [ ] F2-06: proibir endpoints de debug em produção por teste do roteamento final, incluindo caminhos alternativos; revisão de segredos, dependências e logs.
+- [x] F2-01: definir schema inicial por domínio, constraints, índices e dono único de migrations; criar seeds de referência permitidos e fixtures sintéticas.
+- [x] F2-02: implementar conta, convite, verificação, recuperação, logout, revogação e gestão de sessões conforme seção 5. Bootstrap sem acesso público residual. E-mails de conta (verificação, recuperação, convite) são da plataforma, não da empresa: definir remetente e provedor próprios, separados das configurações de e-mail por empresa.
+- [x] F2-03: implementar políticas centralizadas e contexto de acesso; incluir matriz de capacidades e escopos reais do VTUR, sem hierarquia inventada.
+- [x] F2-04: provar isolamento entre empresas, equipes e uso individual em leitura, gravação e agregação; provar bloqueio imediato na próxima requisição após revogação, ressalvadas operações já iniciadas.
+- [x] F2-05: validação de entrada, erros consistentes, CSRF/origem, CSP compatível com o framework, headers, auditoria e limitador de abuso com política de falhas.
+- [x] F2-06: proibir endpoints de debug em produção por teste do roteamento final, incluindo caminhos alternativos; revisão de segredos, dependências e logs.
 
 **Aceite:** duas empresas e papéis sintéticos demonstram acessos permitidos e negados por API e navegador; alterar IDs/empresa não contorna a política. Autenticação no banco novo funciona sem Supabase.
 
@@ -321,10 +321,29 @@ Regra documentada; política aplicada no servidor; entrada validada; gravações
 - [x] R-02: conferir as afirmações técnicas centrais em documentação oficial.
 - [x] R-03: registrar a escolha do usuário por base nova vazia.
 - [x] R-04: propor fases, dependências, critérios e protocolo de passagem.
-- [ ] EXECUÇÃO: nenhuma fase F0–F8 foi concluída nesta revisão.
+- [x] EXECUÇÃO: F0 concluída (26/10/2026, commit `8aeaa5e0`, evidências em `docs/f0/`); F1 concluída (commits `76b2b0dd`–`06dcbbf8`, evidências em `docs/f1/`); F2 concluída (commits `06cf08d7`–`b4a91f6b`, evidências em `docs/f2/`, incluindo `F2-03-politica-rbac.md`). Baseline revalidada no Mac em 26/10/2026 (commit `c8bb5a58`): 879 testes, `svelte-check` 0 erros, build OK. Próximo ID: **F3-01**.
 - [x] R-05: refinamento (26/10/2026) — e-mail transacional (F1-07, F2-02 e seção 5), cron nativo `scheduled()` (F1-02, F5-02), custo do read model no D1 (F0-06, F4-04), plano B de autenticação (F1-04), E2E com Playwright (F0-05), ADRs em `docs/adr/` (F0-07) e ordenação do catálogo por dependências (seção 7, M10).
 - [x] R-06: avaliação de sugestões externas (26/10/2026) — incorporados: `@cloudflare/vitest-pool-workers` para CI de Workers (F0-05, F1-03) e convenção de tipos Drizzle/SQLite documentada (F0-03, F1-03). Não incorporados: (a) PWA/IndexedDB/Dexie — nenhuma funcionalidade offline ou manifesto PWA foi identificado no código ou no escopo declarado do projeto; adicionar isso seria nova feature, não parte da reescrita atual; (b) ordem de execução imediata proposta ("rodar npm run dev → criar migrations") — omite a F0 inteira e contradiz o protocolo deste roteiro (primeiro passo é F0-01, não instalar pacotes ou criar schema); (c) referência ao Kysely como alternativa — o projeto escolheu Drizzle como candidato preferencial; manter uma única opção de ORM até a prova em F1-03 decidir.
 
-**Próxima ação recomendada:** executar F0-01 a F0-07 e produzir o catálogo de regras/acessos e a baseline. Depois, F1 comprova stack e segurança no runtime escolhido. Só então consolidar ferramentas e expandir a implementação por domínio.
+**Próxima ação recomendada:** executar F3-01 a F3-04 (primeiro fluxo completo: clientes + anexo privado), que vira referência de implementação para os demais módulos. Depois, F4 (vendas, recebimentos e comissões).
+
+### Passagem de trabalho — 26/10/2026 (retomada no Mac)
+
+```text
+ID: F0-01..07 / F1-01..07 / F2-01..06
+Estado: CONCLUÍDA (evidências em docs/f0/, docs/f1/, docs/f2/)
+Responsável / data: agente + allima97, 26/10/2026
+Validação: npm test (879 passando), svelte-check (0 erros, 9 warnings a11y pré-existentes
+na tela LGPD), npm run build OK, api:inventory:check OK (259 endpoints)
+SHA da revalidação: c8bb5a58 (branch reescrita/f2-identidade-autorizacao)
+Notas:
+- A cópia do Mac tinha node_modules quebrado (deps opcionais npm) e divergências
+  acumuladas: testes órfãos das exclusões deliberadas (conciliação, REXTUR/SYSTUR) e
+  erros de tipo de res.json() unknown. Tudo corrigido no commit c8bb5a58.
+- docs/f2/F2-03-politica-rbac.md criado nesta passagem (a evidência estava só no commit).
+Pendências: warnings de a11y na tela admin/lgpd (9, pré-existentes, fora do escopo da
+reescrita — a tela é legada e será substituída por M12).
+Próximo passo: F3-01 (clientes: cadastro/listagem/detalhe/edição + anexo privado R2).
+```
 
 Referências técnicas foram consultadas em 26/10/2026 e estão ligadas junto às respectivas afirmações. Revalidar limites, APIs de bibliotecas e versões ao iniciar a execução.
