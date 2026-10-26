@@ -4,7 +4,8 @@
  * Rotas F2 usam Better Auth + D1 diretamente (sem Supabase).
  * Paralelo ao app-v1 existente; não altera as rotas /api/v1/*.
  *
- * Middlewares globais (F2-05):
+ * Middlewares globais (F2-05 / F2-06):
+ *   - productionGuard    — bloqueia /f2-proof/*, /debug/* em produção (404)
  *   - securityHeaders  — CSP, HSTS, X-Content-Type-Options, X-Frame-Options
  *   - rateLimitMiddleware — 120 req/min por IP
  *   - csrfProtection   — verifica Origin em mutating requests
@@ -22,12 +23,14 @@ import { requestContext, handleApiError, handleNotFound } from './middleware';
 import { invitesV2Routes } from './routes/invites-v2';
 import { tenantProofRoutes } from './routes/tenant-proof';
 import { securityHeaders, csrfProtection } from './middleware/security';
+import { productionGuard } from './middleware/production-guard';
 import { rateLimitMiddleware } from './middleware/rate-limit';
 
 export function createApiAppV2() {
   const app = new Hono<ApiEnv>().basePath('/api/v2');
 
   app.use('*', requestContext);
+  app.use('*', productionGuard);
   app.use('*', securityHeaders);
   app.use(
     '*',
