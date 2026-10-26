@@ -68,3 +68,83 @@ export const empresas = sqliteTable('empresas', {
 
 export type Empresa = typeof empresas.$inferSelect;
 export type NovaEmpresa = typeof empresas.$inferInsert;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BETTER AUTH — tabelas de autenticação (F1-04)
+// ─────────────────────────────────────────────────────────────────────────────
+// Estas tabelas são gerenciadas pelo Better Auth e não seguem as convenções
+// ADR-005 (dinheiro/datas). Better Auth usa integer(mode:'timestamp_ms') para
+// datas, que é o padrão do Drizzle adapter para SQLite.
+// Em F2-02 o campo empresa_id será adicionado à tabela user para vincular
+// usuários às empresas.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Tabela de usuários — gerenciada pelo Better Auth.
+ * F2-02: adicionar campo empresa_id FK para empresas.id
+ */
+export const user = sqliteTable('user', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  email: text('email').notNull().unique(),
+  emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
+  image: text('image'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+});
+
+/**
+ * Tabela de sessões — gerenciada pelo Better Auth.
+ */
+export const session = sqliteTable('session', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  token: text('token').notNull().unique(),
+  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+  ipAddress: text('ip_address'),
+  userAgent: text('user_agent'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+});
+
+/**
+ * Tabela de contas OAuth — gerenciada pelo Better Auth.
+ * Usada para vincular providers OAuth (GitHub, Google, etc.) aos usuários.
+ */
+export const account = sqliteTable('account', {
+  id: text('id').primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  accountId: text('account_id').notNull(),
+  providerId: text('provider_id').notNull(),
+  accessToken: text('access_token'),
+  refreshToken: text('refresh_token'),
+  accessTokenExpiresAt: integer('access_token_expires_at', { mode: 'timestamp_ms' }),
+  refreshTokenExpiresAt: integer('refresh_token_expires_at', { mode: 'timestamp_ms' }),
+  scope: text('scope'),
+  idToken: text('id_token'),
+  password: text('password'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+});
+
+/**
+ * Tabela de verificações — gerenciada pelo Better Auth.
+ * Usada para e-mail verification tokens, password reset, etc.
+ */
+export const verification = sqliteTable('verification', {
+  id: text('id').primaryKey(),
+  identifier: text('identifier').notNull(),
+  value: text('value').notNull(),
+  expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+});
+
+export type User = typeof user.$inferSelect;
+export type Session = typeof session.$inferSelect;
+export type Account = typeof account.$inferSelect;
+export type Verification = typeof verification.$inferSelect;

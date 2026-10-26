@@ -75,7 +75,8 @@
     "pdfjs-dist": "^5.7.284",
     "svelte-bottom-sheet": "^2.3.0",
     "tailwind-merge": "^3.7.0",
-    "drizzle-orm": "^0.45.4"
+    "drizzle-orm": "^0.45.4",
+    "better-auth": "^1.7.13"
   },
   "type": "module",
   "overrides": {
