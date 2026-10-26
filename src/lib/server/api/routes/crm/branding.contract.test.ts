@@ -34,7 +34,7 @@ describe('identidade VTur em configurações antigas', () => {
   it('padroniza os modelos e configurações da biblioteca sem buscar logos externos', async () => {
     const response = await handleCrmLibraryGet(event());
     expect(response.status).toBe(200);
-    const body = await response.json();
+    const body: any = await response.json();
     expect(body.settings).toMatchObject({ consultor_nome: 'Consultor', logo_url: VTUR_LOGO_PATH, logo_path: null });
     expect(body.themes.length).toBeGreaterThan(0);
     expect(body.themes.every((theme: { logo_url: string; logo_path: null }) => theme.logo_url === VTUR_LOGO_PATH && theme.logo_path === null)).toBe(true);
@@ -44,7 +44,7 @@ describe('identidade VTur em configurações antigas', () => {
   it.each([handleParametrosEmpresaGet, handleParametrosOrcamentosPdfGet])('retorna somente a marca VTur nos parâmetros', async (handler) => {
     const response = await handler(event());
     expect(response.status).toBe(200);
-    const body = await response.json();
+    const body: any = await response.json();
     expect((body.settings || body).logo_url).toBe(VTUR_LOGO_PATH);
     expect(JSON.stringify(body)).not.toContain(oldLogo);
   });

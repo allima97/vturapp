@@ -10,7 +10,6 @@ function voucher(provider: VoucherProvider): VoucherRecord {
     provider,
     nome: "Circuito Teste",
     status: "rascunho",
-    codigo_systur: "",
     codigo_fornecedor: "ABC123",
     reserva_online: "REF123",
     passageiros: "Cliente Teste",

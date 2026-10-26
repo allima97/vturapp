@@ -13,12 +13,12 @@
  *   npm test          — executa com vitest
  */
 import { describe, expect, it } from 'vitest';
+import { getTableName } from 'drizzle-orm';
 import { empresas, type Empresa, type NovaEmpresa } from '../schema';
 
 describe('schema: empresas', () => {
   it('tem a tabela "empresas" definida', () => {
-    // Drizzle expõe o nome da tabela em [Table]._.name
-    expect((empresas as unknown as { _: { name: string } })._.name).toBe('empresas');
+    expect(getTableName(empresas)).toBe('empresas');
   });
 
   it('colunas têm os nomes corretos em snake_case', () => {
@@ -50,6 +50,9 @@ describe('schema: empresas', () => {
       id: 1,
       nome: 'Agência Teste LTDA',
       cnpj: null,
+      slug: null,
+      plano: 'trial',
+      limiteUsuarios: 5,
       timezone: 'America/Sao_Paulo',
       ativo: true,
       criadoEm: '2026-10-26T00:00:00.000Z',

@@ -12,9 +12,9 @@
 
 import { Hono } from 'hono';
 import type { ApiEnv } from '../../types';
-import { criarConvite, getConvite, aceitarConvite, ConviteError, PAPEIS } from '$lib/server/invites/service';
+import { criarConvite, getConvite, aceitarConvite, ConviteError } from '$lib/server/invites/service';
 import { resolveAuthContext, requireAdmin } from '$lib/server/auth/context';
-import type { Papel } from '$lib/server/db/schema';
+import { PAPEIS, type Papel } from '$lib/server/db/schema';
 
 export const invitesV2Routes = new Hono<ApiEnv>();
 

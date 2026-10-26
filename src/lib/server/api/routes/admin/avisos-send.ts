@@ -124,7 +124,7 @@ export async function handleAdminAvisosSendPost(event: RequestEvent) {
       })
     }, 12_000);
 
-    const payload = await response.json().catch(() => ({}));
+    const payload = (await response.json().catch(() => ({}))) as { message?: string; error?: string; id?: string };
     if (!response.ok) {
       logServerError('[admin/avisos/send] Falha no provedor de e-mail', {
         status: response.status,

@@ -123,7 +123,7 @@ async function enviarEmailResend(params: {
       text: params.text,
     }),
   }, 12_000);
-  const data = await resp.json().catch(() => ({}));
+  const data = (await resp.json().catch(() => ({}))) as { id?: string };
   if (!resp.ok) {
     logServerError("[welcome-email] falha no Resend", new Error("Resend provider error"), {
       status: resp.status,

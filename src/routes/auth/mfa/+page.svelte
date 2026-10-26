@@ -64,7 +64,7 @@
         // Sem fator 2FA configurado — verifica política
         const policyResp = await fetch("/api/v1/admin/auth/mfa-status");
         if (policyResp.ok) {
-          const policy = await policyResp.json();
+          const policy = (await policyResp.json()) as { required?: boolean };
           if (policy?.required) {
             goto(`/perfil?setup_2fa=1&next=${encodeURIComponent(nextPath)}`);
             return;

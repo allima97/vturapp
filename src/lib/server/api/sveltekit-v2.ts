@@ -14,7 +14,7 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import { apiAppV2 } from './app-v2';
 
-export function apiHandlerV2(event: RequestEvent): Promise<Response> {
+export async function apiHandlerV2(event: RequestEvent): Promise<Response> {
   const platformEnv = event.platform?.env;
 
   return apiAppV2.fetch(event.request, {

@@ -1,7 +1,35 @@
 {
   "generatedBy": "scripts/api-inventory.mjs",
-  "count": 258,
+  "count": 259,
   "endpoints": [
+    {
+      "route": "/api/auth/[...auth]",
+      "file": "src/routes/api/auth/[...auth]/+server.ts",
+      "hono": null,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": false,
+        "resolveUserScope": false,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/auth"
+      ],
+      "mutates": false,
+      "lines": 51
+    },
     {
       "route": "/api/auth/convite/activate",
       "file": "src/routes/api/auth/convite/activate/+server.ts",
@@ -2377,9 +2405,6 @@
         "debugOnly": false
       },
       "tables": {
-        "companies": [
-          "select"
-        ],
         "master_empresas": [
           "select"
         ],
@@ -2406,7 +2431,7 @@
         "$lib/utils/html"
       ],
       "mutates": false,
-      "lines": 568
+      "lines": 486
     },
     {
       "route": "/api/v1/conciliacao",
@@ -3406,16 +3431,10 @@
         "debugOnly": false
       },
       "tables": {
-        "companies": [
-          "select"
-        ],
         "crm_template_categories": [
           "select"
         ],
         "master_empresas": [
-          "select"
-        ],
-        "quote_print_settings": [
           "select"
         ],
         "user_crm_assinaturas": [
@@ -3428,6 +3447,7 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
+        "$lib/brand",
         "$lib/cards/officialLibrary",
         "$lib/cards/themeAssetMeta",
         "$lib/server/api/sveltekit",
@@ -3436,7 +3456,7 @@
         "$lib/utils/errors"
       ],
       "mutates": false,
-      "lines": 518
+      "lines": 345
     },
     {
       "route": "/api/v1/crm/signature",
@@ -5615,23 +5635,17 @@
         "adminClient": true,
         "debugOnly": false
       },
-      "tables": {
-        "cidades": [
-          "select"
-        ]
-      },
-      "rpcs": [
-        "buscar_cidades"
-      ],
+      "tables": {},
+      "rpcs": [],
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/geocoding",
         "$lib/server/httpCache",
-        "$lib/server/readModelCache",
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 100
+      "lines": 55
     },
     {
       "route": "/api/v1/orcamentos/cliente-create",
@@ -6179,47 +6193,6 @@
       "lines": 185
     },
     {
-      "route": "/api/v1/pagamentos/[id]/conciliar",
-      "file": "src/routes/api/v1/pagamentos/[id]/conciliar/+server.ts",
-      "hono": "src/lib/server/api/routes/pagamentos/id-conciliar.ts",
-      "methods": [
-        "POST"
-      ],
-      "guards": {
-        "requireAuthenticatedUser": true,
-        "resolveUserScope": true,
-        "roles": [
-          "isAdmin"
-        ],
-        "rejectCrossOrigin": true,
-        "bodyLimit": true,
-        "cronSecret": false,
-        "turnstile": false,
-        "adminClient": true,
-        "debugOnly": false
-      },
-      "tables": {
-        "vendas_pagamentos": [
-          "select",
-          "update"
-        ]
-      },
-      "rpcs": [],
-      "invalidations": [
-        "invalidatePagamentoReadModels",
-        "invalidateReadModelCache"
-      ],
-      "imports": [
-        "$lib/server/api/sveltekit",
-        "$lib/server/httpCache",
-        "$lib/server/readModelCache",
-        "$lib/server/requestGuards",
-        "$lib/server/v1"
-      ],
-      "mutates": true,
-      "lines": 109
-    },
-    {
       "route": "/api/v1/pagamentos/upload",
       "file": "src/routes/api/v1/pagamentos/upload/+server.ts",
       "hono": "src/lib/server/api/routes/pagamentos/upload.ts",
@@ -6429,6 +6402,7 @@
         "invalidateUserReadModels"
       ],
       "imports": [
+        "$lib/brand",
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
@@ -6436,7 +6410,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 126
+      "lines": 105
     },
     {
       "route": "/api/v1/parametros/equipe",
@@ -6674,9 +6648,6 @@
       "tables": {
         "quote_print_settings": [
           "select"
-        ],
-        "users": [
-          "select"
         ]
       },
       "rpcs": [],
@@ -6684,6 +6655,7 @@
         "invalidateQuoteReadModels"
       ],
       "imports": [
+        "$lib/brand",
         "$lib/server/api/sveltekit",
         "$lib/server/auditLog",
         "$lib/server/httpCache",
@@ -6692,7 +6664,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 147
+      "lines": 148
     },
     {
       "route": "/api/v1/parametros/regras-produto-pacote",
@@ -6915,21 +6887,15 @@
         "adminClient": false,
         "debugOnly": false
       },
-      "tables": {
-        "cidades": [
-          "select"
-        ]
-      },
-      "rpcs": [
-        "buscar_cidades"
-      ],
+      "tables": {},
+      "rpcs": [],
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
-        "$lib/server/v1"
+        "$lib/server/geocoding"
       ],
       "mutates": false,
-      "lines": 64
+      "lines": 46
     },
     {
       "route": "/api/v1/preferencias/delete",
@@ -7583,18 +7549,16 @@
         "debugOnly": false
       },
       "tables": {},
-      "rpcs": [
-        "buscar_cidades"
-      ],
+      "rpcs": [],
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/geocoding",
         "$lib/server/httpCache",
-        "$lib/server/readModelCache",
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 67
+      "lines": 58
     },
     {
       "route": "/api/v1/relatorios/clientes",
@@ -8335,13 +8299,14 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
+        "$lib/roteiroOpcionais",
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 729
+      "lines": 741
     },
     {
       "route": "/api/v1/roteiros/sugestoes-busca",
@@ -9292,21 +9257,20 @@
       },
       "tables": {
         "cidades": [
+          "insert",
           "select"
         ]
       },
-      "rpcs": [
-        "buscar_cidades"
-      ],
+      "rpcs": [],
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/geocoding",
         "$lib/server/httpCache",
-        "$lib/server/readModelCache",
         "$lib/server/v1"
       ],
-      "mutates": false,
-      "lines": 234
+      "mutates": true,
+      "lines": 172
     },
     {
       "route": "/api/v1/vendas/complementares",
@@ -10074,23 +10038,17 @@
         "adminClient": true,
         "debugOnly": false
       },
-      "tables": {
-        "cidades": [
-          "select"
-        ]
-      },
-      "rpcs": [
-        "buscar_cidades"
-      ],
+      "tables": {},
+      "rpcs": [],
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/geocoding",
         "$lib/server/httpCache",
-        "$lib/server/readModelCache",
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 99
+      "lines": 50
     },
     {
       "route": "/api/v1/viagens/cliente/[id]",
@@ -10635,6 +10593,37 @@
       ],
       "mutates": true,
       "lines": 320
+    },
+    {
+      "route": "/api/v2/[...path]",
+      "file": "src/routes/api/v2/[...path]/+server.ts",
+      "hono": null,
+      "methods": [
+        "DELETE",
+        "GET",
+        "PATCH",
+        "POST",
+        "PUT"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": false,
+        "resolveUserScope": false,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/api/sveltekit-v2"
+      ],
+      "mutates": false,
+      "lines": 17
     }
   ]
 }

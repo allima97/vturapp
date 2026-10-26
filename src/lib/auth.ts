@@ -73,7 +73,7 @@ export function createAuth(
       requireEmailVerification: Boolean(resendApiKey),
 
       /** Envia e-mail de verificação após cadastro */
-      sendVerificationEmail: async ({ user, url }) => {
+      sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
         await sendAuthEmail(
           user.email,
           'Confirme seu e-mail — VTUR',
@@ -83,7 +83,7 @@ export function createAuth(
       },
 
       /** Envia e-mail de redefinição de senha */
-      sendResetPassword: async ({ user, url }) => {
+      sendResetPassword: async ({ user, url }: { user: { email: string }; url: string }) => {
         await sendAuthEmail(
           user.email,
           'Redefina sua senha — VTUR',

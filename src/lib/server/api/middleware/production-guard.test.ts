@@ -100,7 +100,7 @@ describe('C. productionGuard middleware', () => {
     const app = makeApp();
     const res = await app.request('/api/v2/f2-proof/tenant-isolation', {}, fakeEnv('development') as any);
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body: any = await res.json();
     expect(body.route).toBe('proof');
   });
 
@@ -108,7 +108,7 @@ describe('C. productionGuard middleware', () => {
     const app = makeApp();
     const res = await app.request('/api/v2/f2-proof/tenant-isolation', {}, fakeEnv('production') as any);
     expect(res.status).toBe(404);
-    const body = await res.json();
+    const body: any = await res.json();
     expect(body.code).toBe('NOT_FOUND');
   });
 
@@ -116,7 +116,7 @@ describe('C. productionGuard middleware', () => {
     const app = makeApp();
     const res = await app.request('/api/v2/health', {}, fakeEnv('production') as any);
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body: any = await res.json();
     expect(body.route).toBe('health');
   });
 

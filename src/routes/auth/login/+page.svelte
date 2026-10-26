@@ -86,7 +86,7 @@
       },
       12000
     );
-    const payload = await response.json().catch(() => ({}));
+    const payload = (await response.json().catch(() => ({}))) as LoginResponsePayload;
 
     if (!response.ok) {
       throw new Error(payload.error || 'Login autenticado, mas o servidor não gravou a sessão.');
@@ -200,7 +200,7 @@
           turnstile_token: turnstileToken
         })
       }, 20000);
-      const payload = await res.json().catch(() => ({} as LoginResponsePayload));
+      const payload = (await res.json().catch(() => ({}))) as LoginResponsePayload;
       if (!res.ok) {
         if (res.status === 401) throw new Error('Email ou senha incorretos.');
         if (res.status === 403) {
@@ -258,7 +258,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() || null })
       }, 12000);
-      const optionsPayload = await optionsResponse.json().catch(() => ({}));
+      const optionsPayload = (await optionsResponse.json().catch(() => ({}))) as { options?: any; challengeId?: string; error?: string };
       if (!optionsResponse.ok) {
         throw new Error(optionsPayload.error || 'Erro ao preparar login por passkey.');
       }
@@ -272,7 +272,7 @@
           response: assertion
         })
       }, 20000);
-      const payload = await verifyResponse.json().catch(() => ({} as LoginResponsePayload));
+      const payload = (await verifyResponse.json().catch(() => ({}))) as LoginResponsePayload;
       if (!verifyResponse.ok) {
         throw new Error(payload.error || 'Não foi possível entrar com passkey.');
       }

@@ -50,7 +50,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ turnstile_token: turnstileToken })
         });
-        const verifyPayload = await verifyRes.json().catch(() => ({}));
+        const verifyPayload = (await verifyRes.json().catch(() => ({}))) as { error?: string };
         if (!verifyRes.ok) {
           throw new Error(verifyPayload.error || 'Não foi possível validar o desafio de segurança.');
         }

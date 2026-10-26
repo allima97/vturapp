@@ -32,7 +32,7 @@ export async function handleLgpdMeusDadosGet(event: RequestEvent) {
       .limit(100);
 
     // Dados de MFA registrados
-    const { data: mfaFactors } = await client.auth.admin.listFactors(user.id).catch(() => ({ data: null }));
+    const { data: mfaFactors } = await (client.auth.admin as any).listFactors(user.id).catch(() => ({ data: null }));
 
     return json({
       titular: {

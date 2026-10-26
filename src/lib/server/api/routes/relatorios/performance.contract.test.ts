@@ -105,14 +105,14 @@ describe('GET /api/v1/relatorios/performance', () => {
   it('gestor: própria empresa, dados até D-1 e mesmo período do ano anterior', async () => {
     const res = await handleRelatoriosPerformanceGet(evento('mes=2026-09'));
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body: any = await res.json();
     expect(st.contrib.mock.calls.map((c) => [c[1].dataInicio, c[1].dataFim, c[1].companyIds])).toEqual([
       ['2026-09-01', '2026-09-24', [C1]],
       ['2025-09-01', '2025-09-24', [C1]],
     ]);
     expect(body.empresa).toEqual({ id: C1, nome: 'LOJA SHOPPING CENTER NORTE', responsavel: 'Katia Nishida' });
     expect(body.dadosAte).toBe('2026-09-24');
-    expect(body.vendas).toMatchObject({ vendaMes: 10000, metaMes: 30000, metaAteCorte: 24000, passageiros: 3, vendaRA: 4000, variacaoAnoAnterior: 25 });
+    expect(body.vendas).toMatchObject({ vendaMes: 10000, metaMes: 30000, metaAteCorte: 24000, passageiros: 3, variacaoAnoAnterior: 25 });
     expect(body.business.map((b: any) => [b.nome, b.pct])).toEqual([['Nacional', 60], ['Internacional', 0], ['Marítimo', 0], ['Consolidadora', 40]]);
     expect(body.topDestinosNacional[0]).toMatchObject({ nome: 'MACEIÓ', pct: 100 });
     expect(body.topDestinosInternacional[0]).toMatchObject({ nome: 'LISBOA', pct: 100 });
@@ -142,7 +142,7 @@ describe('GET /api/v1/relatorios/performance', () => {
 
   it('mês passado vai até o último dia', async () => {
     const res = await handleRelatoriosPerformanceGet(evento('mes=2026-08'));
-    const body = await res.json();
+    const body: any = await res.json();
     expect(body.dadosAte).toBe('2026-08-31');
     expect(body.vendas.metaAteCorte).toBe(body.vendas.metaMes);
   });

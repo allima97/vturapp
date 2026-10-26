@@ -203,7 +203,7 @@ async function enviarEmailResend(params: {
       error: readErrorField(err, "message") || err
     };
   }
-  const data = await resp.json().catch(() => ({}));
+  const data = (await resp.json().catch(() => ({}))) as { id?: string };
   if (!resp.ok) {
     logServerError("[convites/send] falha no Resend", new Error("Resend provider error"), {
       status: resp.status,
