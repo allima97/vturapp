@@ -204,7 +204,7 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 - [ ] F4-02: implementar alteração, cancelamento/estorno e comissão com exemplos de cálculo, arredondamento e datas; preservar invariantes sob retry e concorrência.
 - [x] F4-03: implementar consultas/dashboards/relatórios a partir do mesmo contrato financeiro; totais precisam reconciliar com os registros de origem.
 - [x] F4-04: revisar read models: começar com queries e índices adequados; criar agregações/rebuild apenas onde necessário, com versão, checkpoint, recomposição e limite de atraso visível. A escolha usa a estimativa de linhas/custo de F0-06; o rebuild a cada 5 minutos do sistema atual não é portado por padrão.
-- [ ] F4-05: gerar PDFs/documentos com marca VTUR e testes de conteúdo/acesso; verificar quebra de página e valores em exemplos representativos.
+- [x] F4-05: gerar PDFs/documentos com marca VTUR e testes de conteúdo/acesso; verificar quebra de página e valores em exemplos representativos.
 - [ ] F4-06: provar ausência de importadores e conciliação excluídos, incluindo permissões, menus, rotas, parsers e dependências indiretas do financeiro.
 
 **Aceite:** casos financeiros aprovados, duas gravações simultâneas não duplicam nem corrompem valores; relatórios batem com as vendas/recebimentos; nenhum cálculo depende de dado externo legado.
@@ -578,3 +578,28 @@ O rebuild a cada 5 min do Supabase **não é portado**.
 
 **Próximo (F4-05 ou conforme roteiro):**
 - F4-05: gerar PDFs/documentos com marca VTUR e testes de conteúdo/acesso; verificar quebra de página e valores em exemplos representativos.
+
+
+---
+## Passagem de trabalho — F4-05 → F4-06
+
+**Concluído em:** 2026-10-30 | Commit: `afee31f8`
+
+**Entregues:**
+- `src/lib/server/vendas/pdf.ts` — `gerarComprovanteHtml()` + helpers formatação
+- Rota `GET /:id/pdf` em `vendas-v2/index.ts` (RBAC `vendas:ler`, isolamento tenant)
+- Suíte K (18 testes unit) + Suíte L (9 testes Workers) — **957 testes passando**
+
+**Decisão registrada:** Workers não suporta Puppeteer → HTML self-contained servido
+pelo servidor; cliente usa `window.print()` / jsPDF.
+
+**Separação de responsabilidades:**
+- `pdf.ts` não importa `$lib/brand` (evita falha `?raw` no workerd)
+- `logoUrl` é parâmetro em `ComprovanteVendaOptions`; rota injeta `VTUR_LOGO_URL`
+- Workers test mocka `$lib/brand` via `vi.mock`
+
+**Nota RBAC:** Todos os 3 papéis (`admin`, `operador`, `visualizador`) têm `vendas:ler`.
+Não existe papel autenticado que não possa acessar comprovantes — L6 documenta isso.
+
+**Próximo (F4-06):** Provar ausência de importadores e conciliação excluídos:
+permissões, menus, rotas, parsers e dependências indiretas do financeiro.
