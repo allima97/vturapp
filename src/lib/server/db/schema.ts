@@ -56,6 +56,7 @@ export const user = sqliteTable(
     name: text('name').notNull(),
     email: text('email').notNull(),
     emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
+    twoFactorEnabled: integer('two_factor_enabled', { mode: 'boolean' }).notNull().default(false),
     image: text('image'),
     /**
      * FK para empresas.id — define o tenant do usuário.
@@ -200,7 +201,131 @@ export const verification = sqliteTable('verification', {
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
 });
 
+export const twoFactor = sqliteTable(
+  'two_factor',
+  {
+    id: text('id').primaryKey(),
+    secret: text('secret').notNull(),
+    backupCodes: text('backup_codes').notNull(),
+    userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+    verified: integer('verified', { mode: 'boolean' }).notNull().default(true),
+    failedVerificationCount: integer('failed_verification_count', { mode: 'number' })
+      .notNull()
+      .default(0),
+    lockedUntil: integer('locked_until', { mode: 'timestamp_ms' }),
+  },
+  (t) => ({
+    idxSecret: index('two_factor_secret_idx').on(t.secret),
+    idxUser: index('two_factor_user_id_idx').on(t.userId),
+  })
+);
+
 export type User = typeof user.$inferSelect;
 export type Session = typeof session.$inferSelect;
 export type Account = typeof account.$inferSelect;
 export type Verification = typeof verification.$inferSelect;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DOMÍNIO: CLIENTES — M02 / F3-01
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const TIPOS_PESSOA = ['PF', 'PJ'] as const;
+export type TipoPessoa = (typeof TIPOS_PESSOA)[number];
+
+/**
+ * Clientes da empresa (tenant).
+ *
+ * Regras (portadas do sistema legado, ver docs/f0/F0-03/F0-04):
+ *   - nome, documento (CPF 11 dígitos ou CNPJ 14 válido) e telefone obrigatórios;
+ *   - documento guardado só com dígitos; único por empresa (índice UNIQUE);
+ *   - nascimento é data civil (TEXT YYYY-MM-DD), nunca timestamp;
+ *   - tags como JSON TEXT (array de strings);
+ *   - versao: controle de edição concorrente (UPDATE ... WHERE versao = ?);
+ *   - sem exclusão física: ativo=false preserva histórico (vendas futuras
+ *     referenciam o cliente — F4).
+ */
+export const clientes = sqliteTable(
+  'clientes',
+  {
+    id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+    empresaId: integer('empresa_id', { mode: 'number' })
+      .notNull()
+      .references(() => empresas.id, { onDelete: 'cascade' }),
+    nome: text('nome', { length: 200 }).notNull(),
+    tipoPessoa: text('tipo_pessoa', { length: 2 }).notNull().default('PF'),
+    /** CPF (11) ou CNPJ (14), somente dígitos. */
+    documento: text('documento', { length: 14 }).notNull(),
+    /** Data civil YYYY-MM-DD (ADR-005). */
+    nascimento: text('nascimento', { length: 10 }),
+    telefone: text('telefone', { length: 20 }).notNull(),
+    whatsapp: text('whatsapp', { length: 20 }),
+    email: text('email', { length: 320 }),
+    classificacao: text('classificacao', { length: 1 }),
+    endereco: text('endereco', { length: 200 }),
+    numero: text('numero', { length: 20 }),
+    complemento: text('complemento', { length: 100 }),
+    cidade: text('cidade', { length: 120 }),
+    estado: text('estado', { length: 2 }),
+    cep: text('cep', { length: 8 }),
+    rg: text('rg', { length: 20 }),
+    genero: text('genero', { length: 20 }),
+    nacionalidade: text('nacionalidade', { length: 60 }),
+    /** JSON TEXT: array de strings. */
+    tags: text('tags').notNull().default('[]'),
+    tipoCliente: text('tipo_cliente', { length: 30 }).notNull().default('passageiro'),
+    notas: text('notas'),
+    ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
+    /** Concorrência otimista: incrementado a cada UPDATE. */
+    versao: integer('versao', { mode: 'number' }).notNull().default(1),
+    criadoPor: text('criado_por', { length: 36 }).references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    atualizadoEm: text('atualizado_em').notNull().$defaultFn(() => new Date().toISOString()),
+  },
+  (t) => ({
+    idxEmpresaDocumento: uniqueIndex('idx_clientes_empresa_documento').on(t.empresaId, t.documento),
+    idxEmpresaNome: index('idx_clientes_empresa_nome').on(t.empresaId, t.nome),
+    idxEmpresaAtivo: index('idx_clientes_empresa_ativo').on(t.empresaId, t.ativo),
+  })
+);
+
+export type Cliente = typeof clientes.$inferSelect;
+export type NovoCliente = typeof clientes.$inferInsert;
+
+/**
+ * Anexos privados do cliente (metadados no D1; objeto no R2 — F1-05).
+ *
+ * Escrita D1 + objeto R2 não são uma transação conjunta (roteiro §5):
+ * o fluxo é upload R2 → INSERT metadado; falha no INSERT gera compensação
+ * (delete do objeto) no service. Download é mediado: a chave nunca vai ao
+ * navegador; o Worker valida tenant + dono antes de servir o bytes.
+ */
+export const clienteAnexos = sqliteTable(
+  'cliente_anexos',
+  {
+    id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+    empresaId: integer('empresa_id', { mode: 'number' })
+      .notNull()
+      .references(() => empresas.id, { onDelete: 'cascade' }),
+    clienteId: integer('cliente_id', { mode: 'number' })
+      .notNull()
+      .references(() => clientes.id, { onDelete: 'cascade' }),
+    /** Chave imprevisível: empresa/{id}/clientes/{clienteId}/{uuid}-{nome}. */
+    chaveR2: text('chave_r2', { length: 512 }).notNull(),
+    nomeOriginal: text('nome_original', { length: 255 }).notNull(),
+    contentType: text('content_type', { length: 100 }).notNull(),
+    tamanhoBytes: integer('tamanho_bytes', { mode: 'number' }).notNull(),
+    enviadoPor: text('enviado_por', { length: 36 }).references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
+  },
+  (t) => ({
+    idxChave: uniqueIndex('idx_cliente_anexos_chave').on(t.chaveR2),
+    idxCliente: index('idx_cliente_anexos_cliente').on(t.empresaId, t.clienteId),
+  })
+);
+
+export type ClienteAnexo = typeof clienteAnexos.$inferSelect;
+export type NovoClienteAnexo = typeof clienteAnexos.$inferInsert;

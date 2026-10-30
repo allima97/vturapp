@@ -28,16 +28,19 @@
     "drizzle:studio": "drizzle-kit studio"
   },
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.7",
     "@sveltejs/adapter-cloudflare": "^7.2.8",
     "@sveltejs/kit": "^2.5.0",
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/eslint": "^9.6.0",
+    "drizzle-kit": "^0.31.11",
     "eslint": "^9.7.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-svelte": "^2.36.0",
     "globals": "^15.0.0",
     "jsdom": "^25.0.1",
+    "playwright": "^1.56.1",
     "prettier": "^3.3.2",
     "prettier-plugin-svelte": "^3.2.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
@@ -50,8 +53,7 @@
     "vite": "^5.4.0",
     "vitest": "^2.0.4",
     "wrangler": "^4.87.0",
-    "yaml": "^2.8.4",
-    "drizzle-kit": "^0.31.11"
+    "yaml": "^2.8.4"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.8.0",
@@ -63,8 +65,10 @@
     "@simplewebauthn/server": "^13.3.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.0.0",
+    "better-auth": "^1.7.13",
     "chart.js": "^4.5.1",
     "dompurify": "^3.4.2",
+    "drizzle-orm": "^0.45.4",
     "fflate": "^0.8.2",
     "flowbite-svelte": "^1.33.1",
     "flowbite-svelte-icons": "^2.0.0",
@@ -74,9 +78,7 @@
     "lucide-svelte": "^1.0.1",
     "pdfjs-dist": "^5.7.284",
     "svelte-bottom-sheet": "^2.3.0",
-    "tailwind-merge": "^3.7.0",
-    "drizzle-orm": "^0.45.4",
-    "better-auth": "^1.7.13"
+    "tailwind-merge": "^3.7.0"
   },
   "type": "module",
   "overrides": {

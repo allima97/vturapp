@@ -1,5 +1,6 @@
 <script lang="ts">
   import '../app.css';
+  import '$lib/styles/reescrita.css';
   import { onMount } from 'svelte';
   import { beforeNavigate } from '$app/navigation';
   import { browser, dev } from '$app/environment';
@@ -34,7 +35,9 @@
   }
 
   function isPublicRoute(path: string): boolean {
-    return path.startsWith('/auth/') || path === '/negado';
+    // A área da reescrita usa Better Auth; não pode depender da sessão Supabase
+    // que protege o aplicativo legado. Os dados seguem protegidos pela API v2.
+    return path.startsWith('/auth/') || path === '/reescrita' || path.startsWith('/reescrita/') || path === '/negado';
   }
 
   function redirectToLogin(reason: string) {

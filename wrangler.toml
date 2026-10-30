@@ -45,6 +45,7 @@ id = "60fa423718914712bec4f489d41c3dd6"
 binding = "DB"
 database_name = "vturapp-db"
 database_id = "PLACEHOLDER_PROD_D1_ID"   # substituir após: wrangler d1 create vturapp-db
+migrations_dir = "./drizzle"
 
 # ─── R2 — arquivos privados ───────────────────────────────────────────────────
 # Produção: criar com `wrangler r2 bucket create vturapp-files`.
@@ -80,6 +81,7 @@ id = "PLACEHOLDER_STAGING_KV_ID"   # criar com: wrangler kv namespace create vtu
 binding = "DB"
 database_name = "vturapp-db-staging"
 database_id = "PLACEHOLDER_STAGING_D1_ID"   # criar com: wrangler d1 create vturapp-db-staging
+migrations_dir = "./drizzle"
 
 [[env.staging.r2_buckets]]
 binding = "R2"

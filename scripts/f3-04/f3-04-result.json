@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "metrics": {
+    "login_page_ms": 286,
+    "sign_in_ate_listagem_ms": 114,
+    "abrir_detalhe_ms": 37,
+    "upload_ate_listar_ms": 34,
+    "download_ms": 41
+  },
+  "bytes": 479
+}

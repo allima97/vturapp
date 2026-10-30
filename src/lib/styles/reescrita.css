@@ -1,0 +1,53 @@
+.reescrita-login {
+  min-height:100dvh;
+  display:grid;
+  place-items:center;
+  padding:1.25rem;
+  background:var(--vtur-bg);
+}
+.reescrita-login-card { width:min(100%, 28rem); }
+.reescrita-login-card h1 { margin:0; color:var(--vtur-text); font-size:1.75rem; }
+.reescrita-login-intro { margin:.6rem 0 1.4rem; color:var(--vtur-text-secondary); line-height:1.5; }
+.reescrita-eyebrow { margin:1.5rem 0 .35rem; color:var(--vtur-primary-700); font-size:.72rem; font-weight:800; letter-spacing:.12em; }
+.reescrita-legacy-link { display:block; margin-top:1rem; text-align:center; color:var(--vtur-text-secondary); font-size:.88rem; }
+
+.reescrita-page { max-width:76rem; margin:0 auto; padding:clamp(1rem,4vw,2.75rem); color:var(--vtur-text); }
+.reescrita-topline { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1.5rem; }
+.reescrita-topline h1 { margin:0; font-size:clamp(1.8rem,5vw,2.35rem); letter-spacing:-.035em; }
+.reescrita-subtitle,.reescrita-muted { color:var(--vtur-text-secondary); }
+.reescrita-toolbar { display:flex; align-items:center; gap:.8rem; padding:1rem; border:1px solid var(--vtur-border-subtle); border-radius:var(--vtur-radius-card); background:var(--vtur-surface); box-shadow:var(--vtur-shadow-card); }
+.reescrita-toolbar-search { flex:1; min-width:0; }
+.reescrita-toggle { display:flex; align-items:center; gap:.5rem; white-space:nowrap; color:var(--vtur-text-secondary); font-size:.9rem; }
+.reescrita-state-card { display:grid; justify-items:center; gap:.65rem; margin-top:1rem; padding:3rem 1.25rem; text-align:center; }
+.reescrita-state-card h2,.reescrita-state-card p { margin:0; }
+.reescrita-state-card p { max-width:34rem; color:var(--vtur-text-secondary); }
+.reescrita-data-table { margin-top:1rem; }
+.reescrita-client-name { color:var(--vtur-primary-700); font-weight:750; }
+.reescrita-client-email { display:block; margin-top:.2rem; color:var(--vtur-text-secondary); font-size:.82rem; }
+.reescrita-row-actions { display:flex; justify-content:flex-end; gap:.4rem; }
+.reescrita-dialog-content { padding:clamp(1.1rem,4vw,1.8rem); }
+.reescrita-dialog-head { display:flex; justify-content:space-between; align-items:start; gap:1rem; margin-bottom:1.2rem; }
+.reescrita-dialog-head h2 { margin:0; font-size:1.45rem; }
+.reescrita-form-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.9rem; }
+.reescrita-form-grid .wide { grid-column:1/-1; }
+.reescrita-form-note { margin:.9rem 0; color:var(--vtur-text-secondary); font-size:.82rem; }
+.reescrita-dialog-actions { display:flex; justify-content:flex-end; gap:.55rem; margin-top:1.3rem; }
+.reescrita-detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.8rem; }
+.reescrita-detail-grid > div { min-width:0; padding:.7rem; border-radius:var(--vtur-radius-control); background:var(--vtur-bg); }
+.reescrita-detail-grid dt { color:var(--vtur-text-secondary); font-size:.78rem; }
+.reescrita-detail-grid dd { margin:.25rem 0 0; overflow-wrap:anywhere; }
+.reescrita-attachments { list-style:none; margin:0; padding:0; }
+.reescrita-attachments li { display:flex; justify-content:space-between; align-items:center; gap:.75rem; padding:.6rem 0; border-bottom:1px solid var(--vtur-border-subtle); }
+.reescrita-attachments small { display:block; color:var(--vtur-text-secondary); }
+.reescrita-upload { display:grid; gap:.4rem; margin-top:1rem; color:var(--vtur-text-secondary); font-size:.88rem; font-weight:650; }
+.reescrita-upload input { width:100%; font-weight:400; }
+.reescrita-login input:focus,.reescrita-page input:focus,.reescrita-page select:focus,.reescrita-page button:focus-visible,.reescrita-page a:focus-visible { outline:3px solid var(--vtur-focus-ring); outline-offset:2px; }
+
+@media (max-width:720px) {
+  .reescrita-topline { align-items:flex-start; flex-direction:column; }
+  .reescrita-topline > button { width:100%; }
+  .reescrita-toolbar { align-items:stretch; flex-direction:column; }
+  .reescrita-toggle { white-space:normal; }
+  .reescrita-form-grid,.reescrita-detail-grid { grid-template-columns:1fr; }
+  .reescrita-form-grid .wide { grid-column:auto; }
+}

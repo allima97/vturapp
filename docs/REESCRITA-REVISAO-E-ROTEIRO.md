@@ -189,12 +189,12 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 
 **Aceite:** duas empresas e papéis sintéticos demonstram acessos permitidos e negados por API e navegador; alterar IDs/empresa não contorna a política. Autenticação no banco novo funciona sem Supabase.
 
-### F3 — primeiro fluxo completo e experiência compartilhada
+### F3 — primeiro fluxo completo e experiência compartilhada (CONCLUÍDA em 29/10/2026)
 
-- [ ] F3-01: implementar cadastro/listagem/detalhe/edição de cliente e um anexo privado usando as fundações de F2; preparar o cliente para ser referenciado por venda manual.
-- [ ] F3-02: tela com busca, filtros, paginação estável, estados vazio/carregando/erro e validação de campo; modais com foco, teclado, fechamento e retorno de foco corretos.
-- [ ] F3-03: consolidar tokens visuais e componentes realmente repetidos: botão, campo monetário/data, formulário, modal, lista/tabela responsiva, estados e confirmação. Evitar componente universal cheio de exceções.
-- [ ] F3-04: testar criação e edição no mobile e desktop, acesso negado a outro cliente, retry, upload inválido e conflito de edição; medir consultas e carga da tela.
+- [x] F3-01: implementar cadastro/listagem/detalhe/edição de cliente e um anexo privado usando as fundações de F2; preparar o cliente para ser referenciado por venda manual. Evidências: `docs/f3/F3-01-clientes-d1-r2.md`.
+- [x] F3-02: tela com busca, filtros, cursor estável, estados vazio/carregando/erro, formulário, detalhe e anexos. Evidência: `src/routes/reescrita/clientes/+page.svelte`; usa Better Auth isolado e diálogos acessíveis documentados em F3-03.
+- [x] F3-03: adotar tokens semânticos e wrappers compartilhados para botões, campos, cartões, checkbox, tabela responsiva, alertas, estados, paginação e diálogo nativo acessível; manter componentes de célula pequenos e específicos. Evidência: `docs/f3/F3-03-componentes-visuais.md`.
+- [x] F3-04: completar validação funcional autenticada em desktop e mobile, criação/edição em navegador, acesso negado, retry, upload inválido, conflito com recarga de dados e medição de carga/consultas. Cobertura HTTP/Workers, revisão autenticada da lista/formulários/detalhe e cursor com várias páginas estão em `docs/f3/F3-04-validacao-integrada.md`; contagem SQL foi instrumentada (4 chamadas D1 por página) e navegação até a linha visível mediu 279 ms localmente. Upload pela UI validado com Playwright em 29/10/2026 (anexo exibido no detalhe e download byte a byte idêntico; script em `scripts/f3-04/`).
 
 **Aceite:** fluxo completo utilizável com dados sintéticos no D1/R2, sem travamento de modal ou rolagem horizontal. Esse fluxo vira referência de implementação para os demais.
 
@@ -321,11 +321,11 @@ Regra documentada; política aplicada no servidor; entrada validada; gravações
 - [x] R-02: conferir as afirmações técnicas centrais em documentação oficial.
 - [x] R-03: registrar a escolha do usuário por base nova vazia.
 - [x] R-04: propor fases, dependências, critérios e protocolo de passagem.
-- [x] EXECUÇÃO: F0 concluída (26/10/2026, commit `8aeaa5e0`, evidências em `docs/f0/`); F1 concluída (commits `76b2b0dd`–`06dcbbf8`, evidências em `docs/f1/`); F2 concluída (commits `06cf08d7`–`b4a91f6b`, evidências em `docs/f2/`, incluindo `F2-03-politica-rbac.md`). Baseline revalidada no Mac em 26/10/2026 (commit `c8bb5a58`): 879 testes, `svelte-check` 0 erros, build OK. Próximo ID: **F3-01**.
+- [x] EXECUÇÃO: F0 concluída (26/10/2026, commit `8aeaa5e0`, evidências em `docs/f0/`); F1 concluída (commits `76b2b0dd`–`06dcbbf8`, evidências em `docs/f1/`); F2 concluída (commits `06cf08d7`–`b4a91f6b`, evidências em `docs/f2/`, incluindo `F2-03-politica-rbac.md`). Baseline revalidada no Mac em 26/10/2026 (commit `c8bb5a58`): 879 testes, `svelte-check` 0 erros, build OK. F3 concluída em 29/10/2026 (evidências em `docs/f3/`, upload pela UI validado com Playwright; 908 testes, check 0 erros). Próximo ID naquele registro: **F4-01**.
 - [x] R-05: refinamento (26/10/2026) — e-mail transacional (F1-07, F2-02 e seção 5), cron nativo `scheduled()` (F1-02, F5-02), custo do read model no D1 (F0-06, F4-04), plano B de autenticação (F1-04), E2E com Playwright (F0-05), ADRs em `docs/adr/` (F0-07) e ordenação do catálogo por dependências (seção 7, M10).
 - [x] R-06: avaliação de sugestões externas (26/10/2026) — incorporados: `@cloudflare/vitest-pool-workers` para CI de Workers (F0-05, F1-03) e convenção de tipos Drizzle/SQLite documentada (F0-03, F1-03). Não incorporados: (a) PWA/IndexedDB/Dexie — nenhuma funcionalidade offline ou manifesto PWA foi identificado no código ou no escopo declarado do projeto; adicionar isso seria nova feature, não parte da reescrita atual; (b) ordem de execução imediata proposta ("rodar npm run dev → criar migrations") — omite a F0 inteira e contradiz o protocolo deste roteiro (primeiro passo é F0-01, não instalar pacotes ou criar schema); (c) referência ao Kysely como alternativa — o projeto escolheu Drizzle como candidato preferencial; manter uma única opção de ORM até a prova em F1-03 decidir.
 
-**Próxima ação recomendada:** executar F3-01 a F3-04 (primeiro fluxo completo: clientes + anexo privado), que vira referência de implementação para os demais módulos. Depois, F4 (vendas, recebimentos e comissões).
+**Próxima ação recomendada:** F3 concluída (aceite cumprido em 29/10/2026, com upload de anexo validado pela UI via Playwright). Seguir para F4 (vendas, recebimentos e comissões), começando por F4-01.
 
 ### Passagem de trabalho — 26/10/2026 (retomada no Mac)
 
@@ -344,6 +344,130 @@ Notas:
 Pendências: warnings de a11y na tela admin/lgpd (9, pré-existentes, fora do escopo da
 reescrita — a tela é legada e será substituída por M12).
 Próximo passo: F3-01 (clientes: cadastro/listagem/detalhe/edição + anexo privado R2).
+```
+
+### Passagem de trabalho — 26/10/2026 (F3-01 e F3-02)
+
+```text
+ID: F3-01 / F3-02
+Estado: implementados; F3 permanece EM ANDAMENTO
+Validação: 905 testes passaram (108 arquivos; inclui 15 Workers D1/R2); check 0 erros
+             (9 avisos de a11y preexistentes em admin/lgpd); build OK;
+             api:inventory:check OK (259 endpoints)
+Branch: reescrita/f2-identidade-autorizacao
+Notas:
+- API nova de clientes, schema D1, anexos privados R2, autenticação e telas da reescrita
+  estão em `/api/v2/clientes` e `/reescrita/*`; `/clientes` do legado foi preservada.
+- Evidências: docs/f3/F3-01-clientes-d1-r2.md e docs/f3/F3-02-interface-clientes.md.
+Pendências: F3-03; F3-04 inclui conferência visual e testes funcionais desktop/mobile,
+isolamento de acesso, retry, upload inválido e conflito de edição.
+Próximo passo: F3-03 (tokens e componentes compartilhados) antes da validação integrada F3-04.
+```
+
+Este registro foi atualizado pela passagem abaixo; seu status e próximo passo são históricos.
+
+### Passagem de trabalho — 26/10/2026 (F3-03 e parte de F3-04)
+
+```text
+ID: F3-03; avanço de validação F3-04
+Estado: F3-03 concluída; F3 geral permanece EM ANDAMENTO
+Validação: 907 testes em 108 arquivos; 17 Workers D1/R2; check 0 erros;
+           build OK; api:inventory:check OK (259 endpoints); diff --check OK
+Branch: reescrita/f2-identidade-autorizacao
+Notas:
+- Páginas de reescrita agora usam wrappers do projeto, tokens CSS semânticos,
+  tabela responsiva e componente de diálogo nativo com foco inicial e retorno.
+- Bypass explícito do guard Supabase legado para `/reescrita` no hook do servidor
+  e no layout; API v2 continua exigindo sessão Better Auth e RBAC.
+- Testes Workers incluem 503 recuperável seguido de retry, leitura concorrente de lista
+  e anexos, upload inválido HTTP 400, tenant 404, viewer 403, conflito 409 e anexo privado.
+- Navegador local confirmou login isolado e estado autenticado-required em viewport
+  móvel; login revisado em viewport desktop. Acesso à tela autenticada não foi feito
+  por ausência de sessão de teste disponível, portanto lista, formulários e anexos
+  ainda requerem revisão visual/interativa desktop/mobile.
+Pendência: F3-04, validação visual e funcional autenticada + medição de carga.
+Próximo passo: criar sessão Better Auth de teste local e validar os fluxos completos,
+sem usar sessão ou dados da conta pessoal.
+```
+
+### Passagem de trabalho — 26/10/2026 (validação autenticada F3-04)
+
+```text
+ID: F3-03; avanço de F3-04
+Estado: F3-03 concluída; F3-04 parcialmente validada; F3 geral EM ANDAMENTO
+Validação: npm test (907 em 108 arquivos; 17 casos Workers); check (0 erros,
+           9 avisos legados em admin/lgpd); build Cloudflare OK;
+           api:inventory:check OK (259); git diff --check OK
+Branch: reescrita/f2-identidade-autorizacao
+Notas:
+- Sessão sintética no D1 local; browser verificou login, lista, vazio, cadastro,
+  busca, edição, detalhe, alternância de inativos e recarga. Viewports 1440×900
+  e 390×844 sem rolagem horizontal. Tempos Worker observados: página 4–39 ms,
+  get-session 6–68 ms, listagem 7–21 ms (inclui primeiro acesso frio).
+- Corrigidos os guards que interceptavam `/api/auth/*` e `/api/v2/*` antes das
+  proteções Better Auth/Hono, a reatividade do diálogo acessível e o schema/migration
+  ausente do plugin Better Auth two-factor (`0004_better_auth_two_factor.sql`).
+- Não houve acesso remoto, migração remota, deploy ou commit.
+Pendências: upload na UI (Chrome bloqueou acesso ao arquivo local), avanço de cursor
+  e medição instrumentada de renderização e SQL.
+Próximo passo: resolver permissão de arquivo local do Chrome para o upload sintético;
+  depois fechar medições e aceite F3-04.
+```
+
+### Passagem de trabalho — 26/10/2026 (cursor autenticado F3-04)
+
+```text
+ID: avanço de F3-04
+Estado: F3-04 parcialmente validada; F3 geral EM ANDAMENTO
+Validação de navegador: lista/cursor com 22 clientes sintéticos: página 1 exibiu 20,
+  avanço por “Próxima” chegou à página 2 com 2; tempos Worker observados: login 28 ms,
+  sign-in 58 ms, get-session 9–35 ms, lista 13–19 ms, anexos 24 ms.
+Limpeza: removidos os 21 registros temporários de paginação e a conta/sessão Better Auth
+  de teste; permanece apenas o cliente sintético único usado para CRUD, sem anexos.
+Bloqueio: Chrome ainda impede acesso ao arquivo sintético via seletor; upload API e
+  conteúdo inválido seguem cobertos pelos 17 testes Workers.
+Medições complementares: 4 chamadas D1 por página autenticada, em ambas as páginas
+  do teste; 279 ms da navegação local até a linha ficar visível. Suíte completa agora
+  tem 908 testes (18 Workers). A medição de navegador não é métrica isolada de pintura.
+Pendente: upload pela UI, bloqueado pela permissão de acesso a arquivos locais do Chrome.
+Tentativa adicional: o detalhe abriu e confirmou “Nenhum anexo enviado”; o seletor
+  foi acionado, mas a extensão barrou `fileChooser.setFiles` para o PDF sintético.
+  Nenhum upload ocorreu. Conta/sessão temporárias removidas e usuário Alfa original
+  restaurado ao seed local; apenas o cliente sintético permanece.
+Próximo passo: habilitar acesso a arquivos locais pela extensão do Chrome e concluir a
+  medição; não há trabalho remoto, commit ou deploy.
+```
+
+### Passagem de trabalho — 29/10/2026 (F3-04 concluída; F3 fechada)
+
+```text
+ID: F3-04 (fechamento); F3 CONCLUÍDA
+Estado: F3-04 concluída; aceite F3 cumprido; fase F3 CONCLUÍDA
+Validação: npm test 908 passando em 108 arquivos (18 Workers); check 0 erros
+  (9 avisos legados de a11y em admin/lgpd). Disco do Mac muito lento a frio:
+  timeouts de transformação do vitest nas execuções iniciais; suíte completa
+  verde em 19 s com o cache de transformação aquecido.
+Branch: reescrita/f2-identidade-autorizacao
+Notas:
+- Única pendência de F3-04 era o upload de anexo pela UI no navegador. Resolvida
+  com Playwright (E2E previsto em F0-05): o Chromium próprio do Playwright não tem
+  a limitação de permissão file:// da extensão do Chrome que bloqueava
+  fileChooser.setFiles nas tentativas de 26/10.
+- Dependência nova: playwright ^1.56.1 (devDependency). Script de validação e
+  PDF sintético em scripts/f3-04/ (não entra em npm test; grupo E2E separado).
+- Fluxo validado ponta a ponta na UI: login sintético, lista, detalhe de
+  “Cliente F3 Navegador”, envio do PDF pelo input do formulário, anexo exibido
+  na lista (1 KB) e download pelo botão “Baixar” com conteúdo byte a byte
+  idêntico ao enviado (479 bytes).
+- Tempos (servidor local aquecido): login→lista 114 ms; abrir detalhe 37 ms;
+  upload→anexo na UI 34 ms; download 41 ms.
+- Servidor com wrangler dev --local (wrangler.local.toml); build .svelte-kit de
+  26/10 reutilizado por não haver mudança de código-fonte — o vite build neste
+  Mac apresentou leituras de disco patologicamente lentas (sem avanço em 30 min).
+- Conta/sessão/membro sintéticos e o anexo de teste removidos do D1/R2 locais;
+  estado final: apenas o cliente sintético “Cliente F3 Navegador”, sem anexos.
+- Sem acesso remoto, deploy, migração remota ou commit.
+Próximo passo: F4-01 (venda manual, produtos/itens, moeda, recibos/pagamentos).
 ```
 
 Referências técnicas foram consultadas em 26/10/2026 e estão ligadas junto às respectivas afirmações. Revalidar limites, APIs de bibliotecas e versões ao iniciar a execução.
