@@ -203,7 +203,7 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 - [x] F4-01: documentar e implementar venda manual, produtos/itens, moeda, recibos/pagamentos e estados necessários; transação e idempotência para as gravações compostas.
 - [ ] F4-02: implementar alteração, cancelamento/estorno e comissão com exemplos de cálculo, arredondamento e datas; preservar invariantes sob retry e concorrência.
 - [x] F4-03: implementar consultas/dashboards/relatórios a partir do mesmo contrato financeiro; totais precisam reconciliar com os registros de origem.
-- [ ] F4-04: revisar read models: começar com queries e índices adequados; criar agregações/rebuild apenas onde necessário, com versão, checkpoint, recomposição e limite de atraso visível. A escolha usa a estimativa de linhas/custo de F0-06; o rebuild a cada 5 minutos do sistema atual não é portado por padrão.
+- [x] F4-04: revisar read models: começar com queries e índices adequados; criar agregações/rebuild apenas onde necessário, com versão, checkpoint, recomposição e limite de atraso visível. A escolha usa a estimativa de linhas/custo de F0-06; o rebuild a cada 5 minutos do sistema atual não é portado por padrão.
 - [ ] F4-05: gerar PDFs/documentos com marca VTUR e testes de conteúdo/acesso; verificar quebra de página e valores em exemplos representativos.
 - [ ] F4-06: provar ausência de importadores e conciliação excluídos, incluindo permissões, menus, rotas, parsers e dependências indiretas do financeiro.
 
@@ -556,3 +556,25 @@ Agenda de recebíveis com JOIN `venda_parcelas → venda_pagamentos → vendas`.
 
 **Próximo (F4-04 ou conforme roteiro):**
 - F4-04: revisar read models — queries e índices adequados; agregações/rebuild apenas onde necessário
+
+---
+
+## Passagem de trabalho — 30/10/2026 (F4-04)
+
+**Commit:** `698f5d57` — F4-04: revisar read models — índices compostos e ADR-007
+
+**Decisão (ADR-007):** live queries com índices compostos são suficientes nesta escala.
+O rebuild a cada 5 min do Supabase **não é portado**.
+
+**Alterações:**
+- `schema.ts`: 3 índices compostos adicionados
+  - `idx_vendas_empresa_cancelada_data` (empresa_id, cancelada, data_venda) — cobre resumoVendas
+  - `idx_vendas_empresa_cancelada_id` (empresa_id, cancelada, id) — cobre listarVendas keyset cursor
+  - `idx_venda_parcelas_vencimento` (empresa_id, vencimento) — cobre listarParcelas
+- `drizzle/0006_f4_04_indices.sql` — migração `CREATE INDEX IF NOT EXISTS`
+- `docs/adr/ADR-007-read-model.md` — decisão documentada com contexto de escala
+
+**Testes:** 947 passando (109 suítes).
+
+**Próximo (F4-05 ou conforme roteiro):**
+- F4-05: gerar PDFs/documentos com marca VTUR e testes de conteúdo/acesso; verificar quebra de página e valores em exemplos representativos.
