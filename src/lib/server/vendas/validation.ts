@@ -367,3 +367,190 @@ export function validarVenda(body: unknown): VendaValidationResult {
     },
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// F4-02 — Validação parcial para edição de venda (PATCH)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Tipo de entrada para edição — todos os campos opcionais exceto versao.
+ * Se itens for fornecido, deve ter ≥ 1 elemento.
+ * Se pagamentos for fornecido, deve ter ≥ 1 elemento.
+ */
+export type VendaEdicaoInput = {
+  versao: number;
+  vendedor_id?: string | null;
+  cliente_id?: number | null;
+  produto_id?: number | null;
+  data_venda?: string | null;
+  data_lancamento?: string | null;
+  data_embarque?: string | null;
+  data_final?: string | null;
+  desconto_comercial_aplicado?: boolean | null;
+  desconto_comercial?: unknown;
+  valor_bruto?: unknown;
+  valor_taxas?: unknown;
+  valor_total?: unknown;
+  valor_nao_comissionado?: unknown;
+  notas?: string | null;
+  itens?: ItemInput[] | null;
+  pagamentos?: PagamentoInput[] | null;
+};
+
+/** Campos normalizados que podem ser atualizados — todos opcionais. */
+export type VendaEdicaoNormalizada = {
+  vendedor_id?: string | null;
+  cliente_id?: number | null;
+  produto_id?: number | null;
+  data_venda?: string;
+  data_lancamento?: string;
+  data_embarque?: string | null;
+  data_final?: string | null;
+  desconto_comercial_aplicado?: boolean;
+  desconto_comercial_centavos?: number;
+  valor_bruto_centavos?: number;
+  valor_taxas_centavos?: number;
+  valor_total_centavos?: number;
+  valor_pago_centavos?: number;
+  valor_nao_comissionado_centavos?: number;
+  notas?: string | null;
+  itens?: ItemNormalizado[];
+  pagamentos?: PagamentoNormalizado[];
+};
+
+export type VendaEdicaoValidationResult =
+  | { ok: true; versao: number; dados: VendaEdicaoNormalizada }
+  | { ok: false; errors: Record<string, string> };
+
+/**
+ * Valida e normaliza o body de PATCH /vendas/:id.
+ *
+ * Diferenças de validarVenda():
+ *   - versao: obrigatória, inteiro ≥ 1;
+ *   - todos os campos de cabeçalho são opcionais;
+ *   - itens e pagamentos são opcionais, mas se fornecidos devem ter ≥ 1 elemento;
+ *   - data_venda (se fornecida) ainda não pode ser futura;
+ *   - não há chave_idempotencia (a operação é idempotente pelo versionamento).
+ */
+export function validarVendaEdicao(body: unknown): VendaEdicaoValidationResult {
+  const errors: Record<string, string> = {};
+
+  if (!body || typeof body !== 'object') {
+    return { ok: false, errors: { _: 'Corpo da requisição inválido.' } };
+  }
+  const b = body as Record<string, unknown>;
+
+  // ── versao (obrigatória) ──
+  const versaoRaw = Number(b.versao);
+  if (!Number.isInteger(versaoRaw) || versaoRaw < 1) {
+    errors.versao = 'Campo obrigatório: versao (inteiro ≥ 1).';
+  }
+  const versao = versaoRaw;
+
+  // ── datas (opcionais — só validar se presentes) ──
+  const hoje = hojeISO();
+  let dataVenda: string | undefined;
+  let dataLancamento: string | undefined;
+
+  if (b.data_venda !== undefined && b.data_venda !== null) {
+    if (!isDataCivil(b.data_venda)) {
+      errors.data_venda = 'data_venda deve ser YYYY-MM-DD.';
+    } else if (b.data_venda > hoje) {
+      errors.data_venda = 'Data de venda não pode ser futura.';
+    } else {
+      dataVenda = b.data_venda;
+    }
+  }
+
+  if (b.data_lancamento !== undefined && b.data_lancamento !== null) {
+    if (!isDataCivil(b.data_lancamento)) {
+      errors.data_lancamento = 'data_lancamento deve ser YYYY-MM-DD.';
+    } else {
+      dataLancamento = b.data_lancamento > hoje ? hoje : b.data_lancamento;
+    }
+  }
+
+  if (dataVenda && dataLancamento && dataVenda > dataLancamento) {
+    errors.data_venda = 'Data de venda não pode ser posterior à data de lançamento.';
+  }
+
+  const dataEmbarque = b.data_embarque !== undefined
+    ? (isDataCivil(b.data_embarque) ? b.data_embarque : null)
+    : undefined;
+  const dataFinal = b.data_final !== undefined
+    ? (isDataCivil(b.data_final) ? b.data_final : null)
+    : undefined;
+
+  // ── itens (opcionais — se fornecidos devem ter ≥ 1) ──
+  let itens: ItemNormalizado[] | undefined;
+  if (b.itens !== undefined && b.itens !== null) {
+    const itensRaw = Array.isArray(b.itens) ? b.itens : [];
+    if (itensRaw.length === 0) {
+      errors.itens = 'Se fornecidos, itens deve ter pelo menos um elemento.';
+    } else {
+      itens = [];
+      for (let i = 0; i < itensRaw.length; i++) {
+        const item = normalizarItem(itensRaw[i], i, errors);
+        if (item) itens.push(item);
+      }
+    }
+  }
+
+  // ── pagamentos (opcionais — se fornecidos devem ter ≥ 1) ──
+  let pagamentos: PagamentoNormalizado[] | undefined;
+  if (b.pagamentos !== undefined && b.pagamentos !== null) {
+    const pagamentosRaw = Array.isArray(b.pagamentos) ? b.pagamentos : [];
+    if (pagamentosRaw.length === 0) {
+      errors.pagamentos = 'Se fornecidos, pagamentos deve ter pelo menos um elemento.';
+    } else {
+      pagamentos = [];
+      for (let i = 0; i < pagamentosRaw.length; i++) {
+        const pag = normalizarPagamento(pagamentosRaw[i], i, errors);
+        if (pag) pagamentos.push(pag);
+      }
+    }
+  }
+
+  if (Object.keys(errors).length > 0) return { ok: false, errors };
+
+  // ── totais derivados (calculados a partir dos novos filhos, se presentes) ──
+  const dados: VendaEdicaoNormalizada = {};
+
+  if ('vendedor_id' in b) dados.vendedor_id = typeof b.vendedor_id === 'string' && b.vendedor_id.trim() ? b.vendedor_id.trim() : null;
+  if ('cliente_id' in b) dados.cliente_id = typeof b.cliente_id === 'number' ? b.cliente_id : null;
+  if ('produto_id' in b) dados.produto_id = typeof b.produto_id === 'number' ? b.produto_id : null;
+  if (dataVenda !== undefined) dados.data_venda = dataVenda;
+  if (dataLancamento !== undefined) dados.data_lancamento = dataLancamento;
+  if (dataEmbarque !== undefined) dados.data_embarque = dataEmbarque;
+  if (dataFinal !== undefined) dados.data_final = dataFinal;
+  if ('desconto_comercial_aplicado' in b) dados.desconto_comercial_aplicado = b.desconto_comercial_aplicado === true;
+  if ('desconto_comercial' in b) dados.desconto_comercial_centavos = reaisToCentavos(b.desconto_comercial);
+  if ('valor_nao_comissionado' in b) dados.valor_nao_comissionado_centavos = reaisToCentavos(b.valor_nao_comissionado);
+  if ('notas' in b) dados.notas = textoOpcional(b.notas, 2000);
+
+  if (itens !== undefined) {
+    dados.itens = itens;
+    // Recalcular totais a partir dos novos itens (a não ser que o cliente envie explicitamente)
+    dados.valor_bruto_centavos = b.valor_bruto !== undefined
+      ? reaisToCentavos(b.valor_bruto)
+      : itens.reduce((s, it) => s + it.valor_bruto_centavos, 0);
+    dados.valor_taxas_centavos = b.valor_taxas !== undefined
+      ? reaisToCentavos(b.valor_taxas)
+      : itens.reduce((s, it) => s + it.valor_taxas_centavos, 0);
+    dados.valor_total_centavos = b.valor_total !== undefined
+      ? reaisToCentavos(b.valor_total)
+      : itens.reduce((s, it) => s + it.valor_total_centavos, 0);
+  } else {
+    // Sem novos itens — atualizar só se enviados explicitamente
+    if ('valor_bruto' in b) dados.valor_bruto_centavos = reaisToCentavos(b.valor_bruto);
+    if ('valor_taxas' in b) dados.valor_taxas_centavos = reaisToCentavos(b.valor_taxas);
+    if ('valor_total' in b) dados.valor_total_centavos = reaisToCentavos(b.valor_total);
+  }
+
+  if (pagamentos !== undefined) {
+    dados.pagamentos = pagamentos;
+    dados.valor_pago_centavos = pagamentos.reduce((s, p) => s + p.valor_total_centavos, 0);
+  }
+
+  return { ok: true, versao, dados };
+}

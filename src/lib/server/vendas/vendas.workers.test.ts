@@ -1,5 +1,5 @@
 /**
- * F4-01 — Testes de integração de vendas no runtime Workers real
+ * F4-01 / F4-02 — Testes de integração de vendas no runtime Workers real
  * (workerd via Miniflare): D1 local efêmero.
  *
  * Cobre:
@@ -10,6 +10,7 @@
  *   E. Cancelamento lógico + concorrência otimista (versao)
  *   F. Isolamento de tenant: empresa B não vê vendas da empresa A
  *   G. Status derivado: pendente / confirmada / concluida / cancelada
+ *   H. Edição (PATCH): substituição atômica + recálculo de totais
  *
  * Executar:
  *   npx vitest run --project workers src/lib/server/vendas/vendas.workers.test.ts
@@ -34,9 +35,10 @@ import {
   listarVendas,
   obterVenda,
   cancelarVenda,
+  editarVenda,
   derivarStatus,
 } from './service';
-import type { VendaNormalizada } from './validation';
+import type { VendaNormalizada, VendaEdicaoNormalizada } from './validation';
 
 const MIGRATIONS = (env as Record<string, unknown>).TEST_MIGRATIONS as Parameters<
   typeof applyD1Migrations
@@ -62,6 +64,9 @@ function vendaMinima(overrides: Partial<VendaNormalizada> = {}): VendaNormalizad
     data_final: null,
     desconto_comercial_aplicado: false,
     desconto_comercial_centavos: 0,
+    valor_bruto_centavos: 600000,
+    valor_taxas_centavos: 5000,
+    valor_total_centavos: 605000,
     valor_nao_comissionado_centavos: 0,
     notas: null,
     chave_idempotencia: null,
@@ -386,5 +391,186 @@ describe('G. Status derivado (derivarStatus)', () => {
 
   it('sem datas especiais → "pendente"', () => {
     expect(derivarStatus({ cancelada: false, dataEmbarque: null, dataFinal: null })).toBe('pendente');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// H. Edição — PATCH /vendas/:id (F4-02)
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('H. Edição de venda (editarVenda)', () => {
+  // ── H1. Happy path: substituição completa de itens e pagamentos ──
+  it('H1. substitui itens e pagamentos, recalcula totais e incrementa versao', async () => {
+    const db = getDb(env.DB);
+    const original = await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
+    expect(original.versao).toBe(1);
+    expect(original.valorTotalCentavos).toBe(605000);
+    expect(original.itens).toHaveLength(1);
+    expect(original.pagamentos).toHaveLength(1);
+
+    // Novo item com valor diferente
+    const novosItens: VendaEdicaoNormalizada['itens'] = [
+      {
+        produto_id: null,
+        numero_recibo: 'REC-002',
+        numero_reserva: null,
+        data_servico: '2024-12-22',
+        data_fim_servico: null,
+        pax: 1,
+        descricao: 'Passagem aérea GRU-CUN',
+        tipo: 'passagem',
+        moeda: 'BRL',
+        cambio_centavos: 10000,
+        valor_neto_centavos: 80000,
+        valor_bruto_centavos: 120000,
+        valor_taxas_centavos: 8000,
+        valor_total_centavos: 128000,
+        paga_comissao: true,
+        notas: null,
+      },
+    ];
+    const novosPagamentos: VendaEdicaoNormalizada['pagamentos'] = [
+      {
+        forma_id: null,
+        forma_nome: 'PIX',
+        operacao: null,
+        plano: null,
+        valor_bruto_centavos: 128000,
+        desconto_centavos: 0,
+        valor_total_centavos: 128000,
+        parcelas_qtd: 1,
+        parcelas_valor_centavos: 128000,
+        paga_comissao: true,
+        parcelas: [{ numero: 1, valor_centavos: 128000, vencimento: null }],
+      },
+    ];
+
+    const editada = await editarVenda(db, EMPRESA_A, original.id, 1, {
+      itens: novosItens,
+      pagamentos: novosPagamentos,
+    }, env.DB);
+
+    expect(editada.versao).toBe(2);
+    expect(editada.itens).toHaveLength(1);
+    expect(editada.itens[0].descricao).toBe('Passagem aérea GRU-CUN');
+    expect(editada.valorTotalCentavos).toBe(128000);
+    expect(editada.valorPagoCentavos).toBe(128000);
+    expect(editada.pagamentos).toHaveLength(1);
+    expect(editada.pagamentos[0].formaNome).toBe('PIX');
+    expect(editada.pagamentos[0].parcelas).toHaveLength(1);
+  });
+
+  // ── H2. Edição parcial: apenas campos do cabeçalho (sem itens/pagamentos) ──
+  it('H2. edição parcial do cabeçalho não remove itens/pagamentos existentes', async () => {
+    const db = getDb(env.DB);
+    const original = await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
+
+    const editada = await editarVenda(db, EMPRESA_A, original.id, 1, {
+      notas: 'Notas atualizadas via PATCH',
+      data_embarque: '2024-12-20',
+    }, env.DB);
+
+    expect(editada.versao).toBe(2);
+    expect(editada.notas).toBe('Notas atualizadas via PATCH');
+    expect(editada.dataEmbarque).toBe('2024-12-20');
+    // Itens e pagamentos permanecem inalterados
+    expect(editada.itens).toHaveLength(1);
+    expect(editada.itens[0].descricao).toBe('Pacote Cancún 7 noites');
+    expect(editada.pagamentos).toHaveLength(1);
+    // Totais mantidos
+    expect(editada.valorTotalCentavos).toBe(605000);
+  });
+
+  // ── H3. Substituição apenas de pagamentos (mantém itens) ──
+  it('H3. substituição apenas de pagamentos mantém itens intactos', async () => {
+    const db = getDb(env.DB);
+    const original = await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
+
+    const novosPagamentos: VendaEdicaoNormalizada['pagamentos'] = [
+      {
+        forma_id: null,
+        forma_nome: 'Transferência',
+        operacao: null,
+        plano: null,
+        valor_bruto_centavos: 605000,
+        desconto_centavos: 0,
+        valor_total_centavos: 605000,
+        parcelas_qtd: 1,
+        parcelas_valor_centavos: 605000,
+        paga_comissao: false,
+        parcelas: [{ numero: 1, valor_centavos: 605000, vencimento: '2024-12-01' }],
+      },
+    ];
+
+    const editada = await editarVenda(db, EMPRESA_A, original.id, 1, {
+      pagamentos: novosPagamentos,
+    }, env.DB);
+
+    expect(editada.versao).toBe(2);
+    // Itens inalterados
+    expect(editada.itens).toHaveLength(1);
+    expect(editada.itens[0].descricao).toBe('Pacote Cancún 7 noites');
+    // Novo pagamento
+    expect(editada.pagamentos).toHaveLength(1);
+    expect(editada.pagamentos[0].formaNome).toBe('Transferência');
+    expect(editada.pagamentos[0].parcelas[0].vencimento).toBe('2024-12-01');
+    // valor_pago recalculado
+    expect(editada.valorPagoCentavos).toBe(605000);
+  });
+
+  // ── H4. Conflito de versão ──
+  it('H4. versao desatualizada → CONFLITO_VERSAO', async () => {
+    const db = getDb(env.DB);
+    const original = await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
+
+    // Simular que outra sessão editou antes (versão 1 → 2)
+    await editarVenda(db, EMPRESA_A, original.id, 1, { notas: 'primeira edição' }, env.DB);
+
+    // Segunda edição com versão antiga (1) deve falhar
+    await expect(
+      editarVenda(db, EMPRESA_A, original.id, 1, { notas: 'conflito' }, env.DB)
+    ).rejects.toThrow(VendaError);
+
+    try {
+      await editarVenda(db, EMPRESA_A, original.id, 1, { notas: 'conflito' }, env.DB);
+    } catch (err) {
+      expect(err).toBeInstanceOf(VendaError);
+      expect((err as VendaError).code).toBe('CONFLITO_VERSAO');
+    }
+  });
+
+  // ── H5. Venda cancelada não pode ser editada ──
+  it('H5. venda cancelada → CANCELADA', async () => {
+    const db = getDb(env.DB);
+    const original = await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
+    await cancelarVenda(db, EMPRESA_A, original.id, 1);
+
+    await expect(
+      editarVenda(db, EMPRESA_A, original.id, 2, { notas: 'editar cancelada' }, env.DB)
+    ).rejects.toMatchObject({ code: 'CANCELADA' });
+  });
+
+  // ── H6. Isolamento de tenant: empresa B não edita venda da empresa A ──
+  it('H6. empresa B não edita venda da empresa A → NAO_ENCONTRADA', async () => {
+    const db = getDb(env.DB);
+    const vendaA = await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
+
+    await expect(
+      editarVenda(db, EMPRESA_B, vendaA.id, 1, { notas: 'hack' }, env.DB)
+    ).rejects.toMatchObject({ code: 'NAO_ENCONTRADA' });
+  });
+
+  // ── H7. Edição idempotente: mesma versão reeditada retorna o estado atual ──
+  it('H7. após edição bem-sucedida, versao incrementada fica persistida', async () => {
+    const db = getDb(env.DB);
+    const original = await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
+    expect(original.versao).toBe(1);
+
+    const editada1 = await editarVenda(db, EMPRESA_A, original.id, 1, { notas: 'v2' }, env.DB);
+    expect(editada1.versao).toBe(2);
+
+    const editada2 = await editarVenda(db, EMPRESA_A, original.id, 2, { notas: 'v3' }, env.DB);
+    expect(editada2.versao).toBe(3);
+    expect(editada2.notas).toBe('v3');
   });
 });

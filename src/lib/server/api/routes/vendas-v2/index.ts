@@ -1,10 +1,11 @@
 /**
- * Rotas Hono para vendas — /api/v2/vendas (F4-01 / M04).
+ * Rotas Hono para vendas — /api/v2/vendas (F4-01 / F4-02 / M04).
  *
  * Endpoints:
  *   GET    /api/v2/vendas                  — listar (cursor, filtros)
  *   POST   /api/v2/vendas                  — criar (transação atômica + idempotência)
  *   GET    /api/v2/vendas/:id              — detalhe (cabeçalho + itens + pagamentos)
+ *   PATCH  /api/v2/vendas/:id              — editar (substituição atômica + recálculo)
  *   POST   /api/v2/vendas/:id/cancelar     — cancelamento lógico (exige versao)
  *
  * Suporte ao formulário:
@@ -17,10 +18,11 @@ import type { ApiEnv } from '../../types';
 import { resolveAuthContext } from '$lib/server/auth/context';
 import { can } from '$lib/server/policy';
 import { getDb } from '$lib/server/db/client';
-import { validarVenda } from '$lib/server/vendas/validation';
+import { validarVenda, validarVendaEdicao } from '$lib/server/vendas/validation';
 import {
   VendaError,
   criarVenda,
+  editarVenda,
   listarVendas,
   obterVenda,
   cancelarVenda,
@@ -161,7 +163,7 @@ vendasV2Routes.post('/', async (c) => {
   }
 
   try {
-    const venda = await criarVenda(r.db, r.ctx.empresaId, r.ctx.userId, validacao.dados);
+    const venda = await criarVenda(r.db, r.ctx.empresaId, r.ctx.userId, validacao.dados, c.env.DB);
     return c.json({ data: detalheParaJson(venda) }, 201);
   } catch (err) {
     return respostaErro(c, err);
@@ -182,6 +184,38 @@ vendasV2Routes.get('/:id', async (c) => {
 
   try {
     const venda = await obterVenda(r.db, r.ctx.empresaId, id);
+    return c.json({ data: detalheParaJson(venda) });
+  } catch (err) {
+    return respostaErro(c, err);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PATCH /:id — editar (substituição atômica de itens/pagamentos + recálculo)
+// ─────────────────────────────────────────────────────────────────────────────
+
+vendasV2Routes.patch('/:id', async (c) => {
+  const r = await contexto(c);
+  if ('res' in r) return r.res;
+  if (!can(r.ctx.papel, 'vendas', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
+
+  const id = parseId(c.req.param('id'));
+  if (!id) return c.json({ error: 'ID inválido.' }, 400);
+
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: 'JSON inválido.' }, 400);
+  }
+
+  const validacao = validarVendaEdicao(body);
+  if (!validacao.ok) {
+    return c.json({ error: 'Dados inválidos.', code: 'VALIDACAO', errors: validacao.errors }, 400);
+  }
+
+  try {
+    const venda = await editarVenda(r.db, r.ctx.empresaId, id, validacao.versao, validacao.dados, c.env.DB);
     return c.json({ data: detalheParaJson(venda) });
   } catch (err) {
     return respostaErro(c, err);
