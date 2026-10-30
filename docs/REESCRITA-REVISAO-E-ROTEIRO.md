@@ -202,7 +202,7 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 
 - [x] F4-01: documentar e implementar venda manual, produtos/itens, moeda, recibos/pagamentos e estados necessários; transação e idempotência para as gravações compostas.
 - [ ] F4-02: implementar alteração, cancelamento/estorno e comissão com exemplos de cálculo, arredondamento e datas; preservar invariantes sob retry e concorrência.
-- [ ] F4-03: implementar consultas/dashboards/relatórios a partir do mesmo contrato financeiro; totais precisam reconciliar com os registros de origem.
+- [x] F4-03: implementar consultas/dashboards/relatórios a partir do mesmo contrato financeiro; totais precisam reconciliar com os registros de origem.
 - [ ] F4-04: revisar read models: começar com queries e índices adequados; criar agregações/rebuild apenas onde necessário, com versão, checkpoint, recomposição e limite de atraso visível. A escolha usa a estimativa de linhas/custo de F0-06; o rebuild a cada 5 minutos do sistema atual não é portado por padrão.
 - [ ] F4-05: gerar PDFs/documentos com marca VTUR e testes de conteúdo/acesso; verificar quebra de página e valores em exemplos representativos.
 - [ ] F4-06: provar ausência de importadores e conciliação excluídos, incluindo permissões, menus, rotas, parsers e dependências indiretas do financeiro.
@@ -529,3 +529,30 @@ Implementar edição de venda (PATCH /api/v2/vendas/:id) com:
 - Comissão: cálculo, regras, fechamento mensal
 - Ou F4-03: cancelamento/estorno com regras de prazo e reversão de comissão
 
+
+---
+
+## Passagem de trabalho — 30/10/2026 (F4-03)
+
+**Commit:** `fed634d7` — feat(vendas): F4-03 — dashboard financeiro e agenda de parcelas
+
+**O que foi implementado:**
+
+### `resumoVendas(db, empresaId, opts)` — `service.ts`
+Agrega totais de vendas não canceladas (por padrão) com suporte a filtros por período, vendedor e cliente. Além dos totais do cabeçalho, faz dois JOINs adicionais para somar `venda_itens.valor_total_centavos` e `venda_pagamentos.valor_total_centavos`, expondo flags `itensReconciliam` e `pagamentosReconciliam` que verificam a invariante do contrato financeiro.
+
+### `listarParcelas(db, empresaId, opts)` — `service.ts`
+Agenda de recebíveis com JOIN `venda_parcelas → venda_pagamentos → vendas`. Keyset cursor por `id DESC`, filtros por vencimento, vendedor, cliente e `somenteAtivas` (exclui vendas canceladas). Retorna `temMais` e `proximo_cursor`.
+
+### Rotas adicionadas — `vendas-v2/index.ts`
+- `GET /api/v2/vendas/resumo` — query params: `data_venda_de`, `data_venda_ate`, `vendedor_id`, `cliente_id`, `incluir_canceladas`
+- `GET /api/v2/vendas/parcelas` — query params: `cursor`, `limite`, `vencimento_de`, `vencimento_ate`, `vendedor_id`, `cliente_id`, `somente_ativas`
+
+### Testes Workers (+14)
+- Suíte I (8 testes): invariante de reconciliação, múltiplas vendas, isolamento de tenant, canceladas, filtros de período, reconciliação mantida após edição
+- Suíte J (6 testes): parcelas por venda, isolamento de tenant, somenteAtivas, filtro vencimento, keyset cursor sem duplicatas, campos JOIN corretos
+
+**Total acumulado:** 947 testes passando.
+
+**Próximo (F4-04 ou conforme roteiro):**
+- F4-04: revisar read models — queries e índices adequados; agregações/rebuild apenas onde necessário
