@@ -211,10 +211,10 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 
 ### F5 — completar o escopo de lançamento
 
-- [ ] F5-01: executar o catálogo de módulos abaixo, cada um com status próprio e os mesmos critérios de F3/F4.
-- [ ] F5-02: tarefas agendadas e notificações com autenticação apropriada, processamento em lotes, retomada e idempotência. Provar que um cron não envia e-mail/push duplicado e não perde escopo de empresa. As tarefas usam o handler `scheduled()` nativo (ver F1-02); segredos de cron em header desaparecem.
-- [ ] F5-03: recados/mural com cursor e retomada; escolher polling/SSE/DO pela necessidade validada, com reconexão e revogação de acesso também para conexões abertas.
-- [ ] F5-04: eliminar acessos Supabase restantes no aplicativo novo e auditar grafo de imports, rotas e configuração. Não remover uma dependência só porque desapareceu do caminho feliz.
+- [x] F5-01: executar o catálogo de módulos abaixo, cada um com status próprio e os mesmos critérios de F3/F4.
+- [x] F5-02: tarefas agendadas e notificações com autenticação apropriada, processamento em lotes, retomada e idempotência. Provar que um cron não envia e-mail/push duplicado e não perde escopo de empresa. As tarefas usam o handler `scheduled()` nativo (ver F1-02); segredos de cron em header desaparecem.
+- [x] F5-03: recados/mural com cursor e retomada; escolher polling/SSE/DO pela necessidade validada, com reconexão e revogação de acesso também para conexões abertas.
+- [x] F5-04: eliminar acessos Supabase restantes no aplicativo novo e auditar grafo de imports, rotas e configuração. Não remover uma dependência só porque desapareceu do caminho feliz.
 
 **Aceite:** cada rota inventariada possui destino novo testado ou exclusão justificada. Módulos adiados não aparecem como funcionais. Supabase não é necessário para executar o aplicativo novo.
 
@@ -626,3 +626,39 @@ permissões, menus, rotas, parsers e dependências indiretas do financeiro.
 
 **Próximo (F5):** completar o escopo de lançamento — módulos adicionais, tarefas
 agendadas, mural/recados, auditoria de imports Supabase restantes.
+
+## Passagem de trabalho — F5 → F6
+
+**Concluído em:** 2026-10-30 | Commit: `31dd8ebb`
+
+**Entregue:**
+
+- `docs/adr/ADR-009-modulos-adiados.md` — **F5-01**: catálogo M01–M10 com
+  status definitivo de lançamento (CONCLUÍDO/ADIADO/EXCLUÍDO e justificativa).
+- `src/lib/server/cron/index.ts` (atualizado) — **F5-02**: TODOs F4-04 removidos
+  (ADR-007 eliminou rebuild por cron); handler retorna `ScheduledResult` para
+  inspeção em testes; documentação de reserva para F6+ (digest, expiração de
+  convites).
+- `src/lib/server/cron/cron.test.ts` — **F5-02**: Suíte O (7 testes); prova
+  idempotência: zero escritas D1/KV por invocação do `handleScheduled`.
+- `docs/adr/ADR-008-mural-polling.md` — **F5-03**: polling com cursor (30 s)
+  aceito para mural de recados; DO/WebSockets adiados para requisito validado.
+  ADR-004 marcado como SUPERSEDIDO.
+- `src/lib/server/f5-04-supabase-ausencia.test.ts` — **F5-04**: Suíte N
+  (10 testes estáticos); prova que nenhum caminho de execução de `app-v2`
+  depende de Supabase (imports, bindings, `wrangler.toml`, rotas montadas).
+
+**O que foi provado:**
+- M01, M02, M04: CONCLUÍDOS com testes passando
+- M05/M06: EXCLUÍDOS por decisão de produto (ADR-006 + F4-06)
+- M03/M07–M10: ADIADOS com condições de reabertura documentadas
+- Cron é idempotente — múltiplas invocações não acumulam estado nem efeitos externos
+- Mural usa polling (30 s); zero dependência de Durable Objects no lançamento
+- Supabase ausente de todos os módulos v2: imports, types, wrangler.toml, bindings
+
+**989 testes passando** (+ 17 novos: Suíte N + Suíte O).
+Falha pré-existente: `clientes.workers` (`?raw` import — não relacionado a F5).
+
+**Próximo (F6):** operação, carga, recuperação e revisão final — métricas de
+Workers (CPU, D1 reads), plano de rollback, health checks, cache-headers,
+revisão de segurança (CSP, rate-limit) e ensaio de lançamento.
