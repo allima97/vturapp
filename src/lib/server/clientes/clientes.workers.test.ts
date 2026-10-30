@@ -22,6 +22,15 @@ type WorkerBindings = ApiEnv['Bindings'];
 declare module 'cloudflare:test' {
   interface ProvidedEnv extends WorkerBindings {}
 }
+// Stub de brand — o Workers runtime não suporta importação de assets Vite (?raw)
+// Mesmo mock aplicado em vendas-pdf.workers.test.ts
+import { vi } from 'vitest';
+vi.mock('$lib/brand', () => ({
+  VTUR_LOGO_URL: 'data:image/png;base64,stub',
+  VTUR_LOGO_PATH: '/brand/vtur-symbol.png',
+}));
+
+
 
 import { env } from 'cloudflare:test';
 import { applyD1Migrations } from 'cloudflare:test';
