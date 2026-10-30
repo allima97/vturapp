@@ -493,6 +493,10 @@ export const vendas = sqliteTable(
     idxEmpresaCliente: index('idx_vendas_empresa_cliente').on(t.empresaId, t.clienteId),
     idxEmpresaVendedor: index('idx_vendas_empresa_vendedor').on(t.empresaId, t.vendedorId),
     idxEmpresaCancelada: index('idx_vendas_empresa_cancelada').on(t.empresaId, t.cancelada),
+    /** F4-04: cobre resumoVendas com filtro cancelada + data_venda (dashboard). */
+    idxEmpresaCanceladaData: index('idx_vendas_empresa_cancelada_data').on(t.empresaId, t.cancelada, t.dataVenda),
+    /** F4-04: cobre listarVendas com keyset cursor (empresa_id + cancelada + id DESC). */
+    idxEmpresaCanceladaId: index('idx_vendas_empresa_cancelada_id').on(t.empresaId, t.cancelada, t.id),
     idxChaveIdempotencia: uniqueIndex('idx_vendas_chave_idempotencia').on(t.chaveIdempotencia),
     idxNumeroVenda: uniqueIndex('idx_vendas_numero_venda').on(t.empresaId, t.numeroVenda),
   })
@@ -623,6 +627,8 @@ export const vendaParcelas = sqliteTable(
   },
   (t) => ({
     idxPagamento: index('idx_venda_parcelas_pagamento').on(t.empresaId, t.pagamentoId),
+    /** F4-04: cobre listarParcelas com filtro por vencimento. */
+    idxVencimento: index('idx_venda_parcelas_vencimento').on(t.empresaId, t.vencimento),
   })
 );
 
