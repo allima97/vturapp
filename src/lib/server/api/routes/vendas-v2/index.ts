@@ -1,5 +1,5 @@
 /**
- * Rotas Hono para vendas — /api/v2/vendas (F4-01 / F4-02 / M04).
+ * Rotas Hono para vendas — /api/v2/vendas (F4-01 / F4-02 / F4-03 / M04).
  *
  * Endpoints:
  *   GET    /api/v2/vendas                  — listar (cursor, filtros)
@@ -7,6 +7,10 @@
  *   GET    /api/v2/vendas/:id              — detalhe (cabeçalho + itens + pagamentos)
  *   PATCH  /api/v2/vendas/:id              — editar (substituição atômica + recálculo)
  *   POST   /api/v2/vendas/:id/cancelar     — cancelamento lógico (exige versao)
+ *
+ * Dashboard / relatórios (F4-03):
+ *   GET    /api/v2/vendas/resumo           — totais agregados + reconciliação
+ *   GET    /api/v2/vendas/parcelas         — parcelas de pagamentos (keyset cursor)
  *
  * Suporte ao formulário:
  *   GET    /api/v2/vendas/produtos         — lista global de produtos ativos
@@ -28,8 +32,11 @@ import {
   cancelarVenda,
   listarProdutos,
   listarFormasPagamento,
+  resumoVendas,
+  listarParcelas,
   type VendaDetalhe,
   type VendaListItem,
+  type ParcelaItem,
 } from '$lib/server/vendas/service';
 import type { Produto, FormaPagamento } from '$lib/server/db/schema';
 
@@ -73,6 +80,70 @@ function parseId(valor: string): number | null {
   const n = Number(valor);
   return Number.isInteger(n) && n > 0 ? n : null;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /resumo — dashboard financeiro + reconciliação (F4-03)
+// ─────────────────────────────────────────────────────────────────────────────
+
+vendasV2Routes.get('/resumo', async (c) => {
+  const r = await contexto(c);
+  if ('res' in r) return r.res;
+  if (!can(r.ctx.papel, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+
+  const incluirCanceladas = c.req.query('incluir_canceladas') === '1';
+  const dataVendaDe = c.req.query('data_venda_de') || undefined;
+  const dataVendaAte = c.req.query('data_venda_ate') || undefined;
+  const vendedorId = c.req.query('vendedor_id') || undefined;
+  const clienteIdParam = c.req.query('cliente_id');
+  const clienteId = clienteIdParam ? parseId(clienteIdParam) : undefined;
+
+  const resumo = await resumoVendas(r.db, r.ctx.empresaId, {
+    dataVendaDe,
+    dataVendaAte,
+    vendedorId,
+    clienteId: clienteId ?? undefined,
+    incluirCanceladas,
+  });
+
+  return c.json({ data: resumo });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /parcelas — parcelas de pagamentos (keyset cursor) (F4-03)
+// ─────────────────────────────────────────────────────────────────────────────
+
+vendasV2Routes.get('/parcelas', async (c) => {
+  const r = await contexto(c);
+  if ('res' in r) return r.res;
+  if (!can(r.ctx.papel, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+
+  const cursorParam = c.req.query('cursor');
+  const cursor = cursorParam ? parseId(cursorParam) : undefined;
+  const limiteParam = c.req.query('limite');
+  const limite = limiteParam && Number.isInteger(Number(limiteParam)) ? Number(limiteParam) : undefined;
+  const vencimentoDe = c.req.query('vencimento_de') || undefined;
+  const vencimentoAte = c.req.query('vencimento_ate') || undefined;
+  const vendedorId = c.req.query('vendedor_id') || undefined;
+  const clienteIdParam = c.req.query('cliente_id');
+  const clienteId = clienteIdParam ? parseId(clienteIdParam) : undefined;
+  const somenteAtivas = c.req.query('somente_ativas') !== '0';
+
+  const { parcelas, temMais } = await listarParcelas(r.db, r.ctx.empresaId, {
+    cursor: cursor ?? undefined,
+    limite,
+    vencimentoDe,
+    vencimentoAte,
+    vendedorId,
+    clienteId: clienteId ?? undefined,
+    somenteAtivas,
+  });
+
+  return c.json({
+    itens: parcelas.map(parcelaParaJson),
+    tem_mais: temMais,
+    proximo_cursor: temMais && parcelas.length > 0 ? parcelas[parcelas.length - 1].id : null,
+  });
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // GET /produtos — suporte ao formulário (global, sem empresa_id)
@@ -365,5 +436,21 @@ function formaParaJson(f: FormaPagamento) {
     nome: f.nome,
     tipo: f.tipo,
     ativo: f.ativo,
+  };
+}
+
+function parcelaParaJson(p: ParcelaItem) {
+  return {
+    id: p.id,
+    numero: p.numero,
+    valor_centavos: p.valorCentavos,
+    vencimento: p.vencimento,
+    venda_id: p.vendaId,
+    numero_venda: p.numeroVenda,
+    pagamento_id: p.pagamentoId,
+    forma_nome: p.formaNome,
+    cliente_id: p.clienteId,
+    cancelada: p.cancelada,
+    data_venda: p.dataVenda,
   };
 }

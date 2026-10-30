@@ -36,6 +36,8 @@ import {
   obterVenda,
   cancelarVenda,
   editarVenda,
+  resumoVendas,
+  listarParcelas,
   derivarStatus,
 } from './service';
 import type { VendaNormalizada, VendaEdicaoNormalizada } from './validation';
@@ -572,5 +574,282 @@ describe('H. Edição de venda (editarVenda)', () => {
     const editada2 = await editarVenda(db, EMPRESA_A, original.id, 2, { notas: 'v3' }, env.DB);
     expect(editada2.versao).toBe(3);
     expect(editada2.notas).toBe('v3');
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// I. Resumo financeiro e reconciliação (F4-03)
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('I. resumoVendas — dashboard e reconciliação', () => {
+  // ── I1. Resumo vazio retorna zeros ──
+  it('I1. empresa sem vendas → totais zero e reconciliação verdadeira', async () => {
+    const db = getDb(env.DB);
+    const resumo = await resumoVendas(db, EMPRESA_A);
+    expect(resumo.totalVendas).toBe(0);
+    expect(resumo.valorTotalCentavos).toBe(0);
+    expect(resumo.valorPagoCentavos).toBe(0);
+    expect(resumo.valorAReceberCentavos).toBe(0);
+    expect(resumo.somaItensTotalCentavos).toBe(0);
+    expect(resumo.somaPagamentosTotalCentavos).toBe(0);
+    expect(resumo.itensReconciliam).toBe(true);
+    expect(resumo.pagamentosReconciliam).toBe(true);
+  });
+
+  // ── I2. Invariante de reconciliação após criação ──
+  it('I2. após criar venda, itens e pagamentos reconciliam com cabeçalho', async () => {
+    const db = getDb(env.DB);
+    await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
+
+    const resumo = await resumoVendas(db, EMPRESA_A);
+    expect(resumo.totalVendas).toBe(1);
+    // Invariante central: soma dos itens = valor_total da venda
+    expect(resumo.itensReconciliam).toBe(true);
+    // Invariante central: soma dos pagamentos = valor_pago da venda
+    expect(resumo.pagamentosReconciliam).toBe(true);
+    // a_receber calculado corretamente
+    expect(resumo.valorAReceberCentavos).toBe(
+      resumo.valorTotalCentavos - resumo.valorPagoCentavos
+    );
+  });
+
+  // ── I3. Múltiplas vendas — totais somados corretamente ──
+  it('I3. múltiplas vendas — totais agregam corretamente', async () => {
+    const db = getDb(env.DB);
+    await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
+    await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
+
+    const resumo = await resumoVendas(db, EMPRESA_A);
+    expect(resumo.totalVendas).toBe(2);
+    expect(resumo.valorTotalCentavos).toBe(2 * 605000);
+    expect(resumo.itensReconciliam).toBe(true);
+    expect(resumo.pagamentosReconciliam).toBe(true);
+  });
+
+  // ── I4. Isolamento de tenant ──
+  it('I4. empresa A não vê totais da empresa B', async () => {
+    const db = getDb(env.DB);
+    await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
+    await criarVenda(db, EMPRESA_B, USUARIO_B, vendaMinima({ vendedor_id: USUARIO_B }), env.DB);
+
+    const resumoA = await resumoVendas(db, EMPRESA_A);
+    const resumoB = await resumoVendas(db, EMPRESA_B);
+    expect(resumoA.totalVendas).toBe(1);
+    expect(resumoB.totalVendas).toBe(1);
+  });
+
+  // ── I5. Vendas canceladas excluídas por padrão ──
+  it('I5. venda cancelada é excluída do resumo por padrão', async () => {
+    const db = getDb(env.DB);
+    const v = await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
+    await cancelarVenda(db, EMPRESA_A, v.id, v.versao);
+
+    const resumo = await resumoVendas(db, EMPRESA_A);
+    expect(resumo.totalVendas).toBe(0);
+    expect(resumo.valorTotalCentavos).toBe(0);
+  });
+
+  // ── I6. incluirCanceladas inclui venda cancelada ──
+  it('I6. incluirCanceladas=true inclui vendas canceladas nos totais', async () => {
+    const db = getDb(env.DB);
+    const v = await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
+    await cancelarVenda(db, EMPRESA_A, v.id, v.versao);
+
+    const resumoSem = await resumoVendas(db, EMPRESA_A, { incluirCanceladas: false });
+    const resumoCom = await resumoVendas(db, EMPRESA_A, { incluirCanceladas: true });
+    expect(resumoSem.totalVendas).toBe(0);
+    expect(resumoCom.totalVendas).toBe(1);
+    expect(resumoCom.itensReconciliam).toBe(true);
+  });
+
+  // ── I7. Filtro por período data_venda ──
+  it('I7. filtro data_venda_de/ate retorna apenas vendas no intervalo', async () => {
+    const db = getDb(env.DB);
+    await criarVenda(db, EMPRESA_A, USUARIO_A, { ...vendaMinima(), data_venda: '2024-01-15' }, env.DB);
+    await criarVenda(db, EMPRESA_A, USUARIO_A, { ...vendaMinima(), data_venda: '2024-06-20' }, env.DB);
+    await criarVenda(db, EMPRESA_A, USUARIO_A, { ...vendaMinima(), data_venda: '2024-12-01' }, env.DB);
+
+    const resumoQ1 = await resumoVendas(db, EMPRESA_A, {
+      dataVendaDe: '2024-01-01',
+      dataVendaAte: '2024-03-31',
+    });
+    expect(resumoQ1.totalVendas).toBe(1);
+
+    const resumoAno = await resumoVendas(db, EMPRESA_A, {
+      dataVendaDe: '2024-01-01',
+      dataVendaAte: '2024-12-31',
+    });
+    expect(resumoAno.totalVendas).toBe(3);
+    expect(resumoAno.itensReconciliam).toBe(true);
+    expect(resumoAno.pagamentosReconciliam).toBe(true);
+  });
+
+  // ── I8. Reconciliação mantida após edição com novos itens ──
+  it('I8. após editarVenda com novos itens, reconciliação se mantém', async () => {
+    const db = getDb(env.DB);
+    const original = await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
+
+    // Editar com novos itens de valores diferentes
+    const novosItens = [
+      {
+        produto_id: null,
+        numero_recibo: null,
+        numero_reserva: null,
+        data_servico: null,
+        data_fim_servico: null,
+        notas: null,
+        descricao: 'Hotel Novo',
+        tipo: 'hospedagem' as const,
+        pax: 2,
+        moeda: 'BRL' as const,
+        cambio_centavos: 10000,
+        valor_neto_centavos: 80000,
+        valor_bruto_centavos: 100000,
+        valor_taxas_centavos: 3000,
+        valor_total_centavos: 103000,
+        paga_comissao: true,
+        parcelas: [],
+      },
+    ];
+
+    await editarVenda(db, EMPRESA_A, original.id, 1, { itens: novosItens }, env.DB);
+
+    const resumo = await resumoVendas(db, EMPRESA_A);
+    expect(resumo.totalVendas).toBe(1);
+    expect(resumo.valorTotalCentavos).toBe(103000);
+    expect(resumo.itensReconciliam).toBe(true);
+    expect(resumo.pagamentosReconciliam).toBe(true);
+  });
+});
+
+// ══════════════════════════════════════════════════════════════════════════════
+// J. Parcelas (F4-03)
+// ══════════════════════════════════════════════════════════════════════════════
+
+describe('J. listarParcelas — agenda de recebíveis', () => {
+  // Helper: venda com parcelas explícitas
+  function vendaComParcelas(dataVencimento1: string, dataVencimento2: string): VendaNormalizada {
+    return {
+      ...vendaMinima(),
+      pagamentos: [
+        {
+          forma_id: null,
+          forma_nome: 'Cartão',
+          operacao: null,
+          plano: null,
+          valor_bruto_centavos: 605000,
+          desconto_centavos: 0,
+          valor_total_centavos: 605000,
+          parcelas_qtd: 2,
+          parcelas_valor_centavos: 302500,
+          paga_comissao: true,
+          parcelas: [
+            { numero: 1, valor_centavos: 302500, vencimento: dataVencimento1 },
+            { numero: 2, valor_centavos: 302500, vencimento: dataVencimento2 },
+          ],
+        },
+      ],
+    };
+  }
+
+  // ── J1. Lista parcelas criadas ──
+  it('J1. retorna parcelas de venda criada', async () => {
+    const db = getDb(env.DB);
+    await criarVenda(db, EMPRESA_A, USUARIO_A, vendaComParcelas('2024-03-01', '2024-04-01'), env.DB);
+
+    const { parcelas, temMais } = await listarParcelas(db, EMPRESA_A);
+    expect(parcelas).toHaveLength(2);
+    expect(temMais).toBe(false);
+    // Verifica campos básicos
+    expect(parcelas[0].formaNome).toBe('Cartão');
+    expect(parcelas[0].cancelada).toBe(false);
+    expect(parcelas.every((p) => p.valorCentavos === 302500)).toBe(true);
+  });
+
+  // ── J2. Isolamento de tenant ──
+  it('J2. empresa A não vê parcelas da empresa B', async () => {
+    const db = getDb(env.DB);
+    await criarVenda(db, EMPRESA_A, USUARIO_A, vendaComParcelas('2024-03-01', '2024-04-01'), env.DB);
+    await criarVenda(db, EMPRESA_B, USUARIO_B, {
+      ...vendaComParcelas('2024-03-01', '2024-04-01'),
+      vendedor_id: USUARIO_B,
+    }, env.DB);
+
+    const { parcelas: parcelasA } = await listarParcelas(db, EMPRESA_A);
+    const { parcelas: parcelasB } = await listarParcelas(db, EMPRESA_B);
+    expect(parcelasA).toHaveLength(2);
+    expect(parcelasB).toHaveLength(2);
+    expect(parcelasA.every((p) => p.vendaId !== parcelasB[0].vendaId)).toBe(true);
+  });
+
+  // ── J3. somenteAtivas exclui parcelas de vendas canceladas ──
+  it('J3. parcelas de venda cancelada excluídas quando somenteAtivas=true', async () => {
+    const db = getDb(env.DB);
+    const v = await criarVenda(db, EMPRESA_A, USUARIO_A, vendaComParcelas('2024-03-01', '2024-04-01'), env.DB);
+    await cancelarVenda(db, EMPRESA_A, v.id, v.versao);
+
+    const { parcelas: comCanceladas } = await listarParcelas(db, EMPRESA_A, { somenteAtivas: false });
+    const { parcelas: semCanceladas } = await listarParcelas(db, EMPRESA_A, { somenteAtivas: true });
+
+    expect(comCanceladas).toHaveLength(2);
+    expect(semCanceladas).toHaveLength(0);
+  });
+
+  // ── J4. Filtro por vencimento ──
+  it('J4. filtro vencimento_de/ate retorna apenas parcelas no período', async () => {
+    const db = getDb(env.DB);
+    await criarVenda(db, EMPRESA_A, USUARIO_A, vendaComParcelas('2024-03-01', '2024-09-01'), env.DB);
+
+    const { parcelas: t1 } = await listarParcelas(db, EMPRESA_A, {
+      vencimentoDe: '2024-01-01',
+      vencimentoAte: '2024-06-30',
+    });
+    expect(t1).toHaveLength(1);
+    expect(t1[0].vencimento).toBe('2024-03-01');
+
+    const { parcelas: todas } = await listarParcelas(db, EMPRESA_A, {
+      vencimentoDe: '2024-01-01',
+      vencimentoAte: '2024-12-31',
+    });
+    expect(todas).toHaveLength(2);
+  });
+
+  // ── J5. Keyset cursor pagination ──
+  it('J5. cursor retorna próxima página', async () => {
+    const db = getDb(env.DB);
+    // Criar 4 parcelas (2 vendas × 2 parcelas)
+    await criarVenda(db, EMPRESA_A, USUARIO_A, vendaComParcelas('2024-03-01', '2024-04-01'), env.DB);
+    await criarVenda(db, EMPRESA_A, USUARIO_A, vendaComParcelas('2024-05-01', '2024-06-01'), env.DB);
+
+    const { parcelas: pag1, temMais: tm1 } = await listarParcelas(db, EMPRESA_A, { limite: 2 });
+    expect(pag1).toHaveLength(2);
+    expect(tm1).toBe(true);
+
+    const cursor = pag1[pag1.length - 1].id;
+    const { parcelas: pag2, temMais: tm2 } = await listarParcelas(db, EMPRESA_A, { limite: 2, cursor });
+    expect(pag2).toHaveLength(2);
+    expect(tm2).toBe(false);
+
+    // Sem duplicatas entre páginas
+    const ids1 = pag1.map((p) => p.id);
+    const ids2 = pag2.map((p) => p.id);
+    expect(ids1.some((id) => ids2.includes(id))).toBe(false);
+  });
+
+  // ── J6. Venda padrão (3 parcelas) — verifica campos e ordem ──
+  it('J6. vendaMinima gera 3 parcelas; campos formaNome e vendaId corretos', async () => {
+    const db = getDb(env.DB);
+    const v = await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
+
+    const { parcelas, temMais } = await listarParcelas(db, EMPRESA_A);
+    expect(parcelas).toHaveLength(3);
+    expect(temMais).toBe(false);
+    // Campos de contexto vindos do JOIN
+    expect(parcelas.every((p) => p.vendaId === v.id)).toBe(true);
+    expect(parcelas.every((p) => p.formaNome === 'Cartão de Crédito')).toBe(true);
+    expect(parcelas.every((p) => p.cancelada === false)).toBe(true);
+    // Números das parcelas cobrem 1, 2, 3
+    const numeros = parcelas.map((p) => p.numero).sort((a, b) => a - b);
+    expect(numeros).toEqual([1, 2, 3]);
   });
 });

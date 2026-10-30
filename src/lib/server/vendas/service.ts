@@ -672,3 +672,211 @@ export async function editarVenda(
 
   return obterVenda(db, empresaId, vendaId);
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// F4-03 — Consultas / Dashboard / Parcelas
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ── Tipos exportados ──────────────────────────────────────────────────────────
+
+export type ResumoVendas = {
+  /** Número de vendas não canceladas no período/filtro. */
+  totalVendas: number;
+  /** Soma de vendas.valor_total_centavos (não canceladas). */
+  valorTotalCentavos: number;
+  /** Soma de vendas.valor_pago_centavos (não canceladas). */
+  valorPagoCentavos: number;
+  /** valorTotal − valorPago (calculado). */
+  valorAReceberCentavos: number;
+  /** Soma de venda_itens.valor_total_centavos para as mesmas vendas. */
+  somaItensTotalCentavos: number;
+  /** Soma de venda_pagamentos.valor_total_centavos para as mesmas vendas. */
+  somaPagamentosTotalCentavos: number;
+  /** true quando somaItens === valorTotal (invariante de reconciliação). */
+  itensReconciliam: boolean;
+  /** true quando somaPagamentos === valorPago (invariante de reconciliação). */
+  pagamentosReconciliam: boolean;
+};
+
+export type ResumoVendasOptions = {
+  /** Data de venda mínima inclusive (YYYY-MM-DD). */
+  dataVendaDe?: string;
+  /** Data de venda máxima inclusive (YYYY-MM-DD). */
+  dataVendaAte?: string;
+  /** Filtrar por vendedor (user ID). */
+  vendedorId?: string;
+  /** Filtrar por cliente. */
+  clienteId?: number;
+  /** Se true, inclui também as vendas canceladas nos totais. */
+  incluirCanceladas?: boolean;
+};
+
+export type ParcelaItem = {
+  id: number;
+  numero: number;
+  valorCentavos: number;
+  vencimento: string | null;
+  vendaId: number;
+  numeroVenda: string | null;
+  pagamentoId: number;
+  formaNome: string;
+  clienteId: number | null;
+  cancelada: boolean;
+  dataVenda: string;
+};
+
+export type ListarParcelasOptions = {
+  /** Cursor keyset (id da última parcela retornada; retorna id < cursor). */
+  cursor?: number;
+  limite?: number;
+  /** Vencimento mínimo (YYYY-MM-DD). */
+  vencimentoDe?: string;
+  /** Vencimento máximo (YYYY-MM-DD). */
+  vencimentoAte?: string;
+  /** Filtrar por vendedor. */
+  vendedorId?: string;
+  /** Filtrar por cliente. */
+  clienteId?: number;
+  /** Se true (padrão), exclui parcelas de vendas canceladas. */
+  somenteAtivas?: boolean;
+};
+
+// ── resumoVendas ──────────────────────────────────────────────────────────────
+
+/**
+ * Retorna totais agregados das vendas da empresa.
+ *
+ * Inclui valores de reconciliação: a soma dos itens e dos pagamentos deve
+ * coincidir com os campos de cabeçalho (invariante do contrato financeiro).
+ */
+export async function resumoVendas(
+  db: DrizzleDb,
+  empresaId: number,
+  opts: ResumoVendasOptions = {}
+): Promise<ResumoVendas> {
+  const { dataVendaDe, dataVendaAte, vendedorId, clienteId, incluirCanceladas = false } = opts;
+
+  // Condições base para vendas
+  const condicoesVenda = [eq(vendas.empresaId, empresaId)];
+  if (!incluirCanceladas) condicoesVenda.push(eq(vendas.cancelada, false));
+  if (dataVendaDe) condicoesVenda.push(sql`${vendas.dataVenda} >= ${dataVendaDe}`);
+  if (dataVendaAte) condicoesVenda.push(sql`${vendas.dataVenda} <= ${dataVendaAte}`);
+  if (vendedorId) condicoesVenda.push(eq(vendas.vendedorId, vendedorId));
+  if (clienteId !== undefined) condicoesVenda.push(eq(vendas.clienteId, clienteId));
+
+  // Agrega diretamente da tabela vendas
+  const [resumo] = await db
+    .select({
+      total: sql<number>`count(*)`,
+      valorTotal: sql<number>`coalesce(sum(${vendas.valorTotalCentavos}), 0)`,
+      valorPago: sql<number>`coalesce(sum(${vendas.valorPagoCentavos}), 0)`,
+    })
+    .from(vendas)
+    .where(and(...condicoesVenda));
+
+  // Soma de venda_itens para as mesmas vendas (JOIN)
+  const [resumoItens] = await db
+    .select({
+      somaTotal: sql<number>`coalesce(sum(${vendaItens.valorTotalCentavos}), 0)`,
+    })
+    .from(vendaItens)
+    .innerJoin(vendas, eq(vendaItens.vendaId, vendas.id))
+    .where(and(...condicoesVenda));
+
+  // Soma de venda_pagamentos para as mesmas vendas (JOIN)
+  const [resumoPagamentos] = await db
+    .select({
+      somaTotal: sql<number>`coalesce(sum(${vendaPagamentos.valorTotalCentavos}), 0)`,
+    })
+    .from(vendaPagamentos)
+    .innerJoin(vendas, eq(vendaPagamentos.vendaId, vendas.id))
+    .where(and(...condicoesVenda));
+
+  const valorTotal = Number(resumo.valorTotal);
+  const valorPago = Number(resumo.valorPago);
+  const somaItens = Number(resumoItens.somaTotal);
+  const somaPags = Number(resumoPagamentos.somaTotal);
+
+  return {
+    totalVendas: Number(resumo.total),
+    valorTotalCentavos: valorTotal,
+    valorPagoCentavos: valorPago,
+    valorAReceberCentavos: valorTotal - valorPago,
+    somaItensTotalCentavos: somaItens,
+    somaPagamentosTotalCentavos: somaPags,
+    itensReconciliam: somaItens === valorTotal,
+    pagamentosReconciliam: somaPags === valorPago,
+  };
+}
+
+// ── listarParcelas ────────────────────────────────────────────────────────────
+
+/**
+ * Lista parcelas de pagamentos em ordem decrescente de id (keyset pagination).
+ *
+ * Retorna `temMais = true` quando há mais resultados além do limite pedido.
+ * O próximo cursor é o id da última parcela retornada.
+ */
+export async function listarParcelas(
+  db: DrizzleDb,
+  empresaId: number,
+  opts: ListarParcelasOptions = {}
+): Promise<{ parcelas: ParcelaItem[]; temMais: boolean }> {
+  const {
+    cursor,
+    limite = 50,
+    vencimentoDe,
+    vencimentoAte,
+    vendedorId,
+    clienteId,
+    somenteAtivas = true,
+  } = opts;
+
+  const limiteFetch = Math.min(limite + 1, 201);
+
+  const condicoes = [eq(vendaParcelas.empresaId, empresaId)];
+  if (cursor !== undefined) condicoes.push(lt(vendaParcelas.id, cursor));
+  if (vencimentoDe) condicoes.push(sql`${vendaParcelas.vencimento} >= ${vencimentoDe}`);
+  if (vencimentoAte) condicoes.push(sql`${vendaParcelas.vencimento} <= ${vencimentoAte}`);
+  if (somenteAtivas) condicoes.push(eq(vendas.cancelada, false));
+  if (vendedorId) condicoes.push(eq(vendas.vendedorId, vendedorId));
+  if (clienteId !== undefined) condicoes.push(eq(vendas.clienteId, clienteId));
+
+  const rows = await db
+    .select({
+      id: vendaParcelas.id,
+      numero: vendaParcelas.numero,
+      valorCentavos: vendaParcelas.valorCentavos,
+      vencimento: vendaParcelas.vencimento,
+      vendaId: vendas.id,
+      numeroVenda: vendas.numeroVenda,
+      pagamentoId: vendaPagamentos.id,
+      formaNome: vendaPagamentos.formaNome,
+      clienteId: vendas.clienteId,
+      cancelada: vendas.cancelada,
+      dataVenda: vendas.dataVenda,
+    })
+    .from(vendaParcelas)
+    .innerJoin(vendaPagamentos, eq(vendaParcelas.pagamentoId, vendaPagamentos.id))
+    .innerJoin(vendas, eq(vendaPagamentos.vendaId, vendas.id))
+    .where(and(...condicoes))
+    .orderBy(desc(vendaParcelas.id))
+    .limit(limiteFetch);
+
+  const temMais = rows.length > limite;
+  const parcelas = rows.slice(0, limite).map((r) => ({
+    id: r.id,
+    numero: r.numero,
+    valorCentavos: r.valorCentavos,
+    vencimento: r.vencimento ?? null,
+    vendaId: r.vendaId,
+    numeroVenda: r.numeroVenda ?? null,
+    pagamentoId: r.pagamentoId,
+    formaNome: r.formaNome,
+    clienteId: r.clienteId ?? null,
+    cancelada: r.cancelada,
+    dataVenda: r.dataVenda,
+  }));
+
+  return { parcelas, temMais };
+}
