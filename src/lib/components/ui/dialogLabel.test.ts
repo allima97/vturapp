@@ -18,7 +18,7 @@ describe('dialogLabel (Fase 3.6)', () => {
   it('grava aria-labelledby/aria-describedby no role=dialog e limpa ao destruir', () => {
     const host = fakeHost();
     let selector = '';
-    const node = { closest: (s: string) => ((selector = s), host) };
+    const node = { closest: (s: string) => ((selector = s), host as unknown as Element) };
     const action = dialogLabel(node, { labelId: 'd1', descriptionId: 'd1-desc' });
     expect(selector).toBe('[role="dialog"]');
     expect(host.attrs.get('aria-labelledby')).toBe('d1');

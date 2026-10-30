@@ -1,0 +1,16 @@
+# Config mínima para testes de integração Workers (F3+).
+# Usada por @cloudflare/vitest-pool-workers (grupo "workers" do vitest.workspace.ts).
+# Não é deploy: os IDs são fictícios e o Miniflare cria D1/R2 locais efêmeros.
+name = "vturapp-test"
+compatibility_date = "2025-03-21"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "vturapp-test-db"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "./drizzle"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "vturapp-test-files"

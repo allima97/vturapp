@@ -64,7 +64,7 @@
     erroGlobal = '';
     try {
       const r = await fetch('/api/v1/lgpd/admin/solicitacoes');
-      const d = await r.json();
+      const d: any = await r.json();
       if (r.ok) solicitacoes = d.items;
       else erroGlobal = d.error || 'Erro ao carregar.';
     } catch { erroGlobal = 'Falha de conexão.'; }
@@ -76,7 +76,7 @@
     erroGlobal = '';
     try {
       const r = await fetch('/api/v1/lgpd/admin/atividades');
-      const d = await r.json();
+      const d: any = await r.json();
       if (r.ok) atividades = d.atividades;
       else erroGlobal = d.error || 'Erro ao carregar.';
     } catch { erroGlobal = 'Falha de conexão.'; }
@@ -93,7 +93,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: novoStatus, resposta })
       });
-      const d = await r.json();
+      const d: any = await r.json();
       if (r.ok) {
         msgResposta = '✅ Atualizado com sucesso.';
         await carregarSolicitacoes();
@@ -116,7 +116,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tipo: anonTipo, id: anonId.trim(), protocolo_solicitacao: anonProtocolo.trim() || undefined })
       });
-      const d = await r.json();
+      const d: any = await r.json();
       msgAnon = r.ok ? `✅ ${d.mensagem}` : `❌ ${d.error || 'Erro.'}`;
       if (r.ok) { anonId = ''; anonProtocolo = ''; }
     } catch { msgAnon = '❌ Falha de conexão.'; }

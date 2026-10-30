@@ -24,7 +24,7 @@ describe('app Hono /api/v1', () => {
     expect(res.headers.get('x-request-id')).toBe('req-1');
     expect(res.headers.get('server-timing')).toMatch(/^app;dur=\d+$/);
     expect(res.headers.get('cache-control')).toBe('no-store');
-    expect((await res.json()).ok).toBe(true);
+    expect(((await res.json()) as { ok: boolean }).ok).toBe(true);
   });
 
   it('rota inexistente (via catch-all) → 404 JSON', async () => {

@@ -1,0 +1,25 @@
+# Ambiente exclusivamente local para revisão autenticada de F3.
+# Usa .wrangler/state local; não define IDs remotos nem ambientes de deploy.
+name = "vturapp-local-f3"
+main = ".svelte-kit/cloudflare/_worker.js"
+compatibility_date = "2026-04-19"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+PUBLIC_ENVIRONMENT = "development"
+PUBLIC_APP_URL = "http://127.0.0.1:8787"
+BETTER_AUTH_SECRET = "local-f3-only-secret-not-used-remotely-2026"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "vturapp-db"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "./drizzle"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "vturapp-files"
+
+[assets]
+directory = ".svelte-kit/cloudflare"
+binding = "ASSETS"

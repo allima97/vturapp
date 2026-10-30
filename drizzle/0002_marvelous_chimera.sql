@@ -1,0 +1,4 @@
+-- ARQUIVO OBSOLETO — gerado automaticamente e substituído por 0002_f2_schema_dominio.sql
+-- Este arquivo NÃO deve ser aplicado. O journal (_journal.json) aponta para
+-- 0002_f2_schema_dominio que é a migration incremental correta.
+-- Não é possível excluir este arquivo neste ambiente; ele é ignorado pelo wrangler.

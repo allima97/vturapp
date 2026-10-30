@@ -222,11 +222,14 @@ type RateLimitRule = {
 };
 
 const PUBLIC_API_RATE_LIMITS: RateLimitRule[] = [
+	{ prefix: '/api/auth/sign-in/email', methods: ['POST'], limit: 8, windowMs: 60_000 },
+	{ prefix: '/api/auth/sign-up/email', methods: ['POST'], limit: 8, windowMs: 60_000 },
 	{ prefix: '/api/auth/convite/activate', methods: ['POST'], limit: 8, windowMs: 60_000 },
 	{ prefix: '/api/auth/login', methods: ['POST'], limit: 8, windowMs: 60_000 },
 	{ prefix: '/api/auth/passkeys/login', methods: ['POST'], limit: 12, windowMs: 60_000 },
 	{ prefix: '/api/auth/set-session', methods: ['POST'], limit: 40, windowMs: 60_000 },
 	{ prefix: '/api/auth/turnstile/verify', methods: ['POST'], limit: 20, windowMs: 60_000 },
+	{ prefix: '/api/auth', methods: ['POST'], limit: 60, windowMs: 60_000 },
 	{ prefix: '/api/v1/cards', limit: 60, windowMs: 60_000 },
 	{ prefix: '/api/v1/client-error', methods: ['POST'], limit: 30, windowMs: 60_000 },
 	{ prefix: '/api/v1/lgpd/solicitar', methods: ['POST'], limit: 10, windowMs: 60_000 },
@@ -433,6 +436,8 @@ const authGuard: Handle = async ({ event, resolve }) => {
 	const pathname = url.pathname;
 	const isApiRequest = pathMatchesPrefix(pathname, '/api');
 	const apiPublicRoutes = [
+		'/api/auth',
+		'/api/v2',
 		'/api/auth/login',
 		'/api/auth/convite/activate',
 		'/api/auth/passkeys/login',
@@ -447,6 +452,7 @@ const authGuard: Handle = async ({ event, resolve }) => {
 	];
 
 	const rotasPublicas = [
+		'/reescrita',
 		'/auth/login',
 		'/auth/logout',
 		'/auth/register',

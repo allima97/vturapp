@@ -202,7 +202,7 @@ export async function handleClientesAvisosSendPost(event: RequestEvent) {
         })
       }, 12_000);
 
-      const payload = await response.json().catch(() => ({}));
+      const payload = (await response.json().catch(() => ({}))) as { message?: string; error?: string; id?: string };
       if (!response.ok) {
         logServerError('[clientes/avisos/send] Falha no provedor de e-mail', {
           status: response.status,

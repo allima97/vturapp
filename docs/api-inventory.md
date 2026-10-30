@@ -2,9 +2,9 @@
 
 Gerado por `node scripts/api-inventory.mjs` — **não editar à mão**. JSON completo em `docs/api-inventory.json`.
 
-- Endpoints: **258** (126 gravam no banco)
-- Domínios: 50
-- Migrados para Hono: **249** (marcados com <sub>hono</sub>)
+- Endpoints: **259** (126 gravam no banco)
+- Domínios: 51
+- Migrados para Hono: **248** (marcados com <sub>hono</sub>)
 
 ## Pontos de atenção (detectados automaticamente)
 
@@ -71,10 +71,11 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/v1/agenda/range` <sub>hono</sub> | GET | ✔ | ✔ | Vendedor |  |  | agenda_itens(R), users(R) | — | — |
 | `/v1/agenda/update` <sub>hono</sub> | PATCH POST | ✔ | ✔ | Admin | ✔ | ✔ | agenda_itens(R/U) | — | — |
 
-### auth (9)
+### auth (10)
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
+| `/auth/[...auth]` | GET POST |  |  |  |  |  | — | — | — |
 | `/auth/convite/activate` | POST |  |  |  | ✔ | ✔ | user_convites(R/U), users(UP) | — | — |
 | `/auth/login` <sub>turnstile</sub> | POST |  |  |  | ✔ | ✔ | — | — | — |
 | `/auth/passkeys` | DELETE GET | ✔ |  |  | ✔ | ✔ | — | — | — |
@@ -131,7 +132,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/v1/clientes/list` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | clientes(R), quote(R), users(R), vendas(R) | — | — |
 | `/v1/clientes/resolve-import` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | clientes(C/R/U) | — | invalidateClientReadModels |
 | `/v1/clientes/template-dispatches` <sub>hono</sub> | GET POST | ✔ | ✔ | Admin Gestor Master Vendedor | ✔ | ✔ | cliente_template_dispatches(C/R), clientes(R), vendas(R) | — | — |
-| `/v1/clientes/templates/send` <sub>hono</sub> | POST | ✔ | ✔ |  | ✔ | ✔ | companies(R), master_empresas(R), user_message_template_themes(R), user_message_templates(R), users(R) | — | — |
+| `/v1/clientes/templates/send` <sub>hono</sub> | POST | ✔ | ✔ |  | ✔ | ✔ | master_empresas(R), user_message_template_themes(R), user_message_templates(R), users(R) | — | — |
 
 ### conciliacao (18)
 
@@ -174,7 +175,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
-| `/v1/crm/library` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | companies(R), crm_template_categories(R), master_empresas(R), quote_print_settings(R), user_crm_assinaturas(R), user_message_template_themes(R) | — | — |
+| `/v1/crm/library` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | crm_template_categories(R), master_empresas(R), user_crm_assinaturas(R), user_message_template_themes(R) | — | — |
 | `/v1/crm/signature` <sub>hono</sub> | POST | ✔ |  |  | ✔ | ✔ | user_crm_assinaturas(UP) | — | — |
 
 ### cron (2)
@@ -302,7 +303,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
 | `/v1/orcamentos/[id]` <sub>hono</sub> | DELETE GET PATCH | ✔ | ✔ | Admin | ✔ | ✔ | clientes(R), quote(R/U), quote_item(C/R), quote_item_segment(R) | — | invalidateQuoteReadModels |
 | `/v1/orcamentos/[id]/resumo-venda` <sub>hono</sub> | GET | ✔ | ✔ | Admin Financeiro |  |  | clientes(R), quote(R) | — | — |
-| `/v1/orcamentos/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin Financeiro |  |  | cidades(R) | buscar_cidades | — |
+| `/v1/orcamentos/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin Financeiro |  |  | — | — | — |
 | `/v1/orcamentos/cliente-create` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | clientes(C) | — | invalidateClientReadModels |
 | `/v1/orcamentos/clientes` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | clientes(R) | — | — |
 | `/v1/orcamentos/create` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | clientes(R), quote(C), quote_item(C) | — | invalidateQuoteReadModels |
@@ -315,13 +316,12 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/v1/orcamentos/status` <sub>hono</sub> | PATCH | ✔ | ✔ | Admin | ✔ | ✔ | quote(R/U) | — | invalidateQuoteReadModels |
 | `/v1/orcamentos/tipos` <sub>hono</sub> | GET | ✔ | ✔ | Admin Financeiro |  |  | tipo_produtos(R) | — | — |
 
-### pagamentos (4)
+### pagamentos (3)
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
 | `/v1/pagamentos` <sub>hono</sub> | GET POST | ✔ | ✔ | Admin | ✔ | ✔ | vendas(R), vendas_pagamentos(C/R) | — | invalidatePagamentoReadModels, invalidateReadModelCache |
 | `/v1/pagamentos/[id]` <sub>hono</sub> | DELETE GET PATCH | ✔ | ✔ | Admin | ✔ | ✔ | vendas_pagamentos(D/R/U) | — | invalidatePagamentoReadModels, invalidateReadModelCache |
-| `/v1/pagamentos/[id]/conciliar` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | vendas_pagamentos(R/U) | — | invalidatePagamentoReadModels, invalidateReadModelCache |
 | `/v1/pagamentos/upload` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ |  | vendas_pagamentos(R/U) | — | invalidatePagamentoReadModels, invalidateReadModelCache |
 
 ### paises (1)
@@ -341,7 +341,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/v1/parametros/escalas` <sub>hono</sub> | GET POST | ✔ | ✔ | Admin Gestor Master Vendedor | ✔ | ✔ | escala_dia(D/R/U/UP), escala_horario_usuario(C/R), escala_mes(R), feriados(R), users(R) | gestor_equipe_base_id | invalidateReadModelCache |
 | `/v1/parametros/metas` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin Gestor Master | ✔ | ✔ | metas_vendedor(R/U), metas_vendedor_produto(D/R), tipo_produtos(R), users(R) | — | invalidateReadModelCache |
 | `/v1/parametros/nao-comissionaveis` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin | ✔ | ✔ | parametros_pagamentos_nao_comissionaveis(D/R/U) | — | invalidateSalesReadModels |
-| `/v1/parametros/orcamentos-pdf` <sub>hono</sub> | GET POST | ✔ | ✔ | Admin | ✔ | ✔ | quote_print_settings(R), users(R) | — | invalidateQuoteReadModels |
+| `/v1/parametros/orcamentos-pdf` <sub>hono</sub> | GET POST | ✔ | ✔ | Admin | ✔ | ✔ | quote_print_settings(R) | — | invalidateQuoteReadModels |
 | `/v1/parametros/regras-produto-pacote` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin | ✔ | ✔ | product_commission_rule_pacote(D/R/U) | — | invalidateCatalogReadModels |
 | `/v1/parametros/regras-produto` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin | ✔ | ✔ | product_commission_rule(D/R/U) | — | invalidateCatalogReadModels |
 | `/v1/parametros/sistema` <sub>hono</sub> | GET POST | ✔ | ✔ | Admin | ✔ | ✔ | parametros_comissao(R/UP), users(R) | — | invalidateSalesReadModels |
@@ -352,7 +352,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
 | `/v1/preferencias/base` <sub>hono</sub> | GET | ✔ |  |  |  |  | — | — | — |
-| `/v1/preferencias/cidades-busca` <sub>hono</sub> | GET | ✔ |  |  |  |  | cidades(R) | buscar_cidades | — |
+| `/v1/preferencias/cidades-busca` <sub>hono</sub> | GET | ✔ |  |  |  |  | — | — | — |
 | `/v1/preferencias/delete` <sub>hono</sub> | POST | ✔ |  | Admin | ✔ | ✔ | minhas_preferencias(D) | — | invalidatePreferenceReadModels |
 | `/v1/preferencias/list` <sub>hono</sub> | GET | ✔ |  |  |  |  | minhas_preferencias(R), minhas_preferencias_shares(R) | — | — |
 | `/v1/preferencias/save` <sub>hono</sub> | POST | ✔ |  | Admin | ✔ | ✔ | minhas_preferencias(C/U) | — | invalidatePreferenceReadModels |
@@ -400,7 +400,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
 | `/v1/relatorios/base` <sub>hono</sub> | GET | ✔ | ✔ | Admin Vendedor |  |  | companies(R), users(R) | — | — |
-| `/v1/relatorios/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | — | buscar_cidades | — |
+| `/v1/relatorios/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | — | — | — |
 | `/v1/relatorios/clientes` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | clientes(R) | — | — |
 | `/v1/relatorios/destinos` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | — | — | — |
 | `/v1/relatorios/produtos-recibos` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | — | — | — |
@@ -471,6 +471,12 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
 | `/v1/users/aniversariantes` <sub>hono</sub> | GET | ✔ | ✔ |  |  |  | users(R) | — | — |
 
+### v2 (1)
+
+| Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
+|---|---|:-:|:-:|---|:-:|:-:|---|---|---|
+| `/v2/[...path]` | DELETE GET PATCH POST PUT |  |  |  |  |  | — | — | — |
+
 ### vendas (21)
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
@@ -481,7 +487,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/v1/vendas/cadastro-base` <sub>hono</sub> | GET | ✔ | ✔ | Admin Financeiro Gestor Master |  |  | cidades(R), clientes(R), companies(R), produtos(R), tipo_pacotes(R), tipo_produtos(R) | — | — |
 | `/v1/vendas/cadastro-save` <sub>hono</sub> | POST | ✔ | ✔ | Admin Financeiro Gestor Master | ✔ | ✔ | users(R), vendas(C/R/U) | — | invalidateSalesReadModels, publishKvInvalidationAsync, triggerRebuildAsync |
 | `/v1/vendas/cancel` <sub>hono</sub> | POST | ✔ | ✔ | Admin Master | ✔ | ✔ | vendas_recibos(D) | — | invalidateSalesReadModels, publishKvInvalidationAsync, triggerRebuildAsync |
-| `/v1/vendas/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin Master |  |  | cidades(R) | buscar_cidades | — |
+| `/v1/vendas/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin Master |  |  | cidades(C/R) | — | — |
 | `/v1/vendas/complementares` <sub>hono</sub> | GET | ✔ | ✔ | Admin Financeiro Gestor Master |  |  | vendas(R), vendas_recibos(R), vendas_recibos_complementares(R) | — | — |
 | `/v1/vendas/create` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | users(R), vendas(C) | — | invalidateSalesReadModels |
 | `/v1/vendas/gestor-equipe` <sub>hono</sub> | GET | ✔ | ✔ | Admin Gestor |  |  | users(R) | — | — |
@@ -503,7 +509,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
 | `/v1/viagens` <sub>hono</sub> | GET | ✔ | ✔ | Admin Vendedor |  |  | clientes(R), users(R), vendas(R), viagem_passageiros(R), viagens(R) | — | — |
 | `/v1/viagens/[id]` <sub>hono</sub> | DELETE GET PATCH | ✔ | ✔ | Admin Gestor Master Vendedor | ✔ | ✔ | clientes(R), produtos(R), vendas(R), vendas_recibos(R), viagens(D/R/U), vouchers(R) | — | invalidateTripReadModels |
-| `/v1/viagens/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | cidades(R) | buscar_cidades | — |
+| `/v1/viagens/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | — | — | — |
 | `/v1/viagens/cliente/[id]` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | clientes(R), vendas(R), viagens(R) | — | — |
 | `/v1/viagens/clientes` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | clientes(R) | — | — |
 | `/v1/viagens/create` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | clientes(R), viagens(C) | — | invalidateTripReadModels |

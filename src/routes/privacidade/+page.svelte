@@ -43,7 +43,7 @@
           turnstile_token: token
         })
       });
-      const data = await res.json();
+      const data: any = await res.json();
       if (res.ok && data.ok) {
         resultado = { ok: true, protocolo: data.protocolo, prazo: data.prazo, mensagem: data.mensagem };
         tipoSelecionado = '';
@@ -65,6 +65,7 @@
 <svelte:head>
   <title>Política de Privacidade & LGPD — Vtur</title>
   <meta name="description" content="Política de privacidade e exercício de direitos LGPD (Lei 13.709/2018)" />
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </svelte:head>
 
 <main class="lgpd-page">
@@ -282,11 +283,6 @@
     (window as unknown as Record<string, unknown>).onTurnstileSuccess = (t: string) => { token = t; };
   }}
 />
-
-<!-- Carrega script Turnstile -->
-<svelte:head>
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-</svelte:head>
 
 <style>
   .lgpd-page {
