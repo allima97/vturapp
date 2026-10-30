@@ -205,7 +205,7 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 - [x] F4-03: implementar consultas/dashboards/relatórios a partir do mesmo contrato financeiro; totais precisam reconciliar com os registros de origem.
 - [x] F4-04: revisar read models: começar com queries e índices adequados; criar agregações/rebuild apenas onde necessário, com versão, checkpoint, recomposição e limite de atraso visível. A escolha usa a estimativa de linhas/custo de F0-06; o rebuild a cada 5 minutos do sistema atual não é portado por padrão.
 - [x] F4-05: gerar PDFs/documentos com marca VTUR e testes de conteúdo/acesso; verificar quebra de página e valores em exemplos representativos.
-- [ ] F4-06: provar ausência de importadores e conciliação excluídos, incluindo permissões, menus, rotas, parsers e dependências indiretas do financeiro.
+- [x] F4-06: provar ausência de importadores e conciliação excluídos, incluindo permissões, menus, rotas, parsers e dependências indiretas do financeiro.
 
 **Aceite:** casos financeiros aprovados, duas gravações simultâneas não duplicam nem corrompem valores; relatórios batem com as vendas/recebimentos; nenhum cálculo depende de dado externo legado.
 
@@ -603,3 +603,26 @@ Não existe papel autenticado que não possa acessar comprovantes — L6 documen
 
 **Próximo (F4-06):** Provar ausência de importadores e conciliação excluídos:
 permissões, menus, rotas, parsers e dependências indiretas do financeiro.
+
+
+---
+## Passagem de trabalho — F4-06 → F5
+
+**Concluído em:** 2026-10-30 | Commit: `8dc05535`
+
+**Entregue:**
+- `src/lib/server/f4-06-ausencia.test.ts` — Suíte M (15 testes estáticos)
+
+**O que foi provado (análise de código-fonte, sem mocks):**
+- `app-v2.ts` não monta rotas de conciliação, financeiro, ajustes ou importação
+- Nenhum módulo da nova stack importa de `src/lib/conciliacao/` ou módulos legados
+  (`conciliacaoReconcile`, `readModelCache`, `readModelRebuild`, `kvInvalidation`,
+  `relatorios.ts`)
+- Schema D1 não define tabelas de conciliação, extrato, movimentos externos
+- Migrações D1 não criam essas tabelas
+- RBAC não define recursos `conciliacao`/`importacao`/`importador`
+
+**972 testes passando** (+ 15 novos M).
+
+**Próximo (F5):** completar o escopo de lançamento — módulos adicionais, tarefas
+agendadas, mural/recados, auditoria de imports Supabase restantes.
