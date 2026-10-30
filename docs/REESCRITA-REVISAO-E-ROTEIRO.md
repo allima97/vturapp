@@ -148,7 +148,7 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 | F1 | Prova de stack em ambiente isolado | F0 | CONCLUÍDA (26/10/2026, commits `76b2b0dd`–`06dcbbf8`; evidências em `docs/f1/`) |
 | F2 | Identidade, permissões e fundação de dados | F1 | CONCLUÍDA (26/10/2026, commits `06cf08d7`–`b4a91f6b`; evidências em `docs/f2/`; baseline revalidada em `c8bb5a58`) |
 | F3 | Primeiro fluxo completo e base visual | F2 | EM ANDAMENTO |
-| F4 | Núcleo de vendas e financeiro | F3 | PENDENTE |
+| F4 | Núcleo de vendas e financeiro | F3 | EM ANDAMENTO (F4-01 concluída em 30/10/2026) |
 | F5 | Demais módulos e tarefas | F4 para dependências comerciais | PENDENTE |
 | F6 | Operação, carga, recuperação e revisão final | F3–F5 | PENDENTE; medições começam antes |
 | F7 | Ensaio de lançamento e entrada em produção | F6 | PENDENTE |
@@ -200,7 +200,7 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 
 ### F4 — vendas, recebimentos e comissões
 
-- [ ] F4-01: documentar e implementar venda manual, produtos/itens, moeda, recibos/pagamentos e estados necessários; transação e idempotência para as gravações compostas.
+- [x] F4-01: documentar e implementar venda manual, produtos/itens, moeda, recibos/pagamentos e estados necessários; transação e idempotência para as gravações compostas.
 - [ ] F4-02: implementar alteração, cancelamento/estorno e comissão com exemplos de cálculo, arredondamento e datas; preservar invariantes sob retry e concorrência.
 - [ ] F4-03: implementar consultas/dashboards/relatórios a partir do mesmo contrato financeiro; totais precisam reconciliar com os registros de origem.
 - [ ] F4-04: revisar read models: começar com queries e índices adequados; criar agregações/rebuild apenas onde necessário, com versão, checkpoint, recomposição e limite de atraso visível. A escolha usa a estimativa de linhas/custo de F0-06; o rebuild a cada 5 minutos do sistema atual não é portado por padrão.
@@ -471,3 +471,39 @@ Próximo passo: F4-01 (venda manual, produtos/itens, moeda, recibos/pagamentos).
 ```
 
 Referências técnicas foram consultadas em 26/10/2026 e estão ligadas junto às respectivas afirmações. Revalidar limites, APIs de bibliotecas e versões ao iniciar a execução.
+
+---
+
+## Passagem de trabalho — 30/10/2026
+
+**F4-01 concluída** — commit `963e6952`.
+
+### O que foi feito
+
+- **`drizzle/0005_f4_vendas.sql`**: migration com 6 tabelas do domínio vendas:
+  `produtos` (global, sem empresa_id), `formas_pagamento`, `vendas`,
+  `venda_itens`, `venda_pagamentos`, `venda_parcelas`.
+- **`schema.ts`**: tipos Drizzle para todas as tabelas + `VendaStatus`.
+- **`vendas/validation.ts`**: `validarVenda()`, `reaisToCentavos()`, tipos
+  `Input` e `Normalizado` — ADR-005 (centavos inteiros, câmbio 4 casas).
+- **`vendas/service.ts`**: camada de domínio sem `db.transaction()` (Workers
+  não suporta `BEGIN`); usa inserções sequenciais com D1. Funções:
+  `criarVenda()`, `listarVendas()` (cursor), `obterVenda()`,
+  `cancelarVenda()` (versão otimista), `derivarStatus()`.
+- **`routes/vendas-v2/index.ts`**: rota Hono em `/api/v2/vendas` com
+  `GET /`, `POST /`, `GET /:id`, `POST /:id/cancelar`,
+  `GET /produtos`, `GET /formas-pagamento`.
+- **`vendas.workers.test.ts`**: 18 testes Workers (suítes A–G):
+  criação atômica, idempotência, cursor pagination, detalhe completo,
+  cancelamento lógico, concorrência otimista, isolamento de tenant,
+  status derivado.
+
+**Resultado**: 926 testes passando (18 novos).
+
+### Próximo passo: F4-02
+
+Implementar edição de venda (PATCH /api/v2/vendas/:id) com:
+- validação parcial (campos opcionais);
+- substituição atômica de itens e pagamentos;
+- recálculo de totais;
+- concorrência otimista (versao).
