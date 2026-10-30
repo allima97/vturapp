@@ -1,5 +1,5 @@
 /**
- * Rotas Hono para vendas — /api/v2/vendas (F4-01 / F4-02 / F4-03 / M04).
+ * Rotas Hono para vendas — /api/v2/vendas (F4-01 / F4-02 / F4-03 / F4-05 / M04).
  *
  * Endpoints:
  *   GET    /api/v2/vendas                  — listar (cursor, filtros)
@@ -7,6 +7,7 @@
  *   GET    /api/v2/vendas/:id              — detalhe (cabeçalho + itens + pagamentos)
  *   PATCH  /api/v2/vendas/:id              — editar (substituição atômica + recálculo)
  *   POST   /api/v2/vendas/:id/cancelar     — cancelamento lógico (exige versao)
+ *   GET    /api/v2/vendas/:id/pdf          — comprovante HTML com marca VTUR (F4-05)
  *
  * Dashboard / relatórios (F4-03):
  *   GET    /api/v2/vendas/resumo           — totais agregados + reconciliação
@@ -39,6 +40,8 @@ import {
   type ParcelaItem,
 } from '$lib/server/vendas/service';
 import type { Produto, FormaPagamento } from '$lib/server/db/schema';
+import { gerarComprovanteHtml } from '$lib/server/vendas/pdf';
+import { VTUR_LOGO_URL } from '$lib/brand';
 
 export const vendasV2Routes = new Hono<ApiEnv>();
 
@@ -294,6 +297,30 @@ vendasV2Routes.patch('/:id', async (c) => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+
+// GET /:id/pdf — comprovante HTML com marca VTUR (F4-05)
+// ─────────────────────────────────────────────────────────────────────────────
+vendasV2Routes.get('/:id/pdf', async (c) => {
+  const r = await contexto(c);
+  if ('res' in r) return r.res;
+  if (!can(r.ctx.papel, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  const id = parseId(c.req.param('id'));
+  if (!id) return c.json({ error: 'ID inválido.' }, 400);
+  try {
+    const venda = await obterVenda(r.db, r.ctx.empresaId, id);
+    const html = gerarComprovanteHtml(venda, { logoUrl: VTUR_LOGO_URL });
+    return new Response(html, {
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'private, no-store',
+        'Content-Disposition': `inline; filename="comprovante-venda-${id}.html"`,
+      },
+    });
+  } catch (err) {
+    return respostaErro(c, err);
+  }
+});
+
 // POST /:id/cancelar — cancelamento lógico
 // ─────────────────────────────────────────────────────────────────────────────
 
