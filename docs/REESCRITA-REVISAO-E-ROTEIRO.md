@@ -148,7 +148,7 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 | F1 | Prova de stack em ambiente isolado | F0 | CONCLUÍDA (26/10/2026, commits `76b2b0dd`–`06dcbbf8`; evidências em `docs/f1/`) |
 | F2 | Identidade, permissões e fundação de dados | F1 | CONCLUÍDA (26/10/2026, commits `06cf08d7`–`b4a91f6b`; evidências em `docs/f2/`; baseline revalidada em `c8bb5a58`) |
 | F3 | Primeiro fluxo completo e base visual | F2 | EM ANDAMENTO |
-| F4 | Núcleo de vendas e financeiro | F3 | EM ANDAMENTO (F4-01 concluída em 30/10/2026) |
+| F4 | Núcleo de vendas e financeiro | F3 | EM ANDAMENTO (F4-01 concluída 30/10/2026; F4-02 concluída 30/10/2026) |
 | F5 | Demais módulos e tarefas | F4 para dependências comerciais | PENDENTE |
 | F6 | Operação, carga, recuperação e revisão final | F3–F5 | PENDENTE; medições começam antes |
 | F7 | Ensaio de lançamento e entrada em produção | F6 | PENDENTE |
@@ -507,3 +507,25 @@ Implementar edição de venda (PATCH /api/v2/vendas/:id) com:
 - substituição atômica de itens e pagamentos;
 - recálculo de totais;
 - concorrência otimista (versao).
+---
+
+### Passagem de trabalho — 30/10/2026 (F4-02)
+
+**Sessão encerrada**: [`claude.ai/code/session_011V9o2x1y52ecyTFbpRtEUq`](https://claude.ai/code/session_011V9o2x1y52ecyTFbpRtEUq)
+
+**Commit**: `ddf88978` feat(vendas): F4-02 — PATCH /vendas/:id edição atômica com recálculo de totais
+
+**O que foi feito**:
+- `validation.ts`: `validarVendaEdicao()` — validação parcial (todos os campos do cabeçalho opcionais exceto `versao`; `itens`/`pagamentos` opcionais mas ≥ 1 se fornecidos)
+- `service.ts`: `editarVenda()` — DELETE + INSERT atômico de itens e pagamentos; recálculo de totais a partir dos novos filhos; concorrência otimista (`versao`); lança `NAO_ENCONTRADA`, `CANCELADA`, `CONFLITO_VERSAO`
+- `routes/vendas-v2/index.ts`: rota `PATCH /:id` adicionada; corrigido `criarVenda` para usar `c.env.DB`
+- `vendas.workers.test.ts`: suite H com 7 testes (happy path, partial edit, substituição de pagamentos, conflito de versão, edição de cancelada, isolamento de tenant, versionamento sequencial); fix de `vendaMinima()` com campos financeiros top-level
+
+**Resultado**: 933 testes passando (+7 da suite H)
+
+**Padrão crítico**: mesmo do F4-01 — sem `BEGIN TRANSACTION` no Workers runtime; DELETE sequencial de parcelas → pagamentos → itens antes de inserir novos.
+
+**Próximo (F4-03 ou conforme roteiro)**:
+- Comissão: cálculo, regras, fechamento mensal
+- Ou F4-03: cancelamento/estorno com regras de prazo e reversão de comissão
+
