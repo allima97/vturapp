@@ -22,6 +22,7 @@ import type { ApiEnv } from './types';
 import { requestContext, handleApiError, handleNotFound } from './middleware';
 import { invitesV2Routes } from './routes/invites-v2';
 import { clientesV2Routes } from './routes/clientes-v2';
+import { vendasV2Routes } from './routes/vendas-v2';
 import { tenantProofRoutes } from './routes/tenant-proof';
 import { securityHeaders, csrfProtection } from './middleware/security';
 import { productionGuard } from './middleware/production-guard';
@@ -58,6 +59,7 @@ export function createApiAppV2() {
 
   // ── Clientes (F3-01) ──────────────────────────────────────────────────────
   app.route('/clientes', clientesV2Routes);
+  app.route('/vendas', vendasV2Routes);
 
   // ── F2-04 Tenant Isolation Proof (non-production only) ────────────────────
   app.route('/f2-proof', tenantProofRoutes);

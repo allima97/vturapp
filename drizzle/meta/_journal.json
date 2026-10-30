@@ -36,6 +36,13 @@
       "when": 1793048209010,
       "tag": "0004_better_auth_two_factor",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1793364365246,
+      "tag": "0005_f4_vendas",
+      "breakpoints": true
     }
   ]
 }
