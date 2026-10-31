@@ -32,6 +32,7 @@ export const RECURSOS = [
   'relatorios',     // relatórios e exportações
   'configuracoes',  // parâmetros do sistema
   'auditoria',      // logs de auditoria
+  'agenda',         // eventos e tarefas da equipe
 ] as const;
 
 export type Recurso = (typeof RECURSOS)[number];
@@ -104,6 +105,8 @@ const CAPACIDADES_ADMIN: `${Recurso}:${Acao}`[] = [
   ...todos('configuracoes'),
   // Auditoria: somente admin pode ler
   ...todos('auditoria'),
+  // Agenda: admin pode tudo
+  ...todos('agenda'),
 ];
 
 const CAPACIDADES_OPERADOR: `${Recurso}:${Acao}`[] = [
@@ -132,6 +135,9 @@ const CAPACIDADES_OPERADOR: `${Recurso}:${Acao}`[] = [
   ...cap('configuracoes', 'ler'),
 
   // Auditoria: operador NÃO acessa
+
+  // Agenda: operador gerencia os próprios eventos e tarefas
+  ...todos('agenda'),
 ];
 
 const CAPACIDADES_VISUALIZADOR: `${Recurso}:${Acao}`[] = [
@@ -153,6 +159,8 @@ const CAPACIDADES_VISUALIZADOR: `${Recurso}:${Acao}`[] = [
 
   // Configurações: visualizador NÃO acessa
   // Auditoria: visualizador NÃO acessa
+  // Agenda: visualizador lê
+  ...cap('agenda', 'ler'),
 ];
 
 /**

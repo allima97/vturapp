@@ -679,3 +679,44 @@ export const destinos = sqliteTable(
 
 export type Destino = typeof destinos.$inferSelect;
 export type NovoDestino = typeof destinos.$inferInsert;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// M08 — Agenda: eventos e tarefas
+// ─────────────────────────────────────────────────────────────────────────────
+export const agendaItens = sqliteTable(
+  'agenda_itens',
+  {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    empresaId: integer('empresa_id').notNull(),
+    /** Usuário dono do item (criador ou responsável). */
+    userId: text('user_id', { length: 36 }).notNull(),
+    /** 'evento' | 'tarefa' */
+    tipo: text('tipo', { length: 10 }).notNull().default('evento'),
+    titulo: text('titulo', { length: 200 }).notNull(),
+    descricao: text('descricao'),
+    // Campos de evento
+    startDate: text('start_date', { length: 10 }),
+    endDate: text('end_date', { length: 10 }),
+    startAt: text('start_at', { length: 5 }),
+    endAt: text('end_at', { length: 5 }),
+    allDay: integer('all_day', { mode: 'boolean' }).notNull().default(true),
+    // Campos de tarefa
+    vencimento: text('vencimento', { length: 10 }),
+    status: text('status', { length: 20 }).notNull().default('pendente'),
+    prioridade: text('prioridade', { length: 10 }).notNull().default('normal'),
+    done: integer('done', { mode: 'boolean' }).notNull().default(false),
+    // Metadados
+    criadoPor: text('criado_por', { length: 36 }),
+    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    atualizadoEm: text('atualizado_em').notNull().$defaultFn(() => new Date().toISOString()),
+  },
+  (t) => ({
+    idxEmpresaUser: index('idx_agenda_empresa_user').on(t.empresaId, t.userId),
+    idxEmpresaTipo: index('idx_agenda_empresa_tipo').on(t.empresaId, t.tipo),
+    idxStartDate: index('idx_agenda_start_date').on(t.startDate),
+    idxStatus: index('idx_agenda_status').on(t.status),
+  })
+);
+
+export type AgendaItem = typeof agendaItens.$inferSelect;
+export type NovoAgendaItem = typeof agendaItens.$inferInsert;
