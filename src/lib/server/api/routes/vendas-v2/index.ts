@@ -31,6 +31,9 @@ import {
   listarVendas,
   obterVenda,
   cancelarVenda,
+  estornarPagamento,
+  calcularComissao,
+  type EstornoInput,
   listarProdutos,
   listarFormasPagamento,
   resumoVendas,
@@ -481,3 +484,78 @@ function parcelaParaJson(p: ParcelaItem) {
     data_venda: p.dataVenda,
   };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /:id/estornar — estorno financeiro (F4-02)
+// ─────────────────────────────────────────────────────────────────────────────
+
+vendasV2Routes.post('/:id/estornar', async (c) => {
+  const r = await contexto(c);
+  if ('res' in r) return r.res;
+  if (!can(r.ctx.papel, 'vendas', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
+
+  const id = parseId(c.req.param('id'));
+  if (!id) return c.json({ error: 'ID inválido.' }, 400);
+
+  let body: { forma_nome?: unknown; valor_centavos?: unknown; motivo?: unknown; versao?: unknown } = {};
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: 'JSON inválido.' }, 400);
+  }
+
+  const formaNome = typeof body.forma_nome === 'string' && body.forma_nome.trim()
+    ? body.forma_nome.trim()
+    : null;
+  const valorCentavos = Number(body.valor_centavos);
+  const versao = Number(body.versao);
+
+  if (!formaNome) return c.json({ error: 'Campo obrigatório: forma_nome.' }, 400);
+  if (!Number.isInteger(valorCentavos) || valorCentavos <= 0) {
+    return c.json({ error: 'valor_centavos deve ser inteiro positivo.' }, 400);
+  }
+  if (!Number.isInteger(versao) || versao < 1) {
+    return c.json({ error: 'Campo obrigatório: versao.' }, 400);
+  }
+
+  const input: EstornoInput = {
+    formaNome,
+    valorCentavos,
+    motivo: typeof body.motivo === 'string' ? body.motivo.trim() || undefined : undefined,
+    versaoAtual: versao,
+  };
+
+  try {
+    const venda = await estornarPagamento(r.db, r.ctx.empresaId, id, input);
+    return c.json({ data: detalheParaJson(venda) });
+  } catch (err) {
+    return respostaErro(c, err);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GET /:id/comissao — cálculo de comissão (F4-02)
+// ─────────────────────────────────────────────────────────────────────────────
+
+vendasV2Routes.get('/:id/comissao', async (c) => {
+  const r = await contexto(c);
+  if ('res' in r) return r.res;
+  if (!can(r.ctx.papel, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+
+  const id = parseId(c.req.param('id'));
+  if (!id) return c.json({ error: 'ID inválido.' }, 400);
+
+  const taxaParam = c.req.query('taxa_pct');
+  const taxaPct = taxaParam !== undefined ? Number(taxaParam) : NaN;
+  if (isNaN(taxaPct) || taxaPct < 0 || taxaPct > 100) {
+    return c.json({ error: 'Parâmetro obrigatório: taxa_pct (0–100).' }, 400);
+  }
+
+  try {
+    const venda = await obterVenda(r.db, r.ctx.empresaId, id);
+    const resultado = calcularComissao(venda, taxaPct);
+    return c.json({ data: resultado });
+  } catch (err) {
+    return respostaErro(c, err);
+  }
+});

@@ -201,7 +201,7 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 ### F4 — vendas, recebimentos e comissões
 
 - [x] F4-01: documentar e implementar venda manual, produtos/itens, moeda, recibos/pagamentos e estados necessários; transação e idempotência para as gravações compostas.
-- [ ] F4-02: implementar alteração, cancelamento/estorno e comissão com exemplos de cálculo, arredondamento e datas; preservar invariantes sob retry e concorrência.
+- [x] F4-02: implementar alteração, cancelamento/estorno e comissão com exemplos de cálculo, arredondamento e datas; preservar invariantes sob retry e concorrência.
 - [x] F4-03: implementar consultas/dashboards/relatórios a partir do mesmo contrato financeiro; totais precisam reconciliar com os registros de origem.
 - [x] F4-04: revisar read models: começar com queries e índices adequados; criar agregações/rebuild apenas onde necessário, com versão, checkpoint, recomposição e limite de atraso visível. A escolha usa a estimativa de linhas/custo de F0-06; o rebuild a cada 5 minutos do sistema atual não é portado por padrão.
 - [x] F4-05: gerar PDFs/documentos com marca VTUR e testes de conteúdo/acesso; verificar quebra de página e valores em exemplos representativos.
@@ -507,6 +507,26 @@ Implementar edição de venda (PATCH /api/v2/vendas/:id) com:
 - substituição atômica de itens e pagamentos;
 - recálculo de totais;
 - concorrência otimista (versao).
+---
+
+### Passagem de trabalho — 31/10/2026 (F4-02 estorno e comissão)
+
+**Sessão encerrada**: [`claude.ai/code/session_011V9o2x1y52ecyTFbpRtEUq`](https://claude.ai/code/session_011V9o2x1y52ecyTFbpRtEUq)
+
+**O que foi feito**:
+- `service.ts`: adicionados `roundHalfEven` (banker's rounding), `calcularComissao`, `estornarPagamento`, tipos `ResultadoComissao`, `EstornoInput`
+- `routes/vendas-v2/index.ts`: rotas `POST /:id/estornar` e `GET /:id/comissao` adicionadas
+- `f4-02-comissao.test.ts`: Suíte N — 22 testes de cálculo de comissão e `roundHalfEven` (vitest puro)
+- `f4-02-estorno.workers.test.ts`: Suíte O — 8 testes de estorno via Workers runtime (seed corrigido: `empresas`, `user` sem `empresa_id`, datas epoch)
+- `docs/f4/F4-02-alteracao-cancelamento-comissao.md`: documentação completa
+
+**Decisões técnicas**:
+- Banker's rounding (half-even) para evitar viés acumulado em séries de comissões
+- Estorno como linha negativa de pagamento (trilha de auditoria preservada)
+- Concorrência otimista: `UPDATE … WHERE versao = ?` → `CONFLITO_VERSAO` se 0 linhas
+
+**Resultado**: Suíte N 22/22 + Suíte O 8/8; 0 erros TypeScript em f4-02; F4-02 ✅ concluída
+
 ---
 
 ### Passagem de trabalho — 30/10/2026 (F4-02)

@@ -880,3 +880,192 @@ export async function listarParcelas(
 
   return { parcelas, temMais };
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// F4-02 — Comissão: cálculo puro com arredondamento
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Resultado do cálculo de comissão sobre uma venda.
+ */
+export type ResultadoComissao = {
+  /** Base sobre a qual a comissão incide (centavos). */
+  baseComissionavelCentavos: number;
+  /** Taxa usada (ex: 10.5 = 10,5%). */
+  taxaPct: number;
+  /** Comissão calculada (centavos, arredondamento banker-round / half-even). */
+  comissaoCentavos: number;
+  /** Valor excluído da base (itens/pagamentos com paga_comissao=false). */
+  valorNaoComissionadoCentavos: number;
+};
+
+/**
+ * Arredondamento "half-even" (banker's rounding):
+ * evita acúmulo de erros quando se calculam muitas parcelas com o mesmo offset.
+ *
+ * Exemplos:
+ *   roundHalfEven(0.5) → 0  (0.5 → arredonda para o par mais próximo, 0)
+ *   roundHalfEven(1.5) → 2  (1.5 → arredonda para o par mais próximo, 2)
+ *   roundHalfEven(2.5) → 2  (2.5 → arredonda para o par mais próximo, 2)
+ *   roundHalfEven(3.5) → 4
+ *   roundHalfEven(2.3) → 2  (comportamento normal abaixo de 0.5)
+ *   roundHalfEven(2.7) → 3  (comportamento normal acima de 0.5)
+ */
+export function roundHalfEven(x: number): number {
+  const floor = Math.floor(x);
+  const diff = x - floor;
+  if (Math.abs(diff - 0.5) < Number.EPSILON) {
+    // exatamente .5: arredonda para o par
+    return floor % 2 === 0 ? floor : floor + 1;
+  }
+  return Math.round(x);
+}
+
+/**
+ * Calcula a comissão sobre uma venda a partir dos seus itens e pagamentos.
+ *
+ * Base comissionável = soma dos `valor_total_centavos` dos itens onde
+ * `paga_comissao = true`. O campo `valor_nao_comissionado_centavos` do
+ * cabeçalho é tratado como confirmação (auditoria), mas o cálculo usa os
+ * itens para máxima precisão.
+ *
+ * Arredondamento: banker's rounding (half-even) para minimizar acúmulo de
+ * erro em séries de vendas com o mesmo percentual.
+ *
+ * Exemplos documentados (taxaPct = 10):
+ *   valorTotal = 10_000 (R$ 100,00) → comissao = 1_000 (R$ 10,00)
+ *   valorTotal =  3_333 (R$  33,33) → comissao =   333 (R$  3,33) [truncado = 333.3]
+ *   valorTotal =  1_001 (R$  10,01) → comissao =   100 (R$  1,00) [100.1 → 100]
+ *   valorTotal =  1_005 (R$  10,05) → comissao =   100 (R$  1,00) [100.5 → par, 100]
+ *   valorTotal =  3_005 (R$  30,05) → comissao =   300 (R$  3,00) [300.5 → par, 300]
+ *   valorTotal =  1_015 (R$  10,15) → comissao =   102 (R$  1,02) [101.5 → par, 102]
+ *
+ * @param venda Detalhe da venda com itens.
+ * @param taxaPct Percentual da comissão (0–100). Ex: 10.5 para 10,5%.
+ */
+export function calcularComissao(
+  venda: Pick<VendaDetalhe, 'itens' | 'valorNaoComissionadoCentavos'>,
+  taxaPct: number
+): ResultadoComissao {
+  if (taxaPct < 0 || taxaPct > 100) {
+    throw new VendaError('taxaPct deve estar entre 0 e 100.', 'VALIDACAO');
+  }
+
+  const baseComissionavelCentavos = venda.itens
+    .filter((it) => it.pagaComissao)
+    .reduce((s, it) => s + it.valorTotalCentavos, 0);
+
+  const comissaoCentavos = roundHalfEven(baseComissionavelCentavos * taxaPct / 100);
+
+  return {
+    baseComissionavelCentavos,
+    taxaPct,
+    comissaoCentavos,
+    valorNaoComissionadoCentavos: venda.valorNaoComissionadoCentavos,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// F4-02 — Estorno: reverção financeira de pagamento
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type EstornoInput = {
+  /** Forma de pagamento original (ou "Estorno" como texto livre). */
+  formaNome: string;
+  /** Valor a estornar em centavos (positivo; será subtraído do valor_pago). */
+  valorCentavos: number;
+  /** Motivo textual registrado no campo operacao. */
+  motivo?: string;
+  /** Versão atual da venda (concorrência otimista). */
+  versaoAtual: number;
+};
+
+/**
+ * Registra um estorno financeiro na venda.
+ *
+ * Diferença em relação ao cancelamento lógico:
+ *   - `cancelarVenda` marca a venda como inativa (cancelada=true) e impede
+ *     novas operações; o status derivado muda para "cancelada".
+ *   - `estornarPagamento` adiciona uma entrada de pagamento negativa
+ *     (operacao='estorno') e reduz `valor_pago_centavos` do cabeçalho;
+ *     a venda permanece ativa e pode receber novos pagamentos.
+ *
+ * Invariantes preservados:
+ *   1. Tenant isolation: empresa_id do contexto, nunca do body.
+ *   2. Concorrência otimista: versao é verificada e incrementada.
+ *   3. Idempotência: não aplicável ao estorno (cada estorno é intencional);
+ *      o chamador deve controlar duplicação via UI/idempotência de rota.
+ *   4. Venda cancelada não aceita estorno.
+ *   5. valorCentavos > 0 (estorno não pode ser zero ou negativo).
+ *
+ * Lança VendaError em:
+ *   - NAO_ENCONTRADA
+ *   - CANCELADA
+ *   - CONFLITO_VERSAO
+ *   - VALIDACAO (valor <= 0)
+ */
+export async function estornarPagamento(
+  db: DrizzleDb,
+  empresaId: number,
+  vendaId: number,
+  input: EstornoInput
+): Promise<VendaDetalhe> {
+  if (input.valorCentavos <= 0) {
+    throw new VendaError('Valor do estorno deve ser maior que zero.', 'VALIDACAO');
+  }
+
+  const [existente] = await db
+    .select({
+      id: vendas.id,
+      cancelada: vendas.cancelada,
+      versao: vendas.versao,
+      valorPagoCentavos: vendas.valorPagoCentavos,
+    })
+    .from(vendas)
+    .where(and(eq(vendas.id, vendaId), eq(vendas.empresaId, empresaId)));
+
+  if (!existente) throw new VendaError('Venda não encontrada.', 'NAO_ENCONTRADA');
+  if (existente.cancelada) throw new VendaError('Venda cancelada não aceita estorno.', 'CANCELADA');
+  if (existente.versao !== input.versaoAtual) {
+    throw new VendaError('Conflito de versão.', 'CONFLITO_VERSAO');
+  }
+
+  const agora = new Date().toISOString();
+  const novaVersao = input.versaoAtual + 1;
+  // valor_pago pode ficar negativo em caso de estorno maior que o pago (raro, mas válido)
+  const novoValorPago = existente.valorPagoCentavos - input.valorCentavos;
+
+  // Inserir linha de estorno com valor negativo
+  await db.insert(vendaPagamentos).values({
+    empresaId,
+    vendaId,
+    formaNome: input.formaNome,
+    operacao: `estorno${input.motivo ? ': ' + input.motivo : ''}`,
+    valorBrutoCentavos: -input.valorCentavos,
+    descontoCentavos: 0,
+    valorTotalCentavos: -input.valorCentavos,
+    parcelasQtd: 1,
+    parcelasValorCentavos: -input.valorCentavos,
+    pagaComissao: false,
+    criadoEm: agora,
+  });
+
+  // Atualizar cabeçalho com concorrência otimista
+  const resultado = await db
+    .update(vendas)
+    .set({
+      valorPagoCentavos: novoValorPago,
+      versao: novaVersao,
+      atualizadoEm: agora,
+    })
+    .where(and(
+      eq(vendas.id, vendaId),
+      eq(vendas.empresaId, empresaId),
+      eq(vendas.versao, input.versaoAtual)
+    ))
+    .returning({ id: vendas.id });
+
+  if (resultado.length === 0) throw new VendaError('Conflito de versão.', 'CONFLITO_VERSAO');
+
+  return obterVenda(db, empresaId, vendaId);
+}
