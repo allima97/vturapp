@@ -261,7 +261,7 @@ O inventário inicial abaixo precisa ser reconciliado na F0. Não confundir pres
 | M07 | Orçamentos, roteiros e circuitos | M02/M03; versões, preços e exportação | PENDENTE |
 | M08 | Agenda, tarefas, campanhas e SAC | Regras próprias, notificações e vínculo com equipe | PENDENTE |
 | M09 | Recados, mural, avisos e push | Entrega, escopo, duplicação e conexão revogada | PENDENTE |
-| M10 | Destinos, cidades, países e referências | M06/M07 referenciam destinos e cidades: provável antecipação na ordem de execução. Origem/licença dos seeds e busca com acentos | PENDENTE |
+| M10 | Destinos, cidades, países e referências | M06/M07 referenciam destinos e cidades: provável antecipação na ordem de execução. Origem/licença dos seeds e busca com acentos | CONCLUÍDO (31/10/2026) |
 | M11 | Dashboards, ranking, metas e relatórios | Mesmo escopo e regras das vendas; agregados não podem vazar dados | PENDENTE |
 | M12 | Auditoria, privacidade e administração operacional | Retenção, recuperação, acesso a logs e suporte | PENDENTE |
 | X01 | Importação histórica de usuários/vendas/arquivos | Dispensada pelo usuário: iniciar vazio | DISPENSADA |
@@ -763,3 +763,36 @@ estão commitados. O deploy em produção depende de:
 - Sem concorrência otimista em produtos (catálogo de baixa frequência de escrita)
 
 **Resultado**: Suíte V 11/11; 0 erros TypeScript em m03; M03 ✅ CONCLUÍDO
+
+
+### Passagem de trabalho — M10 (31/10/2026)
+
+```text
+ID: M10
+Estado: CONCLUÍDA
+Responsável / data: agente + allima97, 31/10/2026
+Commit: d79ccb52 (branch reescrita/f2-identidade-autorizacao)
+
+Entregues:
+  drizzle/0007_m10_destinos.sql     — tabela destinos com índices
+  src/lib/server/db/schema.ts       — sqliteTable destinos (real para lat/lng)
+  src/lib/server/destinos/service.ts — criarDestino / obterDestino / editarDestino
+                                        inativarDestino / listarDestinos
+                                        DestinoError (VALIDACAO | NAO_ENCONTRADO)
+  src/lib/server/api/routes/destinos-v2/index.ts — GET/ POST/ GET/:id PATCH/:id DELETE/:id
+  src/lib/server/api/app-v2.ts      — /api/v2/destinos montado
+  src/lib/server/m10-destinos.workers.test.ts — Suíte W (11/11 Workers)
+
+Decisões:
+  - Tabela global sem empresa_id (igual a produtos)
+  - paisCod validado como ISO 3166-1 alpha-2 maiúsculas (ex: "BR")
+  - lat/lng armazenados como REAL (Drizzle) / REAL (SQLite)
+  - listarDestinos: filtros por busca (LIKE nome), pais_cod, incluirInativos
+  - Soft delete via ativo=false; obterDestino retorna inativos (visibilidade interna)
+  - Geocoding externo (Nominatim, src/lib/server/geocoding.ts) permanece independente
+
+Próximos módulos disponíveis:
+  M05 — Comissões e caixa
+  M11 — Dashboards, ranking, metas
+  M08 — Agenda, tarefas
+```
