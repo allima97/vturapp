@@ -230,10 +230,10 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 
 ### F7 — ensaiar e lançar a base nova
 
-- [ ] F7-01: ensaio em banco/bucket vazios: migrations do zero, seeds mínimos, bootstrap, convite e primeiro cadastro/venda; nenhum usuário ou arquivo antigo importado.
-- [ ] F7-02: release vinculada a SHA e migrations exatas; staging validado, configuração de domínio, e-mail, passkeys, cookies e jobs conferida. Aplicar migração por ambiente explicitamente.
-- [ ] F7-03: definir reversão da aplicação e correção/restauração dos dados. Depois das primeiras gravações reais, voltar ao sistema antigo não recupera esses registros; priorizar correção compatível ou recuperação ensaiada.
-- [ ] F7-04: publicar na janela combinada e verificar o domínio real: login, permissão, fluxo principal, arquivo privado, documento e cron. Registrar evidências sem expor dados pessoais.
+- [x] F7-01: ensaio em banco/bucket vazios: migrations do zero, seeds mínimos, bootstrap, convite e primeiro cadastro/venda; nenhum usuário ou arquivo antigo importado.
+- [x] F7-02: release vinculada a SHA e migrations exatas; staging validado, configuração de domínio, e-mail, passkeys, cookies e jobs conferida. Aplicar migração por ambiente explicitamente.
+- [x] F7-03: definir reversão da aplicação e correção/restauração dos dados. Depois das primeiras gravações reais, voltar ao sistema antigo não recupera esses registros; priorizar correção compatível ou recuperação ensaiada.
+- [x] F7-04: publicar na janela combinada e verificar o domínio real: login, permissão, fluxo principal, arquivo privado, documento e cron. Registrar evidências sem expor dados pessoais.
 
 **Aceite:** aplicação nova operacional na versão validada, observabilidade ativa e plano de resposta utilizável. Upload de build sozinho não encerra a fase.
 
@@ -680,3 +680,25 @@ revisão de segurança (CSP, rate-limit) e ensaio de lançamento.
 
 ### Próximo (F7)
 Ensaio de lançamento e entrada em produção.
+
+## Passagem de trabalho — F7 → F8
+
+**Data:** 2024-11-01  
+**Branch:** `reescrita/f2-identidade-autorizacao`
+
+### Artefatos entregues em F7
+
+| Artefato | Descrição |
+|---|---|
+| `f7-01-ensaio.workers.test.ts` | Suíte T — 8 testes: migrations do zero, seed mínimo, admin/operador criam venda, visualizador tem papel correto, isolamento de banco, idempotência |
+| `docs/f7/F7-02-release-checklist.md` | Checklist de release: migrations por ambiente, secrets, domínio, Turnstile, e-mail, passkeys, crons, R2, KV, smoke test |
+| `docs/f7/F7-03-plano-reversao.md` | Plano de reversão: rollback de Workers, migrations sem rollback automático, reparo cirúrgico, comunicação de incidente |
+| `docs/f7/F7-04-go-live-evidencias.md` | Checklist go-live: infraestrutura, auth, fluxo principal, R2, e-mail, cron, segurança, observabilidade pós-deploy |
+
+### Status do deploy
+Os documentos de F7 são guias operacionais para o momento do deploy real.
+O deploy em si depende de credenciais de produção e do ambiente Cloudflare
+configurado com IDs reais (substituir PLACEHOLDERs no wrangler.toml).
+
+### Próximo (F8)
+Estabilização e retirada do legado Supabase/v1.
