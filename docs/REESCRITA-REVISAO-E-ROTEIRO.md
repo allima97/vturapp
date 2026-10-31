@@ -260,7 +260,7 @@ O inventário inicial abaixo precisa ser reconciliado na F0. Não confundir pres
 | M06 | Viagens, vouchers, dossiês e documentos | M02/M04; acesso a arquivos e marca VTUR | PENDENTE |
 | M07 | Orçamentos, roteiros e circuitos | M02/M03; versões, preços e exportação | PENDENTE |
 | M08 | Agenda, tarefas, campanhas e SAC | Regras próprias, notificações e vínculo com equipe | CONCLUÍDO (31/10/2026) |
-| M09 | Recados, mural, avisos e push | Entrega, escopo, duplicação e conexão revogada | PENDENTE |
+| M09 | Recados, mural, avisos e push | Entrega, escopo, duplicação e conexão revogada | CONCLUÍDO (31/10/2026) |
 | M10 | Destinos, cidades, países e referências | M06/M07 referenciam destinos e cidades: provável antecipação na ordem de execução. Origem/licença dos seeds e busca com acentos | CONCLUÍDO (31/10/2026) |
 | M11 | Dashboards, ranking, metas e relatórios | Mesmo escopo e regras das vendas; agregados não podem vazar dados | CONCLUÍDO |
 | M12 | Auditoria, privacidade e administração operacional | Retenção, recuperação, acesso a logs e suporte | PENDENTE |
