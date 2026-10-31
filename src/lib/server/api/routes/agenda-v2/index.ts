@@ -6,7 +6,7 @@
  */
 import { Hono } from 'hono';
 import type { ApiEnv } from '../../types';
-import { resolveAuthContext } from '../../middleware/auth-context';
+import { resolveAuthContext } from '$lib/server/auth/context';
 import { getDb } from '$lib/server/db/client';
 import { can } from '$lib/server/policy';
 import {
@@ -27,7 +27,8 @@ export const agendaV2Routes = new Hono<ApiEnv>();
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 async function contexto(c: Parameters<typeof agendaV2Routes.get>[1] extends (c: infer C) => unknown ? C : never) {
-  const ctx = await resolveAuthContext(c.env.event, c.env.DB);
+  const baseURL = new URL(c.req.url).origin;
+  const ctx = await resolveAuthContext(c.req.raw.headers, c.env.DB, c.env.BETTER_AUTH_SECRET, baseURL);
   if (!ctx) return { res: c.json({ error: 'Não autenticado.' }, 401) };
   const db = getDb(c.env.DB);
   return { ctx, db };
