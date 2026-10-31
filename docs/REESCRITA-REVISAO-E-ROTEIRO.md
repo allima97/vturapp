@@ -254,7 +254,7 @@ O inventário inicial abaixo precisa ser reconciliado na F0. Não confundir pres
 |---|---|---|---|
 | M01 | Empresas, usuários, vínculos e permissões | F2; administração de sistema separada do escopo comercial | PENDENTE |
 | M02 | Clientes, acompanhantes e relacionamento | F3; propriedade, documentos e dados pessoais | PENDENTE |
-| M03 | Produtos, tarifas, regras e fornecedores | Cadastros globais versus empresa; precisão e vigência | PENDENTE |
+| M03 | Produtos, tarifas, regras e fornecedores | Cadastros globais versus empresa; precisão e vigência | CONCLUÍDO (31/10/2026) |
 | M04 | Venda manual, itens, recibos e pagamentos | F4; atomicidade, retry, moeda e cancelamento | PENDENTE |
 | M05 | Comissões e caixa | M04; conciliação excluída, sem referência indireta | PENDENTE |
 | M06 | Viagens, vouchers, dossiês e documentos | M02/M04; acesso a arquivos e marca VTUR | PENDENTE |
@@ -745,3 +745,21 @@ estão commitados. O deploy em produção depende de:
 2. Configurar secrets com `wrangler secret put`
 3. Seguir `docs/f7/F7-02-release-checklist.md` antes do deploy
 4. Seguir `docs/f7/F7-04-go-live-evidencias.md` durante o go-live
+
+## Passagem de trabalho — 31/10/2026 (M03)
+
+**Sessão**: [`claude.ai/code/session_011V9o2x1y52ecyTFbpRtEUq`](https://claude.ai/code/session_011V9o2x1y52ecyTFbpRtEUq)
+
+**O que foi feito**:
+- `service.ts`: `criarProduto`, `obterProduto`, `editarProduto`, `inativarProduto` + `ProdutoInput`, `ProdutoError`, `validarProdutoInput` (validação de tipo, moeda, centavos, desconto)
+- `routes/produtos-v2/index.ts`: CRUD completo (`GET /`, `POST /`, `GET /:id`, `PATCH /:id`, `DELETE /:id`) com auth via `resolveAuthContext` e RBAC (`configuracoes:criar/editar/excluir`)
+- `app-v2.ts`: rota `/produtos` montada
+- `m03-produtos.workers.test.ts`: Suíte V — 11/11 testes Workers
+
+**Decisões técnicas**:
+- Catálogo global (sem `empresa_id`): produtos são compartilhados entre empresas
+- Soft delete (`ativo = false`) — nenhuma exclusão física; venda_itens existentes não são afetados
+- RBAC: leitura (`GET`) aberta a qualquer papel autenticado; escrita exige `configuracoes:criar/editar/excluir`
+- Sem concorrência otimista em produtos (catálogo de baixa frequência de escrita)
+
+**Resultado**: Suíte V 11/11; 0 erros TypeScript em m03; M03 ✅ CONCLUÍDO

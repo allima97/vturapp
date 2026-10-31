@@ -30,6 +30,7 @@ import {
   type VendaStatus,
   type Produto,
   type FormaPagamento,
+  TIPOS_PRODUTO,
 } from '$lib/server/db/schema';
 import type { VendaNormalizada } from './validation';
 
@@ -1068,4 +1069,121 @@ export async function estornarPagamento(
   if (resultado.length === 0) throw new VendaError('Conflito de versão.', 'CONFLITO_VERSAO');
 
   return obterVenda(db, empresaId, vendaId);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// M03 — Produtos: catálogo global (CRUD)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface ProdutoInput {
+  nome: string;
+  tipo?: string;
+  destino?: string | null;
+  moeda?: string;
+  valorNetoCentavos?: number;
+  valorVendaCentavos?: number;
+  pagaComissao?: boolean;
+  permiteDesconto?: boolean;
+  descontoPadraoPct?: number | null;
+  fornecedor?: string | null;
+  notas?: string | null;
+  ativo?: boolean;
+}
+
+export class ProdutoError extends Error {
+  constructor(
+    message: string,
+    public readonly code: 'VALIDACAO' | 'NAO_ENCONTRADO' | 'INATIVO'
+  ) {
+    super(message);
+    this.name = 'ProdutoError';
+  }
+}
+
+function validarProdutoInput(dados: ProdutoInput, exigirNome = true): string[] {
+  const erros: string[] = [];
+  if (exigirNome && (!dados.nome || !dados.nome.trim())) erros.push('nome é obrigatório.');
+  if (dados.nome && dados.nome.trim().length > 200) erros.push('nome deve ter no máximo 200 caracteres.');
+  const tiposValidos = TIPOS_PRODUTO as readonly string[];
+  if (dados.tipo && !tiposValidos.includes(dados.tipo)) {
+    erros.push(`tipo deve ser um de: ${TIPOS_PRODUTO.join(', ')}.`);
+  }
+  if (dados.moeda && !/^[A-Z]{3}$/.test(dados.moeda)) erros.push('moeda deve ser código ISO de 3 letras maiúsculas (ex.: BRL, USD).');
+  if (dados.valorNetoCentavos !== undefined && (!Number.isInteger(dados.valorNetoCentavos) || dados.valorNetoCentavos < 0)) {
+    erros.push('valorNetoCentavos deve ser inteiro ≥ 0.');
+  }
+  if (dados.valorVendaCentavos !== undefined && (!Number.isInteger(dados.valorVendaCentavos) || dados.valorVendaCentavos < 0)) {
+    erros.push('valorVendaCentavos deve ser inteiro ≥ 0.');
+  }
+  if (dados.descontoPadraoPct !== undefined && dados.descontoPadraoPct !== null) {
+    if (!Number.isInteger(dados.descontoPadraoPct) || dados.descontoPadraoPct < 0 || dados.descontoPadraoPct > 10000) {
+      erros.push('descontoPadraoPct deve ser inteiro entre 0 e 10000 (representando 0%–100,00%).');
+    }
+  }
+  return erros;
+}
+
+export async function criarProduto(db: DrizzleDb, dados: ProdutoInput): Promise<Produto> {
+  const erros = validarProdutoInput(dados, true);
+  if (erros.length) throw new ProdutoError(erros.join(' '), 'VALIDACAO');
+
+  const agora = new Date().toISOString();
+  const [novo] = await db
+    .insert(produtos)
+    .values({
+      nome: dados.nome.trim(),
+      tipo: (dados.tipo ?? 'pacote') as Produto['tipo'],
+      destino: dados.destino?.trim() || null,
+      moeda: dados.moeda?.toUpperCase() ?? 'BRL',
+      valorNetoCentavos: dados.valorNetoCentavos ?? 0,
+      valorVendaCentavos: dados.valorVendaCentavos ?? 0,
+      pagaComissao: dados.pagaComissao ?? true,
+      permiteDesconto: dados.permiteDesconto ?? true,
+      descontoPadraoPct: dados.descontoPadraoPct ?? null,
+      fornecedor: dados.fornecedor?.trim() || null,
+      notas: dados.notas?.trim() || null,
+      ativo: true,
+      criadoEm: agora,
+      atualizadoEm: agora,
+    })
+    .returning();
+  return novo;
+}
+
+export async function obterProduto(db: DrizzleDb, id: number): Promise<Produto> {
+  const [produto] = await db.select().from(produtos).where(eq(produtos.id, id));
+  if (!produto) throw new ProdutoError('Produto não encontrado.', 'NAO_ENCONTRADO');
+  return produto;
+}
+
+export async function editarProduto(db: DrizzleDb, id: number, dados: Partial<ProdutoInput>): Promise<Produto> {
+  const erros = validarProdutoInput(dados as ProdutoInput, false);
+  if (erros.length) throw new ProdutoError(erros.join(' '), 'VALIDACAO');
+
+  const existente = await obterProduto(db, id);
+
+  const updateSet: Partial<typeof produtos.$inferInsert> = { atualizadoEm: new Date().toISOString() };
+  if (dados.nome !== undefined)               updateSet.nome = dados.nome.trim();
+  if (dados.tipo !== undefined)               updateSet.tipo = dados.tipo as Produto['tipo'];
+  if ('destino' in dados)                     updateSet.destino = dados.destino?.trim() || null;
+  if (dados.moeda !== undefined)              updateSet.moeda = dados.moeda.toUpperCase();
+  if (dados.valorNetoCentavos !== undefined)  updateSet.valorNetoCentavos = dados.valorNetoCentavos;
+  if (dados.valorVendaCentavos !== undefined) updateSet.valorVendaCentavos = dados.valorVendaCentavos;
+  if (dados.pagaComissao !== undefined)       updateSet.pagaComissao = dados.pagaComissao;
+  if (dados.permiteDesconto !== undefined)    updateSet.permiteDesconto = dados.permiteDesconto;
+  if ('descontoPadraoPct' in dados)           updateSet.descontoPadraoPct = dados.descontoPadraoPct ?? null;
+  if ('fornecedor' in dados)                  updateSet.fornecedor = dados.fornecedor?.trim() || null;
+  if ('notas' in dados)                       updateSet.notas = dados.notas?.trim() || null;
+  if (dados.ativo !== undefined)              updateSet.ativo = dados.ativo;
+
+  await db.update(produtos).set(updateSet).where(eq(produtos.id, existente.id));
+  return obterProduto(db, id);
+}
+
+export async function inativarProduto(db: DrizzleDb, id: number): Promise<void> {
+  const existente = await obterProduto(db, id);
+  await db
+    .update(produtos)
+    .set({ ativo: false, atualizadoEm: new Date().toISOString() })
+    .where(eq(produtos.id, existente.id));
 }
