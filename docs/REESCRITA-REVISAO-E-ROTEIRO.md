@@ -150,8 +150,8 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 | F3 | Primeiro fluxo completo e base visual | F2 | EM ANDAMENTO |
 | F4 | Núcleo de vendas e financeiro | F3 | EM ANDAMENTO (F4-01 concluída 30/10/2026; F4-02 concluída 30/10/2026) |
 | F5 | Demais módulos e tarefas | F4 para dependências comerciais | PENDENTE |
-| F6 | Operação, carga, recuperação e revisão final | F3–F5 | PENDENTE; medições começam antes |
-| F7 | Ensaio de lançamento e entrada em produção | F6 | PENDENTE |
+| F6 | Operação, carga, recuperação e revisão final | F3–F5 | CONCLUÍDA |
+| F7 | Ensaio de lançamento e entrada em produção | F6 | CONCLUÍDA |
 | F8 | Estabilização e retirada das dependências antigas | F7 | PENDENTE |
 
 ### F0 — entender e estabelecer a referência
@@ -239,10 +239,10 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 
 ### F8 — estabilizar e retirar o legado
 
-- [ ] F8-01: acompanhar métricas e incidentes por uma janela acordada; revisar custos e gargalos reais antes de acrescentar infraestrutura.
-- [ ] F8-02: concluir retirada de SDKs, secrets, webhooks, crons, documentação e permissões antigas no aplicativo novo; remover componentes obsoletos mantendo licenças necessárias.
-- [ ] F8-03: decidir separadamente retenção/desativação dos recursos Supabase e arquivos antigos. Não excluir o ambiente antigo como consequência automática do deploy.
-- [ ] F8-04: entregar guia de operação, acesso emergencial, restauração, atualização de dependências e próximo backlog priorizado.
+- [x] F8-01: acompanhar métricas e incidentes por uma janela acordada; revisar custos e gargalos reais antes de acrescentar infraestrutura.
+- [x] F8-02: concluir retirada de SDKs, secrets, webhooks, crons, documentação e permissões antigas no aplicativo novo; remover componentes obsoletos mantendo licenças necessárias.
+- [x] F8-03: decidir separadamente retenção/desativação dos recursos Supabase e arquivos antigos. Não excluir o ambiente antigo como consequência automática do deploy.
+- [x] F8-04: entregar guia de operação, acesso emergencial, restauração, atualização de dependências e próximo backlog priorizado.
 
 **Aceite:** equipe consegue operar e retomar o projeto usando os documentos; pendências possuem responsável e próximo passo. Recursos antigos têm destino explícito.
 
@@ -702,3 +702,26 @@ configurado com IDs reais (substituir PLACEHOLDERs no wrangler.toml).
 
 ### Próximo (F8)
 Estabilização e retirada do legado Supabase/v1.
+
+## Passagem de trabalho — F8 → Pós-lançamento
+
+**Data:** 2024-11-01  
+**Branch:** `reescrita/f2-identidade-autorizacao`
+
+### Artefatos entregues em F8
+
+| Artefato | Descrição |
+|---|---|
+| `f8-01-metricas.test.ts` | Suíte U — 10 testes: health endpoint, request ID, Server-Timing, safeLogger, onError sem stack trace, rate limit configurável, wrangler PLACEHOLDERs, sem console.log nas rotas v2, crons sincronizados, SELECT sem LIMIT |
+| `docs/f8/F8-02-retirada-legado.md` | Inventário completo: 3 SDKs Supabase, 8 stores/módulos cliente, 14 arquivos servidor legado, rotas v1 a desativar, secrets a revogar, ordem de execução |
+| `docs/f8/F8-03-supabase-destino.md` | Decisão de desativação: exportação DB + storage, checklist de desativação com pré-condições, retenção de dados, custo estimado pós-migração ($0 vs $25-50/mês) |
+| `docs/f8/F8-04-guia-operacao.md` | Guia completo: stack, dev local, deploy, acesso de emergência (tail, rollback, SQL), atualização de deps, como adicionar rota v2 e migration, backlog priorizado, índice de documentos |
+
+### Estado final da reescrita
+
+Todas as fases F0–F8 estão documentadas e os artefatos de código/documentação
+estão commitados. O deploy em produção depende de:
+1. Substituir PLACEHOLDERs no `wrangler.toml` por IDs reais do Cloudflare
+2. Configurar secrets com `wrangler secret put`
+3. Seguir `docs/f7/F7-02-release-checklist.md` antes do deploy
+4. Seguir `docs/f7/F7-04-go-live-evidencias.md` durante o go-live
