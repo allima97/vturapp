@@ -27,6 +27,7 @@ import { tenantProofRoutes } from './routes/tenant-proof';
 import { produtosV2Routes } from './routes/produtos-v2';
 import { destinosV2Routes } from './routes/destinos-v2';
 import { dashboardV2Routes } from './routes/dashboard-v2';
+import { muralV2Routes } from './routes/mural-v2';
 import { agendaV2Routes } from './routes/agenda-v2';
 import { securityHeaders, csrfProtection } from './middleware/security';
 import { productionGuard } from './middleware/production-guard';
@@ -71,6 +72,7 @@ export function createApiAppV2() {
   app.route('/destinos', destinosV2Routes);
   app.route('/dashboard', dashboardV2Routes);
   app.route('/agenda', agendaV2Routes);
+app.route('/mural', muralV2Routes);
 
   return app;
 }

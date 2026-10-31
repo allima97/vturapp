@@ -720,3 +720,28 @@ export const agendaItens = sqliteTable(
 
 export type AgendaItem = typeof agendaItens.$inferSelect;
 export type NovoAgendaItem = typeof agendaItens.$inferInsert;
+
+// ─── M09: Mural de recados ────────────────────────────────────────────────────
+
+export const muralRecados = sqliteTable(
+  'mural_recados',
+  {
+    id:             integer('id').primaryKey({ autoIncrement: true }),
+    empresaId:      integer('empresa_id').notNull(),
+    remetenteId:    text('remetente_id', { length: 36 }).notNull(),
+    destinatarioId: text('destinatario_id', { length: 36 }),  // null = toda empresa
+    assunto:        text('assunto', { length: 200 }).notNull().default(''),
+    conteudo:       text('conteudo').notNull(),
+    criadoEm:       text('criado_em').notNull(),
+    atualizadoEm:   text('atualizado_em').notNull(),
+  },
+  (t) => ({
+    idxEmpresaData:  index('idx_mural_empresa_data').on(t.empresaId, t.criadoEm),
+    idxDestinatario: index('idx_mural_destinatario').on(t.destinatarioId, t.criadoEm),
+    idxRemetente:    index('idx_mural_remetente').on(t.remetenteId, t.criadoEm),
+  })
+);
+
+export type MuralRecado    = typeof muralRecados.$inferSelect;
+export type NovoMuralRecado = typeof muralRecados.$inferInsert;
+
