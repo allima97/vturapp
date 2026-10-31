@@ -252,7 +252,7 @@ O inventário inicial abaixo precisa ser reconciliado na F0. Não confundir pres
 
 | ID | Domínio | Dependências / risco principal | Estado |
 |---|---|---|---|
-| M01 | Empresas, usuários, vínculos e permissões | F2; administração de sistema separada do escopo comercial | PENDENTE |
+| M01 | Empresas, usuários, vínculos e permissões | F2; administração de sistema separada do escopo comercial | CONCLUÍDO (31/10/2026) |
 | M02 | Clientes, acompanhantes e relacionamento | F3; propriedade, documentos e dados pessoais | PENDENTE |
 | M03 | Produtos, tarifas, regras e fornecedores | Cadastros globais versus empresa; precisão e vigência | CONCLUÍDO (31/10/2026) |
 | M04 | Venda manual, itens, recibos e pagamentos | F4; atomicidade, retry, moeda e cancelamento | PENDENTE |
