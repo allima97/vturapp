@@ -3,6 +3,7 @@
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import { type RotDia, addItem, moveDown, moveUp, newDia, removeItem } from './tipos';
+  import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
   import { ChevronDown, ChevronUp, FileText, Plus, Trash2 } from '$lib/icons';
 
   let { dias = $bindable(), diasImportError = $bindable(), diasImportMsg = $bindable(), showDiasBusca = $bindable(), showDiasImport = $bindable(), sugestoes }: { dias: RotDia[]; diasImportError: string | null; diasImportMsg: string | null; showDiasBusca: boolean; showDiasImport: boolean; sugestoes: Record<string, string[]> } = $props();
@@ -72,13 +73,12 @@
             </div>
           </div>
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <FieldDatalistInput
+            <CidadeDestinoAutocomplete
               label="Cidade"
               bind:value={dia.cidade}
               placeholder="Cidade"
-              options={sugestoes['cidade'] || []}
               class_name="w-full"
-              listId="sugestoes-cidade"
+              endpoint="/api/v1/orcamentos/cidades-busca"
             />
             <FieldInput
               label="Percurso"

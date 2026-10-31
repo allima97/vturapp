@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import { onMount, onDestroy } from 'svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
+  import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import { FieldInput, FieldSelect, FieldTextarea, LoadingState } from '$lib/components/ui';
@@ -568,7 +569,7 @@
               </div>
 
               <div class="md:col-span-2">
-                <FieldInput
+                <CidadeDestinoAutocomplete
                   id={`orcamento-editar-item-destino-${index}`}
                   label="Destino"
                   bind:value={item.city_name}

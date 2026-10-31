@@ -4,6 +4,7 @@
   import Card from '$lib/components/ui/Card.svelte';
   import { type RotPasseio, addItem, moveDown, moveUp, newPasseio, removeItem, updateItem } from './tipos';
   import { ChevronDown, ChevronUp, Plus, Trash2 } from '$lib/icons';
+  import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
 
   let { PASSEIO_TIPO_OPTIONS, handleImportPasseioText, passeioImportError, passeioImportMsg, passeioImportText = $bindable(), passeios = $bindable(), sugestoes }: { PASSEIO_TIPO_OPTIONS: string[]; handleImportPasseioText: () => void; passeioImportError: string | null; passeioImportMsg: string | null; passeioImportText: string; passeios: RotPasseio[]; sugestoes: Record<string, string[]> } = $props();
 </script>
@@ -65,13 +66,12 @@
 
           <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
             <div class="col-span-2">
-              <FieldDatalistInput
+              <CidadeDestinoAutocomplete
                 label="Cidade"
                 bind:value={passeio.cidade}
                 placeholder="Cidade"
-                options={sugestoes['cidade'] || []}
                 class_name="w-full"
-                listId="sugestoes-cidade"
+                endpoint="/api/v1/orcamentos/cidades-busca"
               />
             </div>
             <div class="col-span-2">

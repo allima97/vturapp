@@ -12,6 +12,7 @@
   import { apiGet, apiPatch, apiPost, isCanceledApiError } from '$lib/services/api';
   import { safeOpenNewTab } from '$lib/security/url';
   import { createLoadGuard } from '$lib/utils/loadGuard';
+  import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
   import { Calendar, Download, Plus, RefreshCw, SlidersHorizontal, Video, X } from '$lib/icons';
 
   type Consultoria = {
@@ -414,11 +415,12 @@
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <FieldInput
+      <CidadeDestinoAutocomplete
         id="destino"
         label="Destino"
         bind:value={form.destino}
         placeholder="Ex: Paris, Miami..."
+        endpoint="/api/v1/orcamentos/cidades-busca"
       />
       <FieldInput
         id="taxa"

@@ -3,6 +3,7 @@
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import type { RoteiroOpcionalCidade } from '$lib/roteiroOpcionais';
+  import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
 
   let { opcionais = $bindable() }: { opcionais: RoteiroOpcionalCidade[] } = $props();
   function mover(index: number, delta: number) {
@@ -27,7 +28,7 @@
           <Button type="button" variant="secondary" size="xs" disabled={index === opcionais.length - 1} on:click={() => mover(index, 1)}>Descer cidade</Button>
           <Button type="button" variant="secondary" size="xs" on:click={() => { opcionais = opcionais.filter((_, i) => i !== index); }}>Remover cidade</Button>
         </div>
-        <FieldInput label="Cidade" required bind:value={cidade.cidade} placeholder="Ex.: Barcelona" />
+        <CidadeDestinoAutocomplete label="Cidade" required bind:value={cidade.cidade} placeholder="Ex.: Barcelona" endpoint="/api/v1/orcamentos/cidades-busca" />
         <div class="my-3 space-y-3">
           {#each cidade.passeios as passeio, passeioIndex}
             <div class="space-y-2 rounded-lg bg-slate-50 p-3">

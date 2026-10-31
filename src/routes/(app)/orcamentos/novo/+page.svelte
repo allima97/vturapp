@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import { onMount, onDestroy } from 'svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
+  import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import { FieldInput, FieldSelect, FieldTextarea } from '$lib/components/ui';
@@ -453,12 +454,12 @@
             </div>
 
             <div class="md:col-span-2">
-              <FieldInput
+              <CidadeDestinoAutocomplete
                 id={`orcamento-novo-item-destino-${index}`}
                 label="Destino"
                 bind:value={item.city_name}
-                class_name="w-full"
                 placeholder="Cidade"
+                class_name="w-full"
               />
             </div>
 

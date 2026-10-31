@@ -14,6 +14,7 @@
     PageHeader
   } from '$lib/components/ui';
   import ClienteAutocomplete from '$lib/components/vendas/ClienteAutocomplete.svelte';
+  import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
   import { toast } from '$lib/stores/ui';
   import { ArrowLeft, Plane, RefreshCw } from '$lib/icons';
   import { apiGet, apiPost } from '$lib/services/api';
@@ -236,15 +237,14 @@
         on:input={() => queueCitySearch('origem', form.origem)}
       />
 
-      <FieldDatalistInput
+      <CidadeDestinoAutocomplete
         id="viagem-destino"
         label="Destino"
         bind:value={form.destino}
-        options={destinoOptions}
         placeholder="Ex.: Maceió"
         required={true}
         class_name="w-full"
-        on:input={() => queueCitySearch('destino', form.destino)}
+        endpoint="/api/v1/viagens/cidades-busca"
       />
 
       <FieldInput
