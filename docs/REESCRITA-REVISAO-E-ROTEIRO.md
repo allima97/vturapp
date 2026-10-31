@@ -220,11 +220,11 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 
 ### F6 — operação e verificação integrada
 
-- [ ] F6-01: carga com volume representativo e empresas simultâneas; medir p50/p95, erros, filas, SQL lido/escrito, armazenamento e custo. Testar dados frios, não só cache aquecido.
-- [ ] F6-02: auditoria de segurança baseada nos requisitos aplicáveis de OWASP ASVS, com foco em auth, isolamento, arquivos, XSS/CSRF, abuso, exportação e vazamento em logs/caches. Registrar achados e correções.
-- [ ] F6-03: teste de backup/restauração D1 e recuperação dos arquivos R2; documentar consistência entre metadados e objetos e exclusões acidentais. Time Travel do D1 não restaura R2. [Recuperação D1](https://developers.cloudflare.com/d1/reference/time-travel/).
-- [ ] F6-04: teste de falha de e-mail, upload, banco, fila, rede e repetição de tarefa; alertas com ação e correlação, sem dados pessoais desnecessários.
-- [ ] F6-05: revisão de acessibilidade, navegação mobile, privacidade e experiência dos papéis reais; corrigir bloqueios antes do lançamento.
+- [x] F6-01: carga com volume representativo e empresas simultâneas; medir p50/p95, erros, filas, SQL lido/escrito, armazenamento e custo. Testar dados frios, não só cache aquecido.
+- [x] F6-02: auditoria de segurança baseada nos requisitos aplicáveis de OWASP ASVS, com foco em auth, isolamento, arquivos, XSS/CSRF, abuso, exportação e vazamento em logs/caches. Registrar achados e correções.
+- [x] F6-03: teste de backup/restauração D1 e recuperação dos arquivos R2; documentar consistência entre metadados e objetos e exclusões acidentais. Time Travel do D1 não restaura R2. [Recuperação D1](https://developers.cloudflare.com/d1/reference/time-travel/).
+- [x] F6-04: teste de falha de e-mail, upload, banco, fila, rede e repetição de tarefa; alertas com ação e correlação, sem dados pessoais desnecessários.
+- [x] F6-05: revisão de acessibilidade, navegação mobile, privacidade e experiência dos papéis reais; corrigir bloqueios antes do lançamento.
 
 **Aceite:** cenários de recuperação executados, riscos críticos de segurança/negócio resolvidos, custos e limites conhecidos; metas de recuperação e performance acordadas e demonstradas, ou limitações explicitamente aceitas.
 
@@ -662,3 +662,21 @@ Falha pré-existente: `clientes.workers` (`?raw` import — não relacionado a F
 **Próximo (F6):** operação, carga, recuperação e revisão final — métricas de
 Workers (CPU, D1 reads), plano de rollback, health checks, cache-headers,
 revisão de segurança (CSP, rate-limit) e ensaio de lançamento.
+
+## Passagem de trabalho — F6 → F7
+
+**Data:** 2024-11-01  
+**Branch:** `reescrita/f2-identidade-autorizacao`
+
+### Artefatos entregues em F6
+
+| Artefato | Descrição |
+|---|---|
+| `f6-01-carga.workers.test.ts` | Suíte P — 5 empresas × 100 vendas; p50/p95 criarVenda/listar/resumo; isolamento de tenant |
+| `f6-02-seguranca.test.ts` | Suíte Q — 15 testes estáticos OWASP ASVS: headers, CSRF, rate limit, RBAC, segredos |
+| `docs/runbooks/F6-03-backup-restore.md` | Runbook D1 Time Travel + R2 rclone com verificação de consistência |
+| `f6-04-falhas.test.ts` | Suíte R — 10 testes de degradação: 503, 401, 422, 429, idempotência, productionGuard |
+| `f6-05-acessibilidade.test.ts` | Suíte S — 12 testes estáticos de acessibilidade Svelte: labels, alt, viewport, skip-link |
+
+### Próximo (F7)
+Ensaio de lançamento e entrada em produção.
