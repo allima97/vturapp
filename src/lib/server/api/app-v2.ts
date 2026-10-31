@@ -26,6 +26,7 @@ import { vendasV2Routes } from './routes/vendas-v2';
 import { tenantProofRoutes } from './routes/tenant-proof';
 import { produtosV2Routes } from './routes/produtos-v2';
 import { destinosV2Routes } from './routes/destinos-v2';
+import { dashboardV2Routes } from './routes/dashboard-v2';
 import { securityHeaders, csrfProtection } from './middleware/security';
 import { productionGuard } from './middleware/production-guard';
 import { rateLimitMiddleware } from './middleware/rate-limit';
@@ -67,6 +68,7 @@ export function createApiAppV2() {
   app.route('/f2-proof', tenantProofRoutes);
   app.route('/produtos', produtosV2Routes);
   app.route('/destinos', destinosV2Routes);
+  app.route('/dashboard', dashboardV2Routes);
 
   return app;
 }

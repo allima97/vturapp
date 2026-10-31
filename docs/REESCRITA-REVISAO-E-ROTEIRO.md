@@ -262,7 +262,7 @@ O inventário inicial abaixo precisa ser reconciliado na F0. Não confundir pres
 | M08 | Agenda, tarefas, campanhas e SAC | Regras próprias, notificações e vínculo com equipe | PENDENTE |
 | M09 | Recados, mural, avisos e push | Entrega, escopo, duplicação e conexão revogada | PENDENTE |
 | M10 | Destinos, cidades, países e referências | M06/M07 referenciam destinos e cidades: provável antecipação na ordem de execução. Origem/licença dos seeds e busca com acentos | CONCLUÍDO (31/10/2026) |
-| M11 | Dashboards, ranking, metas e relatórios | Mesmo escopo e regras das vendas; agregados não podem vazar dados | PENDENTE |
+| M11 | Dashboards, ranking, metas e relatórios | Mesmo escopo e regras das vendas; agregados não podem vazar dados | CONCLUÍDO |
 | M12 | Auditoria, privacidade e administração operacional | Retenção, recuperação, acesso a logs e suporte | PENDENTE |
 | X01 | Importação histórica de usuários/vendas/arquivos | Dispensada pelo usuário: iniciar vazio | DISPENSADA |
 | X02 | Importadores CVC/REXTUR e conciliação associada | Fora do produto; testar ausência na nova aplicação | EXCLUSÃO PLANEJADA |
