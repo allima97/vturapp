@@ -16,7 +16,7 @@
  *   - auth:        session, account, verification (Better Auth — ADR-005 exception)
  */
 
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { index, integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DOMÍNIO: IDENTITY — empresas
@@ -634,3 +634,48 @@ export const vendaParcelas = sqliteTable(
 
 export type VendaParcela = typeof vendaParcelas.$inferSelect;
 export type NovoVendaParcela = typeof vendaParcelas.$inferInsert;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// M10 — Destinos (catálogo global de destinos turísticos)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Catálogo global de destinos turísticos.
+ * Sem empresa_id: compartilhado entre todas as empresas.
+ * Referenciado opcionalmente por pacotes/roteiros.
+ */
+export const destinos = sqliteTable(
+  'destinos',
+  {
+    id: integer('id', { mode: 'number' }).primaryKey({ autoIncrement: true }),
+    nome: text('nome', { length: 200 }).notNull(),
+    /** Nome da cidade principal do destino. */
+    cidade: text('cidade', { length: 120 }),
+    /** Estado / região administrativa (nome por extenso). */
+    estado: text('estado', { length: 100 }),
+    /** Código curto do estado (ex: "SP", "RJ"). */
+    estadoCod: text('estado_cod', { length: 10 }),
+    /** Nome do país. */
+    pais: text('pais', { length: 100 }),
+    /** ISO 3166-1 alpha-2 (ex: "BR", "FR"). */
+    paisCod: text('pais_cod', { length: 2 }),
+    /** Continente (ex: "América do Sul", "Europa"). */
+    continente: text('continente', { length: 50 }),
+    /** Latitude (geocoding opcional). */
+    lat: real('lat'),
+    /** Longitude (geocoding opcional). */
+    lng: real('lng'),
+    notas: text('notas'),
+    ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
+    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    atualizadoEm: text('atualizado_em').notNull().$defaultFn(() => new Date().toISOString()),
+  },
+  (t) => ({
+    idxNome: index('idx_destinos_nome').on(t.nome),
+    idxPais: index('idx_destinos_pais').on(t.paisCod),
+    idxAtivo: index('idx_destinos_ativo').on(t.ativo),
+  })
+);
+
+export type Destino = typeof destinos.$inferSelect;
+export type NovoDestino = typeof destinos.$inferInsert;
