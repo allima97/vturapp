@@ -253,17 +253,17 @@ O inventário inicial abaixo precisa ser reconciliado na F0. Não confundir pres
 | ID | Domínio | Dependências / risco principal | Estado |
 |---|---|---|---|
 | M01 | Empresas, usuários, vínculos e permissões | F2; administração de sistema separada do escopo comercial | CONCLUÍDO (31/10/2026) |
-| M02 | Clientes, acompanhantes e relacionamento | F3; propriedade, documentos e dados pessoais | PENDENTE |
+| M02 | Clientes, acompanhantes e relacionamento | F3; propriedade, documentos e dados pessoais | CONCLUÍDO (31/10/2026) |
 | M03 | Produtos, tarifas, regras e fornecedores | Cadastros globais versus empresa; precisão e vigência | CONCLUÍDO (31/10/2026) |
-| M04 | Venda manual, itens, recibos e pagamentos | F4; atomicidade, retry, moeda e cancelamento | PENDENTE |
-| M05 | Comissões e caixa | M04; conciliação excluída, sem referência indireta | PENDENTE |
-| M06 | Viagens, vouchers, dossiês e documentos | M02/M04; acesso a arquivos e marca VTUR | PENDENTE |
-| M07 | Orçamentos, roteiros e circuitos | M02/M03; versões, preços e exportação | PENDENTE |
+| M04 | Venda manual, itens, recibos e pagamentos | F4; atomicidade, retry, moeda e cancelamento | CONCLUÍDO (31/10/2026) |
+| M05 | Comissões e caixa | M04; conciliação excluída, sem referência indireta | EXCLUÍDO (ADR-006) |
+| M06 | Viagens, vouchers, dossiês e documentos | M02/M04; acesso a arquivos e marca VTUR | EXCLUÍDO (ADR-006) |
+| M07 | Orçamentos, roteiros e circuitos | M02/M03; versões, preços e exportação | ADIADO |
 | M08 | Agenda, tarefas, campanhas e SAC | Regras próprias, notificações e vínculo com equipe | CONCLUÍDO (31/10/2026) |
 | M09 | Recados, mural, avisos e push | Entrega, escopo, duplicação e conexão revogada | CONCLUÍDO (31/10/2026) |
 | M10 | Destinos, cidades, países e referências | M06/M07 referenciam destinos e cidades: provável antecipação na ordem de execução. Origem/licença dos seeds e busca com acentos | CONCLUÍDO (31/10/2026) |
 | M11 | Dashboards, ranking, metas e relatórios | Mesmo escopo e regras das vendas; agregados não podem vazar dados | CONCLUÍDO |
-| M12 | Auditoria, privacidade e administração operacional | Retenção, recuperação, acesso a logs e suporte | PENDENTE |
+| M12 | Auditoria, privacidade e administração operacional | Retenção, recuperação, acesso a logs e suporte | CONCLUÍDO (31/10/2026) |
 | X01 | Importação histórica de usuários/vendas/arquivos | Dispensada pelo usuário: iniciar vazio | DISPENSADA |
 | X02 | Importadores CVC/REXTUR e conciliação associada | Fora do produto; testar ausência na nova aplicação | EXCLUSÃO PLANEJADA |
 

@@ -745,3 +745,34 @@ export const muralRecados = sqliteTable(
 export type MuralRecado    = typeof muralRecados.$inferSelect;
 export type NovoMuralRecado = typeof muralRecados.$inferInsert;
 
+
+// ─── M12: Trilha de auditoria v2 ─────────────────────────────────────────────
+
+export const AUDIT_MODULOS = [
+  'Vendas', 'Clientes', 'Cadastros', 'Parametros',
+  'Escalas', 'Admin', 'perfil', 'LGPD', 'Equipe',
+] as const;
+export type AuditModuloV2 = (typeof AUDIT_MODULOS)[number];
+
+export const auditLogs = sqliteTable(
+  'audit_logs',
+  {
+    id:         integer('id').primaryKey({ autoIncrement: true }),
+    empresaId:  integer('empresa_id').notNull(),
+    userId:     text('user_id', { length: 36 }),
+    modulo:     text('modulo', { length: 30 }).notNull(),
+    acao:       text('acao', { length: 60 }).notNull(),
+    detalhes:   text('detalhes'), // JSON serializado
+    ip:         text('ip', { length: 45 }),
+    userAgent:  text('user_agent', { length: 300 }),
+    criadoEm:   text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
+  },
+  (t) => ({
+    idxEmpresaData: index('idx_audit_empresa_data').on(t.empresaId, t.criadoEm),
+    idxUser:        index('idx_audit_user').on(t.userId, t.criadoEm),
+    idxModulo:      index('idx_audit_modulo').on(t.empresaId, t.modulo, t.criadoEm),
+  })
+);
+
+export type AuditLog    = typeof auditLogs.$inferSelect;
+export type NovoAuditLog = typeof auditLogs.$inferInsert;
