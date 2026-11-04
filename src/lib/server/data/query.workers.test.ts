@@ -123,4 +123,14 @@ describe('cliente de dados D1', () => {
 
     expect(result.error).toBeNull();
   });
+  it('filtra por coluna de relacao embutida (venda.vendedor_id)', async () => {
+    const result = await client()
+      .from('viagens')
+      .select('id, venda:vendas!inner(id, vendedor_id)')
+      .in('venda.vendedor_id', ['nenhum'])
+      .limit(5);
+
+    expect(result.error).toBeNull();
+    expect(result.data).toEqual([]);
+  });
 });

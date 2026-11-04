@@ -390,6 +390,31 @@ async function hydrate(
   }
 }
 
+function matchEmbedded(row: Record<string, unknown>, filter: Filter) {
+  if (!('column' in filter)) return true;
+  const [alias, column] = filter.column.split('.');
+  const related = row[alias] as Record<string, unknown> | null | undefined;
+  if (!related) return false;
+  const value = related[column];
+  if (filter.kind === 'in') {
+    const hit = filter.values.map(String).includes(String(value));
+    return filter.negate ? !hit : hit;
+  }
+  if (filter.kind === 'null') return filter.isNull ? value == null : value != null;
+  if (filter.kind === 'cmp') {
+    if (filter.op === 'eq') return String(value) === String(filter.value);
+    if (filter.op === 'neq') return String(value) !== String(filter.value);
+    if (value == null) return false;
+    const a = value as number | string;
+    const b = filter.value as number | string;
+    if (filter.op === 'gt') return a > b;
+    if (filter.op === 'gte') return a >= b;
+    if (filter.op === 'lt') return a < b;
+    if (filter.op === 'lte') return a <= b;
+  }
+  return true;
+}
+
 function prepareWrite(
   table: string,
   value: Record<string, unknown>,
@@ -584,9 +609,13 @@ export function createDataClient(context: DataContext): DataClient {
         try {
           if (operation === 'select') {
             const columns = fields.flatMap((field) => ('column' in field ? [field.column] : []));
-            const where = whereSql(table, filters);
+            const embeddedFilters = filters.filter(
+              (filter) => 'column' in filter && filter.column.includes('.')
+            );
+            const localFilters = filters.filter((filter) => !embeddedFilters.includes(filter));
+            const where = whereSql(table, localFilters);
             let count: number | null = null;
-            if (countExact) {
+            if (countExact && !embeddedFilters.length) {
               const counted = await bound(
                 db,
                 `SELECT COUNT(*) AS total FROM ${physical(table)}${where.sql}`,
@@ -605,16 +634,41 @@ export function createDataClient(context: DataContext): DataClient {
                 })
               )
             ];
-            const rows = await selectRows(
+            for (const filter of embeddedFilters) {
+              const [alias, column] = (filter as { column: string }).column.split('.');
+              const embed = fields.flatMap((field) =>
+                'embed' in field && field.embed.alias === alias ? [field.embed] : []
+              )[0];
+              if (!embed)
+                return {
+                  data: null,
+                  error: fail(`filtro invalido: ${alias}.${column}`),
+                  count: null
+                };
+              if (
+                embed.fields.length &&
+                !embed.fields.some((f) => 'column' in f && f.column === column)
+              )
+                embed.fields.push({ column });
+            }
+            let rows = await selectRows(
               db,
               table,
               explicitColumns ? [...columns, ...relationColumns] : [],
-              filters,
+              localFilters,
               order,
-              limit,
-              offset
+              embeddedFilters.length ? null : limit,
+              embeddedFilters.length ? null : offset
             );
             await hydrate(db, table, rows, fields);
+            if (embeddedFilters.length) {
+              rows = rows.filter((row) =>
+                embeddedFilters.every((filter) => matchEmbedded(row, filter))
+              );
+              if (countExact) count = rows.length;
+              if (offset) rows = rows.slice(offset);
+              if (limit != null) rows = rows.slice(0, limit);
+            }
             if (explicitColumns) {
               for (const row of rows) {
                 for (const column of relationColumns) delete row[column];
