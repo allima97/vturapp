@@ -13,7 +13,7 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
 vi.mock('./root', () => ({ handleTarefasGet: spy('handleTarefasGet') }));
@@ -26,13 +26,13 @@ import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/tarefas', 'handleTarefasGet', {}],
   ['GET', '/api/v1/tarefas/clientes', 'handleTarefasClientesGet', {}],
-  ['GET', '/api/v1/tarefas/usuarios', 'handleTarefasUsuariosGet', {}],
+  ['GET', '/api/v1/tarefas/usuarios', 'handleTarefasUsuariosGet', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/tarefas'],
   ['PUT', '/api/v1/tarefas/clientes'],
-  ['PUT', '/api/v1/tarefas/usuarios'],
+  ['PUT', '/api/v1/tarefas/usuarios']
 ];
 
 function ev(method: string, path: string) {

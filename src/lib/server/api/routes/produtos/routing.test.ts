@@ -13,27 +13,34 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
 vi.mock('./root', () => ({ handleProdutosGet: spy('handleProdutosGet') }));
-vi.mock('./id', () => ({ handleProdutosIdGet: spy('handleProdutosIdGet'), handleProdutosIdPatch: spy('handleProdutosIdPatch'), handleProdutosIdDelete: spy('handleProdutosIdDelete') }));
+vi.mock('./id', () => ({
+  handleProdutosIdGet: spy('handleProdutosIdGet'),
+  handleProdutosIdPatch: spy('handleProdutosIdPatch'),
+  handleProdutosIdDelete: spy('handleProdutosIdDelete')
+}));
 vi.mock('./base', () => ({ handleProdutosBaseGet: spy('handleProdutosBaseGet') }));
 vi.mock('./create', () => ({ handleProdutosCreatePost: spy('handleProdutosCreatePost') }));
-vi.mock('./tarifas', () => ({ handleProdutosTarifasGet: spy('handleProdutosTarifasGet'), handleProdutosTarifasPost: spy('handleProdutosTarifasPost') }));
+vi.mock('./tarifas', () => ({
+  handleProdutosTarifasGet: spy('handleProdutosTarifasGet'),
+  handleProdutosTarifasPost: spy('handleProdutosTarifasPost')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 
 const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/produtos', 'handleProdutosGet', {}],
-  ['GET', '/api/v1/produtos/id-123', 'handleProdutosIdGet', {"id": "id-123"}],
-  ['PATCH', '/api/v1/produtos/id-123', 'handleProdutosIdPatch', {"id": "id-123"}],
-  ['DELETE', '/api/v1/produtos/id-123', 'handleProdutosIdDelete', {"id": "id-123"}],
+  ['GET', '/api/v1/produtos/id-123', 'handleProdutosIdGet', { id: 'id-123' }],
+  ['PATCH', '/api/v1/produtos/id-123', 'handleProdutosIdPatch', { id: 'id-123' }],
+  ['DELETE', '/api/v1/produtos/id-123', 'handleProdutosIdDelete', { id: 'id-123' }],
   ['GET', '/api/v1/produtos/base', 'handleProdutosBaseGet', {}],
   ['POST', '/api/v1/produtos/create', 'handleProdutosCreatePost', {}],
   ['GET', '/api/v1/produtos/tarifas', 'handleProdutosTarifasGet', {}],
-  ['POST', '/api/v1/produtos/tarifas', 'handleProdutosTarifasPost', {}],
+  ['POST', '/api/v1/produtos/tarifas', 'handleProdutosTarifasPost', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
@@ -41,7 +48,7 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/produtos/id-123'],
   ['PUT', '/api/v1/produtos/base'],
   ['PUT', '/api/v1/produtos/create'],
-  ['PUT', '/api/v1/produtos/tarifas'],
+  ['PUT', '/api/v1/produtos/tarifas']
 ];
 
 function ev(method: string, path: string) {

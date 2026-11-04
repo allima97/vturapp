@@ -37,11 +37,13 @@ type CidadeListRow = {
   subdivisao_id: string | null;
   descricao: string | null;
   created_at: string | null;
-  subdivisao?: {
-    id: string;
-    nome: string | null;
-    pais_id: string | null;
-  }[] | null;
+  subdivisao?:
+    | {
+        id: string;
+        nome: string | null;
+        pais_id: string | null;
+      }[]
+    | null;
 };
 
 function readCidadeBody(value: unknown): CidadeBody {
@@ -92,7 +94,11 @@ export async function handleCidadesGet(event: RequestEvent) {
       ttlMs: 300_000,
       staleTtlMs: 1_800_000,
       loader: async () => {
-        let query = client.from('cidades').select(selectFields).order('nome').range((page - 1) * pageSize, page * pageSize - 1);
+        let query = client
+          .from('cidades')
+          .select(selectFields)
+          .order('nome')
+          .range((page - 1) * pageSize, page * pageSize - 1);
 
         if (subdivisaoId) query = query.eq('subdivisao_id', subdivisaoId);
         if (q) {
@@ -136,8 +142,13 @@ export async function handleCidadesPost(event: RequestEvent) {
     const id = String(body.id || '').trim();
     const subdivisaoId = String(body.subdivisao_id || '').trim();
 
-    if (!String(nome || '').trim()) return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
-    if (!subdivisaoId || !isUuid(subdivisaoId)) return json({ error: 'Estado/Subdivisão obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!String(nome || '').trim())
+      return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!subdivisaoId || !isUuid(subdivisaoId))
+      return json(
+        { error: 'Estado/Subdivisão obrigatório.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
 
     const payload = {
       nome: String(nome).trim(),
@@ -147,15 +158,34 @@ export async function handleCidadesPost(event: RequestEvent) {
 
     let result;
     if (id && isUuid(id)) {
-      const { data, error: updateError } = await client.from('cidades').update(payload).eq('id', id).select('id').single();
+      const { data, error: updateError } = await client
+        .from('cidades')
+        .update(payload)
+        .eq('id', id)
+        .select('id')
+        .single();
       if (updateError) throw updateError;
       result = data;
-      registrarLog(event, { userId: user.id, modulo: 'Cadastros', acao: 'cidade_editada', detalhes: { id, payload } });
+      registrarLog(event, {
+        userId: user.id,
+        modulo: 'Cadastros',
+        acao: 'cidade_editada',
+        detalhes: { id, payload }
+      });
     } else {
-      const { data, error: insertError } = await client.from('cidades').insert(payload).select('id').single();
+      const { data, error: insertError } = await client
+        .from('cidades')
+        .insert(payload)
+        .select('id')
+        .single();
       if (insertError) throw insertError;
       result = data;
-      registrarLog(event, { userId: user.id, modulo: 'Cadastros', acao: 'cidade_criada', detalhes: { ...payload } });
+      registrarLog(event, {
+        userId: user.id,
+        modulo: 'Cadastros',
+        acao: 'cidade_criada',
+        detalhes: { ...payload }
+      });
     }
 
     invalidateCatalogReadModels({ userId: user.id });
@@ -179,11 +209,17 @@ export async function handleCidadesDelete(event: RequestEvent) {
     }
 
     const id = String(event.url.searchParams.get('id') || '').trim();
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const { error: deleteError } = await client.from('cidades').delete().eq('id', id);
     if (deleteError) throw deleteError;
-    registrarLog(event, { userId: user.id, modulo: 'Cadastros', acao: 'cidade_excluida', detalhes: { id } });
+    registrarLog(event, {
+      userId: user.id,
+      modulo: 'Cadastros',
+      acao: 'cidade_excluida',
+      detalhes: { id }
+    });
 
     invalidateCatalogReadModels({ userId: user.id });
     return json({ ok: true }, { headers: NO_STORE_HEADERS });

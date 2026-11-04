@@ -12,7 +12,7 @@ export const load: PageServerLoad = async (event) => {
     throw error(404, 'Not found');
   }
 
-  const user = event.locals.user || await requireAuthenticatedUser(event);
+  const user = event.locals.user || (await requireAuthenticatedUser(event));
   const scope = await resolveUserScope(getAdminClient(), user.id);
   if (!scope.isAdmin) {
     throw error(403, 'Sem acesso.');

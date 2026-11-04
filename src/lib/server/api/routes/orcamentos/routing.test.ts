@@ -13,17 +13,30 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./id', () => ({ handleOrcamentosIdGet: spy('handleOrcamentosIdGet'), handleOrcamentosIdPatch: spy('handleOrcamentosIdPatch'), handleOrcamentosIdDelete: spy('handleOrcamentosIdDelete') }));
-vi.mock('./id-resumo-venda', () => ({ handleOrcamentosIdResumoVendaGet: spy('handleOrcamentosIdResumoVendaGet') }));
-vi.mock('./cidades-busca', () => ({ handleOrcamentosCidadesBuscaGet: spy('handleOrcamentosCidadesBuscaGet') }));
-vi.mock('./cliente-create', () => ({ handleOrcamentosClienteCreatePost: spy('handleOrcamentosClienteCreatePost') }));
+vi.mock('./id', () => ({
+  handleOrcamentosIdGet: spy('handleOrcamentosIdGet'),
+  handleOrcamentosIdPatch: spy('handleOrcamentosIdPatch'),
+  handleOrcamentosIdDelete: spy('handleOrcamentosIdDelete')
+}));
+vi.mock('./id-resumo-venda', () => ({
+  handleOrcamentosIdResumoVendaGet: spy('handleOrcamentosIdResumoVendaGet')
+}));
+vi.mock('./cidades-busca', () => ({
+  handleOrcamentosCidadesBuscaGet: spy('handleOrcamentosCidadesBuscaGet')
+}));
+vi.mock('./cliente-create', () => ({
+  handleOrcamentosClienteCreatePost: spy('handleOrcamentosClienteCreatePost')
+}));
 vi.mock('./clientes', () => ({ handleOrcamentosClientesGet: spy('handleOrcamentosClientesGet') }));
 vi.mock('./create', () => ({ handleOrcamentosCreatePost: spy('handleOrcamentosCreatePost') }));
 vi.mock('./delete', () => ({ handleOrcamentosDeletePost: spy('handleOrcamentosDeletePost') }));
-vi.mock('./interacao', () => ({ handleOrcamentosInteracaoPost: spy('handleOrcamentosInteracaoPost'), handleOrcamentosInteracaoGet: spy('handleOrcamentosInteracaoGet') }));
+vi.mock('./interacao', () => ({
+  handleOrcamentosInteracaoPost: spy('handleOrcamentosInteracaoPost'),
+  handleOrcamentosInteracaoGet: spy('handleOrcamentosInteracaoGet')
+}));
 vi.mock('./list', () => ({ handleOrcamentosListGet: spy('handleOrcamentosListGet') }));
 vi.mock('./produtos', () => ({ handleOrcamentosProdutosGet: spy('handleOrcamentosProdutosGet') }));
 vi.mock('./save', () => ({ handleOrcamentosSavePost: spy('handleOrcamentosSavePost') }));
@@ -34,10 +47,15 @@ import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 
 const CASES: Array<[string, string, string, Record<string, string>]> = [
-  ['GET', '/api/v1/orcamentos/id-123', 'handleOrcamentosIdGet', {"id": "id-123"}],
-  ['PATCH', '/api/v1/orcamentos/id-123', 'handleOrcamentosIdPatch', {"id": "id-123"}],
-  ['DELETE', '/api/v1/orcamentos/id-123', 'handleOrcamentosIdDelete', {"id": "id-123"}],
-  ['GET', '/api/v1/orcamentos/id-123/resumo-venda', 'handleOrcamentosIdResumoVendaGet', {"id": "id-123"}],
+  ['GET', '/api/v1/orcamentos/id-123', 'handleOrcamentosIdGet', { id: 'id-123' }],
+  ['PATCH', '/api/v1/orcamentos/id-123', 'handleOrcamentosIdPatch', { id: 'id-123' }],
+  ['DELETE', '/api/v1/orcamentos/id-123', 'handleOrcamentosIdDelete', { id: 'id-123' }],
+  [
+    'GET',
+    '/api/v1/orcamentos/id-123/resumo-venda',
+    'handleOrcamentosIdResumoVendaGet',
+    { id: 'id-123' }
+  ],
   ['GET', '/api/v1/orcamentos/cidades-busca', 'handleOrcamentosCidadesBuscaGet', {}],
   ['POST', '/api/v1/orcamentos/cliente-create', 'handleOrcamentosClienteCreatePost', {}],
   ['GET', '/api/v1/orcamentos/clientes', 'handleOrcamentosClientesGet', {}],
@@ -52,7 +70,7 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/orcamentos/produtos', 'handleOrcamentosProdutosGet', {}],
   ['POST', '/api/v1/orcamentos/save', 'handleOrcamentosSavePost', {}],
   ['PATCH', '/api/v1/orcamentos/status', 'handleOrcamentosStatusPatch', {}],
-  ['GET', '/api/v1/orcamentos/tipos', 'handleOrcamentosTiposGet', {}],
+  ['GET', '/api/v1/orcamentos/tipos', 'handleOrcamentosTiposGet', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
@@ -68,7 +86,7 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/orcamentos/produtos'],
   ['PUT', '/api/v1/orcamentos/save'],
   ['PUT', '/api/v1/orcamentos/status'],
-  ['PUT', '/api/v1/orcamentos/tipos'],
+  ['PUT', '/api/v1/orcamentos/tipos']
 ];
 
 function ev(method: string, path: string) {

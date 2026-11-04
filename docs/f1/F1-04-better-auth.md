@@ -20,8 +20,8 @@ Provar que Better Auth funciona no runtime Cloudflare Workers com D1:
 
 ## Versão instalada
 
-| Pacote | Versão |
-|--------|--------|
+| Pacote        | Versão    |
+| ------------- | --------- |
 | `better-auth` | `^1.7.13` |
 
 O adaptador Drizzle está embutido em `better-auth/adapters/drizzle` (não precisa de pacote separado).
@@ -37,8 +37,9 @@ de request. Não há `process.env` nem `globalThis.DB` — o binding é injetado
 pelo runtime no contexto de cada request.
 
 Better Auth tradicional cria a instância no nível de módulo:
+
 ```ts
-const db = new Database('./sqlite.db');   // ❌ Node.js — não funciona em Workers
+const db = new Database('./sqlite.db'); // ❌ Node.js — não funciona em Workers
 export const auth = betterAuth({ database: db });
 ```
 
@@ -50,7 +51,7 @@ export function createAuth(d1: D1Database, secret: string): AuthInstance {
   const db = drizzle(d1, { schema });
   return betterAuth({
     secret,
-    database: drizzleAdapter(db, { provider: 'sqlite' }),
+    database: drizzleAdapter(db, { provider: 'sqlite' })
     // ...
   });
 }
@@ -68,13 +69,13 @@ const auth = createAuth(event.platform?.env?.DB!, env.BETTER_AUTH_SECRET);
 
 ## Arquivos criados
 
-| Arquivo | Descrição |
-|---------|-----------|
-| `src/lib/auth.ts` | Factory `createAuth(d1, secret)` |
-| `src/lib/auth-client.ts` | `authClient` Svelte com plugin twoFactorClient |
-| `src/routes/api/auth/[...auth]/+server.ts` | Handler GET/POST para todas as rotas Better Auth |
-| `drizzle/0001_auth_schema.sql` | Migration: tabelas user/session/account/verification |
-| `src/lib/server/db/schema.ts` | Tabelas Better Auth adicionadas ao schema Drizzle |
+| Arquivo                                    | Descrição                                            |
+| ------------------------------------------ | ---------------------------------------------------- |
+| `src/lib/auth.ts`                          | Factory `createAuth(d1, secret)`                     |
+| `src/lib/auth-client.ts`                   | `authClient` Svelte com plugin twoFactorClient       |
+| `src/routes/api/auth/[...auth]/+server.ts` | Handler GET/POST para todas as rotas Better Auth     |
+| `drizzle/0001_auth_schema.sql`             | Migration: tabelas user/session/account/verification |
+| `src/lib/server/db/schema.ts`              | Tabelas Better Auth adicionadas ao schema Drizzle    |
 
 ---
 
@@ -91,7 +92,7 @@ export const user = sqliteTable('user', {
   emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(false),
   image: text('image'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull()
 });
 // + session, account, verification (ver schema.ts)
 ```
@@ -100,12 +101,12 @@ export const user = sqliteTable('user', {
 
 ## Plugins configurados
 
-| Plugin | Fase de implementação de UI |
-|--------|---------------------------|
-| `twoFactor()` (servidor) | F2-02 |
-| `twoFactorClient()` (cliente) | F2-02 |
-| `passkey()` (WebAuthn) | A avaliar em F2-02 |
-| `sveltekitCookies()` | F2-02 — requer SvelteKit 2.20+ |
+| Plugin                        | Fase de implementação de UI    |
+| ----------------------------- | ------------------------------ |
+| `twoFactor()` (servidor)      | F2-02                          |
+| `twoFactorClient()` (cliente) | F2-02                          |
+| `passkey()` (WebAuthn)        | A avaliar em F2-02             |
+| `sveltekitCookies()`          | F2-02 — requer SvelteKit 2.20+ |
 
 ---
 
@@ -113,13 +114,13 @@ export const user = sqliteTable('user', {
 
 Após `npm run dev:cf` e migração D1:
 
-| Método | Endpoint | Descrição |
-|--------|----------|-----------|
-| `POST` | `/api/auth/sign-up/email` | Criar conta |
-| `POST` | `/api/auth/sign-in/email` | Login |
-| `POST` | `/api/auth/sign-out` | Logout |
-| `GET`  | `/api/auth/session` | Sessão atual |
-| `POST` | `/api/auth/two-factor/enable` | Ativar TOTP |
+| Método | Endpoint                           | Descrição             |
+| ------ | ---------------------------------- | --------------------- |
+| `POST` | `/api/auth/sign-up/email`          | Criar conta           |
+| `POST` | `/api/auth/sign-in/email`          | Login                 |
+| `POST` | `/api/auth/sign-out`               | Logout                |
+| `GET`  | `/api/auth/session`                | Sessão atual          |
+| `POST` | `/api/auth/two-factor/enable`      | Ativar TOTP           |
 | `POST` | `/api/auth/two-factor/verify-totp` | Verificar código TOTP |
 
 ---
@@ -156,6 +157,7 @@ curl http://localhost:8787/api/auth/session \
 ## Integração com hooks.server.ts (F2-02)
 
 Em F2-02, o `hooks.server.ts` será atualizado para:
+
 1. Remover a auth Supabase
 2. Adicionar Better Auth via `svelteKitHandler`
 3. Popular `event.locals.user` e `event.locals.session`
@@ -166,10 +168,7 @@ import { createAuth } from '$lib/auth';
 import { svelteKitHandler } from 'better-auth/svelte-kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
-  const auth = createAuth(
-    event.platform?.env?.DB!,
-    event.platform?.env?.BETTER_AUTH_SECRET!
-  );
+  const auth = createAuth(event.platform?.env?.DB!, event.platform?.env?.BETTER_AUTH_SECRET!);
 
   const session = await auth.api.getSession({ headers: event.request.headers });
   if (session) {

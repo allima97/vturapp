@@ -18,20 +18,20 @@ O documento anterior, `docs/REESCRITA-PLANO.md`, tem boa cobertura de temas, mas
 
 Fotografia do código em `8bb9f19d537adf7b3b2a9d36c80436c5301a5934`, branch `main`. O plano original estava como arquivo não rastreado. Esta análise não executou build, testes de aplicação, consultas ao banco remoto ou deploy.
 
-| Item observado | Evidência e consequência |
-|---|---|
-| SvelteKit 2.59.0, Svelte 5.55.1, Hono 4.12.16 | Versões do `package-lock.json`; o cabeçalho “SvelteKit 5” do plano confunde o framework com Svelte. |
-| Vite 5.4.21, adapter-cloudflare 7.2.8, Wrangler 4.87.0 | Atualizar como conjunto compatível, incluindo plugins, runtime e configuração. |
-| Tailwind 4.3.3, Flowbite 1.33.1, Vitest 2.1.9 | Atualização de biblioteca não substitui a validação dos componentes existentes. |
-| 258 entradas no inventário de API e 259 arquivos `+server.ts` | `docs/api-inventory.json` e contagem estática. São medidas diferentes; reconciliar por rota e método antes de definir a cobertura. |
-| 354 arquivos TypeScript na pasta de rotas Hono | Incluem testes; não representam 354 endpoints. |
-| 102 arquivos `*.test.ts` e 90 componentes Svelte | Quantidade de arquivos, sem atestar aprovação dos testes ou cobertura de negócio. |
-| 10 migrações SQL locais | Não demonstram que todo o schema remoto esteja documentado. |
-| Ponte SvelteKit → Hono já existente | `src/lib/server/api/sveltekit.ts` passa `{ event }` ao Hono. `c.env.DB` não existe nesse contrato atualmente. |
-| Permissões e escopos mais complexos que uma hierarquia | `src/lib/server/v1.ts`: ADMIN, MASTER, FINANCEIRO, GESTOR, VENDEDOR, OUTRO, múltiplas empresas e uso individual. |
-| Componentes de UI já encapsulados | `src/lib/components/ui`; há cópias locais de Flowbite 0.48.6 e uma tabela do pacote atual. A troca de UI precisa incluir esse código legado, foco e aparência. |
-| Cloudflare já é o destino de execução | `wrangler.toml`: Worker, assets, KV, dois crons; sem bindings de D1/R2. Placement atual em Oregon foi motivado pelo Supabase. |
-| Ainda há dependências de conciliação | Ex.: `financeiro/ajustes-vendas.ts` e `ajustes-vendas-list.ts` usam `conciliacao_recibos`. Não transportar essas dependências automaticamente. |
+| Item observado                                                | Evidência e consequência                                                                                                                                       |
+| ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SvelteKit 2.59.0, Svelte 5.55.1, Hono 4.12.16                 | Versões do `package-lock.json`; o cabeçalho “SvelteKit 5” do plano confunde o framework com Svelte.                                                            |
+| Vite 5.4.21, adapter-cloudflare 7.2.8, Wrangler 4.87.0        | Atualizar como conjunto compatível, incluindo plugins, runtime e configuração.                                                                                 |
+| Tailwind 4.3.3, Flowbite 1.33.1, Vitest 2.1.9                 | Atualização de biblioteca não substitui a validação dos componentes existentes.                                                                                |
+| 258 entradas no inventário de API e 259 arquivos `+server.ts` | `docs/api-inventory.json` e contagem estática. São medidas diferentes; reconciliar por rota e método antes de definir a cobertura.                             |
+| 354 arquivos TypeScript na pasta de rotas Hono                | Incluem testes; não representam 354 endpoints.                                                                                                                 |
+| 102 arquivos `*.test.ts` e 90 componentes Svelte              | Quantidade de arquivos, sem atestar aprovação dos testes ou cobertura de negócio.                                                                              |
+| 10 migrações SQL locais                                       | Não demonstram que todo o schema remoto esteja documentado.                                                                                                    |
+| Ponte SvelteKit → Hono já existente                           | `src/lib/server/api/sveltekit.ts` passa `{ event }` ao Hono. `c.env.DB` não existe nesse contrato atualmente.                                                  |
+| Permissões e escopos mais complexos que uma hierarquia        | `src/lib/server/v1.ts`: ADMIN, MASTER, FINANCEIRO, GESTOR, VENDEDOR, OUTRO, múltiplas empresas e uso individual.                                               |
+| Componentes de UI já encapsulados                             | `src/lib/components/ui`; há cópias locais de Flowbite 0.48.6 e uma tabela do pacote atual. A troca de UI precisa incluir esse código legado, foco e aparência. |
+| Cloudflare já é o destino de execução                         | `wrangler.toml`: Worker, assets, KV, dois crons; sem bindings de D1/R2. Placement atual em Oregon foi motivado pelo Supabase.                                  |
+| Ainda há dependências de conciliação                          | Ex.: `financeiro/ajustes-vendas.ts` e `ajustes-vendas-list.ts` usam `conciliacao_recibos`. Não transportar essas dependências automaticamente.                 |
 
 ### Escopo de negócio que a reescrita deve respeitar
 
@@ -43,25 +43,25 @@ Fotografia do código em `8bb9f19d537adf7b3b2a9d36c80436c5301a5934`, branch `mai
 
 ## 3. Correções necessárias no plano anterior
 
-| Local no plano v2.0 | Problema | Substituição recomendada |
-|---|---|---|
-| F0.3 e F2 | Remover SDKs/clientes Supabase antes de substituir seus consumidores | Preservar o ambiente antigo como referência. Na aplicação nova, remover cada dependência somente quando o fluxo substituto estiver funcionando. Evitar adaptadores genéricos que imitem toda a API Supabase. |
-| Stack e F0.3 | Instalar tudo em `latest` de uma vez | Avaliar versões estáveis como conjunto, fixar no lockfile e testar por mudança. A consulta ao registro npm nesta revisão retornou Kit 3.1.0 em `latest`; Kit 3 altera APIs de configuração e Cloudflare. [Guia oficial](https://svelte.dev/docs/kit/migrating-to-sveltekit-3). |
-| Decisões de auth | Lucia v3 apresentada como alternativa mantida | Remover essa opção: o projeto informa sua descontinuação. Better Auth é o candidato inicial, sujeito a uma prova real em D1/Workers. [Lucia](https://lucia-auth.com/). |
-| F1.2 e F2.1 | Exemplos assumem novos bindings e APIs de auth sem validar a integração | Definir uma ponte tipada e um único responsável pelo handler de auth. A versão escolhida determina como obter bindings; não copiar `event.platform` ou `c.env.DB` indiscriminadamente. |
-| F2 e F3.6 | Cache de sessão/permissão sempre ligado por cinco minutos | Exigir revogação testada. Começar sem cache distribuído de autorização; sessão e vínculo ativo são verificados no servidor. O cookie cache pode postergar a percepção de revogação. [Better Auth](https://better-auth.com/docs/concepts/session-management). |
-| F3.5 | `master > admin > gestor > vendedor > viewer` | Não corresponde ao modelo encontrado e omite FINANCEIRO e uso individual. Modelar capacidades, ações e escopo de recursos, separando administração de sistema de acesso a dados comerciais. |
-| F3.2 | Acrescentar `WHERE empresa_id = ?` em tudo | Tabelas globais, vínculos com várias empresas, equipes e registros filhos exigem políticas próprias. Verificar proprietário e empresa também em joins, arquivos, relatórios, exports e tarefas. |
-| F1.4 e F4.5 | Limites incorretos de D1 | Atualmente: linha/string/BLOB até 2.000.000 bytes; banco até 500 MB no Free ou 10 GB no Paid. “1.000 linhas por consulta” não é o limite documentado. Paginar por experiência e custo. [Limites oficiais](https://developers.cloudflare.com/d1/platform/limits/). |
-| F4.4 | “Triggers não existem no D1” | D1 oferece recursos de SQLite, incluindo triggers; funções e triggers PostgreSQL precisam de redesenho. Escolher entre constraint/trigger e operação de negócio conforme a regra. [SQL D1](https://developers.cloudflare.com/d1/sql-api/sql-statements/). |
-| F8.4 | `batch()` executaria consultas em paralelo | Executa instruções sequencialmente, em lote transacional, com rollback em caso de falha. Não equivale a uma transação interativa do ORM. [API D1](https://developers.cloudflare.com/d1/worker-api/d1-database/). |
-| F5.4 | Upload com `presigned POST` | R2 não suporta o POST de formulário assinado descrito; usar PUT assinado ou upload controlado pelo Worker, conforme tamanho e validação. URLs assinadas dão acesso a quem as possui até expirar. [R2](https://developers.cloudflare.com/r2/api/s3/presigned-urls/). |
-| F5.4 e F6.1 | Limites universais de 10 s de CPU e 30 s de ociosidade | CPU depende do plano/configuração; duração HTTP e CPU são medidas distintas. SSE exige reconexão e tratamento de interrupções, sem assumir esse limite de 30 s. [Workers](https://developers.cloudflare.com/workers/platform/limits/). |
-| F6 | KV como pub/sub e contador de segurança confiável | KV tem consistência eventual. Não usá-lo como autoridade de revogação, contador atômico ou entrega garantida. Polling pode resolver recados; DO só se a necessidade de tempo real justificar. [Consistência KV](https://developers.cloudflare.com/kv/concepts/how-kv-works/). |
-| F8.5–8.6 | Replicação automática, `cacheTtl` no D1 e placement antigo | Réplicas exigem Sessions API. `cacheTtl` citado não é uma opção genérica de consulta D1. Medir a topologia nova; preservar consistência após gravações e em verificações de acesso. [Replicação D1](https://developers.cloudflare.com/d1/best-practices/read-replication/). |
-| F8.6 | HTTP/2 Push e FID como alvos atuais | Priorizar carregamento seletivo, preload criterioso e INP. HTTP/2 Push foi removido do Chrome. [Chrome](https://developer.chrome.com/blog/removing-push/), [Web Vitals](https://web.dev/articles/vitals). |
-| F9 | Segurança, testes e performance concentrados no final | Criar a esteira de validação na F0 e aplicar critérios de aceite em cada fluxo. A auditoria final confirma o trabalho acumulado. |
-| F4.2 | Exportar/importar todos os dados antigos | Dispensado pela decisão de começar vazio. Inventariar schema/RPCs apenas para descobrir regras e dependências; criar seeds novos e sintéticos. |
+| Local no plano v2.0 | Problema                                                                | Substituição recomendada                                                                                                                                                                                                                                                       |
+| ------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| F0.3 e F2           | Remover SDKs/clientes Supabase antes de substituir seus consumidores    | Preservar o ambiente antigo como referência. Na aplicação nova, remover cada dependência somente quando o fluxo substituto estiver funcionando. Evitar adaptadores genéricos que imitem toda a API Supabase.                                                                   |
+| Stack e F0.3        | Instalar tudo em `latest` de uma vez                                    | Avaliar versões estáveis como conjunto, fixar no lockfile e testar por mudança. A consulta ao registro npm nesta revisão retornou Kit 3.1.0 em `latest`; Kit 3 altera APIs de configuração e Cloudflare. [Guia oficial](https://svelte.dev/docs/kit/migrating-to-sveltekit-3). |
+| Decisões de auth    | Lucia v3 apresentada como alternativa mantida                           | Remover essa opção: o projeto informa sua descontinuação. Better Auth é o candidato inicial, sujeito a uma prova real em D1/Workers. [Lucia](https://lucia-auth.com/).                                                                                                         |
+| F1.2 e F2.1         | Exemplos assumem novos bindings e APIs de auth sem validar a integração | Definir uma ponte tipada e um único responsável pelo handler de auth. A versão escolhida determina como obter bindings; não copiar `event.platform` ou `c.env.DB` indiscriminadamente.                                                                                         |
+| F2 e F3.6           | Cache de sessão/permissão sempre ligado por cinco minutos               | Exigir revogação testada. Começar sem cache distribuído de autorização; sessão e vínculo ativo são verificados no servidor. O cookie cache pode postergar a percepção de revogação. [Better Auth](https://better-auth.com/docs/concepts/session-management).                   |
+| F3.5                | `master > admin > gestor > vendedor > viewer`                           | Não corresponde ao modelo encontrado e omite FINANCEIRO e uso individual. Modelar capacidades, ações e escopo de recursos, separando administração de sistema de acesso a dados comerciais.                                                                                    |
+| F3.2                | Acrescentar `WHERE empresa_id = ?` em tudo                              | Tabelas globais, vínculos com várias empresas, equipes e registros filhos exigem políticas próprias. Verificar proprietário e empresa também em joins, arquivos, relatórios, exports e tarefas.                                                                                |
+| F1.4 e F4.5         | Limites incorretos de D1                                                | Atualmente: linha/string/BLOB até 2.000.000 bytes; banco até 500 MB no Free ou 10 GB no Paid. “1.000 linhas por consulta” não é o limite documentado. Paginar por experiência e custo. [Limites oficiais](https://developers.cloudflare.com/d1/platform/limits/).              |
+| F4.4                | “Triggers não existem no D1”                                            | D1 oferece recursos de SQLite, incluindo triggers; funções e triggers PostgreSQL precisam de redesenho. Escolher entre constraint/trigger e operação de negócio conforme a regra. [SQL D1](https://developers.cloudflare.com/d1/sql-api/sql-statements/).                      |
+| F8.4                | `batch()` executaria consultas em paralelo                              | Executa instruções sequencialmente, em lote transacional, com rollback em caso de falha. Não equivale a uma transação interativa do ORM. [API D1](https://developers.cloudflare.com/d1/worker-api/d1-database/).                                                               |
+| F5.4                | Upload com `presigned POST`                                             | R2 não suporta o POST de formulário assinado descrito; usar PUT assinado ou upload controlado pelo Worker, conforme tamanho e validação. URLs assinadas dão acesso a quem as possui até expirar. [R2](https://developers.cloudflare.com/r2/api/s3/presigned-urls/).            |
+| F5.4 e F6.1         | Limites universais de 10 s de CPU e 30 s de ociosidade                  | CPU depende do plano/configuração; duração HTTP e CPU são medidas distintas. SSE exige reconexão e tratamento de interrupções, sem assumir esse limite de 30 s. [Workers](https://developers.cloudflare.com/workers/platform/limits/).                                         |
+| F6                  | KV como pub/sub e contador de segurança confiável                       | KV tem consistência eventual. Não usá-lo como autoridade de revogação, contador atômico ou entrega garantida. Polling pode resolver recados; DO só se a necessidade de tempo real justificar. [Consistência KV](https://developers.cloudflare.com/kv/concepts/how-kv-works/).  |
+| F8.5–8.6            | Replicação automática, `cacheTtl` no D1 e placement antigo              | Réplicas exigem Sessions API. `cacheTtl` citado não é uma opção genérica de consulta D1. Medir a topologia nova; preservar consistência após gravações e em verificações de acesso. [Replicação D1](https://developers.cloudflare.com/d1/best-practices/read-replication/).    |
+| F8.6                | HTTP/2 Push e FID como alvos atuais                                     | Priorizar carregamento seletivo, preload criterioso e INP. HTTP/2 Push foi removido do Chrome. [Chrome](https://developer.chrome.com/blog/removing-push/), [Web Vitals](https://web.dev/articles/vitals).                                                                      |
+| F9                  | Segurança, testes e performance concentrados no final                   | Criar a esteira de validação na F0 e aplicar critérios de aceite em cada fluxo. A auditoria final confirma o trabalho acumulado.                                                                                                                                               |
+| F4.2                | Exportar/importar todos os dados antigos                                | Dispensado pela decisão de começar vazio. Inventariar schema/RPCs apenas para descobrir regras e dependências; criar seeds novos e sintéticos.                                                                                                                                 |
 
 ## 4. Arquitetura proposta e decisões de ferramentas
 
@@ -77,18 +77,18 @@ Operações por domínio → repositórios D1 / serviço de arquivos R2
 Eventos persistidos → tarefas com retry / notificações
 ```
 
-| Área | Proposta | Como fechar a decisão |
-|---|---|---|
-| SvelteKit + Svelte + Hono | Manter a família de ferramentas; avaliar Kit 3 estável | Prova com SSR, cookies, bindings, build, crons e testes; registrar versões exatas, Node, Vite e adaptadores compatíveis. |
-| D1 + R2 | Confirmados no objetivo do projeto | Um D1 inicial compartilhado com isolamento lógico explícito; separar bancos por ambiente. Reavaliar particionamento apenas com volume/requisito demonstrado. |
-| Drizzle | Candidato preferencial para schema e queries | Testar SQL gerado, constraints, migrations e operações atômicas em D1 real. Uma única pasta e um único histórico de migrations, configurados também no Wrangler. |
-| Better Auth | Candidato preferencial para autenticação | Provar adapter SQLite/D1, sessões, convite, recuperação, MFA, passkeys e envio de e-mail. Não presumir que o plugin de organização substitui as políticas do VTUR. [Adapter oficial](https://better-auth.com/docs/adapters/drizzle). |
-| UI | Preservar a interface dos wrappers existentes | Comparar uma tela/formulário/modal completo usando a base atual versus componentes acessíveis, como Bits UI/shadcn-svelte. Decidir por manutenção, acessibilidade e bundle medidos. Não manter duas bases de UI indefinidamente. |
-| Validação | Schemas compartilhados, por exemplo Zod | Validar no servidor; o formulário pode reutilizar o schema sem receber código ou credenciais do servidor. |
-| KV | Opcional, para dados tolerantes a atraso | Não acrescentar cache apenas porque o binding já existe. Documentar chave, escopo, invalidação e atraso aceito de cada uso. |
-| Tempo real | Polling com cursor como primeira hipótese para recados | Definir latência necessária e usuários simultâneos. Usar DO/WebSockets se houver requisito demonstrado; SSE sozinho não fornece broadcast entre instâncias. |
-| Processamento assíncrono | Cron e, se necessário, Queues | Introduzir fila quando retry durável e desacoplamento forem necessários; consumidor idempotente, limite de tentativas e tratamento de falhas. |
-| Busca | Índices/consulta D1 primeiro | Verificar normalização de nomes, acentos, tamanho de catálogo e custo. Busca externa só após evidência. |
+| Área                      | Proposta                                               | Como fechar a decisão                                                                                                                                                                                                                |
+| ------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| SvelteKit + Svelte + Hono | Manter a família de ferramentas; avaliar Kit 3 estável | Prova com SSR, cookies, bindings, build, crons e testes; registrar versões exatas, Node, Vite e adaptadores compatíveis.                                                                                                             |
+| D1 + R2                   | Confirmados no objetivo do projeto                     | Um D1 inicial compartilhado com isolamento lógico explícito; separar bancos por ambiente. Reavaliar particionamento apenas com volume/requisito demonstrado.                                                                         |
+| Drizzle                   | Candidato preferencial para schema e queries           | Testar SQL gerado, constraints, migrations e operações atômicas em D1 real. Uma única pasta e um único histórico de migrations, configurados também no Wrangler.                                                                     |
+| Better Auth               | Candidato preferencial para autenticação               | Provar adapter SQLite/D1, sessões, convite, recuperação, MFA, passkeys e envio de e-mail. Não presumir que o plugin de organização substitui as políticas do VTUR. [Adapter oficial](https://better-auth.com/docs/adapters/drizzle). |
+| UI                        | Preservar a interface dos wrappers existentes          | Comparar uma tela/formulário/modal completo usando a base atual versus componentes acessíveis, como Bits UI/shadcn-svelte. Decidir por manutenção, acessibilidade e bundle medidos. Não manter duas bases de UI indefinidamente.     |
+| Validação                 | Schemas compartilhados, por exemplo Zod                | Validar no servidor; o formulário pode reutilizar o schema sem receber código ou credenciais do servidor.                                                                                                                            |
+| KV                        | Opcional, para dados tolerantes a atraso               | Não acrescentar cache apenas porque o binding já existe. Documentar chave, escopo, invalidação e atraso aceito de cada uso.                                                                                                          |
+| Tempo real                | Polling com cursor como primeira hipótese para recados | Definir latência necessária e usuários simultâneos. Usar DO/WebSockets se houver requisito demonstrado; SSE sozinho não fornece broadcast entre instâncias.                                                                          |
+| Processamento assíncrono  | Cron e, se necessário, Queues                          | Introduzir fila quando retry durável e desacoplamento forem necessários; consumidor idempotente, limite de tentativas e tratamento de falhas.                                                                                        |
+| Busca                     | Índices/consulta D1 primeiro                           | Verificar normalização de nomes, acentos, tamanho de catálogo e custo. Busca externa só após evidência.                                                                                                                              |
 
 Evitar microserviços, múltiplos bancos por empresa, três camadas de cache e bibliotecas concorrentes sem uma necessidade mensurável. Nenhuma ferramenta torna o aplicativo automaticamente seguro ou rápido.
 
@@ -110,14 +110,14 @@ Evitar microserviços, múltiplos bancos por empresa, três camadas de cache e b
 
 Construir uma matriz **papel × ação × recurso × escopo**, com exemplos positivos e negativos. Negar por padrão; menus ocultos são apenas apresentação. A identidade e os vínculos vêm da sessão validada, não do `company_id` recebido do navegador.
 
-| Escopo a modelar | Casos obrigatórios para validar |
-|---|---|
-| Próprio vendedor / uso individual | Cadastro, consulta e alteração dos próprios registros; impedir referência a cliente/venda de outro escopo. |
-| Equipe | Gestor acessa somente vendedores vinculados, inclusive após remoção do vínculo e em relatórios agregados. |
-| Empresa | Membro ativo, ações específicas por módulo e acesso a registros filhos validado pela empresa do pai. |
-| Várias empresas | MASTER/FINANCEIRO com vínculos explícitos; trocar a empresa da tela não concede acesso. |
-| Administração de sistema | Separar gestão de plataforma de acesso comercial. Qualquer exceção de suporte precisa de política e auditoria próprias. |
-| Arquivos, exportações e tarefas | Aplicar a mesma política em download, geração de PDF, export, cron e consumo de fila. |
+| Escopo a modelar                  | Casos obrigatórios para validar                                                                                         |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Próprio vendedor / uso individual | Cadastro, consulta e alteração dos próprios registros; impedir referência a cliente/venda de outro escopo.              |
+| Equipe                            | Gestor acessa somente vendedores vinculados, inclusive após remoção do vínculo e em relatórios agregados.               |
+| Empresa                           | Membro ativo, ações específicas por módulo e acesso a registros filhos validado pela empresa do pai.                    |
+| Várias empresas                   | MASTER/FINANCEIRO com vínculos explícitos; trocar a empresa da tela não concede acesso.                                 |
+| Administração de sistema          | Separar gestão de plataforma de acesso comercial. Qualquer exceção de suporte precisa de política e auditoria próprias. |
+| Arquivos, exportações e tarefas   | Aplicar a mesma política em download, geração de PDF, export, cron e consumo de fila.                                   |
 
 Criar constraints de integridade e, quando adequado, chaves estrangeiras compostas que impeçam associar um filho de uma empresa a um pai de outra. Não há substituição automática de RLS por Drizzle. Decisões sensíveis e revogação devem usar uma leitura com garantia de atualidade; réplica atrasada ou cache não pode reautorizar um usuário bloqueado.
 
@@ -142,17 +142,17 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 
 **Estados:** PENDENTE, EM ANDAMENTO, BLOQUEADA, CONCLUÍDA, DISPENSADA. Só usar CONCLUÍDA com evidência e aceite. As caixas abaixo são o registro operacional inicial, não uma afirmação de implementação.
 
-| Fase | Objetivo | Dependência | Estado inicial |
-|---|---|---|---|
-| F0 | Inventário, regras, baseline e validação contínua | Nenhuma | REABERTA (31/10/2026): schema remoto maior que o inventário inicial; F0-03/F0-04 em reconciliação |
-| F1 | Prova de stack em ambiente isolado | F0 | CONCLUÍDA (26/10/2026, commits `76b2b0dd`–`06dcbbf8`; evidências em `docs/f1/`) |
-| F2 | Identidade, permissões e fundação de dados | F1 | REABERTA (31/10/2026): RBAC D1 ainda não representa todos os papéis e escopos VTUR; ver F0-04 e F2-03 |
-| F3 | Primeiro fluxo completo e base visual | F2 | EM ANDAMENTO |
-| F4 | Núcleo de vendas e financeiro | F3 | EM ANDAMENTO (F4-01 concluída 30/10/2026; F4-02 concluída 30/10/2026) |
-| F5 | Demais módulos e tarefas | F4 para dependências comerciais | PENDENTE |
-| F6 | Operação, carga, recuperação e revisão final | F3–F5 | PENDENTE: D1/R2/KV de staging e produção provisionados; Worker, fluxos integrados, carga e recuperação ainda não validados nesses ambientes |
-| F7 | Ensaio de lançamento e entrada em produção | F6 | PENDENTE: sem Worker de staging publicado; produção D1 está provisionado e migrado, mas não há virada de tráfego comprovada |
-| F8 | Estabilização e retirada das dependências antigas | F7 | PENDENTE |
+| Fase | Objetivo                                          | Dependência                     | Estado inicial                                                                                                                              |
+| ---- | ------------------------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| F0   | Inventário, regras, baseline e validação contínua | Nenhuma                         | REABERTA (31/10/2026): schema remoto maior que o inventário inicial; F0-03/F0-04 em reconciliação                                           |
+| F1   | Prova de stack em ambiente isolado                | F0                              | CONCLUÍDA (26/10/2026, commits `76b2b0dd`–`06dcbbf8`; evidências em `docs/f1/`)                                                             |
+| F2   | Identidade, permissões e fundação de dados        | F1                              | REABERTA (31/10/2026): RBAC D1 ainda não representa todos os papéis e escopos VTUR; ver F0-04 e F2-03                                       |
+| F3   | Primeiro fluxo completo e base visual             | F2                              | EM ANDAMENTO                                                                                                                                |
+| F4   | Núcleo de vendas e financeiro                     | F3                              | EM ANDAMENTO (F4-01 concluída 30/10/2026; F4-02 concluída 30/10/2026)                                                                       |
+| F5   | Demais módulos e tarefas                          | F4 para dependências comerciais | PENDENTE                                                                                                                                    |
+| F6   | Operação, carga, recuperação e revisão final      | F3–F5                           | PENDENTE: D1/R2/KV de staging e produção provisionados; Worker, fluxos integrados, carga e recuperação ainda não validados nesses ambientes |
+| F7   | Ensaio de lançamento e entrada em produção        | F6                              | PENDENTE: sem Worker de staging publicado; produção D1 está provisionado e migrado, mas não há virada de tráfego comprovada                 |
+| F8   | Estabilização e retirada das dependências antigas | F7                              | PENDENTE                                                                                                                                    |
 
 ### F0 — entender e estabelecer a referência
 
@@ -250,22 +250,22 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 
 O inventário inicial abaixo precisa ser reconciliado na F0. Não confundir presença no código antigo com obrigatoriedade no lançamento.
 
-| ID | Domínio | Dependências / risco principal | Estado |
-|---|---|---|---|
-| M01 | Empresas, usuários, vínculos e permissões | F2; administração de sistema separada do escopo comercial | CONCLUÍDO (04/11/2026): seis papéis, escopos e permissões por módulo no D1; matriz v2 de três papéis permanece em /api/v2 |
-| M02 | Clientes, acompanhantes e relacionamento | F3; propriedade, documentos e dados pessoais | CONCLUÍDO (31/10/2026) |
-| M03 | Produtos, tarifas, regras e fornecedores | Cadastros globais versus empresa; precisão e vigência | CONCLUÍDO (31/10/2026) |
-| M04 | Venda manual, itens, recibos e pagamentos | F4; atomicidade, retry, moeda e cancelamento | CONCLUÍDO (31/10/2026) |
-| M05 | Comissões e caixa | M04; conciliação excluída do produto novo | EXCLUÍDO do escopo v2; telas ainda presentes leem o catálogo D1 vazio |
-| M06 | Viagens, vouchers, dossiês e documentos | M02/M04; arquivos no R2 | EXCLUÍDO do escopo v2; telas ainda presentes usam D1/R2, sem SDK antigo |
-| M07 | Orçamentos, roteiros e circuitos | M02/M03; versões, preços e exportação | ADIADO no v2; telas atuais usam o catálogo D1 e arquivos R2 |
-| M08 | Agenda, tarefas, campanhas e SAC | Regras próprias, notificações e vínculo com equipe | CONCLUÍDO (31/10/2026) |
-| M09 | Recados, mural, avisos e push | Entrega, escopo, duplicação e conexão revogada | CONCLUÍDO (31/10/2026) |
-| M10 | Destinos, cidades, países e referências | M06/M07 referenciam destinos e cidades: provável antecipação na ordem de execução. Origem/licença dos seeds e busca com acentos | CONCLUÍDO (31/10/2026) |
-| M11 | Dashboards, ranking, metas e relatórios | Mesmo escopo e regras das vendas; agregados não podem vazar dados | CONCLUÍDO |
-| M12 | Auditoria, privacidade e administração operacional | Retenção, recuperação, acesso a logs e suporte | CONCLUÍDO (31/10/2026) |
-| X01 | Importação histórica de usuários/vendas/arquivos | Dispensada pelo usuário: iniciar vazio | DISPENSADA |
-| X02 | Importadores CVC/REXTUR e conciliação associada | Fora do produto; testar ausência na nova aplicação | EXCLUSÃO PLANEJADA |
+| ID  | Domínio                                            | Dependências / risco principal                                                                                                  | Estado                                                                                                                    |
+| --- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| M01 | Empresas, usuários, vínculos e permissões          | F2; administração de sistema separada do escopo comercial                                                                       | CONCLUÍDO (04/11/2026): seis papéis, escopos e permissões por módulo no D1; matriz v2 de três papéis permanece em /api/v2 |
+| M02 | Clientes, acompanhantes e relacionamento           | F3; propriedade, documentos e dados pessoais                                                                                    | CONCLUÍDO (31/10/2026)                                                                                                    |
+| M03 | Produtos, tarifas, regras e fornecedores           | Cadastros globais versus empresa; precisão e vigência                                                                           | CONCLUÍDO (31/10/2026)                                                                                                    |
+| M04 | Venda manual, itens, recibos e pagamentos          | F4; atomicidade, retry, moeda e cancelamento                                                                                    | CONCLUÍDO (31/10/2026)                                                                                                    |
+| M05 | Comissões e caixa                                  | M04; conciliação excluída do produto novo                                                                                       | EXCLUÍDO do escopo v2; telas ainda presentes leem o catálogo D1 vazio                                                     |
+| M06 | Viagens, vouchers, dossiês e documentos            | M02/M04; arquivos no R2                                                                                                         | EXCLUÍDO do escopo v2; telas ainda presentes usam D1/R2, sem SDK antigo                                                   |
+| M07 | Orçamentos, roteiros e circuitos                   | M02/M03; versões, preços e exportação                                                                                           | ADIADO no v2; telas atuais usam o catálogo D1 e arquivos R2                                                               |
+| M08 | Agenda, tarefas, campanhas e SAC                   | Regras próprias, notificações e vínculo com equipe                                                                              | CONCLUÍDO (31/10/2026)                                                                                                    |
+| M09 | Recados, mural, avisos e push                      | Entrega, escopo, duplicação e conexão revogada                                                                                  | CONCLUÍDO (31/10/2026)                                                                                                    |
+| M10 | Destinos, cidades, países e referências            | M06/M07 referenciam destinos e cidades: provável antecipação na ordem de execução. Origem/licença dos seeds e busca com acentos | CONCLUÍDO (31/10/2026)                                                                                                    |
+| M11 | Dashboards, ranking, metas e relatórios            | Mesmo escopo e regras das vendas; agregados não podem vazar dados                                                               | CONCLUÍDO                                                                                                                 |
+| M12 | Auditoria, privacidade e administração operacional | Retenção, recuperação, acesso a logs e suporte                                                                                  | CONCLUÍDO (31/10/2026)                                                                                                    |
+| X01 | Importação histórica de usuários/vendas/arquivos   | Dispensada pelo usuário: iniciar vazio                                                                                          | DISPENSADA                                                                                                                |
+| X02 | Importadores CVC/REXTUR e conciliação associada    | Fora do produto; testar ausência na nova aplicação                                                                              | EXCLUSÃO PLANEJADA                                                                                                        |
 
 A numeração não é ordem de execução: na F0-04, ordenar as linhas de trabalho pelas dependências verificadas (ex.: M10 antes de M06/M07, porque roteiros e vouchers referenciam destinos e cidades).
 
@@ -503,10 +503,12 @@ Referências técnicas foram consultadas em 26/10/2026 e estão ligadas junto à
 ### Próximo passo: F4-02
 
 Implementar edição de venda (PATCH /api/v2/vendas/:id) com:
+
 - validação parcial (campos opcionais);
 - substituição atômica de itens e pagamentos;
 - recálculo de totais;
 - concorrência otimista (versao).
+
 ---
 
 ### Passagem de trabalho — 31/10/2026 (F4-02 estorno e comissão)
@@ -514,6 +516,7 @@ Implementar edição de venda (PATCH /api/v2/vendas/:id) com:
 **Sessão encerrada**: [`claude.ai/code/session_011V9o2x1y52ecyTFbpRtEUq`](https://claude.ai/code/session_011V9o2x1y52ecyTFbpRtEUq)
 
 **O que foi feito**:
+
 - `service.ts`: adicionados `roundHalfEven` (banker's rounding), `calcularComissao`, `estornarPagamento`, tipos `ResultadoComissao`, `EstornoInput`
 - `routes/vendas-v2/index.ts`: rotas `POST /:id/estornar` e `GET /:id/comissao` adicionadas
 - `f4-02-comissao.test.ts`: Suíte N — 22 testes de cálculo de comissão e `roundHalfEven` (vitest puro)
@@ -521,6 +524,7 @@ Implementar edição de venda (PATCH /api/v2/vendas/:id) com:
 - `docs/f4/F4-02-alteracao-cancelamento-comissao.md`: documentação completa
 
 **Decisões técnicas**:
+
 - Banker's rounding (half-even) para evitar viés acumulado em séries de comissões
 - Estorno como linha negativa de pagamento (trilha de auditoria preservada)
 - Concorrência otimista: `UPDATE … WHERE versao = ?` → `CONFLITO_VERSAO` se 0 linhas
@@ -536,6 +540,7 @@ Implementar edição de venda (PATCH /api/v2/vendas/:id) com:
 **Commit**: `ddf88978` feat(vendas): F4-02 — PATCH /vendas/:id edição atômica com recálculo de totais
 
 **O que foi feito**:
+
 - `validation.ts`: `validarVendaEdicao()` — validação parcial (todos os campos do cabeçalho opcionais exceto `versao`; `itens`/`pagamentos` opcionais mas ≥ 1 se fornecidos)
 - `service.ts`: `editarVenda()` — DELETE + INSERT atômico de itens e pagamentos; recálculo de totais a partir dos novos filhos; concorrência otimista (`versao`); lança `NAO_ENCONTRADA`, `CANCELADA`, `CONFLITO_VERSAO`
 - `routes/vendas-v2/index.ts`: rota `PATCH /:id` adicionada; corrigido `criarVenda` para usar `c.env.DB`
@@ -546,9 +551,9 @@ Implementar edição de venda (PATCH /api/v2/vendas/:id) com:
 **Padrão crítico**: mesmo do F4-01 — sem `BEGIN TRANSACTION` no Workers runtime; DELETE sequencial de parcelas → pagamentos → itens antes de inserir novos.
 
 **Próximo (F4-03 ou conforme roteiro)**:
+
 - Comissão: cálculo, regras, fechamento mensal
 - Ou F4-03: cancelamento/estorno com regras de prazo e reversão de comissão
-
 
 ---
 
@@ -559,22 +564,27 @@ Implementar edição de venda (PATCH /api/v2/vendas/:id) com:
 **O que foi implementado:**
 
 ### `resumoVendas(db, empresaId, opts)` — `service.ts`
+
 Agrega totais de vendas não canceladas (por padrão) com suporte a filtros por período, vendedor e cliente. Além dos totais do cabeçalho, faz dois JOINs adicionais para somar `venda_itens.valor_total_centavos` e `venda_pagamentos.valor_total_centavos`, expondo flags `itensReconciliam` e `pagamentosReconciliam` que verificam a invariante do contrato financeiro.
 
 ### `listarParcelas(db, empresaId, opts)` — `service.ts`
+
 Agenda de recebíveis com JOIN `venda_parcelas → venda_pagamentos → vendas`. Keyset cursor por `id DESC`, filtros por vencimento, vendedor, cliente e `somenteAtivas` (exclui vendas canceladas). Retorna `temMais` e `proximo_cursor`.
 
 ### Rotas adicionadas — `vendas-v2/index.ts`
+
 - `GET /api/v2/vendas/resumo` — query params: `data_venda_de`, `data_venda_ate`, `vendedor_id`, `cliente_id`, `incluir_canceladas`
 - `GET /api/v2/vendas/parcelas` — query params: `cursor`, `limite`, `vencimento_de`, `vencimento_ate`, `vendedor_id`, `cliente_id`, `somente_ativas`
 
 ### Testes Workers (+14)
+
 - Suíte I (8 testes): invariante de reconciliação, múltiplas vendas, isolamento de tenant, canceladas, filtros de período, reconciliação mantida após edição
 - Suíte J (6 testes): parcelas por venda, isolamento de tenant, somenteAtivas, filtro vencimento, keyset cursor sem duplicatas, campos JOIN corretos
 
 **Total acumulado:** 947 testes passando.
 
 **Próximo (F4-04 ou conforme roteiro):**
+
 - F4-04: revisar read models — queries e índices adequados; agregações/rebuild apenas onde necessário
 
 ---
@@ -587,6 +597,7 @@ Agenda de recebíveis com JOIN `venda_parcelas → venda_pagamentos → vendas`.
 O rebuild a cada 5 min do Supabase **não é portado**.
 
 **Alterações:**
+
 - `schema.ts`: 3 índices compostos adicionados
   - `idx_vendas_empresa_cancelada_data` (empresa_id, cancelada, data_venda) — cobre resumoVendas
   - `idx_vendas_empresa_cancelada_id` (empresa_id, cancelada, id) — cobre listarVendas keyset cursor
@@ -597,15 +608,17 @@ O rebuild a cada 5 min do Supabase **não é portado**.
 **Testes:** 947 passando (109 suítes).
 
 **Próximo (F4-05 ou conforme roteiro):**
+
 - F4-05: gerar PDFs/documentos com marca VTUR e testes de conteúdo/acesso; verificar quebra de página e valores em exemplos representativos.
 
-
 ---
+
 ## Passagem de trabalho — F4-05 → F4-06
 
 **Concluído em:** 2026-10-30 | Commit: `afee31f8`
 
 **Entregues:**
+
 - `src/lib/server/vendas/pdf.ts` — `gerarComprovanteHtml()` + helpers formatação
 - Rota `GET /:id/pdf` em `vendas-v2/index.ts` (RBAC `vendas:ler`, isolamento tenant)
 - Suíte K (18 testes unit) + Suíte L (9 testes Workers) — **957 testes passando**
@@ -614,6 +627,7 @@ O rebuild a cada 5 min do Supabase **não é portado**.
 pelo servidor; cliente usa `window.print()` / jsPDF.
 
 **Separação de responsabilidades:**
+
 - `pdf.ts` não importa `$lib/brand` (evita falha `?raw` no workerd)
 - `logoUrl` é parâmetro em `ComprovanteVendaOptions`; rota injeta `VTUR_LOGO_URL`
 - Workers test mocka `$lib/brand` via `vi.mock`
@@ -624,16 +638,18 @@ Não existe papel autenticado que não possa acessar comprovantes — L6 documen
 **Próximo (F4-06):** Provar ausência de importadores e conciliação excluídos:
 permissões, menus, rotas, parsers e dependências indiretas do financeiro.
 
-
 ---
+
 ## Passagem de trabalho — F4-06 → F5
 
 **Concluído em:** 2026-10-30 | Commit: `8dc05535`
 
 **Entregue:**
+
 - `src/lib/server/f4-06-ausencia.test.ts` — Suíte M (15 testes estáticos)
 
 **O que foi provado (análise de código-fonte, sem mocks):**
+
 - `app-v2.ts` não monta rotas de conciliação, financeiro, ajustes ou importação
 - Nenhum módulo da nova stack importa de `src/lib/conciliacao/` ou módulos legados
   (`conciliacaoReconcile`, `readModelCache`, `readModelRebuild`, `kvInvalidation`,
@@ -669,6 +685,7 @@ agendadas, mural/recados, auditoria de imports Supabase restantes.
   depende de Supabase (imports, bindings, `wrangler.toml`, rotas montadas).
 
 **O que foi provado:**
+
 - M01, M02, M04: CONCLUÍDOS com testes passando
 - M05/M06: EXCLUÍDOS por decisão de produto (ADR-006 + F4-06)
 - M03/M07–M10: ADIADOS com condições de reabertura documentadas
@@ -690,15 +707,16 @@ revisão de segurança (CSP, rate-limit) e ensaio de lançamento.
 
 ### Artefatos entregues em F6
 
-| Artefato | Descrição |
-|---|---|
-| `f6-01-carga.workers.test.ts` | Suíte P — 5 empresas × 100 vendas; p50/p95 criarVenda/listar/resumo; isolamento de tenant |
-| `f6-02-seguranca.test.ts` | Suíte Q — 15 testes estáticos OWASP ASVS: headers, CSRF, rate limit, RBAC, segredos |
-| `docs/runbooks/F6-03-backup-restore.md` | Runbook D1 Time Travel + R2 rclone com verificação de consistência |
-| `f6-04-falhas.test.ts` | Suíte R — 10 testes de degradação: 503, 401, 422, 429, idempotência, productionGuard |
-| `f6-05-acessibilidade.test.ts` | Suíte S — 12 testes estáticos de acessibilidade Svelte: labels, alt, viewport, skip-link |
+| Artefato                                | Descrição                                                                                 |
+| --------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `f6-01-carga.workers.test.ts`           | Suíte P — 5 empresas × 100 vendas; p50/p95 criarVenda/listar/resumo; isolamento de tenant |
+| `f6-02-seguranca.test.ts`               | Suíte Q — 15 testes estáticos OWASP ASVS: headers, CSRF, rate limit, RBAC, segredos       |
+| `docs/runbooks/F6-03-backup-restore.md` | Runbook D1 Time Travel + R2 rclone com verificação de consistência                        |
+| `f6-04-falhas.test.ts`                  | Suíte R — 10 testes de degradação: 503, 401, 422, 429, idempotência, productionGuard      |
+| `f6-05-acessibilidade.test.ts`          | Suíte S — 12 testes estáticos de acessibilidade Svelte: labels, alt, viewport, skip-link  |
 
 ### Próximo (F7)
+
 Ensaio de lançamento e entrada em produção.
 
 ## Passagem de trabalho — F7 → F8
@@ -708,19 +726,21 @@ Ensaio de lançamento e entrada em produção.
 
 ### Artefatos entregues em F7
 
-| Artefato | Descrição |
-|---|---|
-| `f7-01-ensaio.workers.test.ts` | Suíte T — 8 testes: migrations do zero, seed mínimo, admin/operador criam venda, visualizador tem papel correto, isolamento de banco, idempotência |
-| `docs/f7/F7-02-release-checklist.md` | Checklist de release: migrations por ambiente, secrets, domínio, Turnstile, e-mail, passkeys, crons, R2, KV, smoke test |
-| `docs/f7/F7-03-plano-reversao.md` | Plano de reversão: rollback de Workers, migrations sem rollback automático, reparo cirúrgico, comunicação de incidente |
-| `docs/f7/F7-04-go-live-evidencias.md` | Checklist go-live: infraestrutura, auth, fluxo principal, R2, e-mail, cron, segurança, observabilidade pós-deploy |
+| Artefato                              | Descrição                                                                                                                                          |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `f7-01-ensaio.workers.test.ts`        | Suíte T — 8 testes: migrations do zero, seed mínimo, admin/operador criam venda, visualizador tem papel correto, isolamento de banco, idempotência |
+| `docs/f7/F7-02-release-checklist.md`  | Checklist de release: migrations por ambiente, secrets, domínio, Turnstile, e-mail, passkeys, crons, R2, KV, smoke test                            |
+| `docs/f7/F7-03-plano-reversao.md`     | Plano de reversão: rollback de Workers, migrations sem rollback automático, reparo cirúrgico, comunicação de incidente                             |
+| `docs/f7/F7-04-go-live-evidencias.md` | Checklist go-live: infraestrutura, auth, fluxo principal, R2, e-mail, cron, segurança, observabilidade pós-deploy                                  |
 
 ### Status do deploy
+
 Os documentos de F7 são guias operacionais para o momento do deploy real.
 O deploy em si depende de credenciais de produção e do ambiente Cloudflare
 configurado com IDs reais (substituir PLACEHOLDERs no wrangler.toml).
 
 ### Próximo (F8)
+
 Estabilização e retirada do legado Supabase/v1.
 
 ## Passagem de trabalho — F8 → Pós-lançamento
@@ -730,16 +750,17 @@ Estabilização e retirada do legado Supabase/v1.
 
 ### Artefatos entregues em F8
 
-| Artefato | Descrição |
-|---|---|
-| `f8-01-metricas.test.ts` | Suíte U — 10 testes: health endpoint, request ID, Server-Timing, safeLogger, onError sem stack trace, rate limit configurável, wrangler PLACEHOLDERs, sem console.log nas rotas v2, crons sincronizados, SELECT sem LIMIT |
-| `docs/f8/F8-02-retirada-legado.md` | Inventário completo: 3 SDKs Supabase, 8 stores/módulos cliente, 14 arquivos servidor legado, rotas v1 a desativar, secrets a revogar, ordem de execução |
-| `docs/f8/F8-03-supabase-destino.md` | Decisão de desativação: exportação DB + storage, checklist de desativação com pré-condições, retenção de dados, custo estimado pós-migração ($0 vs $25-50/mês) |
-| `docs/f8/F8-04-guia-operacao.md` | Guia completo: stack, dev local, deploy, acesso de emergência (tail, rollback, SQL), atualização de deps, como adicionar rota v2 e migration, backlog priorizado, índice de documentos |
+| Artefato                            | Descrição                                                                                                                                                                                                                 |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `f8-01-metricas.test.ts`            | Suíte U — 10 testes: health endpoint, request ID, Server-Timing, safeLogger, onError sem stack trace, rate limit configurável, wrangler PLACEHOLDERs, sem console.log nas rotas v2, crons sincronizados, SELECT sem LIMIT |
+| `docs/f8/F8-02-retirada-legado.md`  | Inventário completo: 3 SDKs Supabase, 8 stores/módulos cliente, 14 arquivos servidor legado, rotas v1 a desativar, secrets a revogar, ordem de execução                                                                   |
+| `docs/f8/F8-03-supabase-destino.md` | Decisão de desativação: exportação DB + storage, checklist de desativação com pré-condições, retenção de dados, custo estimado pós-migração ($0 vs $25-50/mês)                                                            |
+| `docs/f8/F8-04-guia-operacao.md`    | Guia completo: stack, dev local, deploy, acesso de emergência (tail, rollback, SQL), atualização de deps, como adicionar rota v2 e migration, backlog priorizado, índice de documentos                                    |
 
 ### Estado final da reescrita
 
 A reescrita continua parcial. F0, F2, F6, F7 e F8 têm pendências para atingir paridade D1/R2 e retirar Supabase. A publicação em produção depende de:
+
 1. Substituir PLACEHOLDERs no `wrangler.toml` por IDs reais do Cloudflare
 2. Configurar secrets com `wrangler secret put`
 3. Seguir `docs/f7/F7-02-release-checklist.md` antes do deploy
@@ -750,19 +771,20 @@ A reescrita continua parcial. F0, F2, F6, F7 e F8 têm pendências para atingir 
 **Sessão**: [`claude.ai/code/session_011V9o2x1y52ecyTFbpRtEUq`](https://claude.ai/code/session_011V9o2x1y52ecyTFbpRtEUq)
 
 **O que foi feito**:
+
 - `service.ts`: `criarProduto`, `obterProduto`, `editarProduto`, `inativarProduto` + `ProdutoInput`, `ProdutoError`, `validarProdutoInput` (validação de tipo, moeda, centavos, desconto)
 - `routes/produtos-v2/index.ts`: CRUD completo (`GET /`, `POST /`, `GET /:id`, `PATCH /:id`, `DELETE /:id`) com auth via `resolveAuthContext` e RBAC (`configuracoes:criar/editar/excluir`)
 - `app-v2.ts`: rota `/produtos` montada
 - `m03-produtos.workers.test.ts`: Suíte V — 11/11 testes Workers
 
 **Decisões técnicas**:
+
 - Catálogo global (sem `empresa_id`): produtos são compartilhados entre empresas
 - Soft delete (`ativo = false`) — nenhuma exclusão física; venda_itens existentes não são afetados
 - RBAC: leitura (`GET`) aberta a qualquer papel autenticado; escrita exige `configuracoes:criar/editar/excluir`
 - Sem concorrência otimista em produtos (catálogo de baixa frequência de escrita)
 
 **Resultado**: Suíte V 11/11; 0 erros TypeScript em m03; M03 ✅ CONCLUÍDO
-
 
 ### Passagem de trabalho — M10 (31/10/2026)
 
@@ -804,12 +826,14 @@ Responsável / data: agente, 04/11/2026
 Dependências: 0013 aplicada no D1 de staging em 04/11/2026; produção ainda precisa de `npm run d1:migrate:prod`
 
 O que mudou:
+
 - O aplicativo não importa mais o SDK antigo. Sessão é Better Auth. Consultas do app atual e da API v1 passam pelo cliente D1 em `src/lib/server/data`. Arquivos passam pelo binding R2.
 - `drizzle/0013_legado_catalogo.sql` cria o catálogo legado (prefixo `legado_`) ao lado do modelo novo, para não colidir com `vendas`, `clientes` e as demais tabelas v2. O banco começa vazio.
 - Papéis ADMIN, MASTER, FINANCEIRO, GESTOR, VENDEDOR e OUTRO, escopos e `modulo_acesso` continuam nas rotas atuais, agora lendo D1.
 - O journal Drizzle foi alinhado até `0013_legado_catalogo`. A fonte aplicada continua sendo o SQL de `./drizzle`.
 
 Pendências que exigem ação manual (sem credencial neste ambiente):
+
 - Staging já recebeu a 0013. Produção: `npm run d1:migrate:prod` (`--remote --env production`).
 - Publicar de novo o Worker de staging (`npm run cf:deploy:staging`) depois da flag `nodejs_compat`. O deploy de `2b5e6264` já respondeu em staging.
 - Conferir `BETTER_AUTH_SECRET` e `RESEND_API_KEY` nos ambientes.

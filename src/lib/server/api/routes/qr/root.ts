@@ -19,10 +19,15 @@ function clampInt(value: string | null, fallback: number, min: number, max: numb
 }
 
 export const handleQrGet = async ({ url, fetch, getClientAddress, platform }: RequestEvent) => {
-  const rateLimit = await checkPersistentRateLimit('qr', getClientAddress() || 'unknown', {
-    max: 120,
-    windowMs: 60_000
-  }, platform?.env?.DB);
+  const rateLimit = await checkPersistentRateLimit(
+    'qr',
+    getClientAddress() || 'unknown',
+    {
+      max: 120,
+      windowMs: 60_000
+    },
+    platform?.env?.DB
+  );
   if (!rateLimit.allowed) {
     return json(
       { error: 'Muitas requisições. Tente novamente em instantes.' },
@@ -39,7 +44,10 @@ export const handleQrGet = async ({ url, fetch, getClientAddress, platform }: Re
   }
 
   if (text.length > 2048) {
-    return json({ error: 'Texto muito longo para QR Code.' }, { status: 413, headers: NO_STORE_HEADERS });
+    return json(
+      { error: 'Texto muito longo para QR Code.' },
+      { status: 413, headers: NO_STORE_HEADERS }
+    );
   }
 
   const size = clampInt(url.searchParams.get('size'), 200, 96, 512);
@@ -68,17 +76,26 @@ export const handleQrGet = async ({ url, fetch, getClientAddress, platform }: Re
 
     const contentType = String(response.headers.get('content-type') || '').toLowerCase();
     if (!contentType.startsWith('image/')) {
-      return json({ error: 'Resposta invalida do provedor de QR Code.' }, { status: 502, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Resposta invalida do provedor de QR Code.' },
+        { status: 502, headers: NO_STORE_HEADERS }
+      );
     }
 
     const contentLength = Number(response.headers.get('content-length') || 0);
     if (Number.isFinite(contentLength) && contentLength > 1024 * 1024) {
-      return json({ error: 'QR Code excede o tamanho permitido.' }, { status: 502, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'QR Code excede o tamanho permitido.' },
+        { status: 502, headers: NO_STORE_HEADERS }
+      );
     }
 
     const image = await response.arrayBuffer();
     if (!image.byteLength || image.byteLength > 1024 * 1024) {
-      return json({ error: 'QR Code excede o tamanho permitido.' }, { status: 502, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'QR Code excede o tamanho permitido.' },
+        { status: 502, headers: NO_STORE_HEADERS }
+      );
     }
 
     return new Response(image, {
@@ -89,6 +106,9 @@ export const handleQrGet = async ({ url, fetch, getClientAddress, platform }: Re
     });
   } catch (err) {
     logServerError('[qr] falha ao gerar QR Code', err);
-    return json({ error: 'Nao foi possivel gerar o QR Code.' }, { status: 502, headers: NO_STORE_HEADERS });
+    return json(
+      { error: 'Nao foi possivel gerar o QR Code.' },
+      { status: 502, headers: NO_STORE_HEADERS }
+    );
   }
 };

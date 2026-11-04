@@ -28,9 +28,7 @@ export function reaisToCentavos(v: unknown): number {
     .replace(/\s/g, '')
     .replace(/[^\d,.-]/g, '');
   // Formato BR: '1.234,56' → remove pontos como separador de milhar, vírgula → ponto
-  const normalized = raw.includes(',')
-    ? raw.replace(/\./g, '').replace(',', '.')
-    : raw;
+  const normalized = raw.includes(',') ? raw.replace(/\./g, '').replace(',', '.') : raw;
   const num = Number(normalized);
   if (!Number.isFinite(num)) return 0;
   return Math.round(num * 100);
@@ -65,8 +63,8 @@ export type ItemInput = {
   descricao: string;
   tipo?: string | null;
   moeda?: string | null;
-  cambio?: number | null;           // ex: 5.0150 (float, convertido para 4 casas inteiras)
-  valor_neto?: unknown;             // reais → centavos
+  cambio?: number | null; // ex: 5.0150 (float, convertido para 4 casas inteiras)
+  valor_neto?: unknown; // reais → centavos
   valor_bruto?: unknown;
   valor_taxas?: unknown;
   paga_comissao?: boolean | null;
@@ -171,7 +169,11 @@ export type VendaValidationResult =
 // Normalização dos filhos
 // ─────────────────────────────────────────────────────────────────────────────
 
-function normalizarItem(item: unknown, idx: number, errors: Record<string, string>): ItemNormalizado | null {
+function normalizarItem(
+  item: unknown,
+  idx: number,
+  errors: Record<string, string>
+): ItemNormalizado | null {
   if (!item || typeof item !== 'object') {
     errors[`itens[${idx}]`] = 'Item inválido.';
     return null;
@@ -182,17 +184,18 @@ function normalizarItem(item: unknown, idx: number, errors: Record<string, strin
   if (!descricao) errors[`itens[${idx}].descricao`] = 'Descrição do item é obrigatória.';
 
   const tipo = TIPOS_PRODUTO_VALIDOS.has(String(i.tipo || '').trim())
-    ? (String(i.tipo).trim())
+    ? String(i.tipo).trim()
     : 'pacote';
 
-  const moedaRaw = String(i.moeda || 'BRL').trim().toUpperCase();
+  const moedaRaw = String(i.moeda || 'BRL')
+    .trim()
+    .toUpperCase();
   const moeda = MOEDAS_VALIDAS.has(moedaRaw) ? moedaRaw : 'BRL';
 
   // câmbio: 4 casas decimais em inteiro (1.0000 BRL/BRL = 10000)
   const cambioFloat = Number(i.cambio ?? 1);
-  const cambio_centavos = Number.isFinite(cambioFloat) && cambioFloat > 0
-    ? Math.round(cambioFloat * 10000)
-    : 10000;
+  const cambio_centavos =
+    Number.isFinite(cambioFloat) && cambioFloat > 0 ? Math.round(cambioFloat * 10000) : 10000;
 
   const valor_bruto_centavos = reaisToCentavos(i.valor_bruto);
   const valor_taxas_centavos = reaisToCentavos(i.valor_taxas);
@@ -218,11 +221,15 @@ function normalizarItem(item: unknown, idx: number, errors: Record<string, strin
     valor_taxas_centavos,
     valor_total_centavos,
     paga_comissao: i.paga_comissao !== false,
-    notas: textoOpcional(i.notas, 500),
+    notas: textoOpcional(i.notas, 500)
   };
 }
 
-function normalizarPagamento(pag: unknown, idx: number, errors: Record<string, string>): PagamentoNormalizado | null {
+function normalizarPagamento(
+  pag: unknown,
+  idx: number,
+  errors: Record<string, string>
+): PagamentoNormalizado | null {
   if (!pag || typeof pag !== 'object') {
     errors[`pagamentos[${idx}]`] = 'Pagamento inválido.';
     return null;
@@ -235,12 +242,14 @@ function normalizarPagamento(pag: unknown, idx: number, errors: Record<string, s
   const valor_bruto_centavos = reaisToCentavos(p.valor_bruto);
   const desconto_centavos = reaisToCentavos(p.desconto);
   // valor_total = bruto − desconto (se não fornecido explicitamente)
-  const valor_total_centavos = p.valor_total !== undefined
-    ? reaisToCentavos(p.valor_total)
-    : Math.max(0, valor_bruto_centavos - desconto_centavos);
+  const valor_total_centavos =
+    p.valor_total !== undefined
+      ? reaisToCentavos(p.valor_total)
+      : Math.max(0, valor_bruto_centavos - desconto_centavos);
 
   const parcelas_qtd = Math.max(1, Math.trunc(Number(p.parcelas_qtd ?? 1) || 1));
-  const parcelas_valor_centavos = parcelas_qtd > 0 ? Math.round(valor_total_centavos / parcelas_qtd) : 0;
+  const parcelas_valor_centavos =
+    parcelas_qtd > 0 ? Math.round(valor_total_centavos / parcelas_qtd) : 0;
 
   const parcelas_raw = Array.isArray(p.parcelas) ? p.parcelas : [];
   const parcelas = parcelas_raw.map((pp: unknown, pidx: number) => {
@@ -248,7 +257,7 @@ function normalizarPagamento(pag: unknown, idx: number, errors: Record<string, s
     return {
       numero: Math.max(1, Math.trunc(Number(par.numero ?? pidx + 1) || pidx + 1)),
       valor_centavos: reaisToCentavos(par.valor),
-      vencimento: isDataCivil(par.vencimento) ? par.vencimento : null,
+      vencimento: isDataCivil(par.vencimento) ? par.vencimento : null
     };
   });
 
@@ -263,7 +272,7 @@ function normalizarPagamento(pag: unknown, idx: number, errors: Record<string, s
     parcelas_qtd,
     parcelas_valor_centavos,
     paga_comissao: p.paga_comissao !== false,
-    parcelas,
+    parcelas
   };
 }
 
@@ -326,28 +335,33 @@ export function validarVenda(body: unknown): VendaValidationResult {
   }
 
   // ── chave_idempotencia ──
-  const chaveIdempotencia = typeof b.chave_idempotencia === 'string' && UUID_RE.test(b.chave_idempotencia)
-    ? b.chave_idempotencia
-    : null;
+  const chaveIdempotencia =
+    typeof b.chave_idempotencia === 'string' && UUID_RE.test(b.chave_idempotencia)
+      ? b.chave_idempotencia
+      : null;
 
   if (Object.keys(errors).length > 0) return { ok: false, errors };
 
   // ── valores financeiros do cabeçalho ──
   // Se o cliente não enviou, calculamos a partir dos filhos
-  const valorBrutoCentavos = b.valor_bruto !== undefined
-    ? reaisToCentavos(b.valor_bruto)
-    : itens.reduce((sum, it) => sum + it.valor_bruto_centavos, 0);
-  const valorTaxasCentavos = b.valor_taxas !== undefined
-    ? reaisToCentavos(b.valor_taxas)
-    : itens.reduce((sum, it) => sum + it.valor_taxas_centavos, 0);
-  const valorTotalCentavos = b.valor_total !== undefined
-    ? reaisToCentavos(b.valor_total)
-    : itens.reduce((sum, it) => sum + it.valor_total_centavos, 0);
+  const valorBrutoCentavos =
+    b.valor_bruto !== undefined
+      ? reaisToCentavos(b.valor_bruto)
+      : itens.reduce((sum, it) => sum + it.valor_bruto_centavos, 0);
+  const valorTaxasCentavos =
+    b.valor_taxas !== undefined
+      ? reaisToCentavos(b.valor_taxas)
+      : itens.reduce((sum, it) => sum + it.valor_taxas_centavos, 0);
+  const valorTotalCentavos =
+    b.valor_total !== undefined
+      ? reaisToCentavos(b.valor_total)
+      : itens.reduce((sum, it) => sum + it.valor_total_centavos, 0);
 
   return {
     ok: true,
     dados: {
-      vendedor_id: typeof b.vendedor_id === 'string' && b.vendedor_id.trim() ? b.vendedor_id.trim() : null,
+      vendedor_id:
+        typeof b.vendedor_id === 'string' && b.vendedor_id.trim() ? b.vendedor_id.trim() : null,
       cliente_id: typeof b.cliente_id === 'number' ? b.cliente_id : null,
       produto_id: typeof b.produto_id === 'number' ? b.produto_id : null,
       data_venda: dataVenda!,
@@ -363,8 +377,8 @@ export function validarVenda(body: unknown): VendaValidationResult {
       notas: textoOpcional(b.notas, 2000),
       chave_idempotencia: chaveIdempotencia,
       itens,
-      pagamentos,
-    },
+      pagamentos
+    }
   };
 }
 
@@ -474,12 +488,14 @@ export function validarVendaEdicao(body: unknown): VendaEdicaoValidationResult {
     errors.data_venda = 'Data de venda não pode ser posterior à data de lançamento.';
   }
 
-  const dataEmbarque = b.data_embarque !== undefined
-    ? (isDataCivil(b.data_embarque) ? b.data_embarque : null)
-    : undefined;
-  const dataFinal = b.data_final !== undefined
-    ? (isDataCivil(b.data_final) ? b.data_final : null)
-    : undefined;
+  const dataEmbarque =
+    b.data_embarque !== undefined
+      ? isDataCivil(b.data_embarque)
+        ? b.data_embarque
+        : null
+      : undefined;
+  const dataFinal =
+    b.data_final !== undefined ? (isDataCivil(b.data_final) ? b.data_final : null) : undefined;
 
   // ── itens (opcionais — se fornecidos devem ter ≥ 1) ──
   let itens: ItemNormalizado[] | undefined;
@@ -516,30 +532,38 @@ export function validarVendaEdicao(body: unknown): VendaEdicaoValidationResult {
   // ── totais derivados (calculados a partir dos novos filhos, se presentes) ──
   const dados: VendaEdicaoNormalizada = {};
 
-  if ('vendedor_id' in b) dados.vendedor_id = typeof b.vendedor_id === 'string' && b.vendedor_id.trim() ? b.vendedor_id.trim() : null;
+  if ('vendedor_id' in b)
+    dados.vendedor_id =
+      typeof b.vendedor_id === 'string' && b.vendedor_id.trim() ? b.vendedor_id.trim() : null;
   if ('cliente_id' in b) dados.cliente_id = typeof b.cliente_id === 'number' ? b.cliente_id : null;
   if ('produto_id' in b) dados.produto_id = typeof b.produto_id === 'number' ? b.produto_id : null;
   if (dataVenda !== undefined) dados.data_venda = dataVenda;
   if (dataLancamento !== undefined) dados.data_lancamento = dataLancamento;
   if (dataEmbarque !== undefined) dados.data_embarque = dataEmbarque;
   if (dataFinal !== undefined) dados.data_final = dataFinal;
-  if ('desconto_comercial_aplicado' in b) dados.desconto_comercial_aplicado = b.desconto_comercial_aplicado === true;
-  if ('desconto_comercial' in b) dados.desconto_comercial_centavos = reaisToCentavos(b.desconto_comercial);
-  if ('valor_nao_comissionado' in b) dados.valor_nao_comissionado_centavos = reaisToCentavos(b.valor_nao_comissionado);
+  if ('desconto_comercial_aplicado' in b)
+    dados.desconto_comercial_aplicado = b.desconto_comercial_aplicado === true;
+  if ('desconto_comercial' in b)
+    dados.desconto_comercial_centavos = reaisToCentavos(b.desconto_comercial);
+  if ('valor_nao_comissionado' in b)
+    dados.valor_nao_comissionado_centavos = reaisToCentavos(b.valor_nao_comissionado);
   if ('notas' in b) dados.notas = textoOpcional(b.notas, 2000);
 
   if (itens !== undefined) {
     dados.itens = itens;
     // Recalcular totais a partir dos novos itens (a não ser que o cliente envie explicitamente)
-    dados.valor_bruto_centavos = b.valor_bruto !== undefined
-      ? reaisToCentavos(b.valor_bruto)
-      : itens.reduce((s, it) => s + it.valor_bruto_centavos, 0);
-    dados.valor_taxas_centavos = b.valor_taxas !== undefined
-      ? reaisToCentavos(b.valor_taxas)
-      : itens.reduce((s, it) => s + it.valor_taxas_centavos, 0);
-    dados.valor_total_centavos = b.valor_total !== undefined
-      ? reaisToCentavos(b.valor_total)
-      : itens.reduce((s, it) => s + it.valor_total_centavos, 0);
+    dados.valor_bruto_centavos =
+      b.valor_bruto !== undefined
+        ? reaisToCentavos(b.valor_bruto)
+        : itens.reduce((s, it) => s + it.valor_bruto_centavos, 0);
+    dados.valor_taxas_centavos =
+      b.valor_taxas !== undefined
+        ? reaisToCentavos(b.valor_taxas)
+        : itens.reduce((s, it) => s + it.valor_taxas_centavos, 0);
+    dados.valor_total_centavos =
+      b.valor_total !== undefined
+        ? reaisToCentavos(b.valor_total)
+        : itens.reduce((s, it) => s + it.valor_total_centavos, 0);
   } else {
     // Sem novos itens — atualizar só se enviados explicitamente
     if ('valor_bruto' in b) dados.valor_bruto_centavos = reaisToCentavos(b.valor_bruto);

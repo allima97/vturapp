@@ -26,7 +26,10 @@ const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('pt-BR', {
   minute: '2-digit'
 });
 const DATE_SHORT_FORMATTER = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short' });
-const MONTH_LONG_UTC_FORMATTER = new Intl.DateTimeFormat('pt-BR', { month: 'long', timeZone: 'UTC' });
+const MONTH_LONG_UTC_FORMATTER = new Intl.DateTimeFormat('pt-BR', {
+  month: 'long',
+  timeZone: 'UTC'
+});
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const YEAR_MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 const NON_DIGIT_PATTERN = /\D/g;
@@ -50,8 +53,7 @@ export function formatCurrencyShort(value: number | null | undefined): string {
   if (value == null || isNaN(value)) return '-';
   if (Math.abs(value) >= 1_000_000)
     return `R$ ${(value / 1_000_000).toFixed(1).replace('.', ',')}M`;
-  if (Math.abs(value) >= 1_000)
-    return `R$ ${(value / 1_000).toFixed(1).replace('.', ',')}k`;
+  if (Math.abs(value) >= 1_000) return `R$ ${(value / 1_000).toFixed(1).replace('.', ',')}k`;
   return formatCurrency(value);
 }
 

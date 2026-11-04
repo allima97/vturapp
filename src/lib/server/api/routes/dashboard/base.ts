@@ -146,7 +146,10 @@ export async function handleDashboardBaseGet(event: RequestEvent) {
     })();
 
     let vendedores: DashboardVendedorRow[] = [];
-    if (includeVendedores && (scope.isAdmin || scope.isMaster || scope.isFinanceiro || scope.isGestor)) {
+    if (
+      includeVendedores &&
+      (scope.isAdmin || scope.isMaster || scope.isFinanceiro || scope.isGestor)
+    ) {
       vendedores = await getCachedReadModel<DashboardVendedorRow[]>({
         key: buildReadModelCacheKey('dashboard:base:vendedores', {
           userId: user.id,
@@ -168,7 +171,10 @@ export async function handleDashboardBaseGet(event: RequestEvent) {
         staleTtlMs: 1_800_000,
         loader: () => fetchRankingVendedoresByCompanyIds(client, companyIdsForVendedores)
       });
-    } else if (!includeVendedores && (scope.isAdmin || scope.isMaster || scope.isFinanceiro || scope.isGestor)) {
+    } else if (
+      !includeVendedores &&
+      (scope.isAdmin || scope.isMaster || scope.isFinanceiro || scope.isGestor)
+    ) {
       vendedores = [];
     } else {
       const { data: currentUser, error: userError } = await client
@@ -194,10 +200,13 @@ export async function handleDashboardBaseGet(event: RequestEvent) {
       .filter((row) => row.id)
       .sort((left, right) => PT_BR_COLLATOR.compare(left.nome, right.nome));
 
-    return json({
-      empresas,
-      vendedores: vendedoresFiltro
-    }, { headers: CONFIG_READ_HEADERS });
+    return json(
+      {
+        empresas,
+        vendedores: vendedoresFiltro
+      },
+      { headers: CONFIG_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar filtros do dashboard.');
   }

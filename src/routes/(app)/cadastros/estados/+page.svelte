@@ -53,9 +53,26 @@
 
   const columns = [
     { key: 'nome', label: 'Nome', sortable: true },
-    { key: 'pais', label: 'País', sortable: false, formatter: (_: unknown, row: Subdivisao) => row.pais?.nome || '-' },
-    { key: 'codigo_admin1', label: 'Código', sortable: true, width: '100px', formatter: (v: string | null) => v || '-' },
-    { key: 'tipo', label: 'Tipo', sortable: true, width: '120px', formatter: (v: string | null) => v || '-' }
+    {
+      key: 'pais',
+      label: 'País',
+      sortable: false,
+      formatter: (_: unknown, row: Subdivisao) => row.pais?.nome || '-'
+    },
+    {
+      key: 'codigo_admin1',
+      label: 'Código',
+      sortable: true,
+      width: '100px',
+      formatter: (v: string | null) => v || '-'
+    },
+    {
+      key: 'tipo',
+      label: 'Tipo',
+      sortable: true,
+      width: '120px',
+      formatter: (v: string | null) => v || '-'
+    }
   ];
 
   async function loadPaises() {
@@ -72,14 +89,19 @@
     let payload: SubdivisoesResponse | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        payload = await apiGet<SubdivisoesResponse>('/api/v1/subdivisoes', {
-          pais_id: filtroPais || undefined,
-          pageSize: 500
-        }, undefined, 30_000);
+        payload = await apiGet<SubdivisoesResponse>(
+          '/api/v1/subdivisoes',
+          {
+            pais_id: filtroPais || undefined,
+            pageSize: 500
+          },
+          undefined,
+          30_000
+        );
         break;
       } catch (err) {
         if (attempt < 2) {
-          await new Promise(r => setTimeout(r, 300));
+          await new Promise((r) => setTimeout(r, 300));
           continue;
         }
         toast.error(toUserMessage(err, 'Não foi possível carregar os estados. Tente novamente.'));
@@ -99,13 +121,24 @@
 
   function openEdit(s: Subdivisao) {
     editingId = s.id;
-    form = { nome: s.nome, pais_id: s.pais_id, codigo_admin1: s.codigo_admin1 || '', tipo: s.tipo || '' };
+    form = {
+      nome: s.nome,
+      pais_id: s.pais_id,
+      codigo_admin1: s.codigo_admin1 || '',
+      tipo: s.tipo || ''
+    };
     modalOpen = true;
   }
 
   async function save() {
-    if (!form.nome.trim()) { toast.error('Nome obrigatório.'); return; }
-    if (!form.pais_id) { toast.error('País obrigatório.'); return; }
+    if (!form.nome.trim()) {
+      toast.error('Nome obrigatório.');
+      return;
+    }
+    if (!form.pais_id) {
+      toast.error('País obrigatório.');
+      return;
+    }
     saving = true;
     try {
       await apiPost('/api/v1/subdivisoes', {
@@ -173,10 +206,7 @@
 <PageHeader
   title="Estados / Províncias"
   subtitle="Cadastro de estados e províncias vinculados a países."
-  breadcrumbs={[
-    { label: 'Cadastros', href: '/cadastros' },
-    { label: 'Estados' }
-  ]}
+  breadcrumbs={[{ label: 'Cadastros', href: '/cadastros' }, { label: 'Estados' }]}
   actions={[
     { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw },
     { label: 'Novo Estado', onClick: openNew, variant: 'primary', icon: Plus }
@@ -195,12 +225,15 @@
 </div>
 
 <Card class="mb-6 hidden sm:block">
-  <div class="flex gap-4 items-end">
+  <div class="flex items-end gap-4">
     <FieldSelect
       id="est-pais"
       label="País"
       bind:value={filtroPais}
-      options={[{ value: '', label: 'Todos' }, ...paises.map((p) => ({ value: p.id, label: p.nome }))]}
+      options={[
+        { value: '', label: 'Todos' },
+        ...paises.map((p) => ({ value: p.id, label: p.nome }))
+      ]}
       placeholder={null}
     />
   </div>
@@ -212,7 +245,10 @@
       id="est-pais-mobile"
       label="País"
       bind:value={filtroPais}
-      options={[{ value: '', label: 'Todos' }, ...paises.map((p) => ({ value: p.id, label: p.nome }))]}
+      options={[
+        { value: '', label: 'Todos' },
+        ...paises.map((p) => ({ value: p.id, label: p.nome }))
+      ]}
       placeholder={null}
       class_name="w-full"
     />
@@ -222,8 +258,15 @@
   </Button>
 </BottomSheet>
 
-<DataTable {columns} data={subdivisoes} {loading} title="Estados/Províncias" searchable={true} emptyMessage="Nenhum estado encontrado"
-  onRowClick={(row) => openEdit(row)}>
+<DataTable
+  {columns}
+  data={subdivisoes}
+  {loading}
+  title="Estados/Províncias"
+  searchable={true}
+  emptyMessage="Nenhum estado encontrado"
+  onRowClick={(row) => openEdit(row)}
+>
   <svelte:fragment slot="row-actions" let:row>
     <Button
       variant="ghost"
@@ -242,7 +285,18 @@
   </svelte:fragment>
 </DataTable>
 
-<Dialog bind:open={modalOpen} title={editingId ? 'Editar Estado' : 'Novo Estado'} size="sm" showCancel={true} cancelText="Cancelar" showConfirm={true} confirmText={editingId ? 'Salvar' : 'Criar'} loading={saving} onConfirm={save} onCancel={() => (modalOpen = false)}>
+<Dialog
+  bind:open={modalOpen}
+  title={editingId ? 'Editar Estado' : 'Novo Estado'}
+  size="sm"
+  showCancel={true}
+  cancelText="Cancelar"
+  showConfirm={true}
+  confirmText={editingId ? 'Salvar' : 'Criar'}
+  loading={saving}
+  onConfirm={save}
+  onCancel={() => (modalOpen = false)}
+>
   <div class="space-y-4">
     <FieldInput
       id="est-nome"
@@ -255,11 +309,14 @@
       id="est-pais-form"
       label="País *"
       bind:value={form.pais_id}
-      options={[{ value: '', label: 'Selecione uma opção' }, ...paises.map((p) => ({ value: p.id, label: p.nome }))]}
+      options={[
+        { value: '', label: 'Selecione uma opção' },
+        ...paises.map((p) => ({ value: p.id, label: p.nome }))
+      ]}
       placeholder={null}
       class_name="w-full"
     />
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <FieldInput
         id="est-codigo"
         label="Código"

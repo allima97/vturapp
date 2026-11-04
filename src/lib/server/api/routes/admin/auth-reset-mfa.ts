@@ -2,11 +2,7 @@
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
-import {
-  ensureCanManageUsers,
-  findAuthUserIdByEmail,
-  loadManagedUser
-} from '$lib/server/admin';
+import { ensureCanManageUsers, findAuthUserIdByEmail, loadManagedUser } from '$lib/server/admin';
 import {
   getAdminClient,
   requireAuthenticatedUser,
@@ -39,10 +35,15 @@ export async function handleAdminAuthResetMfaPost(event: RequestEvent) {
         : {};
 
     ensureCanManageUsers(scope);
-    const rateLimit = await checkPersistentRateLimit('admin-reset-mfa', user.id, {
-      max: 20,
-      windowMs: 60_000
-    }, event.platform?.env?.DB);
+    const rateLimit = await checkPersistentRateLimit(
+      'admin-reset-mfa',
+      user.id,
+      {
+        max: 20,
+        windowMs: 60_000
+      },
+      event.platform?.env?.DB
+    );
     if (!rateLimit.allowed) {
       return json(
         { error: 'Muitas redefinicoes de MFA. Aguarde e tente novamente.' },
@@ -54,26 +55,36 @@ export async function handleAdminAuthResetMfaPost(event: RequestEvent) {
     }
 
     let userId = String(body.user_id || '').trim();
-    const email = String(body.email || '').trim().toLowerCase();
+    const email = String(body.email || '')
+      .trim()
+      .toLowerCase();
 
     if (!userId && email) {
       userId = (await findAuthUserIdByEmail(client, email)) || '';
     }
 
     if (!userId) {
-      return json({ error: 'Usuario alvo nao informado.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Usuario alvo nao informado.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     await loadManagedUser(client, scope, userId);
 
-    const { data: factorsData, error: factorsError } = await client.auth.admin.mfa.listFactors({ userId });
+    const { data: factorsData, error: factorsError } = await client.auth.admin.mfa.listFactors({
+      userId
+    });
     if (factorsError) throw factorsError;
 
     let deletedCount = 0;
     for (const factor of factorsData?.factors || []) {
       const factorId = String((factor as MfaFactorRow).id || '').trim();
       if (!factorId) continue;
-      const { error: deleteError } = await client.auth.admin.mfa.deleteFactor({ userId, id: factorId });
+      const { error: deleteError } = await client.auth.admin.mfa.deleteFactor({
+        userId,
+        id: factorId
+      });
       if (deleteError) throw deleteError;
       deletedCount += 1;
     }

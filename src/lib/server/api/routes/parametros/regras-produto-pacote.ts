@@ -72,7 +72,10 @@ export async function handleParametrosRegrasProdutoPacoteGet(event: RequestEvent
 
     if (error) throw error;
 
-    return json({ items: (data || []) as unknown as RegraProdutoPacoteRow[] }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      { items: (data || []) as unknown as RegraProdutoPacoteRow[] },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar regras por produto e pacote.');
   }
@@ -90,7 +93,12 @@ export async function handleParametrosRegrasProdutoPacotePost(event: RequestEven
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['parametros'], 2, 'Sem permissão para salvar regras por produto e pacote.');
+      ensureModuloAccess(
+        scope,
+        ['parametros'],
+        2,
+        'Sem permissão para salvar regras por produto e pacote.'
+      );
     }
 
     const body = readBody(bodyResult.data);
@@ -103,17 +111,24 @@ export async function handleParametrosRegrasProdutoPacotePost(event: RequestEven
       return json({ error: 'Produto inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
     }
     if (!tipoPacote) {
-      return json({ error: 'Tipo de pacote obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Tipo de pacote obrigatório.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
     if (ruleId && !isUuid(ruleId)) {
-      return json({ error: 'Regra de comissão inválida.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Regra de comissão inválida.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const payload = {
       produto_id: produtoId,
       tipo_pacote: tipoPacote,
       rule_id: ruleId && isUuid(ruleId) ? ruleId : null,
-      fix_meta_nao_atingida: body.fix_meta_nao_atingida != null ? Number(body.fix_meta_nao_atingida) : null,
+      fix_meta_nao_atingida:
+        body.fix_meta_nao_atingida != null ? Number(body.fix_meta_nao_atingida) : null,
       fix_meta_atingida: body.fix_meta_atingida != null ? Number(body.fix_meta_atingida) : null,
       fix_super_meta: body.fix_super_meta != null ? Number(body.fix_super_meta) : null
     };
@@ -155,13 +170,22 @@ export async function handleParametrosRegrasProdutoPacoteDelete(event: RequestEv
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['parametros'], 5, 'Sem permissão para excluir regras por produto e pacote.');
+      ensureModuloAccess(
+        scope,
+        ['parametros'],
+        5,
+        'Sem permissão para excluir regras por produto e pacote.'
+      );
     }
 
     const id = String(event.url.searchParams.get('id') || '').trim();
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
-    const { error: deleteError } = await client.from('product_commission_rule_pacote').delete().eq('id', id);
+    const { error: deleteError } = await client
+      .from('product_commission_rule_pacote')
+      .delete()
+      .eq('id', id);
     if (deleteError) throw deleteError;
 
     invalidateCatalogReadModels({ userId: user.id });

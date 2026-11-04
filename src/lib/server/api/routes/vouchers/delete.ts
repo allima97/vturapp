@@ -22,11 +22,17 @@ export async function handleVouchersDeleteDelete(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     const id = String(event.url.searchParams.get('id') || '').trim();
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     // Verifica escopo
-    const { data: voucher } = await client.from('vouchers').select('id, company_id').eq('id', id).maybeSingle();
-    if (!voucher) return json({ error: 'Voucher não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    const { data: voucher } = await client
+      .from('vouchers')
+      .select('id, company_id')
+      .eq('id', id)
+      .maybeSingle();
+    if (!voucher)
+      return json({ error: 'Voucher não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
     if (!scope.isAdmin && voucher.company_id !== scope.companyId) {
       return json({ error: 'Voucher fora do escopo.' }, { status: 403, headers: NO_STORE_HEADERS });
     }

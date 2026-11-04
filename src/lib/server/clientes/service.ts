@@ -80,7 +80,7 @@ export async function listarClientes(
   const itens = temMais ? linhas.slice(0, limite) : linhas;
   return {
     itens,
-    proximoCursor: temMais ? itens[itens.length - 1].id : null,
+    proximoCursor: temMais ? itens[itens.length - 1].id : null
   };
 }
 
@@ -164,7 +164,7 @@ export async function atualizarCliente(
       .set({
         ...paraColunas(validacao.dados),
         versao: atual.versao + 1,
-        atualizadoEm: new Date().toISOString(),
+        atualizadoEm: new Date().toISOString()
       })
       .where(
         and(
@@ -248,7 +248,7 @@ export async function registrarAnexo(
 
   const validacao = await validateUploadedFile(file, {
     allowedMimeTypes: ANEXO_TIPOS_PERMITIDOS,
-    maxSizeBytes: ANEXO_TAMANHO_MAX,
+    maxSizeBytes: ANEXO_TAMANHO_MAX
   });
   if (!validacao.ok) {
     throw new ClienteError(validacao.error, 'ANEXO_INVALIDO');
@@ -275,7 +275,7 @@ export async function registrarAnexo(
             nomeOriginal: file.name.slice(0, 255),
             contentType: validacao.mimeType,
             tamanhoBytes: file.size,
-            enviadoPor,
+            enviadoPor
           },
           empresaId
         )
@@ -356,7 +356,7 @@ function paraColunas(dados: ClienteInput) {
     nacionalidade: dados.nacionalidade,
     tags: JSON.stringify(dados.tags),
     tipoCliente: dados.tipo_cliente,
-    notas: dados.notas,
+    notas: dados.notas
   };
 }
 

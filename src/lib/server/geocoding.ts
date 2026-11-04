@@ -49,13 +49,7 @@ type NominatimResult = {
 
 function extractCity(address: NominatimResult['address']): string | undefined {
   if (!address) return undefined;
-  return (
-    address.city ||
-    address.town ||
-    address.village ||
-    address.municipality ||
-    address.county
-  );
+  return address.city || address.town || address.village || address.municipality || address.county;
 }
 
 function makeLabel(nome: string, estado?: string | null, pais?: string | null): string {
@@ -85,7 +79,7 @@ function toGeoResult(result: NominatimResult): CidadeGeoResult | null {
     pais_codigo: paisCodigo,
     lat,
     lng,
-    label: makeLabel(nome, estadoCodigo ?? estado, pais),
+    label: makeLabel(nome, estadoCodigo ?? estado, pais)
   };
 }
 
@@ -103,10 +97,7 @@ function deduplicateResults(items: CidadeGeoResult[]): CidadeGeoResult[] {
  * Busca cidades no Nominatim pelo texto digitado pelo usuário.
  * Retorna sugestões ordenadas por relevância (Nominatim já faz isso).
  */
-export async function buscarCidadesGeo(
-  query: string,
-  limite = 8
-): Promise<CidadeGeoResult[]> {
+export async function buscarCidadesGeo(query: string, limite = 8): Promise<CidadeGeoResult[]> {
   const q = query.trim();
   if (q.length < 2) return [];
 
@@ -116,14 +107,14 @@ export async function buscarCidadesGeo(
       format: 'json',
       limit: String(Math.min(limite * 2, 20)), // pede mais para depois deduplicar
       addressdetails: '1',
-      featuretype: 'city',
+      featuretype: 'city'
     });
 
     const response = await fetch(`${NOMINATIM_BASE}/search?${params}`, {
       headers: {
         'User-Agent': USER_AGENT,
-        'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
-      },
+        'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8'
+      }
     });
 
     if (!response.ok) {
@@ -132,9 +123,7 @@ export async function buscarCidadesGeo(
     }
 
     const data = (await response.json()) as NominatimResult[];
-    const results = data
-      .map(toGeoResult)
-      .filter((item): item is CidadeGeoResult => item !== null);
+    const results = data.map(toGeoResult).filter((item): item is CidadeGeoResult => item !== null);
 
     return deduplicateResults(results).slice(0, limite);
   } catch (err) {

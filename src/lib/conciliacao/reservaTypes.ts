@@ -55,4 +55,3 @@ export type ContratoDraft = {
   raw_text?: string;
   tipo_pacote?: string | null;
 };
-

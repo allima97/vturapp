@@ -10,7 +10,7 @@ const base = {
   nome: 'Maria da Silva',
   tipo_pessoa: 'PF',
   documento: '529.982.247-25', // CPF válido (dígitos verificadores)
-  telefone: '(11) 98888-7777',
+  telefone: '(11) 98888-7777'
 };
 
 describe('validarCliente', () => {
@@ -46,7 +46,7 @@ describe('validarCliente', () => {
     const invalido = validarCliente({
       ...base,
       tipo_pessoa: 'PJ',
-      documento: '11.111.111/1111-11',
+      documento: '11.111.111/1111-11'
     });
     expect(invalido.ok).toBe(false);
     if (!invalido.ok) expect(invalido.errors.documento).toContain('CNPJ');
@@ -54,7 +54,7 @@ describe('validarCliente', () => {
     const valido = validarCliente({
       ...base,
       tipo_pessoa: 'PJ',
-      documento: '04.252.011/0001-10', // CNPJ válido
+      documento: '04.252.011/0001-10' // CNPJ válido
     });
     expect(valido.ok).toBe(true);
     if (valido.ok) expect(valido.dados.documento).toBe('04252011000110');
@@ -86,7 +86,7 @@ describe('validarCliente', () => {
       documento: '04.252.011/0001-10',
       genero: 'Outros',
       nacionalidade: 'Brasileira',
-      nascimento: '1990-01-01',
+      nascimento: '1990-01-01'
     });
     expect(r.ok).toBe(true);
     if (r.ok) {

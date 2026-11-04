@@ -47,7 +47,8 @@ export async function handleCidadesIdGet(event: RequestEvent) {
     }
 
     const cidadeId = String(event.params.id || '').trim();
-    if (!isUuid(cidadeId)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(cidadeId))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const { data, error } = await client
       .from('cidades')
@@ -84,16 +85,21 @@ export async function handleCidadesIdPatch(event: RequestEvent) {
     }
 
     const cidadeId = String(event.params.id || '').trim();
-    if (!isUuid(cidadeId)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(cidadeId))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
     const body = readCidadeUpdateBody(bodyResult.data);
 
     const updateData: Record<string, string | null> = {};
-    
+
     if (body.nome !== undefined) updateData.nome = String(body.nome).trim();
-    if (body.descricao !== undefined) updateData.descricao = String(body.descricao || '').trim() || null;
+    if (body.descricao !== undefined)
+      updateData.descricao = String(body.descricao || '').trim() || null;
 
     if (Object.keys(updateData).length === 0) {
-      return json({ error: 'Nenhum campo para atualizar.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Nenhum campo para atualizar.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { data, error } = await client
@@ -132,15 +138,18 @@ export async function handleCidadesIdDelete(event: RequestEvent) {
     }
 
     const cidadeId = String(event.params.id || '').trim();
-    if (!isUuid(cidadeId)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(cidadeId))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
-    const { error } = await client
-      .from('cidades')
-      .delete()
-      .eq('id', cidadeId);
+    const { error } = await client.from('cidades').delete().eq('id', cidadeId);
 
     if (error) throw error;
-    registrarLog(event, { userId: user.id, modulo: 'Cadastros', acao: 'cidade_excluida', detalhes: { id: cidadeId } });
+    registrarLog(event, {
+      userId: user.id,
+      modulo: 'Cadastros',
+      acao: 'cidade_excluida',
+      detalhes: { id: cidadeId }
+    });
 
     invalidateCatalogReadModels({ userId: user.id });
     return json({ success: true }, { headers: NO_STORE_HEADERS });

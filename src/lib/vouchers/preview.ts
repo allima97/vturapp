@@ -1,5 +1,5 @@
-import { VTUR_LOGO_URL } from "$lib/brand";
-import { normalizeVoucherExtraData, splitLinesFromMultilineText } from "./extraData";
+import { VTUR_LOGO_URL } from '$lib/brand';
+import { normalizeVoucherExtraData, splitLinesFromMultilineText } from './extraData';
 import { addDaysISODate } from '$lib/date';
 import type {
   VoucherAssetRecord,
@@ -8,36 +8,36 @@ import type {
   VoucherHotel,
   VoucherPassengerDetail,
   VoucherRecord,
-  VoucherTransferInfo,
-} from "./types";
+  VoucherTransferInfo
+} from './types';
 
 const ISO_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
 const SHORT_DATE_RE = /^(\d{2})\/(\d{2})$/;
 const DAY_TITLE_RE = /^\(([^)]+)\)\s*:\s*(.+)$/;
 
 function textValue(value?: string | null) {
-  return String(value || "").trim();
+  return String(value || '').trim();
 }
 
 function escapeHtml(value?: string | null) {
   return textValue(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 function normalizeLookupValue(value?: string | null) {
   return textValue(value)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 }
 
 function formatDateBR(value?: string | null) {
   const raw = textValue(value);
-  if (!raw) return "";
+  if (!raw) return '';
   const match = raw.match(ISO_DATE_RE);
   if (match) return `${match[3]}/${match[2]}/${match[1]}`;
 
@@ -47,53 +47,58 @@ function formatDateBR(value?: string | null) {
 }
 
 function providerLabel(provider?: string | null) {
-  if (provider === "special_tours") return "Special Tours";
-  if (provider === "europamundo") return "Europamundo";
-  if (provider === "sato_tours") return "Sato Tours";
-  return "Voucher";
+  if (provider === 'special_tours') return 'Special Tours';
+  if (provider === 'europamundo') return 'Europamundo';
+  if (provider === 'sato_tours') return 'Sato Tours';
+  return 'Voucher';
 }
 
-const EUROPAMUNDO_APP_ICON_RULES: Array<{ match: (value: string) => boolean; iconUrl: string; alt: string }> = [
+const EUROPAMUNDO_APP_ICON_RULES: Array<{
+  match: (value: string) => boolean;
+  iconUrl: string;
+  alt: string;
+}> = [
   {
-    match: (value) => value.includes("suitcase") || value.includes("suit case"),
-    iconUrl: "/icons/vouchers/europamundo/suitcase.webp",
-    alt: "Mobile Suitcase",
+    match: (value) => value.includes('suitcase') || value.includes('suit case'),
+    iconUrl: '/icons/vouchers/europamundo/suitcase.webp',
+    alt: 'Mobile Suitcase'
   },
   {
-    match: (value) => value.includes("uber"),
-    iconUrl: "/icons/vouchers/europamundo/uber.webp",
-    alt: "Uber",
+    match: (value) => value.includes('uber'),
+    iconUrl: '/icons/vouchers/europamundo/uber.webp',
+    alt: 'Uber'
   },
   {
     match: (value) =>
-      value.includes("google tradutor") ||
-      value.includes("google translator") ||
-      value.includes("google translate") ||
-      value.includes("tradutor google") ||
-      value.includes("translate"),
-    iconUrl: "/icons/vouchers/europamundo/google-tradutor.webp",
-    alt: "Google Tradutor",
+      value.includes('google tradutor') ||
+      value.includes('google translator') ||
+      value.includes('google translate') ||
+      value.includes('tradutor google') ||
+      value.includes('translate'),
+    iconUrl: '/icons/vouchers/europamundo/google-tradutor.webp',
+    alt: 'Google Tradutor'
   },
   {
-    match: (value) => value === "xe" || value.includes("xe currency") || value.startsWith("xe "),
-    iconUrl: "/icons/vouchers/europamundo/xe-currency.webp",
-    alt: "XE Currency",
+    match: (value) => value === 'xe' || value.includes('xe currency') || value.startsWith('xe '),
+    iconUrl: '/icons/vouchers/europamundo/xe-currency.webp',
+    alt: 'XE Currency'
   },
   {
-    match: (value) => value.includes("accuweather") || value.includes("accuwheather") || value.includes("wheather"),
-    iconUrl: "/icons/vouchers/europamundo/accuweather.webp",
-    alt: "AccuWeather",
+    match: (value) =>
+      value.includes('accuweather') || value.includes('accuwheather') || value.includes('wheather'),
+    iconUrl: '/icons/vouchers/europamundo/accuweather.webp',
+    alt: 'AccuWeather'
   },
   {
-    match: (value) => value.includes("yelp"),
-    iconUrl: "/icons/vouchers/europamundo/yelp.webp",
-    alt: "Yelp",
+    match: (value) => value.includes('yelp'),
+    iconUrl: '/icons/vouchers/europamundo/yelp.webp',
+    alt: 'Yelp'
   },
   {
-    match: (value) => value.includes("europamundo"),
-    iconUrl: "/icons/vouchers/europamundo/europamundo.webp",
-    alt: "Europamundo",
-  },
+    match: (value) => value.includes('europamundo'),
+    iconUrl: '/icons/vouchers/europamundo/europamundo.webp',
+    alt: 'Europamundo'
+  }
 ];
 
 function getEuropamundoAppIcon(appName?: string | null, assets: VoucherAssetRecord[] = []) {
@@ -105,17 +110,17 @@ function getEuropamundoAppIcon(appName?: string | null, assets: VoucherAssetReco
   const uploadedAsset = sortAssets(
     assets.filter(
       (asset) =>
-        asset.provider === "europamundo" &&
-        asset.asset_kind === "app_icon" &&
+        asset.provider === 'europamundo' &&
+        asset.asset_kind === 'app_icon' &&
         textValue(asset.preview_url) &&
-        matchedRule.match(normalizeLookupValue(asset.label)),
-    ),
+        matchedRule.match(normalizeLookupValue(asset.label))
+    )
   )[0];
 
   if (uploadedAsset?.preview_url) {
     return {
       iconUrl: uploadedAsset.preview_url,
-      alt: matchedRule.alt,
+      alt: matchedRule.alt
     };
   }
 
@@ -129,29 +134,30 @@ function buildEuropamundoAppCard(app: VoucherAppInfo, assets: VoucherAssetRecord
       <div class="europa-app-header">
         ${
           icon
-            ? `<img class="europa-app-icon" src="${escapeHtml(icon.iconUrl)}" alt="${escapeHtml(icon.alt || app.nome || "App")}" />`
-            : ""
+            ? `<img class="europa-app-icon" src="${escapeHtml(icon.iconUrl)}" alt="${escapeHtml(icon.alt || app.nome || 'App')}" />`
+            : ''
         }
-        <div class="europa-app-name">${escapeHtml(app.nome || "-")}</div>
+        <div class="europa-app-name">${escapeHtml(app.nome || '-')}</div>
       </div>
-      <div class="europa-app-description">${escapeHtml(app.descricao || "").replace(/\n/g, "<br/>")}</div>
+      <div class="europa-app-description">${escapeHtml(app.descricao || '').replace(/\n/g, '<br/>')}</div>
     </article>`;
 }
 
 function sortAssets(items: VoucherAssetRecord[]) {
-  return items
-    .slice()
-    .sort((a, b) => {
-      const firstOrder = Number(a.ordem ?? 0);
-      const secondOrder = Number(b.ordem ?? 0);
-      if (firstOrder !== secondOrder) return firstOrder - secondOrder;
-      return String(a.created_at || "").localeCompare(String(b.created_at || ""));
-    });
+  return items.slice().sort((a, b) => {
+    const firstOrder = Number(a.ordem ?? 0);
+    const secondOrder = Number(b.ordem ?? 0);
+    if (firstOrder !== secondOrder) return firstOrder - secondOrder;
+    return String(a.created_at || '').localeCompare(String(b.created_at || ''));
+  });
 }
 
-function pickAssetUrls(assets: VoucherAssetRecord[], provider: string, kind: "image") {
+function pickAssetUrls(assets: VoucherAssetRecord[], provider: string, kind: 'image') {
   const preferred = sortAssets(
-    assets.filter((asset) => asset.asset_kind === kind && asset.provider === provider && textValue(asset.preview_url)),
+    assets.filter(
+      (asset) =>
+        asset.asset_kind === kind && asset.provider === provider && textValue(asset.preview_url)
+    )
   );
   if (preferred.length) {
     const urls: string[] = [];
@@ -163,7 +169,10 @@ function pickAssetUrls(assets: VoucherAssetRecord[], provider: string, kind: "im
 
   const urls: string[] = [];
   for (const asset of sortAssets(
-    assets.filter((asset) => asset.asset_kind === kind && asset.provider === "generic" && textValue(asset.preview_url)),
+    assets.filter(
+      (asset) =>
+        asset.asset_kind === kind && asset.provider === 'generic' && textValue(asset.preview_url)
+    )
   )) {
     if (asset.preview_url) urls.push(asset.preview_url);
   }
@@ -172,7 +181,7 @@ function pickAssetUrls(assets: VoucherAssetRecord[], provider: string, kind: "im
 
 function buildRouteTitle(voucher: VoucherRecord) {
   const code = textValue(voucher.codigo_fornecedor || voucher.codigo_sistema);
-  const name = textValue(voucher.nome || "Voucher");
+  const name = textValue(voucher.nome || 'Voucher');
   if (!code) return name;
   if (name.toLowerCase().startsWith(code.toLowerCase())) return name;
   return `${code} - ${name}`;
@@ -181,18 +190,20 @@ function buildRouteTitle(voucher: VoucherRecord) {
 function parseDayTitle(value?: string | null) {
   const raw = textValue(value);
   const match = raw.match(DAY_TITLE_RE);
-  if (!match) return { note: "", title: raw };
+  if (!match) return { note: '', title: raw };
   return {
     note: textValue(match[1]),
-    title: textValue(match[2]),
+    title: textValue(match[2])
   };
 }
 
 function buildDayHeading(dia: VoucherDia) {
   const parsed = parseDayTitle(dia.titulo);
-  const dayLabel = `Dia ${dia.dia_numero}${parsed.note ? ` (${parsed.note})` : ""}`;
-  const prefix = dia.data_referencia ? `${formatDateBR(dia.data_referencia)} – ${dayLabel}` : dayLabel;
-  return `${prefix}${parsed.title ? `: ${parsed.title}` : ""}`;
+  const dayLabel = `Dia ${dia.dia_numero}${parsed.note ? ` (${parsed.note})` : ''}`;
+  const prefix = dia.data_referencia
+    ? `${formatDateBR(dia.data_referencia)} – ${dayLabel}`
+    : dayLabel;
+  return `${prefix}${parsed.title ? `: ${parsed.title}` : ''}`;
 }
 
 function addDaysToIsoDate(startDate: string, offset: number) {
@@ -210,7 +221,7 @@ function normalizePreviewDays(items: VoucherDia[], startDate?: string | null) {
   return sorted.map((item, index) => ({
     ...item,
     data_referencia: addDaysToIsoDate(textValue(startDate), index),
-    ordem: index,
+    ordem: index
   }));
 }
 
@@ -223,16 +234,16 @@ function splitPassengerLines(value?: string | null) {
   return lines;
 }
 
-function renderMultilineDivs(value?: string | null, emptyLabel = "-") {
+function renderMultilineDivs(value?: string | null, emptyLabel = '-') {
   const lines = splitLinesFromMultilineText(value);
   if (!lines.length) return `<div>${escapeHtml(emptyLabel)}</div>`;
-  return lines.map((line) => `<div>${escapeHtml(line)}</div>`).join("");
+  return lines.map((line) => `<div>${escapeHtml(line)}</div>`).join('');
 }
 
 function renderMultilineList(value?: string | null) {
   const lines = splitLinesFromMultilineText(value);
-  if (!lines.length) return "";
-  return `<ul class="voucher-bullet-list">${lines.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>`;
+  if (!lines.length) return '';
+  return `<ul class="voucher-bullet-list">${lines.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>`;
 }
 
 function renderBulletListFromLines(lines: string[]) {
@@ -241,8 +252,8 @@ function renderBulletListFromLines(lines: string[]) {
     const value = textValue(line);
     if (value) normalized.push(value);
   }
-  if (!normalized.length) return "";
-  return `<ul class="voucher-bullet-list">${normalized.map((line) => `<li>${escapeHtml(line)}</li>`).join("")}</ul>`;
+  if (!normalized.length) return '';
+  return `<ul class="voucher-bullet-list">${normalized.map((line) => `<li>${escapeHtml(line)}</li>`).join('')}</ul>`;
 }
 
 function splitLinesIntoPrintableGroups(lines: string[], maxChars = 900) {
@@ -279,7 +290,7 @@ function rebalanceTrailingSparsePage<T>(
   pages: T[][],
   getUnits: (item: T) => number,
   maxUnitsPerPage: number | ((pageIndex: number) => number),
-  overflowAllowance = 1,
+  overflowAllowance = 1
 ) {
   if (pages.length < 2) return pages;
 
@@ -291,7 +302,7 @@ function rebalanceTrailingSparsePage<T>(
   const previousPageIndex = lastPageIndex - 1;
   const previousPage = copy[previousPageIndex];
   const limit =
-    typeof maxUnitsPerPage === "function"
+    typeof maxUnitsPerPage === 'function'
       ? Math.max(1, maxUnitsPerPage(previousPageIndex))
       : Math.max(1, maxUnitsPerPage);
   const previousUnits = previousPage.reduce((sum, item) => sum + Math.max(1, getUnits(item)), 0);
@@ -318,21 +329,21 @@ function buildUnifiedHotelCard(
     showCity?: boolean;
     addressLabel?: string;
     periodLabel?: string;
-  } = {},
+  } = {}
 ) {
   const showCity = options.showCity !== false;
-  const addressLabel = options.addressLabel || "Endereço";
-  const periodLabel = options.periodLabel || "Check In/Out";
+  const addressLabel = options.addressLabel || 'Endereço';
+  const periodLabel = options.periodLabel || 'Check In/Out';
   const period = buildHotelDateRange(hotel);
 
   return `
     <article class="sheet-card voucher-hotel-card">
-      ${showCity && textValue(hotel.cidade) ? `<div class="voucher-hotel-city">${escapeHtml(hotel.cidade || "-")}</div>` : ""}
-      ${textValue(hotel.hotel) ? `<div class="voucher-hotel-detail voucher-hotel-name"><strong>Hotel:</strong> ${escapeHtml(hotel.hotel)}</div>` : ""}
-      ${period ? `<div class="voucher-hotel-detail voucher-hotel-period"><strong>${escapeHtml(periodLabel)}:</strong> ${escapeHtml(period)}</div>` : ""}
-      ${textValue(hotel.endereco) ? `<div class="voucher-hotel-detail"><strong>${escapeHtml(addressLabel)}:</strong> ${escapeHtml(hotel.endereco)}</div>` : ""}
-      ${textValue(hotel.telefone) ? `<div class="voucher-hotel-detail"><strong>Telefone:</strong> ${escapeHtml(hotel.telefone)}</div>` : ""}
-      ${textValue(hotel.observacao) ? `<div class="voucher-hotel-note">${escapeHtml(hotel.observacao || "")}</div>` : ""}
+      ${showCity && textValue(hotel.cidade) ? `<div class="voucher-hotel-city">${escapeHtml(hotel.cidade || '-')}</div>` : ''}
+      ${textValue(hotel.hotel) ? `<div class="voucher-hotel-detail voucher-hotel-name"><strong>Hotel:</strong> ${escapeHtml(hotel.hotel)}</div>` : ''}
+      ${period ? `<div class="voucher-hotel-detail voucher-hotel-period"><strong>${escapeHtml(periodLabel)}:</strong> ${escapeHtml(period)}</div>` : ''}
+      ${textValue(hotel.endereco) ? `<div class="voucher-hotel-detail"><strong>${escapeHtml(addressLabel)}:</strong> ${escapeHtml(hotel.endereco)}</div>` : ''}
+      ${textValue(hotel.telefone) ? `<div class="voucher-hotel-detail"><strong>Telefone:</strong> ${escapeHtml(hotel.telefone)}</div>` : ''}
+      ${textValue(hotel.observacao) ? `<div class="voucher-hotel-note">${escapeHtml(hotel.observacao || '')}</div>` : ''}
     </article>`;
 }
 
@@ -343,17 +354,17 @@ type ProgramPrintBlock = {
 };
 
 function splitTextIntoPrintableChunks(value?: string | null, maxChars = 1400) {
-  const normalized = textValue(value).replace(/\s+/g, " ").trim();
-  if (!normalized) return [""];
+  const normalized = textValue(value).replace(/\s+/g, ' ').trim();
+  if (!normalized) return [''];
   if (normalized.length <= maxChars) return [normalized];
 
   const sentenceParts = normalized.split(/(?<=[.!?;:])\s+/);
   const chunks: string[] = [];
-  let current = "";
+  let current = '';
 
   const pushCurrent = () => {
     if (current.trim()) chunks.push(current.trim());
-    current = "";
+    current = '';
   };
 
   for (const part of sentenceParts) {
@@ -389,7 +400,7 @@ function buildProgramPrintBlocks(items: VoucherDia[]) {
     return chunks.map((chunk, index) => ({
       heading: index === 0 ? heading : `${heading} (continuação)`,
       description: chunk,
-      units: Math.max(1, Math.ceil(String(chunk || "").length / 850)),
+      units: Math.max(1, Math.ceil(String(chunk || '').length / 850))
     }));
   });
 }
@@ -397,7 +408,7 @@ function buildProgramPrintBlocks(items: VoucherDia[]) {
 function paginateByUnits<T>(
   items: T[],
   getUnits: (item: T) => number,
-  maxUnitsPerPage: number | ((pageIndex: number) => number),
+  maxUnitsPerPage: number | ((pageIndex: number) => number)
 ) {
   const pages: T[][] = [];
   let currentPage: T[] = [];
@@ -407,7 +418,9 @@ function paginateByUnits<T>(
   for (const item of items) {
     const units = Math.max(1, getUnits(item));
     const maxUnitsForCurrentPage =
-      typeof maxUnitsPerPage === "function" ? Math.max(1, maxUnitsPerPage(pageIndex)) : Math.max(1, maxUnitsPerPage);
+      typeof maxUnitsPerPage === 'function'
+        ? Math.max(1, maxUnitsPerPage(pageIndex))
+        : Math.max(1, maxUnitsPerPage);
     if (currentPage.length && currentUnits + units > maxUnitsForCurrentPage) {
       pages.push(currentPage);
       currentPage = [];
@@ -423,12 +436,14 @@ function paginateByUnits<T>(
 }
 
 function buildHotelPrintUnits(hotel: VoucherHotel) {
-  const payload = [hotel.cidade, hotel.hotel, hotel.endereco, hotel.telefone, hotel.observacao].map(textValue).join(" ");
+  const payload = [hotel.cidade, hotel.hotel, hotel.endereco, hotel.telefone, hotel.observacao]
+    .map(textValue)
+    .join(' ');
   return Math.max(1, Math.ceil(payload.length / 900));
 }
 
 function buildAppPrintUnits(app: VoucherAppInfo) {
-  const payload = [app.nome, app.descricao].map(textValue).join(" ");
+  const payload = [app.nome, app.descricao].map(textValue).join(' ');
   return Math.max(1, Math.ceil(payload.length / 1000));
 }
 
@@ -440,7 +455,7 @@ function renderProgramSections(params: {
   dias: VoucherDia[];
 }) {
   const blocks = buildProgramPrintBlocks(params.dias);
-  if (!blocks.length) return "";
+  if (!blocks.length) return '';
 
   const pageLimit = (pageIndex: number) => (pageIndex === 0 ? 6 : 7);
   const pages = paginateByUnits(blocks, (item) => item.units, pageLimit);
@@ -449,18 +464,18 @@ function renderProgramSections(params: {
       (pageBlocks, pageIndex) => `
         <section class="sheet">
           ${buildSpecialHeader(params.providerName)}
-          ${buildBand("PROGRAMA DE VIAGEM")}
+          ${buildBand('PROGRAMA DE VIAGEM')}
           ${
             pageIndex === 0
               ? `<div class="sheet-card sheet-card-center">
                   <div class="route-title">${escapeHtml(params.routeTitle)}</div>
                   ${
                     textValue(params.referenceLabel) && textValue(params.referenceValue)
-                      ? `<div class="route-ref">${escapeHtml(params.referenceLabel || "")}: ${escapeHtml(params.referenceValue || "")}</div>`
-                      : ""
+                      ? `<div class="route-ref">${escapeHtml(params.referenceLabel || '')}: ${escapeHtml(params.referenceValue || '')}</div>`
+                      : ''
                   }
                 </div>`
-              : ""
+              : ''
           }
           <div class="program-list">
             ${pageBlocks
@@ -468,14 +483,14 @@ function renderProgramSections(params: {
                 (block) => `
                   <article class="program-card">
                     <div class="program-heading">${escapeHtml(block.heading)}</div>
-                    <div class="program-description">${escapeHtml(block.description || "").replace(/\n/g, "<br/>")}</div>
-                  </article>`,
+                    <div class="program-description">${escapeHtml(block.description || '').replace(/\n/g, '<br/>')}</div>
+                  </article>`
               )
-              .join("")}
+              .join('')}
           </div>
-        </section>`,
+        </section>`
     )
-    .join("");
+    .join('');
 }
 
 function renderHotelSections(params: {
@@ -483,26 +498,26 @@ function renderHotelSections(params: {
   hoteis: VoucherHotel[];
   renderCard: (hotel: VoucherHotel) => string;
 }) {
-  if (!params.hoteis.length) return "";
+  if (!params.hoteis.length) return '';
   const pageLimit = 6;
   const pages = rebalanceTrailingSparsePage(
     paginateByUnits(params.hoteis, buildHotelPrintUnits, pageLimit),
     buildHotelPrintUnits,
     pageLimit,
-    1,
+    1
   );
   return pages
     .map(
       (pageHotels) => `
         <section class="sheet">
           ${buildSpecialHeader(params.providerName)}
-          ${buildBand("LISTA DE HOTÉIS")}
+          ${buildBand('LISTA DE HOTÉIS')}
           <div class="voucher-hotel-list hotel-list-standalone">
-            ${pageHotels.map((hotel) => params.renderCard(hotel)).join("")}
+            ${pageHotels.map((hotel) => params.renderCard(hotel)).join('')}
           </div>
-        </section>`,
+        </section>`
     )
-    .join("");
+    .join('');
 }
 
 function renderEuropamundoPassengerSections(params: {
@@ -515,14 +530,14 @@ function renderEuropamundoPassengerSections(params: {
     paginateByUnits(params.passageiros, () => 1, pageLimit),
     () => 1,
     pageLimit,
-    2,
+    2
   );
 
   if (!pages.length) {
     return `
       <section class="sheet">
-        ${buildSpecialHeader("Europamundo")}
-        ${buildBand("DADOS DE SUA VIAGEM")}
+        ${buildSpecialHeader('Europamundo')}
+        ${buildBand('DADOS DE SUA VIAGEM')}
         <div class="sheet-card sheet-card-center">
           <div class="route-title">${escapeHtml(params.routeTitle)}</div>
         </div>
@@ -536,8 +551,8 @@ function renderEuropamundoPassengerSections(params: {
     .map(
       (pageRows, pageIndex) => `
         <section class="sheet">
-          ${buildSpecialHeader("Europamundo")}
-          ${buildBand("DADOS DE SUA VIAGEM")}
+          ${buildSpecialHeader('Europamundo')}
+          ${buildBand('DADOS DE SUA VIAGEM')}
           ${
             pageIndex === 0
               ? `<div class="sheet-card sheet-card-center">
@@ -546,10 +561,10 @@ function renderEuropamundoPassengerSections(params: {
                 <div class="sheet-card">
                   ${params.infoTable}
                 </div>`
-              : ""
+              : ''
           }
           <div class="sheet-card europa-passenger-card">
-            <div class="europa-passenger-title">PASSAGEIROS${pageIndex > 0 ? " (continuação)" : ""}</div>
+            <div class="europa-passenger-title">PASSAGEIROS${pageIndex > 0 ? ' (continuação)' : ''}</div>
             <div class="europa-passenger-table-wrap">
               <table class="europa-passenger-table">
                 <thead>
@@ -567,22 +582,22 @@ function renderEuropamundoPassengerSections(params: {
                     .map(
                       (passageiro) => `
                         <tr>
-                          <td>${escapeHtml(passageiro.nome || "-")}</td>
-                          <td>${escapeHtml(passageiro.passenger_id || "-")}</td>
-                          <td>${escapeHtml(passageiro.tipo || "-")}</td>
-                          <td>${escapeHtml(passageiro.passaporte || "-")}</td>
-                          <td>${escapeHtml(formatDateBR(passageiro.data_nascimento) || "-")}</td>
-                          <td>${escapeHtml(passageiro.nacionalidade || "-")}</td>
-                        </tr>`,
+                          <td>${escapeHtml(passageiro.nome || '-')}</td>
+                          <td>${escapeHtml(passageiro.passenger_id || '-')}</td>
+                          <td>${escapeHtml(passageiro.tipo || '-')}</td>
+                          <td>${escapeHtml(passageiro.passaporte || '-')}</td>
+                          <td>${escapeHtml(formatDateBR(passageiro.data_nascimento) || '-')}</td>
+                          <td>${escapeHtml(passageiro.nacionalidade || '-')}</td>
+                        </tr>`
                     )
-                    .join("")}
+                    .join('')}
                 </tbody>
               </table>
             </div>
           </div>
-        </section>`,
+        </section>`
     )
-    .join("");
+    .join('');
 }
 
 type EuropamundoTransferBlock = {
@@ -596,22 +611,30 @@ type EuropamundoTransferBlock = {
 function buildEuropamundoTransferBlocks(
   title: string,
   transfer: VoucherTransferInfo | null | undefined,
-  notesTitle: string,
+  notesTitle: string
 ) {
   const detailsLines = splitLinesFromMultilineText(transfer?.detalhes);
   const notesLines = splitLinesFromMultilineText(transfer?.notas);
   const detailGroups = splitLinesIntoPrintableGroups(detailsLines, 820);
   const noteGroups = splitLinesIntoPrintableGroups(notesLines, 820);
-  const totalBlocks = Math.max(detailGroups.length, noteGroups.length, textValue(transfer?.telefone_transferista) ? 1 : 0);
+  const totalBlocks = Math.max(
+    detailGroups.length,
+    noteGroups.length,
+    textValue(transfer?.telefone_transferista) ? 1 : 0
+  );
 
   if (!totalBlocks) return [] as EuropamundoTransferBlock[];
 
   return Array.from({ length: totalBlocks }, (_, index) => ({
     title: index === 0 ? title : `${title} (continuação)`,
     detailsLines: detailGroups[index] || [],
-    phone: index === 0 ? textValue(transfer?.telefone_transferista) : "",
+    phone: index === 0 ? textValue(transfer?.telefone_transferista) : '',
     notesLines: noteGroups[index] || [],
-    notesTitle: noteGroups[index]?.length ? (index === 0 ? notesTitle : `${notesTitle} (continuação)`) : "",
+    notesTitle: noteGroups[index]?.length
+      ? index === 0
+        ? notesTitle
+        : `${notesTitle} (continuação)`
+      : ''
   }));
 }
 
@@ -621,19 +644,23 @@ function renderEuropamundoTransferSections(params: {
   transferOut?: VoucherTransferInfo | null;
 }) {
   const blocks = [
-    ...buildEuropamundoTransferBlocks("TRANSFER IN", params.transferIn, "Notas traslado de chegada"),
-    ...buildEuropamundoTransferBlocks("TRANSFER OUT", params.transferOut, "Notas traslado de saída"),
+    ...buildEuropamundoTransferBlocks(
+      'TRANSFER IN',
+      params.transferIn,
+      'Notas traslado de chegada'
+    ),
+    ...buildEuropamundoTransferBlocks('TRANSFER OUT', params.transferOut, 'Notas traslado de saída')
   ];
 
-  if (!blocks.length) return "";
+  if (!blocks.length) return '';
 
   const pages = paginateByUnits(blocks, () => 1, 2);
   return pages
     .map(
       (pageBlocks) => `
         <section class="sheet">
-          ${buildSpecialHeader(params.providerName || "Europamundo")}
-          ${buildBand("TRASLADOS")}
+          ${buildSpecialHeader(params.providerName || 'Europamundo')}
+          ${buildBand('TRASLADOS')}
           <div class="europa-transfer-grid europa-transfer-grid--print-safe">
             ${pageBlocks
               .map(
@@ -642,22 +669,22 @@ function renderEuropamundoTransferSections(params: {
                     <div class="europa-transfer-title">${escapeHtml(block.title)}</div>
                     ${
                       block.detailsLines.length
-                        ? `<div class="europa-transfer-content">${block.detailsLines.map((line) => `<div>${escapeHtml(line)}</div>`).join("")}</div>`
-                        : ""
+                        ? `<div class="europa-transfer-content">${block.detailsLines.map((line) => `<div>${escapeHtml(line)}</div>`).join('')}</div>`
+                        : ''
                     }
-                    ${block.phone ? `<div class="europa-transfer-phone">Telefone do transferista: ${escapeHtml(block.phone)}</div>` : ""}
+                    ${block.phone ? `<div class="europa-transfer-phone">Telefone do transferista: ${escapeHtml(block.phone)}</div>` : ''}
                     ${
                       block.notesLines.length
                         ? `<div class="europa-transfer-notes-title">${escapeHtml(block.notesTitle)}</div>${renderBulletListFromLines(block.notesLines)}`
-                        : ""
+                        : ''
                     }
-                  </article>`,
+                  </article>`
               )
-              .join("")}
+              .join('')}
           </div>
-        </section>`,
+        </section>`
     )
-    .join("");
+    .join('');
 }
 
 function renderBulletListSections(params: {
@@ -667,7 +694,7 @@ function renderBulletListSections(params: {
   cardClass?: string;
 }) {
   const groups = splitLinesIntoPrintableGroups(splitLinesFromMultilineText(params.content), 1650);
-  if (!groups.length) return "";
+  if (!groups.length) return '';
 
   return groups
     .map(
@@ -675,20 +702,20 @@ function renderBulletListSections(params: {
         <section class="sheet">
           ${buildSpecialHeader(params.providerName)}
           ${buildBand(params.title)}
-          <div class="sheet-card ${escapeHtml(params.cardClass || "").trim()}">
-            ${pageIndex > 0 ? `<div class="europa-section-continuation">Continuação</div>` : ""}
+          <div class="sheet-card ${escapeHtml(params.cardClass || '').trim()}">
+            ${pageIndex > 0 ? `<div class="europa-section-continuation">Continuação</div>` : ''}
             ${renderBulletListFromLines(group)}
           </div>
-        </section>`,
+        </section>`
     )
-    .join("");
+    .join('');
 }
 
 function renderEuropamundoAppSections(params: {
   apps: VoucherAppInfo[];
   assets?: VoucherAssetRecord[];
 }) {
-  if (!params.apps.length) return "";
+  if (!params.apps.length) return '';
   const pageLimit = 6;
   const pages = paginateByUnits(params.apps, buildAppPrintUnits, pageLimit);
 
@@ -696,22 +723,20 @@ function renderEuropamundoAppSections(params: {
     .map(
       (pageApps) => `
         <section class="sheet">
-          ${buildSpecialHeader("Europamundo")}
-          ${buildBand("APPS RECOMENDADOS")}
+          ${buildSpecialHeader('Europamundo')}
+          ${buildBand('APPS RECOMENDADOS')}
           <div class="europa-apps-grid">
-            ${pageApps
-              .map((app) => buildEuropamundoAppCard(app, params.assets || []))
-              .join("")}
+            ${pageApps.map((app) => buildEuropamundoAppCard(app, params.assets || [])).join('')}
           </div>
-        </section>`,
+        </section>`
     )
-    .join("");
+    .join('');
 }
 
 function buildSpecialHeader(providerName: string) {
-  const isEuropamundo = textValue(providerName).toLowerCase() === "europamundo";
-  const providerClass = isEuropamundo ? " voucher-header--europamundo" : "";
-  const providerLogoClass = isEuropamundo ? " voucher-header-logo--europamundo" : "";
+  const isEuropamundo = textValue(providerName).toLowerCase() === 'europamundo';
+  const providerClass = isEuropamundo ? ' voucher-header--europamundo' : '';
+  const providerLogoClass = isEuropamundo ? ' voucher-header-logo--europamundo' : '';
   return `
     <div class="voucher-header${providerClass}">
       <div class="voucher-header-logo">
@@ -742,54 +767,59 @@ function buildInfoRow(label: string, content: string) {
 function buildSpecialToursPreviewDocument(
   voucher: VoucherRecord,
   assets: VoucherAssetRecord[],
-  options?: { providerAsset?: "special_tours" | "sato_tours"; providerName?: string }
+  options?: { providerAsset?: 'special_tours' | 'sato_tours'; providerName?: string }
 ) {
-  const providerAsset = options?.providerAsset || "special_tours";
-  const providerName = options?.providerName || "Special Tours";
-  const providerImages = pickAssetUrls(assets, providerAsset, "image");
+  const providerAsset = options?.providerAsset || 'special_tours';
+  const providerName = options?.providerName || 'Special Tours';
+  const providerImages = pickAssetUrls(assets, providerAsset, 'image');
   const routeTitle = buildRouteTitle(voucher);
   const extraData = normalizeVoucherExtraData(voucher.extra_data, voucher.provider);
   const passengerLines = splitPassengerLines(voucher.passageiros);
-  const dias = normalizePreviewDays((voucher.voucher_dias || []) as VoucherDia[], voucher.data_inicio);
-  const hoteis = (voucher.voucher_hoteis || [])
-    .slice()
-    .sort((a, b) => {
-      const firstHasDate = Boolean(String(a.data_inicio || "").trim() || String(a.data_fim || "").trim());
-      const secondHasDate = Boolean(String(b.data_inicio || "").trim() || String(b.data_fim || "").trim());
-      if (firstHasDate !== secondHasDate) return firstHasDate ? -1 : 1;
+  const dias = normalizePreviewDays(
+    (voucher.voucher_dias || []) as VoucherDia[],
+    voucher.data_inicio
+  );
+  const hoteis = (voucher.voucher_hoteis || []).slice().sort((a, b) => {
+    const firstHasDate = Boolean(
+      String(a.data_inicio || '').trim() || String(a.data_fim || '').trim()
+    );
+    const secondHasDate = Boolean(
+      String(b.data_inicio || '').trim() || String(b.data_fim || '').trim()
+    );
+    if (firstHasDate !== secondHasDate) return firstHasDate ? -1 : 1;
 
-      const firstDate = String(a.data_inicio || "");
-      const secondDate = String(b.data_inicio || "");
-      if (firstDate !== secondDate) return firstDate.localeCompare(secondDate);
-      return Number(a.ordem ?? 0) - Number(b.ordem ?? 0);
-    });
+    const firstDate = String(a.data_inicio || '');
+    const secondDate = String(b.data_inicio || '');
+    if (firstDate !== secondDate) return firstDate.localeCompare(secondDate);
+    return Number(a.ordem ?? 0) - Number(b.ordem ?? 0);
+  });
 
   const infoTable = `
     <div class="info-table">
       ${buildInfoRow(
-        "Passageiros:",
+        'Passageiros:',
         passengerLines.length
-          ? passengerLines.map((line) => `<div>${escapeHtml(line)}</div>`).join("")
-          : `<div>-</div>`,
+          ? passengerLines.map((line) => `<div>${escapeHtml(line)}</div>`).join('')
+          : `<div>-</div>`
       )}
-      ${buildInfoRow("Tipo Acomodação:", escapeHtml(voucher.tipo_acomodacao || "-"))}
-      ${buildInfoRow("Identificador:", escapeHtml(voucher.reserva_online || "-"))}
-      ${buildInfoRow("Data Início:", escapeHtml(formatDateBR(voucher.data_inicio) || "-"))}
-      ${buildInfoRow("Data Final:", escapeHtml(formatDateBR(voucher.data_fim) || "-"))}
+      ${buildInfoRow('Tipo Acomodação:', escapeHtml(voucher.tipo_acomodacao || '-'))}
+      ${buildInfoRow('Identificador:', escapeHtml(voucher.reserva_online || '-'))}
+      ${buildInfoRow('Data Início:', escapeHtml(formatDateBR(voucher.data_inicio) || '-'))}
+      ${buildInfoRow('Data Final:', escapeHtml(formatDateBR(voucher.data_fim) || '-'))}
     </div>`;
 
   const programSection = renderProgramSections({
     providerName,
     routeTitle,
-    referenceLabel: voucher.reserva_online ? "S/REF" : "",
-    referenceValue: voucher.reserva_online || "",
-    dias,
+    referenceLabel: voucher.reserva_online ? 'S/REF' : '',
+    referenceValue: voucher.reserva_online || '',
+    dias
   });
 
   const transfersSection = renderEuropamundoTransferSections({
     providerName,
     transferIn: extraData.traslado_chegada,
-    transferOut: extraData.traslado_saida,
+    transferOut: extraData.traslado_saida
   });
 
   const hotelSection = renderHotelSections({
@@ -798,9 +828,9 @@ function buildSpecialToursPreviewDocument(
     renderCard: (hotel) =>
       buildUnifiedHotelCard(hotel, {
         showCity: false,
-        addressLabel: "Endereço / Address",
-        periodLabel: "Check In/Out",
-      }),
+        addressLabel: 'Endereço / Address',
+        periodLabel: 'Check In/Out'
+      })
   });
 
   const appSection = providerImages.length
@@ -808,39 +838,39 @@ function buildSpecialToursPreviewDocument(
       <section class="sheet sheet-keep-together">
         ${buildSpecialHeader(providerName)}
         <div class="sheet-keep-together-block">
-          ${buildBand("BAIXE O APLICATIVO CONQUISTA")}
+          ${buildBand('BAIXE O APLICATIVO CONQUISTA')}
           <div class="provider-images">
             ${providerImages
               .map(
                 (imageUrl, index) => `
                   <div class="provider-image-card">
                     <img src="${escapeHtml(imageUrl)}" alt="Imagem padrão ${index + 1} do voucher" />
-                  </div>`,
+                  </div>`
               )
-              .join("")}
+              .join('')}
           </div>
         </div>
       </section>`
-    : "";
+    : '';
 
-  const emergencyOffice = textValue(extraData.emergencia?.escritorio) || "onboard@specialtours.com";
-  const emergency24h = textValue(extraData.emergencia?.emergencia_24h) || "+34 652 99 00 47";
+  const emergencyOffice = textValue(extraData.emergencia?.escritorio) || 'onboard@specialtours.com';
+  const emergency24h = textValue(extraData.emergencia?.emergencia_24h) || '+34 652 99 00 47';
   const emergencyWhatsapp = textValue(extraData.emergencia?.whatsapp);
-  const emergencyOfficeHtml = emergencyOffice.includes("@")
+  const emergencyOfficeHtml = emergencyOffice.includes('@')
     ? `<a href="mailto:${escapeHtml(emergencyOffice)}">${escapeHtml(emergencyOffice)}</a>`
     : escapeHtml(emergencyOffice);
 
   const emergencySection = `
     <section class="sheet">
       ${buildSpecialHeader(providerName)}
-      ${buildBand("TELEFONE DE EMERGÊNCIA")}
+      ${buildBand('TELEFONE DE EMERGÊNCIA')}
       <div class="sheet-card emergency-card">
         <p>Nos adicione no seu WhatsApp e em caso de emergência durante a sua viagem,<br/>ou qualquer outra dúvida, entre em contato conosco.</p>
         <p>Apenas para passageiros em viagem:</p>
         <p class="emergency-strong">${escapeHtml(emergency24h)}</p>
         <p>${emergencyOfficeHtml}</p>
-        ${emergencyWhatsapp ? `<p>WhatsApp emergências: ${escapeHtml(emergencyWhatsapp)}</p>` : ""}
-        ${voucher.reserva_online ? `<p class="emergency-id">IDENTIFICADOR: ${escapeHtml(voucher.reserva_online)}</p>` : ""}
+        ${emergencyWhatsapp ? `<p>WhatsApp emergências: ${escapeHtml(emergencyWhatsapp)}</p>` : ''}
+        ${voucher.reserva_online ? `<p class="emergency-id">IDENTIFICADOR: ${escapeHtml(voucher.reserva_online)}</p>` : ''}
       </div>
     </section>`;
 
@@ -849,7 +879,7 @@ function buildSpecialToursPreviewDocument(
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${escapeHtml(routeTitle || "Voucher")}</title>
+    <title>${escapeHtml(routeTitle || 'Voucher')}</title>
     <style>
       :root {
         --page-bg: #eef3fb;
@@ -1286,7 +1316,7 @@ function buildSpecialToursPreviewDocument(
     <main class="document">
       <section class="sheet">
         ${buildSpecialHeader(providerName)}
-        ${buildBand("DADOS DE SUA VIAGEM")}
+        ${buildBand('DADOS DE SUA VIAGEM')}
         ${buildBand(routeTitle)}
         <div class="sheet-card">
           ${infoTable}
@@ -1303,68 +1333,71 @@ function buildSpecialToursPreviewDocument(
 }
 
 function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: VoucherAssetRecord[]) {
-  const extraData = normalizeVoucherExtraData(voucher.extra_data, "europamundo");
-  const passageiros = (extraData.passageiros_detalhes || []).slice().sort((a, b) => a.ordem - b.ordem);
-  const dias = normalizePreviewDays((voucher.voucher_dias || []) as VoucherDia[], voucher.data_inicio);
-  const hoteis = (voucher.voucher_hoteis || [])
+  const extraData = normalizeVoucherExtraData(voucher.extra_data, 'europamundo');
+  const passageiros = (extraData.passageiros_detalhes || [])
     .slice()
-    .sort((a, b) => {
-      const firstDate = String(a.data_inicio || "");
-      const secondDate = String(b.data_inicio || "");
-      if (firstDate !== secondDate) return firstDate.localeCompare(secondDate);
-      return Number(a.ordem ?? 0) - Number(b.ordem ?? 0);
-    });
+    .sort((a, b) => a.ordem - b.ordem);
+  const dias = normalizePreviewDays(
+    (voucher.voucher_dias || []) as VoucherDia[],
+    voucher.data_inicio
+  );
+  const hoteis = (voucher.voucher_hoteis || []).slice().sort((a, b) => {
+    const firstDate = String(a.data_inicio || '');
+    const secondDate = String(b.data_inicio || '');
+    if (firstDate !== secondDate) return firstDate.localeCompare(secondDate);
+    return Number(a.ordem ?? 0) - Number(b.ordem ?? 0);
+  });
   const apps = (extraData.apps_recomendados || []).slice().sort((a, b) => a.ordem - b.ordem);
-  const routeTitle = textValue(voucher.nome || "Voucher");
+  const routeTitle = textValue(voucher.nome || 'Voucher');
 
   const infoTable = `
     <div class="info-table">
-      ${buildInfoRow("Localizador:", escapeHtml(voucher.reserva_online || "-"))}
-      ${buildInfoRow("Data de Partida:", escapeHtml(formatDateBR(voucher.data_inicio) || "-"))}
-      ${buildInfoRow("Data de Finalização:", escapeHtml(formatDateBR(voucher.data_fim) || "-"))}
-      ${buildInfoRow("Tipo de Quarto:", escapeHtml(voucher.tipo_acomodacao || "-"))}
+      ${buildInfoRow('Localizador:', escapeHtml(voucher.reserva_online || '-'))}
+      ${buildInfoRow('Data de Partida:', escapeHtml(formatDateBR(voucher.data_inicio) || '-'))}
+      ${buildInfoRow('Data de Finalização:', escapeHtml(formatDateBR(voucher.data_fim) || '-'))}
+      ${buildInfoRow('Tipo de Quarto:', escapeHtml(voucher.tipo_acomodacao || '-'))}
     </div>`;
 
   const tripDataSections = renderEuropamundoPassengerSections({
     routeTitle,
     infoTable,
-    passageiros,
+    passageiros
   });
 
   const transfersSection = renderEuropamundoTransferSections({
     transferIn: extraData.traslado_chegada,
-    transferOut: extraData.traslado_saida,
+    transferOut: extraData.traslado_saida
   });
 
   const programSection = renderProgramSections({
-    providerName: "Europamundo",
+    providerName: 'Europamundo',
     routeTitle,
-    referenceLabel: voucher.reserva_online ? "LOCALIZADOR" : "",
-    referenceValue: voucher.reserva_online || "",
-    dias,
+    referenceLabel: voucher.reserva_online ? 'LOCALIZADOR' : '',
+    referenceValue: voucher.reserva_online || '',
+    dias
   });
 
   const hotelsSection = renderHotelSections({
-    providerName: "Europamundo",
+    providerName: 'Europamundo',
     hoteis,
     renderCard: (hotel) =>
       buildUnifiedHotelCard(hotel, {
         showCity: true,
-        addressLabel: "Endereço",
-        periodLabel: "Check In/Out",
-      }),
+        addressLabel: 'Endereço',
+        periodLabel: 'Check In/Out'
+      })
   });
 
   const importantInfoSection = renderBulletListSections({
-    providerName: "Europamundo",
-    title: "INFORMAÇÕES IMPORTANTES",
+    providerName: 'Europamundo',
+    title: 'INFORMAÇÕES IMPORTANTES',
     content: extraData.informacoes_importantes,
-    cardClass: "europa-info-card",
+    cardClass: 'europa-info-card'
   });
 
   const appsSection = renderEuropamundoAppSections({
     apps,
-    assets,
+    assets
   });
 
   const emergencySection =
@@ -1373,36 +1406,36 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
     textValue(extraData.emergencia?.whatsapp)
       ? `
         <section class="sheet">
-          ${buildSpecialHeader("Europamundo")}
-          ${buildBand("TELEFONE DE EMERGÊNCIA")}
+          ${buildSpecialHeader('Europamundo')}
+          ${buildBand('TELEFONE DE EMERGÊNCIA')}
           <div class="sheet-card emergency-card">
             <p>Apenas para passageiros em viagem:</p>
             ${
               textValue(extraData.emergencia?.escritorio)
-                ? `<p><strong>Escritório:</strong> ${escapeHtml(extraData.emergencia?.escritorio || "")}</p>`
-                : ""
+                ? `<p><strong>Escritório:</strong> ${escapeHtml(extraData.emergencia?.escritorio || '')}</p>`
+                : ''
             }
             ${
               textValue(extraData.emergencia?.emergencia_24h)
-                ? `<p class="emergency-strong">Emergência 24 horas: ${escapeHtml(extraData.emergencia?.emergencia_24h || "")}</p>`
-                : ""
+                ? `<p class="emergency-strong">Emergência 24 horas: ${escapeHtml(extraData.emergencia?.emergencia_24h || '')}</p>`
+                : ''
             }
             ${
               textValue(extraData.emergencia?.whatsapp)
-                ? `<p>WhatsApp emergências: ${escapeHtml(extraData.emergencia?.whatsapp || "")}</p>`
-                : ""
+                ? `<p>WhatsApp emergências: ${escapeHtml(extraData.emergencia?.whatsapp || '')}</p>`
+                : ''
             }
-            ${voucher.reserva_online ? `<p class="emergency-id">LOCALIZADOR: ${escapeHtml(voucher.reserva_online)}</p>` : ""}
+            ${voucher.reserva_online ? `<p class="emergency-id">LOCALIZADOR: ${escapeHtml(voucher.reserva_online)}</p>` : ''}
           </div>
         </section>`
-      : "";
+      : '';
 
   return `<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${escapeHtml(routeTitle || "Voucher")}</title>
+    <title>${escapeHtml(routeTitle || 'Voucher')}</title>
     <style>
       :root {
         --page-bg: #eef3fb;
@@ -1832,7 +1865,10 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
 }
 
 function buildGenericVoucherPreviewDocument(voucher: VoucherRecord, assets: VoucherAssetRecord[]) {
-  const dias = normalizePreviewDays((voucher.voucher_dias || []) as VoucherDia[], voucher.data_inicio);
+  const dias = normalizePreviewDays(
+    (voucher.voucher_dias || []) as VoucherDia[],
+    voucher.data_inicio
+  );
   const hoteis = (voucher.voucher_hoteis || [])
     .slice()
     .sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0));
@@ -1843,7 +1879,7 @@ function buildGenericVoucherPreviewDocument(voucher: VoucherRecord, assets: Vouc
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>${escapeHtml(routeTitle || "Voucher")}</title>
+    <title>${escapeHtml(routeTitle || 'Voucher')}</title>
     <style>
       body {
         margin: 0;
@@ -1955,12 +1991,12 @@ function buildGenericVoucherPreviewDocument(voucher: VoucherRecord, assets: Vouc
                 .map(
                   (dia) => `<div class="day">
                     <div class="day-heading">${escapeHtml(buildDayHeading(dia))}</div>
-                    <div>${escapeHtml(dia.descricao || "").replace(/\n/g, "<br/>")}</div>
-                  </div>`,
+                    <div>${escapeHtml(dia.descricao || '').replace(/\n/g, '<br/>')}</div>
+                  </div>`
                 )
-                .join("")}
+                .join('')}
             </section>`
-          : ""
+          : ''
       }
       ${
         hoteis.length
@@ -1969,32 +2005,35 @@ function buildGenericVoucherPreviewDocument(voucher: VoucherRecord, assets: Vouc
               ${hoteis
                 .map(
                   (hotel) => `<div class="hotel">
-                    <div><b>Hotel:</b> ${escapeHtml(hotel.hotel || "-")}</div>
-                    ${hotel.endereco ? `<div><b>Endereço:</b> ${escapeHtml(hotel.endereco)}</div>` : ""}
-                    ${hotel.telefone ? `<div><b>Telefone:</b> ${escapeHtml(hotel.telefone)}</div>` : ""}
-                    ${buildHotelDateRange(hotel) ? `<div><b>Check In/Out:</b> ${escapeHtml(buildHotelDateRange(hotel))}</div>` : ""}
-                  </div>`,
+                    <div><b>Hotel:</b> ${escapeHtml(hotel.hotel || '-')}</div>
+                    ${hotel.endereco ? `<div><b>Endereço:</b> ${escapeHtml(hotel.endereco)}</div>` : ''}
+                    ${hotel.telefone ? `<div><b>Telefone:</b> ${escapeHtml(hotel.telefone)}</div>` : ''}
+                    ${buildHotelDateRange(hotel) ? `<div><b>Check In/Out:</b> ${escapeHtml(buildHotelDateRange(hotel))}</div>` : ''}
+                  </div>`
                 )
-                .join("")}
+                .join('')}
             </section>`
-          : ""
+          : ''
       }
     </main>
   </body>
 </html>`;
 }
 
-export function buildVoucherPreviewDocument(voucher: VoucherRecord, assets: VoucherAssetRecord[] = []) {
-  if (voucher.provider === "special_tours") {
+export function buildVoucherPreviewDocument(
+  voucher: VoucherRecord,
+  assets: VoucherAssetRecord[] = []
+) {
+  if (voucher.provider === 'special_tours') {
     return buildSpecialToursPreviewDocument(voucher, assets);
   }
-  if (voucher.provider === "sato_tours") {
+  if (voucher.provider === 'sato_tours') {
     return buildSpecialToursPreviewDocument(voucher, assets, {
-      providerAsset: "sato_tours",
-      providerName: "Sato Tours",
+      providerAsset: 'sato_tours',
+      providerName: 'Sato Tours'
     });
   }
-  if (voucher.provider === "europamundo") {
+  if (voucher.provider === 'europamundo') {
     return buildEuropamundoPreviewDocument(voucher, assets);
   }
   return buildGenericVoucherPreviewDocument(voucher, assets);

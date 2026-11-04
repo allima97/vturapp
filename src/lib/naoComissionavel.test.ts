@@ -8,7 +8,7 @@ import {
   calcularNaoComissionavelPorVenda,
   calcularNaoComissionavelResumo,
   calcularValorPagamento,
-  isFormaNaoComissionavel,
+  isFormaNaoComissionavel
 } from './naoComissionavel';
 
 // Termos ativos em produção em 24/09/2026 (parametros_pagamentos_nao_comissionaveis)
@@ -25,7 +25,7 @@ const TERMOS = [
   'credito pax',
   'ficha agencia',
   'ficha agencia-recadastro',
-  'vale viagem',
+  'vale viagem'
 ];
 
 describe('isFormaNaoComissionavel', () => {
@@ -62,7 +62,13 @@ describe('calcularNaoComissionavelResumo', () => {
     // não comissionável por termo, vinculado a recibo
     { venda_id: 'v1', venda_recibo_id: 'r1', forma_nome: 'Crédito Pax', valor_total: 300 },
     // não comissionável por paga_comissao = false, sem recibo
-    { venda_id: 'v1', forma_nome: 'Qualquer', paga_comissao: false, valor_bruto: 250, desconto_valor: 50 },
+    {
+      venda_id: 'v1',
+      forma_nome: 'Qualquer',
+      paga_comissao: false,
+      valor_bruto: 250,
+      desconto_valor: 50
+    },
     // comissionável
     { venda_id: 'v1', forma_nome: 'PIX', valor_total: 1000 },
     // forma aninhada + operação/plano entram no nome resolvido
@@ -72,7 +78,7 @@ describe('calcularNaoComissionavelResumo', () => {
     // sem venda_id é ignorado
     { forma_nome: 'Crédito Pax', valor_total: 999 },
     // valor zero é ignorado
-    { venda_id: 'v4', forma_nome: 'Crédito Pax', valor_total: 0 },
+    { venda_id: 'v4', forma_nome: 'Crédito Pax', valor_total: 0 }
   ];
 
   it('separa por venda, por recibo e por venda sem recibo', () => {
@@ -86,7 +92,7 @@ describe('calcularNaoComissionavelResumo', () => {
     expect(Object.fromEntries(calcularNaoComissionavelPorVenda(pagamentos, TERMOS))).toEqual({
       v1: 500,
       v2: 80,
-      v3: 40,
+      v3: 40
     });
   });
 });

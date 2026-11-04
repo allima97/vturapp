@@ -53,7 +53,10 @@ export async function handleMenuPrefsGet(event: RequestEvent) {
     });
   } catch (err: unknown) {
     logServerError('[menu/prefs] falha ao carregar preferencias', err);
-    return new Response('Erro ao carregar preferencias do menu.', { status: 500, headers: TEXT_NO_STORE_HEADERS });
+    return new Response('Erro ao carregar preferencias do menu.', {
+      status: 500,
+      headers: TEXT_NO_STORE_HEADERS
+    });
   }
 }
 
@@ -95,6 +98,9 @@ export async function handleMenuPrefsPost(event: RequestEvent) {
     });
   } catch (err: unknown) {
     logServerError('[menu/prefs] falha ao salvar preferencias', err);
-    return new Response('Erro ao salvar preferencias do menu.', { status: 500, headers: TEXT_NO_STORE_HEADERS });
+    return new Response('Erro ao salvar preferencias do menu.', {
+      status: 500,
+      headers: TEXT_NO_STORE_HEADERS
+    });
   }
 }

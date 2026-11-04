@@ -10,7 +10,9 @@ export const load = async () => {
   if (browser) {
     const dados = createBrowserDataClient();
 
-    const { data: { session } } = await dados.auth.getSession();
+    const {
+      data: { session }
+    } = await dados.auth.getSession();
 
     if (session?.user) {
       auth.setAuth(session.user, session);
@@ -25,7 +27,10 @@ export const load = async () => {
       authListenerInitialized = true;
 
       dados.auth.onAuthStateChange(async (event: string, session) => {
-        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session) {
+        if (
+          (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') &&
+          session
+        ) {
           auth.setAuth(session.user, session);
           // Reinicializa permissões quando auth muda
           try {

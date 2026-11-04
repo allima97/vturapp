@@ -6,9 +6,14 @@
   import { BottomSheet, FieldCheckbox, FieldInput, FieldSelect } from '$lib/components/ui';
   import Dialog from '$lib/components/ui/Dialog.svelte';
   import DataTable from '$lib/components/ui/DataTable.svelte';
-  import { 
-    Plus, Edit2, Trash2, CreditCard, 
-    CheckCircle, XCircle, SlidersHorizontal
+  import {
+    Plus,
+    Edit2,
+    Trash2,
+    CreditCard,
+    CheckCircle,
+    XCircle,
+    SlidersHorizontal
   } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { toUserMessage } from '$lib/utils/errors';
@@ -62,48 +67,51 @@
   let descontoPadraoPctValue = '';
 
   const columns = [
-    { 
-      key: 'nome', 
-      label: 'Nome', 
+    {
+      key: 'nome',
+      label: 'Nome',
       sortable: true,
       formatter: (value: string, row: FormaPagamento) => {
         const detalhes: string[] = [];
         if (row.permite_desconto) detalhes.push('Permite desconto');
         if (row.paga_comissao === false) detalhes.push('Sem comissão');
-        return `<div class="flex flex-col"><span class="font-medium text-slate-900">${escapeHtml(value)}</span><span class="text-xs text-slate-500">${escapeHtml(detalhes.join(' · ') || (row.descricao || '-'))}</span></div>`;
+        return `<div class="flex flex-col"><span class="font-medium text-slate-900">${escapeHtml(value)}</span><span class="text-xs text-slate-500">${escapeHtml(detalhes.join(' · ') || row.descricao || '-')}</span></div>`;
       }
     },
-    { 
-      key: 'descricao', 
+    {
+      key: 'descricao',
       label: 'Descrição',
       formatter: (value: string | null) => value || '-'
     },
-    { 
-      key: 'paga_comissao', 
-      label: 'Paga Comissão', 
+    {
+      key: 'paga_comissao',
+      label: 'Paga Comissão',
       width: '130px',
       align: 'center' as const,
-      formatter: (value: boolean) => value !== false
-        ? '<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Sim</span>'
-        : '<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600">Não</span>'
+      formatter: (value: boolean) =>
+        value !== false
+          ? '<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Sim</span>'
+          : '<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600">Não</span>'
     },
-    { 
-      key: 'permite_desconto', 
-      label: 'Desconto', 
+    {
+      key: 'permite_desconto',
+      label: 'Desconto',
       width: '120px',
       align: 'center' as const,
-      formatter: (value: boolean, row: FormaPagamento) => value
-        ? `<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">${PT_BR_NUMBER_FORMATTER.format(Number(row.desconto_padrao_pct || 0))}%</span>`
-        : '<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600">Não</span>'
+      formatter: (value: boolean, row: FormaPagamento) =>
+        value
+          ? `<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">${PT_BR_NUMBER_FORMATTER.format(Number(row.desconto_padrao_pct || 0))}%</span>`
+          : '<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600">Não</span>'
     },
-    { 
-      key: 'ativo', 
-      label: 'Status', 
+    {
+      key: 'ativo',
+      label: 'Status',
       sortable: true,
       width: '100px',
-      formatter: (value: boolean) => value 
-        ? '<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Ativo</span>'
-        : '<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600">Inativo</span>'
+      formatter: (value: boolean) =>
+        value
+          ? '<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Ativo</span>'
+          : '<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600">Inativo</span>'
     }
   ];
 
@@ -173,7 +181,8 @@
         desconto_padrao_pct: forma.desconto_padrao_pct ?? null,
         ativo: forma.ativo
       };
-      descontoPadraoPctValue = forma.desconto_padrao_pct != null ? String(forma.desconto_padrao_pct) : '';
+      descontoPadraoPctValue =
+        forma.desconto_padrao_pct != null ? String(forma.desconto_padrao_pct) : '';
     } else {
       editando = null;
       form = {
@@ -204,7 +213,7 @@
     try {
       const url = '/api/v1/financeiro/formas-pagamento';
       const method = editando ? 'PATCH' : 'POST';
-      const body = editando 
+      const body = editando
         ? { ...form, id: editando.id, empresa_id: empresaId || undefined }
         : { ...form, empresa_id: empresaId || undefined };
 
@@ -226,7 +235,9 @@
 
     processando = true;
     try {
-      const result = await apiDelete<{ message?: string }>('/api/v1/financeiro/formas-pagamento', { id: excluindo.id });
+      const result = await apiDelete<{ message?: string }>('/api/v1/financeiro/formas-pagamento', {
+        id: excluindo.id
+      });
       toast.success(result.message || 'Forma de pagamento excluída!');
       showDeleteDialog = false;
       excluindo = null;
@@ -238,10 +249,10 @@
     }
   }
 
-  $: ativas = formasPagamento.filter(f => f.ativo);
-  $: inativas = formasPagamento.filter(f => !f.ativo);
-  $: semComissao = formasPagamento.filter(f => f.paga_comissao === false);
-  $: comDesconto = formasPagamento.filter(f => Boolean(f.permite_desconto));
+  $: ativas = formasPagamento.filter((f) => f.ativo);
+  $: inativas = formasPagamento.filter((f) => !f.ativo);
+  $: semComissao = formasPagamento.filter((f) => f.paga_comissao === false);
+  $: comDesconto = formasPagamento.filter((f) => Boolean(f.permite_desconto));
   $: formasVisiveis = formasPagamento.filter((f) => {
     if (filtroRapido === 'ativas') return f.ativo;
     if (filtroRapido === 'inativas') return !f.ativo;
@@ -255,14 +266,11 @@
   <title>Formas de Pagamento | VTUR</title>
 </svelte:head>
 
-<PageHeader 
+<PageHeader
   title="Formas de Pagamento"
   subtitle="Cadastre e gerencie as formas de pagamento aceitas"
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Financeiro', href: '/financeiro' },
-    { label: 'Formas de Pagamento' }
-  ]}
+  breadcrumbs={[{ label: 'Financeiro', href: '/financeiro' }, { label: 'Formas de Pagamento' }]}
   actions={[
     {
       label: 'Nova Forma',
@@ -315,8 +323,11 @@
   </div>
 </div>
 
-<div class="mb-6 rounded-vtur-xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600 shadow-vtur-lg">
-  A tela agora ajuda a revisar rapidamente formas <strong>ativas</strong>, <strong>inativas</strong>, sem comissão e com política de desconto.
+<div
+  class="rounded-vtur-xl shadow-vtur-lg mb-6 border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600"
+>
+  A tela agora ajuda a revisar rapidamente formas <strong>ativas</strong>,
+  <strong>inativas</strong>, sem comissão e com política de desconto.
 </div>
 
 <!-- Mobile: botão de filtros -->
@@ -325,7 +336,7 @@
     <SlidersHorizontal size={16} class="mr-2" />
     Filtros
     {#if empresaId || filtroRapido !== 'todas'}
-      <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-financeiro-500"></span>
+      <span class="bg-financeiro-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
     {/if}
   </Button>
 </div>
@@ -466,11 +477,7 @@
 >
   <svelte:fragment slot="actions" let:row>
     <div class="flex items-center gap-2">
-      <Button
-        variant="secondary"
-        size="sm"
-        on:click={() => abrirForm(row)}
-      >
+      <Button variant="secondary" size="sm" on:click={() => abrirForm(row)}>
         <Edit2 size={16} />
       </Button>
       <Button
@@ -540,7 +547,11 @@
 
     <div class="space-y-2">
       <FieldCheckbox label="Paga comissão" bind:checked={form.paga_comissao} color="financeiro" />
-      <FieldCheckbox label="Permite desconto" bind:checked={form.permite_desconto} color="financeiro" />
+      <FieldCheckbox
+        label="Permite desconto"
+        bind:checked={form.permite_desconto}
+        color="financeiro"
+      />
       <FieldCheckbox label="Ativo" bind:checked={form.ativo} color="financeiro" />
     </div>
   </div>
@@ -565,7 +576,8 @@
       </p>
       <p class="text-sm text-slate-500">
         {#if excluindo.ativo}
-          Esta forma de pagamento está ativa. Se houver pagamentos associados, ela será apenas inativada.
+          Esta forma de pagamento está ativa. Se houver pagamentos associados, ela será apenas
+          inativada.
         {:else}
           Esta forma de pagamento já está inativa.
         {/if}

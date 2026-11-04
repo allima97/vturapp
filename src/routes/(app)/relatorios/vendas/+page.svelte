@@ -11,7 +11,15 @@
   import ChartJS from '$lib/components/charts/ChartJS.svelte';
   import KPICard from '$lib/components/kpis/KPICard.svelte';
   import KPIGrid from '$lib/components/kpis/KPIGrid.svelte';
-  import { ArrowLeft, X, TrendingUp, DollarSign, Users, ShoppingCart, SlidersHorizontal } from '$lib/icons';
+  import {
+    ArrowLeft,
+    X,
+    TrendingUp,
+    DollarSign,
+    Users,
+    ShoppingCart,
+    SlidersHorizontal
+  } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { permissoes } from '$lib/stores/permissoes';
   import {
@@ -179,11 +187,11 @@
   function hasConciliacaoOverride(recibo?: Recibo | null) {
     return Boolean(
       recibo &&
-        (recibo.valor_bruto_override != null ||
-          recibo.valor_liquido_override != null ||
-          recibo.valor_meta_override != null ||
-          recibo.faixa_comissao ||
-          recibo.percentual_comissao_loja != null)
+      (recibo.valor_bruto_override != null ||
+        recibo.valor_liquido_override != null ||
+        recibo.valor_meta_override != null ||
+        recibo.faixa_comissao ||
+        recibo.percentual_comissao_loja != null)
     );
   }
 
@@ -221,14 +229,22 @@
   function buildReciboBusinessKey(
     recibo: Pick<ReciboLinha, 'numero_recibo' | 'produto_id' | 'produto_nome' | 'data_venda'>
   ) {
-    const numeroRecibo = String(recibo.numero_recibo || '').trim().toLowerCase();
-    const produtoId = String(recibo.produto_id || recibo.produto_nome || '').trim().toLowerCase();
+    const numeroRecibo = String(recibo.numero_recibo || '')
+      .trim()
+      .toLowerCase();
+    const produtoId = String(recibo.produto_id || recibo.produto_nome || '')
+      .trim()
+      .toLowerCase();
     const dataVenda = normalizarDataIso(recibo.data_venda);
     if (!numeroRecibo || !produtoId || !dataVenda) return '';
     return `${numeroRecibo}::${produtoId}::${dataVenda}`;
   }
 
-  function normalizarRecibosPeriodo(recibos: ReciboLinha[], inicio?: string | null, fim?: string | null) {
+  function normalizarRecibosPeriodo(
+    recibos: ReciboLinha[],
+    inicio?: string | null,
+    fim?: string | null
+  ) {
     const ini = normalizarDataIso(inicio);
     const end = normalizarDataIso(fim);
     const idsSeen = new Set<string>();
@@ -265,7 +281,6 @@
       end: parts.iso
     };
   }
-
 
   const defaultRange = getDefaultRange();
   const defaultMonth = todayISODateLocal().slice(0, 7);
@@ -529,7 +544,12 @@
     loadingMore = true;
 
     try {
-      const nextPage = await fetchRelatorioRange(dataInicio, dataFim, controller.signal, vendas.length);
+      const nextPage = await fetchRelatorioRange(
+        dataInicio,
+        dataFim,
+        controller.signal,
+        vendas.length
+      );
       if (requestKey !== buildAutoReloadKey()) return;
 
       vendas = [...vendas, ...(nextPage.items || [])];
@@ -626,7 +646,8 @@
       return;
     }
 
-    const hideVendedorColumn = $permissoes.ready && ($permissoes.isVendedor || $permissoes.usoIndividual);
+    const hideVendedorColumn =
+      $permissoes.ready && ($permissoes.isVendedor || $permissoes.usoIndividual);
     const headers = [
       'Recibo',
       'Data',
@@ -674,8 +695,10 @@
 
   // Regra fiel de escopo: vendedor/uso individual não deve escolher empresa ou vendedor global.
   $: showEmpresaFiltro = $permissoes.ready && ($permissoes.isSystemAdmin || $permissoes.isMaster);
-  $: showVendedorFiltro = $permissoes.ready && !$permissoes.isVendedor && !$permissoes.usoIndividual;
-  $: hideVendedorColumn = $permissoes.ready && ($permissoes.isVendedor || $permissoes.usoIndividual);
+  $: showVendedorFiltro =
+    $permissoes.ready && !$permissoes.isVendedor && !$permissoes.usoIndividual;
+  $: hideVendedorColumn =
+    $permissoes.ready && ($permissoes.isVendedor || $permissoes.usoIndividual);
   $: columns = hideVendedorColumn
     ? columnsBase.filter((column) => column.key !== 'vendedor_nome')
     : columnsBase;
@@ -707,7 +730,7 @@
     destinoFiltro,
     produtoFiltro,
     tipoProdutoFiltro
-    ].join('|');
+  ].join('|');
 
   $: if (autoReloadEnabled && autoReloadKey !== lastAutoReloadKey) {
     lastAutoReloadKey = autoReloadKey;
@@ -803,7 +826,9 @@
       dayMap.set(day, (dayMap.get(day) || 0) + Number(point.value || 0));
     }
 
-    const labels = Array.from({ length: daysInMonth }, (_, idx) => String(idx + 1).padStart(2, '0'));
+    const labels = Array.from({ length: daysInMonth }, (_, idx) =>
+      String(idx + 1).padStart(2, '0')
+    );
     const data = Array.from({ length: daysInMonth }, (_, idx) => dayMap.get(idx + 1) || 0);
 
     return {
@@ -831,10 +856,7 @@
   subtitle="Leitura detalhada das vendas com drill-down operacional por cliente, destino, produto e responsável."
   color="financeiro"
   actions={[{ label: 'Voltar', href: '/relatorios', variant: 'secondary', icon: ArrowLeft }]}
-  breadcrumbs={[
-    { label: 'Relatórios', href: '/relatorios' },
-    { label: 'Vendas' }
-  ]}
+  breadcrumbs={[{ label: 'Relatórios', href: '/relatorios' }, { label: 'Vendas' }]}
 />
 
 <!-- Mobile: botão de filtros -->
@@ -843,7 +865,7 @@
     <SlidersHorizontal size={16} class="mr-2" />
     Filtros
     {#if empresaSelecionada || vendedorSelecionado}
-      <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-financeiro-500"></span>
+      <span class="bg-financeiro-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
     {/if}
   </Button>
 </div>
@@ -870,15 +892,31 @@
         class_name="w-full"
       />
     {:else}
-      <FieldInput id="rel-vendas-data-inicio-mobile" label="Data início" type="date" bind:value={dataInicio} class_name="w-full" />
-      <FieldInput id="rel-vendas-data-fim-mobile" label="Data fim" type="date" bind:value={dataFim} min={dataInicio || null} class_name="w-full" />
+      <FieldInput
+        id="rel-vendas-data-inicio-mobile"
+        label="Data início"
+        type="date"
+        bind:value={dataInicio}
+        class_name="w-full"
+      />
+      <FieldInput
+        id="rel-vendas-data-fim-mobile"
+        label="Data fim"
+        type="date"
+        bind:value={dataFim}
+        min={dataInicio || null}
+        class_name="w-full"
+      />
     {/if}
     {#if showEmpresaFiltro}
       <FieldSelect
         id="rel-vendas-empresa-mobile"
         label="Empresa"
         bind:value={empresaSelecionada}
-        options={[{ value: '', label: 'Todas' }, ...empresas.map((empresa) => ({ value: empresa.id, label: empresa.nome }))]}
+        options={[
+          { value: '', label: 'Todas' },
+          ...empresas.map((empresa) => ({ value: empresa.id, label: empresa.nome }))
+        ]}
         placeholder={null}
         class_name="w-full"
       />
@@ -888,7 +926,10 @@
         id="rel-vendas-vendedor-mobile"
         label="Vendedor"
         bind:value={vendedorSelecionado}
-        options={[{ value: '', label: 'Todos' }, ...vendedores.map((vendedor) => ({ value: vendedor.id, label: vendedor.nome }))]}
+        options={[
+          { value: '', label: 'Todos' },
+          ...vendedores.map((vendedor) => ({ value: vendedor.id, label: vendedor.nome }))
+        ]}
         placeholder={null}
         class_name="w-full"
         on:change={handleFilterChange}
@@ -923,15 +964,31 @@
           class_name="w-full"
         />
       {:else}
-        <FieldInput id="rel-vendas-data-inicio" label="Data início" type="date" bind:value={dataInicio} class_name="w-full" />
-        <FieldInput id="rel-vendas-data-fim" label="Data fim" type="date" bind:value={dataFim} min={dataInicio || null} class_name="w-full" />
+        <FieldInput
+          id="rel-vendas-data-inicio"
+          label="Data início"
+          type="date"
+          bind:value={dataInicio}
+          class_name="w-full"
+        />
+        <FieldInput
+          id="rel-vendas-data-fim"
+          label="Data fim"
+          type="date"
+          bind:value={dataFim}
+          min={dataInicio || null}
+          class_name="w-full"
+        />
       {/if}
       {#if showEmpresaFiltro}
         <FieldSelect
           id="rel-vendas-empresa"
           label="Empresa"
           bind:value={empresaSelecionada}
-          options={[{ value: '', label: 'Todas' }, ...empresas.map((empresa) => ({ value: empresa.id, label: empresa.nome }))]}
+          options={[
+            { value: '', label: 'Todas' },
+            ...empresas.map((empresa) => ({ value: empresa.id, label: empresa.nome }))
+          ]}
           placeholder={null}
           class_name="w-full"
         />
@@ -941,7 +998,10 @@
           id="rel-vendas-vendedor"
           label="Vendedor"
           bind:value={vendedorSelecionado}
-          options={[{ value: '', label: 'Todos' }, ...vendedores.map((vendedor) => ({ value: vendedor.id, label: vendedor.nome }))]}
+          options={[
+            { value: '', label: 'Todos' },
+            ...vendedores.map((vendedor) => ({ value: vendedor.id, label: vendedor.nome }))
+          ]}
           placeholder={null}
           class_name="w-full"
           on:change={handleFilterChange}
@@ -950,7 +1010,9 @@
     </div>
 
     {#if clienteIdFiltro || destinoFiltro || produtoFiltro || tipoProdutoFiltro}
-      <div class="flex flex-wrap items-center gap-2 rounded-2xl border border-financeiro-100 bg-financeiro-50/60 px-3 py-3 text-sm text-slate-600">
+      <div
+        class="border-financeiro-100 bg-financeiro-50/60 flex flex-wrap items-center gap-2 rounded-2xl border px-3 py-3 text-sm text-slate-600"
+      >
         <span class="font-medium text-slate-900">Drill-down ativo:</span>
         {#if clienteIdFiltro}
           <span class="rounded-full bg-white px-3 py-1">Cliente específico</span>
@@ -964,7 +1026,12 @@
         {#if tipoProdutoFiltro}
           <span class="rounded-full bg-white px-3 py-1">Tipo: {tipoProdutoFiltro}</span>
         {/if}
-        <Button variant="secondary" size="sm" class_name="rounded-full" on:click={clearContextFilters}>
+        <Button
+          variant="secondary"
+          size="sm"
+          class_name="rounded-full"
+          on:click={clearContextFilters}
+        >
           <X size={14} />
           Limpar contexto
         </Button>
@@ -981,40 +1048,35 @@
   <LoadingState className="mb-6" />
 {:else}
   <KPIGrid className="mb-6" columns={5}>
-    <KPICard 
-      title="Total vendido" 
-      value={formatCurrency(totalVendas)} 
-      color="financeiro" 
-      icon={DollarSign} 
+    <KPICard
+      title="Total vendido"
+      value={formatCurrency(totalVendas)}
+      color="financeiro"
+      icon={DollarSign}
     />
-    <KPICard 
-      title="Total de vendas" 
-      value={resumo.total_vendas} 
-      color="financeiro" 
-      icon={ShoppingCart} 
+    <KPICard
+      title="Total de vendas"
+      value={resumo.total_vendas}
+      color="financeiro"
+      icon={ShoppingCart}
     />
-    <KPICard 
-      title="Total de recibos" 
-      value={totalRecibos} 
-      color="financeiro" 
-      icon={Users} 
+    <KPICard title="Total de recibos" value={totalRecibos} color="financeiro" icon={Users} />
+    <KPICard
+      title="Comissões"
+      value={formatCurrency(totalComissoes)}
+      color="financeiro"
+      icon={TrendingUp}
     />
-    <KPICard 
-      title="Comissões" 
-      value={formatCurrency(totalComissoes)} 
-      color="financeiro" 
-      icon={TrendingUp} 
-    />
-    <KPICard 
-      title="Ticket médio" 
-      value={formatCurrency(ticketMedio)} 
-      color="financeiro" 
-      icon={TrendingUp} 
+    <KPICard
+      title="Ticket médio"
+      value={formatCurrency(ticketMedio)}
+      color="financeiro"
+      icon={TrendingUp}
     />
   </KPIGrid>
 {/if}
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+<div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
   <Card header="Vendas por mês (últimos 6 meses)" color="financeiro">
     {#if loading}
       <LoadingState />
@@ -1032,7 +1094,9 @@
 </div>
 
 {#if detalheTruncado}
-  <div class="mb-4 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+  <div
+    class="mb-4 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between"
+  >
     <span>
       Mostrando {vendas.length} de {totalDetalheVendas} vendas no detalhamento para manter a tela responsiva.
       Use filtros mais específicos para carregar/exportar um conjunto menor.

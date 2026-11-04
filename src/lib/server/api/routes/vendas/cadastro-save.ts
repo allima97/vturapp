@@ -43,12 +43,8 @@ type CadastroSaveVendaPayload = Parameters<typeof buildVendaPayload>[0] & {
   empresa_id?: string | null;
 };
 
-type CadastroSavePagamentosPayload = Parameters<
-  typeof syncVendaChildren
->[0]['pagamentos'];
-type CadastroSaveRecibosPayload = Parameters<
-  typeof syncVendaChildren
->[0]['recibos'];
+type CadastroSavePagamentosPayload = Parameters<typeof syncVendaChildren>[0]['pagamentos'];
+type CadastroSaveRecibosPayload = Parameters<typeof syncVendaChildren>[0]['recibos'];
 
 type CadastroSaveBody = {
   venda?: CadastroSaveVendaPayload;
@@ -86,16 +82,28 @@ export async function handleVendasCadastroSavePost(event: RequestEvent) {
 
     // Validações mínimas
     if (!venda || typeof venda !== 'object') {
-      return json({ error: 'Payload inválido: campo "venda" obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Payload inválido: campo "venda" obrigatório.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
     if (!isUuid(venda.cliente_id)) {
-      return json({ error: 'cliente_id inválido ou ausente.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'cliente_id inválido ou ausente.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
     if (!isUuid(venda.destino_id)) {
-      return json({ error: 'destino_id inválido ou ausente.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'destino_id inválido ou ausente.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
     if (!Array.isArray(recibos) || recibos.length === 0) {
-      return json({ error: 'Pelo menos um recibo é obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Pelo menos um recibo é obrigatório.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const clienteId = String(venda.cliente_id).trim();
@@ -113,11 +121,22 @@ export async function handleVendasCadastroSavePost(event: RequestEvent) {
     // Permissão: criação = nível 2; edição = nível 3
     if (!scope.isAdmin) {
       const moduloMin = isEdit ? 3 : 2;
-      ensureModuloAccess(scope, ['vendas', 'vendas_cadastro'], moduloMin, 'Sem permissão para salvar vendas.');
+      ensureModuloAccess(
+        scope,
+        ['vendas', 'vendas_cadastro'],
+        moduloMin,
+        'Sem permissão para salvar vendas.'
+      );
     }
 
-    if (!scope.isAdmin && (scopedCompanyIds.length === 0 || scopedCompanyIds[0] === NO_MATCH_COMPANY_ID)) {
-      return json({ error: 'Empresa fora do escopo do usuario.' }, { status: 403, headers: NO_STORE_HEADERS });
+    if (
+      !scope.isAdmin &&
+      (scopedCompanyIds.length === 0 || scopedCompanyIds[0] === NO_MATCH_COMPANY_ID)
+    ) {
+      return json(
+        { error: 'Empresa fora do escopo do usuario.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     // Resolver vendedor_id
@@ -142,16 +161,26 @@ export async function handleVendasCadastroSavePost(event: RequestEvent) {
     const sellerCompanyId =
       String((sellerScope as UserCompanyRow | null)?.company_id || '').trim() || null;
 
-    if (!targetCompanyId && sellerCompanyId && (scope.isAdmin || scopedCompanySet.has(sellerCompanyId))) {
+    if (
+      !targetCompanyId &&
+      sellerCompanyId &&
+      (scope.isAdmin || scopedCompanySet.has(sellerCompanyId))
+    ) {
       targetCompanyId = sellerCompanyId;
     }
 
     if (!targetCompanyId && scopedCompanyIds.length > 1) {
-      return json({ error: 'Selecione a empresa da venda.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Selecione a empresa da venda.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     if (sellerCompanyId && targetCompanyId && sellerCompanyId !== targetCompanyId) {
-      return json({ error: 'Vendedor fora da empresa selecionada.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Vendedor fora da empresa selecionada.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     if (isEdit) {
@@ -161,16 +190,26 @@ export async function handleVendasCadastroSavePost(event: RequestEvent) {
         .eq('id', vendaId)
         .maybeSingle();
       if (existingSaleError) throw existingSaleError;
-      const existingCompanyId =
-        String((existingSale as VendaCompanyRow | null)?.company_id || '').trim();
-      if (!existingSale?.id || (!scope.isAdmin && scopedCompanySet.size > 0 && !scopedCompanySet.has(existingCompanyId))) {
-        return json({ error: 'Venda não encontrada ou sem permissão.' }, { status: 403, headers: NO_STORE_HEADERS });
+      const existingCompanyId = String(
+        (existingSale as VendaCompanyRow | null)?.company_id || ''
+      ).trim();
+      if (
+        !existingSale?.id ||
+        (!scope.isAdmin && scopedCompanySet.size > 0 && !scopedCompanySet.has(existingCompanyId))
+      ) {
+        return json(
+          { error: 'Venda não encontrada ou sem permissão.' },
+          { status: 403, headers: NO_STORE_HEADERS }
+        );
       }
       if (isUuid(existingCompanyId)) targetCompanyId = existingCompanyId;
     }
 
     if (!isUuid(String(targetCompanyId || ''))) {
-      return json({ error: 'Empresa da venda invalida.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Empresa da venda invalida.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     // Verificar duplicidade de recibos/reservas
@@ -212,7 +251,10 @@ export async function handleVendasCadastroSavePost(event: RequestEvent) {
         .maybeSingle();
       if (updateError) throw updateError;
       if (!updated?.id) {
-        return json({ error: 'Venda não encontrada ou sem permissão.' }, { status: 403, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Venda não encontrada ou sem permissão.' },
+          { status: 403, headers: NO_STORE_HEADERS }
+        );
       }
       vendaIdFinal = updated.id;
     } else {
@@ -254,19 +296,19 @@ export async function handleVendasCadastroSavePost(event: RequestEvent) {
     invalidateSalesReadModels({
       companyIds: invalidationCompanyIds,
       vendedorIds: invalidationVendedorIds,
-      userId: user.id,
+      userId: user.id
     });
 
     // Reconstruir read model de ranking de forma assíncrona (fire-and-forget)
     triggerRebuildAsync({
       companyIds: invalidationCompanyIds,
       dataVenda: String(vendaPayload.data_venda || ''),
-      executionContext: getPlatformExecutionContext(event.platform),
+      executionContext: getPlatformExecutionContext(event.platform)
     });
 
     // Publicar invalidação no KV para propagar para outras instâncias Workers (fire-and-forget)
     publishKvInvalidationAsync({
-      companyIds: invalidationCompanyIds,
+      companyIds: invalidationCompanyIds
     });
 
     // Auditoria (mesmo formato do vturapp original: {id, venda, recibos})
@@ -274,10 +316,13 @@ export async function handleVendasCadastroSavePost(event: RequestEvent) {
       userId: user.id,
       modulo: 'Vendas',
       acao: isEdit ? 'venda_atualizada' : 'venda_criada',
-      detalhes: { id: vendaIdFinal, venda, recibos },
+      detalhes: { id: vendaIdFinal, venda, recibos }
     });
 
-    return json({ ok: true, venda_id: vendaIdFinal }, { status: isEdit ? 200 : 201, headers: NO_STORE_HEADERS });
+    return json(
+      { ok: true, venda_id: vendaIdFinal },
+      { status: isEdit ? 200 : 201, headers: NO_STORE_HEADERS }
+    );
   } catch (err: unknown) {
     const code = toUserMessage(err, '');
     if (code === 'RECIBO_DUPLICADO' || code === 'RESERVA_DUPLICADA' || code === 'RECIBO_INVALIDO') {

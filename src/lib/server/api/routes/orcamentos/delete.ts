@@ -45,7 +45,8 @@ export async function handleOrcamentosDeletePost(event: RequestEvent) {
     }
 
     const quoteScope = await resolveQuoteCreatorScope(client, scope, {
-      companyId: event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id')
+      companyId:
+        event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id')
     });
 
     const { data: quote, error: quoteError } = await client
@@ -55,7 +56,10 @@ export async function handleOrcamentosDeletePost(event: RequestEvent) {
       .maybeSingle();
     if (quoteError) throw quoteError;
     if (!quote || !isQuoteCreatorAllowed(quoteScope, quote.created_by)) {
-      return json({ error: 'Orcamento nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Orcamento nao encontrado.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { error } = await client.from('quote').delete().eq('id', id);

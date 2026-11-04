@@ -8,13 +8,41 @@
 
   // Tipos do Art. 18 LGPD
   const direitos = [
-    { tipo: 'acesso', label: 'Acesso aos dados', desc: 'Confirmar a existência e obter cópia dos seus dados pessoais tratados.' },
-    { tipo: 'portabilidade', label: 'Portabilidade', desc: 'Receber seus dados em formato estruturado, legível por máquina.' },
-    { tipo: 'retificacao', label: 'Retificação', desc: 'Corrigir dados incompletos, inexatos ou desatualizados.' },
-    { tipo: 'eliminacao', label: 'Eliminação', desc: 'Solicitar a exclusão de dados tratados com consentimento, salvo obrigação legal.' },
-    { tipo: 'revogacao', label: 'Revogar consentimento', desc: 'Retirar consentimento a qualquer momento, sem prejuízo ao tratamento anterior.' },
-    { tipo: 'oposicao', label: 'Oposição', desc: 'Opor-se a tratamento em caso de descumprimento da LGPD.' },
-    { tipo: 'informacao', label: 'Informação', desc: 'Obter informações sobre entidades públicas e privadas com quem compartilhamos dados.' }
+    {
+      tipo: 'acesso',
+      label: 'Acesso aos dados',
+      desc: 'Confirmar a existência e obter cópia dos seus dados pessoais tratados.'
+    },
+    {
+      tipo: 'portabilidade',
+      label: 'Portabilidade',
+      desc: 'Receber seus dados em formato estruturado, legível por máquina.'
+    },
+    {
+      tipo: 'retificacao',
+      label: 'Retificação',
+      desc: 'Corrigir dados incompletos, inexatos ou desatualizados.'
+    },
+    {
+      tipo: 'eliminacao',
+      label: 'Eliminação',
+      desc: 'Solicitar a exclusão de dados tratados com consentimento, salvo obrigação legal.'
+    },
+    {
+      tipo: 'revogacao',
+      label: 'Revogar consentimento',
+      desc: 'Retirar consentimento a qualquer momento, sem prejuízo ao tratamento anterior.'
+    },
+    {
+      tipo: 'oposicao',
+      label: 'Oposição',
+      desc: 'Opor-se a tratamento em caso de descumprimento da LGPD.'
+    },
+    {
+      tipo: 'informacao',
+      label: 'Informação',
+      desc: 'Obter informações sobre entidades públicas e privadas com quem compartilhamos dados.'
+    }
   ];
 
   let tipoSelecionado = $state('');
@@ -23,7 +51,13 @@
   let descricao = $state('');
   let token = $state('');
   let enviando = $state(false);
-  let resultado = $state<{ ok: boolean; protocolo?: string; prazo?: string; mensagem?: string; erro?: string } | null>(null);
+  let resultado = $state<{
+    ok: boolean;
+    protocolo?: string;
+    prazo?: string;
+    mensagem?: string;
+    erro?: string;
+  } | null>(null);
 
   async function handleSubmit(e: Event) {
     e.preventDefault();
@@ -45,7 +79,12 @@
       });
       const data: any = await res.json();
       if (res.ok && data.ok) {
-        resultado = { ok: true, protocolo: data.protocolo, prazo: data.prazo, mensagem: data.mensagem };
+        resultado = {
+          ok: true,
+          protocolo: data.protocolo,
+          prazo: data.prazo,
+          mensagem: data.mensagem
+        };
         tipoSelecionado = '';
         nome = '';
         email = '';
@@ -64,20 +103,22 @@
 
 <svelte:head>
   <title>Política de Privacidade & LGPD — Vtur</title>
-  <meta name="description" content="Política de privacidade e exercício de direitos LGPD (Lei 13.709/2018)" />
+  <meta
+    name="description"
+    content="Política de privacidade e exercício de direitos LGPD (Lei 13.709/2018)"
+  />
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 </svelte:head>
 
 <main class="lgpd-page">
   <div class="container">
-
     <!-- Cabeçalho -->
     <header class="page-header">
       <div class="badge">LGPD · Lei 13.709/2018</div>
       <h1>Política de Privacidade</h1>
       <p class="subtitulo">
-        {EMPRESA_NOME} está comprometida com a proteção dos seus dados pessoais,
-        em conformidade com a Lei Geral de Proteção de Dados.
+        {EMPRESA_NOME} está comprometida com a proteção dos seus dados pessoais, em conformidade com a
+        Lei Geral de Proteção de Dados.
       </p>
       <p class="atualizado">Última atualização: {ATUALIZADO_EM}</p>
     </header>
@@ -85,13 +126,12 @@
     <div class="content-grid">
       <!-- Coluna principal -->
       <div class="main-col">
-
         <!-- 1. Quem somos -->
         <section class="card">
           <h2>1. Controlador dos Dados</h2>
           <p>
-            <strong>{EMPRESA_NOME}</strong> é a controladora responsável pelo tratamento
-            dos dados pessoais coletados pela plataforma Vtur.
+            <strong>{EMPRESA_NOME}</strong> é a controladora responsável pelo tratamento dos dados pessoais
+            coletados pela plataforma Vtur.
           </p>
           <p>
             <strong>Encarregado de Dados (DPO):</strong>
@@ -104,9 +144,18 @@
           <h2>2. Dados Pessoais Tratados</h2>
           <p>Coletamos e tratamos os seguintes dados, conforme necessário para cada finalidade:</p>
           <ul>
-            <li><strong>Clientes e passageiros:</strong> nome completo, e-mail, telefone, CPF/RG/passaporte, data de nascimento, endereço, preferências de viagem.</li>
-            <li><strong>Usuários da plataforma:</strong> nome, e-mail, senha (hash), cargo, empresa, histórico de acesso e ações (auditoria).</li>
-            <li><strong>Dados técnicos:</strong> endereço IP, User-Agent, cookies de sessão (autenticação), logs de erro.</li>
+            <li>
+              <strong>Clientes e passageiros:</strong> nome completo, e-mail, telefone, CPF/RG/passaporte,
+              data de nascimento, endereço, preferências de viagem.
+            </li>
+            <li>
+              <strong>Usuários da plataforma:</strong> nome, e-mail, senha (hash), cargo, empresa, histórico
+              de acesso e ações (auditoria).
+            </li>
+            <li>
+              <strong>Dados técnicos:</strong> endereço IP, User-Agent, cookies de sessão (autenticação),
+              logs de erro.
+            </li>
           </ul>
         </section>
 
@@ -122,12 +171,33 @@
                 </tr>
               </thead>
               <tbody>
-                <tr><td>Gestão de reservas e viagens</td><td>Execução de contrato (Art. 7, V)</td></tr>
-                <tr><td>Emissão de vouchers e documentos</td><td>Execução de contrato (Art. 7, V)</td></tr>
-                <tr><td>Comunicações sobre serviços</td><td>Legítimo interesse / Consentimento (Art. 7, IX)</td></tr>
-                <tr><td>Autenticação e controle de acesso</td><td>Legítimo interesse do controlador (Art. 7, IX)</td></tr>
-                <tr><td>Auditoria e segurança da plataforma</td><td>Obrigação legal / Legítimo interesse (Art. 7, II e IX)</td></tr>
-                <tr><td>Cumprimento de obrigações fiscais</td><td>Obrigação legal (Art. 7, II)</td></tr>
+                <tr
+                  ><td>Gestão de reservas e viagens</td><td>Execução de contrato (Art. 7, V)</td
+                  ></tr
+                >
+                <tr
+                  ><td>Emissão de vouchers e documentos</td><td>Execução de contrato (Art. 7, V)</td
+                  ></tr
+                >
+                <tr
+                  ><td>Comunicações sobre serviços</td><td
+                    >Legítimo interesse / Consentimento (Art. 7, IX)</td
+                  ></tr
+                >
+                <tr
+                  ><td>Autenticação e controle de acesso</td><td
+                    >Legítimo interesse do controlador (Art. 7, IX)</td
+                  ></tr
+                >
+                <tr
+                  ><td>Auditoria e segurança da plataforma</td><td
+                    >Obrigação legal / Legítimo interesse (Art. 7, II e IX)</td
+                  ></tr
+                >
+                <tr
+                  ><td>Cumprimento de obrigações fiscais</td><td>Obrigação legal (Art. 7, II)</td
+                  ></tr
+                >
               </tbody>
             </table>
           </div>
@@ -138,8 +208,14 @@
           <h2>4. Compartilhamento de Dados</h2>
           <p>Compartilhamos dados apenas nas situações necessárias:</p>
           <ul>
-            <li><strong>Fornecedores de tecnologia:</strong> Dados (infraestrutura de banco de dados, EUA — cláusulas contratuais padrão), Cloudflare (CDN e segurança).</li>
-            <li><strong>Parceiros de viagem:</strong> hotéis, companhias aéreas, operadoras — apenas dados necessários para a prestação do serviço contratado.</li>
+            <li>
+              <strong>Fornecedores de tecnologia:</strong> Dados (infraestrutura de banco de dados, EUA
+              — cláusulas contratuais padrão), Cloudflare (CDN e segurança).
+            </li>
+            <li>
+              <strong>Parceiros de viagem:</strong> hotéis, companhias aéreas, operadoras — apenas dados
+              necessários para a prestação do serviço contratado.
+            </li>
             <li><strong>Autoridades:</strong> quando exigido por lei ou ordem judicial.</li>
           </ul>
           <p>Não vendemos dados pessoais a terceiros.</p>
@@ -150,14 +226,19 @@
           <h2>5. Retenção e Eliminação</h2>
           <p>Os dados são retidos pelos seguintes períodos:</p>
           <ul>
-            <li><strong>Dados de clientes e viagens:</strong> 5 anos após o encerramento do contrato (obrigação fiscal — Lei 8.212/91).</li>
+            <li>
+              <strong>Dados de clientes e viagens:</strong> 5 anos após o encerramento do contrato (obrigação
+              fiscal — Lei 8.212/91).
+            </li>
             <li><strong>Logs de acesso:</strong> 6 meses (Marco Civil da Internet, Art. 15).</li>
             <li><strong>Dados de sessão:</strong> até o logout ou expiração (máx. 7 dias).</li>
-            <li><strong>Consentimentos:</strong> enquanto necessários para comprovar a legalidade do tratamento.</li>
+            <li>
+              <strong>Consentimentos:</strong> enquanto necessários para comprovar a legalidade do tratamento.
+            </li>
           </ul>
           <p>
-            Após o prazo, os dados são eliminados ou anonimizados de forma irreversível,
-            salvo obrigação legal de retenção.
+            Após o prazo, os dados são eliminados ou anonimizados de forma irreversível, salvo
+            obrigação legal de retenção.
           </p>
         </section>
 
@@ -166,7 +247,9 @@
           <h2>6. Medidas de Segurança (Art. 46)</h2>
           <ul>
             <li>Criptografia em trânsito (TLS 1.2+) e em repouso.</li>
-            <li>Autenticação multifator (MFA) disponível e obrigatória para empresas configuradas.</li>
+            <li>
+              Autenticação multifator (MFA) disponível e obrigatória para empresas configuradas.
+            </li>
             <li>Controle de acesso baseado em papéis (RBAC) e módulos.</li>
             <li>Registro de auditoria de todas as ações sensíveis.</li>
             <li>Proteção contra bots (Cloudflare Turnstile) em formulários públicos.</li>
@@ -177,24 +260,26 @@
         <!-- 7. Cookies -->
         <section class="card">
           <h2>7. Cookies</h2>
-          <p>Utilizamos apenas cookies estritamente necessários para autenticação e manutenção de sessão. Não utilizamos cookies de rastreamento ou publicidade.</p>
+          <p>
+            Utilizamos apenas cookies estritamente necessários para autenticação e manutenção de
+            sessão. Não utilizamos cookies de rastreamento ou publicidade.
+          </p>
         </section>
 
         <!-- 8. DPO e ANPD -->
         <section class="card">
           <h2>8. Encarregado de Dados (DPO) e ANPD</h2>
           <p>
-            Para exercer seus direitos ou esclarecer dúvidas, entre em contato com nosso
-            Encarregado de Dados: <a href="mailto:{DPO_EMAIL}">{DPO_EMAIL}</a>.
+            Para exercer seus direitos ou esclarecer dúvidas, entre em contato com nosso Encarregado
+            de Dados: <a href="mailto:{DPO_EMAIL}">{DPO_EMAIL}</a>.
           </p>
           <p>
             Você também pode apresentar reclamação à
-            <a href="{ANPD_URL}" target="_blank" rel="noreferrer">
+            <a href={ANPD_URL} target="_blank" rel="noreferrer">
               Autoridade Nacional de Proteção de Dados (ANPD)
             </a>.
           </p>
         </section>
-
       </div>
 
       <!-- Sidebar: formulário de direitos -->
@@ -202,8 +287,8 @@
         <div class="card formulario-card">
           <h2>Exercer Direitos (Art. 18)</h2>
           <p class="form-intro">
-            Envie sua solicitação. Respondemos em até <strong>15 dias corridos</strong>,
-            conforme previsto na LGPD.
+            Envie sua solicitação. Respondemos em até <strong>15 dias corridos</strong>, conforme
+            previsto na LGPD.
           </p>
 
           {#if resultado?.ok}
@@ -227,7 +312,7 @@
                   {/each}
                 </select>
                 {#if tipoSelecionado}
-                  <p class="field-help">{direitos.find(d => d.tipo === tipoSelecionado)?.desc}</p>
+                  <p class="field-help">{direitos.find((d) => d.tipo === tipoSelecionado)?.desc}</p>
                 {/if}
               </div>
 
@@ -238,7 +323,13 @@
 
               <div class="field">
                 <label for="email">E-mail *</label>
-                <input id="email" type="email" bind:value={email} required placeholder="seu@email.com" />
+                <input
+                  id="email"
+                  type="email"
+                  bind:value={email}
+                  required
+                  placeholder="seu@email.com"
+                />
               </div>
 
               <div class="field">
@@ -255,7 +346,8 @@
               <!-- Turnstile widget -->
               <div
                 class="cf-turnstile"
-                data-sitekey={publicEnv.PUBLIC_TURNSTILE_SITE_KEY || (publicEnv.PUBLIC_ENVIRONMENT === 'production' ? '' : '1x00000000000000000000AA')}
+                data-sitekey={publicEnv.PUBLIC_TURNSTILE_SITE_KEY ||
+                  (publicEnv.PUBLIC_ENVIRONMENT === 'production' ? '' : '1x00000000000000000000AA')}
                 data-callback="onTurnstileSuccess"
               ></div>
 
@@ -280,7 +372,9 @@
 <svelte:window
   on:load={() => {
     // Callback global para o Turnstile
-    (window as unknown as Record<string, unknown>).onTurnstileSuccess = (t: string) => { token = t; };
+    (window as unknown as Record<string, unknown>).onTurnstileSuccess = (t: string) => {
+      token = t;
+    };
   }}
 />
 
@@ -363,7 +457,8 @@
     color: #1a202c;
   }
 
-  .card p, .card li {
+  .card p,
+  .card li {
     font-size: 0.95rem;
     line-height: 1.6;
     margin-bottom: 0.5rem;

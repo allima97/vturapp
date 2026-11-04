@@ -37,7 +37,10 @@ describe('guardas', () => {
         if (!permitidos.has(id)) achados.push(id);
       }
     }
-    expect(achados, 'Escreva a expressão na própria linha do $: (ver PROGRESSO-MIGRACAO.md, "Filtros que não recarregavam")').toEqual([]);
+    expect(
+      achados,
+      'Escreva a expressão na própria linha do $: (ver PROGRESSO-MIGRACAO.md, "Filtros que não recarregavam")'
+    ).toEqual([]);
   });
 
   it('a URL da própria tela é sincronizada com replaceState(), não com goto(..., { replaceState: true })', () => {

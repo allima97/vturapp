@@ -75,28 +75,31 @@ export const handlePushSubscribePost = async (event: RequestEvent) => {
 
     const body = readPushSubscribeRequestBody(bodyResult.data);
     const subscription = body.subscription || readPushSubscriptionBody(bodyResult.data);
-    const endpoint = String(subscription?.endpoint || "").trim();
+    const endpoint = String(subscription?.endpoint || '').trim();
     const keys = subscription?.keys || {};
-    const p256dh = String(keys?.p256dh || "").trim();
-    const auth = String(keys?.auth || "").trim();
+    const p256dh = String(keys?.p256dh || '').trim();
+    const auth = String(keys?.auth || '').trim();
 
     if (!endpoint || !p256dh || !auth) {
-      return json({ error: "Subscription invalida." }, { status: 400, headers: NO_STORE_HEADERS });
+      return json({ error: 'Subscription invalida.' }, { status: 400, headers: NO_STORE_HEADERS });
     }
     if (
       endpoint.length > MAX_ENDPOINT_LENGTH ||
       String(p256dh).length > MAX_KEY_LENGTH ||
       String(auth).length > MAX_KEY_LENGTH
     ) {
-      return json({ error: "Subscription muito grande." }, { status: 413, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Subscription muito grande.' },
+        { status: 413, headers: NO_STORE_HEADERS }
+      );
     }
     try {
       const parsedEndpoint = new URL(endpoint);
-      if (parsedEndpoint.protocol !== "https:") {
-        return json({ error: "Endpoint invalido." }, { status: 400, headers: NO_STORE_HEADERS });
+      if (parsedEndpoint.protocol !== 'https:') {
+        return json({ error: 'Endpoint invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
       }
     } catch {
-      return json({ error: "Endpoint invalido." }, { status: 400, headers: NO_STORE_HEADERS });
+      return json({ error: 'Endpoint invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
     }
 
     const payload = {
@@ -104,23 +107,29 @@ export const handlePushSubscribePost = async (event: RequestEvent) => {
       endpoint,
       p256dh,
       auth,
-      user_agent: request.headers.get("user-agent") || null,
+      user_agent: request.headers.get('user-agent') || null,
       active: true,
-      updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     } satisfies PushSubscriptionUpsert;
 
     const { error } = await client
-      .from("push_subscriptions")
-      .upsert(payload, { onConflict: "endpoint" });
+      .from('push_subscriptions')
+      .upsert(payload, { onConflict: 'endpoint' });
 
     if (error) {
-      logServerError("[push/subscribe] falha ao salvar subscription", error);
-      return json({ error: "Erro ao salvar subscription." }, { status: 500, headers: NO_STORE_HEADERS });
+      logServerError('[push/subscribe] falha ao salvar subscription', error);
+      return json(
+        { error: 'Erro ao salvar subscription.' },
+        { status: 500, headers: NO_STORE_HEADERS }
+      );
     }
 
     return json({ ok: true }, { headers: NO_STORE_HEADERS });
   } catch (error: unknown) {
-    logServerError("[push/subscribe] falha interna", error);
-    return json({ error: "Erro interno ao salvar subscription." }, { status: 500, headers: NO_STORE_HEADERS });
+    logServerError('[push/subscribe] falha interna', error);
+    return json(
+      { error: 'Erro interno ao salvar subscription.' },
+      { status: 500, headers: NO_STORE_HEADERS }
+    );
   }
 };

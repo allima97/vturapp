@@ -39,11 +39,14 @@
 
   onMount(async () => {
     try {
-      const data = await apiFetch<{ items?: ViagemCliente[] }>(`/api/v1/viagens/cliente/${clienteId}`, {
-        signal: controller.signal,
-        // Sem acesso ao módulo Viagens: só esconde o quadro (sem mandar para a tela "acesso negado").
-        redirectOnForbidden: false
-      });
+      const data = await apiFetch<{ items?: ViagemCliente[] }>(
+        `/api/v1/viagens/cliente/${clienteId}`,
+        {
+          signal: controller.signal,
+          // Sem acesso ao módulo Viagens: só esconde o quadro (sem mandar para a tela "acesso negado").
+          redirectOnForbidden: false
+        }
+      );
       viagens = Array.isArray(data?.items) ? data.items : [];
     } catch (err) {
       if (isCanceledApiError(err)) return;
@@ -68,7 +71,9 @@
     {:else if erro}
       <p role="alert" class="text-sm text-red-700">{erro}</p>
     {:else if viagens.length === 0}
-      <div class="rounded-vtur-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">
+      <div
+        class="rounded-vtur-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500"
+      >
         Nenhuma viagem vinculada a este cliente.
       </div>
     {:else}
@@ -83,11 +88,16 @@
               <span class="min-w-0">
                 <span class="block truncate font-medium text-slate-900">{viagem.destino}</span>
                 <span class="block text-xs text-slate-500">
-                  {formatDate(viagem.data_inicio)}{viagem.data_fim ? ` a ${formatDate(viagem.data_fim)}` : ''}
-                  {#if viagem.origem} · saída de {viagem.origem}{/if}
+                  {formatDate(viagem.data_inicio)}{viagem.data_fim
+                    ? ` a ${formatDate(viagem.data_fim)}`
+                    : ''}
+                  {#if viagem.origem}
+                    · saída de {viagem.origem}{/if}
                 </span>
               </span>
-              <span class={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_CLASSES[status]}`}>
+              <span
+                class={`shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_CLASSES[status]}`}
+              >
                 {formatViagemStatus(status)}
               </span>
             </a>

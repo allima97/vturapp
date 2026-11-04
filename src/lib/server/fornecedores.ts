@@ -86,7 +86,11 @@ function normalizeFornecedor(row: FornecedorRecord) {
   };
 }
 
-export async function fetchFornecedores(client: DataClient, scope: UserScope, params: URLSearchParams) {
+export async function fetchFornecedores(
+  client: DataClient,
+  scope: UserScope,
+  params: URLSearchParams
+) {
   const requestedCompanyId = String(params.get('empresa_id') || '').trim();
   const companyIds = resolveScopedCompanyIds(scope, requestedCompanyId);
 
@@ -114,7 +118,8 @@ export async function fetchFornecedores(client: DataClient, scope: UserScope, pa
 
       const baseRows: Array<{ id?: string | null }> = [];
       let totalCount = 0;
-      const companyBatches = companyIds.length > QUERY_IN_BATCH_SIZE ? chunkArray(companyIds) : [companyIds];
+      const companyBatches =
+        companyIds.length > QUERY_IN_BATCH_SIZE ? chunkArray(companyIds) : [companyIds];
       for (const batch of companyBatches) {
         const base = await buildBaseQuery(batch);
         if (base.error) throw base.error;
@@ -159,7 +164,11 @@ export async function fetchFornecedores(client: DataClient, scope: UserScope, pa
         );
         products.push(
           ...((await optionalRows(
-            client.from('produtos').select('id, fornecedor_id').in('fornecedor_id', batch).limit(10000)
+            client
+              .from('produtos')
+              .select('id, fornecedor_id')
+              .in('fornecedor_id', batch)
+              .limit(10000)
           )) as unknown as ProdutoFornecedorRow[])
         );
       }
@@ -244,7 +253,9 @@ export function sanitizeFornecedorPayload(body: Record<string, unknown>, scope: 
   const nomeCompleto = String(body?.nome_completo || '').trim();
   const nomeFantasia = String(body?.nome_fantasia || '').trim();
   const localizacao = String(body?.localizacao || '').trim() === 'exterior' ? 'exterior' : 'brasil';
-  const companyId = isUuid(String(body?.company_id || '')) ? String(body.company_id) : scope.companyId;
+  const companyId = isUuid(String(body?.company_id || ''))
+    ? String(body.company_id)
+    : scope.companyId;
 
   return {
     company_id: companyId || null,

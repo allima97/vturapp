@@ -27,7 +27,7 @@ const TYPE_MAP = {
   smallint: 'integer',
   numeric: 'real',
   real: 'real',
-  'double precision': 'real',
+  'double precision': 'real'
 };
 
 function sqliteType(column) {
@@ -64,7 +64,7 @@ for (const object of objects) {
   for (const column of object.columns || []) {
     columns[column.column_name] = {
       kind: sqliteType(column),
-      nullable: column.is_nullable !== 'NO',
+      nullable: column.is_nullable !== 'NO'
     };
   }
   const primaryKey = [];
@@ -87,7 +87,7 @@ for (const object of source.objects) {
   for (const constraint of object.constraints || []) {
     if (constraint.constraint_type !== 'f') continue;
     const match = constraint.definition.match(
-      /FOREIGN KEY \(([^)]+)\) REFERENCES (?:auth\.)?([a-z_][a-z0-9_]*)\(([^)]+)\)/i,
+      /FOREIGN KEY \(([^)]+)\) REFERENCES (?:auth\.)?([a-z_][a-z0-9_]*)\(([^)]+)\)/i
     );
     if (!match) continue;
     if (constraint.definition.includes('auth.')) continue;
@@ -100,7 +100,7 @@ for (const object of source.objects) {
       table: object.name,
       column: columns[0],
       refTable: match[2],
-      refColumn: refColumns[0],
+      refColumn: refColumns[0]
     });
   }
 }
@@ -158,11 +158,11 @@ const meta = {
       name,
       {
         columns: table.columns,
-        primaryKey: table.primaryKey,
-      },
-    ]),
+        primaryKey: table.primaryKey
+      }
+    ])
   ),
-  fks,
+  fks
 };
 
 function camel(name) {
@@ -172,8 +172,12 @@ function camel(name) {
 
 const schemaLines = [];
 schemaLines.push('/**');
-schemaLines.push(' * Espelho Drizzle do catalogo legado. Gerado por scripts/gerar-catalogo-legado.mjs.');
-schemaLines.push(' * A migration SQL em drizzle/0013_legado_catalogo.sql e a fonte aplicada no D1.');
+schemaLines.push(
+  ' * Espelho Drizzle do catalogo legado. Gerado por scripts/gerar-catalogo-legado.mjs.'
+);
+schemaLines.push(
+  ' * A migration SQL em drizzle/0013_legado_catalogo.sql e a fonte aplicada no D1.'
+);
 schemaLines.push(' */');
 schemaLines.push("import { integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core';");
 schemaLines.push('');
@@ -182,13 +186,21 @@ for (const [name, table] of tables) {
   for (const [columnName, column] of Object.entries(table.columns)) {
     const isPk = table.primaryKey.length === 1 && table.primaryKey[0] === columnName;
     if (column.kind === 'boolean') {
-      schemaLines.push(`  ${camel(columnName).replace(/^legado/, '') || 'col'}: integer('${columnName}', { mode: 'boolean' })${isPk ? '.primaryKey()' : ''},`);
+      schemaLines.push(
+        `  ${camel(columnName).replace(/^legado/, '') || 'col'}: integer('${columnName}', { mode: 'boolean' })${isPk ? '.primaryKey()' : ''},`
+      );
     } else if (column.kind === 'integer') {
-      schemaLines.push(`  ${safeField(columnName)}: integer('${columnName}', { mode: 'number' })${isPk ? '.primaryKey()' : ''},`);
+      schemaLines.push(
+        `  ${safeField(columnName)}: integer('${columnName}', { mode: 'number' })${isPk ? '.primaryKey()' : ''},`
+      );
     } else if (column.kind === 'real') {
-      schemaLines.push(`  ${safeField(columnName)}: real('${columnName}')${isPk ? '.primaryKey()' : ''},`);
+      schemaLines.push(
+        `  ${safeField(columnName)}: real('${columnName}')${isPk ? '.primaryKey()' : ''},`
+      );
     } else {
-      schemaLines.push(`  ${safeField(columnName)}: text('${columnName}')${isPk ? '.primaryKey()' : ''},`);
+      schemaLines.push(
+        `  ${safeField(columnName)}: text('${columnName}')${isPk ? '.primaryKey()' : ''},`
+      );
     }
   }
   schemaLines.push('});');
@@ -219,8 +231,10 @@ for (const [name, table] of tables) {
     const isPk = table.primaryKey.length === 1 && table.primaryKey[0] === columnName;
     const field = safeField(columnName);
     const pk = isPk ? '.primaryKey()' : '';
-    if (column.kind === 'boolean') fixed.push(`  ${field}: integer('${columnName}', { mode: 'boolean' })${pk},`);
-    else if (column.kind === 'integer') fixed.push(`  ${field}: integer('${columnName}', { mode: 'number' })${pk},`);
+    if (column.kind === 'boolean')
+      fixed.push(`  ${field}: integer('${columnName}', { mode: 'boolean' })${pk},`);
+    else if (column.kind === 'integer')
+      fixed.push(`  ${field}: integer('${columnName}', { mode: 'number' })${pk},`);
     else if (column.kind === 'real') fixed.push(`  ${field}: real('${columnName}')${pk},`);
     else fixed.push(`  ${field}: text('${columnName}')${pk},`);
   }

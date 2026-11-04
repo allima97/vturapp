@@ -210,14 +210,14 @@ export async function handleRoteirosPost(event: RequestEvent) {
       const diasRows = dias.map((dia, index: number) => {
         const day = isRecord(dia) ? (dia as RoteiroDiaDraft) : {};
         return {
-        roteiro_id: roteiroId,
-        created_by: user.id,
-        company_id: companyId,
-        ordem: index + 1,
-        cidade: String(day.cidade || '').trim(),
-        data: typeof day.data === 'string' ? day.data : null,
-        descricao: String(day.descricao || '').trim() || null
-      };
+          roteiro_id: roteiroId,
+          created_by: user.id,
+          company_id: companyId,
+          ordem: index + 1,
+          cidade: String(day.cidade || '').trim(),
+          data: typeof day.data === 'string' ? day.data : null,
+          descricao: String(day.descricao || '').trim() || null
+        };
       });
 
       if (diasRows.length > 0) {
@@ -245,7 +245,8 @@ export async function handleRoteirosDelete(event: RequestEvent) {
     }
 
     const id = String(event.url.searchParams.get('id') || '').trim();
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     // RLS garante que só o dono pode excluir
     const { error: deleteError } = await dados
@@ -287,7 +288,9 @@ export async function handleRoteirosPatch(event: RequestEvent) {
         typeof body.termo === 'string' ? body.termo : null,
         80
       );
-      const tipo = String(body.tipo || '').trim().slice(0, 60);
+      const tipo = String(body.tipo || '')
+        .trim()
+        .slice(0, 60);
 
       if (!termo && !tipo) return json({ sugestoes: [] }, { headers: NO_STORE_HEADERS });
 
@@ -307,13 +310,19 @@ export async function handleRoteirosPatch(event: RequestEvent) {
     if (action === 'sugestoes-salvar') {
       const { tipo, valor } = body;
       if (!tipo || !valor) {
-        return json({ error: 'tipo e valor obrigatorios.' }, { status: 400, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'tipo e valor obrigatorios.' },
+          { status: 400, headers: NO_STORE_HEADERS }
+        );
       }
 
       const safeTipo = String(tipo).trim().slice(0, 60);
       const safeValor = String(valor).trim().slice(0, 160);
       if (!safeTipo || !safeValor) {
-        return json({ error: 'tipo e valor obrigatorios.' }, { status: 400, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'tipo e valor obrigatorios.' },
+          { status: 400, headers: NO_STORE_HEADERS }
+        );
       }
 
       const normalizedValor = safeValor.toLowerCase();
@@ -344,7 +353,12 @@ export async function handleRoteirosPatch(event: RequestEvent) {
 
       const { data: inserted, error: insertError } = await dados
         .from('roteiro_sugestoes')
-        .insert({ tipo: safeTipo, valor: safeValor, company_id: companyId, valor_normalizado: normalizedValor })
+        .insert({
+          tipo: safeTipo,
+          valor: safeValor,
+          company_id: companyId,
+          valor_normalizado: normalizedValor
+        })
         .select('id')
         .single();
       const insertedSuggestion = inserted as Pick<RoteiroSugestaoRow, 'id'> | null;

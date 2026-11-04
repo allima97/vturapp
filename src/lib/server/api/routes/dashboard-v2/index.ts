@@ -22,7 +22,7 @@ import {
   rankingProdutos,
   rankingClientes,
   evolucaoMensal,
-  type FiltrosPeriodo,
+  type FiltrosPeriodo
 } from '$lib/server/dashboard/service';
 
 export const dashboardV2Routes = new Hono<ApiEnv>();
@@ -37,7 +37,7 @@ async function contexto(c: Context<ApiEnv>) {
   const baseURL =
     PUBLIC_ENVIRONMENT === 'production'
       ? 'https://vturapp.com.br'
-      : PUBLIC_APP_URL ?? 'http://localhost:5173';
+      : (PUBLIC_APP_URL ?? 'http://localhost:5173');
   const ctx = await resolveAuthContext(c.req.raw.headers, DB, BETTER_AUTH_SECRET, baseURL);
   if (!ctx) return { res: c.json({ error: 'Não autenticado.' }, 401) };
   return { ctx, db: getDb(DB) };
@@ -45,7 +45,7 @@ async function contexto(c: Context<ApiEnv>) {
 
 function filtrosDoPeriodo(c: Context<ApiEnv>): FiltrosPeriodo {
   const dataInicio = c.req.query('data_inicio') ?? undefined;
-  const dataFim    = c.req.query('data_fim')    ?? undefined;
+  const dataFim = c.req.query('data_fim') ?? undefined;
   return { dataInicio, dataFim };
 }
 

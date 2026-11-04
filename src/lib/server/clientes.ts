@@ -30,7 +30,9 @@ export function canUseCompanyClienteScope(scope: UserScope, vendedorParam?: stri
   if (scope.usoIndividual) return false;
   if ((scope.companyIds || []).length > 0 || scope.companyId) return true;
 
-  return tipoNome.includes('MASTER') || tipoNome.includes('FINANCEIRO') || tipoNome.includes('GESTOR');
+  return (
+    tipoNome.includes('MASTER') || tipoNome.includes('FINANCEIRO') || tipoNome.includes('GESTOR')
+  );
 }
 
 export async function resolveCompanyClienteIds(client: DataClient, companyIds: string[]) {
@@ -170,7 +172,10 @@ export function matchesClienteBusca(
   if (!digits) return false;
 
   const documentoDigits = String(item.cpf || '').replace(/\D/g, '');
-  const phoneDigits = `${String(item.telefone || '')} ${String(item.whatsapp || '')}`.replace(/\D/g, '');
+  const phoneDigits = `${String(item.telefone || '')} ${String(item.whatsapp || '')}`.replace(
+    /\D/g,
+    ''
+  );
   return documentoDigits.includes(digits) || phoneDigits.includes(digits);
 }
 

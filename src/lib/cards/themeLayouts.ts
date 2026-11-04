@@ -1,9 +1,9 @@
-import birthdayElegant from "./themes/birthday-elegant/theme.json";
-import womensDaySoft from "./themes/womens-day-soft/theme.json";
-import mothersDayFloral from "./themes/mothers-day-floral/theme.json";
-import newYearCelebration from "./themes/new-year-celebration.theme.json";
-import christmasGold from "./themes/christmas-gold.theme.json";
-import easterPastel from "./themes/easter-pastel.theme.json";
+import birthdayElegant from './themes/birthday-elegant/theme.json';
+import womensDaySoft from './themes/womens-day-soft/theme.json';
+import mothersDayFloral from './themes/mothers-day-floral/theme.json';
+import newYearCelebration from './themes/new-year-celebration.theme.json';
+import christmasGold from './themes/christmas-gold.theme.json';
+import easterPastel from './themes/easter-pastel.theme.json';
 
 export type CardThemeStyle = {
   x?: number;
@@ -14,11 +14,11 @@ export type CardThemeStyle = {
   fontWeight?: number | string;
   color?: string;
   fontFamily?: string;
-  align?: "left" | "center" | "right" | "justify";
-  textAlign?: "left" | "center" | "right" | "justify";
+  align?: 'left' | 'center' | 'right' | 'justify';
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
   lineHeight?: number;
   italic?: boolean;
-  fontStyle?: "normal" | "italic";
+  fontStyle?: 'normal' | 'italic';
 };
 
 export type CardThemePhotoSlot = {
@@ -84,15 +84,15 @@ export type CardThemeLayout = {
 };
 
 const THEME_LAYOUTS: Record<string, CardThemeLayout> = {
-  "birthday-elegant": birthdayElegant as CardThemeLayout,
-  "womens-day-soft": womensDaySoft as CardThemeLayout,
-  "mothers-day-floral": mothersDayFloral as CardThemeLayout,
-  "new-year-celebration": newYearCelebration as CardThemeLayout,
-  "christmas-gold": christmasGold as CardThemeLayout,
-  "easter-pastel": easterPastel as CardThemeLayout,
+  'birthday-elegant': birthdayElegant as CardThemeLayout,
+  'womens-day-soft': womensDaySoft as CardThemeLayout,
+  'mothers-day-floral': mothersDayFloral as CardThemeLayout,
+  'new-year-celebration': newYearCelebration as CardThemeLayout,
+  'christmas-gold': christmasGold as CardThemeLayout,
+  'easter-pastel': easterPastel as CardThemeLayout
 };
 
 export function getCardThemeLayout(themeName?: string | null) {
-  const key = String(themeName || "").trim();
+  const key = String(themeName || '').trim();
   return key ? THEME_LAYOUTS[key] || null : null;
 }

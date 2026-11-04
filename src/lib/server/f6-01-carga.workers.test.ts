@@ -27,7 +27,7 @@ declare module 'cloudflare:test' {
 import { vi } from 'vitest';
 vi.mock('$lib/brand', () => ({
   VTUR_LOGO_URL: 'data:image/png;base64,stub',
-  VTUR_LOGO_PATH: '/brand/vtur-symbol.png',
+  VTUR_LOGO_PATH: '/brand/vtur-symbol.png'
 }));
 
 import { env } from 'cloudflare:test';
@@ -82,8 +82,8 @@ function vendaSimples(empresaId: number, usuarioId: string): VendaNormalizada {
         valor_taxas_centavos: 0,
         valor_total_centavos: 150000,
         paga_comissao: false,
-        notas: null,
-      },
+        notas: null
+      }
     ],
     pagamentos: [
       {
@@ -97,9 +97,9 @@ function vendaSimples(empresaId: number, usuarioId: string): VendaNormalizada {
         parcelas_qtd: 1,
         parcelas_valor_centavos: 150000,
         paga_comissao: false,
-        parcelas: [{ numero: 1, valor_centavos: 150000, vencimento: '2024-07-01' }],
-      },
-    ],
+        parcelas: [{ numero: 1, valor_centavos: 150000, vencimento: '2024-07-01' }]
+      }
+    ]
   };
 }
 
@@ -151,7 +151,13 @@ beforeAll(async () => {
   const drizzleDb = getDb(env.DB);
   for (const [i, empresaId] of EMPRESA_IDS.entries()) {
     for (let n = 0; n < N_VENDAS_POR_EMPRESA; n++) {
-      await criarVenda(drizzleDb, empresaId, USUARIO_IDS[i], vendaSimples(empresaId, USUARIO_IDS[i]), env.DB);
+      await criarVenda(
+        drizzleDb,
+        empresaId,
+        USUARIO_IDS[i],
+        vendaSimples(empresaId, USUARIO_IDS[i]),
+        env.DB
+      );
     }
   }
 }, 120_000);
@@ -160,88 +166,92 @@ beforeAll(async () => {
 
 describe('Suíte P — F6-01: carga com volume representativo', () => {
   // P1 ──────────────────────────────────────────────────────────────────────
-  it(
-    'P1. criarVenda: p95 < 200 ms com 100 inserções por empresa (500 no total)',
-    async () => {
-      const tempos: number[] = [];
+  it('P1. criarVenda: p95 < 200 ms com 100 inserções por empresa (500 no total)', async () => {
+    const tempos: number[] = [];
 
-      for (const [i, empresaId] of EMPRESA_IDS.entries()) {
-        const drizzleDb = getDb(env.DB);
-        for (let n = 0; n < N_VENDAS_POR_EMPRESA; n++) {
-          const t0 = performance.now();
-          await criarVenda(drizzleDb, empresaId, USUARIO_IDS[i], vendaSimples(empresaId, USUARIO_IDS[i]), env.DB);
-          tempos.push(performance.now() - t0);
-        }
+    for (const [i, empresaId] of EMPRESA_IDS.entries()) {
+      const drizzleDb = getDb(env.DB);
+      for (let n = 0; n < N_VENDAS_POR_EMPRESA; n++) {
+        const t0 = performance.now();
+        await criarVenda(
+          drizzleDb,
+          empresaId,
+          USUARIO_IDS[i],
+          vendaSimples(empresaId, USUARIO_IDS[i]),
+          env.DB
+        );
+        tempos.push(performance.now() - t0);
       }
+    }
 
-      tempos.sort((a, b) => a - b);
-      const p50 = percentile(tempos, 50);
-      const p95 = percentile(tempos, 95);
-      const p99 = percentile(tempos, 99);
+    tempos.sort((a, b) => a - b);
+    const p50 = percentile(tempos, 50);
+    const p95 = percentile(tempos, 95);
+    const p99 = percentile(tempos, 99);
 
-      console.log(`[P1] criarVenda  n=${tempos.length}  p50=${p50.toFixed(1)}ms  p95=${p95.toFixed(1)}ms  p99=${p99.toFixed(1)}ms`);
+    console.log(
+      `[P1] criarVenda  n=${tempos.length}  p50=${p50.toFixed(1)}ms  p95=${p95.toFixed(1)}ms  p99=${p99.toFixed(1)}ms`
+    );
 
-      expect(p95, `p95 de criarVenda deve ser < 200 ms (foi ${p95.toFixed(1)} ms)`).toBeLessThan(200);
-    },
-    180_000
-  );
+    expect(p95, `p95 de criarVenda deve ser < 200 ms (foi ${p95.toFixed(1)} ms)`).toBeLessThan(200);
+  }, 180_000);
 
   // P2 ──────────────────────────────────────────────────────────────────────
-  it(
-    'P2. listarVendas: p95 < 150 ms com 100 registros por empresa (dados frios)',
-    async () => {
-      const tempos: number[] = [];
+  it('P2. listarVendas: p95 < 150 ms com 100 registros por empresa (dados frios)', async () => {
+    const tempos: number[] = [];
 
-      for (const [i, empresaId] of EMPRESA_IDS.entries()) {
-        const drizzleDb = getDb(env.DB);
-        // 10 chamadas por empresa com cursores diferentes (simula navegação)
-        for (let page = 0; page < 10; page++) {
-          const t0 = performance.now();
-          await listarVendas(drizzleDb, empresaId, { limite: 20 });
-          tempos.push(performance.now() - t0);
-        }
-
-        // Isolamento verificado pelo count (listarVendas já filtra por empresaId internamente)
-        const resultado = await listarVendas(getDb(env.DB), empresaId, { limite: 200 });
-        expect(resultado.itens.length).toBeGreaterThan(0);
+    for (const [i, empresaId] of EMPRESA_IDS.entries()) {
+      const drizzleDb = getDb(env.DB);
+      // 10 chamadas por empresa com cursores diferentes (simula navegação)
+      for (let page = 0; page < 10; page++) {
+        const t0 = performance.now();
+        await listarVendas(drizzleDb, empresaId, { limite: 20 });
+        tempos.push(performance.now() - t0);
       }
 
-      tempos.sort((a, b) => a - b);
-      const p50 = percentile(tempos, 50);
-      const p95 = percentile(tempos, 95);
+      // Isolamento verificado pelo count (listarVendas já filtra por empresaId internamente)
+      const resultado = await listarVendas(getDb(env.DB), empresaId, { limite: 200 });
+      expect(resultado.itens.length).toBeGreaterThan(0);
+    }
 
-      console.log(`[P2] listarVendas  n=${tempos.length}  p50=${p50.toFixed(1)}ms  p95=${p95.toFixed(1)}ms`);
+    tempos.sort((a, b) => a - b);
+    const p50 = percentile(tempos, 50);
+    const p95 = percentile(tempos, 95);
 
-      expect(p95, `p95 de listarVendas deve ser < 150 ms (foi ${p95.toFixed(1)} ms)`).toBeLessThan(150);
-    },
-    60_000
-  );
+    console.log(
+      `[P2] listarVendas  n=${tempos.length}  p50=${p50.toFixed(1)}ms  p95=${p95.toFixed(1)}ms`
+    );
+
+    expect(p95, `p95 de listarVendas deve ser < 150 ms (foi ${p95.toFixed(1)} ms)`).toBeLessThan(
+      150
+    );
+  }, 60_000);
 
   // P3 ──────────────────────────────────────────────────────────────────────
-  it(
-    'P3. resumoVendas: p95 < 150 ms com 100 registros por empresa',
-    async () => {
-      const tempos: number[] = [];
+  it('P3. resumoVendas: p95 < 150 ms com 100 registros por empresa', async () => {
+    const tempos: number[] = [];
 
-      for (const empresaId of EMPRESA_IDS) {
-        const drizzleDb = getDb(env.DB);
-        for (let r = 0; r < 10; r++) {
-          const t0 = performance.now();
-          await resumoVendas(drizzleDb, empresaId, {});
-          tempos.push(performance.now() - t0);
-        }
+    for (const empresaId of EMPRESA_IDS) {
+      const drizzleDb = getDb(env.DB);
+      for (let r = 0; r < 10; r++) {
+        const t0 = performance.now();
+        await resumoVendas(drizzleDb, empresaId, {});
+        tempos.push(performance.now() - t0);
       }
+    }
 
-      tempos.sort((a, b) => a - b);
-      const p50 = percentile(tempos, 50);
-      const p95 = percentile(tempos, 95);
+    tempos.sort((a, b) => a - b);
+    const p50 = percentile(tempos, 50);
+    const p95 = percentile(tempos, 95);
 
-      console.log(`[P3] resumoVendas  n=${tempos.length}  p50=${p50.toFixed(1)}ms  p95=${p95.toFixed(1)}ms`);
+    console.log(
+      `[P3] resumoVendas  n=${tempos.length}  p50=${p50.toFixed(1)}ms  p95=${p95.toFixed(1)}ms`
+    );
 
-      expect(p95, `p95 de resumoVendas deve ser < 150 ms (foi ${p95.toFixed(1)} ms)`).toBeLessThan(150);
-    },
-    60_000
-  );
+    expect(p95, `p95 de resumoVendas deve ser < 150 ms (foi ${p95.toFixed(1)} ms)`).toBeLessThan(
+      150
+    );
+  }, 60_000);
 
   // P4 ──────────────────────────────────────────────────────────────────────
   it('P4. isolamento de tenant: nenhuma empresa vê vendas de outra após carga', async () => {
@@ -269,4 +279,4 @@ describe('Suíte P — F6-01: carga com volume representativo', () => {
       expect(resumo.valorTotalCentavos).toBe(esperado);
     }
   }, 30_000);
-}, );
+});

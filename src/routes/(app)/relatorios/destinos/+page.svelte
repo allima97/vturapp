@@ -124,7 +124,13 @@
 
   const columns = [
     { key: 'destino', label: 'Destino', sortable: true },
-    { key: 'quantidade', label: 'Vendas', sortable: true, align: 'center' as const, width: '100px' },
+    {
+      key: 'quantidade',
+      label: 'Vendas',
+      sortable: true,
+      align: 'center' as const,
+      width: '100px'
+    },
     {
       key: 'receita',
       label: 'Receita',
@@ -159,16 +165,21 @@
     loading = true;
 
     try {
-      const data = await apiGet<DestinosRelatorioPayload>('/api/v1/relatorios/destinos', {
-        data_inicio: dataInicio,
-        data_fim: dataFim,
-        empresa_id: empresaSelecionada || undefined,
-        vendedor_id: vendedorSelecionado || undefined,
-        ordenacao,
-        recorte,
-        items_limit: RELATORIO_PAGE_SIZE,
-        items_offset: 0
-      }, controller.signal, 90_000);
+      const data = await apiGet<DestinosRelatorioPayload>(
+        '/api/v1/relatorios/destinos',
+        {
+          data_inicio: dataInicio,
+          data_fim: dataFim,
+          empresa_id: empresaSelecionada || undefined,
+          vendedor_id: vendedorSelecionado || undefined,
+          ordenacao,
+          recorte,
+          items_limit: RELATORIO_PAGE_SIZE,
+          items_offset: 0
+        },
+        controller.signal,
+        90_000
+      );
       if (requestSeq !== relatorioRequestSeq) return;
       destinos = data.items || [];
       totalRelatorioItems = Number(data.total || destinos.length || 0);
@@ -208,16 +219,21 @@
     loadingMore = true;
 
     try {
-      const data = await apiGet<DestinosRelatorioPayload>('/api/v1/relatorios/destinos', {
-        data_inicio: dataInicio,
-        data_fim: dataFim,
-        empresa_id: empresaSelecionada || undefined,
-        vendedor_id: vendedorSelecionado || undefined,
-        ordenacao,
-        recorte,
-        items_limit: RELATORIO_PAGE_SIZE,
-        items_offset: destinos.length
-      }, controller.signal, 90_000);
+      const data = await apiGet<DestinosRelatorioPayload>(
+        '/api/v1/relatorios/destinos',
+        {
+          data_inicio: dataInicio,
+          data_fim: dataFim,
+          empresa_id: empresaSelecionada || undefined,
+          vendedor_id: vendedorSelecionado || undefined,
+          ordenacao,
+          recorte,
+          items_limit: RELATORIO_PAGE_SIZE,
+          items_offset: destinos.length
+        },
+        controller.signal,
+        90_000
+      );
 
       destinos = [...destinos, ...(data.items || [])];
       totalRelatorioItems = Number(data.total || totalRelatorioItems || destinos.length);
@@ -340,7 +356,8 @@
 
   // Regra de escopo: vendedor/uso individual não escolhe empresa ou vendedor global.
   $: showEmpresaFiltro = !$permissoes.ready || $permissoes.isSystemAdmin || $permissoes.isMaster;
-  $: showVendedorFiltro = !$permissoes.ready || (!$permissoes.isVendedor && !$permissoes.usoIndividual);
+  $: showVendedorFiltro =
+    !$permissoes.ready || (!$permissoes.isVendedor && !$permissoes.usoIndividual);
 
   $: if ($permissoes.ready && !showEmpresaFiltro && empresaSelecionada) empresaSelecionada = '';
   $: if ($permissoes.ready && !showVendedorFiltro && vendedorSelecionado) vendedorSelecionado = '';
@@ -356,7 +373,7 @@
     vendedorSelecionado,
     ordenacao,
     recorte
-    ].join('|');
+  ].join('|');
 
   $: if (autoReloadEnabled && autoReloadKey !== lastAutoReloadKey) {
     lastAutoReloadKey = autoReloadKey;
@@ -373,10 +390,7 @@
   subtitle="Analise de vendas por destino turistico"
   color="financeiro"
   actions={[{ label: 'Voltar', href: '/relatorios', variant: 'secondary', icon: ArrowLeft }]}
-  breadcrumbs={[
-    { label: 'Relatorios', href: '/relatorios' },
-    { label: 'Destinos' }
-  ]}
+  breadcrumbs={[{ label: 'Relatorios', href: '/relatorios' }, { label: 'Destinos' }]}
 />
 
 <!-- Mobile: botão de filtros -->
@@ -385,7 +399,7 @@
     <SlidersHorizontal size={16} class="mr-2" />
     Filtros
     {#if empresaSelecionada || vendedorSelecionado || recorte !== 'todos'}
-      <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-financeiro-500"></span>
+      <span class="bg-financeiro-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
     {/if}
   </Button>
 </div>
@@ -433,7 +447,10 @@
         id="rel-destinos-empresa-mobile"
         label="Empresa"
         bind:value={empresaSelecionada}
-        options={[{ value: '', label: 'Todas' }, ...empresas.map((e) => ({ value: e.id, label: e.nome }))]}
+        options={[
+          { value: '', label: 'Todas' },
+          ...empresas.map((e) => ({ value: e.id, label: e.nome }))
+        ]}
         placeholder={null}
         class_name="w-full"
       />
@@ -443,7 +460,10 @@
         id="rel-destinos-vendedor-mobile"
         label="Vendedor"
         bind:value={vendedorSelecionado}
-        options={[{ value: '', label: 'Todos' }, ...vendedores.map((v) => ({ value: v.id, label: v.nome }))]}
+        options={[
+          { value: '', label: 'Todos' },
+          ...vendedores.map((v) => ({ value: v.id, label: v.nome }))
+        ]}
         placeholder={null}
         class_name="w-full"
       />
@@ -520,7 +540,10 @@
       id="rel-destinos-empresa"
       label="Empresa"
       bind:value={empresaSelecionada}
-      options={[{ value: '', label: 'Todas' }, ...empresas.map((e) => ({ value: e.id, label: e.nome }))]}
+      options={[
+        { value: '', label: 'Todas' },
+        ...empresas.map((e) => ({ value: e.id, label: e.nome }))
+      ]}
       placeholder={null}
       class_name="w-full"
     />
@@ -530,7 +553,10 @@
       id="rel-destinos-vendedor"
       label="Vendedor"
       bind:value={vendedorSelecionado}
-      options={[{ value: '', label: 'Todos' }, ...vendedores.map((v) => ({ value: v.id, label: v.nome }))]}
+      options={[
+        { value: '', label: 'Todos' },
+        ...vendedores.map((v) => ({ value: v.id, label: v.nome }))
+      ]}
       placeholder={null}
       class_name="w-full"
     />
@@ -564,13 +590,13 @@
 {#if destinoTop}
   <Card color="financeiro" class="mb-6">
     <div class="flex items-center gap-4">
-      <div class="p-4 bg-financeiro-100 rounded-full">
+      <div class="bg-financeiro-100 rounded-full p-4">
         <MapPin size={32} class="text-financeiro-600" />
       </div>
       <div class="flex-1">
         <h3 class="text-lg font-semibold text-slate-900">Destino em Destaque</h3>
-        <p class="text-2xl font-bold text-financeiro-600">{destinoTop.destino}</p>
-        <div class="flex gap-6 mt-2 text-sm">
+        <p class="text-financeiro-600 text-2xl font-bold">{destinoTop.destino}</p>
+        <div class="mt-2 flex gap-6 text-sm">
           <span class="text-slate-500">{destinoTop.quantidade} vendas</span>
           <span class="text-slate-500">{formatCurrency(destinoTop.receita)} em receita</span>
           <span class="text-slate-500">{destinoTop.percentual.toFixed(1)}% do total</span>
@@ -580,7 +606,7 @@
   </Card>
 {/if}
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+<div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
   <Card header="Receita por Destino" color="financeiro">
     <ChartJS type="doughnut" data={vendasPorDestinoData} height={280} />
   </Card>
@@ -590,8 +616,13 @@
 </div>
 
 {#if relatorioTruncado}
-  <div class="mb-4 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:flex-row sm:items-center sm:justify-between">
-    <span>Exibindo {destinos.length} de {totalRelatorioItems} destinos. Carregue mais somente quando precisar detalhar/exportar mais linhas.</span>
+  <div
+    class="mb-4 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:flex-row sm:items-center sm:justify-between"
+  >
+    <span
+      >Exibindo {destinos.length} de {totalRelatorioItems} destinos. Carregue mais somente quando precisar
+      detalhar/exportar mais linhas.</span
+    >
     <Button variant="secondary" size="sm" disabled={loadingMore} on:click={loadMoreRelatorio}>
       {loadingMore ? 'Carregando...' : 'Carregar mais'}
     </Button>

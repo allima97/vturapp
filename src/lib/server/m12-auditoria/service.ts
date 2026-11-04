@@ -14,13 +14,19 @@ import { auditLogs, clientes, user, vendas } from '$lib/server/db/schema';
 
 // ─── Campos sensíveis a remover dos detalhes (LGPD Art. 46) ──────────────────
 const CAMPOS_SENSIVEIS = new Set([
-  'senha', 'password', 'cpf', 'token', 'secret', 'hash',
-  'credit_card', 'cartao', 'cvv', 'pin',
+  'senha',
+  'password',
+  'cpf',
+  'token',
+  'secret',
+  'hash',
+  'credit_card',
+  'cartao',
+  'cvv',
+  'pin'
 ]);
 
-function sanitizarDetalhes(
-  detalhes: Record<string, unknown> | null | undefined,
-): string | null {
+function sanitizarDetalhes(detalhes: Record<string, unknown> | null | undefined): string | null {
   if (!detalhes) return null;
   const sanitizado: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(detalhes)) {
@@ -46,20 +52,17 @@ export interface GravarAuditParams {
  * Fire-and-forget: nunca lança exceção — falhas são silenciosas
  * (não devem bloquear a operação de negócio).
  */
-export async function gravarAudit(
-  db: DrizzleDb,
-  params: GravarAuditParams,
-): Promise<void> {
+export async function gravarAudit(db: DrizzleDb, params: GravarAuditParams): Promise<void> {
   try {
     await db.insert(auditLogs).values({
       empresaId: params.empresaId,
-      userId:    params.userId ?? null,
-      modulo:    params.modulo,
-      acao:      params.acao,
-      detalhes:  sanitizarDetalhes(params.detalhes ?? null),
-      ip:        params.ip ?? null,
+      userId: params.userId ?? null,
+      modulo: params.modulo,
+      acao: params.acao,
+      detalhes: sanitizarDetalhes(params.detalhes ?? null),
+      ip: params.ip ?? null,
       userAgent: params.userAgent?.slice(0, 300) ?? null,
-      criadoEm:  new Date().toISOString(),
+      criadoEm: new Date().toISOString()
     });
   } catch {
     // silencioso: auditoria nunca bloqueia a operação principal
@@ -71,7 +74,7 @@ export async function gravarAudit(
 export interface FiltroAudit {
   modulo?: string;
   userId?: string;
-  de?: string;  // ISO date
+  de?: string; // ISO date
   ate?: string; // ISO date
   cursor?: number; // id do último registro (keyset pagination)
   limite?: number;
@@ -96,28 +99,28 @@ export interface AuditEntry {
 export async function listarAuditLogs(
   db: DrizzleDb,
   empresaId: number,
-  filtro: FiltroAudit = {},
+  filtro: FiltroAudit = {}
 ): Promise<{ logs: AuditEntry[]; proximo: number | null }> {
   const limite = Math.min(filtro.limite ?? 50, 100);
 
   const conditions = [eq(auditLogs.empresaId, empresaId)];
   if (filtro.modulo) conditions.push(eq(auditLogs.modulo, filtro.modulo));
   if (filtro.userId) conditions.push(eq(auditLogs.userId, filtro.userId));
-  if (filtro.de)     conditions.push(gte(auditLogs.criadoEm, filtro.de));
-  if (filtro.ate)    conditions.push(lte(auditLogs.criadoEm, filtro.ate + 'T23:59:59Z'));
+  if (filtro.de) conditions.push(gte(auditLogs.criadoEm, filtro.de));
+  if (filtro.ate) conditions.push(lte(auditLogs.criadoEm, filtro.ate + 'T23:59:59Z'));
   if (filtro.cursor) conditions.push(sql`${auditLogs.id} < ${filtro.cursor}`);
 
   const rows = await db
     .select({
-      id:         auditLogs.id,
-      userId:     auditLogs.userId,
-      userNome:   user.name,
-      userEmail:  user.email,
-      modulo:     auditLogs.modulo,
-      acao:       auditLogs.acao,
-      detalhes:   auditLogs.detalhes,
-      ip:         auditLogs.ip,
-      criadoEm:   auditLogs.criadoEm,
+      id: auditLogs.id,
+      userId: auditLogs.userId,
+      userNome: user.name,
+      userEmail: user.email,
+      modulo: auditLogs.modulo,
+      acao: auditLogs.acao,
+      detalhes: auditLogs.detalhes,
+      ip: auditLogs.ip,
+      criadoEm: auditLogs.criadoEm
     })
     .from(auditLogs)
     .leftJoin(user, eq(auditLogs.userId, user.id))
@@ -131,9 +134,9 @@ export async function listarAuditLogs(
   return {
     logs: pagina.map((r) => ({
       ...r,
-      detalhes: r.detalhes ? JSON.parse(r.detalhes) : null,
+      detalhes: r.detalhes ? JSON.parse(r.detalhes) : null
     })),
-    proximo: temProximo ? (pagina.at(-1)?.id ?? null) : null,
+    proximo: temProximo ? (pagina.at(-1)?.id ?? null) : null
   };
 }
 
@@ -153,7 +156,7 @@ export interface DadosTitular {
 export async function exportarDadosTitular(
   db: DrizzleDb,
   empresaId: number,
-  userId: string,
+  userId: string
 ): Promise<DadosTitular> {
   const [titular] = await db
     .select({ id: user.id, nome: user.name, email: user.email, criadoEm: user.createdAt })
@@ -179,15 +182,15 @@ export async function exportarDadosTitular(
   return {
     usuario: titular
       ? {
-          id:       titular.id,
-          nome:     titular.nome ?? '',
-          email:    titular.email,
-          criadoEm: titular.criadoEm ? new Date(titular.criadoEm).toISOString() : '',
+          id: titular.id,
+          nome: titular.nome ?? '',
+          email: titular.email,
+          criadoEm: titular.criadoEm ? new Date(titular.criadoEm).toISOString() : ''
         }
       : null,
-    totalVendas:    Number(totalVendas),
+    totalVendas: Number(totalVendas),
     totalAuditLogs: Number(totalAuditLogs),
-    totalClientes:  Number(totalClientes),
+    totalClientes: Number(totalClientes)
   };
 }
 
@@ -199,7 +202,7 @@ export async function exportarDadosTitular(
 export async function anonimizarTitularAuditLogs(
   db: DrizzleDb,
   empresaId: number,
-  userId: string,
+  userId: string
 ): Promise<{ anonimizados: number }> {
   // Conta antes de atualizar (D1 não expõe rowsAffected de forma confiável)
   const [{ total }] = await db

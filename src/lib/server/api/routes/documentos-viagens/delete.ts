@@ -29,7 +29,10 @@ export async function handleDocumentosViagensDeletePost(event: RequestEvent) {
   try {
     const originError = rejectCrossOriginRequest(event.request);
     if (originError) return originError;
-    const bodyResult = await readJsonBodyLimited(event.request, MAX_DOCUMENTO_VIAGEM_DELETE_BODY_BYTES);
+    const bodyResult = await readJsonBodyLimited(
+      event.request,
+      MAX_DOCUMENTO_VIAGEM_DELETE_BODY_BYTES
+    );
     if (!bodyResult.ok) return bodyResult.response;
 
     const client = getAdminClient();
@@ -37,12 +40,18 @@ export async function handleDocumentosViagensDeletePost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['operacao_documentos_viagens', 'documentos_viagens', 'operacao'], 4, 'Sem permissao para excluir documentos.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_documentos_viagens', 'documentos_viagens', 'operacao'],
+        4,
+        'Sem permissao para excluir documentos.'
+      );
     }
 
     const body = readDocumentoViagemDeleteBody(bodyResult.data);
     const id = String(body?.id || '').trim();
-    if (!isUuid(id)) return json({ error: 'id invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'id invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const { data: doc, error: fetchErr } = await client
       .from('documentos_viagens')
@@ -50,13 +59,22 @@ export async function handleDocumentosViagensDeletePost(event: RequestEvent) {
       .eq('id', id)
       .maybeSingle();
     if (fetchErr) throw fetchErr;
-    if (!doc) return json({ error: 'Documento nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!doc)
+      return json(
+        { error: 'Documento nao encontrado.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
 
     if (!scope.isAdmin) {
       const allowedCompanyIds = cleanStringSet([scope.companyId, ...(scope.companyIds || [])]);
-      const targetCompanyId = String((doc as { company_id?: string | null })?.company_id || '').trim();
+      const targetCompanyId = String(
+        (doc as { company_id?: string | null })?.company_id || ''
+      ).trim();
       if (!targetCompanyId || !allowedCompanyIds.has(targetCompanyId)) {
-        return json({ error: 'Documento fora do escopo da empresa.' }, { status: 403, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Documento fora do escopo da empresa.' },
+          { status: 403, headers: NO_STORE_HEADERS }
+        );
       }
     }
 

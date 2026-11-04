@@ -13,23 +13,25 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
 vi.mock('./permissions', () => ({ handleDebugPermissionsGet: spy('handleDebugPermissionsGet') }));
-vi.mock('./vendas-recibos-diff', () => ({ handleDebugVendasRecibosDiffGet: spy('handleDebugVendasRecibosDiffGet') }));
+vi.mock('./vendas-recibos-diff', () => ({
+  handleDebugVendasRecibosDiffGet: spy('handleDebugVendasRecibosDiffGet')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 
 const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/debug/permissions', 'handleDebugPermissionsGet', {}],
-  ['GET', '/api/v1/debug/vendas-recibos-diff', 'handleDebugVendasRecibosDiffGet', {}],
+  ['GET', '/api/v1/debug/vendas-recibos-diff', 'handleDebugVendasRecibosDiffGet', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/debug/permissions'],
-  ['PUT', '/api/v1/debug/vendas-recibos-diff'],
+  ['PUT', '/api/v1/debug/vendas-recibos-diff']
 ];
 
 function ev(method: string, path: string) {

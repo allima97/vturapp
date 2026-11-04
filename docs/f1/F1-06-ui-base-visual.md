@@ -9,18 +9,18 @@
 
 ## Contexto do projeto
 
-| Métrica | Valor |
-|---------|-------|
-| Arquivos `.svelte` | 405 |
-| Componentes wrapper customizados | 28 |
-| Usages de `<Button>` | 700+ |
-| Usages de `<Card>` | 287 |
-| Usages de `<Dialog>` | 68 |
-| Usages de `<DataTable>` | 54 |
-| Flowbite Svelte atual | 1.33.1 (Svelte 5) |
-| Flowbite legado copiado | 0.48.6 (Svelte 4, cópia local) |
-| Bits UI instalado | ❌ não |
-| shadcn-svelte instalado | ❌ não |
+| Métrica                          | Valor                          |
+| -------------------------------- | ------------------------------ |
+| Arquivos `.svelte`               | 405                            |
+| Componentes wrapper customizados | 28                             |
+| Usages de `<Button>`             | 700+                           |
+| Usages de `<Card>`               | 287                            |
+| Usages de `<Dialog>`             | 68                             |
+| Usages de `<DataTable>`          | 54                             |
+| Flowbite Svelte atual            | 1.33.1 (Svelte 5)              |
+| Flowbite legado copiado          | 0.48.6 (Svelte 4, cópia local) |
+| Bits UI instalado                | ❌ não                         |
+| shadcn-svelte instalado          | ❌ não                         |
 
 ### Camada de wrappers existente
 
@@ -44,40 +44,40 @@ afeta as 400+ páginas da aplicação.
 
 ### A — Flowbite Svelte 1.33.1 (atual)
 
-| Critério | Avaliação |
-|----------|-----------|
-| Svelte 5 | ✅ Migrado completamente para Svelte 5 (runes) |
-| Já instalado | ✅ `flowbite-svelte: ^1.33.1` em package.json |
-| API familiar | ✅ wrappers legados já conhecidos |
+| Critério       | Avaliação                                                |
+| -------------- | -------------------------------------------------------- |
+| Svelte 5       | ✅ Migrado completamente para Svelte 5 (runes)           |
+| Já instalado   | ✅ `flowbite-svelte: ^1.33.1` em package.json            |
+| API familiar   | ✅ wrappers legados já conhecidos                        |
 | Acessibilidade | ⚠️ ARIA básico, não usa Radix/Floating UI como primitivo |
-| Bundle size | ⚠️ Tree-shaking ok mas componentes são pesados |
-| Manutenção | ⚠️ Comunidade mediana; issues lentas |
-| TypeScript | ✅ Tipagem completa |
-| Dark mode | ✅ Via Tailwind `dark:` class |
+| Bundle size    | ⚠️ Tree-shaking ok mas componentes são pesados           |
+| Manutenção     | ⚠️ Comunidade mediana; issues lentas                     |
+| TypeScript     | ✅ Tipagem completa                                      |
+| Dark mode      | ✅ Via Tailwind `dark:` class                            |
 
 ### B — Bits UI 1.x (headless) + Tailwind
 
-| Critério | Avaliação |
-|----------|-----------|
-| Svelte 5 | ✅ Construído para Svelte 5 runes desde o início |
-| Já instalado | ❌ Requer `npm install bits-ui` |
-| Acessibilidade | ✅ Primitivos baseados em WAI-ARIA, Floating UI, foco gerenciado |
-| Headless | ✅ Zero CSS de lib — 100% Tailwind customizável |
-| Bundle size | ✅ Menor: apenas primitivos sem CSS embutido |
-| Manutenção | ✅ Huntabyte; muito ativo, usada pelo shadcn-svelte |
-| TypeScript | ✅ Tipagem forte com variantes |
-| Esforço de migração | ⚠️ Reescrever internals dos 28 wrappers |
+| Critério            | Avaliação                                                        |
+| ------------------- | ---------------------------------------------------------------- |
+| Svelte 5            | ✅ Construído para Svelte 5 runes desde o início                 |
+| Já instalado        | ❌ Requer `npm install bits-ui`                                  |
+| Acessibilidade      | ✅ Primitivos baseados em WAI-ARIA, Floating UI, foco gerenciado |
+| Headless            | ✅ Zero CSS de lib — 100% Tailwind customizável                  |
+| Bundle size         | ✅ Menor: apenas primitivos sem CSS embutido                     |
+| Manutenção          | ✅ Huntabyte; muito ativo, usada pelo shadcn-svelte              |
+| TypeScript          | ✅ Tipagem forte com variantes                                   |
+| Esforço de migração | ⚠️ Reescrever internals dos 28 wrappers                          |
 
 ### C — shadcn-svelte 1.x
 
-| Critério | Avaliação |
-|----------|-----------|
-| Svelte 5 | ✅ Migrou para Svelte 5 + Bits UI como primitivo |
-| Abordagem | 📋 "Copy-paste" — componentes gerados no projeto, sem dependência em runtime |
-| Acessibilidade | ✅ Herda de Bits UI |
-| Design opinativo | ⚠️ Shadcn visual — precisaria sobrescrever tokens para o design vtur |
-| Integração Tailwind 4 | ✅ Suporte ativo no CLI |
-| Conflito com wrappers | ⚠️ Geraria dois sistemas de componentes em src/lib/components/ui |
+| Critério              | Avaliação                                                                    |
+| --------------------- | ---------------------------------------------------------------------------- |
+| Svelte 5              | ✅ Migrou para Svelte 5 + Bits UI como primitivo                             |
+| Abordagem             | 📋 "Copy-paste" — componentes gerados no projeto, sem dependência em runtime |
+| Acessibilidade        | ✅ Herda de Bits UI                                                          |
+| Design opinativo      | ⚠️ Shadcn visual — precisaria sobrescrever tokens para o design vtur         |
+| Integração Tailwind 4 | ✅ Suporte ativo no CLI                                                      |
+| Conflito com wrappers | ⚠️ Geraria dois sistemas de componentes em src/lib/components/ui             |
 
 ---
 
@@ -90,10 +90,11 @@ afeta as 400+ páginas da aplicação.
   import { Modal } from 'flowbite-svelte';
   let open = false;
 </script>
+
 <Modal bind:open title="Confirmar">
   <p>Conteúdo</p>
   <svelte:fragment slot="footer">
-    <Button onclick={() => open = false}>OK</Button>
+    <Button onclick={() => (open = false)}>OK</Button>
   </svelte:fragment>
 </Modal>
 ```
@@ -107,6 +108,7 @@ Em Flowbite 1.33 os slots foram mantidos com compat layer — funciona mas não 
 <script>
   import { Dialog } from 'bits-ui';
 </script>
+
 <Dialog.Root>
   <Dialog.Trigger>Abrir</Dialog.Trigger>
   <Dialog.Portal>
@@ -127,20 +129,20 @@ no wrapper `src/lib/components/ui/Dialog.svelte` sem vazamento de API.
 
 ## Esforço de migração
 
-| Wrapper | Complexidade | flowbite-legacy que usa | Bits UI equivalente |
-|---------|-------------|-------------------------|---------------------|
-| Button | Baixa | Button | Personalizado (sem primitivo necessário) |
-| Dialog | Média | Modal | Dialog.Root |
-| Dropdown | Média | Dropdown | DropdownMenu.Root |
-| Tooltip | Baixa | Tooltip | Tooltip.Root |
-| Input | Baixa | Input | Personalizado (input nativo) |
-| Checkbox | Baixa | Checkbox | Checkbox.Root |
-| Tabs | Baixa | — (custom) | Tabs.Root |
-| Badge | Baixa | Badge | Personalizado |
-| Card | Nenhuma | — (custom) | Não precisa |
-| DataTable | Nenhuma | — (custom) | Não precisa |
+| Wrapper   | Complexidade | flowbite-legacy que usa | Bits UI equivalente                      |
+| --------- | ------------ | ----------------------- | ---------------------------------------- |
+| Button    | Baixa        | Button                  | Personalizado (sem primitivo necessário) |
+| Dialog    | Média        | Modal                   | Dialog.Root                              |
+| Dropdown  | Média        | Dropdown                | DropdownMenu.Root                        |
+| Tooltip   | Baixa        | Tooltip                 | Tooltip.Root                             |
+| Input     | Baixa        | Input                   | Personalizado (input nativo)             |
+| Checkbox  | Baixa        | Checkbox                | Checkbox.Root                            |
+| Tabs      | Baixa        | — (custom)              | Tabs.Root                                |
+| Badge     | Baixa        | Badge                   | Personalizado                            |
+| Card      | Nenhuma      | — (custom)              | Não precisa                              |
+| DataTable | Nenhuma      | — (custom)              | Não precisa                              |
 
-**Total estimado**: 6 componentes precisam de reescrita real, 4 são triviais, 
+**Total estimado**: 6 componentes precisam de reescrita real, 4 são triviais,
 restantes (Card, DataTable, etc.) não precisam de nada.
 
 ---
@@ -187,11 +189,11 @@ restantes (Card, DataTable, etc.) não precisam de nada.
 
 ## Bundle size estimate
 
-| Cenário | Estimativa gzip |
-|---------|----------------|
-| flowbite-svelte 1.33 (full) | ~45 KB |
-| bits-ui 1.x (apenas componentes usados) | ~8-12 KB |
-| Economia estimada | ~33 KB |
+| Cenário                                 | Estimativa gzip |
+| --------------------------------------- | --------------- |
+| flowbite-svelte 1.33 (full)             | ~45 KB          |
+| bits-ui 1.x (apenas componentes usados) | ~8-12 KB        |
+| Economia estimada                       | ~33 KB          |
 
 (Números aproximados — medir com `vite-bundle-visualizer` em F2-01)
 

@@ -78,7 +78,9 @@
 
     const nome = normalizeLookup(cidade.nome);
     const label = normalizeLookup(getCidadeLabel(cidade));
-    const estado = normalizeLookup(cidade.estado || cidade.subdivisao_nome || cidade.subdivisao?.nome);
+    const estado = normalizeLookup(
+      cidade.estado || cidade.subdivisao_nome || cidade.subdivisao?.nome
+    );
     const full = `${nome} ${estado}`.trim();
 
     if (nome === query) return 0;
@@ -103,7 +105,7 @@
 
       return PT_BR_BASE_COLLATOR.compare(
         String(a.estado || a.subdivisao_nome || a.subdivisao?.nome || ''),
-        String(b.estado || b.subdivisao_nome || b.subdivisao?.nome || ''),
+        String(b.estado || b.subdivisao_nome || b.subdivisao?.nome || '')
       );
     });
   }
@@ -121,14 +123,19 @@
   function parseItems(payload: unknown): CidadeOption[] {
     if (Array.isArray(payload)) return payload as CidadeOption[];
 
-    const items = payload && typeof payload === 'object' ? (payload as { items?: unknown }).items : null;
+    const items =
+      payload && typeof payload === 'object' ? (payload as { items?: unknown }).items : null;
     if (Array.isArray(items)) return items as CidadeOption[];
 
     return [];
   }
 
   function hasCidadeId(payload: unknown): payload is CidadeOption {
-    return Boolean(payload && typeof payload === 'object' && String((payload as { id?: unknown }).id || '').trim());
+    return Boolean(
+      payload &&
+      typeof payload === 'object' &&
+      String((payload as { id?: unknown }).id || '').trim()
+    );
   }
 
   function resolveSelectedCity() {
@@ -136,7 +143,8 @@
   }
 
   function getFilteredCities(input: string) {
-    if (searchResults.length > 0) return sortCities(uniqueCities(searchResults), input).slice(0, maxResults);
+    if (searchResults.length > 0)
+      return sortCities(uniqueCities(searchResults), input).slice(0, maxResults);
 
     const query = normalizeLookup(input);
     const base = query
@@ -169,7 +177,10 @@
 
     const normalized = normalizeLookup(raw);
     const selected = uniqueCities([...searchResults, ...cities]).find((item) => {
-      return normalizeLookup(getCidadeLabel(item)) === normalized || normalizeLookup(String(item.nome || '')) === normalized;
+      return (
+        normalizeLookup(getCidadeLabel(item)) === normalized ||
+        normalizeLookup(String(item.nome || '')) === normalized
+      );
     });
 
     if (selected) {
@@ -206,10 +217,15 @@
       let payload: unknown = null;
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          payload = await apiGet('/api/v1/vendas/cidades-busca', { id: idValue }, undefined, 30_000);
+          payload = await apiGet(
+            '/api/v1/vendas/cidades-busca',
+            { id: idValue },
+            undefined,
+            30_000
+          );
           break;
         } catch {
-          if (attempt < 2) await new Promise(r => setTimeout(r, 250));
+          if (attempt < 2) await new Promise((r) => setTimeout(r, 250));
         }
       }
       if (!hasCidadeId(payload)) return;
@@ -232,14 +248,19 @@
     loading = true;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        const payload = await apiGet('/api/v1/vendas/cidades-busca', { q: query, limite: maxResults }, undefined, 30_000);
+        const payload = await apiGet(
+          '/api/v1/vendas/cidades-busca',
+          { q: query, limite: maxResults },
+          undefined,
+          30_000
+        );
         const items = sortCities(uniqueCities(parseItems(payload)), query).slice(0, maxResults);
         searchResults = items;
         dispatch('loaded', items);
         break;
       } catch {
         if (attempt < 2) {
-          await new Promise(r => setTimeout(r, 250));
+          await new Promise((r) => setTimeout(r, 250));
         } else {
           searchResults = [];
         }
@@ -308,7 +329,9 @@
   />
 
   {#if showOptions}
-    <div class="absolute z-20 mt-1 max-h-72 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+    <div
+      class="absolute z-20 mt-1 max-h-72 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg"
+    >
       {#if loading}
         <div class="px-3 py-2 text-sm text-slate-500">Buscando...</div>
       {:else if getFilteredCities(searchText).length === 0}

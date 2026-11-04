@@ -1,9 +1,25 @@
 import { Hono } from 'hono';
 import type { ApiEnv } from '../../types';
-import { handleOperacaoCampanhasGet, handleOperacaoCampanhasPost, handleOperacaoCampanhasDelete } from './campanhas';
-import { handleOperacaoDocumentosViagensGet, handleOperacaoDocumentosViagensDelete } from './documentos-viagens';
-import { handleOperacaoPreferenciasGet, handleOperacaoPreferenciasPost, handleOperacaoPreferenciasDelete, handleOperacaoPreferenciasPatch } from './preferencias';
-import { handleOperacaoRecadosGet, handleOperacaoRecadosPost, handleOperacaoRecadosDelete } from './recados';
+import {
+  handleOperacaoCampanhasGet,
+  handleOperacaoCampanhasPost,
+  handleOperacaoCampanhasDelete
+} from './campanhas';
+import {
+  handleOperacaoDocumentosViagensGet,
+  handleOperacaoDocumentosViagensDelete
+} from './documentos-viagens';
+import {
+  handleOperacaoPreferenciasGet,
+  handleOperacaoPreferenciasPost,
+  handleOperacaoPreferenciasDelete,
+  handleOperacaoPreferenciasPatch
+} from './preferencias';
+import {
+  handleOperacaoRecadosGet,
+  handleOperacaoRecadosPost,
+  handleOperacaoRecadosDelete
+} from './recados';
 import { handleOperacaoSacGet, handleOperacaoSacPost, handleOperacaoSacDelete } from './sac';
 
 // /api/v1/operacao/* atendido pelo Hono (gerado por migrate_domain.py). Estáticas antes de '/:param'.

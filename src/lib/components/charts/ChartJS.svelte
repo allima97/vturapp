@@ -1,19 +1,19 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { Chart as ChartType, ChartData, ChartOptions } from 'chart.js';
-  
+
   export let type: 'line' | 'bar' | 'pie' | 'doughnut' | 'radar' = 'line';
   export let data: ChartData;
   export let options: ChartOptions = {};
   export let height: number = 300;
   export let lazy: boolean = true;
   export let rootMargin: string = '320px';
-  
+
   let container: HTMLDivElement;
   let canvas: HTMLCanvasElement;
   let chart: ChartType | null = null;
   let creatingChart = false;
-  
+
   function buildDefaultOptions(): ChartOptions {
     return {
       responsive: true,
@@ -33,34 +33,37 @@
           }
         }
       },
-      scales: type === 'pie' || type === 'doughnut' ? undefined : {
-        y: {
-          beginAtZero: true,
-          grid: {
-            color: 'rgba(148, 163, 184, 0.1)'
-          },
-          ticks: {
-            font: {
-              size: 11,
-              family: "'Inter', sans-serif"
+      scales:
+        type === 'pie' || type === 'doughnut'
+          ? undefined
+          : {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: 'rgba(148, 163, 184, 0.1)'
+                },
+                ticks: {
+                  font: {
+                    size: 11,
+                    family: "'Inter', sans-serif"
+                  }
+                }
+              },
+              x: {
+                grid: {
+                  display: false
+                },
+                ticks: {
+                  font: {
+                    size: 11,
+                    family: "'Inter', sans-serif"
+                  }
+                }
+              }
             }
-          }
-        },
-        x: {
-          grid: {
-            display: false
-          },
-          ticks: {
-            font: {
-              size: 11,
-              family: "'Inter', sans-serif"
-            }
-          }
-        }
-      }
     };
   }
-  
+
   type MergeableRecord = Record<string, unknown>;
 
   function isMergeableRecord(value: unknown): value is MergeableRecord {
@@ -137,7 +140,7 @@
       chart = null;
     };
   });
-  
+
   // Update chart when data changes
   $: if (chart && data) {
     chart.data = data;

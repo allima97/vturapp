@@ -25,7 +25,10 @@ export async function handleDebugPermissionsGet(event: RequestEvent) {
 
     // ✅ Apenas administradores podem acessar este endpoint de debug
     if (!scope.isAdmin) {
-      return json({ error: 'Acesso restrito a administradores.' }, { status: 403, headers: DEBUG_HEADERS });
+      return json(
+        { error: 'Acesso restrito a administradores.' },
+        { status: 403, headers: DEBUG_HEADERS }
+      );
     }
 
     const { data: userData } = await client
@@ -40,14 +43,10 @@ export async function handleDebugPermissionsGet(event: RequestEvent) {
       .eq('usuario_id', user.id);
 
     // Empresas filtradas pelo escopo do admin
-    const { data: empresas } = scope.companyIds.length > 0
-      ? await client
-          .from('companies')
-          .select('id, nome_fantasia')
-          .in('id', scope.companyIds)
-      : await client
-          .from('companies')
-          .select('id, nome_fantasia');
+    const { data: empresas } =
+      scope.companyIds.length > 0
+        ? await client.from('companies').select('id, nome_fantasia').in('id', scope.companyIds)
+        : await client.from('companies').select('id, nome_fantasia');
 
     return json(
       {

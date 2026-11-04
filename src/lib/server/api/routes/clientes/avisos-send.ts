@@ -60,7 +60,10 @@ function renderHtml(text: string) {
     .join('');
 }
 
-async function tryInsertHistorico(client: ReturnType<typeof getAdminClient>, payload: ClienteAvisoHistoricoInsert) {
+async function tryInsertHistorico(
+  client: ReturnType<typeof getAdminClient>,
+  payload: ClienteAvisoHistoricoInsert
+) {
   const { error } = await client.from('cliente_avisos_historico').insert(payload);
   if (!error) return true;
 
@@ -89,7 +92,9 @@ export async function handleClientesAvisosSendGet(event: RequestEvent) {
 
     const { data, error } = await client
       .from('cliente_avisos_historico')
-      .select('id, cliente_id, template_id, canal, assunto, mensagem, status, provider, provider_id, destinatario, enviado_por, created_at')
+      .select(
+        'id, cliente_id, template_id, canal, assunto, mensagem, status, provider, provider_id, destinatario, enviado_por, created_at'
+      )
       .eq('cliente_id', clienteId)
       .order('created_at', { ascending: false })
       .limit(10);
@@ -121,12 +126,15 @@ export async function handleClientesAvisosSendPost(event: RequestEvent) {
       'clientes-avisos-send',
       `${event.getClientAddress?.() || 'unknown'}:${user.id}`,
       { max: 20, windowMs: 60_000 },
-      event.platform?.env?.DB,
+      event.platform?.env?.DB
     );
     if (!rateLimit.allowed) {
       return json(
         { error: 'Muitas tentativas de envio. Aguarde alguns segundos.' },
-        { status: 429, headers: { ...NO_STORE_HEADERS, 'Retry-After': String(rateLimit.retryAfterSeconds) } }
+        {
+          status: 429,
+          headers: { ...NO_STORE_HEADERS, 'Retry-After': String(rateLimit.retryAfterSeconds) }
+        }
       );
     }
 
@@ -141,7 +149,9 @@ export async function handleClientesAvisosSendPost(event: RequestEvent) {
     }
 
     const clienteId = String(body.cliente_id || '').trim();
-    const canal = String(body.canal || '').trim().toLowerCase();
+    const canal = String(body.canal || '')
+      .trim()
+      .toLowerCase();
     const templateId = String(body.template_id || '').trim();
     const assuntoBruto = String(body.assunto || '').trim();
     const mensagemBruta = String(body.mensagem || '').trim();
@@ -165,10 +175,14 @@ export async function handleClientesAvisosSendPost(event: RequestEvent) {
       .maybeSingle();
 
     if (clienteError) throw clienteError;
-    if (!cliente) return json({ error: 'Cliente nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!cliente)
+      return json({ error: 'Cliente nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
 
     const vars = {
-      nome: String(cliente.nome || '').trim().split(' ')[0] || '',
+      nome:
+        String(cliente.nome || '')
+          .trim()
+          .split(' ')[0] || '',
       nome_completo: String(cliente.nome || '').trim(),
       email: String(cliente.email || '').trim()
     };
@@ -178,38 +192,55 @@ export async function handleClientesAvisosSendPost(event: RequestEvent) {
 
     if (canal === 'email') {
       if (!cliente.email) {
-        return json({ error: 'Cliente sem e-mail cadastrado.' }, { status: 400, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Cliente sem e-mail cadastrado.' },
+          { status: 400, headers: NO_STORE_HEADERS }
+        );
       }
 
       const settings = await loadEmailSettings(client);
       const apiKey = String(settings?.resend_api_key || '').trim();
       if (!apiKey) {
-        return json({ error: 'Resend nao configurado para envio de e-mail.' }, { status: 400, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Resend nao configurado para envio de e-mail.' },
+          { status: 400, headers: NO_STORE_HEADERS }
+        );
       }
 
       const fromEmails = buildFromEmails(settings);
-      const response = await fetchWithTimeout('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
+      const response = await fetchWithTimeout(
+        'https://api.resend.com/emails',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: fromEmails.avisos,
+            to: [cliente.email],
+            subject: assunto,
+            html: renderHtml(mensagem),
+            text: mensagem
+          })
         },
-        body: JSON.stringify({
-          from: fromEmails.avisos,
-          to: [cliente.email],
-          subject: assunto,
-          html: renderHtml(mensagem),
-          text: mensagem
-        })
-      }, 12_000);
+        12_000
+      );
 
-      const payload = (await response.json().catch(() => ({}))) as { message?: string; error?: string; id?: string };
+      const payload = (await response.json().catch(() => ({}))) as {
+        message?: string;
+        error?: string;
+        id?: string;
+      };
       if (!response.ok) {
         logServerError('[clientes/avisos/send] Falha no provedor de e-mail', {
           status: response.status,
           providerMessage: String(payload?.message || payload?.error || '')
         });
-        return json({ error: 'Falha ao enviar e-mail.' }, { status: 502, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Falha ao enviar e-mail.' },
+          { status: 502, headers: NO_STORE_HEADERS }
+        );
       }
 
       const historicoDisponivel = await tryInsertHistorico(client, {
@@ -225,20 +256,26 @@ export async function handleClientesAvisosSendPost(event: RequestEvent) {
         enviado_por: user.id
       });
 
-      return json({
-        ok: true,
-        canal: 'email',
-        provider: 'resend',
-        provider_id: payload?.id || null,
-        cliente_id: clienteId,
-        template_id: templateId || null,
-        historico_disponivel: historicoDisponivel
-      }, { headers: NO_STORE_HEADERS });
+      return json(
+        {
+          ok: true,
+          canal: 'email',
+          provider: 'resend',
+          provider_id: payload?.id || null,
+          cliente_id: clienteId,
+          template_id: templateId || null,
+          historico_disponivel: historicoDisponivel
+        },
+        { headers: NO_STORE_HEADERS }
+      );
     }
 
     const phone = normalizePhone(String(cliente.whatsapp || cliente.telefone || ''));
     if (!phone) {
-      return json({ error: 'Cliente sem telefone/WhatsApp cadastrado.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Cliente sem telefone/WhatsApp cadastrado.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(mensagem)}`;
@@ -255,15 +292,18 @@ export async function handleClientesAvisosSendPost(event: RequestEvent) {
       enviado_por: user.id
     });
 
-    return json({
-      ok: true,
-      canal: 'whatsapp',
-      mode: 'manual_link',
-      whatsapp_url: whatsappUrl,
-      cliente_id: clienteId,
-      template_id: templateId || null,
-      historico_disponivel: historicoDisponivel
-    }, { headers: NO_STORE_HEADERS });
+    return json(
+      {
+        ok: true,
+        canal: 'whatsapp',
+        mode: 'manual_link',
+        whatsapp_url: whatsappUrl,
+        cliente_id: clienteId,
+        template_id: templateId || null,
+        historico_disponivel: historicoDisponivel
+      },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao enviar aviso ao cliente.');
   }

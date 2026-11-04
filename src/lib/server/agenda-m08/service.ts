@@ -14,10 +14,10 @@ import type { AgendaItem } from '$lib/server/db/schema';
 export interface EventoInput {
   titulo: string;
   descricao?: string | null;
-  startDate: string;        // YYYY-MM-DD
-  endDate?: string | null;  // YYYY-MM-DD, default = startDate
-  startAt?: string | null;  // HH:MM
-  endAt?: string | null;    // HH:MM
+  startDate: string; // YYYY-MM-DD
+  endDate?: string | null; // YYYY-MM-DD, default = startDate
+  startAt?: string | null; // HH:MM
+  endAt?: string | null; // HH:MM
   allDay?: boolean;
 }
 
@@ -30,15 +30,15 @@ export interface TarefaInput {
 }
 
 export interface ListarEventosOpts {
-  inicio?: string;   // YYYY-MM-DD
-  fim?: string;      // YYYY-MM-DD
-  userId?: string;   // filtrar por usuário (gerente pode omitir para ver todos)
+  inicio?: string; // YYYY-MM-DD
+  fim?: string; // YYYY-MM-DD
+  userId?: string; // filtrar por usuário (gerente pode omitir para ver todos)
 }
 
 export interface ListarTarefasOpts {
   status?: string;
   prioridade?: string;
-  userId?: string;   // filtrar por usuário (gerente pode omitir para ver todos)
+  userId?: string; // filtrar por usuário (gerente pode omitir para ver todos)
   incluirConcluidas?: boolean;
 }
 
@@ -64,7 +64,8 @@ const PRIORIDADES = ['baixa', 'normal', 'alta', 'urgente'] as const;
 function validarEvento(dados: Partial<EventoInput>, exigirTitulo = true): string[] {
   const erros: string[] = [];
   if (exigirTitulo && !dados.titulo?.trim()) erros.push('titulo é obrigatório.');
-  if (dados.titulo && dados.titulo.trim().length > 200) erros.push('titulo: máximo 200 caracteres.');
+  if (dados.titulo && dados.titulo.trim().length > 200)
+    erros.push('titulo: máximo 200 caracteres.');
   if (dados.startDate !== undefined && dados.startDate !== null && !ISO_DATE.test(dados.startDate))
     erros.push('start_date deve estar no formato YYYY-MM-DD.');
   if (dados.endDate !== undefined && dados.endDate !== null && !ISO_DATE.test(dados.endDate))
@@ -79,12 +80,17 @@ function validarEvento(dados: Partial<EventoInput>, exigirTitulo = true): string
 function validarTarefa(dados: Partial<TarefaInput>, exigirTitulo = true): string[] {
   const erros: string[] = [];
   if (exigirTitulo && !dados.titulo?.trim()) erros.push('titulo é obrigatório.');
-  if (dados.titulo && dados.titulo.trim().length > 200) erros.push('titulo: máximo 200 caracteres.');
+  if (dados.titulo && dados.titulo.trim().length > 200)
+    erros.push('titulo: máximo 200 caracteres.');
   if (dados.status && !(STATUSES_TAREFA as readonly string[]).includes(dados.status))
     erros.push(`status inválido. Use: ${STATUSES_TAREFA.join(', ')}.`);
   if (dados.prioridade && !(PRIORIDADES as readonly string[]).includes(dados.prioridade))
     erros.push(`prioridade inválida. Use: ${PRIORIDADES.join(', ')}.`);
-  if (dados.vencimento !== undefined && dados.vencimento !== null && !ISO_DATE.test(dados.vencimento))
+  if (
+    dados.vencimento !== undefined &&
+    dados.vencimento !== null &&
+    !ISO_DATE.test(dados.vencimento)
+  )
     erros.push('vencimento deve estar no formato YYYY-MM-DD.');
   return erros;
 }
@@ -123,18 +129,14 @@ export async function criarEvento(
       allDay,
       criadoPor: userId,
       criadoEm: ts,
-      atualizadoEm: ts,
+      atualizadoEm: ts
     })
     .returning();
 
   return item;
 }
 
-export async function obterItem(
-  db: DrizzleDb,
-  empresaId: number,
-  id: number
-): Promise<AgendaItem> {
+export async function obterItem(db: DrizzleDb, empresaId: number, id: number): Promise<AgendaItem> {
   const [item] = await db
     .select()
     .from(agendaItens)
@@ -173,11 +175,7 @@ export async function editarEvento(
   return updated;
 }
 
-export async function excluirItem(
-  db: DrizzleDb,
-  empresaId: number,
-  id: number
-): Promise<void> {
+export async function excluirItem(db: DrizzleDb, empresaId: number, id: number): Promise<void> {
   await obterItem(db, empresaId, id);
   await db
     .delete(agendaItens)
@@ -189,10 +187,7 @@ export async function listarEventos(
   empresaId: number,
   opts: ListarEventosOpts = {}
 ): Promise<AgendaItem[]> {
-  const conds = [
-    eq(agendaItens.empresaId, empresaId),
-    eq(agendaItens.tipo, 'evento'),
-  ];
+  const conds = [eq(agendaItens.empresaId, empresaId), eq(agendaItens.tipo, 'evento')];
 
   if (opts.userId) conds.push(eq(agendaItens.userId, opts.userId));
 
@@ -239,7 +234,7 @@ export async function criarTarefa(
       done: false,
       criadoPor: userId,
       criadoEm: ts,
-      atualizadoEm: ts,
+      atualizadoEm: ts
     })
     .returning();
 
@@ -294,10 +289,7 @@ export async function listarTarefas(
   empresaId: number,
   opts: ListarTarefasOpts = {}
 ): Promise<AgendaItem[]> {
-  const conds = [
-    eq(agendaItens.empresaId, empresaId),
-    eq(agendaItens.tipo, 'tarefa'),
-  ];
+  const conds = [eq(agendaItens.empresaId, empresaId), eq(agendaItens.tipo, 'tarefa')];
 
   if (opts.userId) conds.push(eq(agendaItens.userId, opts.userId));
   if (opts.status) conds.push(eq(agendaItens.status, opts.status));

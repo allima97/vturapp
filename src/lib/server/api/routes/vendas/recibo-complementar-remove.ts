@@ -40,7 +40,10 @@ export async function handleVendasReciboComplementarRemovePost(event: RequestEve
   try {
     const originError = rejectCrossOriginRequest(event.request);
     if (originError) return originError;
-    const textResult = await readTextBodyLimited(event.request, MAX_RECIBO_COMPLEMENTAR_REMOVE_BODY_BYTES);
+    const textResult = await readTextBodyLimited(
+      event.request,
+      MAX_RECIBO_COMPLEMENTAR_REMOVE_BODY_BYTES
+    );
     if (!textResult.ok) return textResult.response;
 
     const client = getAdminClient();
@@ -48,7 +51,12 @@ export async function handleVendasReciboComplementarRemovePost(event: RequestEve
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster) {
-      ensureModuloAccess(scope, ['vendas_consulta', 'vendas'], 3, 'Sem permissao para editar vendas.');
+      ensureModuloAccess(
+        scope,
+        ['vendas_consulta', 'vendas'],
+        3,
+        'Sem permissao para editar vendas.'
+      );
     }
 
     const rawBody = textResult.text;
@@ -82,19 +90,28 @@ export async function handleVendasReciboComplementarRemovePost(event: RequestEve
       .map((link: ComplementaryLinkRow) => String(link.id));
 
     if (allowedIds.length !== ids.length) {
-      return json({ error: 'Vinculo complementar fora do escopo.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Vinculo complementar fora do escopo.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
-    const { error } = await client.from('vendas_recibos_complementares').delete().in('id', allowedIds);
+    const { error } = await client
+      .from('vendas_recibos_complementares')
+      .delete()
+      .in('id', allowedIds);
     if (error) throw error;
 
     invalidateSalesReadModels();
-    for (const link of (links || []) as Array<{ venda_id?: string | null; recibo_id?: string | null }>) {
+    for (const link of (links || []) as Array<{
+      venda_id?: string | null;
+      recibo_id?: string | null;
+    }>) {
       registrarLog(event, {
         userId: user.id,
         modulo: 'Vendas',
         acao: 'recibo_complementar_removido',
-        detalhes: { venda_id: link.venda_id ?? null, recibo_id: link.recibo_id ?? null },
+        detalhes: { venda_id: link.venda_id ?? null, recibo_id: link.recibo_id ?? null }
       });
     }
     return json({ ok: true, removed: allowedIds.length }, { headers: NO_STORE_HEADERS });

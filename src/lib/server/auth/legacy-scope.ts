@@ -18,11 +18,18 @@ import {
   user,
   userProfiles,
   userTypes,
-  type LegacyPermissionLevel,
+  type LegacyPermissionLevel
 } from '$lib/server/db/schema';
 import { listarModulosComHeranca, MAPA_MODULOS, MODULO_ALIASES } from '$lib/config/modulos';
 
-export const LEGACY_ROLES = ['ADMIN', 'MASTER', 'FINANCEIRO', 'GESTOR', 'VENDEDOR', 'OUTRO'] as const;
+export const LEGACY_ROLES = [
+  'ADMIN',
+  'MASTER',
+  'FINANCEIRO',
+  'GESTOR',
+  'VENDEDOR',
+  'OUTRO'
+] as const;
 export type LegacyRole = (typeof LEGACY_ROLES)[number];
 
 export type LegacyAccessScope = {
@@ -55,7 +62,7 @@ const PERMISSION_LEVEL: Record<LegacyPermissionLevel, number> = {
   create: 2,
   edit: 3,
   delete: 4,
-  admin: 5,
+  admin: 5
 };
 
 function normalizeModule(value: string): string {
@@ -83,7 +90,7 @@ export function resolveLegacyRole(typeName: string, usageIndividual: boolean): L
 function addPermission(
   target: Record<string, LegacyPermissionLevel>,
   module: string,
-  permission: string,
+  permission: string
 ): void {
   const level = permission.toLowerCase() as LegacyPermissionLevel;
   if (!(level in PERMISSION_LEVEL)) return;
@@ -99,7 +106,7 @@ function addPermission(
 }
 
 function buildPermissionMap(
-  rows: Array<{ modulo: string; permissao: string; ativo: boolean }>,
+  rows: Array<{ modulo: string; permissao: string; ativo: boolean }>
 ): Record<string, LegacyPermissionLevel> {
   const result: Record<string, LegacyPermissionLevel> = {};
   for (const row of rows) {
@@ -112,7 +119,8 @@ async function resolveManagerTeam(d1: D1Database, userId: string, companyId: num
   // A RPC antiga segue até o gestor-base, evita ciclos e limita a cadeia a 10.
   // A relação atual só tem um sucessor por gestor (gestor_id é PK).
   const base = await d1
-    .prepare(`
+    .prepare(
+      `
       WITH RECURSIVE links(gestor_id, gestor_base_id, path, depth) AS (
         SELECT gestor_id, gestor_base_id, '|' || gestor_id || '|', 1
         FROM gestor_equipe_compartilhada
@@ -129,7 +137,8 @@ async function resolveManagerTeam(d1: D1Database, userId: string, companyId: num
       FROM links
       ORDER BY depth DESC
       LIMIT 1
-    `)
+    `
+    )
     .bind(userId)
     .first<{ gestor_base_id: string }>();
   const baseManagerId = base?.gestor_base_id ?? userId;
@@ -141,21 +150,30 @@ async function resolveManagerTeam(d1: D1Database, userId: string, companyId: num
     .where(and(eq(gestorVendedor.gestorId, baseManagerId), eq(gestorVendedor.ativo, true)))
     .all();
 
-  const sameCompanyManagers = companyId === null
-    ? []
-    : await db
-        .select({ userId: user.id })
-        .from(user)
-        .innerJoin(userProfiles, eq(userProfiles.userId, user.id))
-        .innerJoin(userTypes, eq(userTypes.id, userProfiles.userTypeId))
-        .where(and(
-          eq(user.empresaId, companyId),
-          eq(userProfiles.ativo, true),
-          like(userTypes.name, '%GESTOR%'),
-        ))
-        .all();
+  const sameCompanyManagers =
+    companyId === null
+      ? []
+      : await db
+          .select({ userId: user.id })
+          .from(user)
+          .innerJoin(userProfiles, eq(userProfiles.userId, user.id))
+          .innerJoin(userTypes, eq(userTypes.id, userProfiles.userTypeId))
+          .where(
+            and(
+              eq(user.empresaId, companyId),
+              eq(userProfiles.ativo, true),
+              like(userTypes.name, '%GESTOR%')
+            )
+          )
+          .all();
 
-  return [...new Set([userId, ...directTeam.map((row) => row.userId), ...sameCompanyManagers.map((row) => row.userId)])];
+  return [
+    ...new Set([
+      userId,
+      ...directTeam.map((row) => row.userId),
+      ...sameCompanyManagers.map((row) => row.userId)
+    ])
+  ];
 }
 
 /**
@@ -165,7 +183,7 @@ async function resolveManagerTeam(d1: D1Database, userId: string, companyId: num
  */
 export async function resolveLegacyAccessScope(
   d1: D1Database,
-  userId: string,
+  userId: string
 ): Promise<LegacyAccessScope | null> {
   const db = getDb(d1);
   const profile = await db
@@ -173,7 +191,7 @@ export async function resolveLegacyAccessScope(
       typeName: userTypes.name,
       usageIndividual: userProfiles.usoIndividual,
       active: userProfiles.ativo,
-      companyId: user.empresaId,
+      companyId: user.empresaId
     })
     .from(userProfiles)
     .innerJoin(user, eq(user.id, userProfiles.userId))
@@ -189,7 +207,11 @@ export async function resolveLegacyAccessScope(
   const ownCompanyId = profile.companyId ?? null;
 
   const accessRows = await db
-    .select({ modulo: moduloAcesso.modulo, permissao: moduloAcesso.permissao, ativo: moduloAcesso.ativo })
+    .select({
+      modulo: moduloAcesso.modulo,
+      permissao: moduloAcesso.permissao,
+      ativo: moduloAcesso.ativo
+    })
     .from(moduloAcesso)
     .where(eq(moduloAcesso.usuarioId, userId))
     .all();
@@ -204,7 +226,9 @@ export async function resolveLegacyAccessScope(
       .from(masterEmpresas)
       .where(eq(masterEmpresas.masterId, userId))
       .all();
-    const linked = rows.filter((row) => row.status.toLowerCase() !== 'rejected').map((row) => row.companyId);
+    const linked = rows
+      .filter((row) => row.status.toLowerCase() !== 'rejected')
+      .map((row) => row.companyId);
     companyIds = [...new Set(linked.length ? linked : ownCompanyId === null ? [] : [ownCompanyId])];
   } else if (role === 'FINANCEIRO') {
     const rows = await db
@@ -212,19 +236,24 @@ export async function resolveLegacyAccessScope(
       .from(financeiroEmpresas)
       .where(eq(financeiroEmpresas.financeiroId, userId))
       .all();
-    companyIds = [...new Set([
-      ...rows.filter((row) => row.status.toLowerCase() !== 'rejected').map((row) => row.companyId),
-      ...(ownCompanyId === null ? [] : [ownCompanyId]),
-    ])];
+    companyIds = [
+      ...new Set([
+        ...rows
+          .filter((row) => row.status.toLowerCase() !== 'rejected')
+          .map((row) => row.companyId),
+        ...(ownCompanyId === null ? [] : [ownCompanyId])
+      ])
+    ];
   } else {
     companyIds = ownCompanyId === null ? [] : [ownCompanyId];
   }
 
-  const teamSellerIds = role === 'GESTOR'
-    ? await resolveManagerTeam(d1, userId, ownCompanyId)
-    : role === 'VENDEDOR' && profile.usageIndividual
-      ? [userId]
-      : [];
+  const teamSellerIds =
+    role === 'GESTOR'
+      ? await resolveManagerTeam(d1, userId, ownCompanyId)
+      : role === 'VENDEDOR' && profile.usageIndividual
+        ? [userId]
+        : [];
 
   return {
     userId,
@@ -239,7 +268,7 @@ export async function resolveLegacyAccessScope(
     isMaster: role === 'MASTER',
     isFinanceiro: role === 'FINANCEIRO',
     isGestor: role === 'GESTOR',
-    isVendedor: role === 'VENDEDOR',
+    isVendedor: role === 'VENDEDOR'
   };
 }
 
@@ -247,7 +276,7 @@ export async function resolveLegacyAccessScope(
 export function hasLegacyModuleAccess(
   scope: LegacyAccessScope,
   modules: string[],
-  minLevel = 1,
+  minLevel = 1
 ): boolean {
   if (scope.isAdmin) return true;
 
@@ -263,6 +292,8 @@ export function hasLegacyModuleAccess(
 
   return Object.entries(scope.modulePermissions).some(([module, permission]) => {
     const normalized = normalizeModule(module);
-    return (allowed.has(module) || allowed.has(normalized)) && PERMISSION_LEVEL[permission] >= minLevel;
+    return (
+      (allowed.has(module) || allowed.has(normalized)) && PERMISSION_LEVEL[permission] >= minLevel
+    );
   });
 }

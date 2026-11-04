@@ -91,11 +91,17 @@ export async function handleCircuitosPost(event: RequestEvent) {
       ativo: body.ativo !== false
     };
 
-    if (!payload.nome) return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!payload.nome)
+      return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     let result;
     if (id && isUuid(id)) {
-      const { data, error } = await client.from('circuitos').update(payload).eq('id', id).select('id').single();
+      const { data, error } = await client
+        .from('circuitos')
+        .update(payload)
+        .eq('id', id)
+        .select('id')
+        .single();
       if (error) throw error;
       result = data;
     } else {

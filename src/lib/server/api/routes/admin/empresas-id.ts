@@ -19,8 +19,14 @@ import { cleanStringSet } from '$lib/utils/array';
 
 const MAX_ADMIN_COMPANY_BODY_BYTES = 32 * 1024;
 const ADMIN_COMPANY_ALLOWED_UPDATE_FIELDS = [
-  'nome_empresa', 'nome_fantasia', 'cnpj', 'telefone',
-  'endereco', 'cidade', 'estado', 'active'
+  'nome_empresa',
+  'nome_fantasia',
+  'cnpj',
+  'telefone',
+  'endereco',
+  'cidade',
+  'estado',
+  'active'
 ] as const;
 
 type PlanRow = {
@@ -62,7 +68,10 @@ export async function handleAdminEmpresasIdGet(event: RequestEvent) {
 
     const accessibleCompanySet = cleanStringSet(getAccessibleCompanyIds(scope));
     if (!scope.isAdmin && !accessibleCompanySet.has(companyId)) {
-      return new Response('Empresa fora do escopo permitido.', { status: 403, headers: NO_STORE_HEADERS });
+      return new Response('Empresa fora do escopo permitido.', {
+        status: 403,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const { data: companyRow, error: companyError } = await client
@@ -109,9 +118,7 @@ export async function handleAdminEmpresasIdGet(event: RequestEvent) {
     if (mastersRes.error) throw mastersRes.error;
 
     const masterRows = ((mastersRes.data || []) as MasterUserRow[]).filter((row) =>
-      relationTypeName(row.user_types)
-        .toUpperCase()
-        .includes('MASTER')
+      relationTypeName(row.user_types).toUpperCase().includes('MASTER')
     );
 
     const mastersMap = new Map(
@@ -156,7 +163,10 @@ export async function handleAdminEmpresasIdPatch(event: RequestEvent) {
 
     const accessibleCompanySet = cleanStringSet(getAccessibleCompanyIds(scope));
     if (!scope.isAdmin && !accessibleCompanySet.has(companyId)) {
-      return json({ error: 'Empresa fora do escopo permitido.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Empresa fora do escopo permitido.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const body =
@@ -171,7 +181,10 @@ export async function handleAdminEmpresasIdPatch(event: RequestEvent) {
     }
 
     if (Object.keys(updatePayload).length === 1) {
-      return json({ error: 'Nenhum campo para atualizar.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Nenhum campo para atualizar.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { data, error } = await client
@@ -182,7 +195,8 @@ export async function handleAdminEmpresasIdPatch(event: RequestEvent) {
       .maybeSingle();
 
     if (error) throw error;
-    if (!data) return json({ error: 'Empresa não encontrada.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!data)
+      return json({ error: 'Empresa não encontrada.' }, { status: 404, headers: NO_STORE_HEADERS });
 
     return json({ ok: true, empresa: data }, { headers: NO_STORE_HEADERS });
   } catch (err) {

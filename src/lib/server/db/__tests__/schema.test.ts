@@ -37,7 +37,7 @@ describe('schema: empresas', () => {
     const empresa: NovaEmpresa = {
       nome: 'Agência Teste LTDA',
       criadoEm: new Date().toISOString(),
-      atualizadoEm: new Date().toISOString(),
+      atualizadoEm: new Date().toISOString()
     };
     expect(empresa.nome).toBe('Agência Teste LTDA');
     expect(empresa.ativo).toBeUndefined(); // tem default no schema
@@ -56,7 +56,7 @@ describe('schema: empresas', () => {
       timezone: 'America/Sao_Paulo',
       ativo: true,
       criadoEm: '2026-10-26T00:00:00.000Z',
-      atualizadoEm: '2026-10-26T00:00:00.000Z',
+      atualizadoEm: '2026-10-26T00:00:00.000Z'
     };
     expect(mockRow.id).toBe(1);
     // ADR-005: boolean como boolean em TypeScript (mode: 'boolean')

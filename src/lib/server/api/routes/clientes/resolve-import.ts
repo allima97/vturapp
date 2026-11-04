@@ -63,7 +63,10 @@ export async function handleClientesResolveImportPost(event: RequestEvent) {
   try {
     const originError = rejectCrossOriginRequest(event.request);
     if (originError) return originError;
-    const bodyResult = await readJsonBodyLimited(event.request, MAX_CLIENTE_RESOLVE_IMPORT_BODY_BYTES);
+    const bodyResult = await readJsonBodyLimited(
+      event.request,
+      MAX_CLIENTE_RESOLVE_IMPORT_BODY_BYTES
+    );
     if (!bodyResult.ok) return bodyResult.response;
 
     const client = getAdminClient();
@@ -159,12 +162,15 @@ export async function handleClientesResolveImportPost(event: RequestEvent) {
         });
       }
 
-      return json({ cliente: { ...existing, ...updates }, created: false }, { headers: NO_STORE_HEADERS });
+      return json(
+        { cliente: { ...existing, ...updates }, created: false },
+        { headers: NO_STORE_HEADERS }
+      );
     }
 
     // ✅ company_id compatível com MASTER (usa primeiro do escopo)
     const companyId = scope.isAdmin
-      ? (requestedCompanyId || null)
+      ? requestedCompanyId || null
       : resolveScopedCompanyId(scope, requestedCompanyId || null);
 
     if (!scope.isAdmin && !companyId) {

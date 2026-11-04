@@ -78,7 +78,9 @@ function normalizeText(value?: string | null) {
     .toUpperCase();
 }
 
-function normalizeConciliacaoStatus(value?: string | null): 'BAIXA' | 'OPFAX' | 'ESTORNO' | 'OUTRO' {
+function normalizeConciliacaoStatus(
+  value?: string | null
+): 'BAIXA' | 'OPFAX' | 'ESTORNO' | 'OUTRO' {
   const raw = normalizeText(value);
   if (!raw) return 'OUTRO';
   if (raw.includes('ESTORNO')) return 'ESTORNO';
@@ -105,7 +107,12 @@ export async function handleConciliacaoGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster && !scope.isFinanceiro && !scope.isGestor) {
-      ensureModuloAccess(scope, ['operacao_conciliacao', 'conciliacao'], 1, 'Sem acesso à Conciliação.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_conciliacao', 'conciliacao'],
+        1,
+        'Sem acesso à Conciliação.'
+      );
     }
 
     const { searchParams } = event.url;
@@ -119,7 +126,10 @@ export async function handleConciliacaoGet(event: RequestEvent) {
     const companyIds = resolveScopedCompanyIds(scope, searchParams.get('company_id'));
 
     if (!scope.isAdmin && companyIds.length === 0) {
-      return json({ error: 'Empresa não identificada.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Empresa não identificada.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const rows = await getCachedReadModel<ConciliacaoListRow[]>({
@@ -145,7 +155,8 @@ export async function handleConciliacaoGet(event: RequestEvent) {
         for (const companyBatch of companyBatches) {
           let query = client
             .from('conciliacao_recibos')
-            .select(`
+            .select(
+              `
               id, company_id, documento, numero_reserva, movimento_data, status, descricao,
               valor_lancamentos, valor_taxas, valor_descontos, valor_abatimentos,
               valor_nao_comissionavel, valor_calculada_loja, valor_visao_master,
@@ -157,7 +168,8 @@ export async function handleConciliacaoGet(event: RequestEvent) {
               is_baixa_rac, last_checked_at,
               ranking_vendedor:users!ranking_vendedor_id(id, nome_completo),
               ranking_produto:tipo_produtos!ranking_produto_id(id, nome)
-            `)
+            `
+            )
             .order('movimento_data', { ascending: false })
             .limit(5000);
 
@@ -180,10 +192,14 @@ export async function handleConciliacaoGet(event: RequestEvent) {
     const formatStatusLabel = (s?: string | null) => {
       const st = (s ?? '') as string;
       switch (st) {
-        case 'BAIXA': return 'Baixa';
-        case 'OPFAX': return 'Operação';
-        case 'ESTORNO': return 'Estorno';
-        default: return st;
+        case 'BAIXA':
+          return 'Baixa';
+        case 'OPFAX':
+          return 'Operação';
+        case 'ESTORNO':
+          return 'Estorno';
+        default:
+          return st;
       }
     };
     // Parity: add readable status label and mirror status as status_label for templates
@@ -197,7 +213,10 @@ export async function handleConciliacaoGet(event: RequestEvent) {
     if (q) {
       const qLower = q.toLowerCase();
       items = items.filter((row) =>
-        [row.documento, row.numero_reserva, row.descricao, row.status].join(' ').toLowerCase().includes(qLower)
+        [row.documento, row.numero_reserva, row.descricao, row.status]
+          .join(' ')
+          .toLowerCase()
+          .includes(qLower)
       );
     }
 
@@ -205,7 +224,9 @@ export async function handleConciliacaoGet(event: RequestEvent) {
     const paginatedItems = items.slice((page - 1) * pageSize, page * pageSize);
 
     // KPIs
-    const efetivados = items.filter((row) => isConciliacaoEfetivada({ status: row.status, descricao: row.descricao }));
+    const efetivados = items.filter((row) =>
+      isConciliacaoEfetivada({ status: row.status, descricao: row.descricao })
+    );
     const pendentes = efetivados.filter((row) => !row.conciliado);
     const semRanking = efetivados.filter((row) => !row.venda_id && !row.ranking_vendedor_id);
 
@@ -220,7 +241,10 @@ export async function handleConciliacaoGet(event: RequestEvent) {
           efetivados: efetivados.length,
           pendentes: pendentes.length,
           semRanking: semRanking.length,
-          totalValor: efetivados.reduce((acc, row) => acc + Number(row.valor_calculada_loja || row.valor_lancamentos || 0), 0)
+          totalValor: efetivados.reduce(
+            (acc, row) => acc + Number(row.valor_calculada_loja || row.valor_lancamentos || 0),
+            0
+          )
         }
       },
       { headers: DYNAMIC_READ_HEADERS }

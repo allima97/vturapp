@@ -57,7 +57,8 @@
       key: 'local',
       label: 'Cidade',
       sortable: true,
-      formatter: (_value: unknown, row: Empresa) => `<span>${escapeHtml(row.cidade || '-')}${row.estado ? ` / ${escapeHtml(row.estado)}` : ''}</span>`
+      formatter: (_value: unknown, row: Empresa) =>
+        `<span>${escapeHtml(row.cidade || '-')}${row.estado ? ` / ${escapeHtml(row.estado)}` : ''}</span>`
     },
     {
       key: 'billing',
@@ -76,7 +77,8 @@
       key: 'plan',
       label: 'Plano',
       sortable: true,
-      formatter: (_value: unknown, row: Empresa) => `<span>${escapeHtml(row.billing?.plan?.nome || '-')}</span>`
+      formatter: (_value: unknown, row: Empresa) =>
+        `<span>${escapeHtml(row.billing?.plan?.nome || '-')}</span>`
     },
     {
       key: 'master_links',
@@ -89,7 +91,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const payload = await apiGet<{ items?: Empresa[] }>('/api/v1/admin/empresas', undefined, request.signal);
+      const payload = await apiGet<{ items?: Empresa[] }>(
+        '/api/v1/admin/empresas',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       rows = payload.items || [];
     } catch (err) {
@@ -121,32 +127,51 @@
 <PageHeader
   title="Empresas Master"
   subtitle="Empresas acessiveis ao master com billing e portfolio vinculado."
-  breadcrumbs={[
-    { label: 'Master', href: '/master' },
-    { label: 'Empresas' }
-  ]}
-  actions={[
-    { label: 'Atualizar', onClick: loadPage, variant: 'secondary', icon: RefreshCw }
-  ]}
+  breadcrumbs={[{ label: 'Master', href: '/master' }, { label: 'Empresas' }]}
+  actions={[{ label: 'Atualizar', onClick: loadPage, variant: 'secondary', icon: RefreshCw }]}
 />
 
 <div class="space-y-6">
   <div class="vtur-kpi-grid mb-6">
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500"><Building2 size={20} /></div>
-      <div><p class="text-sm font-medium text-slate-500">Total</p><p class="text-2xl font-bold text-slate-900">{stats.total}</p></div>
+      <div
+        class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500"
+      >
+        <Building2 size={20} />
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Total</p>
+        <p class="text-2xl font-bold text-slate-900">{stats.total}</p>
+      </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500"><CheckCircle size={20} /></div>
-      <div><p class="text-sm font-medium text-slate-500">Ativas</p><p class="text-2xl font-bold text-slate-900">{stats.ativas}</p></div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
+        <CheckCircle size={20} />
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Ativas</p>
+        <p class="text-2xl font-bold text-slate-900">{stats.ativas}</p>
+      </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-500"><CreditCard size={20} /></div>
-      <div><p class="text-sm font-medium text-slate-500">Billing ativo</p><p class="text-2xl font-bold text-slate-900">{stats.billingAtivo}</p></div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-500">
+        <CreditCard size={20} />
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Billing ativo</p>
+        <p class="text-2xl font-bold text-slate-900">{stats.billingAtivo}</p>
+      </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-500"><Network size={20} /></div>
-      <div><p class="text-sm font-medium text-slate-500">Vínculos master</p><p class="text-2xl font-bold text-slate-900">{stats.masters}</p></div>
+      <div
+        class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-500"
+      >
+        <Network size={20} />
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Vínculos master</p>
+        <p class="text-2xl font-bold text-slate-900">{stats.masters}</p>
+      </div>
     </div>
   </div>
 

@@ -20,14 +20,9 @@ import { chunkArray } from '$lib/utils/array';
 const MAX_ORCAMENTO_SAVE_BODY_BYTES = 2 * 1024 * 1024;
 
 const EXCLUDED_PRODUTO_TIPOS = new Set(
-  [
-    'Seguro viagem',
-    'Passagem Aerea',
-    'Passagem Facial',
-    'Aereo',
-    'Chip',
-    'Aluguel de Carro',
-  ].map((value) => normalizeLookupText(value))
+  ['Seguro viagem', 'Passagem Aerea', 'Passagem Facial', 'Aereo', 'Chip', 'Aluguel de Carro'].map(
+    (value) => normalizeLookupText(value)
+  )
 );
 
 type QuoteItemPayload = {
@@ -75,16 +70,20 @@ type ClienteScopeRow = {
 };
 
 function normalizeLookupText(value: string) {
-  return (value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+  return (value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
 }
 
 function validateItem(item: QuoteItemPayload) {
   return Boolean(
     item.item_type &&
-      item.quantity > 0 &&
-      item.start_date &&
-      item.title &&
-      Number(item.total_amount || 0) > 0
+    item.quantity > 0 &&
+    item.start_date &&
+    item.title &&
+    Number(item.total_amount || 0) > 0
   );
 }
 
@@ -122,7 +121,7 @@ async function syncProductsCatalog(
       nome: nomeRaw,
       destino: destinoRaw || null,
       cidade_id: cidadeId,
-      tipo_produto: tipoLabelMap.get(tipoKey) || null,
+      tipo_produto: tipoLabelMap.get(tipoKey) || null
     };
 
     try {
@@ -177,7 +176,8 @@ export async function handleOrcamentosSavePost(event: RequestEvent) {
         ? (bodyResult.data as OrcamentoSaveBody)
         : null;
     const quoteId = String(body?.quote_id || '').trim();
-    if (!isUuid(quoteId)) return new Response('Quote invalido.', { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(quoteId))
+      return new Response('Quote invalido.', { status: 400, headers: NO_STORE_HEADERS });
 
     const items = Array.isArray(body?.items) ? (body.items as QuoteItemPayload[]) : [];
     const removedItemIds = Array.isArray(body?.removed_item_ids)
@@ -193,7 +193,8 @@ export async function handleOrcamentosSavePost(event: RequestEvent) {
     }
 
     const quoteScope = await resolveQuoteCreatorScope(client, scope, {
-      companyId: event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id')
+      companyId:
+        event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id')
     });
     const { data: existingQuote, error: quoteCheckError } = await client
       .from('quote')
@@ -205,7 +206,8 @@ export async function handleOrcamentosSavePost(event: RequestEvent) {
       return new Response('Orcamento nao encontrado.', { status: 404, headers: NO_STORE_HEADERS });
     }
     if (clienteId) {
-      if (!isUuid(clienteId)) return new Response('Cliente invalido.', { status: 400, headers: NO_STORE_HEADERS });
+      if (!isUuid(clienteId))
+        return new Response('Cliente invalido.', { status: 400, headers: NO_STORE_HEADERS });
       const { data: cliente, error: clienteErr } = await client
         .from('clientes')
         .select('id, company_id')
@@ -213,18 +215,24 @@ export async function handleOrcamentosSavePost(event: RequestEvent) {
         .maybeSingle();
       if (clienteErr) throw clienteErr;
       const clienteRow = cliente as ClienteScopeRow | null;
-      if (!clienteRow?.id) return new Response('Cliente nao encontrado.', { status: 404, headers: NO_STORE_HEADERS });
+      if (!clienteRow?.id)
+        return new Response('Cliente nao encontrado.', { status: 404, headers: NO_STORE_HEADERS });
       const clienteCompanyId = String(clienteRow.company_id || '').trim();
       if (!scope.isAdmin && clienteCompanyId && !scope.companyIds.includes(clienteCompanyId)) {
-        return new Response('Cliente fora do seu escopo.', { status: 403, headers: NO_STORE_HEADERS });
+        return new Response('Cliente fora do seu escopo.', {
+          status: 403,
+          headers: NO_STORE_HEADERS
+        });
       }
     }
 
     const requestedItemIds = Array.from(
-      new Set([
-        ...items.map((item) => String(item.id || '').trim()),
-        ...removedItemIds.map((id) => String(id || '').trim())
-      ].filter(isUuid))
+      new Set(
+        [
+          ...items.map((item) => String(item.id || '').trim()),
+          ...removedItemIds.map((id) => String(id || '').trim())
+        ].filter(isUuid)
+      )
     );
     const allowedExistingItemIds = new Set<string>();
     if (requestedItemIds.length) {
@@ -257,7 +265,7 @@ export async function handleOrcamentosSavePost(event: RequestEvent) {
       end_date: item.end_date || item.start_date || null,
       currency: item.currency || 'BRL',
       raw: item.raw || {},
-      order_index: typeof item.order_index === 'number' ? item.order_index : index,
+      order_index: typeof item.order_index === 'number' ? item.order_index : index
     }));
 
     const { error: itemError } = await client
@@ -305,15 +313,13 @@ export async function handleOrcamentosSavePost(event: RequestEvent) {
             quote_item_id: item.id,
             segment_type: segment.segment_type,
             data: segment.data || {},
-            order_index: typeof segment.order_index === 'number' ? segment.order_index : idx,
+            order_index: typeof segment.order_index === 'number' ? segment.order_index : idx
           }))
         )
         .filter((seg) => Boolean(seg.quote_item_id));
 
       if (segmentPayloads.length) {
-        const { error: segErr } = await client
-          .from('quote_item_segment')
-          .insert(segmentPayloads);
+        const { error: segErr } = await client.from('quote_item_segment').insert(segmentPayloads);
         if (segErr) throw segErr;
       }
     }
@@ -335,16 +341,13 @@ export async function handleOrcamentosSavePost(event: RequestEvent) {
       client_name: clientName || null,
       client_whatsapp: clientWhatsapp || null,
       client_email: clientEmail || null,
-      updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
     if (body?.raw_json && typeof body.raw_json === 'object' && !Array.isArray(body.raw_json)) {
       quotePayload.raw_json = body.raw_json;
     }
 
-    const { error: quoteError } = await client
-      .from('quote')
-      .update(quotePayload)
-      .eq('id', quoteId);
+    const { error: quoteError } = await client.from('quote').update(quotePayload).eq('id', quoteId);
     if (quoteError) throw quoteError;
 
     invalidateQuoteReadModels({
@@ -355,7 +358,7 @@ export async function handleOrcamentosSavePost(event: RequestEvent) {
 
     return new Response(JSON.stringify({ ok: true, status: nextStatus }), {
       status: 200,
-      headers: { 'Content-Type': 'application/json', ...NO_STORE_HEADERS },
+      headers: { 'Content-Type': 'application/json', ...NO_STORE_HEADERS }
     });
   } catch (err: unknown) {
     logServerError('[orcamentos/save] falha ao salvar orcamento', err);

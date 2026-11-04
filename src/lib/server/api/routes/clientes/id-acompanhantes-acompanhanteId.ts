@@ -11,7 +11,11 @@ import {
 import { ensureClienteAccess } from '$lib/server/clientes';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateClientReadModels } from '$lib/server/readModelCache';
-import { readJsonBodyLimited, rejectCrossOriginRequest, rejectLargePayload } from '$lib/server/requestGuards';
+import {
+  readJsonBodyLimited,
+  rejectCrossOriginRequest,
+  rejectLargePayload
+} from '$lib/server/requestGuards';
 
 const MAX_ACOMPANHANTE_UPDATE_BODY_BYTES = 64 * 1024;
 const MAX_ACOMPANHANTE_DELETE_BODY_BYTES = 8 * 1024;
@@ -37,7 +41,10 @@ export async function handleClientesIdAcompanhantesAcompanhanteIdPatch(event: Re
         : {};
     const nomeCompleto = String(body?.nome_completo || '').trim();
     if (!nomeCompleto) {
-      return json({ error: 'Informe o nome completo do acompanhante.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Informe o nome completo do acompanhante.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { data, error } = await client
@@ -55,7 +62,9 @@ export async function handleClientesIdAcompanhantesAcompanhanteIdPatch(event: Re
       })
       .eq('id', acompanhanteId)
       .eq('cliente_id', clienteId)
-      .select('id, cliente_id, company_id, nome_completo, cpf, telefone, grau_parentesco, rg, data_nascimento, observacoes, ativo, created_at, updated_at')
+      .select(
+        'id, cliente_id, company_id, nome_completo, cpf, telefone, grau_parentesco, rg, data_nascimento, observacoes, ativo, created_at, updated_at'
+      )
       .single();
 
     if (error) throw error;
@@ -65,10 +74,13 @@ export async function handleClientesIdAcompanhantesAcompanhanteIdPatch(event: Re
       userId: user.id
     });
 
-    return json({
-      item: data,
-      message: 'Acompanhante atualizado com sucesso.'
-    }, { headers: NO_STORE_HEADERS });
+    return json(
+      {
+        item: data,
+        message: 'Acompanhante atualizado com sucesso.'
+      },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao atualizar acompanhante.');
   }
@@ -104,9 +116,12 @@ export async function handleClientesIdAcompanhantesAcompanhanteIdDelete(event: R
       userId: user.id
     });
 
-    return json({
-      message: 'Acompanhante removido com sucesso.'
-    }, { headers: NO_STORE_HEADERS });
+    return json(
+      {
+        message: 'Acompanhante removido com sucesso.'
+      },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao remover acompanhante.');
   }

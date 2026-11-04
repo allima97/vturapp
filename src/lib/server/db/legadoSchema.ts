@@ -12,7 +12,7 @@ export const legadoAdminAvisosTemplates = sqliteTable('legado_admin_avisos_templ
   ativo: integer('ativo', { mode: 'boolean' }),
   createdAt: text('created_at'),
   updatedAt: text('updated_at'),
-  senderKey: text('sender_key'),
+  senderKey: text('sender_key')
 });
 
 export const legadoAdminEmailSettings = sqliteTable('legado_admin_email_settings', {
@@ -30,7 +30,7 @@ export const legadoAdminEmailSettings = sqliteTable('legado_admin_email_settings
   avisosFromEmail: text('avisos_from_email'),
   financeiroFromEmail: text('financeiro_from_email'),
   suporteFromEmail: text('suporte_from_email'),
-  resendApiKey: text('resend_api_key'),
+  resendApiKey: text('resend_api_key')
 });
 
 export const legadoAdminSystemSettings = sqliteTable('legado_admin_system_settings', {
@@ -40,7 +40,7 @@ export const legadoAdminSystemSettings = sqliteTable('legado_admin_system_settin
   maintenanceMessage: text('maintenance_message'),
   updatedBy: text('updated_by'),
   updatedAt: text('updated_at'),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoAgendaItens = sqliteTable('legado_agenda_itens', {
@@ -61,7 +61,7 @@ export const legadoAgendaItens = sqliteTable('legado_agenda_itens', {
   endAt: text('end_at'),
   categoriaId: text('categoria_id'),
   prioridade: text('prioridade'),
-  arquivo: text('arquivo'),
+  arquivo: text('arquivo')
 });
 
 export const legadoAirlineIataAliases = sqliteTable('legado_airline_iata_aliases', {
@@ -69,7 +69,7 @@ export const legadoAirlineIataAliases = sqliteTable('legado_airline_iata_aliases
   airlineCodeId: text('airline_code_id'),
   alias: text('alias'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoAirlineIataCodes = sqliteTable('legado_airline_iata_codes', {
@@ -78,7 +78,7 @@ export const legadoAirlineIataCodes = sqliteTable('legado_airline_iata_codes', {
   airlineName: text('airline_name'),
   active: integer('active', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoAuthPasskeyChallenges = sqliteTable('legado_auth_passkey_challenges', {
@@ -88,7 +88,7 @@ export const legadoAuthPasskeyChallenges = sqliteTable('legado_auth_passkey_chal
   challenge: text('challenge'),
   expiresAt: text('expires_at'),
   usedAt: text('used_at'),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoAuthPasskeys = sqliteTable('legado_auth_passkeys', {
@@ -107,7 +107,7 @@ export const legadoAuthPasskeys = sqliteTable('legado_auth_passkeys', {
   rpId: text('rp_id'),
   lastUsedAt: text('last_used_at'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoAuthSignupDebug = sqliteTable('legado_auth_signup_debug', {
@@ -118,7 +118,7 @@ export const legadoAuthSignupDebug = sqliteTable('legado_auth_signup_debug', {
   err: text('err'),
   detail: text('detail'),
   hint: text('hint'),
-  context: text('context'),
+  context: text('context')
 });
 
 export const legadoCampanhas = sqliteTable('legado_campanhas', {
@@ -137,7 +137,7 @@ export const legadoCampanhas = sqliteTable('legado_campanhas', {
   createdBy: text('created_by'),
   createdAt: text('created_at'),
   updatedAt: text('updated_at'),
-  arquivadaEm: text('arquivada_em'),
+  arquivadaEm: text('arquivada_em')
 });
 
 export const legadoCidades = sqliteTable('legado_cidades', {
@@ -152,24 +152,24 @@ export const legadoCidades = sqliteTable('legado_cidades', {
   grauImportancia: integer('grau_importancia', { mode: 'number' }),
   nomePtBR: text('nome_ptBR'),
   estadoNome: text('estado_nome'),
-  paisNome: text('pais_nome'),
+  paisNome: text('pais_nome')
 });
 
 export const legadoCidadesImportStaging = sqliteTable('legado_cidades_import_staging', {
   id: integer('id', { mode: 'number' }).primaryKey(),
   cidade: text('cidade'),
   pais: text('pais'),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoCidadesImportTargets = sqliteTable('legado_cidades_import_targets', {
   cidadeKey: text('cidade_key'),
-  paisId: text('pais_id'),
+  paisId: text('pais_id')
 });
 
 export const legadoCidadesImportTargetsNorm = sqliteTable('legado_cidades_import_targets_norm', {
   paisId: text('pais_id'),
-  cidadeKey: text('cidade_key'),
+  cidadeKey: text('cidade_key')
 });
 
 export const legadoCidadesNormCache = sqliteTable('legado_cidades_norm_cache', {
@@ -177,7 +177,7 @@ export const legadoCidadesNormCache = sqliteTable('legado_cidades_norm_cache', {
   subdivisaoId: text('subdivisao_id'),
   paisId: text('pais_id'),
   nomeKey: text('nome_key'),
-  nomePtKey: text('nome_pt_key'),
+  nomePtKey: text('nome_pt_key')
 });
 
 export const legadoCircuitoDatas = sqliteTable('legado_circuito_datas', {
@@ -187,7 +187,7 @@ export const legadoCircuitoDatas = sqliteTable('legado_circuito_datas', {
   cidadeInicioId: text('cidade_inicio_id'),
   diasExtraAntes: integer('dias_extra_antes', { mode: 'number' }),
   diasExtraDepois: integer('dias_extra_depois', { mode: 'number' }),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoCircuitoDias = sqliteTable('legado_circuito_dias', {
@@ -196,14 +196,14 @@ export const legadoCircuitoDias = sqliteTable('legado_circuito_dias', {
   diaNumero: integer('dia_numero', { mode: 'number' }),
   titulo: text('titulo'),
   descricao: text('descricao'),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoCircuitoDiasCidades = sqliteTable('legado_circuito_dias_cidades', {
   id: text('id').primaryKey(),
   circuitoDiaId: text('circuito_dia_id'),
   cidadeId: text('cidade_id'),
-  ordem: integer('ordem', { mode: 'number' }),
+  ordem: integer('ordem', { mode: 'number' })
 });
 
 export const legadoCircuitos = sqliteTable('legado_circuitos', {
@@ -213,7 +213,7 @@ export const legadoCircuitos = sqliteTable('legado_circuitos', {
   operador: text('operador'),
   resumo: text('resumo'),
   ativo: integer('ativo', { mode: 'boolean' }),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoClienteAcompanhantes = sqliteTable('legado_cliente_acompanhantes', {
@@ -230,7 +230,7 @@ export const legadoClienteAcompanhantes = sqliteTable('legado_cliente_acompanhan
   ativo: integer('ativo', { mode: 'boolean' }),
   createdBy: text('created_by'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoClienteTemplateDispatches = sqliteTable('legado_cliente_template_dispatches', {
@@ -248,7 +248,7 @@ export const legadoClienteTemplateDispatches = sqliteTable('legado_cliente_templ
   sentAt: text('sent_at'),
   sentDay: text('sent_day'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoClientes = sqliteTable('legado_clientes', {
@@ -280,14 +280,14 @@ export const legadoClientes = sqliteTable('legado_clientes', {
   createdBy: text('created_by'),
   tipoPessoa: text('tipo_pessoa'),
   lgpdAnonimizado: integer('lgpd_anonimizado', { mode: 'boolean' }),
-  lgpdAnonimizadoEm: text('lgpd_anonimizado_em'),
+  lgpdAnonimizadoEm: text('lgpd_anonimizado_em')
 });
 
 export const legadoClientesCompany = sqliteTable('legado_clientes_company', {
   companyId: text('company_id'),
   clienteId: text('cliente_id'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoComissionamentoGeral = sqliteTable('legado_comissionamento_geral', {
@@ -299,7 +299,7 @@ export const legadoComissionamentoGeral = sqliteTable('legado_comissionamento_ge
   diferenciado: real('diferenciado'),
   ativo: integer('ativo', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoComissoes = sqliteTable('legado_comissoes', {
@@ -321,7 +321,7 @@ export const legadoComissoes = sqliteTable('legado_comissoes', {
   createdBy: text('created_by'),
   createdAt: text('created_at'),
   updatedAt: text('updated_at'),
-  reciboId: text('recibo_id'),
+  reciboId: text('recibo_id')
 });
 
 export const legadoCommissionRule = sqliteTable('legado_commission_rule', {
@@ -336,7 +336,7 @@ export const legadoCommissionRule = sqliteTable('legado_commission_rule', {
   createdAt: text('created_at'),
   updatedAt: text('updated_at'),
   companyId: text('company_id'),
-  createdBy: text('created_by'),
+  createdBy: text('created_by')
 });
 
 export const legadoCommissionTier = sqliteTable('legado_commission_tier', {
@@ -349,7 +349,7 @@ export const legadoCommissionTier = sqliteTable('legado_commission_tier', {
   incPctComissao: real('inc_pct_comissao'),
   ativo: integer('ativo', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoCompanies = sqliteTable('legado_companies', {
@@ -365,7 +365,7 @@ export const legadoCompanies = sqliteTable('legado_companies', {
   estado: text('estado'),
   ownerUserId: text('owner_user_id'),
   active: integer('active', { mode: 'boolean' }),
-  logoUrl: text('logo_url'),
+  logoUrl: text('logo_url')
 });
 
 export const legadoCompanyBilling = sqliteTable('legado_company_billing', {
@@ -379,7 +379,7 @@ export const legadoCompanyBilling = sqliteTable('legado_company_billing', {
   inicioCobranca: text('inicio_cobranca'),
   trialEndsAt: text('trial_ends_at'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoCompanyBillingEvents = sqliteTable('legado_company_billing_events', {
@@ -393,17 +393,20 @@ export const legadoCompanyBillingEvents = sqliteTable('legado_company_billing_ev
   referencia: text('referencia'),
   vencimento: text('vencimento'),
   pagoEm: text('pago_em'),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
-export const legadoConciliacaoDiasSemMovimento = sqliteTable('legado_conciliacao_dias_sem_movimento', {
-  id: text('id').primaryKey(),
-  companyId: text('company_id'),
-  data: text('data'),
-  marcadoPor: text('marcado_por'),
-  marcadoEm: text('marcado_em'),
-  observacao: text('observacao'),
-});
+export const legadoConciliacaoDiasSemMovimento = sqliteTable(
+  'legado_conciliacao_dias_sem_movimento',
+  {
+    id: text('id').primaryKey(),
+    companyId: text('company_id'),
+    data: text('data'),
+    marcadoPor: text('marcado_por'),
+    marcadoEm: text('marcado_em'),
+    observacao: text('observacao')
+  }
+);
 
 export const legadoConciliacaoExecucoes = sqliteTable('legado_conciliacao_execucoes', {
   id: text('id').primaryKey(),
@@ -416,7 +419,7 @@ export const legadoConciliacaoExecucoes = sqliteTable('legado_conciliacao_execuc
   stillPending: integer('still_pending', { mode: 'number' }),
   status: text('status'),
   errorMessage: text('error_message'),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoConciliacaoReciboChanges = sqliteTable('legado_conciliacao_recibo_changes', {
@@ -434,7 +437,7 @@ export const legadoConciliacaoReciboChanges = sqliteTable('legado_conciliacao_re
   changedAt: text('changed_at'),
   revertedAt: text('reverted_at'),
   revertedBy: text('reverted_by'),
-  revertReason: text('revert_reason'),
+  revertReason: text('revert_reason')
 });
 
 export const legadoConciliacaoRecibos = sqliteTable('legado_conciliacao_recibos', {
@@ -480,7 +483,7 @@ export const legadoConciliacaoRecibos = sqliteTable('legado_conciliacao_recibos'
   isSeguroViagem: integer('is_seguro_viagem', { mode: 'boolean' }),
   isBaixaRac: integer('is_baixa_rac', { mode: 'boolean' }),
   valorNaoComissionavel: real('valor_nao_comissionavel'),
-  numeroReserva: text('numero_reserva'),
+  numeroReserva: text('numero_reserva')
 });
 
 export const legadoConsultoriasOnline = sqliteTable('legado_consultorias_online', {
@@ -500,7 +503,7 @@ export const legadoConsultoriasOnline = sqliteTable('legado_consultorias_online'
   lembreteEnviadoEm: text('lembrete_enviado_em'),
   lembreteEnvios: text('lembrete_envios'),
   fechada: integer('fechada', { mode: 'boolean' }),
-  fechadaEm: text('fechada_em'),
+  fechadaEm: text('fechada_em')
 });
 
 export const legadoCrmMessageTemplates = sqliteTable('legado_crm_message_templates', {
@@ -517,7 +520,7 @@ export const legadoCrmMessageTemplates = sqliteTable('legado_crm_message_templat
   isActive: integer('is_active', { mode: 'boolean' }),
   sortOrder: integer('sort_order', { mode: 'number' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoCrmTemplateCategories = sqliteTable('legado_crm_template_categories', {
@@ -528,7 +531,7 @@ export const legadoCrmTemplateCategories = sqliteTable('legado_crm_template_cate
   sortOrder: integer('sort_order', { mode: 'number' }),
   ativo: integer('ativo', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoDashboardWidgets = sqliteTable('legado_dashboard_widgets', {
@@ -539,7 +542,7 @@ export const legadoDashboardWidgets = sqliteTable('legado_dashboard_widgets', {
   visivel: integer('visivel', { mode: 'boolean' }),
   createdAt: text('created_at'),
   updatedAt: text('updated_at'),
-  settings: text('settings'),
+  settings: text('settings')
 });
 
 export const legadoDocumentosViagens = sqliteTable('legado_documentos_viagens', {
@@ -557,7 +560,7 @@ export const legadoDocumentosViagens = sqliteTable('legado_documentos_viagens', 
   updatedBy: text('updated_by'),
   title: text('title'),
   templateText: text('template_text'),
-  templateFields: text('template_fields'),
+  templateFields: text('template_fields')
 });
 
 export const legadoEscalaDia = sqliteTable('legado_escala_dia', {
@@ -570,7 +573,7 @@ export const legadoEscalaDia = sqliteTable('legado_escala_dia', {
   horaFim: text('hora_fim'),
   observacao: text('observacao'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoEscalaHorarioUsuario = sqliteTable('legado_escala_horario_usuario', {
@@ -595,7 +598,7 @@ export const legadoEscalaHorarioUsuario = sqliteTable('legado_escala_horario_usu
   feriadoFim: text('feriado_fim'),
   autoAplicar: integer('auto_aplicar', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoEscalaMes = sqliteTable('legado_escala_mes', {
@@ -606,7 +609,7 @@ export const legadoEscalaMes = sqliteTable('legado_escala_mes', {
   status: text('status'),
   observacoes: text('observacoes'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoEstados = sqliteTable('legado_estados', {
@@ -614,7 +617,7 @@ export const legadoEstados = sqliteTable('legado_estados', {
   nome: text('nome'),
   paisId: text('pais_id'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoFeriados = sqliteTable('legado_feriados', {
@@ -626,7 +629,7 @@ export const legadoFeriados = sqliteTable('legado_feriados', {
   estado: text('estado'),
   cidade: text('cidade'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoFinanceiroEmpresas = sqliteTable('legado_financeiro_empresas', {
@@ -636,7 +639,7 @@ export const legadoFinanceiroEmpresas = sqliteTable('legado_financeiro_empresas'
   status: text('status'),
   createdAt: text('created_at'),
   approvedAt: text('approved_at'),
-  createdBy: text('created_by'),
+  createdBy: text('created_by')
 });
 
 export const legadoFormasPagamento = sqliteTable('legado_formas_pagamento', {
@@ -649,7 +652,7 @@ export const legadoFormasPagamento = sqliteTable('legado_formas_pagamento', {
   descontoPadraoPct: real('desconto_padrao_pct'),
   ativo: integer('ativo', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoFornecedores = sqliteTable('legado_fornecedores', {
@@ -669,14 +672,14 @@ export const legadoFornecedores = sqliteTable('legado_fornecedores', {
   tipoFaturamento: text('tipo_faturamento'),
   principaisServicos: text('principais_servicos'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoGestorEquipeCompartilhada = sqliteTable('legado_gestor_equipe_compartilhada', {
   gestorId: text('gestor_id').primaryKey(),
   gestorBaseId: text('gestor_base_id'),
   createdAt: text('created_at'),
-  createdBy: text('created_by'),
+  createdBy: text('created_by')
 });
 
 export const legadoGestorVendedor = sqliteTable('legado_gestor_vendedor', {
@@ -686,7 +689,7 @@ export const legadoGestorVendedor = sqliteTable('legado_gestor_vendedor', {
   companyId: text('company_id'),
   podeModificar: integer('pode_modificar', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  ativo: integer('ativo', { mode: 'boolean' }),
+  ativo: integer('ativo', { mode: 'boolean' })
 });
 
 export const legadoHistoricoViagensReal = sqliteTable('legado_historico_viagens_real', {
@@ -701,7 +704,7 @@ export const legadoHistoricoViagensReal = sqliteTable('legado_historico_viagens_
   notas: text('notas'),
   createdAt: text('created_at'),
   updatedAt: text('updated_at'),
-  valorTotal: real('valor_total'),
+  valorTotal: real('valor_total')
 });
 
 export const legadoInquiry = sqliteTable('legado_inquiry', {
@@ -721,14 +724,14 @@ export const legadoInquiry = sqliteTable('legado_inquiry', {
   notes: text('notes'),
   assignedAt: text('assigned_at'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoInquiryPreference = sqliteTable('legado_inquiry_preference', {
   id: text('id').primaryKey(),
   inquiryId: text('inquiry_id'),
   preferenceKey: text('preference_key'),
-  preferenceValue: text('preference_value'),
+  preferenceValue: text('preference_value')
 });
 
 export const legadoLgpdAtividadesTratamento = sqliteTable('legado_lgpd_atividades_tratamento', {
@@ -743,7 +746,7 @@ export const legadoLgpdAtividadesTratamento = sqliteTable('legado_lgpd_atividade
   medidasSeguranca: text('medidas_seguranca'),
   ativo: integer('ativo', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoLgpdConsentimentos = sqliteTable('legado_lgpd_consentimentos', {
@@ -760,7 +763,7 @@ export const legadoLgpdConsentimentos = sqliteTable('legado_lgpd_consentimentos'
   revogadoEm: text('revogado_em'),
   revogadoMotivo: text('revogado_motivo'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoLgpdSolicitacoes = sqliteTable('legado_lgpd_solicitacoes', {
@@ -781,7 +784,7 @@ export const legadoLgpdSolicitacoes = sqliteTable('legado_lgpd_solicitacoes', {
   ipOrigem: text('ip_origem'),
   userAgent: text('user_agent'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoLogs = sqliteTable('legado_logs', {
@@ -792,7 +795,7 @@ export const legadoLogs = sqliteTable('legado_logs', {
   detalhes: text('detalhes'),
   ip: text('ip'),
   userAgent: text('user_agent'),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoMasterDocuments = sqliteTable('legado_master_documents', {
@@ -805,7 +808,7 @@ export const legadoMasterDocuments = sqliteTable('legado_master_documents', {
   storagePath: text('storage_path'),
   mimeType: text('mime_type'),
   sizeBytes: integer('size_bytes', { mode: 'number' }),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoMasterEmpresas = sqliteTable('legado_master_empresas', {
@@ -815,13 +818,13 @@ export const legadoMasterEmpresas = sqliteTable('legado_master_empresas', {
   status: text('status'),
   createdAt: text('created_at'),
   approvedAt: text('approved_at'),
-  approvedBy: text('approved_by'),
+  approvedBy: text('approved_by')
 });
 
 export const legadoMenuPrefs = sqliteTable('legado_menu_prefs', {
   userId: text('user_id').primaryKey(),
   prefs: text('prefs'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoMessageTemplatesV2 = sqliteTable('legado_message_templates_v2', {
@@ -855,7 +858,7 @@ export const legadoMessageTemplatesV2 = sqliteTable('legado_message_templates_v2
   usageCount: integer('usage_count', { mode: 'number' }),
   lastUsedAt: text('last_used_at'),
   metadata: text('metadata'),
-  version: integer('version', { mode: 'number' }),
+  version: integer('version', { mode: 'number' })
 });
 
 export const legadoMetasVendedor = sqliteTable('legado_metas_vendedor', {
@@ -868,7 +871,7 @@ export const legadoMetasVendedor = sqliteTable('legado_metas_vendedor', {
   createdAt: text('created_at'),
   updatedAt: text('updated_at'),
   templateId: text('template_id'),
-  scope: text('scope'),
+  scope: text('scope')
 });
 
 export const legadoMetasVendedorProduto = sqliteTable('legado_metas_vendedor_produto', {
@@ -877,7 +880,7 @@ export const legadoMetasVendedorProduto = sqliteTable('legado_metas_vendedor_pro
   produtoId: text('produto_id'),
   valor: real('valor'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoMinhasPreferencias = sqliteTable('legado_minhas_preferencias', {
@@ -892,7 +895,7 @@ export const legadoMinhasPreferencias = sqliteTable('legado_minhas_preferencias'
   observacao: text('observacao'),
   createdAt: text('created_at'),
   updatedAt: text('updated_at'),
-  updatedBy: text('updated_by'),
+  updatedBy: text('updated_by')
 });
 
 export const legadoMinhasPreferenciasShares = sqliteTable('legado_minhas_preferencias_shares', {
@@ -904,7 +907,7 @@ export const legadoMinhasPreferenciasShares = sqliteTable('legado_minhas_prefere
   status: text('status'),
   createdAt: text('created_at'),
   acceptedAt: text('accepted_at'),
-  revokedAt: text('revoked_at'),
+  revokedAt: text('revoked_at')
 });
 
 export const legadoModuloAcesso = sqliteTable('legado_modulo_acesso', {
@@ -914,7 +917,7 @@ export const legadoModuloAcesso = sqliteTable('legado_modulo_acesso', {
   permissao: text('permissao'),
   ativo: integer('ativo', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoModuloAcessoBackup = sqliteTable('legado_modulo_acesso_backup', {
@@ -924,7 +927,7 @@ export const legadoModuloAcessoBackup = sqliteTable('legado_modulo_acesso_backup
   permissao: text('permissao'),
   ativo: integer('ativo', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoMuralRecadoRespostas = sqliteTable('legado_mural_recado_respostas', {
@@ -933,7 +936,7 @@ export const legadoMuralRecadoRespostas = sqliteTable('legado_mural_recado_respo
   companyId: text('company_id'),
   senderId: text('sender_id'),
   conteudo: text('conteudo'),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoMuralRecados = sqliteTable('legado_mural_recados', {
@@ -945,7 +948,7 @@ export const legadoMuralRecados = sqliteTable('legado_mural_recados', {
   conteudo: text('conteudo'),
   createdAt: text('created_at'),
   senderDeleted: integer('sender_deleted', { mode: 'boolean' }),
-  receiverDeleted: integer('receiver_deleted', { mode: 'boolean' }),
+  receiverDeleted: integer('receiver_deleted', { mode: 'boolean' })
 });
 
 export const legadoMuralRecadosArquivos = sqliteTable('legado_mural_recados_arquivos', {
@@ -958,7 +961,7 @@ export const legadoMuralRecadosArquivos = sqliteTable('legado_mural_recados_arqu
   storagePath: text('storage_path'),
   mimeType: text('mime_type'),
   sizeBytes: integer('size_bytes', { mode: 'number' }),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoMuralRecadosLeituras = sqliteTable('legado_mural_recados_leituras', {
@@ -967,7 +970,7 @@ export const legadoMuralRecadosLeituras = sqliteTable('legado_mural_recados_leit
   recadoId: text('recado_id'),
   userId: text('user_id'),
   readAt: text('read_at'),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoPaises = sqliteTable('legado_paises', {
@@ -975,7 +978,7 @@ export const legadoPaises = sqliteTable('legado_paises', {
   nome: text('nome'),
   codigoIso: text('codigo_iso'),
   continente: text('continente'),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoParametrosCambios = sqliteTable('legado_parametros_cambios', {
@@ -987,7 +990,7 @@ export const legadoParametrosCambios = sqliteTable('legado_parametros_cambios', 
   valor: real('valor'),
   observacoes: text('observacoes'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoParametrosComissao = sqliteTable('legado_parametros_comissao', {
@@ -1011,19 +1014,22 @@ export const legadoParametrosComissao = sqliteTable('legado_parametros_comissao'
   conciliacaoSuperMeta: real('conciliacao_super_meta'),
   conciliacaoTipo: text('conciliacao_tipo'),
   conciliacaoTiers: text('conciliacao_tiers'),
-  conciliacaoFaixasLoja: text('conciliacao_faixas_loja'),
+  conciliacaoFaixasLoja: text('conciliacao_faixas_loja')
 });
 
-export const legadoParametrosPagamentosNaoComissionaveis = sqliteTable('legado_parametros_pagamentos_nao_comissionaveis', {
-  id: text('id').primaryKey(),
-  termo: text('termo'),
-  termoNormalizado: text('termo_normalizado'),
-  ativo: integer('ativo', { mode: 'boolean' }),
-  createdAt: text('created_at'),
-  createdBy: text('created_by'),
-  updatedAt: text('updated_at'),
-  updatedBy: text('updated_by'),
-});
+export const legadoParametrosPagamentosNaoComissionaveis = sqliteTable(
+  'legado_parametros_pagamentos_nao_comissionaveis',
+  {
+    id: text('id').primaryKey(),
+    termo: text('termo'),
+    termoNormalizado: text('termo_normalizado'),
+    ativo: integer('ativo', { mode: 'boolean' }),
+    createdAt: text('created_at'),
+    createdBy: text('created_by'),
+    updatedAt: text('updated_at'),
+    updatedBy: text('updated_by')
+  }
+);
 
 export const legadoParametrosSistema = sqliteTable('legado_parametros_sistema', {
   id: text('id').primaryKey(),
@@ -1033,7 +1039,7 @@ export const legadoParametrosSistema = sqliteTable('legado_parametros_sistema', 
   modoCorporativo: integer('modo_corporativo', { mode: 'boolean' }),
   politicaCancelamento: text('politica_cancelamento'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoPlans = sqliteTable('legado_plans', {
@@ -1044,7 +1050,7 @@ export const legadoPlans = sqliteTable('legado_plans', {
   moeda: text('moeda'),
   ativo: integer('ativo', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoProductCommissionRule = sqliteTable('legado_product_commission_rule', {
@@ -1056,21 +1062,24 @@ export const legadoProductCommissionRule = sqliteTable('legado_product_commissio
   fixSuperMeta: real('fix_super_meta'),
   ativo: integer('ativo', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
-export const legadoProductCommissionRulePacote = sqliteTable('legado_product_commission_rule_pacote', {
-  id: text('id').primaryKey(),
-  produtoId: text('produto_id'),
-  tipoPacote: text('tipo_pacote'),
-  ruleId: text('rule_id'),
-  fixMetaNaoAtingida: real('fix_meta_nao_atingida'),
-  fixMetaAtingida: real('fix_meta_atingida'),
-  fixSuperMeta: real('fix_super_meta'),
-  ativo: integer('ativo', { mode: 'boolean' }),
-  createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
-});
+export const legadoProductCommissionRulePacote = sqliteTable(
+  'legado_product_commission_rule_pacote',
+  {
+    id: text('id').primaryKey(),
+    produtoId: text('produto_id'),
+    tipoPacote: text('tipo_pacote'),
+    ruleId: text('rule_id'),
+    fixMetaNaoAtingida: real('fix_meta_nao_atingida'),
+    fixMetaAtingida: real('fix_meta_atingida'),
+    fixSuperMeta: real('fix_super_meta'),
+    ativo: integer('ativo', { mode: 'boolean' }),
+    createdAt: text('created_at'),
+    updatedAt: text('updated_at')
+  }
+);
 
 export const legadoProdutos = sqliteTable('legado_produtos', {
   id: text('id').primaryKey(),
@@ -1095,7 +1104,7 @@ export const legadoProdutos = sqliteTable('legado_produtos', {
   moeda: text('moeda'),
   cambio: real('cambio'),
   valorEmReais: real('valor_em_reais'),
-  circuitoId: text('circuito_id'),
+  circuitoId: text('circuito_id')
 });
 
 export const legadoProdutosTarifas = sqliteTable('legado_produtos_tarifas', {
@@ -1114,7 +1123,7 @@ export const legadoProdutosTarifas = sqliteTable('legado_produtos_tarifas', {
   cambio: real('cambio'),
   valorEmReais: real('valor_em_reais'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoQuote = sqliteTable('legado_quote', {
@@ -1141,7 +1150,7 @@ export const legadoQuote = sqliteTable('legado_quote', {
   dataFinal: text('data_final'),
   lastInteractionAt: text('last_interaction_at'),
   lastInteractionNotes: text('last_interaction_notes'),
-  roteiroId: text('roteiro_id'),
+  roteiroId: text('roteiro_id')
 });
 
 export const legadoQuoteImportLog = sqliteTable('legado_quote_import_log', {
@@ -1150,7 +1159,7 @@ export const legadoQuoteImportLog = sqliteTable('legado_quote_import_log', {
   level: text('level'),
   message: text('message'),
   payload: text('payload'),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoQuoteItem = sqliteTable('legado_quote_item', {
@@ -1172,7 +1181,7 @@ export const legadoQuoteItem = sqliteTable('legado_quote_item', {
   updatedAt: text('updated_at'),
   orderIndex: integer('order_index', { mode: 'number' }),
   taxesAmount: real('taxes_amount'),
-  cidadeId: text('cidade_id'),
+  cidadeId: text('cidade_id')
 });
 
 export const legadoQuoteItemSegment = sqliteTable('legado_quote_item_segment', {
@@ -1181,7 +1190,7 @@ export const legadoQuoteItemSegment = sqliteTable('legado_quote_item_segment', {
   segmentType: text('segment_type'),
   data: text('data'),
   orderIndex: integer('order_index', { mode: 'number' }),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoQuotePrintSettings = sqliteTable('legado_quote_print_settings', {
@@ -1203,7 +1212,7 @@ export const legadoQuotePrintSettings = sqliteTable('legado_quote_print_settings
   logoPath: text('logo_path'),
   imagemComplementarUrl: text('imagem_complementar_url'),
   imagemComplementarPath: text('imagem_complementar_path'),
-  whatsappCodigoPais: text('whatsapp_codigo_pais'),
+  whatsappCodigoPais: text('whatsapp_codigo_pais')
 });
 
 export const legadoRankingReadModelStatus = sqliteTable('legado_ranking_read_model_status', {
@@ -1216,7 +1225,7 @@ export const legadoRankingReadModelStatus = sqliteTable('legado_ranking_read_mod
   rebuiltAt: text('rebuilt_at'),
   lastError: text('last_error'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoRankingReciboContribuicoes = sqliteTable('legado_ranking_recibo_contribuicoes', {
@@ -1243,7 +1252,7 @@ export const legadoRankingReciboContribuicoes = sqliteTable('legado_ranking_reci
   sourceTaxas: real('source_taxas'),
   origem: text('origem'),
   builtAt: text('built_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoRecibos = sqliteTable('legado_recibos', {
@@ -1252,7 +1261,7 @@ export const legadoRecibos = sqliteTable('legado_recibos', {
   produtoId: text('produto_id'),
   valor: real('valor'),
   descricao: text('descricao'),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoRoteiroDia = sqliteTable('legado_roteiro_dia', {
@@ -1265,7 +1274,7 @@ export const legadoRoteiroDia = sqliteTable('legado_roteiro_dia', {
   ordem: integer('ordem', { mode: 'number' }),
   descricao: text('descricao'),
   createdAt: text('created_at'),
-  percurso: text('percurso'),
+  percurso: text('percurso')
 });
 
 export const legadoRoteiroHotel = sqliteTable('legado_roteiro_hotel', {
@@ -1286,7 +1295,7 @@ export const legadoRoteiroHotel = sqliteTable('legado_roteiro_hotel', {
   qtdAdultos: integer('qtd_adultos', { mode: 'number' }),
   qtdCriancas: integer('qtd_criancas', { mode: 'number' }),
   valorOriginal: real('valor_original'),
-  valorFinal: real('valor_final'),
+  valorFinal: real('valor_final')
 });
 
 export const legadoRoteiroInvestimento = sqliteTable('legado_roteiro_investimento', {
@@ -1296,7 +1305,7 @@ export const legadoRoteiroInvestimento = sqliteTable('legado_roteiro_investiment
   valorPorPessoa: real('valor_por_pessoa'),
   qtdApto: integer('qtd_apto', { mode: 'number' }),
   valorPorApto: real('valor_por_apto'),
-  ordem: integer('ordem', { mode: 'number' }),
+  ordem: integer('ordem', { mode: 'number' })
 });
 
 export const legadoRoteiroPagamento = sqliteTable('legado_roteiro_pagamento', {
@@ -1306,7 +1315,7 @@ export const legadoRoteiroPagamento = sqliteTable('legado_roteiro_pagamento', {
   valorTotalComTaxas: real('valor_total_com_taxas'),
   taxas: real('taxas'),
   formaPagamento: text('forma_pagamento'),
-  ordem: integer('ordem', { mode: 'number' }),
+  ordem: integer('ordem', { mode: 'number' })
 });
 
 export const legadoRoteiroPasseio = sqliteTable('legado_roteiro_passeio', {
@@ -1323,7 +1332,7 @@ export const legadoRoteiroPasseio = sqliteTable('legado_roteiro_passeio', {
   qtdAdultos: integer('qtd_adultos', { mode: 'number' }),
   qtdCriancas: integer('qtd_criancas', { mode: 'number' }),
   valorOriginal: real('valor_original'),
-  valorFinal: real('valor_final'),
+  valorFinal: real('valor_final')
 });
 
 export const legadoRoteiroPersonalizado = sqliteTable('legado_roteiro_personalizado', {
@@ -1342,7 +1351,7 @@ export const legadoRoteiroPersonalizado = sqliteTable('legado_roteiro_personaliz
   mostrarPagamentoPdf: integer('mostrar_pagamento_pdf', { mode: 'boolean' }),
   mostrarInformacoesPdf: integer('mostrar_informacoes_pdf', { mode: 'boolean' }),
   mostrarRodapePdf: integer('mostrar_rodape_pdf', { mode: 'boolean' }),
-  opcionais: text('opcionais'),
+  opcionais: text('opcionais')
 });
 
 export const legadoRoteiroSugestoes = sqliteTable('legado_roteiro_sugestoes', {
@@ -1352,7 +1361,7 @@ export const legadoRoteiroSugestoes = sqliteTable('legado_roteiro_sugestoes', {
   valor: text('valor'),
   usoCount: integer('uso_count', { mode: 'number' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoRoteiroTransporte = sqliteTable('legado_roteiro_transporte', {
@@ -1381,7 +1390,7 @@ export const legadoRoteiroTransporte = sqliteTable('legado_roteiro_transporte', 
   qtdAdultos: integer('qtd_adultos', { mode: 'number' }),
   qtdCriancas: integer('qtd_criancas', { mode: 'number' }),
   valorTotal: real('valor_total'),
-  taxas: real('taxas'),
+  taxas: real('taxas')
 });
 
 export const legadoSacControle = sqliteTable('legado_sac_controle', {
@@ -1399,7 +1408,7 @@ export const legadoSacControle = sqliteTable('legado_sac_controle', {
   updatedAt: text('updated_at'),
   status: text('status'),
   responsavel: text('responsavel'),
-  prazo: text('prazo'),
+  prazo: text('prazo')
 });
 
 export const legadoSacInteracoes = sqliteTable('legado_sac_interacoes', {
@@ -1408,7 +1417,7 @@ export const legadoSacInteracoes = sqliteTable('legado_sac_interacoes', {
   dataInteracao: text('data_interacao'),
   descricao: text('descricao'),
   createdBy: text('created_by'),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoSecurityAuditWeeklyRuns = sqliteTable('legado_security_audit_weekly_runs', {
@@ -1421,7 +1430,7 @@ export const legadoSecurityAuditWeeklyRuns = sqliteTable('legado_security_audit_
   unforcedCriticalCount: integer('unforced_critical_count', { mode: 'number' }),
   pagamentosCompanyMismatch: integer('pagamentos_company_mismatch', { mode: 'number' }),
   bucketPublic: integer('bucket_public', { mode: 'boolean' }),
-  details: text('details'),
+  details: text('details')
 });
 
 export const legadoSecurityRateLimits = sqliteTable('legado_security_rate_limits', {
@@ -1429,7 +1438,7 @@ export const legadoSecurityRateLimits = sqliteTable('legado_security_rate_limits
   keyHash: text('key_hash'),
   windowStart: text('window_start'),
   expiresAt: text('expires_at'),
-  hits: integer('hits', { mode: 'number' }),
+  hits: integer('hits', { mode: 'number' })
 });
 
 export const legadoServicoFornecedorPrice = sqliteTable('legado_servico_fornecedor_price', {
@@ -1440,17 +1449,20 @@ export const legadoServicoFornecedorPrice = sqliteTable('legado_servico_forneced
   tipoValor: text('tipo_valor'),
   ativo: integer('ativo', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
-export const legadoServicoFornecedorPricePeriod = sqliteTable('legado_servico_fornecedor_price_period', {
-  id: text('id').primaryKey(),
-  servicoFornecedorPriceId: text('servico_fornecedor_price_id'),
-  dataInicio: text('data_inicio'),
-  dataFim: text('data_fim'),
-  ajusteTipo: text('ajuste_tipo'),
-  ajusteValor: real('ajuste_valor'),
-});
+export const legadoServicoFornecedorPricePeriod = sqliteTable(
+  'legado_servico_fornecedor_price_period',
+  {
+    id: text('id').primaryKey(),
+    servicoFornecedorPriceId: text('servico_fornecedor_price_id'),
+    dataInicio: text('data_inicio'),
+    dataFim: text('data_fim'),
+    ajusteTipo: text('ajuste_tipo'),
+    ajusteValor: real('ajuste_valor')
+  }
+);
 
 export const legadoServicoPrice = sqliteTable('legado_servico_price', {
   id: text('id').primaryKey(),
@@ -1460,7 +1472,7 @@ export const legadoServicoPrice = sqliteTable('legado_servico_price', {
   tipoValor: text('tipo_valor'),
   ativo: integer('ativo', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoServicoPricePeriod = sqliteTable('legado_servico_price_period', {
@@ -1469,7 +1481,7 @@ export const legadoServicoPricePeriod = sqliteTable('legado_servico_price_period
   dataInicio: text('data_inicio'),
   dataFim: text('data_fim'),
   ajusteTipo: text('ajuste_tipo'),
-  ajusteValor: real('ajuste_valor'),
+  ajusteValor: real('ajuste_valor')
 });
 
 export const legadoServicos = sqliteTable('legado_servicos', {
@@ -1479,7 +1491,7 @@ export const legadoServicos = sqliteTable('legado_servicos', {
   descricao: text('descricao'),
   ativo: integer('ativo', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoServicosFornecedor = sqliteTable('legado_servicos_fornecedor', {
@@ -1490,7 +1502,7 @@ export const legadoServicosFornecedor = sqliteTable('legado_servicos_fornecedor'
   descricao: text('descricao'),
   ativo: integer('ativo', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoSubdivisoes = sqliteTable('legado_subdivisoes', {
@@ -1499,7 +1511,7 @@ export const legadoSubdivisoes = sqliteTable('legado_subdivisoes', {
   codigoAdmin1: text('codigo_admin1'),
   nome: text('nome'),
   tipo: text('tipo'),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoSystemDocumentation = sqliteTable('legado_system_documentation', {
@@ -1507,61 +1519,70 @@ export const legadoSystemDocumentation = sqliteTable('legado_system_documentatio
   slug: text('slug'),
   markdown: text('markdown'),
   updatedAt: text('updated_at'),
-  updatedBy: text('updated_by'),
+  updatedBy: text('updated_by')
 });
 
-export const legadoSystemDocumentationSectionVersions = sqliteTable('legado_system_documentation_section_versions', {
-  id: text('id').primaryKey(),
-  sectionId: text('section_id'),
-  slug: text('slug'),
-  roleScope: text('role_scope'),
-  moduleKey: text('module_key'),
-  routePattern: text('route_pattern'),
-  title: text('title'),
-  summary: text('summary'),
-  contentMarkdown: text('content_markdown'),
-  tone: text('tone'),
-  sortOrder: integer('sort_order', { mode: 'number' }),
-  isActive: integer('is_active', { mode: 'boolean' }),
-  action: text('action'),
-  createdAt: text('created_at'),
-  createdBy: text('created_by'),
-});
+export const legadoSystemDocumentationSectionVersions = sqliteTable(
+  'legado_system_documentation_section_versions',
+  {
+    id: text('id').primaryKey(),
+    sectionId: text('section_id'),
+    slug: text('slug'),
+    roleScope: text('role_scope'),
+    moduleKey: text('module_key'),
+    routePattern: text('route_pattern'),
+    title: text('title'),
+    summary: text('summary'),
+    contentMarkdown: text('content_markdown'),
+    tone: text('tone'),
+    sortOrder: integer('sort_order', { mode: 'number' }),
+    isActive: integer('is_active', { mode: 'boolean' }),
+    action: text('action'),
+    createdAt: text('created_at'),
+    createdBy: text('created_by')
+  }
+);
 
-export const legadoSystemDocumentationSections = sqliteTable('legado_system_documentation_sections', {
-  id: text('id').primaryKey(),
-  slug: text('slug'),
-  roleScope: text('role_scope'),
-  moduleKey: text('module_key'),
-  routePattern: text('route_pattern'),
-  title: text('title'),
-  summary: text('summary'),
-  contentMarkdown: text('content_markdown'),
-  tone: text('tone'),
-  sortOrder: integer('sort_order', { mode: 'number' }),
-  isActive: integer('is_active', { mode: 'boolean' }),
-  createdAt: text('created_at'),
-  createdBy: text('created_by'),
-  updatedAt: text('updated_at'),
-  updatedBy: text('updated_by'),
-});
+export const legadoSystemDocumentationSections = sqliteTable(
+  'legado_system_documentation_sections',
+  {
+    id: text('id').primaryKey(),
+    slug: text('slug'),
+    roleScope: text('role_scope'),
+    moduleKey: text('module_key'),
+    routePattern: text('route_pattern'),
+    title: text('title'),
+    summary: text('summary'),
+    contentMarkdown: text('content_markdown'),
+    tone: text('tone'),
+    sortOrder: integer('sort_order', { mode: 'number' }),
+    isActive: integer('is_active', { mode: 'boolean' }),
+    createdAt: text('created_at'),
+    createdBy: text('created_by'),
+    updatedAt: text('updated_at'),
+    updatedBy: text('updated_by')
+  }
+);
 
-export const legadoSystemDocumentationVersions = sqliteTable('legado_system_documentation_versions', {
-  id: text('id').primaryKey(),
-  docId: text('doc_id'),
-  slug: text('slug'),
-  markdown: text('markdown'),
-  action: text('action'),
-  createdAt: text('created_at'),
-  createdBy: text('created_by'),
-});
+export const legadoSystemDocumentationVersions = sqliteTable(
+  'legado_system_documentation_versions',
+  {
+    id: text('id').primaryKey(),
+    docId: text('doc_id'),
+    slug: text('slug'),
+    markdown: text('markdown'),
+    action: text('action'),
+    createdAt: text('created_at'),
+    createdBy: text('created_by')
+  }
+);
 
 export const legadoSystemModuleSettings = sqliteTable('legado_system_module_settings', {
   moduleKey: text('module_key').primaryKey(),
   enabled: integer('enabled', { mode: 'boolean' }),
   reason: text('reason'),
   updatedAt: text('updated_at'),
-  updatedBy: text('updated_by'),
+  updatedBy: text('updated_by')
 });
 
 export const legadoTipoPacotes = sqliteTable('legado_tipo_pacotes', {
@@ -1573,7 +1594,7 @@ export const legadoTipoPacotes = sqliteTable('legado_tipo_pacotes', {
   fixSuperMeta: real('fix_super_meta'),
   ativo: integer('ativo', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoTipoProdutos = sqliteTable('legado_tipo_produtos', {
@@ -1589,7 +1610,7 @@ export const legadoTipoProdutos = sqliteTable('legado_tipo_produtos', {
   metaProdutoValor: real('meta_produto_valor'),
   comissaoProdutoMetaPct: real('comissao_produto_meta_pct'),
   descontarMetaGeral: integer('descontar_meta_geral', { mode: 'boolean' }),
-  exibeKpiComissao: integer('exibe_kpi_comissao', { mode: 'boolean' }),
+  exibeKpiComissao: integer('exibe_kpi_comissao', { mode: 'boolean' })
 });
 
 export const legadoTodoCategorias = sqliteTable('legado_todo_categorias', {
@@ -1599,7 +1620,7 @@ export const legadoTodoCategorias = sqliteTable('legado_todo_categorias', {
   nome: text('nome'),
   cor: text('cor'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoUserConvites = sqliteTable('legado_user_convites', {
@@ -1615,7 +1636,7 @@ export const legadoUserConvites = sqliteTable('legado_user_convites', {
   acceptedAt: text('accepted_at'),
   cancelledAt: text('cancelled_at'),
   expiresAt: text('expires_at'),
-  usoIndividual: integer('uso_individual', { mode: 'boolean' }),
+  usoIndividual: integer('uso_individual', { mode: 'boolean' })
 });
 
 export const legadoUserCrmAssinaturas = sqliteTable('legado_user_crm_assinaturas', {
@@ -1634,7 +1655,7 @@ export const legadoUserCrmAssinaturas = sqliteTable('legado_user_crm_assinaturas
   linha3Italic: integer('linha3_italic', { mode: 'boolean' }),
   isDefault: integer('is_default', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoUserMessageTemplateThemes = sqliteTable('legado_user_message_template_themes', {
@@ -1661,7 +1682,7 @@ export const legadoUserMessageTemplateThemes = sqliteTable('legado_user_message_
   assinaturaMaxLinhas: integer('assinatura_max_linhas', { mode: 'number' }),
   assinaturaMaxPalavras: integer('assinatura_max_palavras', { mode: 'number' }),
   logoUrl: text('logo_url'),
-  logoPath: text('logo_path'),
+  logoPath: text('logo_path')
 });
 
 export const legadoUserMessageTemplates = sqliteTable('legado_user_message_templates', {
@@ -1683,7 +1704,7 @@ export const legadoUserMessageTemplates = sqliteTable('legado_user_message_templ
   bodyStyle: text('body_style'),
   signatureStyle: text('signature_style'),
   layoutKey: text('layout_key'),
-  scope: text('scope'),
+  scope: text('scope')
 });
 
 export const legadoUserTypeDefaultPerms = sqliteTable('legado_user_type_default_perms', {
@@ -1693,14 +1714,14 @@ export const legadoUserTypeDefaultPerms = sqliteTable('legado_user_type_default_
   permissao: text('permissao'),
   ativo: integer('ativo', { mode: 'boolean' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoUserTypes = sqliteTable('legado_user_types', {
   id: text('id').primaryKey(),
   name: text('name'),
   description: text('description'),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoUsers = sqliteTable('legado_users', {
@@ -1729,7 +1750,7 @@ export const legadoUsers = sqliteTable('legado_users', {
   participaRanking: integer('participa_ranking', { mode: 'boolean' }),
   mustChangePassword: integer('must_change_password', { mode: 'boolean' }),
   passwordChangedAt: text('password_changed_at'),
-  avatarUrl: text('avatar_url'),
+  avatarUrl: text('avatar_url')
 });
 
 export const legadoVGestorVendedorDetails = sqliteTable('legado_v_gestor_vendedor_details', {
@@ -1740,7 +1761,7 @@ export const legadoVGestorVendedorDetails = sqliteTable('legado_v_gestor_vendedo
   vendedorCpf: text('vendedor_cpf'),
   companyName: text('company_name'),
   podeModificar: integer('pode_modificar', { mode: 'boolean' }),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoVUsersComplete = sqliteTable('legado_v_users_complete', {
@@ -1757,7 +1778,7 @@ export const legadoVUsersComplete = sqliteTable('legado_v_users_complete', {
   companyName: text('company_name'),
   companyCnpj: text('company_cnpj'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoVendas = sqliteTable('legado_vendas', {
@@ -1784,7 +1805,7 @@ export const legadoVendas = sqliteTable('legado_vendas', {
   valorTaxas: real('valor_taxas'),
   valorNaoComissionado: real('valor_nao_comissionado'),
   companyId: text('company_id'),
-  dataVenda: text('data_venda'),
+  dataVenda: text('data_venda')
 });
 
 export const legadoVendasPagamentos = sqliteTable('legado_vendas_pagamentos', {
@@ -1806,7 +1827,7 @@ export const legadoVendasPagamentos = sqliteTable('legado_vendas_pagamentos', {
   observacoes: text('observacoes'),
   createdAt: text('created_at'),
   updatedAt: text('updated_at'),
-  vendaReciboId: text('venda_recibo_id'),
+  vendaReciboId: text('venda_recibo_id')
 });
 
 export const legadoVendasRecibos = sqliteTable('legado_vendas_recibos', {
@@ -1831,15 +1852,18 @@ export const legadoVendasRecibos = sqliteTable('legado_vendas_recibos', {
   canceladoPorConciliacaoEm: text('cancelado_por_conciliacao_em'),
   canceladoPorConciliacaoObservacao: text('cancelado_por_conciliacao_observacao'),
   numeroReciboNormalizado: text('numero_recibo_normalizado'),
-  destinoCidadeId: text('destino_cidade_id'),
+  destinoCidadeId: text('destino_cidade_id')
 });
 
-export const legadoVendasRecibosComplementares = sqliteTable('legado_vendas_recibos_complementares', {
-  id: text('id').primaryKey(),
-  vendaId: text('venda_id'),
-  reciboId: text('recibo_id'),
-  createdAt: text('created_at'),
-});
+export const legadoVendasRecibosComplementares = sqliteTable(
+  'legado_vendas_recibos_complementares',
+  {
+    id: text('id').primaryKey(),
+    vendaId: text('venda_id'),
+    reciboId: text('recibo_id'),
+    createdAt: text('created_at')
+  }
+);
 
 export const legadoVendasRecibosNotas = sqliteTable('legado_vendas_recibos_notas', {
   id: text('id').primaryKey(),
@@ -1848,7 +1872,7 @@ export const legadoVendasRecibosNotas = sqliteTable('legado_vendas_recibos_notas
   companyId: text('company_id'),
   notas: text('notas'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoVendasRecibosRateio = sqliteTable('legado_vendas_recibos_rateio', {
@@ -1865,7 +1889,7 @@ export const legadoVendasRecibosRateio = sqliteTable('legado_vendas_recibos_rate
   updatedBy: text('updated_by'),
   createdAt: text('created_at'),
   updatedAt: text('updated_at'),
-  conciliacaoReciboId: text('conciliacao_recibo_id'),
+  conciliacaoReciboId: text('conciliacao_recibo_id')
 });
 
 export const legadoViagemAcompanhantes = sqliteTable('legado_viagem_acompanhantes', {
@@ -1878,7 +1902,7 @@ export const legadoViagemAcompanhantes = sqliteTable('legado_viagem_acompanhante
   observacoes: text('observacoes'),
   createdBy: text('created_by'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoViagemDocumentos = sqliteTable('legado_viagem_documentos', {
@@ -1893,7 +1917,7 @@ export const legadoViagemDocumentos = sqliteTable('legado_viagem_documentos', {
   expiresAt: text('expires_at'),
   createdBy: text('created_by'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoViagemPassageiros = sqliteTable('legado_viagem_passageiros', {
@@ -1905,7 +1929,7 @@ export const legadoViagemPassageiros = sqliteTable('legado_viagem_passageiros', 
   observacoes: text('observacoes'),
   createdBy: text('created_by'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoViagemServicos = sqliteTable('legado_viagem_servicos', {
@@ -1924,7 +1948,7 @@ export const legadoViagemServicos = sqliteTable('legado_viagem_servicos', {
   observacoes: text('observacoes'),
   createdBy: text('created_by'),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoViagens = sqliteTable('legado_viagens', {
@@ -1944,7 +1968,7 @@ export const legadoViagens = sqliteTable('legado_viagens', {
   clienteId: text('cliente_id'),
   reciboId: text('recibo_id'),
   followUpText: text('follow_up_text'),
-  followUpFechado: integer('follow_up_fechado', { mode: 'boolean' }),
+  followUpFechado: integer('follow_up_fechado', { mode: 'boolean' })
 });
 
 export const legadoVoucherAssets = sqliteTable('legado_voucher_assets', {
@@ -1962,7 +1986,7 @@ export const legadoVoucherAssets = sqliteTable('legado_voucher_assets', {
   ativo: integer('ativo', { mode: 'boolean' }),
   ordem: integer('ordem', { mode: 'number' }),
   createdAt: text('created_at'),
-  updatedAt: text('updated_at'),
+  updatedAt: text('updated_at')
 });
 
 export const legadoVoucherDias = sqliteTable('legado_voucher_dias', {
@@ -1974,7 +1998,7 @@ export const legadoVoucherDias = sqliteTable('legado_voucher_dias', {
   dataReferencia: text('data_referencia'),
   cidade: text('cidade'),
   ordem: integer('ordem', { mode: 'number' }),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoVoucherHoteis = sqliteTable('legado_voucher_hoteis', {
@@ -1991,7 +2015,7 @@ export const legadoVoucherHoteis = sqliteTable('legado_voucher_hoteis', {
   status: text('status'),
   observacao: text('observacao'),
   ordem: integer('ordem', { mode: 'number' }),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoVouchers = sqliteTable('legado_vouchers', {
@@ -2014,7 +2038,7 @@ export const legadoVouchers = sqliteTable('legado_vouchers', {
   passageiros: text('passageiros'),
   tipoAcomodacao: text('tipo_acomodacao'),
   extraData: text('extra_data'),
-  viagemId: text('viagem_id'),
+  viagemId: text('viagem_id')
 });
 
 export const legadoVwCidadesLocalizacao = sqliteTable('legado_vw_cidades_localizacao', {
@@ -2032,7 +2056,7 @@ export const legadoVwCidadesLocalizacao = sqliteTable('legado_vw_cidades_localiz
   longitude: real('longitude'),
   populacao: integer('populacao', { mode: 'number' }),
   descricao: text('descricao'),
-  createdAt: text('created_at'),
+  createdAt: text('created_at')
 });
 
 export const legadoVwCidadesLocalizacaoBusca = sqliteTable('legado_vw_cidades_localizacao_busca', {
@@ -2052,7 +2076,7 @@ export const legadoVwCidadesLocalizacaoBusca = sqliteTable('legado_vw_cidades_lo
   descricao: text('descricao'),
   createdAt: text('created_at'),
   label: text('label'),
-  searchText: text('search_text'),
+  searchText: text('search_text')
 });
 
 export const legadoVwProdutosComissionamento = sqliteTable('legado_vw_produtos_comissionamento', {
@@ -2064,14 +2088,14 @@ export const legadoVwProdutosComissionamento = sqliteTable('legado_vw_produtos_c
   metaAtingida: real('meta_atingida'),
   superMeta: real('super_meta'),
   diferenciado: real('diferenciado'),
-  comissionamentoAtivo: integer('comissionamento_ativo', { mode: 'boolean' }),
+  comissionamentoAtivo: integer('comissionamento_ativo', { mode: 'boolean' })
 });
 
 export const legadoVwSomaMetaPlaceholder = sqliteTable('legado_vw_soma_meta_placeholder', {
   produtoId: text('produto_id'),
   tipo: text('tipo'),
   somaNaMeta: integer('soma_na_meta', { mode: 'boolean' }),
-  regraComissionamento: text('regra_comissionamento'),
+  regraComissionamento: text('regra_comissionamento')
 });
 
 export const mfaFatores = sqliteTable('mfa_fatores', {
@@ -2080,6 +2104,5 @@ export const mfaFatores = sqliteTable('mfa_fatores', {
   secret: text('secret').notNull(),
   friendlyName: text('friendly_name'),
   status: text('status').notNull(),
-  createdAt: text('created_at').notNull(),
+  createdAt: text('created_at').notNull()
 });
-

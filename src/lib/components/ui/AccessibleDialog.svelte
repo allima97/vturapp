@@ -35,7 +35,9 @@
 
   async function focusDialogContent() {
     await tick();
-    element.querySelector<HTMLElement>('[autofocus], input, select, textarea, button, a[href]')?.focus();
+    element
+      .querySelector<HTMLElement>('[autofocus], input, select, textarea, button, a[href]')
+      ?.focus();
   }
 
   function handleClose() {

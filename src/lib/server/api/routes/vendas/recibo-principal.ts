@@ -32,7 +32,12 @@ export async function handleVendasReciboPrincipalPost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster) {
-      ensureModuloAccess(scope, ['vendas_consulta', 'vendas'], 3, 'Sem permissao para editar vendas.');
+      ensureModuloAccess(
+        scope,
+        ['vendas_consulta', 'vendas'],
+        3,
+        'Sem permissao para editar vendas.'
+      );
     }
 
     const rawBody = textResult.text;
@@ -40,7 +45,10 @@ export async function handleVendasReciboPrincipalPost(event: RequestEvent) {
     const vendaId = String(body?.venda_id || '').trim();
     const reciboId = String(body?.recibo_id || '').trim();
     if (!isUuid(vendaId) || !isUuid(reciboId)) {
-      return new Response('venda_id ou recibo_id invalido.', { status: 400, headers: NO_STORE_HEADERS });
+      return new Response('venda_id ou recibo_id invalido.', {
+        status: 400,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const companyIds = resolveScopedCompanyIds(
@@ -52,7 +60,13 @@ export async function handleVendasReciboPrincipalPost(event: RequestEvent) {
       scope,
       event.url.searchParams.get('vendedor_ids') || event.url.searchParams.get('vendedor_id')
     );
-    const sale = await fetchSaleForScope({ client, scope, saleId: vendaId, companyIds, vendedorIds });
+    const sale = await fetchSaleForScope({
+      client,
+      scope,
+      saleId: vendaId,
+      companyIds,
+      vendedorIds
+    });
     if (!sale) {
       return new Response('Venda nao encontrada.', { status: 404, headers: NO_STORE_HEADERS });
     }
@@ -73,7 +87,10 @@ export async function handleVendasReciboPrincipalPost(event: RequestEvent) {
       (receipt as { produto_resolvido_id?: string | null })?.produto_resolvido_id || ''
     ).trim();
     if (!isUuid(produtoResolvidoId)) {
-      return new Response('Recibo sem produto valido para definir como principal.', { status: 400, headers: NO_STORE_HEADERS });
+      return new Response('Recibo sem produto valido para definir como principal.', {
+        status: 400,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const updateQuery = client
@@ -82,10 +99,15 @@ export async function handleVendasReciboPrincipalPost(event: RequestEvent) {
       .eq('id', vendaId)
       .eq('company_id', saleCompanyId);
 
-    const { data: updated, error: updateError } = await updateQuery.select('id, destino_id').maybeSingle();
+    const { data: updated, error: updateError } = await updateQuery
+      .select('id, destino_id')
+      .maybeSingle();
     if (updateError) throw updateError;
     if (!updated?.id) {
-      return new Response('Nao foi possivel atualizar o recibo principal.', { status: 403, headers: NO_STORE_HEADERS });
+      return new Response('Nao foi possivel atualizar o recibo principal.', {
+        status: 403,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     invalidateSalesReadModels();
@@ -93,7 +115,7 @@ export async function handleVendasReciboPrincipalPost(event: RequestEvent) {
       userId: user.id,
       modulo: 'Vendas',
       acao: 'recibo_principal_atualizado',
-      detalhes: { venda_id: vendaId, recibo_id: reciboId, produto_resolvido_id: produtoResolvidoId },
+      detalhes: { venda_id: vendaId, recibo_id: reciboId, produto_resolvido_id: produtoResolvidoId }
     });
     return json(
       {

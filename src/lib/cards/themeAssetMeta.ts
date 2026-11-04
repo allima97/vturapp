@@ -32,9 +32,14 @@ function resolveAssetUrl(theme?: ThemeAssetMeta | null) {
     !rawAssetUrl.startsWith('/') &&
     !rawAssetUrl.startsWith('data:');
 
-  const storageUrl = buildDadosStorageUrl(storagePath || (assetLooksLikeStoredPath ? rawAssetUrl : ''));
-  const isLegacyDadosStorageUrl = /\/storage\/v1\/object\/public\/message-template-themes\//i.test(rawAssetUrl);
-  if (storageUrl && (isLegacyDadosStorageUrl || assetLooksLikeStoredPath || !rawAssetUrl)) return storageUrl;
+  const storageUrl = buildDadosStorageUrl(
+    storagePath || (assetLooksLikeStoredPath ? rawAssetUrl : '')
+  );
+  const isLegacyDadosStorageUrl = /\/storage\/v1\/object\/public\/message-template-themes\//i.test(
+    rawAssetUrl
+  );
+  if (storageUrl && (isLegacyDadosStorageUrl || assetLooksLikeStoredPath || !rawAssetUrl))
+    return storageUrl;
   return rawAssetUrl;
 }
 
@@ -42,6 +47,6 @@ export function resolveThemeAssetMeta(theme?: ThemeAssetMeta | null) {
   return {
     asset_url: resolveAssetUrl(theme),
     width_px: Number(theme?.width_px || 0),
-    height_px: Number(theme?.height_px || 0),
+    height_px: Number(theme?.height_px || 0)
   };
 }

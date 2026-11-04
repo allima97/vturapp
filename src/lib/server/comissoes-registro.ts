@@ -160,7 +160,15 @@ export async function persistPaidComissoes(params: {
   dataPagamento: string;
   observacoesPagamento?: string | null;
 }) {
-  const { client, userId, rows, resolvedByKey, existingByKey, dataPagamento, observacoesPagamento } = params;
+  const {
+    client,
+    userId,
+    rows,
+    resolvedByKey,
+    existingByKey,
+    dataPagamento,
+    observacoesPagamento
+  } = params;
 
   const inserts: Record<string, unknown>[] = [];
   const updates: Array<{ id: string; payload: Record<string, unknown> }> = [];
@@ -248,7 +256,15 @@ export async function persistPaidReceiptComissoes(params: {
   dataPagamento: string;
   observacoesPagamento?: string | null;
 }) {
-  const { client, userId, rows, resolvedByKey, existingByKey, dataPagamento, observacoesPagamento } = params;
+  const {
+    client,
+    userId,
+    rows,
+    resolvedByKey,
+    existingByKey,
+    dataPagamento,
+    observacoesPagamento
+  } = params;
 
   const inserts: Record<string, unknown>[] = [];
   const updates: Array<{ id: string; payload: Record<string, unknown> }> = [];
@@ -342,14 +358,19 @@ export function applyPersistedComissao(
           ? 'processando'
           : 'pendente';
 
-  const valorComissao = persisted.valor_comissao != null ? toNum(persisted.valor_comissao) : base.valor_comissao;
+  const valorComissao =
+    persisted.valor_comissao != null ? toNum(persisted.valor_comissao) : base.valor_comissao;
 
   return {
     valor_venda: persisted.valor_venda != null ? toNum(persisted.valor_venda) : base.valor_venda,
     valor_comissionavel:
-      persisted.valor_comissionavel != null ? toNum(persisted.valor_comissionavel) : base.valor_comissionavel,
+      persisted.valor_comissionavel != null
+        ? toNum(persisted.valor_comissionavel)
+        : base.valor_comissionavel,
     percentual_aplicado:
-      persisted.percentual_aplicado != null ? toNum(persisted.percentual_aplicado) : base.percentual_aplicado,
+      persisted.percentual_aplicado != null
+        ? toNum(persisted.percentual_aplicado)
+        : base.percentual_aplicado,
     valor_comissao: valorComissao,
     status,
     valor_pago: status === 'pago' ? valorComissao : 0

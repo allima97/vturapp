@@ -46,7 +46,12 @@ export async function handleVendasReciboEditPatch(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster) {
-      ensureModuloAccess(scope, ['vendas_consulta', 'vendas'], 3, 'Sem permissao para editar recibos.');
+      ensureModuloAccess(
+        scope,
+        ['vendas_consulta', 'vendas'],
+        3,
+        'Sem permissao para editar recibos.'
+      );
     }
 
     const rawBody = textResult.text;
@@ -75,16 +80,25 @@ export async function handleVendasReciboEditPatch(event: RequestEvent) {
     const valorTotal = parseOptionalMoney(body?.valor_total);
 
     if (!isUuid(vendaId) || !isUuid(reciboId)) {
-      return new Response('venda_id ou recibo_id invalido.', { status: 400, headers: NO_STORE_HEADERS });
+      return new Response('venda_id ou recibo_id invalido.', {
+        status: 400,
+        headers: NO_STORE_HEADERS
+      });
     }
     if (!numeroRecibo) {
-      return new Response('numero_recibo e obrigatorio.', { status: 400, headers: NO_STORE_HEADERS });
+      return new Response('numero_recibo e obrigatorio.', {
+        status: 400,
+        headers: NO_STORE_HEADERS
+      });
     }
     if (!isUuid(produtoId)) {
       return new Response('produto_id invalido.', { status: 400, headers: NO_STORE_HEADERS });
     }
     if (destinoCidadeId && !isUuid(destinoCidadeId)) {
-      return new Response('destino_cidade_id invalido.', { status: 400, headers: NO_STORE_HEADERS });
+      return new Response('destino_cidade_id invalido.', {
+        status: 400,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const companyIds = resolveScopedCompanyIds(
@@ -97,7 +111,13 @@ export async function handleVendasReciboEditPatch(event: RequestEvent) {
       event.url.searchParams.get('vendedor_ids') || event.url.searchParams.get('vendedor_id')
     );
     // Verifica se a venda pertence ao escopo do usuário
-    const sale = await fetchSaleForScope({ client, scope, saleId: vendaId, companyIds, vendedorIds });
+    const sale = await fetchSaleForScope({
+      client,
+      scope,
+      saleId: vendaId,
+      companyIds,
+      vendedorIds
+    });
     if (!sale) {
       return new Response('Venda nao encontrada.', { status: 404, headers: NO_STORE_HEADERS });
     }
@@ -124,9 +144,14 @@ export async function handleVendasReciboEditPatch(event: RequestEvent) {
       return new Response('Produto nao encontrado.', { status: 404, headers: NO_STORE_HEADERS });
     }
 
-    const tipoProdutoId = String((produto as { tipo_produto?: string | null })?.tipo_produto || '').trim();
+    const tipoProdutoId = String(
+      (produto as { tipo_produto?: string | null })?.tipo_produto || ''
+    ).trim();
     if (!isUuid(tipoProdutoId)) {
-      return new Response('Produto sem tipo de produto valido.', { status: 400, headers: NO_STORE_HEADERS });
+      return new Response('Produto sem tipo de produto valido.', {
+        status: 400,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const { data: updated, error: updateError } = await client
@@ -144,7 +169,9 @@ export async function handleVendasReciboEditPatch(event: RequestEvent) {
         tipo_pacote: tipoPacote || null
       })
       .eq('id', reciboId)
-      .select('id, numero_recibo, numero_recibo_normalizado, produto_id, produto_resolvido_id, destino_cidade_id, numero_reserva, data_inicio, data_fim, valor_total, tipo_pacote')
+      .select(
+        'id, numero_recibo, numero_recibo_normalizado, produto_id, produto_resolvido_id, destino_cidade_id, numero_reserva, data_inicio, data_fim, valor_total, tipo_pacote'
+      )
       .maybeSingle();
 
     if (updateError) throw updateError;
@@ -156,7 +183,7 @@ export async function handleVendasReciboEditPatch(event: RequestEvent) {
     // Reconstruir read model de ranking de forma assíncrona (fire-and-forget)
     triggerRebuildAsync({
       companyIds: scopedCompanyIds,
-      executionContext: getPlatformExecutionContext(event.platform),
+      executionContext: getPlatformExecutionContext(event.platform)
     });
 
     // Publicar invalidação no KV para propagar para outras instâncias Workers (fire-and-forget)

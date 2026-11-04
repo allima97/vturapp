@@ -37,7 +37,7 @@
   <title>Editar Circuito | VTUR</title>
 </svelte:head>
 
-<PageHeader 
+<PageHeader
   title="Editar Circuito"
   subtitle="Atualizar informações do circuito"
   color="financeiro"
@@ -50,7 +50,7 @@
 
 <form on:submit|preventDefault={handleSubmit}>
   <Card color="financeiro" class="mb-6">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
       <FieldInput
         id="circuito-codigo"
         label="Código"
@@ -80,7 +80,7 @@
         class_name="w-full"
       />
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <FieldInput
           id="circuito-dias"
           label="Dias"
@@ -136,7 +136,8 @@
         ]}
         class_name="w-full"
         on:change={(event) => {
-          circuito.guia = String((event.currentTarget as HTMLInputElement | null)?.value || 'false') === 'true';
+          circuito.guia =
+            String((event.currentTarget as HTMLInputElement | null)?.value || 'false') === 'true';
         }}
       />
 
@@ -159,7 +160,7 @@
     </Button>
     <Button variant="primary" color="financeiro" type="submit" disabled={saving}>
       {#if saving}
-        <span class="animate-spin mr-2">⟳</span>
+        <span class="mr-2 animate-spin">⟳</span>
         Salvando...
       {:else}
         <Save size={18} class="mr-2" />

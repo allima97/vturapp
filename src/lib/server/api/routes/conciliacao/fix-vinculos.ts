@@ -93,7 +93,8 @@ function readFixVinculosBody(value: unknown): FixVinculosBody {
   if (typeof body.dryRun === 'boolean') parsed.dryRun = body.dryRun;
   if (typeof body.limit === 'number' || typeof body.limit === 'string') parsed.limit = body.limit;
   if (typeof body.month === 'string') parsed.month = body.month;
-  if (typeof body.conciliacaoReciboId === 'string') parsed.conciliacaoReciboId = body.conciliacaoReciboId;
+  if (typeof body.conciliacaoReciboId === 'string')
+    parsed.conciliacaoReciboId = body.conciliacaoReciboId;
   if (typeof body.conciliacaoId === 'string') parsed.conciliacaoId = body.conciliacaoId;
 
   return parsed;
@@ -193,33 +194,29 @@ type AuditDetail = {
     valor_venda_real: number;
     valor_taxas: number;
   };
-  sistema:
-    | {
-        venda_id: string | null;
-        venda_recibo_id: string | null;
-        numero_recibo: string;
-        vendedor_id: string | null;
-        vendedor_nome: string | null;
-        data_venda: string | null;
-        data_lancamento: string | null;
-        valor_total: number;
-        valor_rav: number;
-        valor_ranking: number;
-        valor_taxas: number;
-        cancelada: boolean;
-        produto: string | null;
-        rateio:
-          | {
-              vendedor_origem_id: string | null;
-              vendedor_origem_nome: string | null;
-              vendedor_destino_id: string | null;
-              vendedor_destino_nome: string | null;
-              percentual_origem: number;
-              percentual_destino: number;
-            }
-          | null;
-      }
-    | null;
+  sistema: {
+    venda_id: string | null;
+    venda_recibo_id: string | null;
+    numero_recibo: string;
+    vendedor_id: string | null;
+    vendedor_nome: string | null;
+    data_venda: string | null;
+    data_lancamento: string | null;
+    valor_total: number;
+    valor_rav: number;
+    valor_ranking: number;
+    valor_taxas: number;
+    cancelada: boolean;
+    produto: string | null;
+    rateio: {
+      vendedor_origem_id: string | null;
+      vendedor_origem_nome: string | null;
+      vendedor_destino_id: string | null;
+      vendedor_destino_nome: string | null;
+      percentual_origem: number;
+      percentual_destino: number;
+    } | null;
+  } | null;
   candidatos: AuditCandidate[];
 };
 
@@ -248,7 +245,7 @@ function firstTipoProduto(
         nome?: string | null;
         tipo?: string | null;
       }>
-    | null,
+    | null
 ) {
   return Array.isArray(value) ? (value[0] ?? null) : (value ?? null);
 }
@@ -310,7 +307,8 @@ function numeroReciboMatches(left?: string | null, right?: string | null) {
 
   const leftSignificantCore = stripLeadingZeros(leftCore);
   const rightSignificantCore = stripLeadingZeros(rightCore);
-  if (!leftSignificantCore || !rightSignificantCore || leftSignificantCore !== rightSignificantCore) return false;
+  if (!leftSignificantCore || !rightSignificantCore || leftSignificantCore !== rightSignificantCore)
+    return false;
 
   const leftPrefix = extractReciboPrefix(left);
   const rightPrefix = extractReciboPrefix(right);
@@ -334,7 +332,9 @@ function isRexturDocumento(value?: string | null) {
 }
 
 function normalizeRexturLocalizador(value?: string | null) {
-  return toStr(value).replace(/^REXTUR[\s-]*/i, '').toUpperCase();
+  return toStr(value)
+    .replace(/^REXTUR[\s-]*/i, '')
+    .toUpperCase();
 }
 
 function moneyMatches(left: number, right: number) {
@@ -348,7 +348,14 @@ function maxSeverity(issues: AuditIssue[]) {
   return 'ok';
 }
 
-function issue(code: string, severity: AuditSeverity, title: string, message: string, expected?: string | number | null, actual?: string | number | null): AuditIssue {
+function issue(
+  code: string,
+  severity: AuditSeverity,
+  title: string,
+  message: string,
+  expected?: string | number | null,
+  actual?: string | number | null
+): AuditIssue {
   return { code, severity, title, message, expected, actual };
 }
 
@@ -360,7 +367,9 @@ function receiptMatchesDocument(row: ConciliacaoAuditRow, recibo: ReceiptAuditRo
   if (isRexturDocumento(row?.documento)) {
     const rowReserva = normalizeRexturLocalizador(row?.numero_reserva);
     const reciboReserva = normalizeRexturLocalizador(recibo?.numero_reserva);
-    return isRexturDocumento(recibo?.numero_recibo) && (!rowReserva || rowReserva === reciboReserva);
+    return (
+      isRexturDocumento(recibo?.numero_recibo) && (!rowReserva || rowReserva === reciboReserva)
+    );
   }
 
   return (
@@ -469,12 +478,21 @@ export async function handleConciliacaoFixVinculosPost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster && !scope.isFinanceiro && !scope.isGestor) {
-      ensureModuloAccess(scope, ['operacao_conciliacao', 'conciliacao'], 3, 'Sem permissao para auditar vinculos.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_conciliacao', 'conciliacao'],
+        3,
+        'Sem permissao para auditar vinculos.'
+      );
     }
 
     const body = readFixVinculosBody(bodyResult.data);
     const companyId = resolveScopedCompanyId(scope, body?.companyId);
-    if (!companyId) return json({ error: 'Selecione uma empresa para auditar vínculos.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!companyId)
+      return json(
+        { error: 'Selecione uma empresa para auditar vínculos.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
 
     const dryRun = Boolean(body?.dryRun ?? true);
     const limit = Math.min(5000, Math.max(1, Number(body?.limit || 500)));
@@ -550,7 +568,9 @@ export async function handleConciliacaoFixVinculosPost(event: RequestEvent) {
       .limit(10000);
 
     if (candidateStart && candidateEnd) {
-      candidateQuery = candidateQuery.gte('data_venda', candidateStart).lte('data_venda', candidateEnd);
+      candidateQuery = candidateQuery
+        .gte('data_venda', candidateStart)
+        .lte('data_venda', candidateEnd);
     }
 
     const { data: candidateData, error: candidateErr } = await candidateQuery;
@@ -572,7 +592,9 @@ export async function handleConciliacaoFixVinculosPost(event: RequestEvent) {
       const batch = allReceiptIds.slice(index, index + 200);
       const { data, error } = await client
         .from('vendas_recibos_rateio')
-        .select('id, venda_recibo_id, vendedor_origem_id, vendedor_destino_id, percentual_origem, percentual_destino, ativo, observacao')
+        .select(
+          'id, venda_recibo_id, vendedor_origem_id, vendedor_destino_id, percentual_origem, percentual_destino, ativo, observacao'
+        )
         .eq('ativo', true)
         .in('venda_recibo_id', batch);
       if (error) throw error;
@@ -628,44 +650,52 @@ export async function handleConciliacaoFixVinculosPost(event: RequestEvent) {
       });
 
       if (linkedReciboId && !linkedRecibo) {
-        issues.push(issue(
-          'RECIBO_INEXISTENTE',
-          'critical',
-          'Recibo vinculado nao existe',
-          'A conciliacao guarda um venda_recibo_id que nao foi encontrado em vendas_recibos.',
-          linkedReciboId,
-          null
-        ));
+        issues.push(
+          issue(
+            'RECIBO_INEXISTENTE',
+            'critical',
+            'Recibo vinculado nao existe',
+            'A conciliacao guarda um venda_recibo_id que nao foi encontrado em vendas_recibos.',
+            linkedReciboId,
+            null
+          )
+        );
       }
 
       if (!linkedReciboId) {
         if (uniqueCandidates.length === 1) {
-          issues.push(issue(
-            'SEM_VINCULO_COM_CANDIDATO',
-            'warning',
-            'Sem vinculo, mas ha candidato',
-            `Existe um recibo de venda com o mesmo documento: ${receiptLabel(uniqueCandidates[0])}. Rode a conciliacao pendente ou audite manualmente antes de atribuir ranking.`,
-            receiptLabel(uniqueCandidates[0]),
-            null
-          ));
+          issues.push(
+            issue(
+              'SEM_VINCULO_COM_CANDIDATO',
+              'warning',
+              'Sem vinculo, mas ha candidato',
+              `Existe um recibo de venda com o mesmo documento: ${receiptLabel(uniqueCandidates[0])}. Rode a conciliacao pendente ou audite manualmente antes de atribuir ranking.`,
+              receiptLabel(uniqueCandidates[0]),
+              null
+            )
+          );
         } else if (uniqueCandidates.length > 1 && !isManualRepeatingDoc(documento)) {
-          issues.push(issue(
-            'MULTIPLOS_CANDIDATOS',
-            'warning',
-            'Mais de um candidato para o documento',
-            `Foram encontrados ${uniqueCandidates.length} recibos de venda parecidos com este documento.`,
-            uniqueCandidates.length,
-            null
-          ));
+          issues.push(
+            issue(
+              'MULTIPLOS_CANDIDATOS',
+              'warning',
+              'Mais de um candidato para o documento',
+              `Foram encontrados ${uniqueCandidates.length} recibos de venda parecidos com este documento.`,
+              uniqueCandidates.length,
+              null
+            )
+          );
         } else if (isNumericReceiptLike(documento)) {
-          issues.push(issue(
-            'SEM_VINCULO_RECIBO',
-            'warning',
-            'Recibo sem vínculo de venda',
-            'O documento parece ser um recibo numérico, mas nao esta ligado a vendas_recibos.',
-            documento,
-            null
-          ));
+          issues.push(
+            issue(
+              'SEM_VINCULO_RECIBO',
+              'warning',
+              'Recibo sem vínculo de venda',
+              'O documento parece ser um recibo numérico, mas nao esta ligado a vendas_recibos.',
+              documento,
+              null
+            )
+          );
         }
       }
 
@@ -675,156 +705,190 @@ export async function handleConciliacaoFixVinculosPost(event: RequestEvent) {
         const reciboNumero = receiptLabel(linkedRecibo);
 
         if (!receiptMatchesDocument(row, linkedRecibo)) {
-          issues.push(issue(
-            'RECIBO_NUMERO_DIVERGENTE',
-            'critical',
-            'Documento nao confere com o recibo vinculado',
-            'O numero da conciliacao nao bate com o numero do recibo de venda vinculado.',
-            documento,
-            reciboNumero
-          ));
+          issues.push(
+            issue(
+              'RECIBO_NUMERO_DIVERGENTE',
+              'critical',
+              'Documento nao confere com o recibo vinculado',
+              'O numero da conciliacao nao bate com o numero do recibo de venda vinculado.',
+              documento,
+              reciboNumero
+            )
+          );
         }
 
         if (!venda) {
-          issues.push(issue(
-            'VENDA_INEXISTENTE',
-            'critical',
-            'Venda do recibo nao encontrada',
-            'O recibo vinculado nao retornou uma venda correspondente.',
-            linkedRecibo.venda_id,
-            null
-          ));
+          issues.push(
+            issue(
+              'VENDA_INEXISTENTE',
+              'critical',
+              'Venda do recibo nao encontrada',
+              'O recibo vinculado nao retornou uma venda correspondente.',
+              linkedRecibo.venda_id,
+              null
+            )
+          );
         } else {
           const vendaCompanyId = toStr(venda?.company_id);
           const reciboVendaId = toStr(linkedRecibo?.venda_id);
           const vendedorVendaId = toStr(venda?.vendedor_id);
 
           if (vendaCompanyId !== companyId) {
-            issues.push(issue(
-              'EMPRESA_DIVERGENTE',
-              'critical',
-              'Empresa divergente',
-              'O recibo vinculado pertence a outra empresa.',
-              companyId,
-              vendaCompanyId
-            ));
+            issues.push(
+              issue(
+                'EMPRESA_DIVERGENTE',
+                'critical',
+                'Empresa divergente',
+                'O recibo vinculado pertence a outra empresa.',
+                companyId,
+                vendaCompanyId
+              )
+            );
           }
 
           if (linkedVendaId && reciboVendaId && linkedVendaId !== reciboVendaId) {
-            issues.push(issue(
-              'VENDA_DIVERGENTE',
-              'critical',
-              'Venda divergente',
-              'conciliacao_recibos.venda_id nao e a venda dona do venda_recibo_id vinculado.',
-              reciboVendaId,
-              linkedVendaId
-            ));
+            issues.push(
+              issue(
+                'VENDA_DIVERGENTE',
+                'critical',
+                'Venda divergente',
+                'conciliacao_recibos.venda_id nao e a venda dona do venda_recibo_id vinculado.',
+                reciboVendaId,
+                linkedVendaId
+              )
+            );
           }
 
-          if (Boolean(venda?.cancelada)) {
-            issues.push(issue(
-              'VENDA_CANCELADA',
-              'warning',
-              'Venda vinculada esta cancelada',
-              'A conciliacao esta ligada a uma venda marcada como cancelada.',
-              'venda ativa',
-              'cancelada'
-            ));
+          if (venda?.cancelada) {
+            issues.push(
+              issue(
+                'VENDA_CANCELADA',
+                'warning',
+                'Venda vinculada esta cancelada',
+                'A conciliacao esta ligada a uma venda marcada como cancelada.',
+                'venda ativa',
+                'cancelada'
+              )
+            );
           }
 
           if (rankingVendedorId && vendedorVendaId && rankingVendedorId !== vendedorVendaId) {
-            issues.push(issue(
-              'VENDEDOR_RANKING_DIVERGENTE',
-              'warning',
-              'Vendedor da venda difere da conciliacao',
-              'A venda vinculada esta em um vendedor diferente do vendedor atribuido na conciliacao/ranking. Se a conciliacao estiver correta, ajuste a venda; se a venda estiver correta, ajuste o ranking. Rateios devem ficar em ajustes de vendas.',
-              userNameById.get(rankingVendedorId) || rankingVendedorId,
-              userNameById.get(vendedorVendaId) || vendedorVendaId
-            ));
+            issues.push(
+              issue(
+                'VENDEDOR_RANKING_DIVERGENTE',
+                'warning',
+                'Vendedor da venda difere da conciliacao',
+                'A venda vinculada esta em um vendedor diferente do vendedor atribuido na conciliacao/ranking. Se a conciliacao estiver correta, ajuste a venda; se a venda estiver correta, ajuste o ranking. Rateios devem ficar em ajustes de vendas.',
+                userNameById.get(rankingVendedorId) || rankingVendedorId,
+                userNameById.get(vendedorVendaId) || vendedorVendaId
+              )
+            );
           }
 
           if (!rankingVendedorId && vendedorVendaId) {
-            issues.push(issue(
-              'VENDEDOR_RANKING_VAZIO',
-              'warning',
-              'Vendedor de ranking vazio',
-              'A venda vinculada tem vendedor, mas a conciliacao ainda nao refletiu esse vendedor no ranking.',
-              userNameById.get(vendedorVendaId) || vendedorVendaId,
-              null
-            ));
+            issues.push(
+              issue(
+                'VENDEDOR_RANKING_VAZIO',
+                'warning',
+                'Vendedor de ranking vazio',
+                'A venda vinculada tem vendedor, mas a conciliacao ainda nao refletiu esse vendedor no ranking.',
+                userNameById.get(vendedorVendaId) || vendedorVendaId,
+                null
+              )
+            );
           }
 
-          if (monthKey(venda?.data_lancamento) && monthKey(linkedRecibo?.data_venda) && monthKey(venda?.data_lancamento) !== monthKey(linkedRecibo?.data_venda)) {
-            issues.push(issue(
-              'DATA_LANCAMENTO_DIVERGENTE',
-              'warning',
-              'Data de lancamento em outro mes',
-              'A venda pode aparecer em telas que usam data_lancamento/created_at, mesmo com recibo em outro mes.',
-              linkedRecibo.data_venda,
-              venda.data_lancamento
-            ));
+          if (
+            monthKey(venda?.data_lancamento) &&
+            monthKey(linkedRecibo?.data_venda) &&
+            monthKey(venda?.data_lancamento) !== monthKey(linkedRecibo?.data_venda)
+          ) {
+            issues.push(
+              issue(
+                'DATA_LANCAMENTO_DIVERGENTE',
+                'warning',
+                'Data de lancamento em outro mes',
+                'A venda pode aparecer em telas que usam data_lancamento/created_at, mesmo com recibo em outro mes.',
+                linkedRecibo.data_venda,
+                venda.data_lancamento
+              )
+            );
           }
 
           if (rateio) {
-            issues.push(issue(
-              'RATEIO_ATIVO',
-              'info',
-              'Recibo tem divisao ativa',
-              `Rateio ${toNumber(rateio.percentual_origem).toFixed(2)}% / ${toNumber(rateio.percentual_destino).toFixed(2)}%.`,
-              userNameById.get(toStr(rateio.vendedor_origem_id)) || toStr(rateio.vendedor_origem_id),
-              userNameById.get(toStr(rateio.vendedor_destino_id)) || toStr(rateio.vendedor_destino_id)
-            ));
+            issues.push(
+              issue(
+                'RATEIO_ATIVO',
+                'info',
+                'Recibo tem divisao ativa',
+                `Rateio ${toNumber(rateio.percentual_origem).toFixed(2)}% / ${toNumber(rateio.percentual_destino).toFixed(2)}%.`,
+                userNameById.get(toStr(rateio.vendedor_origem_id)) ||
+                  toStr(rateio.vendedor_origem_id),
+                userNameById.get(toStr(rateio.vendedor_destino_id)) ||
+                  toStr(rateio.vendedor_destino_id)
+              )
+            );
           }
         }
 
         const valorRav = Math.max(0, toNumber(linkedRecibo.valor_rav));
-        const sistemaValorRanking = roundMoney(Math.max(0, toNumber(linkedRecibo.valor_total) - valorRav));
+        const sistemaValorRanking = roundMoney(
+          Math.max(0, toNumber(linkedRecibo.valor_total) - valorRav)
+        );
         const sistemaTaxas = roundMoney(toNumber(linkedRecibo.valor_taxas));
         const conciliacaoValorReal = roundMoney(toNumber(metrics.valorVendaReal));
         const conciliacaoTaxas = roundMoney(toNumber(row?.valor_taxas));
 
         if (!moneyMatches(conciliacaoValorReal, sistemaValorRanking)) {
-          issues.push(issue(
-            'VALOR_DIVERGENTE',
-            'warning',
-            'Valor da conciliacao difere da venda',
-            'A base da conciliacao nao bate com o valor do recibo de venda para ranking.',
-            sistemaValorRanking,
-            conciliacaoValorReal
-          ));
+          issues.push(
+            issue(
+              'VALOR_DIVERGENTE',
+              'warning',
+              'Valor da conciliacao difere da venda',
+              'A base da conciliacao nao bate com o valor do recibo de venda para ranking.',
+              sistemaValorRanking,
+              conciliacaoValorReal
+            )
+          );
         }
 
         if (!moneyMatches(conciliacaoTaxas, sistemaTaxas)) {
-          issues.push(issue(
-            'TAXAS_DIVERGENTES',
-            'warning',
-            'Taxas divergentes',
-            'As taxas importadas na conciliacao nao batem com as taxas do recibo de venda.',
-            sistemaTaxas,
-            conciliacaoTaxas
-          ));
+          issues.push(
+            issue(
+              'TAXAS_DIVERGENTES',
+              'warning',
+              'Taxas divergentes',
+              'As taxas importadas na conciliacao nao batem com as taxas do recibo de venda.',
+              sistemaTaxas,
+              conciliacaoTaxas
+            )
+          );
         }
 
         if (valorRav > 0) {
-          issues.push(issue(
-            'RAV_ABATIDO',
-            'info',
-            'Recibo possui RAV',
-            'O RAV nao deve subir para ranking/comissao; a auditoria compara o valor da venda ja abatendo o RAV.',
-            valorRav,
-            null
-          ));
+          issues.push(
+            issue(
+              'RAV_ABATIDO',
+              'info',
+              'Recibo possui RAV',
+              'O RAV nao deve subir para ranking/comissao; a auditoria compara o valor da venda ja abatendo o RAV.',
+              valorRav,
+              null
+            )
+          );
         }
 
         if (uniqueCandidates.length > 1 && !isManualRepeatingDoc(documento)) {
-          issues.push(issue(
-            'DUPLICIDADE_CANDIDATOS',
-            'warning',
-            'Documento com mais de um candidato',
-            `Foram encontrados ${uniqueCandidates.length} recibos de venda que podem casar com este documento.`,
-            uniqueCandidates.length,
-            reciboNumero
-          ));
+          issues.push(
+            issue(
+              'DUPLICIDADE_CANDIDATOS',
+              'warning',
+              'Documento com mais de um candidato',
+              `Foram encontrados ${uniqueCandidates.length} recibos de venda que podem casar com este documento.`,
+              uniqueCandidates.length,
+              reciboNumero
+            )
+          );
         }
       }
 
@@ -847,7 +911,9 @@ export async function handleConciliacaoFixVinculosPost(event: RequestEvent) {
           venda_id: linkedVendaId || null,
           venda_recibo_id: linkedReciboId || null,
           ranking_vendedor_id: rankingVendedorId || null,
-          ranking_vendedor_nome: rankingVendedorId ? userNameById.get(rankingVendedorId) || rankingVendedorId : null,
+          ranking_vendedor_nome: rankingVendedorId
+            ? userNameById.get(rankingVendedorId) || rankingVendedorId
+            : null,
           valor_venda_real: roundMoney(toNumber(metrics.valorVendaReal)),
           valor_taxas: roundMoney(toNumber(row?.valor_taxas))
         },
@@ -857,21 +923,32 @@ export async function handleConciliacaoFixVinculosPost(event: RequestEvent) {
               venda_recibo_id: toStr(linkedRecibo?.id) || null,
               numero_recibo: receiptLabel(linkedRecibo),
               vendedor_id: toStr(linkedVenda?.vendedor_id) || null,
-              vendedor_nome: toStr(linkedVenda?.vendedor_id) ? userNameById.get(toStr(linkedVenda?.vendedor_id)) || toStr(linkedVenda?.vendedor_id) : null,
+              vendedor_nome: toStr(linkedVenda?.vendedor_id)
+                ? userNameById.get(toStr(linkedVenda?.vendedor_id)) ||
+                  toStr(linkedVenda?.vendedor_id)
+                : null,
               data_venda: linkedRecibo?.data_venda || linkedVenda?.data_venda || null,
               data_lancamento: linkedVenda?.data_lancamento || null,
               valor_total: roundMoney(toNumber(linkedRecibo?.valor_total)),
               valor_rav: roundMoney(toNumber(linkedRecibo?.valor_rav)),
-              valor_ranking: roundMoney(Math.max(0, toNumber(linkedRecibo?.valor_total) - Math.max(0, toNumber(linkedRecibo?.valor_rav)))),
+              valor_ranking: roundMoney(
+                Math.max(
+                  0,
+                  toNumber(linkedRecibo?.valor_total) -
+                    Math.max(0, toNumber(linkedRecibo?.valor_rav))
+                )
+              ),
               valor_taxas: roundMoney(toNumber(linkedRecibo?.valor_taxas)),
               cancelada: Boolean(linkedVenda?.cancelada),
               produto: linkedTipoProduto?.nome || linkedRecibo?.tipo_pacote || null,
               rateio: rateio
                 ? {
                     vendedor_origem_id: toStr(rateio?.vendedor_origem_id) || null,
-                    vendedor_origem_nome: userNameById.get(toStr(rateio?.vendedor_origem_id)) || null,
+                    vendedor_origem_nome:
+                      userNameById.get(toStr(rateio?.vendedor_origem_id)) || null,
                     vendedor_destino_id: toStr(rateio?.vendedor_destino_id) || null,
-                    vendedor_destino_nome: userNameById.get(toStr(rateio?.vendedor_destino_id)) || null,
+                    vendedor_destino_nome:
+                      userNameById.get(toStr(rateio?.vendedor_destino_id)) || null,
                     percentual_origem: toNumber(rateio?.percentual_origem),
                     percentual_destino: toNumber(rateio?.percentual_destino)
                   }
@@ -905,7 +982,14 @@ export async function handleConciliacaoFixVinculosPost(event: RequestEvent) {
         }
         return summary;
       },
-      { critical: 0, warnings: 0, infos: 0, rowsWithIssues: 0, corrigiveis: 0, fixableIds: [] as string[] }
+      {
+        critical: 0,
+        warnings: 0,
+        infos: 0,
+        rowsWithIssues: 0,
+        corrigiveis: 0,
+        fixableIds: [] as string[]
+      }
     );
 
     const { critical, warnings, infos, rowsWithIssues, corrigiveis, fixableIds } = diagnostico;
@@ -930,7 +1014,9 @@ export async function handleConciliacaoFixVinculosPost(event: RequestEvent) {
           .eq('company_id', companyId);
 
         if (fixErr) {
-          logServerError('[fix-vinculos] erro ao corrigir lote', fixErr, { batch_size: batch.length });
+          logServerError('[fix-vinculos] erro ao corrigir lote', fixErr, {
+            batch_size: batch.length
+          });
         } else {
           corrigidos += batch.length;
         }
@@ -943,21 +1029,22 @@ export async function handleConciliacaoFixVinculosPost(event: RequestEvent) {
       invalidateSalesReadModels({ companyIds: [companyId], userId: user.id });
     }
 
-    return json({
-      ok: true,
-      checked: rows.length,
-      critical,
-      warnings,
-      infos,
-      issues: rowsWithIssues,
-      incorretos: critical,
-      corrigiveis: remainingCorrigiveis,
-      corrigidos,
-      dryRun,
-      detalhes: detalhes
-        .filter((item) => item.issues.length > 0)
-        .slice(0, 200)
-    }, { headers: NO_STORE_HEADERS });
+    return json(
+      {
+        ok: true,
+        checked: rows.length,
+        critical,
+        warnings,
+        infos,
+        issues: rowsWithIssues,
+        incorretos: critical,
+        corrigiveis: remainingCorrigiveis,
+        corrigidos,
+        dryRun,
+        detalhes: detalhes.filter((item) => item.issues.length > 0).slice(0, 200)
+      },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao auditar vinculos de conciliacao.');
   }

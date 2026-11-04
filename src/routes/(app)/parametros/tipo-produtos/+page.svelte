@@ -51,8 +51,10 @@
     { value: 'outro', label: 'Outro' }
   ];
 
-  $: canEdit = !$permissoes.ready || $permissoes.isSystemAdmin || permissoes.can('parametros', 'edit');
-  $: canDelete = !$permissoes.ready || $permissoes.isSystemAdmin || permissoes.can('parametros', 'admin');
+  $: canEdit =
+    !$permissoes.ready || $permissoes.isSystemAdmin || permissoes.can('parametros', 'edit');
+  $: canDelete =
+    !$permissoes.ready || $permissoes.isSystemAdmin || permissoes.can('parametros', 'admin');
 
   const columns = [
     { key: 'nome', label: 'Nome', sortable: true },
@@ -82,7 +84,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const payload = await apiGet<{ items?: TipoProduto[] }>('/api/v1/tipo-produtos', { all: 1 }, request.signal);
+      const payload = await apiGet<{ items?: TipoProduto[] }>(
+        '/api/v1/tipo-produtos',
+        { all: 1 },
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       tipos = payload.items || [];
     } catch (err) {
@@ -111,7 +117,10 @@
   }
 
   async function save() {
-    if (!form.nome.trim()) { toast.error('Nome obrigatório.'); return; }
+    if (!form.nome.trim()) {
+      toast.error('Nome obrigatório.');
+      return;
+    }
 
     saving = true;
     try {
@@ -133,7 +142,12 @@
   }
 
   async function deleteTipo(id: string) {
-    if (!(await confirmAction('Deseja excluir este tipo de produto? Ele não pode estar vinculado a recibos.'))) return;
+    if (
+      !(await confirmAction(
+        'Deseja excluir este tipo de produto? Ele não pode estar vinculado a recibos.'
+      ))
+    )
+      return;
     deletingId = id;
     try {
       await apiDelete('/api/v1/tipo-produtos', { id });
@@ -157,13 +171,12 @@
   title="Tipos de Produto"
   subtitle="Gerencie a lista global de tipos de produto utilizados nos recibos."
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Parâmetros', href: '/parametros' },
-    { label: 'Tipos de Produto' }
-  ]}
+  breadcrumbs={[{ label: 'Parâmetros', href: '/parametros' }, { label: 'Tipos de Produto' }]}
   actions={[
     { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw },
-    ...(canEdit ? [{ label: 'Novo Tipo', onClick: openNew, variant: 'primary' as const, icon: Plus }] : [])
+    ...(canEdit
+      ? [{ label: 'Novo Tipo', onClick: openNew, variant: 'primary' as const, icon: Plus }]
+      : [])
   ]}
 />
 
@@ -208,10 +221,35 @@
 >
   <div class="space-y-4">
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <FieldInput id="tprod-nome" label="Nome" required={true} bind:value={form.nome} placeholder="Ex: Pacote Aéreo + Hotel" class_name="w-full" />
-      <FieldSelect id="tprod-tipo" label="Tipo" bind:value={form.tipo} options={TIPOS} placeholder="" class_name="w-full" />
+      <FieldInput
+        id="tprod-nome"
+        label="Nome"
+        required={true}
+        bind:value={form.nome}
+        placeholder="Ex: Pacote Aéreo + Hotel"
+        class_name="w-full"
+      />
+      <FieldSelect
+        id="tprod-tipo"
+        label="Tipo"
+        bind:value={form.tipo}
+        options={TIPOS}
+        placeholder=""
+        class_name="w-full"
+      />
     </div>
-    <FieldInput id="tprod-descricao" label="Descrição" bind:value={form.descricao} placeholder="Descrição opcional" class_name="w-full" />
-    <FieldCheckbox label="Tipo ativo" bind:checked={form.ativo} color="financeiro" class_name="rounded-xl border border-slate-200 bg-white px-3 py-2" />
+    <FieldInput
+      id="tprod-descricao"
+      label="Descrição"
+      bind:value={form.descricao}
+      placeholder="Descrição opcional"
+      class_name="w-full"
+    />
+    <FieldCheckbox
+      label="Tipo ativo"
+      bind:checked={form.ativo}
+      color="financeiro"
+      class_name="rounded-xl border border-slate-200 bg-white px-3 py-2"
+    />
   </div>
 </Dialog>

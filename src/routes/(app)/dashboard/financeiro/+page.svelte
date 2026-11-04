@@ -75,7 +75,9 @@
   }
 
   function monthRange(monthKey: string) {
-    const [yearRaw, monthRaw] = String(monthKey || '').split('-').map(Number);
+    const [yearRaw, monthRaw] = String(monthKey || '')
+      .split('-')
+      .map(Number);
     const year = Number.isFinite(yearRaw) ? yearRaw : new Date().getFullYear();
     const month = Number.isFinite(monthRaw) ? monthRaw : new Date().getMonth() + 1;
     const start = new Date(year, month - 1, 1);
@@ -120,11 +122,16 @@
     dashboardAbortController = controller;
     loading = true;
     try {
-      const caixaPayload = await apiGet<CaixaSummary>('/api/v1/financeiro/caixa', {
+      const caixaPayload = await apiGet<CaixaSummary>(
+        '/api/v1/financeiro/caixa',
+        {
           data_inicio: periodo.inicio,
           data_fim: periodo.fim,
           empresa_id: empresaId || undefined
-        }, controller.signal, 60_000);
+        },
+        controller.signal,
+        60_000
+      );
       if (requestSeq !== dashboardRequestSeq) return;
       caixa = caixaPayload;
     } catch (error: unknown) {
@@ -175,7 +182,13 @@
 <div class="space-y-6">
   <Card title="Período" color="financeiro">
     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-      <FieldInput id="financeiro-mes" label="Mês" type="month" bind:value={mes} class_name="w-full" />
+      <FieldInput
+        id="financeiro-mes"
+        label="Mês"
+        type="month"
+        bind:value={mes}
+        class_name="w-full"
+      />
       {#if canSelectEmpresa}
         <FieldSelect
           id="financeiro-dashboard-empresa"
@@ -189,7 +202,7 @@
     </div>
   </Card>
 
-  <KPIGrid columns={4} loading={loading}>
+  <KPIGrid columns={4} {loading}>
     <KPICard
       title="Entradas"
       value={money(resumoCaixa.totalEntradas)}
@@ -216,25 +229,54 @@
   <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
     <Card title="Fila financeira" subtitle="Atalhos do fluxo operacional" color="financeiro">
       <div class="grid gap-3 md:grid-cols-2">
-        <Button href="/financeiro/ajustes-vendas" variant="outline" color="financeiro" class_name="justify-start! rounded-xl! p-4!">
+        <Button
+          href="/financeiro/ajustes-vendas"
+          variant="outline"
+          color="financeiro"
+          class_name="justify-start! rounded-xl! p-4!"
+        >
           <Settings size={18} class="mr-3 text-orange-600" /> Ajustes de vendas
         </Button>
-        <Button href="/financeiro/comissoes" variant="outline" color="financeiro" class_name="justify-start! rounded-xl! p-4!">
+        <Button
+          href="/financeiro/comissoes"
+          variant="outline"
+          color="financeiro"
+          class_name="justify-start! rounded-xl! p-4!"
+        >
           <Wallet size={18} class="mr-3 text-orange-600" /> Comissionamento
         </Button>
-        <Button href="/vendas" variant="outline" color="financeiro" class_name="justify-start! rounded-xl! p-4!">
+        <Button
+          href="/vendas"
+          variant="outline"
+          color="financeiro"
+          class_name="justify-start! rounded-xl! p-4!"
+        >
           <ShoppingCart size={18} class="mr-3 text-orange-600" /> Vendas e pagamentos
         </Button>
-        <Button href="/financeiro/formas-pagamento" variant="outline" color="financeiro" class_name="justify-start! rounded-xl! p-4!">
+        <Button
+          href="/financeiro/formas-pagamento"
+          variant="outline"
+          color="financeiro"
+          class_name="justify-start! rounded-xl! p-4!"
+        >
           <CreditCard size={18} class="mr-3 text-orange-600" /> Formas de pagamento
         </Button>
-        <Button href="/financeiro/notas-fiscais" variant="outline" color="financeiro" class_name="justify-start! rounded-xl! p-4!">
+        <Button
+          href="/financeiro/notas-fiscais"
+          variant="outline"
+          color="financeiro"
+          class_name="justify-start! rounded-xl! p-4!"
+        >
           <ReceiptText size={18} class="mr-3 text-orange-600" /> Notas fiscais
         </Button>
       </div>
     </Card>
 
-    <Card title="Leitura do mês" subtitle="Indicadores financeiros sem dados comerciais" color="financeiro">
+    <Card
+      title="Leitura do mês"
+      subtitle="Indicadores financeiros sem dados comerciais"
+      color="financeiro"
+    >
       <div class="space-y-4">
         <div class="flex items-center justify-between rounded-xl border border-slate-200 p-4">
           <div class="flex items-center gap-3">

@@ -13,7 +13,11 @@
 import { eq } from 'drizzle-orm';
 import { getDb } from '$lib/server/db/client';
 import { membrosEmpresa, user, type Papel } from '$lib/server/db/schema';
-import { LegacyAccessDisabledError, resolveLegacyAccessScope, type LegacyAccessScope } from '$lib/server/auth/legacy-scope';
+import {
+  LegacyAccessDisabledError,
+  resolveLegacyAccessScope,
+  type LegacyAccessScope
+} from '$lib/server/auth/legacy-scope';
 import { createAuth } from '$lib/auth';
 
 export type AuthContext = {
@@ -43,7 +47,7 @@ export async function resolveAuthContext(
 
   // 1. Verificar sessão Better Auth
   const sessionResult = await auth.api.getSession({
-    headers,
+    headers
   });
 
   if (!sessionResult?.user || !sessionResult?.session) {
@@ -88,7 +92,7 @@ export async function resolveAuthContext(
     userEmail: sessionUser.email,
     empresaId: userRow.empresaId,
     papel: membro.papel as Papel,
-    ...(legacyScope ? { legacyScope } : {}),
+    ...(legacyScope ? { legacyScope } : {})
   };
 }
 

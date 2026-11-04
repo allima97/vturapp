@@ -94,7 +94,11 @@ export function isMenuItemHidden(prefs: MenuPrefsV1, itemKey: string) {
   return prefs.hidden.includes(itemKey);
 }
 
-export function toggleMenuItemHidden(prefs: MenuPrefsV1, itemKey: string, next?: boolean): MenuPrefsV1 {
+export function toggleMenuItemHidden(
+  prefs: MenuPrefsV1,
+  itemKey: string,
+  next?: boolean
+): MenuPrefsV1 {
   const set = new Set(prefs.hidden);
   const shouldHide = typeof next === 'boolean' ? next : !set.has(itemKey);
   if (shouldHide) set.add(itemKey);
@@ -102,7 +106,11 @@ export function toggleMenuItemHidden(prefs: MenuPrefsV1, itemKey: string, next?:
   return { ...prefs, hidden: Array.from(set) };
 }
 
-export function getEffectiveItemSection(prefs: MenuPrefsV1, itemKey: string, defaultSection: string): string {
+export function getEffectiveItemSection(
+  prefs: MenuPrefsV1,
+  itemKey: string,
+  defaultSection: string
+): string {
   const override = prefs.section?.[itemKey];
   return (override ? String(override) : '').trim() || defaultSection;
 }
@@ -129,14 +137,22 @@ export function setMenuItemSection(
   return { ...prefs, section: map };
 }
 
-export function getEffectiveSectionOrder(prefs: MenuPrefsV1, sectionKey: string, itemKeys: string[]): string[] {
+export function getEffectiveSectionOrder(
+  prefs: MenuPrefsV1,
+  sectionKey: string,
+  itemKeys: string[]
+): string[] {
   const available = compactStringValues(itemKeys);
   const stored = (prefs.order?.[sectionKey] || []).filter((key) => available.includes(key));
   const remaining = available.filter((key) => !stored.includes(key));
   return [...stored, ...remaining];
 }
 
-export function setSectionOrder(prefs: MenuPrefsV1, sectionKey: string, nextOrder: string[]): MenuPrefsV1 {
+export function setSectionOrder(
+  prefs: MenuPrefsV1,
+  sectionKey: string,
+  nextOrder: string[]
+): MenuPrefsV1 {
   const cleaned = compactStringValues(nextOrder);
   return { ...prefs, order: { ...(prefs.order || {}), [sectionKey]: cleaned } };
 }

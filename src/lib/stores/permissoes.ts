@@ -17,10 +17,7 @@
 import { writable, derived, get } from 'svelte/store';
 import type { User } from '$lib/stores/auth';
 import { toUserMessage } from '$lib/utils/errors';
-import {
-  MAPA_MODULOS,
-  listarModulosComHeranca,
-} from '$lib/config/modulos';
+import { MAPA_MODULOS, listarModulosComHeranca } from '$lib/config/modulos';
 
 // ---------------------------------------------------------------------------
 // TIPOS
@@ -70,12 +67,18 @@ export interface PermissoesState {
 /** Converte nível textual em número para comparação */
 const permLevel = (p: PermissaoNivel | undefined): number => {
   switch (p) {
-    case 'admin':  return 5;
-    case 'delete': return 4;
-    case 'edit':   return 3;
-    case 'create': return 2;
-    case 'view':   return 1;
-    default:       return 0;
+    case 'admin':
+      return 5;
+    case 'delete':
+      return 4;
+    case 'edit':
+      return 3;
+    case 'create':
+      return 2;
+    case 'view':
+      return 1;
+    default:
+      return 0;
   }
 };
 
@@ -88,10 +91,10 @@ const permLevel = (p: PermissaoNivel | undefined): number => {
 function resolvePapel(tipoNome: string, usoIndividual: boolean): Papel {
   const nome = tipoNome.toUpperCase();
   // Admin do sistema prevalece sobre uso_individual
-  if (nome.includes('ADMIN'))   return 'ADMIN';
-  if (nome.includes('MASTER'))  return 'MASTER';
+  if (nome.includes('ADMIN')) return 'ADMIN';
+  if (nome.includes('MASTER')) return 'MASTER';
   if (nome.includes('FINANCEIRO')) return 'FINANCEIRO';
-  if (nome.includes('GESTOR'))  return 'GESTOR';
+  if (nome.includes('GESTOR')) return 'GESTOR';
   if (usoIndividual) return 'VENDEDOR';
   if (nome.includes('VENDEDOR')) return 'VENDEDOR';
   return 'OUTRO';
@@ -110,16 +113,13 @@ function resolveIsSystemAdmin(tipoNome: string, _usoIndividual: boolean): boolea
  * escolhe a melhor (ativo > maior nível > mais recente).
  * Portabilizado de pickBestAcesso do vtur-app.
  */
-function pickBestPermissao(
-  entries: Array<{ permissao: string; ativo: boolean }>,
-): PermissaoNivel {
+function pickBestPermissao(entries: Array<{ permissao: string; ativo: boolean }>): PermissaoNivel {
   // Prioriza entradas ativas; entre as ativas, pega a de maior nível
   const ativas = entries.filter((e) => e.ativo);
   const fonte = ativas.length > 0 ? ativas : entries;
 
-  const sorted = [...fonte].sort((a, b) =>
-    permLevel(b.permissao as PermissaoNivel) -
-    permLevel(a.permissao as PermissaoNivel)
+  const sorted = [...fonte].sort(
+    (a, b) => permLevel(b.permissao as PermissaoNivel) - permLevel(a.permissao as PermissaoNivel)
   );
 
   const best = sorted[0]?.permissao as PermissaoNivel | undefined;
@@ -150,7 +150,7 @@ const initialState: PermissoesState = {
   permissoes: {},
   ready: false,
   loading: false,
-  error: null,
+  error: null
 };
 
 // ---------------------------------------------------------------------------
@@ -167,7 +167,9 @@ function createPermissoesStore() {
 
   const isPermissionOrSessionError = (error: unknown) => {
     const code = String(getErrorField(error, 'code') || '').toUpperCase();
-    const status = Number(getErrorField(error, 'status') || getErrorField(error, 'statusCode') || 0);
+    const status = Number(
+      getErrorField(error, 'status') || getErrorField(error, 'statusCode') || 0
+    );
     const message = String(getErrorField(error, 'message') || '').toLowerCase();
     return (
       code === '42501' ||
@@ -192,14 +194,17 @@ function createPermissoesStore() {
   // ------------------------------------------------------------------
   // INIT — carrega tudo do Dados
   // ------------------------------------------------------------------
-  async function init(dados: { auth: { getUser: () => Promise<any>; getSession: () => Promise<any> }; from: (table: string) => any }): Promise<void> {
+  async function init(dados: {
+    auth: { getUser: () => Promise<any>; getSession: () => Promise<any> };
+    from: (table: string) => any;
+  }): Promise<void> {
     update((s) => ({ ...s, loading: true, error: null }));
 
     try {
       let user: User | null = null;
       try {
         const {
-          data: { user: directUser },
+          data: { user: directUser }
         } = await dados.auth.getUser();
         user = directUser;
       } catch (getUserError) {
@@ -208,7 +213,7 @@ function createPermissoesStore() {
         }
 
         const {
-          data: { session },
+          data: { session }
         } = await dados.auth.getSession();
         user = session?.user ?? null;
       }
@@ -229,13 +234,8 @@ function createPermissoesStore() {
         throw profileErr;
       }
 
-      const userTypeData = profile?.user_types as
-        | { name: string }[]
-        | { name: string }
-        | null;
-      const userTypeName = Array.isArray(userTypeData)
-        ? userTypeData[0]?.name
-        : userTypeData?.name;
+      const userTypeData = profile?.user_types as { name: string }[] | { name: string } | null;
+      const userTypeName = Array.isArray(userTypeData) ? userTypeData[0]?.name : userTypeData?.name;
       const userType = String(userTypeName || '').toUpperCase();
       const usoIndividual = Boolean(profile?.uso_individual);
 
@@ -256,7 +256,9 @@ function createPermissoesStore() {
       // Agrupa por módulo para escolher o melhor quando houver duplicatas
       const grouped: Record<string, Array<{ permissao: string; ativo: boolean }>> = {};
       for (const a of acessosRaw || []) {
-        const key = String(a.modulo || '').toLowerCase().trim();
+        const key = String(a.modulo || '')
+          .toLowerCase()
+          .trim();
         if (!key) continue;
         if (!grouped[key]) grouped[key] = [];
         grouped[key].push({ permissao: a.permissao, ativo: Boolean(a.ativo) });
@@ -280,7 +282,7 @@ function createPermissoesStore() {
 
         if (!settingsResp.error) {
           disabledModules = (settingsResp.data || []).map((m: any) =>
-            String(m.module_key || '').toLowerCase(),
+            String(m.module_key || '').toLowerCase()
           );
         } else {
           const code = String(settingsResp.error.code || '').toLowerCase();
@@ -296,7 +298,7 @@ function createPermissoesStore() {
 
             if (!legacyResp.error) {
               disabledModules = (legacyResp.data || []).map((m: any) =>
-                String(m.key || '').toLowerCase(),
+                String(m.key || '').toLowerCase()
               );
             }
           }
@@ -320,7 +322,7 @@ function createPermissoesStore() {
         permissoes: acessos,
         ready: true,
         loading: false,
-        error: null,
+        error: null
       });
     } catch (err) {
       const normalizedError = new Error(toUserMessage(err, 'Erro ao carregar permissões'));
@@ -333,7 +335,7 @@ function createPermissoesStore() {
         ...s,
         loading: false,
         ready: true,
-        error: finalMessage,
+        error: finalMessage
       }));
 
       throw new Error(finalMessage);
@@ -349,7 +351,9 @@ function createPermissoesStore() {
 
     if (state.isSystemAdmin) return true;
 
-    const key = String(moduloDb || '').toLowerCase().trim();
+    const key = String(moduloDb || '')
+      .toLowerCase()
+      .trim();
 
     // Verifica permissão individual do usuário primeiro
     const perm = state.acessos[key] ?? 'none';
@@ -438,7 +442,10 @@ function createPermissoesStore() {
   // ------------------------------------------------------------------
   // refresh — recarrega permissões
   // ------------------------------------------------------------------
-  async function refresh(dados: { auth: { getUser: () => Promise<any>; getSession: () => Promise<any> }; from: (table: string) => any }): Promise<void> {
+  async function refresh(dados: {
+    auth: { getUser: () => Promise<any>; getSession: () => Promise<any> };
+    from: (table: string) => any;
+  }): Promise<void> {
     await init(dados);
   }
 
@@ -457,7 +464,7 @@ function createPermissoesStore() {
     getPermissao,
     createCanChecker,
     refresh,
-    reset,
+    reset
   };
 }
 

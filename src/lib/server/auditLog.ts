@@ -15,7 +15,15 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import { getAdminClient, logServerError } from '$lib/server/v1';
 
-export type AuditModulo = 'Vendas' | 'Clientes' | 'Cadastros' | 'Parametros' | 'Escalas' | 'Admin' | 'perfil' | 'LGPD';
+export type AuditModulo =
+  | 'Vendas'
+  | 'Clientes'
+  | 'Cadastros'
+  | 'Parametros'
+  | 'Escalas'
+  | 'Admin'
+  | 'perfil'
+  | 'LGPD';
 
 /** Ações já existentes no histórico da tabela `logs` para o módulo Vendas. */
 export type AuditAcaoVendas =
@@ -50,7 +58,7 @@ export type AuditAcaoOutros =
   | 'permissoes_atualizadas' // Admin: { permissoes: { modulo: permissao }, usuario_alterado_id }
   | 'modulos_globais_atualizados' // Admin: { disabled_modules: string[] }
   | 'perfil_atualizado' // perfil: payload gravado em users
-  | 'lgpd_anonimizacao'   // LGPD: anonimização de titular (Art. 18)
+  | 'lgpd_anonimizacao' // LGPD: anonimização de titular (Art. 18)
   | 'lgpd_solicitacao_recebida'; // LGPD: nova solicitação de direito (Art. 18)
 
 export type AuditAcao = AuditAcaoVendas | AuditAcaoOutros;
@@ -68,8 +76,18 @@ const MAX_USER_AGENT = 500;
  * independentemente do formato do valor (LGPD Art. 46 — segurança de dados).
  */
 const SENSITIVE_KEYS = new Set([
-  'cpf', 'cpf_cnpj', 'documento', 'doc', 'num_doc', 'rg',
-  'senha', 'password', 'token', 'secret', 'api_key', 'authorization',
+  'cpf',
+  'cpf_cnpj',
+  'documento',
+  'doc',
+  'num_doc',
+  'rg',
+  'senha',
+  'password',
+  'token',
+  'secret',
+  'api_key',
+  'authorization'
 ]);
 
 // CPF formatado: 000.000.000-00
@@ -78,18 +96,14 @@ const RE_CPF_FORMATTED = /\d{3}\.\d{3}\.\d{3}-\d{2}/g;
 const RE_CPF_PLAIN = /(?<!\d)(\d{11})(?!\d)/g;
 
 function maskString(value: string): string {
-  return value
-    .replace(RE_CPF_FORMATTED, '***.***.***-**')
-    .replace(RE_CPF_PLAIN, '***.***.***-**');
+  return value.replace(RE_CPF_FORMATTED, '***.***.***-**').replace(RE_CPF_PLAIN, '***.***.***-**');
 }
 
 /**
  * Remove ou mascara dados sensíveis do objeto `detalhes` antes da gravação.
  * Percorre recursivamente objetos aninhados (ex: payload completo de cliente).
  */
-function sanitizeDetalhes(
-  obj: Record<string, unknown> | null,
-): Record<string, unknown> | null {
+function sanitizeDetalhes(obj: Record<string, unknown> | null): Record<string, unknown> | null {
   if (!obj || typeof obj !== 'object') return obj;
   const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(obj)) {
@@ -105,8 +119,8 @@ function sanitizeDetalhes(
         typeof item === 'string'
           ? maskString(item)
           : item !== null && typeof item === 'object'
-          ? sanitizeDetalhes(item as Record<string, unknown>)
-          : item,
+            ? sanitizeDetalhes(item as Record<string, unknown>)
+            : item
       );
     } else {
       out[k] = v;
@@ -153,7 +167,7 @@ export function registrarLog(
      * (para quando é preciso ler algo do banco sem atrasar a resposta).
      */
     detalhes?: Record<string, unknown> | null | (() => Promise<Record<string, unknown> | null>);
-  },
+  }
 ): void {
   let row: Record<string, unknown>;
   try {
@@ -163,10 +177,10 @@ export function registrarLog(
       acao: params.acao,
       // sanitizeDetalhes remove CPF e campos sensíveis antes de gravar (LGPD Art. 46)
       detalhes: sanitizeDetalhes(
-        typeof params.detalhes === 'function' ? null : (params.detalhes ?? null),
+        typeof params.detalhes === 'function' ? null : (params.detalhes ?? null)
       ),
       ip: resolveIp(event),
-      user_agent: (event.request.headers.get('user-agent') || '').slice(0, MAX_USER_AGENT) || null,
+      user_agent: (event.request.headers.get('user-agent') || '').slice(0, MAX_USER_AGENT) || null
     };
   } catch (err) {
     logServerError('[auditLog] falha ao montar registro', err, { acao: params.acao });
@@ -183,7 +197,7 @@ export function registrarLog(
     } catch (err) {
       logServerError('[auditLog] falha ao gravar log de auditoria', err, {
         modulo: params.modulo,
-        acao: params.acao,
+        acao: params.acao
       });
     }
   })();

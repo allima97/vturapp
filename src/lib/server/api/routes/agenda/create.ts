@@ -21,7 +21,11 @@ function normalizePayload(body: Record<string, unknown>) {
   const startAt = String(body?.start_at || '').trim() || null;
   const endAt = String(body?.end_at || '').trim() || null;
   const allDay =
-    body?.all_day !== undefined ? Boolean(body.all_day) : body?.allDay !== undefined ? Boolean(body.allDay) : !startAt;
+    body?.all_day !== undefined
+      ? Boolean(body.all_day)
+      : body?.allDay !== undefined
+        ? Boolean(body.allDay)
+        : !startAt;
 
   return {
     titulo,
@@ -59,17 +63,26 @@ export async function handleAgendaCreatePost(event: RequestEvent) {
     }
 
     if (!isIsoDate(payload.startDate) || !isIsoDate(payload.endDate)) {
-      return json({ error: 'start_date e end_date devem estar no formato YYYY-MM-DD.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'start_date e end_date devem estar no formato YYYY-MM-DD.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const requestedCompanyId = String(body?.company_id || body?.empresa_id || '').trim();
     const companyId = scope.isAdmin
-      ? (isUuid(requestedCompanyId) ? requestedCompanyId : null)
+      ? isUuid(requestedCompanyId)
+        ? requestedCompanyId
+        : null
       : resolveScopedCompanyId(scope, requestedCompanyId || null);
 
     if (!scope.isAdmin && !companyId) {
       return json(
-        { error: requestedCompanyId ? 'Empresa fora do escopo.' : 'Empresa não identificada para criar evento.' },
+        {
+          error: requestedCompanyId
+            ? 'Empresa fora do escopo.'
+            : 'Empresa não identificada para criar evento.'
+        },
         { status: requestedCompanyId ? 403 : 400, headers: NO_STORE_HEADERS }
       );
     }

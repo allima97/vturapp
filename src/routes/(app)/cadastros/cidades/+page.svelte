@@ -73,7 +73,12 @@
         return `<span>${pais ? `${escapeHtml(sub)} · ${escapeHtml(pais)}` : escapeHtml(sub)}</span>`;
       }
     },
-    { key: 'descricao', label: 'Descrição', sortable: false, formatter: (v: string | null) => `<span>${escapeHtml(v || '-')}</span>` }
+    {
+      key: 'descricao',
+      label: 'Descrição',
+      sortable: false,
+      formatter: (v: string | null) => `<span>${escapeHtml(v || '-')}</span>`
+    }
   ];
 
   async function loadSubdivisoes() {
@@ -86,7 +91,12 @@
 
     loadingSubdivisoes = true;
     try {
-      const payload = await apiGet<SubdivisoesResponse>('/api/v1/subdivisoes', { q: term, page: 1, pageSize: 200 }, undefined, 30_000);
+      const payload = await apiGet<SubdivisoesResponse>(
+        '/api/v1/subdivisoes',
+        { q: term, page: 1, pageSize: 200 },
+        undefined,
+        30_000
+      );
       subdivisoes = Array.isArray(payload?.items) ? payload.items : [];
     } catch (_err) {
       subdivisoes = [];
@@ -111,16 +121,21 @@
     let payload: CidadesResponse | null = null;
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
-        payload = await apiGet<CidadesResponse>('/api/v1/cidades', {
-          q: hasCityTerm ? term : undefined,
-          subdivisao_id: hasSubdivisaoFilter ? filtroSubdivisao : undefined,
-          page: 1,
-          pageSize: 200
-        }, undefined, 30_000);
+        payload = await apiGet<CidadesResponse>(
+          '/api/v1/cidades',
+          {
+            q: hasCityTerm ? term : undefined,
+            subdivisao_id: hasSubdivisaoFilter ? filtroSubdivisao : undefined,
+            page: 1,
+            pageSize: 200
+          },
+          undefined,
+          30_000
+        );
         break;
       } catch (err) {
         if (attempt < 2) {
-          await new Promise(r => setTimeout(r, 300));
+          await new Promise((r) => setTimeout(r, 300));
           continue;
         }
         toast.error(toUserMessage(err, 'Não foi possível carregar as cidades. Tente novamente.'));
@@ -146,7 +161,10 @@
   }
 
   async function save() {
-    if (!form.nome.trim()) { toast.error('Nome obrigatório.'); return; }
+    if (!form.nome.trim()) {
+      toast.error('Nome obrigatório.');
+      return;
+    }
     saving = true;
     try {
       await apiPost('/api/v1/cidades', {
@@ -233,10 +251,7 @@
 <PageHeader
   title="Cidades"
   subtitle="Cadastro de cidades utilizadas nos destinos e produtos."
-  breadcrumbs={[
-    { label: 'Cadastros', href: '/cadastros' },
-    { label: 'Cidades' }
-  ]}
+  breadcrumbs={[{ label: 'Cadastros', href: '/cadastros' }, { label: 'Cidades' }]}
   actions={[
     { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw },
     { label: 'Nova Cidade', onClick: openNew, variant: 'primary', icon: Plus }
@@ -255,7 +270,7 @@
 </div>
 
 <Card class="mb-6 hidden sm:block">
-  <div class="flex flex-wrap gap-4 items-end">
+  <div class="flex flex-wrap items-end gap-4">
     <FieldInput
       bind:value={busca}
       icon={Search}
@@ -327,8 +342,15 @@
   </Button>
 </BottomSheet>
 
-<DataTable {columns} data={cidades} {loading} title="Cidades cadastradas" searchable={false} emptyMessage="Nenhuma cidade encontrada"
-  onRowClick={(row) => openEdit(row)}>
+<DataTable
+  {columns}
+  data={cidades}
+  {loading}
+  title="Cidades cadastradas"
+  searchable={false}
+  emptyMessage="Nenhuma cidade encontrada"
+  onRowClick={(row) => openEdit(row)}
+>
   <svelte:fragment slot="row-actions" let:row>
     <Button
       variant="ghost"
@@ -347,7 +369,18 @@
   </svelte:fragment>
 </DataTable>
 
-<Dialog bind:open={modalOpen} title={editingId ? 'Editar Cidade' : 'Nova Cidade'} size="sm" showCancel={true} cancelText="Cancelar" showConfirm={true} confirmText={editingId ? 'Salvar' : 'Criar'} loading={saving} onConfirm={save} onCancel={() => (modalOpen = false)}>
+<Dialog
+  bind:open={modalOpen}
+  title={editingId ? 'Editar Cidade' : 'Nova Cidade'}
+  size="sm"
+  showCancel={true}
+  cancelText="Cancelar"
+  showConfirm={true}
+  confirmText={editingId ? 'Salvar' : 'Criar'}
+  loading={saving}
+  onConfirm={save}
+  onCancel={() => (modalOpen = false)}
+>
   <div class="space-y-4">
     <FieldInput
       id="cid-nome"

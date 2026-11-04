@@ -90,7 +90,7 @@ async function handleFiveMin(env: ScheduledEnv, _ctx: ExecutionContext): Promise
   return {
     schedule: CRON_FIVE_MIN,
     handled: true,
-    note: 'noop — ADR-007 removeu necessidade de rebuild; reservado para F6+',
+    note: 'noop — ADR-007 removeu necessidade de rebuild; reservado para F6+'
   };
 }
 
@@ -101,10 +101,7 @@ async function handleFiveMin(env: ScheduledEnv, _ctx: ExecutionContext): Promise
  * Reservado para F6+: expiração de convites, limpeza de sessões antigas.
  * Idempotente: sem escritas D1 ou envios externos nesta fase.
  */
-async function handleNightly(
-  env: ScheduledEnv,
-  _ctx: ExecutionContext
-): Promise<ScheduledResult> {
+async function handleNightly(env: ScheduledEnv, _ctx: ExecutionContext): Promise<ScheduledResult> {
   void env;
   console.log(
     '[cron:nightly] sem lógica ativa (ADR-007: rebuild noturno descartado; reservado para F6+)'
@@ -112,6 +109,6 @@ async function handleNightly(
   return {
     schedule: CRON_NIGHTLY,
     handled: true,
-    note: 'noop — ADR-007 removeu necessidade de rebuild; reservado para F6+',
+    note: 'noop — ADR-007 removeu necessidade de rebuild; reservado para F6+'
   };
 }

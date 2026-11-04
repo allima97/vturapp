@@ -86,9 +86,7 @@ export function formatThreadTime(value?: string | null) {
     date.getFullYear() === now.getFullYear() &&
     date.getMonth() === now.getMonth() &&
     date.getDate() === now.getDate();
-  return sameDay
-    ? TIME_FORMATTER.format(date)
-    : DATE_FORMATTER.format(date);
+  return sameDay ? TIME_FORMATTER.format(date) : DATE_FORMATTER.format(date);
 }
 
 export function getNomeExibicao(user?: UserMini | null) {
@@ -125,7 +123,9 @@ export function buildRecadoPreview(recado?: RecadoRow | null) {
   const arquivos = recado.arquivos || [];
   if (arquivos.length > 0) {
     const primeiro = arquivos[0];
-    return arquivos.length > 1 ? `${primeiro.file_name} (+${arquivos.length - 1})` : primeiro.file_name;
+    return arquivos.length > 1
+      ? `${primeiro.file_name} (+${arquivos.length - 1})`
+      : primeiro.file_name;
   }
   return 'Sem mensagens ainda';
 }
@@ -141,11 +141,19 @@ export function buildAttachmentUrl(bucket?: string | null, path?: string | null)
   return `/api/arquivos/publico/${bucketSegment}/${pathSegment}`;
 }
 
-export function safeAttachmentHref(rawUrl?: string | null, bucket?: string | null, path?: string | null) {
+export function safeAttachmentHref(
+  rawUrl?: string | null,
+  bucket?: string | null,
+  path?: string | null
+) {
   return sanitizeHref(rawUrl, ['http:', 'https:']) || buildAttachmentUrl(bucket, path) || '#';
 }
 
-export function buildThreads(recados: RecadoRow[], usuariosEmpresa: UserMini[], userId: string | null): Thread[] {
+export function buildThreads(
+  recados: RecadoRow[],
+  usuariosEmpresa: UserMini[],
+  userId: string | null
+): Thread[] {
   const result: Thread[] = [];
 
   const companyRecados = recados.filter((recado) => !recado.receiver_id);
@@ -170,7 +178,10 @@ export function buildThreads(recados: RecadoRow[], usuariosEmpresa: UserMini[], 
   const pessoas = usuariosEmpresa
     .filter((user) => user.id && user.id !== userId)
     .sort((a, b) =>
-      PT_BR_BASE_COLLATOR.compare(normalizeSortKey(getNomeExibicao(a)), normalizeSortKey(getNomeExibicao(b)))
+      PT_BR_BASE_COLLATOR.compare(
+        normalizeSortKey(getNomeExibicao(a)),
+        normalizeSortKey(getNomeExibicao(b))
+      )
     );
 
   for (const pessoa of pessoas) {
@@ -179,10 +190,13 @@ export function buildThreads(recados: RecadoRow[], usuariosEmpresa: UserMini[], 
       const isFromPessoa = recado.sender_id === pessoa.id && recado.receiver_id === userId;
       return Boolean(isToPessoa || isFromPessoa);
     });
-    const sorted = [...relevant].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    const sorted = [...relevant].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
     const last = sorted[0];
     const unread = relevant.filter(
-      (recado) => recado.receiver_id === userId && !recado.leituras?.some((entry) => entry.user_id === userId)
+      (recado) =>
+        recado.receiver_id === userId && !recado.leituras?.some((entry) => entry.user_id === userId)
     ).length;
 
     result.push({

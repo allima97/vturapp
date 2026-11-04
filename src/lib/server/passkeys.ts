@@ -80,7 +80,10 @@ function bytesToBase64Url(bytes: Uint8Array) {
 }
 
 function base64UrlToBytes(value: string) {
-  const base64 = value.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(value.length / 4) * 4, '=');
+  const base64 = value
+    .replace(/-/g, '+')
+    .replace(/_/g, '/')
+    .padEnd(Math.ceil(value.length / 4) * 4, '=');
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
 
@@ -104,7 +107,9 @@ function getPasskeyRp(event: RequestEvent) {
 }
 
 function normalizeEmail(value?: string | null) {
-  return String(value || '').trim().toLowerCase();
+  return String(value || '')
+    .trim()
+    .toLowerCase();
 }
 
 function normalizeTransports(value?: unknown): AuthenticatorTransportFuture[] {
@@ -121,14 +126,15 @@ function isMissingPasskeyTable(err: unknown) {
   const details = errorDetails(err);
   const code = String(details.code || '').toLowerCase();
   const message = String(details.message || '').toLowerCase();
-  return code === '42p01' || message.includes('auth_passkeys') || message.includes('auth_passkey_challenges');
+  return (
+    code === '42p01' ||
+    message.includes('auth_passkeys') ||
+    message.includes('auth_passkey_challenges')
+  );
 }
 
 function passkeyUnavailable(): never {
-  throw error(
-    503,
-    'Passkeys ainda não estão habilitadas neste ambiente.'
-  );
+  throw error(503, 'Passkeys ainda não estão habilitadas neste ambiente.');
 }
 
 export function toPasskeyErrorResponse(err: unknown, fallbackMessage: string) {
@@ -139,7 +145,8 @@ export function toPasskeyErrorResponse(err: unknown, fallbackMessage: string) {
   }
 
   const rawMessage = String(details.body?.message || details.message || fallbackMessage);
-  const message = isProductionRuntime() && status >= 500 && status !== 503 ? fallbackMessage : rawMessage;
+  const message =
+    isProductionRuntime() && status >= 500 && status !== 503 ? fallbackMessage : rawMessage;
 
   if (status === 404) {
     return json({ error: message || fallbackMessage }, { status: 400, headers: NO_STORE_HEADERS });
@@ -222,8 +229,9 @@ async function createDadosSessionForUser(event: RequestEvent, userId: string) {
   if (!context) throw error(500, 'Banco indisponivel.');
   context.cookies = {
     get: (name) => event.cookies.get(name),
-    set: (name, value, options) => event.cookies.set(name, value, { path: '/', ...(options || {}) }),
-    delete: (name, options) => event.cookies.delete(name, { path: '/', ...(options || {}) }),
+    set: (name, value, options) =>
+      event.cookies.set(name, value, { path: '/', ...(options || {}) }),
+    delete: (name, options) => event.cookies.delete(name, { path: '/', ...(options || {}) })
   };
   const admin = getAdminClient();
   const { data: userData, error: userError } = await admin.auth.admin.getUserById(userId);
@@ -236,7 +244,7 @@ async function createDadosSessionForUser(event: RequestEvent, userId: string) {
   return {
     user,
     session: { access_token: 'cookie', refresh_token: 'cookie', user },
-    storageKey: 'sessao',
+    storageKey: 'sessao'
   };
 }
 
@@ -276,7 +284,10 @@ export async function deletePasskey(userId: string, passkeyId: string) {
   }
 }
 
-export async function buildRegistrationOptions(event: RequestEvent, user: { id: string; email?: string | null }) {
+export async function buildRegistrationOptions(
+  event: RequestEvent,
+  user: { id: string; email?: string | null }
+) {
   const admin = getAdminClient();
   const { rpName, rpID } = getPasskeyRp(event);
   const email = normalizeEmail(user.email) || user.id;
@@ -347,8 +358,14 @@ export async function verifyRegistration(params: {
       throw error(400, 'Não foi possível validar a passkey.');
     }
 
-    const { credential, credentialDeviceType, credentialBackedUp, aaguid, origin: credentialOrigin, rpID: credentialRpID } =
-      verification.registrationInfo;
+    const {
+      credential,
+      credentialDeviceType,
+      credentialBackedUp,
+      aaguid,
+      origin: credentialOrigin,
+      rpID: credentialRpID
+    } = verification.registrationInfo;
     const transports = credential.transports ?? params.response.response.transports ?? [];
     const email = normalizeEmail(params.user.email) || params.user.id;
 
@@ -356,7 +373,10 @@ export async function verifyRegistration(params: {
     const { error: insertError } = await admin.from('auth_passkeys').insert({
       user_id: params.user.id,
       user_email: email,
-      name: String(params.name || 'Passkey').trim().slice(0, 80) || 'Passkey',
+      name:
+        String(params.name || 'Passkey')
+          .trim()
+          .slice(0, 80) || 'Passkey',
       credential_id: credential.id,
       public_key: bytesToBase64Url(credential.publicKey),
       counter: credential.counter,

@@ -18,12 +18,17 @@
   export let vinculosAuditApplying: boolean;
   export let vinculosAuditResult: VinculoAuditResult | null;
   export let vinculosAuditConciliacaoId: string | null;
-  export let runFixVinculosAudit: (options?: { conciliacaoId?: string | null; apply?: boolean }) => void | Promise<void>;
+  export let runFixVinculosAudit: (options?: {
+    conciliacaoId?: string | null;
+    apply?: boolean;
+  }) => void | Promise<void>;
 </script>
 
 <Dialog
   bind:open={vinculosAuditOpen}
-  title={vinculosAuditScope === 'recibo' ? 'Auditoria do vínculo do recibo' : 'Auditoria de vínculos da conciliação'}
+  title={vinculosAuditScope === 'recibo'
+    ? 'Auditoria do vínculo do recibo'
+    : 'Auditoria de vínculos da conciliação'}
   color="financeiro"
   cancelText="Fechar"
   size="full"
@@ -61,7 +66,9 @@
       </div>
 
       {#if vinculosAuditResult.detalhes.length === 0}
-        <div class="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
+        <div
+          class="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800"
+        >
           Nenhuma divergência encontrada nos vínculos auditados.
         </div>
       {:else}
@@ -72,17 +79,24 @@
                 <div class="min-w-0">
                   <div class="flex flex-wrap items-center gap-2">
                     <p class="font-semibold text-slate-900">{detail.documento || '-'}</p>
-                    <span class="rounded-full px-2 py-1 text-xs font-semibold {auditSeverityClass(detail.severity)}">
+                    <span
+                      class="rounded-full px-2 py-1 text-xs font-semibold {auditSeverityClass(
+                        detail.severity
+                      )}"
+                    >
                       {auditSeverityLabel(detail.severity)}
                     </span>
                     {#if detail.fixable}
-                      <span class="rounded-full bg-orange-100 px-2 py-1 text-[11px] font-semibold text-orange-700">limpeza segura</span>
+                      <span
+                        class="rounded-full bg-orange-100 px-2 py-1 text-[11px] font-semibold text-orange-700"
+                        >limpeza segura</span
+                      >
                     {/if}
                   </div>
                   <p class="text-xs text-slate-500">{formatDate(detail.movimento_data)}</p>
                 </div>
                 <div class="text-left sm:text-right">
-                  <p class="text-xs font-semibold uppercase text-slate-500">Recibo do sistema</p>
+                  <p class="text-xs font-semibold text-slate-500 uppercase">Recibo do sistema</p>
                   <p class="font-medium text-slate-900">{detail.sistema?.numero_recibo || '-'}</p>
                   <p class="text-xs text-slate-500">
                     Venda: {formatDate(detail.sistema?.data_venda)}
@@ -95,39 +109,59 @@
 
               <div class="grid gap-3 text-sm lg:grid-cols-[1.2fr_1.2fr_0.8fr_0.8fr]">
                 <div class="rounded-lg bg-slate-50 px-3 py-2">
-                  <p class="text-xs font-semibold uppercase text-slate-500">Vendedores</p>
-                  <p class="text-slate-700">Venda: <span class="font-medium">{detail.sistema?.vendedor_nome || '-'}</span></p>
-                  <p class="text-slate-700">Ranking: <span class="font-medium">{detail.conciliacao?.ranking_vendedor_nome || '-'}</span></p>
+                  <p class="text-xs font-semibold text-slate-500 uppercase">Vendedores</p>
+                  <p class="text-slate-700">
+                    Venda: <span class="font-medium">{detail.sistema?.vendedor_nome || '-'}</span>
+                  </p>
+                  <p class="text-slate-700">
+                    Ranking: <span class="font-medium"
+                      >{detail.conciliacao?.ranking_vendedor_nome || '-'}</span
+                    >
+                  </p>
                   {#if detail.sistema?.rateio}
                     <p class="mt-1 text-xs text-blue-700">
-                      Rateio: {detail.sistema.rateio.vendedor_origem_nome || '-'} {Number(detail.sistema.rateio.percentual_origem || 0).toFixed(2)}%
-                      / {detail.sistema.rateio.vendedor_destino_nome || '-'} {Number(detail.sistema.rateio.percentual_destino || 0).toFixed(2)}%
+                      Rateio: {detail.sistema.rateio.vendedor_origem_nome || '-'}
+                      {Number(detail.sistema.rateio.percentual_origem || 0).toFixed(2)}% / {detail
+                        .sistema.rateio.vendedor_destino_nome || '-'}
+                      {Number(detail.sistema.rateio.percentual_destino || 0).toFixed(2)}%
                     </p>
                   {/if}
                 </div>
                 <div class="rounded-lg bg-slate-50 px-3 py-2">
-                  <p class="text-xs font-semibold uppercase text-slate-500">Candidatos</p>
+                  <p class="text-xs font-semibold text-slate-500 uppercase">Candidatos</p>
                   {#if detail.candidatos && detail.candidatos.length > 0}
-                    <p class="text-slate-700">{detail.candidatos.map((c) => c.numero_recibo).join(', ')}</p>
+                    <p class="text-slate-700">
+                      {detail.candidatos.map((c) => c.numero_recibo).join(', ')}
+                    </p>
                   {:else}
                     <p class="text-slate-500">-</p>
                   {/if}
                 </div>
                 <div class="rounded-lg bg-slate-50 px-3 py-2">
-                  <p class="text-xs font-semibold uppercase text-slate-500">Valor conc. / venda</p>
-                  <p class="font-medium text-slate-900">{formatCurrency(detail.conciliacao?.valor_venda_real)}</p>
-                  <p class="text-xs text-slate-500">{formatCurrency(detail.sistema?.valor_ranking)}</p>
+                  <p class="text-xs font-semibold text-slate-500 uppercase">Valor conc. / venda</p>
+                  <p class="font-medium text-slate-900">
+                    {formatCurrency(detail.conciliacao?.valor_venda_real)}
+                  </p>
+                  <p class="text-xs text-slate-500">
+                    {formatCurrency(detail.sistema?.valor_ranking)}
+                  </p>
                 </div>
                 <div class="rounded-lg bg-slate-50 px-3 py-2">
-                  <p class="text-xs font-semibold uppercase text-slate-500">Taxas conc. / venda</p>
-                  <p class="font-medium text-slate-900">{formatCurrency(detail.conciliacao?.valor_taxas)}</p>
-                  <p class="text-xs text-slate-500">{formatCurrency(detail.sistema?.valor_taxas)}</p>
+                  <p class="text-xs font-semibold text-slate-500 uppercase">Taxas conc. / venda</p>
+                  <p class="font-medium text-slate-900">
+                    {formatCurrency(detail.conciliacao?.valor_taxas)}
+                  </p>
+                  <p class="text-xs text-slate-500">
+                    {formatCurrency(detail.sistema?.valor_taxas)}
+                  </p>
                 </div>
               </div>
 
               <div class="mt-3 grid gap-2 xl:grid-cols-2">
                 {#each detail.issues as issueItem}
-                  <div class="rounded-xl border px-3 py-2 {auditIssueBorderClass(issueItem.severity)}">
+                  <div
+                    class="rounded-xl border px-3 py-2 {auditIssueBorderClass(issueItem.severity)}"
+                  >
                     <p class="text-xs font-semibold">{issueItem.title}</p>
                     <p class="text-xs leading-relaxed">{issueItem.message}</p>
                     {#if auditExpectedActual(issueItem)}
@@ -142,7 +176,9 @@
       {/if}
 
       <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-        A correção automática só limpa vínculos críticos inseguros. Diferenças de valor, taxas, datas, vendedor e rateio ficam como auditoria; o ajuste pode ser na venda, na conciliação/ranking ou no rateio.
+        A correção automática só limpa vínculos críticos inseguros. Diferenças de valor, taxas,
+        datas, vendedor e rateio ficam como auditoria; o ajuste pode ser na venda, na
+        conciliação/ranking ou no rateio.
       </div>
     {:else}
       <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
@@ -155,7 +191,8 @@
     {#if vinculosAuditResult && vinculosAuditResult.corrigiveis > 0}
       <Button
         color="financeiro"
-        on:click={() => runFixVinculosAudit({ conciliacaoId: vinculosAuditConciliacaoId, apply: true })}
+        on:click={() =>
+          runFixVinculosAudit({ conciliacaoId: vinculosAuditConciliacaoId, apply: true })}
         disabled={vinculosAuditApplying || vinculosAuditLoading}
         loading={vinculosAuditApplying}
       >

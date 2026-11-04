@@ -2,7 +2,7 @@
 
 **Status:** ACEITO  
 **Fase:** F5-03  
-**Data:** 2026-10-30  
+**Data:** 2026-10-30
 
 ## Contexto
 
@@ -13,11 +13,11 @@ em ADR-004.
 
 Opções avaliadas:
 
-| Opção | Prós | Contras |
-|-------|------|---------|
-| **Polling HTTP** | Zero infra extra; stateless; simples de implementar e testar | Latência ≥ intervalo de poll |
-| SSE (Server-Sent Events) | Menor latência que polling | Exige conexão persistente; Workers têm limite de CPU/duração; sem broadcast nativo entre instâncias |
-| Durable Objects + WebSocket | Broadcast real entre usuários | Custo adicional; complexidade; exige requisito de latência < 5 s validado com usuários |
+| Opção                       | Prós                                                         | Contras                                                                                             |
+| --------------------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| **Polling HTTP**            | Zero infra extra; stateless; simples de implementar e testar | Latência ≥ intervalo de poll                                                                        |
+| SSE (Server-Sent Events)    | Menor latência que polling                                   | Exige conexão persistente; Workers têm limite de CPU/duração; sem broadcast nativo entre instâncias |
+| Durable Objects + WebSocket | Broadcast real entre usuários                                | Custo adicional; complexidade; exige requisito de latência < 5 s validado com usuários              |
 
 ## Decisão
 
@@ -53,10 +53,10 @@ Opções avaliadas:
 
 ## Arquivos afetados (F5-03)
 
-| Arquivo | Ação |
-|---------|------|
-| `src/lib/server/api/app-v2.ts` | Montar `muralV2Routes` em `/mural` |
-| `src/lib/server/api/routes/mural/index.ts` | Adicionar param `?since=` |
-| `src/lib/server/api/routes/mural/recados.ts` | Filtro `WHERE criado_em > ?` |
+| Arquivo                                      | Ação                               |
+| -------------------------------------------- | ---------------------------------- |
+| `src/lib/server/api/app-v2.ts`               | Montar `muralV2Routes` em `/mural` |
+| `src/lib/server/api/routes/mural/index.ts`   | Adicionar param `?since=`          |
+| `src/lib/server/api/routes/mural/recados.ts` | Filtro `WHERE criado_em > ?`       |
 
 ADR-004 é supersedido por este documento; seu status passa a SUPERSEDIDO.

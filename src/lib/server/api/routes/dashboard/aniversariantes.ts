@@ -52,7 +52,9 @@ type AniversarianteItem = {
  *  evitando qualquer problema de timezone/DST. */
 function extractMonthDay(nascimento: string | null): { month: number; day: number } | null {
   if (!nascimento) return null;
-  const m = String(nascimento).trim().match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const m = String(nascimento)
+    .trim()
+    .match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (!m) return null;
   return { month: Number(m[2]), day: Number(m[3]) };
 }
@@ -170,14 +172,20 @@ export async function handleDashboardAniversariantesGet(event: RequestEvent) {
         tags: [
           READ_MODEL_TAGS.clients,
           READ_MODEL_TAGS.dashboard,
-          ...scopeCacheTags({ companyIds, userId: user.id, vendedorIds: scope.isVendedor ? [user.id] : [] })
+          ...scopeCacheTags({
+            companyIds,
+            userId: user.id,
+            vendedorIds: scope.isVendedor ? [user.id] : []
+          })
         ],
         ttlMs: 300_000,
         staleTtlMs: 1_800_000,
         loader: async () => {
           const companyBatches = companyIds.length > 0 ? chunkArray(companyIds) : [null];
           const clienteBatches =
-            scope.isVendedor && vendedorClienteIdList.length > 0 ? chunkArray(vendedorClienteIdList) : [null];
+            scope.isVendedor && vendedorClienteIdList.length > 0
+              ? chunkArray(vendedorClienteIdList)
+              : [null];
           const batchRows = await Promise.all(
             companyBatches.flatMap((companyBatch) =>
               clienteBatches.map(async (clienteBatch) => {
@@ -205,14 +213,20 @@ export async function handleDashboardAniversariantesGet(event: RequestEvent) {
         tags: [
           READ_MODEL_TAGS.clients,
           READ_MODEL_TAGS.dashboard,
-          ...scopeCacheTags({ companyIds, userId: user.id, vendedorIds: scope.isVendedor ? [user.id] : [] })
+          ...scopeCacheTags({
+            companyIds,
+            userId: user.id,
+            vendedorIds: scope.isVendedor ? [user.id] : []
+          })
         ],
         ttlMs: 300_000,
         staleTtlMs: 1_800_000,
         loader: async () => {
           const companyBatches = companyIds.length > 0 ? chunkArray(companyIds) : [null];
           const clienteBatches =
-            scope.isVendedor && vendedorClienteIdList.length > 0 ? chunkArray(vendedorClienteIdList) : [null];
+            scope.isVendedor && vendedorClienteIdList.length > 0
+              ? chunkArray(vendedorClienteIdList)
+              : [null];
           const batchRows = await Promise.all(
             companyBatches.flatMap((companyBatch) =>
               clienteBatches.map(async (clienteBatch) => {
@@ -249,37 +263,41 @@ export async function handleDashboardAniversariantesGet(event: RequestEvent) {
 
     const clientesAniv = (clientes || [])
       .filter((c) => isBirthdayInRange(c.nascimento, diasAfrente))
-      .map((c): AniversarianteItem => ({
-        id: c.id,
-        nome: c.nome,
-        nascimento: c.nascimento,
-        telefone: c.telefone,
-        whatsapp: c.whatsapp,
-        email: null as string | null,
-        aniversario_hoje: isToday(c.nascimento),
-        pessoa_tipo: 'cliente' as const,
-        cliente_id: c.id as string | null
-      }));
+      .map(
+        (c): AniversarianteItem => ({
+          id: c.id,
+          nome: c.nome,
+          nascimento: c.nascimento,
+          telefone: c.telefone,
+          whatsapp: c.whatsapp,
+          email: null as string | null,
+          aniversario_hoje: isToday(c.nascimento),
+          pessoa_tipo: 'cliente' as const,
+          cliente_id: c.id as string | null
+        })
+      );
 
     const acompanhantesAniv = (acompanhantes || [])
       .filter((a) => isBirthdayInRange(a.data_nascimento, diasAfrente))
-      .map((a): AniversarianteItem => ({
-        id: a.id,
-        nome: a.nome_completo,
-        nascimento: a.data_nascimento,
-        telefone: a.telefone,
-        whatsapp: null as string | null,
-        email: null as string | null,
-        aniversario_hoje: isToday(a.data_nascimento),
-        pessoa_tipo: 'acompanhante' as const,
-        cliente_id: a.cliente_id as string | null
-      }));
+      .map(
+        (a): AniversarianteItem => ({
+          id: a.id,
+          nome: a.nome_completo,
+          nascimento: a.data_nascimento,
+          telefone: a.telefone,
+          whatsapp: null as string | null,
+          email: null as string | null,
+          aniversario_hoje: isToday(a.data_nascimento),
+          pessoa_tipo: 'acompanhante' as const,
+          cliente_id: a.cliente_id as string | null
+        })
+      );
 
-    const aniversariantesFiltrados = [...clientesAniv, ...acompanhantesAniv]
-      .sort((a, b) =>
+    const aniversariantesFiltrados = [...clientesAniv, ...acompanhantesAniv].sort(
+      (a, b) =>
         getNextBirthdayMs(a.nascimento, hojeMs, hojeYear) -
         getNextBirthdayMs(b.nascimento, hojeMs, hojeYear)
-      );
+    );
 
     const aniversariantes = hasExplicitLimit
       ? aniversariantesFiltrados.slice(0, outputLimit)

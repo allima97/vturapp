@@ -13,11 +13,18 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./root', () => ({ handleVouchersGet: spy('handleVouchersGet'), handleVouchersPost: spy('handleVouchersPost') }));
-vi.mock('./id', () => ({ handleVouchersIdGet: spy('handleVouchersIdGet'), handleVouchersIdPatch: spy('handleVouchersIdPatch'), handleVouchersIdDelete: spy('handleVouchersIdDelete') }));
+vi.mock('./root', () => ({
+  handleVouchersGet: spy('handleVouchersGet'),
+  handleVouchersPost: spy('handleVouchersPost')
+}));
+vi.mock('./id', () => ({
+  handleVouchersIdGet: spy('handleVouchersIdGet'),
+  handleVouchersIdPatch: spy('handleVouchersIdPatch'),
+  handleVouchersIdDelete: spy('handleVouchersIdDelete')
+}));
 vi.mock('./create', () => ({ handleVouchersCreatePost: spy('handleVouchersCreatePost') }));
 vi.mock('./delete', () => ({ handleVouchersDeleteDelete: spy('handleVouchersDeleteDelete') }));
 
@@ -27,18 +34,18 @@ import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/vouchers', 'handleVouchersGet', {}],
   ['POST', '/api/v1/vouchers', 'handleVouchersPost', {}],
-  ['GET', '/api/v1/vouchers/id-123', 'handleVouchersIdGet', {"id": "id-123"}],
-  ['PATCH', '/api/v1/vouchers/id-123', 'handleVouchersIdPatch', {"id": "id-123"}],
-  ['DELETE', '/api/v1/vouchers/id-123', 'handleVouchersIdDelete', {"id": "id-123"}],
+  ['GET', '/api/v1/vouchers/id-123', 'handleVouchersIdGet', { id: 'id-123' }],
+  ['PATCH', '/api/v1/vouchers/id-123', 'handleVouchersIdPatch', { id: 'id-123' }],
+  ['DELETE', '/api/v1/vouchers/id-123', 'handleVouchersIdDelete', { id: 'id-123' }],
   ['POST', '/api/v1/vouchers/create', 'handleVouchersCreatePost', {}],
-  ['DELETE', '/api/v1/vouchers/delete', 'handleVouchersDeleteDelete', {}],
+  ['DELETE', '/api/v1/vouchers/delete', 'handleVouchersDeleteDelete', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/vouchers'],
   ['PUT', '/api/v1/vouchers/id-123'],
   ['PUT', '/api/v1/vouchers/create'],
-  ['PUT', '/api/v1/vouchers/delete'],
+  ['PUT', '/api/v1/vouchers/delete']
 ];
 
 function ev(method: string, path: string) {

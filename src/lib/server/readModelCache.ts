@@ -24,12 +24,12 @@ const DEFAULT_STALE_TTL_MS = 120_000;
 
 // TTL para catálogos semi-estáticos: países, cidades, produtos base, planos, módulos.
 // Mudam raramente (operação admin) — cache agressivo sem thrash no banco.
-export const CATALOG_TTL_MS = 600_000;        // 10 min fresco
+export const CATALOG_TTL_MS = 600_000; // 10 min fresco
 export const CATALOG_STALE_TTL_MS = 3_600_000; // 1h stale
 
 // TTL para dados de usuários/empresas — mudam em operações admin pontuais.
-export const USER_TTL_MS = 300_000;            // 5 min fresco
-export const USER_STALE_TTL_MS = 1_800_000;   // 30 min stale
+export const USER_TTL_MS = 300_000; // 5 min fresco
+export const USER_STALE_TTL_MS = 1_800_000; // 30 min stale
 // Aumentado de 250 para 600: sistema multi-tenant com múltiplas empresas/usuários
 // esgota 250 entradas rapidamente, causando expulsão prematura e recarga constante.
 const MAX_ENTRIES = 600;
@@ -91,24 +91,24 @@ export function registerSalesReadModelDirtyMarker(fn: SalesReadModelDirtyMarker)
 }
 
 export const READ_MODEL_TAGS = {
-  sales: "data:sales",
-  clients: "data:clients",
-  catalog: "data:catalog",
-  payments: "data:payments",
-  finance: "data:finance",
-  users: "data:users",
-  conciliacao: "data:conciliacao",
-  quote: "data:quote",
-  trips: "data:trips",
-  consultorias: "data:consultorias",
-  todo: "data:todo",
-  preferences: "data:preferences",
-  mural: "data:mural",
-  metas: "data:metas",
-  dashboard: "view:dashboard",
-  vendasKpis: "view:vendas-kpis",
-  ranking: "view:ranking",
-  comissoes: "view:comissoes",
+  sales: 'data:sales',
+  clients: 'data:clients',
+  catalog: 'data:catalog',
+  payments: 'data:payments',
+  finance: 'data:finance',
+  users: 'data:users',
+  conciliacao: 'data:conciliacao',
+  quote: 'data:quote',
+  trips: 'data:trips',
+  consultorias: 'data:consultorias',
+  todo: 'data:todo',
+  preferences: 'data:preferences',
+  mural: 'data:mural',
+  metas: 'data:metas',
+  dashboard: 'view:dashboard',
+  vendasKpis: 'view:vendas-kpis',
+  ranking: 'view:ranking',
+  comissoes: 'view:comissoes'
 } as const;
 
 const TRANSACTIONAL_READ_MODEL_TAGS = new Set<string>([
@@ -117,7 +117,7 @@ const TRANSACTIONAL_READ_MODEL_TAGS = new Set<string>([
   READ_MODEL_TAGS.vendasKpis,
   READ_MODEL_TAGS.ranking,
   READ_MODEL_TAGS.comissoes,
-  READ_MODEL_TAGS.conciliacao,
+  READ_MODEL_TAGS.conciliacao
 ]);
 
 function nowMs() {
@@ -131,12 +131,8 @@ export function invalidateConsultoriaReadModels(params?: {
 }) {
   const scopedTags = scopeCacheTags(params || {});
   invalidateReadModelCache({
-    tags: [
-      READ_MODEL_TAGS.consultorias,
-      READ_MODEL_TAGS.dashboard,
-      READ_MODEL_TAGS.clients,
-    ],
-    scopeTags: scopedTags,
+    tags: [READ_MODEL_TAGS.consultorias, READ_MODEL_TAGS.dashboard, READ_MODEL_TAGS.clients],
+    scopeTags: scopedTags
   });
 }
 
@@ -147,12 +143,8 @@ export function invalidateTodoReadModels(params?: {
 }) {
   const scopedTags = scopeCacheTags(params || {});
   invalidateReadModelCache({
-    tags: [
-      READ_MODEL_TAGS.todo,
-      READ_MODEL_TAGS.dashboard,
-      READ_MODEL_TAGS.users,
-    ],
-    scopeTags: scopedTags,
+    tags: [READ_MODEL_TAGS.todo, READ_MODEL_TAGS.dashboard, READ_MODEL_TAGS.users],
+    scopeTags: scopedTags
   });
 }
 
@@ -163,12 +155,8 @@ export function invalidatePreferenceReadModels(params?: {
 }) {
   const scopedTags = scopeCacheTags(params || {});
   invalidateReadModelCache({
-    tags: [
-      READ_MODEL_TAGS.preferences,
-      READ_MODEL_TAGS.catalog,
-      READ_MODEL_TAGS.users,
-    ],
-    scopeTags: scopedTags,
+    tags: [READ_MODEL_TAGS.preferences, READ_MODEL_TAGS.catalog, READ_MODEL_TAGS.users],
+    scopeTags: scopedTags
   });
 }
 
@@ -179,11 +167,8 @@ export function invalidateMuralReadModels(params?: {
 }) {
   const scopedTags = scopeCacheTags(params || {});
   invalidateReadModelCache({
-    tags: [
-      READ_MODEL_TAGS.mural,
-      READ_MODEL_TAGS.users,
-    ],
-    scopeTags: scopedTags,
+    tags: [READ_MODEL_TAGS.mural, READ_MODEL_TAGS.users],
+    scopeTags: scopedTags
   });
 }
 
@@ -194,19 +179,19 @@ function stableValue(value: unknown): unknown {
       normalized.every(
         (item) =>
           item == null ||
-          typeof item === "string" ||
-          typeof item === "number" ||
-          typeof item === "boolean",
+          typeof item === 'string' ||
+          typeof item === 'number' ||
+          typeof item === 'boolean'
       )
     ) {
       return [...normalized].sort((left, right) =>
-        String(left ?? "").localeCompare(String(right ?? "")),
+        String(left ?? '').localeCompare(String(right ?? ''))
       );
     }
     return normalized;
   }
 
-  if (value && typeof value === "object") {
+  if (value && typeof value === 'object') {
     return Object.keys(value as Record<string, unknown>)
       .sort()
       .reduce<Record<string, unknown>>((acc, key) => {
@@ -228,7 +213,7 @@ function hashString(value: string) {
 }
 
 function normalizeCacheKey(key: string) {
-  const normalized = String(key || "").trim() || "cache";
+  const normalized = String(key || '').trim() || 'cache';
   if (normalized.length <= MAX_CACHE_KEY_LENGTH) return normalized;
   return `${normalized.slice(0, MAX_CACHE_KEY_LENGTH)}:${hashString(normalized)}`;
 }
@@ -250,17 +235,10 @@ export function scopeCacheTags(params: {
 }
 
 function isScopeTag(tag: string) {
-  return (
-    tag.startsWith("company:") ||
-    tag.startsWith("vendedor:") ||
-    tag.startsWith("user:")
-  );
+  return tag.startsWith('company:') || tag.startsWith('vendedor:') || tag.startsWith('user:');
 }
 
-export function buildReadModelCacheKey(
-  namespace: string,
-  parts: Record<string, unknown>,
-) {
+export function buildReadModelCacheKey(namespace: string, parts: Record<string, unknown>) {
   return normalizeCacheKey(`${namespace}:${JSON.stringify(stableValue(parts))}`);
 }
 
@@ -274,7 +252,7 @@ function pruneBySize() {
   if (cache.size <= MAX_ENTRIES) return;
 
   const ordered = Array.from(cache.entries()).sort(
-    (left, right) => left[1].lastAccessAt - right[1].lastAccessAt,
+    (left, right) => left[1].lastAccessAt - right[1].lastAccessAt
   );
   const removeCount = Math.max(0, ordered.length - MAX_ENTRIES);
   for (let i = 0; i < removeCount; i += 1) {
@@ -282,12 +260,10 @@ function pruneBySize() {
   }
 }
 
-export async function getCachedReadModel<T>(
-  options: CacheOptions<T>,
-): Promise<T> {
+export async function getCachedReadModel<T>(options: CacheOptions<T>): Promise<T> {
   const optionTags: string[] = [];
   for (const tag of options.tags || []) {
-    const normalizedTag = String(tag || "").trim();
+    const normalizedTag = String(tag || '').trim();
     if (normalizedTag) optionTags.push(normalizedTag);
   }
 
@@ -316,7 +292,7 @@ export async function getCachedReadModel<T>(
       expiresAt: writtenAt + ttlMs,
       staleUntil: writtenAt + staleTtlMs,
       lastAccessAt: writtenAt,
-      tags,
+      tags
     });
     pruneExpired();
     pruneBySize();
@@ -383,7 +359,7 @@ export function invalidateReadModelCache(options?: {
 
   const tags = cleanStringSet(options?.tags);
   const scopeTags = cleanStringSet(options?.scopeTags);
-  const keyPrefix = String(options?.keyPrefix || "").trim();
+  const keyPrefix = String(options?.keyPrefix || '').trim();
 
   if (tags.size === 0 && scopeTags.size === 0 && !keyPrefix) {
     cache.clear();
@@ -392,8 +368,7 @@ export function invalidateReadModelCache(options?: {
 
   for (const [key, entry] of cache.entries()) {
     const matchesPrefix = keyPrefix ? key.startsWith(keyPrefix) : false;
-    const matchesDataTag =
-      tags.size > 0 && Array.from(tags).some((tag) => entry.tags.has(tag));
+    const matchesDataTag = tags.size > 0 && Array.from(tags).some((tag) => entry.tags.has(tag));
     const entryHasScopeTag = Array.from(entry.tags).some(isScopeTag);
     const matchesScope =
       scopeTags.size === 0 ||
@@ -421,9 +396,9 @@ export function invalidateSalesReadModels(params?: {
       READ_MODEL_TAGS.dashboard,
       READ_MODEL_TAGS.vendasKpis,
       READ_MODEL_TAGS.ranking,
-      READ_MODEL_TAGS.comissoes,
+      READ_MODEL_TAGS.comissoes
     ],
-    scopeTags: scopedTags,
+    scopeTags: scopedTags
   });
   // Propaga a invalidacao para as demais instancias do Worker via KV -- sem
   // isso, so a instancia que processou a mutacao teria seu cache local
@@ -443,12 +418,8 @@ export function invalidateQuoteReadModels(params?: {
 }) {
   const scopedTags = scopeCacheTags(params || {});
   invalidateReadModelCache({
-    tags: [
-      READ_MODEL_TAGS.quote,
-      READ_MODEL_TAGS.dashboard,
-      READ_MODEL_TAGS.ranking,
-    ],
-    scopeTags: scopedTags,
+    tags: [READ_MODEL_TAGS.quote, READ_MODEL_TAGS.dashboard, READ_MODEL_TAGS.ranking],
+    scopeTags: scopedTags
   });
 }
 
@@ -459,12 +430,8 @@ export function invalidateClientReadModels(params?: {
 }) {
   const scopedTags = scopeCacheTags(params || {});
   invalidateReadModelCache({
-    tags: [
-      READ_MODEL_TAGS.clients,
-      READ_MODEL_TAGS.trips,
-      READ_MODEL_TAGS.dashboard,
-    ],
-    scopeTags: scopedTags,
+    tags: [READ_MODEL_TAGS.clients, READ_MODEL_TAGS.trips, READ_MODEL_TAGS.dashboard],
+    scopeTags: scopedTags
   });
 }
 
@@ -481,9 +448,9 @@ export function invalidateCatalogReadModels(params?: {
       READ_MODEL_TAGS.dashboard,
       READ_MODEL_TAGS.vendasKpis,
       READ_MODEL_TAGS.ranking,
-      READ_MODEL_TAGS.comissoes,
+      READ_MODEL_TAGS.comissoes
     ],
-    scopeTags: scopedTags,
+    scopeTags: scopedTags
   });
 }
 
@@ -493,8 +460,7 @@ export function invalidateCommissionReadModels(params?: {
   userId?: string | null;
 }) {
   const hasDataScope =
-    normalizeIds(params?.companyIds).length > 0 ||
-    normalizeIds(params?.vendedorIds).length > 0;
+    normalizeIds(params?.companyIds).length > 0 || normalizeIds(params?.vendedorIds).length > 0;
   const scopedTags = hasDataScope ? scopeCacheTags(params || {}) : [];
   invalidateReadModelCache({
     tags: [
@@ -502,9 +468,9 @@ export function invalidateCommissionReadModels(params?: {
       READ_MODEL_TAGS.finance,
       READ_MODEL_TAGS.dashboard,
       READ_MODEL_TAGS.vendasKpis,
-      READ_MODEL_TAGS.ranking,
+      READ_MODEL_TAGS.ranking
     ],
-    scopeTags: scopedTags,
+    scopeTags: scopedTags
   });
 }
 
@@ -519,9 +485,9 @@ export function invalidateUserReadModels(params?: {
       READ_MODEL_TAGS.users,
       READ_MODEL_TAGS.trips,
       READ_MODEL_TAGS.ranking,
-      READ_MODEL_TAGS.dashboard,
+      READ_MODEL_TAGS.dashboard
     ],
-    scopeTags: scopedTags,
+    scopeTags: scopedTags
   });
 }
 
@@ -532,11 +498,7 @@ export function invalidateTripReadModels(params?: {
 }) {
   const scopedTags = scopeCacheTags(params || {});
   invalidateReadModelCache({
-    tags: [
-      READ_MODEL_TAGS.trips,
-      READ_MODEL_TAGS.dashboard,
-      READ_MODEL_TAGS.clients,
-    ],
-    scopeTags: scopedTags,
+    tags: [READ_MODEL_TAGS.trips, READ_MODEL_TAGS.dashboard, READ_MODEL_TAGS.clients],
+    scopeTags: scopedTags
   });
 }

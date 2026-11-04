@@ -54,33 +54,55 @@
 
 <div class="vtur-page-header mb-4 sm:mb-6">
   {#if breadcrumbs.length > 0}
-    <nav aria-label="Trilha de navegação" class="mb-2 flex flex-wrap items-center gap-1.5 text-sm text-slate-500">
-      <a href="/" class="rounded-sm transition-colors hover:text-slate-900 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-300" aria-label="Início" title="Início">
+    <nav
+      aria-label="Trilha de navegação"
+      class="mb-2 flex flex-wrap items-center gap-1.5 text-sm text-slate-500"
+    >
+      <a
+        href="/"
+        class="rounded-sm transition-colors hover:text-slate-900 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-300"
+        aria-label="Início"
+        title="Início"
+      >
         <Home size={14} aria-hidden="true" />
       </a>
       {#each breadcrumbs as crumb, i}
         <ChevronRight size={14} class="text-slate-400" aria-hidden="true" />
         {#if crumb.href && i < breadcrumbs.length - 1}
-          <a href={crumb.href} class="rounded-sm transition-colors hover:text-slate-900 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-300">
+          <a
+            href={crumb.href}
+            class="rounded-sm transition-colors hover:text-slate-900 focus:outline-hidden focus-visible:ring-2 focus-visible:ring-blue-300"
+          >
             {crumb.label}
           </a>
         {:else}
-          <span class="font-medium text-slate-900" aria-current={i === breadcrumbs.length - 1 ? 'page' : undefined}>{crumb.label}</span>
+          <span
+            class="font-medium text-slate-900"
+            aria-current={i === breadcrumbs.length - 1 ? 'page' : undefined}>{crumb.label}</span
+          >
         {/if}
       {/each}
     </nav>
   {/if}
 
   <div class="vtur-card px-4 py-3 sm:px-5 sm:py-4">
-    <div class="mb-3 h-1 w-14 rounded-full bg-gradient-to-r {accentClass} sm:mb-4 sm:h-1.5 sm:w-20"></div>
+    <div
+      class="mb-3 h-1 w-14 rounded-full bg-gradient-to-r {accentClass} sm:mb-4 sm:h-1.5 sm:w-20"
+    ></div>
 
     <div class="flex flex-col gap-3 sm:gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div class="min-w-0 flex-1">
-        <h1 class="text-xl sm:text-[1.7rem] font-semibold tracking-tight text-slate-900 leading-tight">
+        <h1
+          class="text-xl leading-tight font-semibold tracking-tight text-slate-900 sm:text-[1.7rem]"
+        >
           {title}
         </h1>
         {#if subtitle}
-          <p class="mt-1 text-xs sm:text-sm leading-5 sm:leading-6 text-slate-500 line-clamp-2 sm:line-clamp-none">{subtitle}</p>
+          <p
+            class="mt-1 line-clamp-2 text-xs leading-5 text-slate-500 sm:line-clamp-none sm:text-sm sm:leading-6"
+          >
+            {subtitle}
+          </p>
         {/if}
       </div>
 
@@ -88,14 +110,25 @@
         <div class="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
           {#each actions as action}
             {#if action.href}
-              <Button href={action.href} variant={action.variant || 'primary'} size="sm" class_name="min-h-[40px] sm:min-h-0">
+              <Button
+                href={action.href}
+                variant={action.variant || 'primary'}
+                size="sm"
+                class_name="min-h-[40px] sm:min-h-0"
+              >
                 {#if action.icon}
                   <svelte:component this={action.icon} size={16} class="mr-1.5" />
                 {/if}
                 {action.label}
               </Button>
             {:else}
-              <Button on:click={(e) => action.onClick?.(e)} variant={action.variant || 'primary'} size="sm" loading={action.loading || false} class_name="min-h-[40px] sm:min-h-0">
+              <Button
+                on:click={(e) => action.onClick?.(e)}
+                variant={action.variant || 'primary'}
+                size="sm"
+                loading={action.loading || false}
+                class_name="min-h-[40px] sm:min-h-0"
+              >
                 {#if action.icon}
                   <svelte:component this={action.icon} size={16} class="mr-1.5" />
                 {/if}

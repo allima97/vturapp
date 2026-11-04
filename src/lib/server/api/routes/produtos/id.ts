@@ -34,7 +34,8 @@ export async function handleProdutosIdGet(event: RequestEvent) {
 
     const id = String(event.params.id || '').trim();
     if (!id) throw error(400, 'ID do produto é obrigatório.');
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const produto = await fetchProdutoById(client, id);
     if (!produto) throw error(404, 'Produto não encontrado.');
@@ -62,22 +63,32 @@ export async function handleProdutosIdPatch(event: RequestEvent) {
 
     const id = String(event.params.id || '').trim();
     if (!id) throw error(400, 'ID do produto é obrigatório.');
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const body = readProdutoUpdateBody(bodyResult.data);
     const payload = sanitizeProdutoPayload(body);
 
     if (!payload.nome) {
-      return json({ error: 'Nome do produto é obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Nome do produto é obrigatório.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
     if (!payload.destino) {
       return json({ error: 'Destino é obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
     }
     if (!payload.tipo_produto) {
-      return json({ error: 'Tipo de produto é obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Tipo de produto é obrigatório.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
     if (!payload.todas_as_cidades && !payload.cidade_id) {
-      return json({ error: 'Cidade é obrigatória para produtos não globais.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Cidade é obrigatória para produtos não globais.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const updatePayload = {
@@ -95,7 +106,10 @@ export async function handleProdutosIdPatch(event: RequestEvent) {
     if (updateError) throw updateError;
     if (!data) throw error(404, 'Produto não encontrado.');
 
-    invalidateCatalogReadModels({ companyIds: scope.companyId ? [scope.companyId] : undefined, userId: user.id });
+    invalidateCatalogReadModels({
+      companyIds: scope.companyId ? [scope.companyId] : undefined,
+      userId: user.id
+    });
     const produto = await fetchProdutoById(client, id);
     return json({ success: true, data: produto }, { headers: NO_STORE_HEADERS });
   } catch (err) {
@@ -118,15 +132,22 @@ export async function handleProdutosIdDelete(event: RequestEvent) {
 
     const id = String(event.params.id || '').trim();
     if (!id) throw error(400, 'ID do produto é obrigatório.');
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
-    const { error: tarifasError } = await client.from('produtos_tarifas').delete().eq('produto_id', id);
+    const { error: tarifasError } = await client
+      .from('produtos_tarifas')
+      .delete()
+      .eq('produto_id', id);
     if (tarifasError) throw tarifasError;
 
     const { error: deleteError } = await client.from('produtos').delete().eq('id', id);
     if (deleteError) throw deleteError;
 
-    invalidateCatalogReadModels({ companyIds: scope.companyId ? [scope.companyId] : undefined, userId: user.id });
+    invalidateCatalogReadModels({
+      companyIds: scope.companyId ? [scope.companyId] : undefined,
+      userId: user.id
+    });
     return json({ success: true }, { headers: NO_STORE_HEADERS });
   } catch (err) {
     return toErrorResponse(err, 'Erro ao excluir produto.');

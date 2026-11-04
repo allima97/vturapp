@@ -11,7 +11,8 @@
   export let value = '';
   export let options: string[] = [];
   export let placeholder = '';
-  export let type: 'text' | 'email' | 'password' | 'number' | 'date' | 'tel' | 'time' | 'url' = 'text';
+  export let type: 'text' | 'email' | 'password' | 'number' | 'date' | 'tel' | 'time' | 'url' =
+    'text';
   export let required = false;
   export let disabled = false;
   export let readonly = false;

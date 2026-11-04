@@ -44,12 +44,29 @@
     <form onsubmit={entrar}>
       <p class="reescrita-eyebrow">VTUR · NOVA APLICAÇÃO</p>
       <h1>Entrar na VTUR</h1>
-      <p class="reescrita-login-intro">Acesse o ambiente novo com a conta criada para a reescrita.</p>
+      <p class="reescrita-login-intro">
+        Acesse o ambiente novo com a conta criada para a reescrita.
+      </p>
 
       {#if error}<AlertMessage variant="error" message={error} />{/if}
 
-      <FieldInput id="reescrita-login-email" label="E-mail" type="email" autocomplete="username" bind:value={email} required />
-      <FieldInput id="reescrita-login-password" label="Senha" type="password" autocomplete="current-password" bind:value={password} required class_name="mt-4" />
+      <FieldInput
+        id="reescrita-login-email"
+        label="E-mail"
+        type="email"
+        autocomplete="username"
+        bind:value={email}
+        required
+      />
+      <FieldInput
+        id="reescrita-login-password"
+        label="Senha"
+        type="password"
+        autocomplete="current-password"
+        bind:value={password}
+        required
+        class_name="mt-4"
+      />
 
       <Button type="submit" variant="primary" loading={busy} class_name="mt-5 w-full">
         {busy ? 'Entrando…' : 'Entrar'}

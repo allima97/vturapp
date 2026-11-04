@@ -13,17 +13,23 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
 vi.mock('./base', () => ({ handlePreferenciasBaseGet: spy('handlePreferenciasBaseGet') }));
-vi.mock('./cidades-busca', () => ({ handlePreferenciasCidadesBuscaGet: spy('handlePreferenciasCidadesBuscaGet') }));
+vi.mock('./cidades-busca', () => ({
+  handlePreferenciasCidadesBuscaGet: spy('handlePreferenciasCidadesBuscaGet')
+}));
 vi.mock('./delete', () => ({ handlePreferenciasDeletePost: spy('handlePreferenciasDeletePost') }));
 vi.mock('./list', () => ({ handlePreferenciasListGet: spy('handlePreferenciasListGet') }));
 vi.mock('./save', () => ({ handlePreferenciasSavePost: spy('handlePreferenciasSavePost') }));
 vi.mock('./share', () => ({ handlePreferenciasSharePost: spy('handlePreferenciasSharePost') }));
-vi.mock('./share-accept', () => ({ handlePreferenciasShareAcceptPost: spy('handlePreferenciasShareAcceptPost') }));
-vi.mock('./share-revoke', () => ({ handlePreferenciasShareRevokePost: spy('handlePreferenciasShareRevokePost') }));
+vi.mock('./share-accept', () => ({
+  handlePreferenciasShareAcceptPost: spy('handlePreferenciasShareAcceptPost')
+}));
+vi.mock('./share-revoke', () => ({
+  handlePreferenciasShareRevokePost: spy('handlePreferenciasShareRevokePost')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
@@ -36,7 +42,7 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['POST', '/api/v1/preferencias/save', 'handlePreferenciasSavePost', {}],
   ['POST', '/api/v1/preferencias/share', 'handlePreferenciasSharePost', {}],
   ['POST', '/api/v1/preferencias/share-accept', 'handlePreferenciasShareAcceptPost', {}],
-  ['POST', '/api/v1/preferencias/share-revoke', 'handlePreferenciasShareRevokePost', {}],
+  ['POST', '/api/v1/preferencias/share-revoke', 'handlePreferenciasShareRevokePost', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
@@ -47,7 +53,7 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/preferencias/save'],
   ['PUT', '/api/v1/preferencias/share'],
   ['PUT', '/api/v1/preferencias/share-accept'],
-  ['PUT', '/api/v1/preferencias/share-revoke'],
+  ['PUT', '/api/v1/preferencias/share-revoke']
 ];
 
 function ev(method: string, path: string) {

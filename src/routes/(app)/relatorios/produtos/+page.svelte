@@ -175,16 +175,21 @@
     loading = true;
 
     try {
-      const data = await apiGet<ProdutosRelatorioPayload>('/api/v1/relatorios/produtos', {
-        data_inicio: dataInicio,
-        data_fim: dataFim,
-        empresa_id: empresaSelecionada || undefined,
-        vendedor_id: vendedorSelecionado || undefined,
-        tipo: tipoSelecionado || undefined,
-        ordenacao,
-        items_limit: RELATORIO_PAGE_SIZE,
-        items_offset: 0
-      }, controller.signal, 90_000);
+      const data = await apiGet<ProdutosRelatorioPayload>(
+        '/api/v1/relatorios/produtos',
+        {
+          data_inicio: dataInicio,
+          data_fim: dataFim,
+          empresa_id: empresaSelecionada || undefined,
+          vendedor_id: vendedorSelecionado || undefined,
+          tipo: tipoSelecionado || undefined,
+          ordenacao,
+          items_limit: RELATORIO_PAGE_SIZE,
+          items_offset: 0
+        },
+        controller.signal,
+        90_000
+      );
       if (requestSeq !== relatorioRequestSeq) return;
       produtos = data.items || [];
       totalRelatorioItems = Number(data.total || produtos.length || 0);
@@ -227,16 +232,21 @@
     loadingMore = true;
 
     try {
-      const data = await apiGet<ProdutosRelatorioPayload>('/api/v1/relatorios/produtos', {
-        data_inicio: dataInicio,
-        data_fim: dataFim,
-        empresa_id: empresaSelecionada || undefined,
-        vendedor_id: vendedorSelecionado || undefined,
-        tipo: tipoSelecionado || undefined,
-        ordenacao,
-        items_limit: RELATORIO_PAGE_SIZE,
-        items_offset: produtos.length
-      }, controller.signal, 90_000);
+      const data = await apiGet<ProdutosRelatorioPayload>(
+        '/api/v1/relatorios/produtos',
+        {
+          data_inicio: dataInicio,
+          data_fim: dataFim,
+          empresa_id: empresaSelecionada || undefined,
+          vendedor_id: vendedorSelecionado || undefined,
+          tipo: tipoSelecionado || undefined,
+          ordenacao,
+          items_limit: RELATORIO_PAGE_SIZE,
+          items_offset: produtos.length
+        },
+        controller.signal,
+        90_000
+      );
 
       produtos = [...produtos, ...(data.items || [])];
       totalRelatorioItems = Number(data.total || totalRelatorioItems || produtos.length);
@@ -383,7 +393,8 @@
 
   // Regra de escopo: vendedor/uso individual não escolhe empresa ou vendedor global.
   $: showEmpresaFiltro = !$permissoes.ready || $permissoes.isSystemAdmin || $permissoes.isMaster;
-  $: showVendedorFiltro = !$permissoes.ready || (!$permissoes.isVendedor && !$permissoes.usoIndividual);
+  $: showVendedorFiltro =
+    !$permissoes.ready || (!$permissoes.isVendedor && !$permissoes.usoIndividual);
 
   $: if ($permissoes.ready && !showEmpresaFiltro && empresaSelecionada) empresaSelecionada = '';
   $: if ($permissoes.ready && !showVendedorFiltro && vendedorSelecionado) vendedorSelecionado = '';
@@ -399,7 +410,7 @@
     vendedorSelecionado,
     tipoSelecionado,
     ordenacao
-    ].join('|');
+  ].join('|');
 
   $: if (autoReloadEnabled && autoReloadKey !== lastAutoReloadKey) {
     lastAutoReloadKey = autoReloadKey;
@@ -416,10 +427,7 @@
   subtitle="Performance por tipo de produto"
   color="financeiro"
   actions={[{ label: 'Voltar', href: '/relatorios', variant: 'secondary', icon: ArrowLeft }]}
-  breadcrumbs={[
-    { label: 'Relatorios', href: '/relatorios' },
-    { label: 'Produtos' }
-  ]}
+  breadcrumbs={[{ label: 'Relatorios', href: '/relatorios' }, { label: 'Produtos' }]}
 />
 
 <!-- Mobile: botão de filtros -->
@@ -428,7 +436,7 @@
     <SlidersHorizontal size={16} class="mr-2" />
     Filtros
     {#if empresaSelecionada || vendedorSelecionado || tipoSelecionado}
-      <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-financeiro-500"></span>
+      <span class="bg-financeiro-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
     {/if}
   </Button>
 </div>
@@ -476,7 +484,10 @@
         id="rel-produtos-empresa-mobile"
         label="Empresa"
         bind:value={empresaSelecionada}
-        options={[{ value: '', label: 'Todas' }, ...empresas.map((e) => ({ value: e.id, label: e.nome }))]}
+        options={[
+          { value: '', label: 'Todas' },
+          ...empresas.map((e) => ({ value: e.id, label: e.nome }))
+        ]}
         placeholder={null}
         class_name="w-full"
       />
@@ -486,7 +497,10 @@
         id="rel-produtos-vendedor-mobile"
         label="Vendedor"
         bind:value={vendedorSelecionado}
-        options={[{ value: '', label: 'Todos' }, ...vendedores.map((v) => ({ value: v.id, label: v.nome }))]}
+        options={[
+          { value: '', label: 'Todos' },
+          ...vendedores.map((v) => ({ value: v.id, label: v.nome }))
+        ]}
         placeholder={null}
         class_name="w-full"
       />
@@ -495,7 +509,10 @@
       id="rel-produtos-tipo-mobile"
       label="Tipo"
       bind:value={tipoSelecionado}
-      options={[{ value: '', label: 'Todos' }, ...tiposDisponiveis.map((t) => ({ value: t, label: t }))]}
+      options={[
+        { value: '', label: 'Todos' },
+        ...tiposDisponiveis.map((t) => ({ value: t, label: t }))
+      ]}
       placeholder={null}
       class_name="w-full"
     />
@@ -560,7 +577,10 @@
       id="rel-produtos-empresa"
       label="Empresa"
       bind:value={empresaSelecionada}
-      options={[{ value: '', label: 'Todas' }, ...empresas.map((e) => ({ value: e.id, label: e.nome }))]}
+      options={[
+        { value: '', label: 'Todas' },
+        ...empresas.map((e) => ({ value: e.id, label: e.nome }))
+      ]}
       placeholder={null}
       class_name="w-full"
     />
@@ -570,7 +590,10 @@
       id="rel-produtos-vendedor"
       label="Vendedor"
       bind:value={vendedorSelecionado}
-      options={[{ value: '', label: 'Todos' }, ...vendedores.map((v) => ({ value: v.id, label: v.nome }))]}
+      options={[
+        { value: '', label: 'Todos' },
+        ...vendedores.map((v) => ({ value: v.id, label: v.nome }))
+      ]}
       placeholder={null}
       class_name="w-full"
     />
@@ -579,7 +602,10 @@
     id="rel-produtos-tipo"
     label="Tipo"
     bind:value={tipoSelecionado}
-    options={[{ value: '', label: 'Todos' }, ...tiposDisponiveis.map((t) => ({ value: t, label: t }))]}
+    options={[
+      { value: '', label: 'Todos' },
+      ...tiposDisponiveis.map((t) => ({ value: t, label: t }))
+    ]}
     placeholder={null}
     class_name="w-full"
   />
@@ -600,29 +626,46 @@
 
 <div class="vtur-kpi-grid {produtoTop ? '' : 'vtur-kpi-grid-3'} mb-6">
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-500"><Wallet size={20} /></div>
-    <div><p class="text-sm font-medium text-slate-500">Receita Total</p><p class="text-2xl font-bold text-slate-900">{formatCurrency(totalReceita)}</p></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-500">
+      <Wallet size={20} />
+    </div>
+    <div>
+      <p class="text-sm font-medium text-slate-500">Receita Total</p>
+      <p class="text-2xl font-bold text-slate-900">{formatCurrency(totalReceita)}</p>
+    </div>
   </div>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500"><TrendingUp size={20} /></div>
-    <div><p class="text-sm font-medium text-slate-500">Lucro Total</p><p class="text-2xl font-bold text-slate-900">{formatCurrency(totalLucro)}</p></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
+      <TrendingUp size={20} />
+    </div>
+    <div>
+      <p class="text-sm font-medium text-slate-500">Lucro Total</p>
+      <p class="text-2xl font-bold text-slate-900">{formatCurrency(totalLucro)}</p>
+    </div>
   </div>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500"><BarChart2 size={20} /></div>
-    <div><p class="text-sm font-medium text-slate-500">Margem Média</p><p class="text-2xl font-bold text-slate-900">{margemMedia.toFixed(1)}%</p></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+      <BarChart2 size={20} />
+    </div>
+    <div>
+      <p class="text-sm font-medium text-slate-500">Margem Média</p>
+      <p class="text-2xl font-bold text-slate-900">{margemMedia.toFixed(1)}%</p>
+    </div>
   </div>
   {#if produtoTop}
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-500"><Trophy size={20} /></div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-500">
+        <Trophy size={20} />
+      </div>
       <div>
         <p class="text-sm font-medium text-slate-500">Produto Top</p>
-        <p class="text-lg font-bold text-slate-900 truncate">{produtoTop.produto}</p>
+        <p class="truncate text-lg font-bold text-slate-900">{produtoTop.produto}</p>
       </div>
     </div>
   {/if}
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+<div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
   <Card header="Receita vs Lucro por Produto" color="financeiro">
     <ChartJS type="bar" data={receitaPorProdutoData} height={280} />
   </Card>
@@ -632,8 +675,13 @@
 </div>
 
 {#if relatorioTruncado}
-  <div class="mb-4 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:flex-row sm:items-center sm:justify-between">
-    <span>Exibindo {produtos.length} de {totalRelatorioItems} produtos. Carregue mais somente quando precisar detalhar/exportar mais linhas.</span>
+  <div
+    class="mb-4 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:flex-row sm:items-center sm:justify-between"
+  >
+    <span
+      >Exibindo {produtos.length} de {totalRelatorioItems} produtos. Carregue mais somente quando precisar
+      detalhar/exportar mais linhas.</span
+    >
     <Button variant="secondary" size="sm" disabled={loadingMore} on:click={loadMoreRelatorio}>
       {loadingMore ? 'Carregando...' : 'Carregar mais'}
     </Button>

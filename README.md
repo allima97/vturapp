@@ -53,6 +53,7 @@ npm run build
 
 Esta é uma reescrita completa do sistema VTUR (Astro + React) para SvelteKit.
 Mantém:
+
 - Lógica de negócio (APIs Hono)
 - Banco de dados Supabase
 - Identidade visual (cores por módulo)

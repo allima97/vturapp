@@ -71,7 +71,12 @@ export async function handleVouchersGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['operacao_vouchers', 'vouchers', 'operacao'], 1, 'Sem acesso a Vouchers.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_vouchers', 'vouchers', 'operacao'],
+        1,
+        'Sem acesso a Vouchers.'
+      );
     }
 
     const companyIds = resolveScopedCompanyIds(scope, event.url.searchParams.get('company_id'));
@@ -79,17 +84,20 @@ export async function handleVouchersGet(event: RequestEvent) {
     const buildQuery = (companyIdsFilter?: string[]) => {
       let query = client
         .from('vouchers')
-        .select(`
+        .select(
+          `
           id, company_id, provider, nome, codigo_sistema, codigo_fornecedor,
           reserva_online, passageiros, tipo_acomodacao, operador, resumo,
           data_inicio, data_fim, ativo, extra_data, created_at, updated_at,
           voucher_dias(id, dia_numero, titulo, descricao, data_referencia, cidade, ordem),
           voucher_hoteis(id, cidade, hotel, endereco, data_inicio, data_fim, noites, telefone, contato, status, observacao, ordem)
-        `)
+        `
+        )
         .order('updated_at', { ascending: false })
         .limit(500);
 
-      if (companyIdsFilter && companyIdsFilter.length > 0) query = query.in('company_id', companyIdsFilter);
+      if (companyIdsFilter && companyIdsFilter.length > 0)
+        query = query.in('company_id', companyIdsFilter);
       return query;
     };
 
@@ -137,7 +145,12 @@ export async function handleVouchersPost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['operacao_vouchers', 'vouchers', 'operacao'], 2, 'Sem permissão para criar vouchers.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_vouchers', 'vouchers', 'operacao'],
+        2,
+        'Sem permissão para criar vouchers.'
+      );
     }
 
     const body: VoucherCreateBody =
@@ -163,24 +176,26 @@ export async function handleVouchersPost(event: RequestEvent) {
 
     const { data: voucher, error: voucherError } = await client
       .from('vouchers')
-      .insert([{
-        company_id: scope.companyId,
-        created_by: user.id,
-        viagem_id: viagemId,
-        provider: body.provider || 'special_tours',
-        nome: String(body.nome || '').trim(),
-        codigo_sistema: body.codigo_sistema || null,
-        codigo_fornecedor: body.codigo_fornecedor || null,
-        reserva_online: body.reserva_online || null,
-        passageiros: body.passageiros || null,
-        tipo_acomodacao: body.tipo_acomodacao || null,
-        operador: body.operador || null,
-        resumo: body.resumo || null,
-        extra_data: body.extra_data || {},
-        data_inicio: body.data_inicio || null,
-        data_fim: body.data_fim || null,
-        ativo: body.ativo !== false
-      }])
+      .insert([
+        {
+          company_id: scope.companyId,
+          created_by: user.id,
+          viagem_id: viagemId,
+          provider: body.provider || 'special_tours',
+          nome: String(body.nome || '').trim(),
+          codigo_sistema: body.codigo_sistema || null,
+          codigo_fornecedor: body.codigo_fornecedor || null,
+          reserva_online: body.reserva_online || null,
+          passageiros: body.passageiros || null,
+          tipo_acomodacao: body.tipo_acomodacao || null,
+          operador: body.operador || null,
+          resumo: body.resumo || null,
+          extra_data: body.extra_data || {},
+          data_inicio: body.data_inicio || null,
+          data_fim: body.data_fim || null,
+          ativo: body.ativo !== false
+        }
+      ])
       .select('id')
       .single();
 

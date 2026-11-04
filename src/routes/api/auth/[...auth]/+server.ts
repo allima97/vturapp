@@ -34,13 +34,13 @@ const handler: RequestHandler = async ({ request, platform }) => {
   const baseURL =
     env.PUBLIC_ENVIRONMENT === 'production'
       ? 'https://vturapp.com.br'
-      : env.PUBLIC_APP_URL ?? 'http://localhost:5173';
+      : (env.PUBLIC_APP_URL ?? 'http://localhost:5173');
 
   const auth = createAuth(
     env.DB,
     env.BETTER_AUTH_SECRET,
     baseURL,
-    env.RESEND_API_KEY   // F2-02: habilitado para verificação de e-mail
+    env.RESEND_API_KEY // F2-02: habilitado para verificação de e-mail
   );
 
   return auth.handler(request);

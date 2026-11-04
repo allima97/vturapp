@@ -49,10 +49,7 @@ export class TenantError extends Error {
  * // Antes de deletar um registro:
  * assertTenantOwnership(ctx.empresaId, venda.empresaId);
  */
-export function assertTenantOwnership(
-  userEmpresaId: number,
-  rowEmpresaId: number
-): void {
+export function assertTenantOwnership(userEmpresaId: number, rowEmpresaId: number): void {
   if (userEmpresaId !== rowEmpresaId) {
     throw new TenantError(
       `Acesso negado: registro pertence à empresa ${rowEmpresaId}, não à empresa ${userEmpresaId}.`,
@@ -127,10 +124,7 @@ export function assertHasEmpresaId(
   empresaId: number | null | undefined
 ): asserts empresaId is number {
   if (!empresaId) {
-    throw new TenantError(
-      'Usuário autenticado não tem empresa associada.',
-      'MISSING_EMPRESA_ID'
-    );
+    throw new TenantError('Usuário autenticado não tem empresa associada.', 'MISSING_EMPRESA_ID');
   }
 }
 
@@ -141,9 +135,6 @@ export function assertHasEmpresaId(
 /**
  * Retorna true se houver mismatch de tenant (para logging sem lançar exceção).
  */
-export function isTenantMismatch(
-  userEmpresaId: number,
-  rowEmpresaId: number
-): boolean {
+export function isTenantMismatch(userEmpresaId: number, rowEmpresaId: number): boolean {
   return userEmpresaId !== rowEmpresaId;
 }

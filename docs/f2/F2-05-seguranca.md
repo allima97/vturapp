@@ -9,28 +9,28 @@
 
 Adicionar camadas de segurança à API v2 antes que o tráfego real chegue a ela:
 
-| Camada | Implementação |
-|---|---|
-| Validação de input | Pure TypeScript (sem Zod) |
-| Security Headers | Hono middleware `securityHeaders` |
-| CSRF Protection | Verificação de `Origin` para mutating requests |
-| Rate Limiting | Sliding-window em memória, por IP |
+| Camada             | Implementação                                  |
+| ------------------ | ---------------------------------------------- |
+| Validação de input | Pure TypeScript (sem Zod)                      |
+| Security Headers   | Hono middleware `securityHeaders`              |
+| CSRF Protection    | Verificação de `Origin` para mutating requests |
+| Rate Limiting      | Sliding-window em memória, por IP              |
 
 ---
 
 ## Arquivos criados
 
-| Arquivo | Responsabilidade |
-|---|---|
-| `src/lib/server/api/middleware/security.ts` | `securityHeaders` + `csrfProtection` middleware |
-| `src/lib/server/api/middleware/rate-limit.ts` | `rateLimitMiddleware` + helpers |
-| `src/lib/server/validation/schemas.ts` | `parseConviteInput`, `parseAceitarConviteInput`, `parseRegistroEmpresaInput` |
-| `src/lib/server/validation/schemas.test.ts` | 52 testes cobrindo todos os schemas e middlewares |
+| Arquivo                                       | Responsabilidade                                                             |
+| --------------------------------------------- | ---------------------------------------------------------------------------- |
+| `src/lib/server/api/middleware/security.ts`   | `securityHeaders` + `csrfProtection` middleware                              |
+| `src/lib/server/api/middleware/rate-limit.ts` | `rateLimitMiddleware` + helpers                                              |
+| `src/lib/server/validation/schemas.ts`        | `parseConviteInput`, `parseAceitarConviteInput`, `parseRegistroEmpresaInput` |
+| `src/lib/server/validation/schemas.test.ts`   | 52 testes cobrindo todos os schemas e middlewares                            |
 
 ## Arquivo modificado
 
-| Arquivo | Mudança |
-|---|---|
+| Arquivo                        | Mudança                                                          |
+| ------------------------------ | ---------------------------------------------------------------- |
 | `src/lib/server/api/app-v2.ts` | Wired `securityHeaders`, `rateLimitMiddleware`, `csrfProtection` |
 
 ---
@@ -62,6 +62,7 @@ APIs JSON são naturalmente resistentes a CSRF (HTML `<form>` não envia
 `Content-Type: application/json`), mas esta camada adiciona defesa em profundidade.
 
 **Regras:**
+
 - Métodos GET/HEAD/OPTIONS: bypass (não mutantes)
 - Path `/api/auth/*`: bypass (Better Auth tem CSRF interno via token)
 - `Origin: null` em dev: permitido; em prod → 403 `CSRF_MISSING_ORIGIN`
@@ -75,15 +76,17 @@ APIs JSON são naturalmente resistentes a CSRF (HTML `<form>` não envia
 **Algoritmo:** sliding-window in-memory por IP.
 
 **Configuração na API v2:**
+
 ```typescript
 rateLimitMiddleware({
-  windowMs: 60_000,      // 1 minuto
-  maxRequests: 120,      // 120 req/min
-  excludePaths: ['/api/v2/health'],
-})
+  windowMs: 60_000, // 1 minuto
+  maxRequests: 120, // 120 req/min
+  excludePaths: ['/api/v2/health']
+});
 ```
 
 **Response quando bloqueado:**
+
 ```
 HTTP 429 Too Many Requests
 Retry-After: 42
@@ -95,6 +98,7 @@ X-RateLimit-Reset: <epoch seconds>
 ```
 
 **Extração de IP (prioridade):**
+
 1. `CF-Connecting-IP` (Cloudflare)
 2. `X-Forwarded-For` (primeiro da lista)
 3. `127.0.0.1` (fallback dev)
@@ -107,17 +111,18 @@ Para limites globais, usar Cloudflare KV ou Durable Objects (roadmap F5+).
 ## 4. Validação de Input (pure TypeScript)
 
 Sem Zod. Cada schema segue o padrão:
+
 ```typescript
-type ParseResult<T> = { ok: true; data: T } | { ok: false; errors: string[] }
+type ParseResult<T> = { ok: true; data: T } | { ok: false; errors: string[] };
 ```
 
 ### Schemas disponíveis
 
-| Schema | Campos validados |
-|---|---|
-| `parseConviteInput` | `email` (formato, max 320), `papel` (admin\|operador\|visualizador) |
-| `parseAceitarConviteInput` | `token` (UUID v4) |
-| `parseRegistroEmpresaInput` | `nome` (2–200), `slug` (3–80, URL-safe), `cnpj?` (14 dígitos) |
+| Schema                      | Campos validados                                                    |
+| --------------------------- | ------------------------------------------------------------------- |
+| `parseConviteInput`         | `email` (formato, max 320), `papel` (admin\|operador\|visualizador) |
+| `parseAceitarConviteInput`  | `token` (UUID v4)                                                   |
+| `parseRegistroEmpresaInput` | `nome` (2–200), `slug` (3–80, URL-safe), `cnpj?` (14 dígitos)       |
 
 ### Uso nos routes
 
@@ -157,15 +162,15 @@ npx vitest run src/lib/server/validation/schemas.test.ts
 
 ## Invariantes F2-05
 
-| ID | Invariante | Testado |
-|---|---|---|
-| F2-05-A | Todo endpoint v2 responde com `X-Content-Type-Options: nosniff` | ✅ (middleware) |
-| F2-05-B | POST/PUT/DELETE sem Origin em prod → 403 `CSRF_MISSING_ORIGIN` | ✅ E |
-| F2-05-C | POST/PUT/DELETE com Origin inválido → 403 `CSRF_INVALID_ORIGIN` | ✅ E |
-| F2-05-D | Após 120 req/min → 429 com `Retry-After` | ✅ F |
-| F2-05-E | Input com email inválido → 400 `VALIDATION_ERROR` com detalhes | ✅ B |
-| F2-05-F | Input com papel inválido → 400 `VALIDATION_ERROR` | ✅ B |
-| F2-05-G | HSTS emitido apenas em produção | ✅ (código condicional) |
+| ID      | Invariante                                                      | Testado                 |
+| ------- | --------------------------------------------------------------- | ----------------------- |
+| F2-05-A | Todo endpoint v2 responde com `X-Content-Type-Options: nosniff` | ✅ (middleware)         |
+| F2-05-B | POST/PUT/DELETE sem Origin em prod → 403 `CSRF_MISSING_ORIGIN`  | ✅ E                    |
+| F2-05-C | POST/PUT/DELETE com Origin inválido → 403 `CSRF_INVALID_ORIGIN` | ✅ E                    |
+| F2-05-D | Após 120 req/min → 429 com `Retry-After`                        | ✅ F                    |
+| F2-05-E | Input com email inválido → 400 `VALIDATION_ERROR` com detalhes  | ✅ B                    |
+| F2-05-F | Input com papel inválido → 400 `VALIDATION_ERROR`               | ✅ B                    |
+| F2-05-G | HSTS emitido apenas em produção                                 | ✅ (código condicional) |
 
 ---
 

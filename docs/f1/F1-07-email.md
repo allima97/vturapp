@@ -20,13 +20,13 @@ Provar que e-mail transacional funciona no runtime Cloudflare Workers:
 
 ## Por que não SMTP em Workers
 
-| Abordagem | Funciona em Workers? | Motivo |
-|-----------|---------------------|--------|
-| `nodemailer` + SMTP | ❌ | Requer `net` e `tls` do Node.js (não disponível) |
-| Resend SMTP (smtp.resend.com:465) | ❌ | TCP/465 bloqueado pelo runtime Workers |
-| Resend API HTTP REST | ✅ | `fetch()` nativo — funciona perfeitamente |
-| AWS SES API HTTP | ✅ | Mesma abordagem, mas mais complexo (auth Sigv4) |
-| SendGrid API HTTP | ✅ | Similar ao Resend |
+| Abordagem                         | Funciona em Workers? | Motivo                                           |
+| --------------------------------- | -------------------- | ------------------------------------------------ |
+| `nodemailer` + SMTP               | ❌                   | Requer `net` e `tls` do Node.js (não disponível) |
+| Resend SMTP (smtp.resend.com:465) | ❌                   | TCP/465 bloqueado pelo runtime Workers           |
+| Resend API HTTP REST              | ✅                   | `fetch()` nativo — funciona perfeitamente        |
+| AWS SES API HTTP                  | ✅                   | Mesma abordagem, mas mais complexo (auth Sigv4)  |
+| SendGrid API HTTP                 | ✅                   | Similar ao Resend                                |
 
 **Conclusão**: em Cloudflare Workers, **somente APIs HTTP** funcionam para e-mail.
 Resend é a melhor opção pelo developer experience e deliverability.
@@ -53,13 +53,13 @@ Hono Route /api/v1/email-proof/send
 
 ## Arquivos criados
 
-| Arquivo | Descrição |
-|---------|-----------|
-| `src/lib/server/email/client.ts` | `sendEmail()`, `sendEmailWithRetry()`, `ResendApiError`, `hasResendApiKey()` |
-| `src/lib/server/email/templates.ts` | `templateTesteStack()`, `templateBoasVindas()` |
-| `src/lib/server/email/index.ts` | Re-exportações |
-| `src/lib/server/api/routes/email-proof/index.ts` | Rotas GET /status e POST /send |
-| `src/lib/server/api/app.ts` | Rota `/email-proof` registrada |
+| Arquivo                                          | Descrição                                                                    |
+| ------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `src/lib/server/email/client.ts`                 | `sendEmail()`, `sendEmailWithRetry()`, `ResendApiError`, `hasResendApiKey()` |
+| `src/lib/server/email/templates.ts`              | `templateTesteStack()`, `templateBoasVindas()`                               |
+| `src/lib/server/email/index.ts`                  | Re-exportações                                                               |
+| `src/lib/server/api/routes/email-proof/index.ts` | Rotas GET /status e POST /send                                               |
+| `src/lib/server/api/app.ts`                      | Rota `/email-proof` registrada                                               |
 
 ---
 
@@ -70,10 +70,10 @@ export async function sendEmail(apiKey: string, payload: ResendEmailPayload) {
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${apiKey}`,    // API key nunca exposta na URL
-      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`, // API key nunca exposta na URL
+      'Content-Type': 'application/json'
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(payload)
   });
 
   if (!response.ok) {
@@ -131,7 +131,7 @@ async function handleNightly(env: ScheduledEnv, ctx: ExecutionContext) {
     from: 'Vtur App <noreply@vturapp.com.br>',
     to: summary.adminEmails,
     subject: `Resumo diário — ${summary.date}`,
-    html: templateResumoDiario(summary).html,
+    html: templateResumoDiario(summary).html
   });
 }
 ```
@@ -143,10 +143,12 @@ O binding `RESEND_API_KEY` já está em `app.d.ts` (F1-02).
 ## Migração do sistema de e-mail atual (F2-04 / F4-03)
 
 O sistema atual (`emailSettings.ts` + `welcome-email/root.ts`) usa:
+
 - SMTP via `nodemailer` (lido de Supabase DB)
 - Resend SMTP como provider SMTP (smtp.resend.com)
 
 **Plano de migração:**
+
 1. Substituir `resolveResendApiKey()` por leitura direta de `env.RESEND_API_KEY`
 2. Substituir envio SMTP por `sendEmail()` do novo client
 3. Manter template engine atual (`emailMarkdown.ts`) ou migrar para React Email
@@ -155,14 +157,14 @@ O sistema atual (`emailSettings.ts` + `welcome-email/root.ts`) usa:
 
 ## Comparação: client atual vs novo
 
-| Aspecto | emailSettings.ts atual | email/client.ts (F1-07) |
-|---------|----------------------|------------------------|
-| Runtime | Node.js (nodemailer) | Workers (fetch) |
-| Config source | Supabase DB | env binding |
-| SMTP | ✅ | ❌ (não funciona em Workers) |
-| Resend API | Via SMTP relay | Via API HTTP direta |
-| Retry | ❌ | ✅ (1 retry, configurável) |
-| TypeScript | ⚠️ parcial | ✅ completo |
+| Aspecto       | emailSettings.ts atual | email/client.ts (F1-07)      |
+| ------------- | ---------------------- | ---------------------------- |
+| Runtime       | Node.js (nodemailer)   | Workers (fetch)              |
+| Config source | Supabase DB            | env binding                  |
+| SMTP          | ✅                     | ❌ (não funciona em Workers) |
+| Resend API    | Via SMTP relay         | Via API HTTP direta          |
+| Retry         | ❌                     | ✅ (1 retry, configurável)   |
+| TypeScript    | ⚠️ parcial             | ✅ completo                  |
 
 ---
 

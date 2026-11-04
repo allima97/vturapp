@@ -126,7 +126,9 @@ const ACCESS_CHANGE_CACHE_TAGS = [
 ];
 
 function normalizePermissionValue(value?: string | null) {
-  const normalized = String(value || 'none').trim().toLowerCase();
+  const normalized = String(value || 'none')
+    .trim()
+    .toLowerCase();
   return PERMISSION_VALUES.has(normalized) ? normalized : 'none';
 }
 
@@ -145,41 +147,66 @@ function firstEmbedded<T>(value: T | T[] | null | undefined) {
   return value || null;
 }
 
-export function extractUserTypeName(record: { user_types?: ManagedUserRow['user_types'] } | null | undefined) {
-  return String(firstEmbedded(record?.user_types)?.name || '').trim().toUpperCase();
+export function extractUserTypeName(
+  record: { user_types?: ManagedUserRow['user_types'] } | null | undefined
+) {
+  return String(firstEmbedded(record?.user_types)?.name || '')
+    .trim()
+    .toUpperCase();
 }
 
-export function extractCompanyName(record: { companies?: ManagedUserRow['companies'] } | null | undefined) {
+export function extractCompanyName(
+  record: { companies?: ManagedUserRow['companies'] } | null | undefined
+) {
   const company = firstEmbedded(record?.companies);
   return String(company?.nome_fantasia || company?.nome_empresa || '').trim();
 }
 
 export function isSystemAdminRole(role?: string | null) {
-  return String(role || '').trim().toUpperCase().includes('ADMIN');
+  return String(role || '')
+    .trim()
+    .toUpperCase()
+    .includes('ADMIN');
 }
 
 export function isMasterRole(role?: string | null) {
-  return String(role || '').trim().toUpperCase().includes('MASTER');
+  return String(role || '')
+    .trim()
+    .toUpperCase()
+    .includes('MASTER');
 }
 
 export function isGestorRole(role?: string | null) {
-  return String(role || '').trim().toUpperCase().includes('GESTOR');
+  return String(role || '')
+    .trim()
+    .toUpperCase()
+    .includes('GESTOR');
 }
 
 export function isSellerRole(role?: string | null) {
-  return String(role || '').trim().toUpperCase().includes('VENDEDOR');
+  return String(role || '')
+    .trim()
+    .toUpperCase()
+    .includes('VENDEDOR');
 }
 
 export function isFinanceiroRole(role?: string | null) {
-  return String(role || '').trim().toUpperCase().includes('FINANCEIRO');
+  return String(role || '')
+    .trim()
+    .toUpperCase()
+    .includes('FINANCEIRO');
 }
 
 export function normalizeUserType(role?: string | null) {
-  return String(role || '').trim().toUpperCase();
+  return String(role || '')
+    .trim()
+    .toUpperCase();
 }
 
 export function isRestrictedUserTypeName(role?: string | null) {
-  const normalized = String(role || '').trim().toUpperCase();
+  const normalized = String(role || '')
+    .trim()
+    .toUpperCase();
   return normalized.includes('ADMIN') || normalized.includes('MASTER');
 }
 
@@ -195,13 +222,7 @@ export function getAccessibleCompanyIds(scope: UserScope) {
 export function canManageUsers(scope: UserScope) {
   const adminPerm = permLevel(scope.permissoes.admin);
   const usersPerm = permLevel(scope.permissoes.admin_users);
-  return (
-    scope.isAdmin ||
-    scope.isMaster ||
-    scope.isGestor ||
-    adminPerm >= 5 ||
-    usersPerm >= 3
-  );
+  return scope.isAdmin || scope.isMaster || scope.isGestor || adminPerm >= 5 || usersPerm >= 3;
 }
 
 export function canManagePermissions(scope: UserScope) {
@@ -233,7 +254,10 @@ export function ensureCanManageCompanies(scope: UserScope) {
   }
 }
 
-export function isUserInScope(scope: UserScope, row: Pick<ManagedUserRow, 'id' | 'company_id' | 'user_types'>) {
+export function isUserInScope(
+  scope: UserScope,
+  row: Pick<ManagedUserRow, 'id' | 'company_id' | 'user_types'>
+) {
   if (scope.isAdmin) return true;
   if (row.id === scope.userId) return true;
 
@@ -258,7 +282,10 @@ export function isUserInScope(scope: UserScope, row: Pick<ManagedUserRow, 'id' |
   return false;
 }
 
-export function ensureTargetUserScope(scope: UserScope, row: Pick<ManagedUserRow, 'id' | 'company_id' | 'user_types'>) {
+export function ensureTargetUserScope(
+  scope: UserScope,
+  row: Pick<ManagedUserRow, 'id' | 'company_id' | 'user_types'>
+) {
   if (scope.isAdmin || row.id === scope.userId) return;
 
   const roleName = extractUserTypeName({ user_types: row.user_types });
@@ -317,7 +344,9 @@ export function ensureAssignableCompany(scope: UserScope, companyId?: string | n
 }
 
 export function ensureAssignableUserType(scope: UserScope, typeName?: string | null) {
-  const normalized = String(typeName || '').trim().toUpperCase();
+  const normalized = String(typeName || '')
+    .trim()
+    .toUpperCase();
   if (!normalized) return;
 
   if (scope.isAdmin) return;
@@ -379,7 +408,10 @@ export function ensureAssignablePermissionSet(
 
 export async function listManagedUsers(client: DataClient, scope: UserScope) {
   const rows: ManagedUserRow[] = [];
-  const fetchUsers = async (filters?: { companyIds?: string[] | null; ownUserId?: string | null }) => {
+  const fetchUsers = async (filters?: {
+    companyIds?: string[] | null;
+    ownUserId?: string | null;
+  }) => {
     let query = client
       .from('users')
       .select(
@@ -539,7 +571,7 @@ export async function loadManagedCompanies(client: DataClient, scope: UserScope)
 export async function loadFinanceiroCompanyIds(
   client: DataClient,
   scope: UserScope,
-  financeiroId: string,
+  financeiroId: string
 ) {
   const scopedFinanceiroId = String(financeiroId || '').trim();
   if (!scopedFinanceiroId) return [];
@@ -570,7 +602,10 @@ export async function loadFinanceiroCompanyIds(
   return Array.from(
     new Set(
       rows
-        .filter((row: { status?: string | null }) => String(row?.status || '').toLowerCase() !== 'rejected')
+        .filter(
+          (row: { status?: string | null }) =>
+            String(row?.status || '').toLowerCase() !== 'rejected'
+        )
         .map((row: { company_id?: string | null }) => String(row?.company_id || '').trim())
         .filter(isUuid)
     )
@@ -582,7 +617,7 @@ export async function syncFinanceiroCompanyLinks(
   scope: UserScope,
   financeiroId: string,
   companyIds: string[],
-  actorUserId?: string | null,
+  actorUserId?: string | null
 ) {
   const scopedFinanceiroId = String(financeiroId || '').trim();
   if (!isUuid(scopedFinanceiroId)) {
@@ -656,9 +691,7 @@ export async function syncFinanceiroCompanyLinks(
     }));
 
   if (rowsToInsert.length > 0) {
-    const { error: insertError } = await client
-      .from('financeiro_empresas')
-      .insert(rowsToInsert);
+    const { error: insertError } = await client.from('financeiro_empresas').insert(rowsToInsert);
     if (insertError) throw insertError;
   }
 
@@ -699,7 +732,10 @@ export async function loadUserTypeDefaultPermissions(client: DataClient, userTyp
 }
 
 export function buildPermissionMatrix(
-  rows: Array<{ modulo?: string | null; permissao?: string | null; ativo?: boolean | null }> | null | undefined
+  rows:
+    | Array<{ modulo?: string | null; permissao?: string | null; ativo?: boolean | null }>
+    | null
+    | undefined
 ) {
   const rowMap = new Map<string, { modulo: string; permissao: string; ativo: boolean }>();
 
@@ -763,7 +799,10 @@ export async function saveUserPermissions(
 
     const existingId = existingMap.get(item.modulo);
     if (existingId) {
-      const { error: updateError } = await client.from('modulo_acesso').update(payload).eq('id', existingId);
+      const { error: updateError } = await client
+        .from('modulo_acesso')
+        .update(payload)
+        .eq('id', existingId);
       if (updateError) throw updateError;
     } else {
       const { error: insertError } = await client.from('modulo_acesso').insert(payload);
@@ -826,7 +865,11 @@ export async function saveDefaultPermissions(
   invalidateReadModelCache({ tags: [READ_MODEL_TAGS.users] });
 }
 
-export async function syncUserTypeDefaultPermissions(client: DataClient, userId: string, userTypeId?: string | null) {
+export async function syncUserTypeDefaultPermissions(
+  client: DataClient,
+  userId: string,
+  userTypeId?: string | null
+) {
   const normalizedUserTypeId = String(userTypeId || '').trim();
   if (!normalizedUserTypeId) return;
 
@@ -844,8 +887,13 @@ export async function syncUserTypeDefaultPermissions(client: DataClient, userId:
   );
 }
 
-export async function findAuthUserIdByEmail(client: ReturnType<typeof getAdminClient>, email: string) {
-  const normalized = String(email || '').trim().toLowerCase();
+export async function findAuthUserIdByEmail(
+  client: ReturnType<typeof getAdminClient>,
+  email: string
+) {
+  const normalized = String(email || '')
+    .trim()
+    .toLowerCase();
   if (!normalized) return null;
 
   const perPage = 200;
@@ -853,7 +901,12 @@ export async function findAuthUserIdByEmail(client: ReturnType<typeof getAdminCl
     const { data, error: listError } = await client.auth.admin.listUsers({ page, perPage });
     if (listError) throw listError;
     const users = (data?.users || []) as Array<{ id?: string | null; email?: string | null }>;
-    const found = users.find((user) => String(user.email || '').trim().toLowerCase() === normalized);
+    const found = users.find(
+      (user) =>
+        String(user.email || '')
+          .trim()
+          .toLowerCase() === normalized
+    );
     if (found?.id) return String(found.id);
     if (users.length < perPage) break;
   }
@@ -914,7 +967,12 @@ export async function loadSystemModuleSettings(client: DataClient) {
 
 export async function saveSystemModuleSettings(
   client: DataClient,
-  payload: Array<{ module_key: string; enabled: boolean; reason?: string | null; updated_by?: string | null }>
+  payload: Array<{
+    module_key: string;
+    enabled: boolean;
+    reason?: string | null;
+    updated_by?: string | null;
+  }>
 ) {
   for (const item of payload) {
     const moduleKey = normalizeModuloKey(item.module_key);
@@ -955,7 +1013,11 @@ export async function loadAvisoTemplates(client: DataClient): Promise<AvisoTempl
     .order('nome', { ascending: true });
 
   if (!queryError) {
-    return ((data || []) as Array<Omit<AvisoTemplatePayload, 'sender_key'> & { sender_key?: string | null }>).map((row) => ({
+    return (
+      (data || []) as Array<
+        Omit<AvisoTemplatePayload, 'sender_key'> & { sender_key?: string | null }
+      >
+    ).map((row) => ({
       ...row,
       sender_key: row.sender_key || 'avisos'
     }));
@@ -996,7 +1058,9 @@ export function buildFromEmails(settings: Partial<EmailSettingsPayload> | null |
   const alerta = String(settings?.alerta_from_email || DEFAULT_FROM_EMAILS.alerta).trim();
   const admin = String(settings?.admin_from_email || DEFAULT_FROM_EMAILS.admin).trim();
   const avisos = String(settings?.avisos_from_email || DEFAULT_FROM_EMAILS.avisos).trim();
-  const financeiro = String(settings?.financeiro_from_email || DEFAULT_FROM_EMAILS.financeiro).trim();
+  const financeiro = String(
+    settings?.financeiro_from_email || DEFAULT_FROM_EMAILS.financeiro
+  ).trim();
   const suporte = String(settings?.suporte_from_email || DEFAULT_FROM_EMAILS.suporte).trim();
 
   return {

@@ -19,29 +19,44 @@ describe('can() — permissões básicas', () => {
   it('admin pode gerenciar empresa', () => expect(can('admin', 'empresa', 'gerenciar')).toBe(true));
   it('admin pode excluir vendas', () => expect(can('admin', 'vendas', 'excluir')).toBe(true));
   it('admin pode ler auditoria', () => expect(can('admin', 'auditoria', 'ler')).toBe(true));
-  it('admin pode gerenciar financeiro', () => expect(can('admin', 'financeiro', 'gerenciar')).toBe(true));
-  it('admin pode convidar usuarios', () => expect(can('admin', 'usuarios', 'gerenciar')).toBe(true));
+  it('admin pode gerenciar financeiro', () =>
+    expect(can('admin', 'financeiro', 'gerenciar')).toBe(true));
+  it('admin pode convidar usuarios', () =>
+    expect(can('admin', 'usuarios', 'gerenciar')).toBe(true));
 
   // Operador — escrita limitada
   it('operador pode ler vendas', () => expect(can('operador', 'vendas', 'ler')).toBe(true));
   it('operador pode criar vendas', () => expect(can('operador', 'vendas', 'criar')).toBe(true));
   it('operador pode editar vendas', () => expect(can('operador', 'vendas', 'editar')).toBe(true));
-  it('operador NÃO pode excluir vendas', () => expect(can('operador', 'vendas', 'excluir')).toBe(false));
-  it('operador NÃO pode gerenciar empresa', () => expect(can('operador', 'empresa', 'gerenciar')).toBe(false));
-  it('operador NÃO pode editar empresa', () => expect(can('operador', 'empresa', 'editar')).toBe(false));
-  it('operador NÃO pode criar convites', () => expect(can('operador', 'convites', 'criar')).toBe(false));
-  it('operador NÃO pode ler auditoria', () => expect(can('operador', 'auditoria', 'ler')).toBe(false));
-  it('operador NÃO pode gerenciar financeiro', () => expect(can('operador', 'financeiro', 'gerenciar')).toBe(false));
+  it('operador NÃO pode excluir vendas', () =>
+    expect(can('operador', 'vendas', 'excluir')).toBe(false));
+  it('operador NÃO pode gerenciar empresa', () =>
+    expect(can('operador', 'empresa', 'gerenciar')).toBe(false));
+  it('operador NÃO pode editar empresa', () =>
+    expect(can('operador', 'empresa', 'editar')).toBe(false));
+  it('operador NÃO pode criar convites', () =>
+    expect(can('operador', 'convites', 'criar')).toBe(false));
+  it('operador NÃO pode ler auditoria', () =>
+    expect(can('operador', 'auditoria', 'ler')).toBe(false));
+  it('operador NÃO pode gerenciar financeiro', () =>
+    expect(can('operador', 'financeiro', 'gerenciar')).toBe(false));
 
   // Visualizador — somente leitura seletiva
   it('visualizador pode ler vendas', () => expect(can('visualizador', 'vendas', 'ler')).toBe(true));
-  it('visualizador pode ler clientes', () => expect(can('visualizador', 'clientes', 'ler')).toBe(true));
-  it('visualizador pode ler relatorios', () => expect(can('visualizador', 'relatorios', 'ler')).toBe(true));
-  it('visualizador NÃO pode criar vendas', () => expect(can('visualizador', 'vendas', 'criar')).toBe(false));
-  it('visualizador NÃO pode ler financeiro', () => expect(can('visualizador', 'financeiro', 'ler')).toBe(false));
-  it('visualizador NÃO pode ler usuarios', () => expect(can('visualizador', 'usuarios', 'ler')).toBe(false));
-  it('visualizador NÃO pode ler auditoria', () => expect(can('visualizador', 'auditoria', 'ler')).toBe(false));
-  it('visualizador NÃO pode exportar relatorios', () => expect(can('visualizador', 'relatorios', 'exportar')).toBe(false));
+  it('visualizador pode ler clientes', () =>
+    expect(can('visualizador', 'clientes', 'ler')).toBe(true));
+  it('visualizador pode ler relatorios', () =>
+    expect(can('visualizador', 'relatorios', 'ler')).toBe(true));
+  it('visualizador NÃO pode criar vendas', () =>
+    expect(can('visualizador', 'vendas', 'criar')).toBe(false));
+  it('visualizador NÃO pode ler financeiro', () =>
+    expect(can('visualizador', 'financeiro', 'ler')).toBe(false));
+  it('visualizador NÃO pode ler usuarios', () =>
+    expect(can('visualizador', 'usuarios', 'ler')).toBe(false));
+  it('visualizador NÃO pode ler auditoria', () =>
+    expect(can('visualizador', 'auditoria', 'ler')).toBe(false));
+  it('visualizador NÃO pode exportar relatorios', () =>
+    expect(can('visualizador', 'relatorios', 'exportar')).toBe(false));
 
   // Sem papel / null
   it('null NÃO pode ler vendas', () => expect(can(null, 'vendas', 'ler')).toBe(false));
@@ -86,8 +101,11 @@ describe('invariantes da matriz RBAC', () => {
     for (const papel of ['admin', 'operador', 'visualizador'] as const) {
       for (const cap of MATRIZ_RBAC[papel]) {
         const [recurso, acao] = cap.split(':');
-        expect(recursoSet.has(recurso as typeof RECURSOS[number]), `recurso inválido: ${recurso}`).toBe(true);
-        expect(acaoSet.has(acao as typeof ACOES[number]), `ação inválida: ${acao}`).toBe(true);
+        expect(
+          recursoSet.has(recurso as (typeof RECURSOS)[number]),
+          `recurso inválido: ${recurso}`
+        ).toBe(true);
+        expect(acaoSet.has(acao as (typeof ACOES)[number]), `ação inválida: ${acao}`).toBe(true);
       }
     }
   });
@@ -120,7 +138,7 @@ describe('authorize()', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.response.status).toBe(403);
-      const body = await result.response.json() as { code: string };
+      const body = (await result.response.json()) as { code: string };
       expect(body.code).toBe('FORBIDDEN');
     }
   });
@@ -130,7 +148,7 @@ describe('authorize()', () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.response.status).toBe(401);
-      const body = await result.response.json() as { code: string };
+      const body = (await result.response.json()) as { code: string };
       expect(body.code).toBe('UNAUTHENTICATED');
     }
   });

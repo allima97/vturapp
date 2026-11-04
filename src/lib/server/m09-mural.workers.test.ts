@@ -17,7 +17,7 @@ import {
   excluirRecado,
   listarRecados,
   listarTodosRecados,
-  MuralError,
+  MuralError
 } from '$lib/server/mural-m09/service';
 
 const EMPRESA_Z = 24;
@@ -52,7 +52,7 @@ describe('Suíte Z — M09: Mural de recados', () => {
   it('Z1. criarRecado broadcast — destinatarioId=null, retorna recado', async () => {
     const r = await criarRecado(db, EMPRESA_Z, USER_Z1, {
       assunto: 'Aviso geral',
-      conteudo: 'Reunião amanhã às 9h.',
+      conteudo: 'Reunião amanhã às 9h.'
     });
     expect(r.id).toBeGreaterThan(0);
     expect(r.remetenteId).toBe(USER_Z1);
@@ -65,7 +65,7 @@ describe('Suíte Z — M09: Mural de recados', () => {
     const r = await criarRecado(db, EMPRESA_Z, USER_Z1, {
       assunto: 'Direto para Z2',
       conteudo: 'Oi Z2!',
-      destinatarioId: USER_Z2,
+      destinatarioId: USER_Z2
     });
     expect(r.destinatarioId).toBe(USER_Z2);
   });
@@ -82,11 +82,11 @@ describe('Suíte Z — M09: Mural de recados', () => {
     await criarRecado(db, EMPRESA_Z, USER_Z1, { conteudo: 'Broadcast Z4' });
     const r2 = await criarRecado(db, EMPRESA_Z, USER_Z1, {
       conteudo: 'Só para Z2',
-      destinatarioId: USER_Z2,
+      destinatarioId: USER_Z2
     });
     await criarRecado(db, EMPRESA_Z, USER_Z1, {
       conteudo: 'Só para Z3',
-      destinatarioId: USER_Z3,
+      destinatarioId: USER_Z3
     });
 
     const recados = await listarRecados(db, EMPRESA_Z, USER_Z2, {});
@@ -100,7 +100,7 @@ describe('Suíte Z — M09: Mural de recados', () => {
     await criarRecado(db, EMPRESA_Z, USER_Z1, { conteudo: 'Broadcast Z5' });
     await criarRecado(db, EMPRESA_Z, USER_Z1, {
       conteudo: 'Direto Z5',
-      destinatarioId: USER_Z2,
+      destinatarioId: USER_Z2
     });
     const todos = await listarTodosRecados(db, EMPRESA_Z, {});
     expect(todos.length).toBeGreaterThanOrEqual(2);
@@ -152,22 +152,20 @@ describe('Suíte Z — M09: Mural de recados', () => {
 
   it('Z10. excluirRecado por terceiro (não remetente, não admin) — SEM_PERMISSAO', async () => {
     const r = await criarRecado(db, EMPRESA_Z, USER_Z1, { conteudo: 'Não excluir Z10' });
-    await expect(
-      excluirRecado(db, EMPRESA_Z, r.id, USER_Z2, 'operador')
-    ).rejects.toThrow(MuralError);
+    await expect(excluirRecado(db, EMPRESA_Z, r.id, USER_Z2, 'operador')).rejects.toThrow(
+      MuralError
+    );
   });
 
   // ── Validações ─────────────────────────────────────────────────────────────
 
   it('Z11. criarRecado conteudo vazio — VALIDACAO', async () => {
-    await expect(
-      criarRecado(db, EMPRESA_Z, USER_Z1, { conteudo: '' })
-    ).rejects.toThrow(MuralError);
+    await expect(criarRecado(db, EMPRESA_Z, USER_Z1, { conteudo: '' })).rejects.toThrow(MuralError);
   });
 
   it('Z12. criarRecado conteudo só espaços — VALIDACAO', async () => {
-    await expect(
-      criarRecado(db, EMPRESA_Z, USER_Z1, { conteudo: '   ' })
-    ).rejects.toThrow(MuralError);
+    await expect(criarRecado(db, EMPRESA_Z, USER_Z1, { conteudo: '   ' })).rejects.toThrow(
+      MuralError
+    );
   });
 });

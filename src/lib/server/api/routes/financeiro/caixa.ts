@@ -117,12 +117,17 @@ export async function handleFinanceiroCaixaGet(event: RequestEvent) {
           for (const companyBatch of companyBatches) {
             let pagamentosQuery = client
               .from('vendas_pagamentos')
-              .select('id, venda_id, forma_nome, valor_total, created_at, venda:vendas!venda_id(numero_venda, cliente_id, data_venda, company_id)')
+              .select(
+                'id, venda_id, forma_nome, valor_total, created_at, venda:vendas!venda_id(numero_venda, cliente_id, data_venda, company_id)'
+              )
               .gte('created_at', inicio + 'T00:00:00')
               .lte('created_at', fim + 'T23:59:59');
             if (companyBatch) pagamentosQuery = pagamentosQuery.in('company_id', companyBatch);
             const { data, error: pagError } = await pagamentosQuery;
-            if (pagError) { logServerError('[caixa] Erro pagamentos', pagError); continue; }
+            if (pagError) {
+              logServerError('[caixa] Erro pagamentos', pagError);
+              continue;
+            }
             rows.push(...(data || []));
           }
           return rows;
@@ -139,13 +144,18 @@ export async function handleFinanceiroCaixaGet(event: RequestEvent) {
           for (const companyBatch of companyBatches) {
             let movQuery = client
               .from('caixa_movimentacoes')
-              .select('id, tipo, categoria, descricao, valor, data_movimentacao, forma_pagamento:forma_pagamento_id(id, nome)')
+              .select(
+                'id, tipo, categoria, descricao, valor, data_movimentacao, forma_pagamento:forma_pagamento_id(id, nome)'
+              )
               .gte('data_movimentacao', inicio)
               .lte('data_movimentacao', fim)
               .order('data_movimentacao', { ascending: false });
             if (companyBatch) movQuery = movQuery.in('company_id', companyBatch);
             const { data, error: movError } = await movQuery;
-            if (movError) { logServerError('[caixa] caixa_movimentacoes', movError); continue; }
+            if (movError) {
+              logServerError('[caixa] caixa_movimentacoes', movError);
+              continue;
+            }
             rows.push(...(data || []));
           }
           return rows;
@@ -156,7 +166,10 @@ export async function handleFinanceiroCaixaGet(event: RequestEvent) {
     const pagItems = pagamentos || [];
     const movItems = movimentacoes || [];
 
-    const totalEntradasPagamentos = pagItems.reduce((sum, p) => sum + Number(p.valor_total || 0), 0);
+    const totalEntradasPagamentos = pagItems.reduce(
+      (sum, p) => sum + Number(p.valor_total || 0),
+      0
+    );
     const totalEntradasMovimentacoes = movItems
       .filter((m) => String(m.tipo || '').toLowerCase() === 'entrada')
       .reduce((sum, m) => sum + Number(m.valor || 0), 0);
@@ -257,16 +270,17 @@ export async function handleFinanceiroCaixaPost(event: RequestEvent) {
     ensureModuloAccess(scope, ['financeiro'], 2, 'Sem permissao para criar movimentacoes.');
 
     const body =
-      bodyResult.data && typeof bodyResult.data === 'object'
-        ? (bodyResult.data as JsonBody)
-        : {};
+      bodyResult.data && typeof bodyResult.data === 'object' ? (bodyResult.data as JsonBody) : {};
     if (!body.tipo || !body.descricao || body.valor === undefined || !body.data_movimentacao) {
       return json(
         { success: false, error: 'Tipo, descricao, valor e data sao obrigatorios.' },
         { status: 400, headers: NO_STORE_HEADERS }
       );
     }
-    const companyId = resolveScopedCompanyId(scope, optionalString(body.empresa_id || body.company_id));
+    const companyId = resolveScopedCompanyId(
+      scope,
+      optionalString(body.empresa_id || body.company_id)
+    );
     if (!companyId) {
       return json(
         { success: false, error: 'Selecione uma empresa para criar movimentação.' },
@@ -276,22 +290,29 @@ export async function handleFinanceiroCaixaPost(event: RequestEvent) {
 
     const { data, error } = await client
       .from('caixa_movimentacoes')
-      .insert([{
-        company_id: companyId,
-        tipo: body.tipo,
-        categoria: body.categoria || 'outro',
-        descricao: body.descricao,
-        valor: body.valor,
-        data_movimentacao: body.data_movimentacao,
-        forma_pagamento_id: body.forma_pagamento_id || null,
-        observacoes: body.observacoes || null,
-        user_id: user.id
-      }])
-      .select('id, company_id, tipo, categoria, descricao, valor, data_movimentacao, forma_pagamento_id, observacoes, user_id')
+      .insert([
+        {
+          company_id: companyId,
+          tipo: body.tipo,
+          categoria: body.categoria || 'outro',
+          descricao: body.descricao,
+          valor: body.valor,
+          data_movimentacao: body.data_movimentacao,
+          forma_pagamento_id: body.forma_pagamento_id || null,
+          observacoes: body.observacoes || null,
+          user_id: user.id
+        }
+      ])
+      .select(
+        'id, company_id, tipo, categoria, descricao, valor, data_movimentacao, forma_pagamento_id, observacoes, user_id'
+      )
       .single();
 
     if (error) {
-      if (String(error.code || '').includes('42P01') || String(error.message || '').includes('does not exist')) {
+      if (
+        String(error.code || '').includes('42P01') ||
+        String(error.message || '').includes('does not exist')
+      ) {
         return json(
           { success: true, item: { id: crypto.randomUUID(), ...body, company_id: companyId } },
           { headers: NO_STORE_HEADERS }
@@ -305,9 +326,7 @@ export async function handleFinanceiroCaixaPost(event: RequestEvent) {
       userId: user.id
     });
     invalidateReadModelCache({
-      tags: [
-        READ_MODEL_TAGS.finance,
-      ],
+      tags: [READ_MODEL_TAGS.finance],
       scopeTags: financeScopeTags
     });
 

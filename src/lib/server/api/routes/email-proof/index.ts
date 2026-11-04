@@ -26,7 +26,9 @@ export const emailProofRoutes = new Hono<ApiEnv>()
     const ok = hasResendApiKey(apiKey);
     return c.json({
       configured: ok,
-      hint: ok ? 'RESEND_API_KEY presente e bem-formada (re_...)' : 'RESEND_API_KEY ausente ou inválida em .dev.vars',
+      hint: ok
+        ? 'RESEND_API_KEY presente e bem-formada (re_...)'
+        : 'RESEND_API_KEY ausente ou inválida em .dev.vars'
     });
   })
 
@@ -59,7 +61,7 @@ export const emailProofRoutes = new Hono<ApiEnv>()
 
     const template = templateTesteStack({
       timestamp: new Date().toISOString(),
-      environment: env?.PUBLIC_ENVIRONMENT ?? 'development',
+      environment: env?.PUBLIC_ENVIRONMENT ?? 'development'
     });
 
     try {
@@ -69,7 +71,7 @@ export const emailProofRoutes = new Hono<ApiEnv>()
         subject: template.subject,
         html: template.html,
         text: template.text,
-        tags: [{ name: 'fase', value: 'f1-07-prova-stack' }],
+        tags: [{ name: 'fase', value: 'f1-07-prova-stack' }]
       });
 
       return c.json({ success: true, id: result.id, to: body.to });

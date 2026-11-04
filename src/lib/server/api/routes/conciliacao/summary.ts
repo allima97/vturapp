@@ -50,7 +50,12 @@ export async function handleConciliacaoSummaryGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster && !scope.isFinanceiro && !scope.isGestor) {
-      ensureModuloAccess(scope, ['operacao_conciliacao', 'conciliacao'], 1, 'Sem acesso à Conciliação.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_conciliacao', 'conciliacao'],
+        1,
+        'Sem acesso à Conciliação.'
+      );
     }
 
     const { searchParams } = event.url;
@@ -59,7 +64,10 @@ export async function handleConciliacaoSummaryGet(event: RequestEvent) {
 
     // Não-admins devem sempre ter empresa resolvida
     if (!scope.isAdmin && companyIds.length === 0) {
-      return json({ error: 'Empresa não identificada.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Empresa não identificada.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
     // Admin sem filtro explicitamente passado também precisa de company_id
     if (companyIds.length === 0) {
@@ -74,7 +82,10 @@ export async function handleConciliacaoSummaryGet(event: RequestEvent) {
     // companyId primário para diagnóstico cronológico (usa o primeiro do escopo)
     const companyIdDiag = companyIds[0];
 
-    const { rows, diagnostico } = await getCachedReadModel<{ rows: ConciliacaoSummaryRow[]; diagnostico: DiagnosticoCronologico | null }>({
+    const { rows, diagnostico } = await getCachedReadModel<{
+      rows: ConciliacaoSummaryRow[];
+      diagnostico: DiagnosticoCronologico | null;
+    }>({
       key: buildReadModelCacheKey('conciliacao:summary', {
         companyIds,
         inicio,
@@ -131,7 +142,11 @@ export async function handleConciliacaoSummaryGet(event: RequestEvent) {
     const byDay = new Map<string, number>();
     for (const row of efetivados) {
       const day = String(row.movimento_data || '').slice(0, 10);
-      if (day) byDay.set(day, (byDay.get(day) || 0) + Number(row.valor_calculada_loja || row.valor_lancamentos || 0));
+      if (day)
+        byDay.set(
+          day,
+          (byDay.get(day) || 0) + Number(row.valor_calculada_loja || row.valor_lancamentos || 0)
+        );
     }
 
     const timeline = Array.from(byDay.entries())
@@ -139,33 +154,40 @@ export async function handleConciliacaoSummaryGet(event: RequestEvent) {
       .map(([date, value]) => ({ date, value }));
 
     // Monta alerta de bloqueio cronológico (apenas se houver lacunas)
-    const lacunaCronologica = diagnostico && diagnostico.diasFaltantes.length > 0
-      ? {
-          fronteira: diagnostico.fronteira,
-          dias_faltantes: diagnostico.diasFaltantes,
-          dias_bloqueados: diagnostico.diasBloqueados,
-          dias_sem_movimento: diagnostico.diasSemMovimento,
-          registros_bloqueados: diagnostico.registrosBloqueados,
-          aviso: `A conciliação está bloqueada a partir de ${diagnostico.fronteira}. ` +
-            `Importe os arquivos dos dias: ${diagnostico.diasFaltantes.map((d) => {
-              const [y, m, dia] = d.split('-');
-              return `${dia}/${m}/${y}`;
-            }).join(', ')} ` +
-            `para liberar ${diagnostico.registrosBloqueados} registro(s) bloqueado(s).`
-        }
-      : null;
+    const lacunaCronologica =
+      diagnostico && diagnostico.diasFaltantes.length > 0
+        ? {
+            fronteira: diagnostico.fronteira,
+            dias_faltantes: diagnostico.diasFaltantes,
+            dias_bloqueados: diagnostico.diasBloqueados,
+            dias_sem_movimento: diagnostico.diasSemMovimento,
+            registros_bloqueados: diagnostico.registrosBloqueados,
+            aviso:
+              `A conciliação está bloqueada a partir de ${diagnostico.fronteira}. ` +
+              `Importe os arquivos dos dias: ${diagnostico.diasFaltantes
+                .map((d) => {
+                  const [y, m, dia] = d.split('-');
+                  return `${dia}/${m}/${y}`;
+                })
+                .join(', ')} ` +
+              `para liberar ${diagnostico.registrosBloqueados} registro(s) bloqueado(s).`
+          }
+        : null;
 
-    return json({
-      periodo: { inicio, fim },
-      total: rows.length,
-      efetivados: efetivados.length,
-      pendentes: pendentes.length,
-      semRanking: semRanking.length,
-      baixaRac: baixaRac.length,
-      totalValor,
-      timeline,
-      ...(lacunaCronologica ? { lacuna_cronologica: lacunaCronologica } : {})
-    }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      {
+        periodo: { inicio, fim },
+        total: rows.length,
+        efetivados: efetivados.length,
+        pendentes: pendentes.length,
+        semRanking: semRanking.length,
+        baixaRac: baixaRac.length,
+        totalValor,
+        timeline,
+        ...(lacunaCronologica ? { lacuna_cronologica: lacunaCronologica } : {})
+      },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar resumo da conciliação.');
   }

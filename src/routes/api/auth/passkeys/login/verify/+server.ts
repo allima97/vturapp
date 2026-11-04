@@ -27,10 +27,15 @@ export const POST: RequestHandler = async (event) => {
     const originError = rejectCrossOriginRequest(event.request, 'Origem inválida.');
     if (originError) return originError;
 
-    const rateLimit = await checkPersistentRateLimit('passkey-login-verify', event.getClientAddress?.() || 'unknown', {
-      max: 30,
-      windowMs: 60_000
-    }, event.platform?.env?.DB);
+    const rateLimit = await checkPersistentRateLimit(
+      'passkey-login-verify',
+      event.getClientAddress?.() || 'unknown',
+      {
+        max: 30,
+        windowMs: 60_000
+      },
+      event.platform?.env?.DB
+    );
     if (!rateLimit.allowed) {
       return json(
         { error: 'Muitas tentativas de passkey. Tente novamente em instantes.' },
@@ -48,7 +53,10 @@ export const POST: RequestHandler = async (event) => {
     const response = body?.response;
 
     if (!challengeId || !response) {
-      return json({ error: 'Dados da passkey incompletos.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Dados da passkey incompletos.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const sessionPayload = await verifyAuthentication({

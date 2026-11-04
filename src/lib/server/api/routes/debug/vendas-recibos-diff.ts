@@ -56,14 +56,14 @@ export async function handleDebugVendasRecibosDiffGet(event: RequestEvent) {
       return debugJson({ error: 'Informe um período válido em inicio/fim.' }, { status: 400 });
     }
 
-    const companyIds = resolveScopedCompanyIds(scope, searchParams.get('empresa_id') || searchParams.get('company_id'));
-    const requestedVendedorRaw = searchParams.get('vendedor_ids') || searchParams.get('vendedor_id');
-    const hasRequestedVendedorFilter = String(requestedVendedorRaw || '').trim().length > 0;
-    const scopedVendedorIds = await resolveScopedVendedorIds(
-      client,
+    const companyIds = resolveScopedCompanyIds(
       scope,
-      requestedVendedorRaw
+      searchParams.get('empresa_id') || searchParams.get('company_id')
     );
+    const requestedVendedorRaw =
+      searchParams.get('vendedor_ids') || searchParams.get('vendedor_id');
+    const hasRequestedVendedorFilter = String(requestedVendedorRaw || '').trim().length > 0;
+    const scopedVendedorIds = await resolveScopedVendedorIds(client, scope, requestedVendedorRaw);
     const vendedorIds =
       hasRequestedVendedorFilter && scopedVendedorIds.length === 0
         ? [NO_MATCH_COMPANY_ID]

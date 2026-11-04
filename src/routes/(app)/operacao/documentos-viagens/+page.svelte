@@ -32,7 +32,11 @@
   let deletingId = '';
   const loadGuard = createLoadGuard();
 
-  $: canDelete = !$permissoes.ready || $permissoes.isSystemAdmin || permissoes.can('documentos_viagens', 'delete') || permissoes.can('operacao', 'delete');
+  $: canDelete =
+    !$permissoes.ready ||
+    $permissoes.isSystemAdmin ||
+    permissoes.can('documentos_viagens', 'delete') ||
+    permissoes.can('operacao', 'delete');
 
   function formatBytes(bytes?: number | null) {
     const n = Number(bytes);
@@ -40,7 +44,10 @@
     const units = ['B', 'KB', 'MB', 'GB'];
     let idx = 0;
     let val = n;
-    while (val >= 1024 && idx < units.length - 1) { val /= 1024; idx++; }
+    while (val >= 1024 && idx < units.length - 1) {
+      val /= 1024;
+      idx++;
+    }
     return `${val.toFixed(idx === 0 ? 0 : 1)} ${units[idx]}`;
   }
 
@@ -51,7 +58,9 @@
       sortable: true,
       formatter: (v: string | null, row: Documento) => {
         const nome = v || row.file_name;
-        const titulo = row.title ? `<div class="text-xs text-slate-500">${escapeHtml(row.title)}</div>` : '';
+        const titulo = row.title
+          ? `<div class="text-xs text-slate-500">${escapeHtml(row.title)}</div>`
+          : '';
         return `<div><div class="font-medium text-slate-900">${escapeHtml(nome)}</div>${titulo}</div>`;
       }
     },
@@ -63,8 +72,10 @@
       formatter: (v: string | null) => {
         if (!v) return '-';
         if (v.includes('pdf')) return '<span class="text-red-600 text-xs font-medium">PDF</span>';
-        if (v.includes('word') || v.includes('document')) return '<span class="text-blue-600 text-xs font-medium">Word</span>';
-        if (v.includes('text')) return '<span class="text-slate-600 text-xs font-medium">Texto</span>';
+        if (v.includes('word') || v.includes('document'))
+          return '<span class="text-blue-600 text-xs font-medium">Word</span>';
+        if (v.includes('text'))
+          return '<span class="text-slate-600 text-xs font-medium">Texto</span>';
         return `<span class="text-xs text-slate-500">${escapeHtml(v.split('/')[1] || v)}</span>`;
       }
     },
@@ -86,7 +97,8 @@
       key: 'uploader',
       label: 'Por',
       sortable: false,
-      formatter: (_: unknown, row: Documento) => row.uploader?.nome_completo || row.uploader?.email || '-'
+      formatter: (_: unknown, row: Documento) =>
+        row.uploader?.nome_completo || row.uploader?.email || '-'
     }
   ];
 
@@ -94,7 +106,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const payload = await apiGet<{ items?: Documento[] }>('/api/v1/operacao/documentos-viagens', undefined, request.signal);
+      const payload = await apiGet<{ items?: Documento[] }>(
+        '/api/v1/operacao/documentos-viagens',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       documentos = payload.items || [];
     } catch (err) {
@@ -130,12 +146,8 @@
   title="Documentos de Viagens"
   subtitle="Biblioteca de documentos e templates para uso nas viagens dos clientes."
   color="operacao"
-  breadcrumbs={[
-    { label: 'Documentos de Viagens' }
-  ]}
-  actions={[
-    { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }
-  ]}
+  breadcrumbs={[{ label: 'Documentos de Viagens' }]}
+  actions={[{ label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }]}
 />
 
 <DataTable

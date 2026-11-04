@@ -123,7 +123,12 @@
         { key: 'dashboard', name: 'Dashboard', href: dashboardHref, icon: LayoutDashboard },
         { key: 'tarefas', name: 'Tarefas', href: '/operacao/tarefas', icon: SquareCheckBig },
         { key: 'agenda', name: 'Agenda', href: '/operacao/agenda', icon: Calendar },
-        { key: 'acompanhamento', name: 'Follow-up', href: '/operacao/acompanhamento', icon: FileText },
+        {
+          key: 'acompanhamento',
+          name: 'Follow-up',
+          href: '/operacao/acompanhamento',
+          icon: FileText
+        },
         { key: 'recados', name: 'Recados', href: '/operacao/recados', icon: MessageSquare },
         { key: 'aniversariantes', name: 'Aniversariantes', href: '/aniversariantes', icon: Gift }
       ]
@@ -133,19 +138,44 @@
       collapsible: true,
       items: [
         { key: 'vendas', name: 'Vendas', href: '/vendas', icon: CircleDollarSign },
-        { key: 'ultimas_compras', name: 'Últimas Compras', href: '/operacao/ultimas-compras', icon: ShoppingCart },
+        {
+          key: 'ultimas_compras',
+          name: 'Últimas Compras',
+          href: '/operacao/ultimas-compras',
+          icon: ShoppingCart
+        },
         { key: 'clientes', name: 'Clientes', href: '/clientes', icon: Users },
         { key: 'viagens', name: 'Viagens', href: '/operacao/viagens', icon: Plane },
         { key: 'orcamentos', name: 'Orçamentos', href: '/orcamentos', icon: FileText },
         { key: 'roteiros', name: 'Roteiros', href: '/orcamentos/roteiros', icon: MapIcon },
         { key: 'vouchers', name: 'Vouchers', href: '/operacao/vouchers', icon: Ticket },
-        { key: 'controle_sac', name: 'Controle SAC', href: '/operacao/controle-sac', icon: AlertCircle },
+        {
+          key: 'controle_sac',
+          name: 'Controle SAC',
+          href: '/operacao/controle-sac',
+          icon: AlertCircle
+        },
         { key: 'campanhas', name: 'Campanhas', href: '/operacao/campanhas', icon: Megaphone },
-        { key: 'documentos', name: 'Documentos', href: '/operacao/documentos-viagens', icon: FileText },
-        { key: 'consultoria_online', name: 'Consultoria Online', href: '/consultoria-online', icon: Video },
+        {
+          key: 'documentos',
+          name: 'Documentos',
+          href: '/operacao/documentos-viagens',
+          icon: FileText
+        },
+        {
+          key: 'consultoria_online',
+          name: 'Consultoria Online',
+          href: '/consultoria-online',
+          icon: Video
+        },
         { key: 'relatorios', name: 'Relatórios', href: '/relatorios', icon: FileChartColumn },
         { key: 'rel_ranking', name: 'Ranking', href: '/relatorios/ranking', icon: Trophy },
-        { key: 'rel_desempenho', name: 'Análise de Desempenho', href: '/relatorios/desempenho', icon: BarChart2 }
+        {
+          key: 'rel_desempenho',
+          name: 'Análise de Desempenho',
+          href: '/relatorios/desempenho',
+          icon: BarChart2
+        }
       ]
     },
     {
@@ -153,12 +183,32 @@
       collapsible: true,
       items: [
         { key: 'caixa', name: 'Caixa', href: '/financeiro/caixa', icon: TrendingUp },
-        { key: 'vendas_financeiro', name: 'Vendas / Pagamentos', href: '/vendas', icon: CircleDollarSign },
+        {
+          key: 'vendas_financeiro',
+          name: 'Vendas / Pagamentos',
+          href: '/vendas',
+          icon: CircleDollarSign
+        },
         { key: 'comissoes', name: 'Comissionamento', href: '/financeiro/comissoes', icon: Wallet },
         { key: 'fechamento', name: 'Fechamento', href: '/comissoes/fechamento', icon: Wallet },
-        { key: 'ajustes_vendas', name: 'Ajustes Vendas', href: '/financeiro/ajustes-vendas', icon: SlidersHorizontal },
-        { key: 'formas_pagamento', name: 'Formas de Pagto', href: '/financeiro/formas-pagamento', icon: CreditCard },
-        { key: 'notas_fiscais', name: 'Notas Fiscais', href: '/financeiro/notas-fiscais', icon: FileText },
+        {
+          key: 'ajustes_vendas',
+          name: 'Ajustes Vendas',
+          href: '/financeiro/ajustes-vendas',
+          icon: SlidersHorizontal
+        },
+        {
+          key: 'formas_pagamento',
+          name: 'Formas de Pagto',
+          href: '/financeiro/formas-pagamento',
+          icon: CreditCard
+        },
+        {
+          key: 'notas_fiscais',
+          name: 'Notas Fiscais',
+          href: '/financeiro/notas-fiscais',
+          icon: FileText
+        },
         { key: 'regras', name: 'Regras', href: '/financeiro/regras', icon: Settings }
       ]
     },
@@ -171,10 +221,25 @@
         { key: 'equipe', name: 'Equipe', href: '/parametros/equipe', icon: Users },
         { key: 'escalas', name: 'Escalas', href: '/parametros/escalas', icon: Calendar },
         { key: 'cambios', name: 'Câmbios', href: '/parametros/cambios', icon: Banknote },
-        { key: 'tipo_pacotes', name: 'Tipo Pacotes', href: '/parametros/tipo-pacotes', icon: Package },
-        { key: 'tipo_produtos', name: 'Tipo Produtos', href: '/parametros/tipo-produtos', icon: Package },
+        {
+          key: 'tipo_pacotes',
+          name: 'Tipo Pacotes',
+          href: '/parametros/tipo-pacotes',
+          icon: Package
+        },
+        {
+          key: 'tipo_produtos',
+          name: 'Tipo Produtos',
+          href: '/parametros/tipo-produtos',
+          icon: Package
+        },
         { key: 'vouchers_assets', name: 'Vouchers', href: '/parametros/vouchers', icon: ImagePlus },
-        { key: 'orcamentos_pdf', name: 'Orçamentos PDF', href: '/parametros/orcamentos', icon: FileText },
+        {
+          key: 'orcamentos_pdf',
+          name: 'Orçamentos PDF',
+          href: '/parametros/orcamentos',
+          icon: FileText
+        },
         { key: 'crm', name: 'CRM', href: '/parametros/crm', icon: MessageSquare },
         { key: 'avisos', name: 'Avisos', href: '/parametros/avisos', icon: BellRing },
         { key: 'empresa', name: 'Empresa', href: '/parametros/empresa', icon: Building2 }
@@ -185,13 +250,23 @@
       collapsible: true,
       items: [
         { key: 'cadastros_produtos', name: 'Produtos', href: '/cadastros/produtos', icon: Package },
-        { key: 'cadastros_circuitos', name: 'Circuitos', href: '/cadastros/circuitos', icon: MapIcon },
+        {
+          key: 'cadastros_circuitos',
+          name: 'Circuitos',
+          href: '/cadastros/circuitos',
+          icon: MapIcon
+        },
         { key: 'cadastros_paises', name: 'Países', href: '/cadastros/paises', icon: Globe },
         { key: 'cadastros_estados', name: 'Estados', href: '/cadastros/estados', icon: MapPinned },
         { key: 'cadastros_cidades', name: 'Cidades', href: '/cadastros/cidades', icon: MapPin },
         { key: 'cadastros_destinos', name: 'Destinos', href: '/cadastros/destinos', icon: MapIcon },
         { key: 'cadastros_lote', name: 'Lote', href: '/cadastros/lote', icon: Package },
-        { key: 'cadastros_fornecedores', name: 'Fornecedores', href: '/cadastros/fornecedores', icon: Truck }
+        {
+          key: 'cadastros_fornecedores',
+          name: 'Fornecedores',
+          href: '/cadastros/fornecedores',
+          icon: Truck
+        }
       ]
     },
     {
@@ -201,8 +276,18 @@
         { key: 'meu_perfil', name: 'Meu Perfil', href: '/perfil', icon: UserCircle },
         { key: 'minha_escala', name: 'Minha Escala', href: '/perfil/escala', icon: Calendar },
         { key: 'autenticacao_2fa', name: 'Autenticação 2FA', href: '/perfil/mfa', icon: Shield },
-        { key: 'personalizar_menu', name: 'Personalizar Menu', href: '/perfil/personalizar', icon: Settings },
-        { key: 'preferencias', name: 'Preferências', href: '/operacao/minhas-preferencias', icon: Star }
+        {
+          key: 'personalizar_menu',
+          name: 'Personalizar Menu',
+          href: '/perfil/personalizar',
+          icon: Settings
+        },
+        {
+          key: 'preferencias',
+          name: 'Preferências',
+          href: '/operacao/minhas-preferencias',
+          icon: Star
+        }
       ]
     }
   ] as MenuSection[];
@@ -216,23 +301,55 @@
 
   const adminItems: MenuItem[] = [
     { key: 'admin_central', name: 'Central Admin', href: '/admin', icon: Shield, systemOnly: true },
-    { key: 'admin_dashboard', name: 'Dashboard Admin', href: '/dashboard/admin', icon: LayoutDashboard, systemOnly: true },
+    {
+      key: 'admin_dashboard',
+      name: 'Dashboard Admin',
+      href: '/dashboard/admin',
+      icon: LayoutDashboard,
+      systemOnly: true
+    },
     { key: 'admin_planos', name: 'Planos', href: '/admin/planos', icon: CreditCard },
     { key: 'admin_financeiro', name: 'Financeiro', href: '/admin/financeiro', icon: Wallet },
     { key: 'admin_empresas', name: 'Empresas', href: '/admin/empresas', icon: Building2 },
     { key: 'admin_usuarios', name: 'Usuários', href: '/admin/usuarios', icon: Users },
     { key: 'admin_tipos', name: 'Tipos de usuário', href: '/admin/tipos-usuario', icon: Users },
-    { key: 'admin_aniversariantes', name: 'Aniversariantes', href: '/admin/aniversariantes', icon: Gift },
+    {
+      key: 'admin_aniversariantes',
+      name: 'Aniversariantes',
+      href: '/admin/aniversariantes',
+      icon: Gift
+    },
     { key: 'admin_avisos', name: 'Avisos', href: '/admin/avisos', icon: Megaphone },
     { key: 'admin_crm', name: 'CRM — Templates', href: '/admin/crm', icon: MessageSquare },
     { key: 'admin_email', name: 'E-mail', href: '/admin/email', icon: Mail },
-    { key: 'admin_modulos', name: 'Módulos do sistema', href: '/admin/modulos-sistema', icon: Settings },
+    {
+      key: 'admin_modulos',
+      name: 'Módulos do sistema',
+      href: '/admin/modulos-sistema',
+      icon: Settings
+    },
     { key: 'admin_permissoes', name: 'Permissões', href: '/admin/permissoes', icon: Shield },
-    { key: 'admin_parametros_importacao', name: 'Parâmetros importação', href: '/admin/parametros-importacao', icon: Settings },
-    { key: 'admin_fix_recibos', name: 'Correção de recibos', href: '/admin/fix-recibos', icon: RefreshCw },
+    {
+      key: 'admin_parametros_importacao',
+      name: 'Parâmetros importação',
+      href: '/admin/parametros-importacao',
+      icon: Settings
+    },
+    {
+      key: 'admin_fix_recibos',
+      name: 'Correção de recibos',
+      href: '/admin/fix-recibos',
+      icon: RefreshCw
+    },
     { key: 'admin_lgpd', name: 'LGPD', href: '/admin/lgpd', icon: Shield, systemOnly: true },
     { key: 'admin_logs', name: 'Logs', href: '/dashboard/logs', icon: FileText, systemOnly: true },
-    { key: 'admin_documentacao', name: 'Documentação', href: '/documentacao', icon: FileText, systemOnly: true }
+    {
+      key: 'admin_documentacao',
+      name: 'Documentação',
+      href: '/documentacao',
+      icon: FileText,
+      systemOnly: true
+    }
   ];
 
   // Seções recolhidas, pelo título (antes era pela posição na lista visível,
@@ -286,11 +403,17 @@
 
     if (item.systemOnly && !$permissoes.isSystemAdmin) return false;
     if (item.key === 'vendas_financeiro' && !$permissoes.isFinanceiro) return false;
-    if (item.key === 'ultimas_compras' && !($permissoes.isMaster || $permissoes.isGestor)) return false;
-    if (item.key === 'vouchers_assets' && !($permissoes.isMaster || $permissoes.isGestor || $permissoes.isSystemAdmin)) return false;
+    if (item.key === 'ultimas_compras' && !($permissoes.isMaster || $permissoes.isGestor))
+      return false;
+    if (
+      item.key === 'vouchers_assets' &&
+      !($permissoes.isMaster || $permissoes.isGestor || $permissoes.isSystemAdmin)
+    )
+      return false;
     if (item.key === 'fechamento' && !$permissoes.isFinanceiro) return false;
     if (item.key === 'notas_fiscais' && !$permissoes.isFinanceiro) return false;
-    if (item.key === 'rel_desempenho' && !($permissoes.isMaster || $permissoes.isGestor)) return false;
+    if (item.key === 'rel_desempenho' && !($permissoes.isMaster || $permissoes.isGestor))
+      return false;
 
     if ($permissoes.isFinanceiro) {
       if (item.key === 'vendas') return false;
@@ -427,12 +550,14 @@
       : menuSections
           .map((section) => ({
             ...section,
-            items: section.items.filter((item) => canSeeItem(item)),
+            items: section.items.filter((item) => canSeeItem(item))
           }))
           .filter((section) => section.items.length > 0);
 
     visibleMasterItems = masterItems.filter((item) => canSeeItem(item));
-    visibleAdminItems = $permissoes.isSystemAdmin ? adminItems.filter((item) => canSeeItem(item)) : [];
+    visibleAdminItems = $permissoes.isSystemAdmin
+      ? adminItems.filter((item) => canSeeItem(item))
+      : [];
   }
 
   // Fase 5.1: a busca rápida (Ctrl+K) mostra exatamente o que este menu mostra.
@@ -441,14 +566,21 @@
       ...visibleMenuSections.flatMap((section) =>
         section.items.map((item) => ({ secao: section.title, item }))
       ),
-      ...($permissoes.isMaster ? visibleMasterItems.map((item) => ({ secao: 'MASTER', item })) : []),
+      ...($permissoes.isMaster
+        ? visibleMasterItems.map((item) => ({ secao: 'MASTER', item }))
+        : []),
       ...visibleAdminItems.map((item) => ({
         secao: $permissoes.isSystemAdmin ? 'ADMINISTRAÇÃO' : 'ADMIN',
         item
       }))
     ]
       .filter(({ item }) => Boolean(item.href) && !item.disabled)
-      .map(({ secao, item }) => ({ secao, nome: item.name, href: item.href as string, icon: item.icon }))
+      .map(({ secao, item }) => ({
+        secao,
+        nome: item.name,
+        href: item.href as string,
+        icon: item.icon
+      }))
   );
 
   function handleItemClick() {
@@ -458,17 +590,13 @@
   // Computa o href ativo considerando TODOS os itens do menu;
   // prefere o match mais específico (href mais longo) para evitar
   // duplo destaque quando uma rota pai e uma sub-rota são ambas itens do menu.
-  $: allMenuItems = [
-    ...menuSections.flatMap((s) => s.items),
-    ...masterItems,
-    ...adminItems,
-  ].filter((item): item is MenuItem & { href: string } => Boolean(item.href));
+  $: allMenuItems = [...menuSections.flatMap((s) => s.items), ...masterItems, ...adminItems].filter(
+    (item): item is MenuItem & { href: string } => Boolean(item.href)
+  );
 
   $: activeHref = (() => {
     // Ordena por href mais longo primeiro (mais específico vence)
-    const sorted = [...allMenuItems].sort(
-      (a, b) => (b.href?.length || 0) - (a.href?.length || 0)
-    );
+    const sorted = [...allMenuItems].sort((a, b) => (b.href?.length || 0) - (a.href?.length || 0));
     if (currentPath === '/') {
       return sorted.find((item) => item.href === '/')?.href ?? null;
     }
@@ -517,41 +645,76 @@
           { key: 'dashboard', name: 'Dashboard', href: dashboardHref, icon: LayoutDashboard },
           { key: 'caixa', name: 'Caixa', href: '/financeiro/caixa', icon: TrendingUp },
           { key: 'vendas_financeiro', name: 'Vendas', href: '/vendas', icon: CircleDollarSign },
-            { key: 'ajustes_vendas', name: 'Ajustes', href: '/financeiro/ajustes-vendas', icon: Settings },
+          {
+            key: 'ajustes_vendas',
+            name: 'Ajustes',
+            href: '/financeiro/ajustes-vendas',
+            icon: Settings
+          },
           { key: 'comissoes', name: 'Comissões', href: '/financeiro/comissoes', icon: Wallet },
           { key: 'notas_fiscais', name: 'NF', href: '/financeiro/notas-fiscais', icon: FileText },
-          { key: 'meu_perfil', name: 'Perfil', href: '/perfil', icon: UserCircle },
+          { key: 'meu_perfil', name: 'Perfil', href: '/perfil', icon: UserCircle }
         ]
-    : [
-        { key: 'dashboard',       name: 'Dashboard',      href: dashboardHref,                    icon: LayoutDashboard },
-        { key: 'clientes',        name: 'Clientes',       href: '/clientes',                      icon: Users },
-        { key: 'vendas',          name: 'Vendas',         href: '/vendas',                        icon: CircleDollarSign },
-        { key: 'ultimas_compras', name: 'Últimas Compras',href: '/operacao/ultimas-compras',      icon: ShoppingCart },
-        { key: 'orcamentos',      name: 'Orçamentos',     href: '/orcamentos',                    icon: FileText },
-        { key: 'roteiros',        name: 'Roteiros',       href: '/orcamentos/roteiros',           icon: MapIcon },
-        { key: 'viagens',         name: 'Viagens',        href: '/operacao/viagens',              icon: Plane },
-        { key: 'vouchers',        name: 'Vouchers',       href: '/operacao/vouchers',             icon: Ticket },
-        { key: 'tarefas',         name: 'Tarefas',        href: '/operacao/tarefas',              icon: SquareCheckBig },
-        { key: 'agenda',          name: 'Agenda',         href: '/operacao/agenda',               icon: Calendar },
-        { key: 'acompanhamento',  name: 'Follow-up', href: '/operacao/acompanhamento',       icon: FileText },
-        { key: 'controle_sac',    name: 'SAC',            href: '/operacao/controle-sac',         icon: AlertCircle },
-        { key: 'campanhas',       name: 'Campanhas',      href: '/operacao/campanhas',            icon: Megaphone },
-        { key: 'documentos',      name: 'Documentos',     href: '/operacao/documentos-viagens',   icon: FileText },
-        { key: 'consultoria_online', name: 'Consultoria', href: '/consultoria-online',            icon: Video },
-        { key: 'aniversariantes', name: 'Aniversariantes',href: '/aniversariantes',               icon: Gift },
-        { key: 'preferencias',    name: 'Preferências',   href: '/operacao/minhas-preferencias',  icon: Star },
-        { key: 'caixa',           name: 'Caixa',          href: '/financeiro/caixa',              icon: TrendingUp },
-        { key: 'comissoes',       name: 'Comissões',      href: '/financeiro/comissoes',          icon: Wallet },
-        { key: 'fechamento',      name: 'Fechamento',     href: '/comissoes/fechamento',          icon: Wallet },
-        { key: 'relatorios',      name: 'Relatórios',     href: '/relatorios',                    icon: FileChartColumn },
-        { key: 'rel_ranking',     name: 'Ranking',        href: '/relatorios/ranking',            icon: Trophy },
-        { key: 'rel_desempenho',  name: 'Análise Desempenho', href: '/relatorios/desempenho',     icon: BarChart2 },
-        { key: 'parametros',      name: 'Parâmetros',     href: '/parametros',                    icon: Settings },
-        $permissoes.isMaster
-          ? { name: 'Master',     href: '/master',                 icon: Shield }
-          : { name: 'Admin',      href: '/admin',                  icon: Shield },
-        { key: 'meu_perfil',      name: 'Perfil',         href: '/perfil',                        icon: UserCircle },
-      ];
+      : [
+          { key: 'dashboard', name: 'Dashboard', href: dashboardHref, icon: LayoutDashboard },
+          { key: 'clientes', name: 'Clientes', href: '/clientes', icon: Users },
+          { key: 'vendas', name: 'Vendas', href: '/vendas', icon: CircleDollarSign },
+          {
+            key: 'ultimas_compras',
+            name: 'Últimas Compras',
+            href: '/operacao/ultimas-compras',
+            icon: ShoppingCart
+          },
+          { key: 'orcamentos', name: 'Orçamentos', href: '/orcamentos', icon: FileText },
+          { key: 'roteiros', name: 'Roteiros', href: '/orcamentos/roteiros', icon: MapIcon },
+          { key: 'viagens', name: 'Viagens', href: '/operacao/viagens', icon: Plane },
+          { key: 'vouchers', name: 'Vouchers', href: '/operacao/vouchers', icon: Ticket },
+          { key: 'tarefas', name: 'Tarefas', href: '/operacao/tarefas', icon: SquareCheckBig },
+          { key: 'agenda', name: 'Agenda', href: '/operacao/agenda', icon: Calendar },
+          {
+            key: 'acompanhamento',
+            name: 'Follow-up',
+            href: '/operacao/acompanhamento',
+            icon: FileText
+          },
+          { key: 'controle_sac', name: 'SAC', href: '/operacao/controle-sac', icon: AlertCircle },
+          { key: 'campanhas', name: 'Campanhas', href: '/operacao/campanhas', icon: Megaphone },
+          {
+            key: 'documentos',
+            name: 'Documentos',
+            href: '/operacao/documentos-viagens',
+            icon: FileText
+          },
+          {
+            key: 'consultoria_online',
+            name: 'Consultoria',
+            href: '/consultoria-online',
+            icon: Video
+          },
+          { key: 'aniversariantes', name: 'Aniversariantes', href: '/aniversariantes', icon: Gift },
+          {
+            key: 'preferencias',
+            name: 'Preferências',
+            href: '/operacao/minhas-preferencias',
+            icon: Star
+          },
+          { key: 'caixa', name: 'Caixa', href: '/financeiro/caixa', icon: TrendingUp },
+          { key: 'comissoes', name: 'Comissões', href: '/financeiro/comissoes', icon: Wallet },
+          { key: 'fechamento', name: 'Fechamento', href: '/comissoes/fechamento', icon: Wallet },
+          { key: 'relatorios', name: 'Relatórios', href: '/relatorios', icon: FileChartColumn },
+          { key: 'rel_ranking', name: 'Ranking', href: '/relatorios/ranking', icon: Trophy },
+          {
+            key: 'rel_desempenho',
+            name: 'Análise Desempenho',
+            href: '/relatorios/desempenho',
+            icon: BarChart2
+          },
+          { key: 'parametros', name: 'Parâmetros', href: '/parametros', icon: Settings },
+          $permissoes.isMaster
+            ? { name: 'Master', href: '/master', icon: Shield }
+            : { name: 'Admin', href: '/admin', icon: Shield },
+          { key: 'meu_perfil', name: 'Perfil', href: '/perfil', icon: UserCircle }
+        ];
 
   $: {
     hiddenMenuSet;
@@ -563,7 +726,8 @@
 
   // Encontra a entrada mais específica que bate com a rota atual
   $: currentNavEntry = (() => {
-    const candidates = visibleMobileNavEntries.length > 0 ? visibleMobileNavEntries : mobileNavEntries;
+    const candidates =
+      visibleMobileNavEntries.length > 0 ? visibleMobileNavEntries : mobileNavEntries;
     const sorted = [...candidates].sort((a, b) => b.href.length - a.href.length);
     if (currentPath === '/') return candidates.find((entry) => entry.href === '/') ?? candidates[0];
     // Exato primeiro
@@ -576,9 +740,7 @@
       const nextChar = currentPath[entry.href.length];
       return nextChar === undefined || nextChar === '/';
     });
-    return prefix
-      ?? candidates.find((entry) => entry.href === '/perfil')
-      ?? candidates[0];
+    return prefix ?? candidates.find((entry) => entry.href === '/perfil') ?? candidates[0];
   })();
 
   async function handleRefreshPermissions() {
@@ -613,11 +775,7 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <!-- Fundo escurecido: fecha no clique; pelo teclado, o menu fecha com Esc. -->
-  <div
-    class="vtur-sidebar-overlay"
-    aria-hidden="true"
-    on:click={() => sidebar.close()}
-  ></div>
+  <div class="vtur-sidebar-overlay" aria-hidden="true" on:click={() => sidebar.close()}></div>
 {/if}
 
 <!-- ============================================================
@@ -674,7 +832,11 @@
               <span class="vtur-sidebar__section-title">{section.title}</span>
               <ChevronDown
                 size={12}
-                class="vtur-sidebar__section-toggle-icon transition-transform duration-200 {collapsed[section.title] ? '' : 'rotate-180'}"
+                class="vtur-sidebar__section-toggle-icon transition-transform duration-200 {collapsed[
+                  section.title
+                ]
+                  ? ''
+                  : 'rotate-180'}"
                 aria-hidden="true"
               />
             </Button>
@@ -683,12 +845,25 @@
           {/if}
 
           {#if !section.collapsible || !collapsed[section.title]}
-            <nav id={sectionDomId(section.title)} class="vtur-sidebar__nav" aria-label={section.title} transition:slide={{ duration: 180 }}>
+            <nav
+              id={sectionDomId(section.title)}
+              class="vtur-sidebar__nav"
+              aria-label={section.title}
+              transition:slide={{ duration: 180 }}
+            >
               {#each section.items as item}
                 {#if item.disabled}
-                  <div class="vtur-sidebar__item vtur-sidebar__item--disabled" aria-disabled="true" title={item.name}>
+                  <div
+                    class="vtur-sidebar__item vtur-sidebar__item--disabled"
+                    aria-disabled="true"
+                    title={item.name}
+                  >
                     <div class="vtur-sidebar__item-main">
-                      <svelte:component this={item.icon} size={22} class="vtur-sidebar__item-icon" />
+                      <svelte:component
+                        this={item.icon}
+                        size={22}
+                        class="vtur-sidebar__item-icon"
+                      />
                       <span class="vtur-sidebar__item-label">{item.name}</span>
                     </div>
                     {#if item.badge}
@@ -737,7 +912,11 @@
                 on:click={handleItemClick}
               >
                 <div class="vtur-sidebar__item-main">
-                  <svelte:component this={item.icon} size={22} class="vtur-sidebar__item-icon {isActive(item.href) ? 'text-blue-600' : ''}" />
+                  <svelte:component
+                    this={item.icon}
+                    size={22}
+                    class="vtur-sidebar__item-icon {isActive(item.href) ? 'text-blue-600' : ''}"
+                  />
                   <span class="vtur-sidebar__item-label">{item.name}</span>
                 </div>
               </a>
@@ -748,7 +927,9 @@
 
       {#if visibleAdminItems.length > 0}
         <section class="vtur-sidebar__section">
-          <h2 class="vtur-sidebar__section-title px-1">{$permissoes.isSystemAdmin ? 'ADMINISTRAÇÃO' : 'ADMIN'}</h2>
+          <h2 class="vtur-sidebar__section-title px-1">
+            {$permissoes.isSystemAdmin ? 'ADMINISTRAÇÃO' : 'ADMIN'}
+          </h2>
           <nav class="vtur-sidebar__nav" aria-label="Admin">
             {#each visibleAdminItems as item}
               <a
@@ -760,7 +941,11 @@
                 on:click={handleItemClick}
               >
                 <div class="vtur-sidebar__item-main">
-                  <svelte:component this={item.icon} size={22} class="vtur-sidebar__item-icon {isActive(item.href) ? 'text-blue-600' : ''}" />
+                  <svelte:component
+                    this={item.icon}
+                    size={22}
+                    class="vtur-sidebar__item-icon {isActive(item.href) ? 'text-blue-600' : ''}"
+                  />
                   <span class="vtur-sidebar__item-label">{item.name}</span>
                 </div>
               </a>
@@ -794,8 +979,13 @@
           title="Atualizar permissões"
         >
           <div class="vtur-sidebar__item-main">
-            <RefreshCw size={22} class={`vtur-sidebar__item-icon ${refreshingPerms ? 'animate-spin' : ''}`} />
-            <span class="vtur-sidebar__item-label">{refreshingPerms ? 'Atualizando...' : 'Atualizar permissões'}</span>
+            <RefreshCw
+              size={22}
+              class={`vtur-sidebar__item-icon ${refreshingPerms ? 'animate-spin' : ''}`}
+            />
+            <span class="vtur-sidebar__item-label"
+              >{refreshingPerms ? 'Atualizando...' : 'Atualizar permissões'}</span
+            >
           </div>
         </Button>
         <Button
@@ -815,7 +1005,9 @@
 
       <div class="vtur-sidebar__profile">
         <div class="vtur-sidebar__avatar">
-          {String(userDisplayName || '').slice(0, 2).toUpperCase()}
+          {String(userDisplayName || '')
+            .slice(0, 2)
+            .toUpperCase()}
         </div>
         <div class="vtur-sidebar__profile-copy">
           <p class="vtur-sidebar__profile-name">{userDisplayName}</p>
@@ -834,10 +1026,7 @@
     BOTTOM NAV COMPACTO — padrão vtur-app:
     3 colunas: [Menu] [Página atual com ícone + nome grande] [Spacer]
   -->
-  <nav
-    class="vtur-mobile-nav"
-    aria-label="Navegação principal"
-  >
+  <nav class="vtur-mobile-nav" aria-label="Navegação principal">
     <!-- Coluna 1: Hamburguer / Menu -->
     <Button
       type="button"
@@ -850,7 +1039,7 @@
       ariaLabel={$sidebar.isOpen ? 'Fechar menu' : 'Abrir menu'}
     >
       <Menu size={22} aria-hidden="true" />
-      <span class="text-[0.65rem] font-medium leading-none">Menu</span>
+      <span class="text-[0.65rem] leading-none font-medium">Menu</span>
     </Button>
 
     <!-- Coluna 2: Módulo/Página atual — ícone + nome em destaque -->

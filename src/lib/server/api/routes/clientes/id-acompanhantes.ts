@@ -26,7 +26,9 @@ export async function handleClientesIdAcompanhantesGet(event: RequestEvent) {
 
     const { data, error } = await client
       .from('cliente_acompanhantes')
-      .select('id, cliente_id, company_id, nome_completo, cpf, telefone, grau_parentesco, rg, data_nascimento, observacoes, ativo, created_at, updated_at')
+      .select(
+        'id, cliente_id, company_id, nome_completo, cpf, telefone, grau_parentesco, rg, data_nascimento, observacoes, ativo, created_at, updated_at'
+      )
       .eq('cliente_id', clienteId)
       .order('nome_completo', { ascending: true });
 
@@ -60,7 +62,10 @@ export async function handleClientesIdAcompanhantesPost(event: RequestEvent) {
         : {};
     const nomeCompleto = String(body?.nome_completo || '').trim();
     if (!nomeCompleto) {
-      return json({ error: 'Informe o nome completo do acompanhante.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Informe o nome completo do acompanhante.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { data: clienteRow, error: clienteError } = await client
@@ -85,7 +90,9 @@ export async function handleClientesIdAcompanhantesPost(event: RequestEvent) {
         ativo: body?.ativo !== false,
         created_by: user.id
       })
-      .select('id, cliente_id, company_id, nome_completo, cpf, telefone, grau_parentesco, rg, data_nascimento, observacoes, ativo, created_at, updated_at')
+      .select(
+        'id, cliente_id, company_id, nome_completo, cpf, telefone, grau_parentesco, rg, data_nascimento, observacoes, ativo, created_at, updated_at'
+      )
       .single();
 
     if (error) throw error;
@@ -95,10 +102,13 @@ export async function handleClientesIdAcompanhantesPost(event: RequestEvent) {
       userId: user.id
     });
 
-    return json({
-      item: data,
-      message: 'Acompanhante cadastrado com sucesso.'
-    }, { headers: NO_STORE_HEADERS });
+    return json(
+      {
+        item: data,
+        message: 'Acompanhante cadastrado com sucesso.'
+      },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao salvar acompanhante.');
   }

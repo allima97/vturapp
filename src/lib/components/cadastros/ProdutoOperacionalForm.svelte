@@ -6,7 +6,15 @@
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import Dialog from '$lib/components/ui/Dialog.svelte';
-  import { FieldCheckbox, FieldDatalistInput, FieldInput, FieldSelect, FieldTextarea, FieldToggle, LoadingState } from '$lib/components/ui';
+  import {
+    FieldCheckbox,
+    FieldDatalistInput,
+    FieldInput,
+    FieldSelect,
+    FieldTextarea,
+    FieldToggle,
+    LoadingState
+  } from '$lib/components/ui';
   import { ArrowLeft, Plus, Save, Trash2 } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { toUserMessage } from '$lib/utils/errors';
@@ -176,7 +184,8 @@
   async function loadProduto(signal?: AbortSignal) {
     if (!produtoId) return;
     const data = await apiGet<ProdutoDetalhe>(`/api/v1/produtos/${produtoId}`, undefined, signal);
-    const fornecedorLabel = data?.fornecedor?.nome_fantasia || data?.fornecedor?.nome_completo || '';
+    const fornecedorLabel =
+      data?.fornecedor?.nome_fantasia || data?.fornecedor?.nome_completo || '';
     form = {
       nome: data.nome || '',
       destino: data.destino || '',
@@ -304,7 +313,8 @@
     if (!form.nome.trim()) return toast.error('Nome é obrigatório.');
     if (!form.destino.trim()) return toast.error('Destino é obrigatório.');
     if (!form.tipo_produto) return toast.error('Tipo de produto é obrigatório.');
-    if (!form.todas_as_cidades && !form.cidade_id) return toast.error('Cidade é obrigatória para produtos por cidade.');
+    if (!form.todas_as_cidades && !form.cidade_id)
+      return toast.error('Cidade é obrigatória para produtos por cidade.');
 
     saving = true;
     try {
@@ -319,10 +329,19 @@
         ? await apiPost<ProdutoSaveResponse>('/api/v1/produtos/create', payload)
         : await apiPatch<ProdutoSaveResponse>(`/api/v1/produtos/${produtoId}`, payload);
 
-      const savedId = String(data?.data?.id || data?.data?.data?.id || data?.data?.produto?.id || data?.data?.id || produtoId || '');
+      const savedId = String(
+        data?.data?.id ||
+          data?.data?.data?.id ||
+          data?.data?.produto?.id ||
+          data?.data?.id ||
+          produtoId ||
+          ''
+      );
       if (savedId) await saveTarifas(savedId);
 
-      toast.success(isCreateMode ? 'Cadastro salvo com sucesso.' : 'Cadastro atualizado com sucesso.');
+      toast.success(
+        isCreateMode ? 'Cadastro salvo com sucesso.' : 'Cadastro atualizado com sucesso.'
+      );
       goto(routeBase);
     } catch (err: unknown) {
       if (dev) console.error(err);
@@ -390,7 +409,9 @@
         <FieldToggle
           label="Produto global"
           bind:checked={form.todas_as_cidades}
-          helper={form.todas_as_cidades ? 'O cadastro fica disponível para qualquer cidade e usa destino global.' : 'Mantenha desligado para vincular o cadastro a uma cidade específica.'}
+          helper={form.todas_as_cidades
+            ? 'O cadastro fica disponível para qualquer cidade e usa destino global.'
+            : 'Mantenha desligado para vincular o cadastro a uma cidade específica.'}
           color="financeiro"
           class_name="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
           on:change={() => {
@@ -413,7 +434,10 @@
           id="produto-cidade"
           label="Cidade"
           bind:value={form.cidade_id}
-          options={[{ value: '', label: 'Selecione uma opção' }, ...cidades.map((c) => ({ value: c.id, label: cidadeLabel(c.id) }))]}
+          options={[
+            { value: '', label: 'Selecione uma opção' },
+            ...cidades.map((c) => ({ value: c.id, label: cidadeLabel(c.id) }))
+          ]}
           placeholder=""
           disabled={form.todas_as_cidades}
           class_name="w-full"
@@ -546,9 +570,14 @@
           color="financeiro"
           class_name="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
         />
-        <div class="md:col-span-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+        <div
+          class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600 md:col-span-2"
+        >
           <p class="font-medium text-slate-900">Impacto operacional</p>
-          <p class="mt-1">Este cadastro alimenta Vendas e listas base. Produtos globais aparecem para qualquer cidade; produtos por cidade dependem do vínculo em `cidade_id`.</p>
+          <p class="mt-1">
+            Este cadastro alimenta Vendas e listas base. Produtos globais aparecem para qualquer
+            cidade; produtos por cidade dependem do vínculo em `cidade_id`.
+          </p>
         </div>
       </div>
     </Card>
@@ -557,7 +586,9 @@
       <div class="mb-4 flex items-center justify-between">
         <div>
           <h3 class="text-lg font-semibold text-slate-900">Tarifas</h3>
-          <p class="text-sm text-slate-500">Use tarifas quando o produto exigir grade por acomodação, pax, período e moeda.</p>
+          <p class="text-sm text-slate-500">
+            Use tarifas quando o produto exigir grade por acomodação, pax, período e moeda.
+          </p>
         </div>
         <Button type="button" variant="secondary" on:click={addTarifa}>
           <Plus size={16} class="mr-2" />
@@ -566,7 +597,9 @@
       </div>
 
       {#if tarifas.length === 0}
-        <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500">
+        <div
+          class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-4 text-sm text-slate-500"
+        >
           Nenhuma tarifa cadastrada. O produto pode funcionar apenas com os valores base acima.
         </div>
       {:else}
@@ -575,7 +608,13 @@
             <div class="rounded-xl border border-slate-200 p-4">
               <div class="mb-4 flex items-center justify-between">
                 <p class="font-medium text-slate-900">Tarifa {index + 1}</p>
-                <Button variant="ghost" size="sm" color="red" class_name="text-slate-400 hover:bg-red-50 hover:text-red-600" on:click={() => removeTarifa(index)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  color="red"
+                  class_name="text-slate-400 hover:bg-red-50 hover:text-red-600"
+                  on:click={() => removeTarifa(index)}
+                >
                   <Trash2 size={16} />
                 </Button>
               </div>
@@ -584,13 +623,15 @@
                   value={tarifa.acomodacao}
                   placeholder="Acomodação"
                   class_name="w-full"
-                  on:input={(e) => updateTarifa(index, 'acomodacao', (e.target as HTMLInputElement).value)}
+                  on:input={(e) =>
+                    updateTarifa(index, 'acomodacao', (e.target as HTMLInputElement).value)}
                 />
                 <FieldInput
                   value={tarifa.tipo}
                   placeholder="Tipo"
                   class_name="w-full"
-                  on:input={(e) => updateTarifa(index, 'tipo', (e.target as HTMLInputElement).value)}
+                  on:input={(e) =>
+                    updateTarifa(index, 'tipo', (e.target as HTMLInputElement).value)}
                 />
                 <FieldInput
                   type="number"
@@ -598,7 +639,12 @@
                   value={tarifa.qte_pax}
                   placeholder="Qtd pax"
                   class_name="w-full"
-                  on:input={(e) => updateTarifa(index, 'qte_pax', Number((e.target as HTMLInputElement).value || 0))}
+                  on:input={(e) =>
+                    updateTarifa(
+                      index,
+                      'qte_pax',
+                      Number((e.target as HTMLInputElement).value || 0)
+                    )}
                 />
                 <FieldSelect
                   value={tarifa.padrao}
@@ -608,19 +654,22 @@
                   ]}
                   placeholder={null}
                   class_name="w-full"
-                  on:change={(e) => updateTarifa(index, 'padrao', (e.target as HTMLSelectElement).value)}
+                  on:change={(e) =>
+                    updateTarifa(index, 'padrao', (e.target as HTMLSelectElement).value)}
                 />
                 <FieldInput
                   type="date"
                   value={tarifa.validade_de}
                   class_name="w-full"
-                  on:input={(e) => updateTarifa(index, 'validade_de', (e.target as HTMLInputElement).value)}
+                  on:input={(e) =>
+                    updateTarifa(index, 'validade_de', (e.target as HTMLInputElement).value)}
                 />
                 <FieldInput
                   type="date"
                   value={tarifa.validade_ate}
                   class_name="w-full"
-                  on:input={(e) => updateTarifa(index, 'validade_ate', (e.target as HTMLInputElement).value)}
+                  on:input={(e) =>
+                    updateTarifa(index, 'validade_ate', (e.target as HTMLInputElement).value)}
                 />
                 <FieldInput
                   type="number"
@@ -628,7 +677,12 @@
                   value={tarifa.valor_neto}
                   placeholder="Valor líquido"
                   class_name="w-full"
-                  on:input={(e) => updateTarifa(index, 'valor_neto', Number((e.target as HTMLInputElement).value || 0))}
+                  on:input={(e) =>
+                    updateTarifa(
+                      index,
+                      'valor_neto',
+                      Number((e.target as HTMLInputElement).value || 0)
+                    )}
                 />
                 <FieldInput
                   type="number"
@@ -647,7 +701,12 @@
                   value={tarifa.valor_venda}
                   placeholder="Valor de venda"
                   class_name="w-full"
-                  on:input={(e) => updateTarifa(index, 'valor_venda', Number((e.target as HTMLInputElement).value || 0))}
+                  on:input={(e) =>
+                    updateTarifa(
+                      index,
+                      'valor_venda',
+                      Number((e.target as HTMLInputElement).value || 0)
+                    )}
                 />
                 <FieldSelect
                   value={tarifa.moeda}
@@ -658,7 +717,8 @@
                   ]}
                   placeholder={null}
                   class_name="w-full"
-                  on:change={(e) => updateTarifa(index, 'moeda', (e.target as HTMLSelectElement).value)}
+                  on:change={(e) =>
+                    updateTarifa(index, 'moeda', (e.target as HTMLSelectElement).value)}
                 />
                 <FieldInput
                   type="number"
@@ -667,7 +727,12 @@
                   placeholder="Câmbio"
                   disabled={tarifa.moeda === 'BRL'}
                   class_name="w-full"
-                  on:input={(e) => updateTarifa(index, 'cambio', Number((e.target as HTMLInputElement).value || 1))}
+                  on:input={(e) =>
+                    updateTarifa(
+                      index,
+                      'cambio',
+                      Number((e.target as HTMLInputElement).value || 1)
+                    )}
                 />
                 <FieldInput
                   type="number"
@@ -718,6 +783,7 @@
   onCancel={() => (showDeleteDialog = false)}
 >
   <p class="text-slate-600">
-    Tem certeza que deseja excluir este registro? Se houver vínculos com vendas, orçamentos ou operação, a exclusão pode ser bloqueada pelo banco.
+    Tem certeza que deseja excluir este registro? Se houver vínculos com vendas, orçamentos ou
+    operação, a exclusão pode ser bloqueada pelo banco.
   </p>
 </Dialog>

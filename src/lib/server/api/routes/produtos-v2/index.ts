@@ -26,7 +26,7 @@ import {
   inativarProduto,
   listarProdutos,
   obterProduto,
-  type ProdutoInput,
+  type ProdutoInput
 } from '$lib/server/vendas/service';
 
 export const produtosV2Routes = new Hono<ApiEnv>();
@@ -41,7 +41,7 @@ async function contexto(c: Context<ApiEnv>) {
   const baseURL =
     PUBLIC_ENVIRONMENT === 'production'
       ? 'https://vturapp.com.br'
-      : PUBLIC_APP_URL ?? 'http://localhost:5173';
+      : (PUBLIC_APP_URL ?? 'http://localhost:5173');
   const ctx = await resolveAuthContext(c.req.raw.headers, DB, BETTER_AUTH_SECRET, baseURL);
   if (!ctx) return { res: c.json({ error: 'Não autenticado.' }, 401) };
   return { ctx, db: getDb(DB) };
@@ -85,7 +85,8 @@ produtosV2Routes.get('/', async (c) => {
 produtosV2Routes.post('/', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!canForContext(r.ctx, 'configuracoes', 'criar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'configuracoes', 'criar'))
+    return c.json({ error: 'Sem permissão.' }, 403);
 
   const body = await c.req.json<ProdutoInput>().catch(() => null);
   if (!body) return c.json({ error: 'Corpo JSON inválido.' }, 400);
@@ -124,7 +125,8 @@ produtosV2Routes.get('/:id', async (c) => {
 produtosV2Routes.patch('/:id', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!canForContext(r.ctx, 'configuracoes', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'configuracoes', 'editar'))
+    return c.json({ error: 'Sem permissão.' }, 403);
 
   const id = parseId(c.req.param('id'));
   if (!id) return c.json({ error: 'ID inválido.' }, 400);
@@ -147,7 +149,8 @@ produtosV2Routes.patch('/:id', async (c) => {
 produtosV2Routes.delete('/:id', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!canForContext(r.ctx, 'configuracoes', 'excluir')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'configuracoes', 'excluir'))
+    return c.json({ error: 'Sem permissão.' }, 403);
 
   const id = parseId(c.req.param('id'));
   if (!id) return c.json({ error: 'ID inválido.' }, 400);

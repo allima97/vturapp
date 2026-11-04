@@ -86,7 +86,9 @@
       systemModuleCatalog = payload.system_module_catalog || [];
     } catch (err) {
       if (isCanceledApiError(err)) return;
-      toast.error(toUserMessage(err, 'Nao foi possivel carregar o painel de permissoes do master.'));
+      toast.error(
+        toUserMessage(err, 'Nao foi possivel carregar o painel de permissoes do master.')
+      );
       rows = [];
       globalModules = [];
       systemModuleCatalog = [];
@@ -105,26 +107,40 @@
 <PageHeader
   title="Permissoes Master"
   subtitle="Controle do escopo multiempresa e leitura da disponibilidade global dos modulos do sistema."
-  breadcrumbs={[
-    { label: 'Master', href: '/master' },
-    { label: 'Permissoes' }
-  ]}
+  breadcrumbs={[{ label: 'Master', href: '/master' }, { label: 'Permissoes' }]}
   actions={[{ label: 'Atualizar', onClick: loadPage, variant: 'secondary', icon: RefreshCw }]}
 />
 
 <div class="space-y-6">
   <div class="vtur-kpi-grid vtur-kpi-grid-3">
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500"><Users size={20} /></div>
-      <div><p class="text-sm font-medium text-slate-500">Usuarios no painel</p><p class="text-2xl font-bold text-slate-900">{rows.length}</p></div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+        <Users size={20} />
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Usuarios no painel</p>
+        <p class="text-2xl font-bold text-slate-900">{rows.length}</p>
+      </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500"><LayoutGrid size={20} /></div>
-      <div><p class="text-sm font-medium text-slate-500">Modulos globais</p><p class="text-2xl font-bold text-slate-900">{systemModuleCatalog.length}</p></div>
+      <div
+        class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500"
+      >
+        <LayoutGrid size={20} />
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Modulos globais</p>
+        <p class="text-2xl font-bold text-slate-900">{systemModuleCatalog.length}</p>
+      </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500"><XCircle size={20} /></div>
-      <div><p class="text-sm font-medium text-slate-500">Modulos desabilitados</p><p class="text-2xl font-bold text-slate-900">{disabledGlobalModulesCount}</p></div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500">
+        <XCircle size={20} />
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Modulos desabilitados</p>
+        <p class="text-2xl font-bold text-slate-900">{disabledGlobalModulesCount}</p>
+      </div>
     </div>
   </div>
 
@@ -136,7 +152,9 @@
             <p class="font-medium text-slate-900">{item.label}</p>
             <p class="text-xs text-slate-500">{item.key}</p>
           </div>
-          <span class={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getGlobalEnabled(item.key) ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+          <span
+            class={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${getGlobalEnabled(item.key) ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}
+          >
             {getGlobalEnabled(item.key) ? 'Ativo' : 'Desabilitado'}
           </span>
         </div>
@@ -144,7 +162,8 @@
     </div>
 
     <p class="mt-4 text-sm text-slate-500">
-      A disponibilidade global e informativa no escopo master. Alteracoes globais permanecem restritas ao painel ADMIN.
+      A disponibilidade global e informativa no escopo master. Alteracoes globais permanecem
+      restritas ao painel ADMIN.
     </p>
   </Card>
 

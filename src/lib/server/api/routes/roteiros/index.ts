@@ -1,7 +1,12 @@
 import { Hono } from 'hono';
 import type { ApiEnv } from '../../types';
 import { withRouteParams } from '../../params';
-import { handleRoteirosGet, handleRoteirosPost, handleRoteirosDelete, handleRoteirosPatch } from './root';
+import {
+  handleRoteirosGet,
+  handleRoteirosPost,
+  handleRoteirosDelete,
+  handleRoteirosPatch
+} from './root';
 import { handleRoteirosIdGet } from './id';
 import { handleRoteirosDeleteDelete } from './delete';
 import { handleRoteirosDiasBuscaGet } from './dias-busca';

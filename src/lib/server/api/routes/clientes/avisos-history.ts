@@ -29,7 +29,9 @@ export async function handleClientesAvisosHistoryGet(event: RequestEvent) {
 
     const { data, error } = await client
       .from('cliente_avisos_historico')
-      .select('id, cliente_id, template_id, canal, assunto, mensagem, status, provider, provider_id, destinatario, enviado_por, created_at')
+      .select(
+        'id, cliente_id, template_id, canal, assunto, mensagem, status, provider, provider_id, destinatario, enviado_por, created_at'
+      )
       .eq('cliente_id', clienteId)
       .order('created_at', { ascending: false })
       .limit(10);

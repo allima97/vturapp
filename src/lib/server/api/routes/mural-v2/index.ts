@@ -12,7 +12,7 @@ import {
   excluirRecado,
   listarRecados,
   listarTodosRecados,
-  MuralError,
+  MuralError
 } from '$lib/server/mural-m09/service';
 import { getDb } from '$lib/server/db/client';
 
@@ -56,17 +56,22 @@ export const muralV2Routes = new Hono<ApiEnv>()
 
     const db = getDb(DB);
     let body: { assunto?: string; conteudo?: string; destinatarioId?: string } = {};
-    try { body = await c.req.json(); } catch { /* keep empty */ }
+    try {
+      body = await c.req.json();
+    } catch {
+      /* keep empty */
+    }
 
     try {
       const recado = await criarRecado(db, ctx.empresaId, ctx.userId, {
         assunto: body.assunto,
         conteudo: body.conteudo ?? '',
-        destinatarioId: body.destinatarioId ?? null,
+        destinatarioId: body.destinatarioId ?? null
       });
       return c.json({ recado }, 201);
     } catch (e) {
-      if (e instanceof MuralError && e.code === 'VALIDACAO') return c.json({ error: e.message }, 422);
+      if (e instanceof MuralError && e.code === 'VALIDACAO')
+        return c.json({ error: e.message }, 422);
       throw e;
     }
   })

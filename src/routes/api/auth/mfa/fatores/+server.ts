@@ -1,6 +1,6 @@
-import { json } from "@sveltejs/kit";
-import type { RequestHandler } from "./$types";
-import { getDataClient } from "$lib/server/data";
+import { json } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+import { getDataClient } from '$lib/server/data';
 
 export const GET: RequestHandler = async () => {
   const result = await getDataClient().auth.mfa.listFactors();
@@ -12,10 +12,9 @@ export const POST: RequestHandler = async ({ request }) => {
     friendlyName?: string;
   };
   const result = await getDataClient().auth.mfa.enroll({
-    friendlyName: body.friendlyName,
+    friendlyName: body.friendlyName
   });
-  if (result.error)
-    return json({ error: result.error.message }, { status: 400 });
+  if (result.error) return json({ error: result.error.message }, { status: 400 });
   return json(result.data);
 };
 
@@ -24,7 +23,7 @@ export const DELETE: RequestHandler = async ({ request }) => {
     factorId?: string;
   };
   const result = await getDataClient().auth.mfa.unenroll({
-    factorId: String(body.factorId || ""),
+    factorId: String(body.factorId || '')
   });
   return json({ ok: !result.error }, { status: result.error ? 400 : 200 });
 };

@@ -191,10 +191,7 @@
   title="Nova Viagem"
   subtitle="Cadastre uma viagem operacional com cliente, roteiro base e acompanhamento."
   color="clientes"
-  breadcrumbs={[
-    { label: 'Viagens', href: '/operacao/viagens' },
-    { label: 'Nova viagem' }
-  ]}
+  breadcrumbs={[{ label: 'Viagens', href: '/operacao/viagens' }, { label: 'Nova viagem' }]}
   actions={[
     { label: 'Voltar', href: '/operacao/viagens', variant: 'secondary', icon: ArrowLeft },
     { label: 'Recarregar clientes', onClick: loadClientes, variant: 'secondary', icon: RefreshCw }

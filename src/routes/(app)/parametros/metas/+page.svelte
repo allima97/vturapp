@@ -4,7 +4,13 @@
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import Dialog from '$lib/components/ui/Dialog.svelte';
-  import { BottomSheet, FieldCheckbox, FieldInput, FieldSelect, LoadingState } from '$lib/components/ui';
+  import {
+    BottomSheet,
+    FieldCheckbox,
+    FieldInput,
+    FieldSelect,
+    LoadingState
+  } from '$lib/components/ui';
   import { addMonthsISODate, todayISODateLocal } from '$lib/date';
   import { formatCurrency, formatYearMonthLabel } from '$lib/utils/formatters';
   import { toast } from '$lib/stores/ui';
@@ -12,7 +18,15 @@
   import { confirmAction } from '$lib/stores/confirm';
   import { apiDelete, apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
-  import { CopyCheck, Pencil, Plus, RefreshCw, SlidersHorizontal, Target, Trash2 } from '$lib/icons';
+  import {
+    CopyCheck,
+    Pencil,
+    Plus,
+    RefreshCw,
+    SlidersHorizontal,
+    Target,
+    Trash2
+  } from '$lib/icons';
   import { toUserMessage } from '$lib/utils/errors';
 
   type Produto = {
@@ -192,7 +206,10 @@
     }
 
     return detalhes
-      .map((item) => `${item.produto?.nome || produtoNome(item.produto_id)}: ${formatCurrency(Number(item.valor || 0))}`)
+      .map(
+        (item) =>
+          `${item.produto?.nome || produtoNome(item.produto_id)}: ${formatCurrency(Number(item.valor || 0))}`
+      )
       .join(' | ');
   }
 
@@ -204,10 +221,14 @@
         items?: Meta[];
         vendedores?: Vendedor[];
         produtos?: Produto[];
-      }>('/api/v1/parametros/metas', {
-        periodo,
-        vendedor_id: vendedorFiltro || undefined
-      }, request.signal);
+      }>(
+        '/api/v1/parametros/metas',
+        {
+          periodo,
+          vendedor_id: vendedorFiltro || undefined
+        },
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       metas = payload.items || [];
       vendedores = payload.vendedores || [];
@@ -224,7 +245,10 @@
     if (target === 'form') {
       form = { ...form, meta_produtos: [...form.meta_produtos, { produto_id: '', valor: '' }] };
     } else {
-      bulkForm = { ...bulkForm, meta_produtos: [...bulkForm.meta_produtos, { produto_id: '', valor: '' }] };
+      bulkForm = {
+        ...bulkForm,
+        meta_produtos: [...bulkForm.meta_produtos, { produto_id: '', valor: '' }]
+      };
     }
   }
 
@@ -232,16 +256,27 @@
     if (target === 'form') {
       form = { ...form, meta_produtos: form.meta_produtos.filter((_, i) => i !== index) };
     } else {
-      bulkForm = { ...bulkForm, meta_produtos: bulkForm.meta_produtos.filter((_, i) => i !== index) };
+      bulkForm = {
+        ...bulkForm,
+        meta_produtos: bulkForm.meta_produtos.filter((_, i) => i !== index)
+      };
     }
   }
 
-  function updateProdutoRow(target: 'form' | 'bulk', index: number, patch: Partial<ProdutoFormRow>) {
+  function updateProdutoRow(
+    target: 'form' | 'bulk',
+    index: number,
+    patch: Partial<ProdutoFormRow>
+  ) {
     if (target === 'form') {
-      const meta_produtos = form.meta_produtos.map((row, i) => (i === index ? { ...row, ...patch } : row));
+      const meta_produtos = form.meta_produtos.map((row, i) =>
+        i === index ? { ...row, ...patch } : row
+      );
       form = { ...form, meta_produtos };
     } else {
-      const meta_produtos = bulkForm.meta_produtos.map((row, i) => (i === index ? { ...row, ...patch } : row));
+      const meta_produtos = bulkForm.meta_produtos.map((row, i) =>
+        i === index ? { ...row, ...patch } : row
+      );
       bulkForm = { ...bulkForm, meta_produtos };
     }
   }
@@ -356,7 +391,10 @@
   }
 
   async function deleteMeta(meta: Meta) {
-    if (!(await confirmAction(`Excluir a meta de ${formatYearMonthLabel(meta.periodo.slice(0, 7))}?`))) return;
+    if (
+      !(await confirmAction(`Excluir a meta de ${formatYearMonthLabel(meta.periodo.slice(0, 7))}?`))
+    )
+      return;
     deletingId = meta.id;
     try {
       await apiDelete('/api/v1/parametros/metas', { id: meta.id });
@@ -380,14 +418,22 @@
   title="Metas de Vendedores"
   subtitle="Filtre o mês, revise o histórico e ajuste metas de vendas e produtos diferenciados."
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Parâmetros', href: '/parametros' },
-    { label: 'Metas' }
-  ]}
+  breadcrumbs={[{ label: 'Parâmetros', href: '/parametros' }, { label: 'Metas' }]}
   actions={[
     { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw },
-    ...(canEdit ? [{ label: 'Aplicar em lote', onClick: openBulk, variant: 'secondary' as const, icon: CopyCheck }] : []),
-    ...(canEdit ? [{ label: 'Nova meta', onClick: () => openNew(), variant: 'primary' as const, icon: Plus }] : [])
+    ...(canEdit
+      ? [
+          {
+            label: 'Aplicar em lote',
+            onClick: openBulk,
+            variant: 'secondary' as const,
+            icon: CopyCheck
+          }
+        ]
+      : []),
+    ...(canEdit
+      ? [{ label: 'Nova meta', onClick: () => openNew(), variant: 'primary' as const, icon: Plus }]
+      : [])
   ]}
 />
 
@@ -487,14 +533,29 @@
 
 <Card title={`Metas de ${formatYearMonthLabel(periodo)}`} padding="none">
   <div class="overflow-x-auto">
-    <table class="min-w-full divide-y divide-slate-200 table-mobile-cards">
+    <table class="table-mobile-cards min-w-full divide-y divide-slate-200">
       <thead class="bg-slate-50">
         <tr>
-          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Vendedor</th>
-          <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Meta vendas</th>
-          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Produto diferenciado</th>
-          <th class="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
-          <th class="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Ações</th>
+          <th
+            class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase"
+            >Vendedor</th
+          >
+          <th
+            class="px-5 py-3 text-right text-xs font-semibold tracking-wide text-slate-500 uppercase"
+            >Meta vendas</th
+          >
+          <th
+            class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase"
+            >Produto diferenciado</th
+          >
+          <th
+            class="px-5 py-3 text-left text-xs font-semibold tracking-wide text-slate-500 uppercase"
+            >Status</th
+          >
+          <th
+            class="px-5 py-3 text-right text-xs font-semibold tracking-wide text-slate-500 uppercase"
+            >Ações</th
+          >
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100 bg-white">
@@ -506,18 +567,25 @@
           </tr>
         {:else if rows.length === 0}
           <tr>
-            <td colspan="5" class="px-5 py-8 text-center text-sm text-slate-500">Nenhum vendedor no escopo atual.</td>
+            <td colspan="5" class="px-5 py-8 text-center text-sm text-slate-500"
+              >Nenhum vendedor no escopo atual.</td
+            >
           </tr>
         {:else}
           {#each rows as row}
             <tr class="hover:bg-slate-50">
               <td data-label="Vendedor" class="px-5 py-4">
-                <div class="font-semibold text-slate-900">{row.vendedor.nome_completo || 'Vendedor'}</div>
+                <div class="font-semibold text-slate-900">
+                  {row.vendedor.nome_completo || 'Vendedor'}
+                </div>
                 {#if row.vendedor.email}
                   <div class="text-xs text-slate-500">{row.vendedor.email}</div>
                 {/if}
               </td>
-              <td data-label="Meta vendas" class="px-5 py-4 text-right font-semibold text-slate-900">
+              <td
+                data-label="Meta vendas"
+                class="px-5 py-4 text-right font-semibold text-slate-900"
+              >
                 {row.meta ? formatCurrency(Number(row.meta.meta_geral || 0)) : '-'}
               </td>
               <td data-label="Produto diferenciado" class="px-5 py-4 text-sm text-slate-600">
@@ -525,11 +593,20 @@
               </td>
               <td data-label="Status" class="px-5 py-4">
                 {#if row.meta?.ativo}
-                  <span class="inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">Ativa</span>
+                  <span
+                    class="inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700"
+                    >Ativa</span
+                  >
                 {:else if row.meta}
-                  <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">Inativa</span>
+                  <span
+                    class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600"
+                    >Inativa</span
+                  >
                 {:else}
-                  <span class="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">Não cadastrada</span>
+                  <span
+                    class="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700"
+                    >Não cadastrada</span
+                  >
                 {/if}
               </td>
               <td data-label="Ações" class="px-5 py-4">
@@ -621,12 +698,22 @@
     </div>
 
     <div class="rounded-lg border border-slate-200">
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
+      <div
+        class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3"
+      >
         <div>
           <h4 class="text-sm font-semibold text-slate-900">Metas por produto diferenciado</h4>
-          <p class="text-xs text-slate-500">Use para seguro viagem e outros produtos com meta própria.</p>
+          <p class="text-xs text-slate-500">
+            Use para seguro viagem e outros produtos com meta própria.
+          </p>
         </div>
-        <Button variant="secondary" size="xs" color="financeiro" on:click={() => addProdutoRow('form')} disabled={produtos.length === 0}>
+        <Button
+          variant="secondary"
+          size="xs"
+          color="financeiro"
+          on:click={() => addProdutoRow('form')}
+          disabled={produtos.length === 0}
+        >
           <Plus size={14} class="mr-1" />
           Produto
         </Button>
@@ -644,7 +731,10 @@
                 label="Produto"
                 value={item.produto_id}
                 options={produtoOptions}
-                on:change={(event) => updateProdutoRow('form', index, { produto_id: (event.currentTarget as HTMLSelectElement).value })}
+                on:change={(event) =>
+                  updateProdutoRow('form', index, {
+                    produto_id: (event.currentTarget as HTMLSelectElement).value
+                  })}
                 required={true}
               />
               <FieldInput
@@ -654,9 +744,17 @@
                 min="0"
                 prefix="R$"
                 value={item.valor}
-                on:input={(event) => updateProdutoRow('form', index, { valor: (event.currentTarget as HTMLInputElement).value })}
+                on:input={(event) =>
+                  updateProdutoRow('form', index, {
+                    valor: (event.currentTarget as HTMLInputElement).value
+                  })}
               />
-              <Button variant="ghost" color="financeiro" on:click={() => removeProdutoRow('form', index)} class_name="hover:bg-red-50! hover:text-red-600!">
+              <Button
+                variant="ghost"
+                color="financeiro"
+                on:click={() => removeProdutoRow('form', index)}
+                class_name="hover:bg-red-50! hover:text-red-600!"
+              >
                 <Trash2 size={16} />
               </Button>
             </div>
@@ -697,7 +795,9 @@
 
       <FieldInput
         id="bulk-meta-geral"
-        label={bulkForm.modo === 'total_loja' ? 'Meta total de vendas' : 'Meta de vendas por vendedor'}
+        label={bulkForm.modo === 'total_loja'
+          ? 'Meta total de vendas'
+          : 'Meta de vendas por vendedor'}
         type="number"
         step="0.01"
         min="0"
@@ -708,26 +808,41 @@
 
       <div class="rounded-lg bg-slate-50 p-4 text-sm text-slate-600 md:col-span-2">
         {#if bulkForm.modo === 'total_loja'}
-          Cada vendedor receberá {formatCurrency(parseMoney(bulkForm.meta_geral) / Math.max(1, bulkCount))} de meta de vendas.
+          Cada vendedor receberá {formatCurrency(
+            parseMoney(bulkForm.meta_geral) / Math.max(1, bulkCount)
+          )} de meta de vendas.
         {:else}
           Cada vendedor receberá {formatCurrency(parseMoney(bulkForm.meta_geral))} de meta de vendas.
         {/if}
       </div>
 
       <div class="md:col-span-2">
-        <FieldCheckbox label="Criar metas como ativas" bind:checked={bulkForm.ativo} color="financeiro" />
+        <FieldCheckbox
+          label="Criar metas como ativas"
+          bind:checked={bulkForm.ativo}
+          color="financeiro"
+        />
       </div>
     </div>
 
     <div class="rounded-lg border border-slate-200">
-      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3">
+      <div
+        class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-4 py-3"
+      >
         <div>
           <h4 class="text-sm font-semibold text-slate-900">Produto diferenciado</h4>
           <p class="text-xs text-slate-500">
-            No modo de divisão, o valor de cada produto também será dividido entre os vendedores filtrados.
+            No modo de divisão, o valor de cada produto também será dividido entre os vendedores
+            filtrados.
           </p>
         </div>
-        <Button variant="secondary" size="xs" color="financeiro" on:click={() => addProdutoRow('bulk')} disabled={produtos.length === 0}>
+        <Button
+          variant="secondary"
+          size="xs"
+          color="financeiro"
+          on:click={() => addProdutoRow('bulk')}
+          disabled={produtos.length === 0}
+        >
           <Plus size={14} class="mr-1" />
           Produto
         </Button>
@@ -743,7 +858,10 @@
                 label="Produto"
                 value={item.produto_id}
                 options={produtoOptions}
-                on:change={(event) => updateProdutoRow('bulk', index, { produto_id: (event.currentTarget as HTMLSelectElement).value })}
+                on:change={(event) =>
+                  updateProdutoRow('bulk', index, {
+                    produto_id: (event.currentTarget as HTMLSelectElement).value
+                  })}
                 required={true}
               />
               <FieldInput
@@ -753,9 +871,17 @@
                 min="0"
                 prefix="R$"
                 value={item.valor}
-                on:input={(event) => updateProdutoRow('bulk', index, { valor: (event.currentTarget as HTMLInputElement).value })}
+                on:input={(event) =>
+                  updateProdutoRow('bulk', index, {
+                    valor: (event.currentTarget as HTMLInputElement).value
+                  })}
               />
-              <Button variant="ghost" color="financeiro" on:click={() => removeProdutoRow('bulk', index)} class_name="hover:bg-red-50! hover:text-red-600!">
+              <Button
+                variant="ghost"
+                color="financeiro"
+                on:click={() => removeProdutoRow('bulk', index)}
+                class_name="hover:bg-red-50! hover:text-red-600!"
+              >
                 <Trash2 size={16} />
               </Button>
             </div>

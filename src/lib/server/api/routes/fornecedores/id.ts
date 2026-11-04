@@ -17,7 +17,8 @@ import { invalidateCatalogReadModels } from '$lib/server/readModelCache';
 import { cleanStringSet } from '$lib/utils/array';
 
 const MAX_FORNECEDOR_UPDATE_BODY_BYTES = 128 * 1024;
-const validationError = (message: string) => json({ error: message }, { status: 400, headers: NO_STORE_HEADERS });
+const validationError = (message: string) =>
+  json({ error: message }, { status: 400, headers: NO_STORE_HEADERS });
 
 function readFornecedorUpdateBody(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
@@ -42,7 +43,12 @@ export async function handleFornecedoresIdGet(event: RequestEvent) {
 
     const allowedCompanyIds = resolveScopedCompanyIds(scope, fornecedor.company_id || null);
     const allowedCompanySet = cleanStringSet(allowedCompanyIds);
-    if (!scope.isAdmin && allowedCompanyIds.length > 0 && fornecedor.company_id && !allowedCompanySet.has(String(fornecedor.company_id).trim())) {
+    if (
+      !scope.isAdmin &&
+      allowedCompanyIds.length > 0 &&
+      fornecedor.company_id &&
+      !allowedCompanySet.has(String(fornecedor.company_id).trim())
+    ) {
       throw error(403, 'Sem acesso a este fornecedor.');
     }
 
@@ -75,7 +81,12 @@ export async function handleFornecedoresIdPut(event: RequestEvent) {
 
     const allowedCompanyIds = resolveScopedCompanyIds(scope, existing.company_id || null);
     const allowedCompanySet = cleanStringSet(allowedCompanyIds);
-    if (!scope.isAdmin && allowedCompanyIds.length > 0 && existing.company_id && !allowedCompanySet.has(String(existing.company_id).trim())) {
+    if (
+      !scope.isAdmin &&
+      allowedCompanyIds.length > 0 &&
+      existing.company_id &&
+      !allowedCompanySet.has(String(existing.company_id).trim())
+    ) {
       throw error(403, 'Sem acesso a este fornecedor.');
     }
 
@@ -159,7 +170,12 @@ export async function handleFornecedoresIdDelete(event: RequestEvent) {
 
     const allowedCompanyIds = resolveScopedCompanyIds(scope, fornecedor.company_id || null);
     const allowedCompanySet = cleanStringSet(allowedCompanyIds);
-    if (!scope.isAdmin && allowedCompanyIds.length > 0 && fornecedor.company_id && !allowedCompanySet.has(String(fornecedor.company_id).trim())) {
+    if (
+      !scope.isAdmin &&
+      allowedCompanyIds.length > 0 &&
+      fornecedor.company_id &&
+      !allowedCompanySet.has(String(fornecedor.company_id).trim())
+    ) {
       throw error(403, 'Sem acesso a este fornecedor.');
     }
 
@@ -170,7 +186,10 @@ export async function handleFornecedoresIdDelete(event: RequestEvent) {
     if (countError) throw countError;
 
     if ((count || 0) > 0) {
-      return json({ error: 'Não é possível excluir fornecedor com produtos vinculados.' }, { status: 409, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Não é possível excluir fornecedor com produtos vinculados.' },
+        { status: 409, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { error: deleteError } = await client.from('fornecedores').delete().eq('id', id);

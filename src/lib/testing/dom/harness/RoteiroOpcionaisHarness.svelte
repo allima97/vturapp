@@ -6,4 +6,5 @@
   // svelte-ignore state_referenced_locally
   expose(() => opcionais);
 </script>
+
 <AbaOpcionais bind:opcionais />

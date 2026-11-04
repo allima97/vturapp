@@ -30,6 +30,6 @@ export async function apiHandlerV2(event: RequestEvent): Promise<Response> {
     PUBLIC_ENVIRONMENT: platformEnv?.PUBLIC_ENVIRONMENT,
 
     // ── NOTE: sem `event` (sem Dados em v2) ───────────────────────────
-    event: null as unknown as RequestEvent, // satisfaz o tipo ApiEnv; nunca usado em v2
+    event: null as unknown as RequestEvent // satisfaz o tipo ApiEnv; nunca usado em v2
   });
 }

@@ -13,7 +13,7 @@
   import { FieldCheckbox, FieldInput } from '$lib/components/ui';
   import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
   import { Mail, Lock, Eye, EyeOff, AlertCircle, TestTube, Clock, Fingerprint } from '$lib/icons';
-  
+
   let email = '';
   let password = '';
   let showPassword = false;
@@ -27,7 +27,8 @@
   let redirectTarget = '/';
   let passkeySupported = false;
 
-  $: turnstileEnabled = !mockMode && Boolean(String(publicEnv.PUBLIC_TURNSTILE_SITE_KEY || '').trim());
+  $: turnstileEnabled =
+    !mockMode && Boolean(String(publicEnv.PUBLIC_TURNSTILE_SITE_KEY || '').trim());
 
   type LoginSession = {
     access_token: string;
@@ -65,7 +66,9 @@
       return await fetch(input, { ...init, signal: controller.signal });
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'AbortError') {
-        throw new Error('Tempo esgotado ao tentar entrar. Verifique sua conexão e tente novamente.');
+        throw new Error(
+          'Tempo esgotado ao tentar entrar. Verifique sua conexão e tente novamente.'
+        );
       }
       throw err;
     } finally {
@@ -135,7 +138,7 @@
 
     await goto(redirectTarget, { invalidateAll: true });
   }
-  
+
   onMount(() => {
     mockMode = dev && isMockMode();
     passkeySupported = !mockMode && window.isSecureContext && browserSupportsWebAuthn();
@@ -152,12 +155,15 @@
       sessionExpired = true;
       // Limpa a query string para não ficar persistindo no histórico
       if (window.history.replaceState) {
-        const cleanedUrl = redirectTarget === '/' ? '/auth/login' : `/auth/login?next=${encodeURIComponent(redirectTarget)}`;
+        const cleanedUrl =
+          redirectTarget === '/'
+            ? '/auth/login'
+            : `/auth/login?next=${encodeURIComponent(redirectTarget)}`;
         window.history.replaceState({}, '', cleanedUrl);
       }
     }
   });
-  
+
   async function handleLogin() {
     if (loading) return;
 
@@ -191,20 +197,26 @@
         return;
       }
 
-      const res = await fetchWithTimeout('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          password,
-          turnstile_token: turnstileToken
-        })
-      }, 20000);
+      const res = await fetchWithTimeout(
+        '/api/auth/login',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            password,
+            turnstile_token: turnstileToken
+          })
+        },
+        20000
+      );
       const payload = (await res.json().catch(() => ({}))) as LoginResponsePayload;
       if (!res.ok) {
         if (res.status === 401) throw new Error('Email ou senha incorretos.');
         if (res.status === 403) {
-          throw new Error(payload.error || 'Não foi possível validar a verificação de segurança. Tente novamente.');
+          throw new Error(
+            payload.error || 'Não foi possível validar a verificação de segurança. Tente novamente.'
+          );
         }
         throw new Error(payload.error || 'Erro ao fazer login. Tente novamente.');
       }
@@ -217,7 +229,11 @@
       await syncSessionOnServer(session);
 
       void syncSessionInBrowser(session).catch((browserSyncError) => {
-        if (dev) console.warn('[login] Sessão gravada no servidor, mas o storage do navegador não respondeu:', browserSyncError);
+        if (dev)
+          console.warn(
+            '[login] Sessão gravada no servidor, mas o storage do navegador não respondeu:',
+            browserSyncError
+          );
       });
 
       auth.setAuth(payload.user ?? null, session);
@@ -253,25 +269,37 @@
     error = null;
 
     try {
-      const optionsResponse = await fetchWithTimeout('/api/auth/passkeys/login/options', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim() || null })
-      }, 12000);
-      const optionsPayload = (await optionsResponse.json().catch(() => ({}))) as { options?: any; challengeId?: string; error?: string };
+      const optionsResponse = await fetchWithTimeout(
+        '/api/auth/passkeys/login/options',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email.trim() || null })
+        },
+        12000
+      );
+      const optionsPayload = (await optionsResponse.json().catch(() => ({}))) as {
+        options?: any;
+        challengeId?: string;
+        error?: string;
+      };
       if (!optionsResponse.ok) {
         throw new Error(optionsPayload.error || 'Erro ao preparar login por passkey.');
       }
 
       const assertion = await startAuthentication({ optionsJSON: optionsPayload.options });
-      const verifyResponse = await fetchWithTimeout('/api/auth/passkeys/login/verify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          challengeId: optionsPayload.challengeId,
-          response: assertion
-        })
-      }, 20000);
+      const verifyResponse = await fetchWithTimeout(
+        '/api/auth/passkeys/login/verify',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            challengeId: optionsPayload.challengeId,
+            response: assertion
+          })
+        },
+        20000
+      );
       const payload = (await verifyResponse.json().catch(() => ({}))) as LoginResponsePayload;
       if (!verifyResponse.ok) {
         throw new Error(payload.error || 'Não foi possível entrar com passkey.');
@@ -285,7 +313,11 @@
       await syncSessionOnServer(session);
 
       void syncSessionInBrowser(session).catch((browserSyncError) => {
-        if (dev) console.warn('[passkey-login] Sessão gravada no servidor, mas o storage do navegador não respondeu:', browserSyncError);
+        if (dev)
+          console.warn(
+            '[passkey-login] Sessão gravada no servidor, mas o storage do navegador não respondeu:',
+            browserSyncError
+          );
       });
 
       auth.setAuth(payload.user ?? null, session);
@@ -301,7 +333,7 @@
       passkeyLoading = false;
     }
   }
-  
+
   function handleKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter') {
       handleLogin();
@@ -314,47 +346,66 @@
   <meta name="description" content="Acesse o sistema VTUR" />
 </svelte:head>
 
-<div class="vtur-auth-shell min-h-screen flex items-center justify-center p-4">
+<div class="vtur-auth-shell flex min-h-screen items-center justify-center p-4">
   <div class="w-full max-w-md">
     <!-- Logo -->
     <div class="vtur-auth-brand">
       <div class="vtur-auth-brand-lockup flex flex-col items-center">
-        <img src="/brand/vtur-app-symbol.png?v=9" alt="vtur-app" class="vtur-auth-brand-logo object-contain mb-2" />
+        <img
+          src="/brand/vtur-app-symbol.png?v=9"
+          alt="vtur-app"
+          class="vtur-auth-brand-logo mb-2 object-contain"
+        />
         <div class="flex flex-col items-center gap-0.5">
-          <div class="flex items-baseline gap-0" style="font-size:2rem;font-weight:800;letter-spacing:-0.01em;line-height:1;">
-            <span style="color:#ffffff;font-family:'Segoe UI',system-ui,sans-serif;">vtur-</span><span style="color:#22d3ee;font-family:'Segoe UI',system-ui,sans-serif;">app</span>
+          <div
+            class="flex items-baseline gap-0"
+            style="font-size:2rem;font-weight:800;letter-spacing:-0.01em;line-height:1;"
+          >
+            <span style="color:#ffffff;font-family:'Segoe UI',system-ui,sans-serif;">vtur-</span
+            ><span style="color:#22d3ee;font-family:'Segoe UI',system-ui,sans-serif;">app</span>
           </div>
-          <p style="color:rgba(255,255,255,0.6);font-size:0.65rem;letter-spacing:0.18em;font-weight:500;font-family:'Segoe UI',system-ui,sans-serif;">SIMPLIFICA · CONECTA · EVOLUI</p>
+          <p
+            style="color:rgba(255,255,255,0.6);font-size:0.65rem;letter-spacing:0.18em;font-weight:500;font-family:'Segoe UI',system-ui,sans-serif;"
+          >
+            SIMPLIFICA · CONECTA · EVOLUI
+          </p>
         </div>
       </div>
     </div>
-    
+
     <Card padding="lg">
       {#if mockMode}
-        <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-center gap-2 text-amber-700 text-sm">
+        <div
+          class="mb-4 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700"
+        >
           <TestTube size={18} />
           <span><strong>Modo de Teste:</strong> Qualquer email/senha funcionam</span>
         </div>
       {/if}
 
       {#if sessionExpired}
-        <div class="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2 text-amber-700 text-sm">
-          <Clock size={18} class="shrink-0 mt-0.5" />
-          <span><strong>Sessão expirada:</strong> Por segurança, sua sessão foi encerrada. Faça login novamente para continuar.</span>
+        <div
+          class="mb-4 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700"
+        >
+          <Clock size={18} class="mt-0.5 shrink-0" />
+          <span
+            ><strong>Sessão expirada:</strong> Por segurança, sua sessão foi encerrada. Faça login novamente
+            para continuar.</span
+          >
         </div>
       {/if}
 
-      <h2 class="text-xl font-bold text-slate-900 mb-6 text-center">
-        Acesse sua conta
-      </h2>
-      
+      <h2 class="mb-6 text-center text-xl font-bold text-slate-900">Acesse sua conta</h2>
+
       {#if error}
-        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm">
+        <div
+          class="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+        >
           <AlertCircle size={18} />
           <span>{error}</span>
         </div>
       {/if}
-      
+
       <form on:submit|preventDefault={handleLogin} class="space-y-4">
         <!-- Email -->
         <FieldInput
@@ -369,7 +420,7 @@
           disabled={loading}
           class_name="w-full"
         />
-        
+
         <!-- Senha -->
         <FieldInput
           id="password"
@@ -386,11 +437,11 @@
           disabled={loading}
           class_name="w-full"
         />
-        
+
         <!-- Lembrar-me / Esqueci senha -->
         <div class="flex items-center justify-between text-sm">
           <FieldCheckbox label="Lembrar-me" class_name="text-slate-600" />
-          <a href="/auth/recuperar-senha" class="text-blue-600 hover:text-blue-700 font-medium">
+          <a href="/auth/recuperar-senha" class="font-medium text-blue-600 hover:text-blue-700">
             Esqueceu a senha?
           </a>
         </div>
@@ -403,13 +454,7 @@
         />
 
         <!-- Botão Login -->
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          loading={loading}
-          class_name="w-full"
-        >
+        <Button type="submit" variant="primary" size="lg" {loading} class_name="w-full">
           Entrar
         </Button>
       </form>
@@ -417,7 +462,7 @@
       {#if passkeySupported}
         <div class="my-5 flex items-center gap-3">
           <div class="h-px flex-1 bg-slate-200"></div>
-          <span class="text-xs font-semibold uppercase tracking-[0.12em] text-slate-400">ou</span>
+          <span class="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">ou</span>
           <div class="h-px flex-1 bg-slate-200"></div>
         </div>
 
@@ -434,19 +479,20 @@
           Entrar com passkey
         </Button>
         <p class="mt-2 text-center text-xs leading-relaxed text-slate-500">
-          Use uma passkey cadastrada no perfil. Se informar o e-mail acima, o sistema tenta localizar somente as passkeys dessa conta.
+          Use uma passkey cadastrada no perfil. Se informar o e-mail acima, o sistema tenta
+          localizar somente as passkeys dessa conta.
         </p>
       {/if}
-      
+
       <!-- Convite -->
       <div class="mt-6 text-center text-sm">
         <span class="text-slate-500">Recebeu um convite?</span>
-        <a href="/auth/convite" class="ml-1 text-blue-600 hover:text-blue-700 font-medium">
+        <a href="/auth/convite" class="ml-1 font-medium text-blue-600 hover:text-blue-700">
           Ativar conta
         </a>
       </div>
     </Card>
-    
+
     <!-- Footer -->
     <p class="vtur-auth-footer mt-8 text-center text-sm">
       © {new Date().getFullYear()} VTUR. Todos os direitos reservados.

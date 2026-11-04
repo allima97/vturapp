@@ -8,7 +8,7 @@
 </script>
 
 <!-- Wizard Steps -->
-<div class="bg-white rounded-xl shadow-xs border border-slate-200 mb-6 overflow-hidden">
+<div class="mb-6 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
   <div class="flex flex-wrap">
     {#each steps as step, i}
       {@const status = getStepStatus(i)}
@@ -25,20 +25,22 @@
         }`}
         on:click={() => goToStep(i)}
       >
-        <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg
-          {status === 'current' 
-            ? 'bg-clientes-500 text-white shadow-lg' 
+        <div
+          class="flex h-10 w-10 items-center justify-center rounded-full text-lg
+          {status === 'current'
+            ? 'bg-clientes-500 text-white shadow-lg'
             : status === 'completed'
               ? 'bg-green-500 text-white'
-              : 'bg-slate-200 text-slate-500'}">
+              : 'bg-slate-200 text-slate-500'}"
+        >
           <svelte:component this={step.icon} size={20} />
         </div>
         <div class="text-center">
-          <p class="font-semibold hidden sm:block">{step.label}</p>
-          <p class="text-xs opacity-75 hidden md:block">{step.description}</p>
+          <p class="hidden font-semibold sm:block">{step.label}</p>
+          <p class="hidden text-xs opacity-75 md:block">{step.description}</p>
         </div>
         {#if status === 'current'}
-          <div class="absolute bottom-0 left-0 right-0 h-1 bg-clientes-500"></div>
+          <div class="bg-clientes-500 absolute right-0 bottom-0 left-0 h-1"></div>
         {/if}
       </Button>
     {/each}

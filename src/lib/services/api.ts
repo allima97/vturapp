@@ -29,7 +29,7 @@ export class ApiError extends Error {
   }
 }
 
-const DEFAULT_API_TIMEOUT_MS = 20_000;  // falha rápida para chamadas comuns
+const DEFAULT_API_TIMEOUT_MS = 20_000; // falha rápida para chamadas comuns
 const DEFAULT_GET_CACHE_TTL_MS = 15_000; // navegações rápidas reaproveitam cache
 
 type CachedGetEntry = {
@@ -54,9 +54,7 @@ export function abortInFlightApiReads() {
 }
 
 function shouldBypassLocalGetValueCache(url: string) {
-  return [
-    '/api/v1/vendas/list'
-  ].some((prefix) => url.startsWith(prefix));
+  return ['/api/v1/vendas/list'].some((prefix) => url.startsWith(prefix));
 }
 
 export function isCanceledApiError(err: unknown) {
@@ -65,7 +63,9 @@ export function isCanceledApiError(err: unknown) {
   return err.status === 0 && payload?.aborted === true && payload?.timeout !== true;
 }
 
-function buildQueryString(query?: Record<string, string | number | boolean | undefined | null>): string {
+function buildQueryString(
+  query?: Record<string, string | number | boolean | undefined | null>
+): string {
   if (!query) return '';
   const params = new URLSearchParams();
   for (const [key, value] of Object.entries(query)) {
@@ -132,14 +132,9 @@ export async function apiFetch<T = unknown>(path: string, options: ApiOptions = 
   const url = `${path}${queryString}`;
   const method = options.method || 'GET';
   const isGetCacheCandidate =
-    browser &&
-    method === 'GET' &&
-    !options.headers &&
-    !options.body &&
-    options.noCache !== true;
+    browser && method === 'GET' && !options.headers && !options.body && options.noCache !== true;
   const canShareGetPromise = isGetCacheCandidate && !options.signal;
-  const shouldKeepGetValue =
-    isGetCacheCandidate && !shouldBypassLocalGetValueCache(url);
+  const shouldKeepGetValue = isGetCacheCandidate && !shouldBypassLocalGetValueCache(url);
 
   if (isGetCacheCandidate) {
     const cached = getCache.get(url);
@@ -203,8 +198,7 @@ export async function apiFetch<T = unknown>(path: string, options: ApiOptions = 
       });
     } catch (err) {
       const aborted =
-        controller.signal.aborted ||
-        (err instanceof DOMException && err.name === 'AbortError');
+        controller.signal.aborted || (err instanceof DOMException && err.name === 'AbortError');
       if (aborted && !didTimeout && navigationAbortedControllers.has(controller)) {
         return new Promise<T>(() => {});
       }
@@ -252,10 +246,12 @@ export async function apiFetch<T = unknown>(path: string, options: ApiOptions = 
 
   if (isGetCacheCandidate) {
     const ttlMs = Math.max(0, Number(options.cacheTtlMs ?? DEFAULT_GET_CACHE_TTL_MS));
-    const entry: CachedGetEntry | null = canShareGetPromise ? {
-      expiresAt: Date.now() + Math.max(ttlMs, timeoutMs),
-      promise: requestPromise
-    } : null;
+    const entry: CachedGetEntry | null = canShareGetPromise
+      ? {
+          expiresAt: Date.now() + Math.max(ttlMs, timeoutMs),
+          promise: requestPromise
+        }
+      : null;
     if (entry) getCache.set(url, entry);
     try {
       const value = await requestPromise;
@@ -278,15 +274,29 @@ export async function apiFetch<T = unknown>(path: string, options: ApiOptions = 
   return requestPromise;
 }
 
-export function apiGet<T = unknown>(path: string, query?: ApiOptions['query'], signal?: AbortSignal, timeoutMs?: number) {
+export function apiGet<T = unknown>(
+  path: string,
+  query?: ApiOptions['query'],
+  signal?: AbortSignal,
+  timeoutMs?: number
+) {
   return apiFetch<T>(path, { method: 'GET', query, signal, ...(timeoutMs ? { timeoutMs } : {}) });
 }
 
-export function apiPost<T = unknown>(path: string, body: ApiOptions['body'], signal?: AbortSignal, timeoutMs?: number) {
+export function apiPost<T = unknown>(
+  path: string,
+  body: ApiOptions['body'],
+  signal?: AbortSignal,
+  timeoutMs?: number
+) {
   return apiFetch<T>(path, { method: 'POST', body, signal, ...(timeoutMs ? { timeoutMs } : {}) });
 }
 
-export function apiPatch<T = unknown>(path: string, body: ApiOptions['body'], signal?: AbortSignal) {
+export function apiPatch<T = unknown>(
+  path: string,
+  body: ApiOptions['body'],
+  signal?: AbortSignal
+) {
   return apiFetch<T>(path, { method: 'PATCH', body, signal });
 }
 
@@ -294,6 +304,10 @@ export function apiPut<T = unknown>(path: string, body: ApiOptions['body'], sign
   return apiFetch<T>(path, { method: 'PUT', body, signal });
 }
 
-export function apiDelete<T = unknown>(path: string, query?: ApiOptions['query'], signal?: AbortSignal) {
+export function apiDelete<T = unknown>(
+  path: string,
+  query?: ApiOptions['query'],
+  signal?: AbortSignal
+) {
   return apiFetch<T>(path, { method: 'DELETE', query, signal });
 }

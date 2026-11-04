@@ -13,7 +13,9 @@ export const lgpdRoutes = new Hono<ApiEnv>()
   .get('/meus-dados', (c) => handleLgpdMeusDadosGet(c.env.event))
   // Admin: gestão de solicitações
   .get('/admin/solicitacoes', (c) => handleLgpdSolicitacoesGet(c.env.event))
-  .patch('/admin/solicitacoes/:id', (c) => handleLgpdSolicitacaoAtualizar(c.env.event, c.req.param('id')))
+  .patch('/admin/solicitacoes/:id', (c) =>
+    handleLgpdSolicitacaoAtualizar(c.env.event, c.req.param('id'))
+  )
   // Admin: ROPA - Registro de Atividades de Tratamento (Art. 37)
   .get('/admin/atividades', (c) => handleLgpdAtividadesGet(c.env.event))
   // Admin: Anonimização de titular (Art. 18, IV/VI)

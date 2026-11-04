@@ -69,7 +69,10 @@ export async function handleParametrosRegrasProdutoGet(event: RequestEvent) {
 
     if (error) throw error;
 
-    return json({ items: (data || []) as unknown as RegraProdutoRow[] }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      { items: (data || []) as unknown as RegraProdutoRow[] },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar regras por produto.');
   }
@@ -99,13 +102,17 @@ export async function handleParametrosRegrasProdutoPost(event: RequestEvent) {
       return json({ error: 'Produto inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
     }
     if (ruleId && !isUuid(ruleId)) {
-      return json({ error: 'Regra de comissão inválida.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Regra de comissão inválida.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const payload = {
       produto_id: produtoId,
       rule_id: ruleId && isUuid(ruleId) ? ruleId : null,
-      fix_meta_nao_atingida: body.fix_meta_nao_atingida != null ? Number(body.fix_meta_nao_atingida) : null,
+      fix_meta_nao_atingida:
+        body.fix_meta_nao_atingida != null ? Number(body.fix_meta_nao_atingida) : null,
       fix_meta_atingida: body.fix_meta_atingida != null ? Number(body.fix_meta_atingida) : null,
       fix_super_meta: body.fix_super_meta != null ? Number(body.fix_super_meta) : null
     };
@@ -147,13 +154,22 @@ export async function handleParametrosRegrasProdutoDelete(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['parametros'], 5, 'Sem permissão para excluir regras por produto.');
+      ensureModuloAccess(
+        scope,
+        ['parametros'],
+        5,
+        'Sem permissão para excluir regras por produto.'
+      );
     }
 
     const id = String(event.url.searchParams.get('id') || '').trim();
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
-    const { error: deleteError } = await client.from('product_commission_rule').delete().eq('id', id);
+    const { error: deleteError } = await client
+      .from('product_commission_rule')
+      .delete()
+      .eq('id', id);
     if (deleteError) throw deleteError;
 
     invalidateCatalogReadModels({ userId: user.id });

@@ -49,11 +49,7 @@ export type MembroDetalhe = {
 export class EmpresaError extends Error {
   constructor(
     message: string,
-    public readonly code:
-      | 'NAO_ENCONTRADO'
-      | 'VALIDACAO'
-      | 'SEM_PERMISSAO'
-      | 'CONFLITO'
+    public readonly code: 'NAO_ENCONTRADO' | 'VALIDACAO' | 'SEM_PERMISSAO' | 'CONFLITO'
   ) {
     super(message);
     this.name = 'EmpresaError';
@@ -69,11 +65,7 @@ export class EmpresaError extends Error {
  * Lança NAO_ENCONTRADO se a empresa não existir (inconsistência).
  */
 export async function obterEmpresa(db: DrizzleDb, empresaId: number) {
-  const rows = await db
-    .select()
-    .from(empresas)
-    .where(eq(empresas.id, empresaId))
-    .limit(1);
+  const rows = await db.select().from(empresas).where(eq(empresas.id, empresaId)).limit(1);
 
   if (rows.length === 0) {
     throw new EmpresaError('Empresa não encontrada.', 'NAO_ENCONTRADO');
@@ -86,11 +78,7 @@ export async function obterEmpresa(db: DrizzleDb, empresaId: number) {
  * Atualiza os dados da empresa.
  * Apenas admin pode chamar (verificação de papel feita na rota).
  */
-export async function editarEmpresa(
-  db: DrizzleDb,
-  empresaId: number,
-  dados: EmpresaInput
-) {
+export async function editarEmpresa(db: DrizzleDb, empresaId: number, dados: EmpresaInput) {
   // Validações
   if (dados.nome !== undefined && dados.nome.trim().length === 0) {
     throw new EmpresaError('Nome da empresa não pode ser vazio.', 'VALIDACAO');
@@ -106,10 +94,7 @@ export async function editarEmpresa(
   if (dados.timezone !== undefined) update.timezone = dados.timezone;
   if (dados.slug !== undefined) update.slug = dados.slug || null;
 
-  await db
-    .update(empresas)
-    .set(update)
-    .where(eq(empresas.id, empresaId));
+  await db.update(empresas).set(update).where(eq(empresas.id, empresaId));
 
   return obterEmpresa(db, empresaId);
 }
@@ -134,15 +119,15 @@ export async function listarMembros(
 
   const rows = await db
     .select({
-      id:           membrosEmpresa.id,
-      userId:       membrosEmpresa.userId,
-      empresaId:    membrosEmpresa.empresaId,
-      papel:        membrosEmpresa.papel,
-      ativo:        membrosEmpresa.ativo,
-      criadoEm:     membrosEmpresa.criadoEm,
+      id: membrosEmpresa.id,
+      userId: membrosEmpresa.userId,
+      empresaId: membrosEmpresa.empresaId,
+      papel: membrosEmpresa.papel,
+      ativo: membrosEmpresa.ativo,
+      criadoEm: membrosEmpresa.criadoEm,
       atualizadoEm: membrosEmpresa.atualizadoEm,
-      nome:         user.name,
-      email:        user.email,
+      nome: user.name,
+      email: user.email
     })
     .from(membrosEmpresa)
     .leftJoin(user, eq(membrosEmpresa.userId, user.id))
@@ -162,24 +147,19 @@ export async function obterMembro(
 ): Promise<MembroDetalhe> {
   const rows = await db
     .select({
-      id:           membrosEmpresa.id,
-      userId:       membrosEmpresa.userId,
-      empresaId:    membrosEmpresa.empresaId,
-      papel:        membrosEmpresa.papel,
-      ativo:        membrosEmpresa.ativo,
-      criadoEm:     membrosEmpresa.criadoEm,
+      id: membrosEmpresa.id,
+      userId: membrosEmpresa.userId,
+      empresaId: membrosEmpresa.empresaId,
+      papel: membrosEmpresa.papel,
+      ativo: membrosEmpresa.ativo,
+      criadoEm: membrosEmpresa.criadoEm,
       atualizadoEm: membrosEmpresa.atualizadoEm,
-      nome:         user.name,
-      email:        user.email,
+      nome: user.name,
+      email: user.email
     })
     .from(membrosEmpresa)
     .leftJoin(user, eq(membrosEmpresa.userId, user.id))
-    .where(
-      and(
-        eq(membrosEmpresa.id, membroId),
-        eq(membrosEmpresa.empresaId, empresaId)
-      )
-    )
+    .where(and(eq(membrosEmpresa.id, membroId), eq(membrosEmpresa.empresaId, empresaId)))
     .limit(1);
 
   if (rows.length === 0) {
@@ -217,15 +197,22 @@ export async function alterarPapelMembro(
     .limit(1);
   if (!target) throw new EmpresaError('Membro não encontrado.', 'NAO_ENCONTRADO');
 
-  const accessStatements = await buildTenantAccessProfileStatements(db, target.userId, novoPapel, agora);
+  const accessStatements = await buildTenantAccessProfileStatements(
+    db,
+    target.userId,
+    novoPapel,
+    agora
+  );
   const statements = [
     db
       .update(membrosEmpresa)
       .set({ papel: novoPapel, atualizadoEm: agora })
       .where(and(eq(membrosEmpresa.id, membroId), eq(membrosEmpresa.empresaId, empresaId))),
-    ...accessStatements,
+    ...accessStatements
   ];
-  await db.batch(statements as unknown as [typeof statements[number], ...typeof statements[number][]]);
+  await db.batch(
+    statements as unknown as [(typeof statements)[number], ...(typeof statements)[number][]]
+  );
 
   return obterMembro(db, empresaId, membroId);
 }
@@ -246,34 +233,24 @@ export async function revogarMembroM01(
   await db
     .update(membrosEmpresa)
     .set({ ativo: false, atualizadoEm: agora })
-    .where(
-      and(
-        eq(membrosEmpresa.id, membroId),
-        eq(membrosEmpresa.empresaId, empresaId)
-      )
-    );
+    .where(and(eq(membrosEmpresa.id, membroId), eq(membrosEmpresa.empresaId, empresaId)));
 
   // Retorna o membro com ativo=false (busca sem filtro de ativo)
   const rows = await db
     .select({
-      id:           membrosEmpresa.id,
-      userId:       membrosEmpresa.userId,
-      empresaId:    membrosEmpresa.empresaId,
-      papel:        membrosEmpresa.papel,
-      ativo:        membrosEmpresa.ativo,
-      criadoEm:     membrosEmpresa.criadoEm,
+      id: membrosEmpresa.id,
+      userId: membrosEmpresa.userId,
+      empresaId: membrosEmpresa.empresaId,
+      papel: membrosEmpresa.papel,
+      ativo: membrosEmpresa.ativo,
+      criadoEm: membrosEmpresa.criadoEm,
       atualizadoEm: membrosEmpresa.atualizadoEm,
-      nome:         user.name,
-      email:        user.email,
+      nome: user.name,
+      email: user.email
     })
     .from(membrosEmpresa)
     .leftJoin(user, eq(membrosEmpresa.userId, user.id))
-    .where(
-      and(
-        eq(membrosEmpresa.id, membroId),
-        eq(membrosEmpresa.empresaId, empresaId)
-      )
-    )
+    .where(and(eq(membrosEmpresa.id, membroId), eq(membrosEmpresa.empresaId, empresaId)))
     .limit(1);
 
   return rows[0] as MembroDetalhe;

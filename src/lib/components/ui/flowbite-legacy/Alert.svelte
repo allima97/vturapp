@@ -1,14 +1,28 @@
-<script>// @ts-nocheck (cópia do Flowbite-Svelte 0.48.6, ver README.md)
-import TransitionFrame from "./TransitionFrame.svelte";
-import { twMerge } from "tailwind-merge";
-import CloseButton from "./CloseButton.svelte";
-export let dismissable = false;
-export let defaultClass = "p-4 gap-3 text-sm";
-let divClass;
-$: divClass = twMerge(defaultClass, ($$slots.icon || dismissable) && "flex items-center", $$props.class);
+<script>
+  // @ts-nocheck (cópia do Flowbite-Svelte 0.48.6, ver README.md)
+  import TransitionFrame from './TransitionFrame.svelte';
+  import { twMerge } from 'tailwind-merge';
+  import CloseButton from './CloseButton.svelte';
+  export let dismissable = false;
+  export let defaultClass = 'p-4 gap-3 text-sm';
+  let divClass;
+  $: divClass = twMerge(
+    defaultClass,
+    ($$slots.icon || dismissable) && 'flex items-center',
+    $$props.class
+  );
 </script>
 
-<TransitionFrame {dismissable} color="primary" role="alert" rounded {...$$restProps} class={divClass} on:close let:close>
+<TransitionFrame
+  {dismissable}
+  color="primary"
+  role="alert"
+  rounded
+  {...$$restProps}
+  class={divClass}
+  on:close
+  let:close
+>
   {#if $$slots.icon}
     <slot name="icon" />
   {/if}
@@ -21,7 +35,19 @@ $: divClass = twMerge(defaultClass, ($$slots.icon || dismissable) && "flex items
 
   {#if dismissable}
     <slot name="close-button" {close}>
-      <CloseButton class="ms-auto -me-1.5 -my-1.5 dark:hover:bg-gray-700" color={$$restProps.color} on:click={close} on:click on:change on:keydown on:keyup on:focus on:blur on:mouseenter on:mouseleave />
+      <CloseButton
+        class="-my-1.5 ms-auto -me-1.5 dark:hover:bg-gray-700"
+        color={$$restProps.color}
+        on:click={close}
+        on:click
+        on:change
+        on:keydown
+        on:keyup
+        on:focus
+        on:blur
+        on:mouseenter
+        on:mouseleave
+      />
     </slot>
   {/if}
 </TransitionFrame>

@@ -23,7 +23,12 @@ export async function handleParametrosEquipeGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['parametros_equipe', 'equipe', 'parametros'], 1, 'Sem acesso a Equipe.');
+      ensureModuloAccess(
+        scope,
+        ['parametros_equipe', 'equipe', 'parametros'],
+        1,
+        'Sem acesso a Equipe.'
+      );
     }
 
     // Busca usuários da empresa
@@ -54,14 +59,18 @@ export async function handleParametrosEquipeGet(event: RequestEvent) {
     // Busca convites pendentes
     let convitesQuery = client
       .from('user_convites')
-      .select('id, invited_email, company_id, user_type_id, invited_by, invited_by_role, status, created_at, expires_at')
+      .select(
+        'id, invited_email, company_id, user_type_id, invited_by, invited_by_role, status, created_at, expires_at'
+      )
       .eq('status', 'pending');
 
     if (scope.companyId && !scope.isAdmin) {
       convitesQuery = convitesQuery.eq('company_id', scope.companyId);
     }
 
-    const { data: convitesData } = await convitesQuery.order('created_at', { ascending: false }).limit(100);
+    const { data: convitesData } = await convitesQuery
+      .order('created_at', { ascending: false })
+      .limit(100);
 
     // Busca tipos de usuário para o formulário de convite
     const { data: tiposData } = await client
@@ -70,12 +79,15 @@ export async function handleParametrosEquipeGet(event: RequestEvent) {
       .order('name')
       .limit(50);
 
-    return json({
-      usuarios: usersData || [],
-      relacoes: relData || [],
-      convites: convitesData || [],
-      tipos_usuario: tiposData || []
-    }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      {
+        usuarios: usersData || [],
+        relacoes: relData || [],
+        convites: convitesData || [],
+        tipos_usuario: tiposData || []
+      },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar equipe.');
   }
@@ -93,7 +105,12 @@ export async function handleParametrosEquipePost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['parametros_equipe', 'equipe', 'parametros'], 2, 'Sem permissão para gerenciar equipe.');
+      ensureModuloAccess(
+        scope,
+        ['parametros_equipe', 'equipe', 'parametros'],
+        2,
+        'Sem permissão para gerenciar equipe.'
+      );
     }
 
     const body =
@@ -104,10 +121,12 @@ export async function handleParametrosEquipePost(event: RequestEvent) {
     const vendedorId = String(vendedor_id || '').trim();
 
     if (action === 'toggle_relacao') {
-      if (!isUuid(vendedorId)) return json({ error: 'Vendedor inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+      if (!isUuid(vendedorId))
+        return json({ error: 'Vendedor inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
       const gestorId = scope.isGestor ? scope.userId : String(body.gestor_id || '').trim();
-      if (!isUuid(gestorId)) return json({ error: 'Gestor inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+      if (!isUuid(gestorId))
+        return json({ error: 'Gestor inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
       // Verifica se já existe
       const { data: existing } = await client

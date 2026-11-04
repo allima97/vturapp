@@ -13,41 +13,111 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./tipos-usuario-id-permissoes', () => ({ handleAdminTiposUsuarioIdPermissoesGet: spy('handleAdminTiposUsuarioIdPermissoesGet'), handleAdminTiposUsuarioIdPermissoesPost: spy('handleAdminTiposUsuarioIdPermissoesPost') }));
-vi.mock('./auth-mfa-status', () => ({ handleAdminAuthMfaStatusPost: spy('handleAdminAuthMfaStatusPost') }));
-vi.mock('./auth-reset-mfa', () => ({ handleAdminAuthResetMfaPost: spy('handleAdminAuthResetMfaPost') }));
-vi.mock('./auth-set-password', () => ({ handleAdminAuthSetPasswordPost: spy('handleAdminAuthSetPasswordPost') }));
-vi.mock('./avisos', () => ({ handleAdminAvisosGet: spy('handleAdminAvisosGet'), handleAdminAvisosPost: spy('handleAdminAvisosPost') }));
+vi.mock('./tipos-usuario-id-permissoes', () => ({
+  handleAdminTiposUsuarioIdPermissoesGet: spy('handleAdminTiposUsuarioIdPermissoesGet'),
+  handleAdminTiposUsuarioIdPermissoesPost: spy('handleAdminTiposUsuarioIdPermissoesPost')
+}));
+vi.mock('./auth-mfa-status', () => ({
+  handleAdminAuthMfaStatusPost: spy('handleAdminAuthMfaStatusPost')
+}));
+vi.mock('./auth-reset-mfa', () => ({
+  handleAdminAuthResetMfaPost: spy('handleAdminAuthResetMfaPost')
+}));
+vi.mock('./auth-set-password', () => ({
+  handleAdminAuthSetPasswordPost: spy('handleAdminAuthSetPasswordPost')
+}));
+vi.mock('./avisos', () => ({
+  handleAdminAvisosGet: spy('handleAdminAvisosGet'),
+  handleAdminAvisosPost: spy('handleAdminAvisosPost')
+}));
 vi.mock('./avisos-send', () => ({ handleAdminAvisosSendPost: spy('handleAdminAvisosSendPost') }));
-vi.mock('./crm', () => ({ handleAdminCrmGet: spy('handleAdminCrmGet'), handleAdminCrmPost: spy('handleAdminCrmPost') }));
-vi.mock('./email', () => ({ handleAdminEmailGet: spy('handleAdminEmailGet'), handleAdminEmailPost: spy('handleAdminEmailPost') }));
+vi.mock('./crm', () => ({
+  handleAdminCrmGet: spy('handleAdminCrmGet'),
+  handleAdminCrmPost: spy('handleAdminCrmPost')
+}));
+vi.mock('./email', () => ({
+  handleAdminEmailGet: spy('handleAdminEmailGet'),
+  handleAdminEmailPost: spy('handleAdminEmailPost')
+}));
 vi.mock('./email-test', () => ({ handleAdminEmailTestPost: spy('handleAdminEmailTestPost') }));
-vi.mock('./empresas', () => ({ handleAdminEmpresasGet: spy('handleAdminEmpresasGet'), handleAdminEmpresasPost: spy('handleAdminEmpresasPost') }));
-vi.mock('./empresas-id', () => ({ handleAdminEmpresasIdGet: spy('handleAdminEmpresasIdGet'), handleAdminEmpresasIdPatch: spy('handleAdminEmpresasIdPatch') }));
-vi.mock('./fix-recibos', () => ({ handleAdminFixRecibosGet: spy('handleAdminFixRecibosGet'), handleAdminFixRecibosPost: spy('handleAdminFixRecibosPost') }));
+vi.mock('./empresas', () => ({
+  handleAdminEmpresasGet: spy('handleAdminEmpresasGet'),
+  handleAdminEmpresasPost: spy('handleAdminEmpresasPost')
+}));
+vi.mock('./empresas-id', () => ({
+  handleAdminEmpresasIdGet: spy('handleAdminEmpresasIdGet'),
+  handleAdminEmpresasIdPatch: spy('handleAdminEmpresasIdPatch')
+}));
+vi.mock('./fix-recibos', () => ({
+  handleAdminFixRecibosGet: spy('handleAdminFixRecibosGet'),
+  handleAdminFixRecibosPost: spy('handleAdminFixRecibosPost')
+}));
 vi.mock('./logs', () => ({ handleAdminLogsGet: spy('handleAdminLogsGet') }));
-vi.mock('./maintenance', () => ({ handleAdminMaintenanceGet: spy('handleAdminMaintenanceGet'), handleAdminMaintenancePost: spy('handleAdminMaintenancePost') }));
-vi.mock('./master-empresas', () => ({ handleAdminMasterEmpresasGet: spy('handleAdminMasterEmpresasGet'), handleAdminMasterEmpresasPost: spy('handleAdminMasterEmpresasPost') }));
-vi.mock('./modulos-sistema', () => ({ handleAdminModulosSistemaGet: spy('handleAdminModulosSistemaGet'), handleAdminModulosSistemaPost: spy('handleAdminModulosSistemaPost') }));
-vi.mock('./permissoes', () => ({ handleAdminPermissoesGet: spy('handleAdminPermissoesGet'), handleAdminPermissoesPost: spy('handleAdminPermissoesPost') }));
-vi.mock('./permissoes-id', () => ({ handleAdminPermissoesIdGet: spy('handleAdminPermissoesIdGet'), handleAdminPermissoesIdPost: spy('handleAdminPermissoesIdPost') }));
-vi.mock('./planos', () => ({ handleAdminPlanosGet: spy('handleAdminPlanosGet'), handleAdminPlanosPost: spy('handleAdminPlanosPost'), handleAdminPlanosDelete: spy('handleAdminPlanosDelete') }));
+vi.mock('./maintenance', () => ({
+  handleAdminMaintenanceGet: spy('handleAdminMaintenanceGet'),
+  handleAdminMaintenancePost: spy('handleAdminMaintenancePost')
+}));
+vi.mock('./master-empresas', () => ({
+  handleAdminMasterEmpresasGet: spy('handleAdminMasterEmpresasGet'),
+  handleAdminMasterEmpresasPost: spy('handleAdminMasterEmpresasPost')
+}));
+vi.mock('./modulos-sistema', () => ({
+  handleAdminModulosSistemaGet: spy('handleAdminModulosSistemaGet'),
+  handleAdminModulosSistemaPost: spy('handleAdminModulosSistemaPost')
+}));
+vi.mock('./permissoes', () => ({
+  handleAdminPermissoesGet: spy('handleAdminPermissoesGet'),
+  handleAdminPermissoesPost: spy('handleAdminPermissoesPost')
+}));
+vi.mock('./permissoes-id', () => ({
+  handleAdminPermissoesIdGet: spy('handleAdminPermissoesIdGet'),
+  handleAdminPermissoesIdPost: spy('handleAdminPermissoesIdPost')
+}));
+vi.mock('./planos', () => ({
+  handleAdminPlanosGet: spy('handleAdminPlanosGet'),
+  handleAdminPlanosPost: spy('handleAdminPlanosPost'),
+  handleAdminPlanosDelete: spy('handleAdminPlanosDelete')
+}));
 vi.mock('./summary', () => ({ handleAdminSummaryGet: spy('handleAdminSummaryGet') }));
-vi.mock('./system-modules', () => ({ handleAdminSystemModulesGet: spy('handleAdminSystemModulesGet'), handleAdminSystemModulesPost: spy('handleAdminSystemModulesPost') }));
-vi.mock('./tipos-usuario', () => ({ handleAdminTiposUsuarioGet: spy('handleAdminTiposUsuarioGet'), handleAdminTiposUsuarioPost: spy('handleAdminTiposUsuarioPost') }));
-vi.mock('./tipos-usuario-id', () => ({ handleAdminTiposUsuarioIdGet: spy('handleAdminTiposUsuarioIdGet') }));
-vi.mock('./usuarios', () => ({ handleAdminUsuariosGet: spy('handleAdminUsuariosGet'), handleAdminUsuariosPost: spy('handleAdminUsuariosPost') }));
-vi.mock('./usuarios-id', () => ({ handleAdminUsuariosIdGet: spy('handleAdminUsuariosIdGet'), handleAdminUsuariosIdPatch: spy('handleAdminUsuariosIdPatch') }));
+vi.mock('./system-modules', () => ({
+  handleAdminSystemModulesGet: spy('handleAdminSystemModulesGet'),
+  handleAdminSystemModulesPost: spy('handleAdminSystemModulesPost')
+}));
+vi.mock('./tipos-usuario', () => ({
+  handleAdminTiposUsuarioGet: spy('handleAdminTiposUsuarioGet'),
+  handleAdminTiposUsuarioPost: spy('handleAdminTiposUsuarioPost')
+}));
+vi.mock('./tipos-usuario-id', () => ({
+  handleAdminTiposUsuarioIdGet: spy('handleAdminTiposUsuarioIdGet')
+}));
+vi.mock('./usuarios', () => ({
+  handleAdminUsuariosGet: spy('handleAdminUsuariosGet'),
+  handleAdminUsuariosPost: spy('handleAdminUsuariosPost')
+}));
+vi.mock('./usuarios-id', () => ({
+  handleAdminUsuariosIdGet: spy('handleAdminUsuariosIdGet'),
+  handleAdminUsuariosIdPatch: spy('handleAdminUsuariosIdPatch')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 
 const CASES: Array<[string, string, string, Record<string, string>]> = [
-  ['GET', '/api/v1/admin/tipos-usuario/id-123/permissoes', 'handleAdminTiposUsuarioIdPermissoesGet', {"id": "id-123"}],
-  ['POST', '/api/v1/admin/tipos-usuario/id-123/permissoes', 'handleAdminTiposUsuarioIdPermissoesPost', {"id": "id-123"}],
+  [
+    'GET',
+    '/api/v1/admin/tipos-usuario/id-123/permissoes',
+    'handleAdminTiposUsuarioIdPermissoesGet',
+    { id: 'id-123' }
+  ],
+  [
+    'POST',
+    '/api/v1/admin/tipos-usuario/id-123/permissoes',
+    'handleAdminTiposUsuarioIdPermissoesPost',
+    { id: 'id-123' }
+  ],
   ['POST', '/api/v1/admin/auth/mfa-status', 'handleAdminAuthMfaStatusPost', {}],
   ['POST', '/api/v1/admin/auth/reset-mfa', 'handleAdminAuthResetMfaPost', {}],
   ['POST', '/api/v1/admin/auth/set-password', 'handleAdminAuthSetPasswordPost', {}],
@@ -61,8 +131,8 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['POST', '/api/v1/admin/email/test', 'handleAdminEmailTestPost', {}],
   ['GET', '/api/v1/admin/empresas', 'handleAdminEmpresasGet', {}],
   ['POST', '/api/v1/admin/empresas', 'handleAdminEmpresasPost', {}],
-  ['GET', '/api/v1/admin/empresas/id-123', 'handleAdminEmpresasIdGet', {"id": "id-123"}],
-  ['PATCH', '/api/v1/admin/empresas/id-123', 'handleAdminEmpresasIdPatch', {"id": "id-123"}],
+  ['GET', '/api/v1/admin/empresas/id-123', 'handleAdminEmpresasIdGet', { id: 'id-123' }],
+  ['PATCH', '/api/v1/admin/empresas/id-123', 'handleAdminEmpresasIdPatch', { id: 'id-123' }],
   ['GET', '/api/v1/admin/fix-recibos', 'handleAdminFixRecibosGet', {}],
   ['POST', '/api/v1/admin/fix-recibos', 'handleAdminFixRecibosPost', {}],
   ['GET', '/api/v1/admin/logs', 'handleAdminLogsGet', {}],
@@ -74,8 +144,8 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['POST', '/api/v1/admin/modulos-sistema', 'handleAdminModulosSistemaPost', {}],
   ['GET', '/api/v1/admin/permissoes', 'handleAdminPermissoesGet', {}],
   ['POST', '/api/v1/admin/permissoes', 'handleAdminPermissoesPost', {}],
-  ['GET', '/api/v1/admin/permissoes/id-123', 'handleAdminPermissoesIdGet', {"id": "id-123"}],
-  ['POST', '/api/v1/admin/permissoes/id-123', 'handleAdminPermissoesIdPost', {"id": "id-123"}],
+  ['GET', '/api/v1/admin/permissoes/id-123', 'handleAdminPermissoesIdGet', { id: 'id-123' }],
+  ['POST', '/api/v1/admin/permissoes/id-123', 'handleAdminPermissoesIdPost', { id: 'id-123' }],
   ['GET', '/api/v1/admin/planos', 'handleAdminPlanosGet', {}],
   ['POST', '/api/v1/admin/planos', 'handleAdminPlanosPost', {}],
   ['DELETE', '/api/v1/admin/planos', 'handleAdminPlanosDelete', {}],
@@ -84,11 +154,11 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['POST', '/api/v1/admin/system-modules', 'handleAdminSystemModulesPost', {}],
   ['GET', '/api/v1/admin/tipos-usuario', 'handleAdminTiposUsuarioGet', {}],
   ['POST', '/api/v1/admin/tipos-usuario', 'handleAdminTiposUsuarioPost', {}],
-  ['GET', '/api/v1/admin/tipos-usuario/id-123', 'handleAdminTiposUsuarioIdGet', {"id": "id-123"}],
+  ['GET', '/api/v1/admin/tipos-usuario/id-123', 'handleAdminTiposUsuarioIdGet', { id: 'id-123' }],
   ['GET', '/api/v1/admin/usuarios', 'handleAdminUsuariosGet', {}],
   ['POST', '/api/v1/admin/usuarios', 'handleAdminUsuariosPost', {}],
-  ['GET', '/api/v1/admin/usuarios/id-123', 'handleAdminUsuariosIdGet', {"id": "id-123"}],
-  ['PATCH', '/api/v1/admin/usuarios/id-123', 'handleAdminUsuariosIdPatch', {"id": "id-123"}],
+  ['GET', '/api/v1/admin/usuarios/id-123', 'handleAdminUsuariosIdGet', { id: 'id-123' }],
+  ['PATCH', '/api/v1/admin/usuarios/id-123', 'handleAdminUsuariosIdPatch', { id: 'id-123' }]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
@@ -115,7 +185,7 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/admin/tipos-usuario'],
   ['PUT', '/api/v1/admin/tipos-usuario/id-123'],
   ['PUT', '/api/v1/admin/usuarios'],
-  ['PUT', '/api/v1/admin/usuarios/id-123'],
+  ['PUT', '/api/v1/admin/usuarios/id-123']
 ];
 
 function ev(method: string, path: string) {

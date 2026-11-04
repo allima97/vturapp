@@ -43,7 +43,9 @@ export async function handleUsersAniversariantesGet(event: RequestEvent) {
     const buildQuery = (companyIdsFilter = companyIds) => {
       let query = client
         .from('users')
-        .select('id, nome_completo, email, data_nascimento, company_id, user_types(name), companies:companies!company_id(nome_fantasia)')
+        .select(
+          'id, nome_completo, email, data_nascimento, company_id, user_types(name), companies:companies!company_id(nome_fantasia)'
+        )
         .eq('active', true)
         .not('data_nascimento', 'is', null)
         .limit(500);

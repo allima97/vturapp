@@ -55,7 +55,12 @@ export async function handleFinanceiroFormasPagamentoGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['financeiro', 'Formas de Pagamento'], 1, 'Sem acesso ao Financeiro.');
+      ensureModuloAccess(
+        scope,
+        ['financeiro', 'Formas de Pagamento'],
+        1,
+        'Sem acesso ao Financeiro.'
+      );
     }
 
     const { searchParams } = event.url;
@@ -82,7 +87,10 @@ export async function handleFinanceiroFormasPagamentoGet(event: RequestEvent) {
 
       if (error) {
         // Tabela formas_pagamento pode não existir — retorna lista vazia
-        if (String(error.code || '').includes('42P01') || String(error.message || '').includes('does not exist')) {
+        if (
+          String(error.code || '').includes('42P01') ||
+          String(error.message || '').includes('does not exist')
+        ) {
           return json({ success: true, items: [] }, { headers: DYNAMIC_READ_HEADERS });
         }
         throw error;
@@ -108,13 +116,19 @@ export async function handleFinanceiroFormasPagamentoPost(event: RequestEvent) {
     const user = await requireAuthenticatedUser(event);
     const scope = await resolveUserScope(client, user.id);
 
-    ensureModuloAccess(scope, ['financeiro', 'Formas de Pagamento'], 2, 'Sem permissão para criar formas de pagamento.');
+    ensureModuloAccess(
+      scope,
+      ['financeiro', 'Formas de Pagamento'],
+      2,
+      'Sem permissão para criar formas de pagamento.'
+    );
 
     const body =
-      bodyResult.data && typeof bodyResult.data === 'object'
-        ? (bodyResult.data as JsonBody)
-        : {};
-    const companyId = resolveScopedCompanyId(scope, optionalString(body.empresa_id || body.company_id));
+      bodyResult.data && typeof bodyResult.data === 'object' ? (bodyResult.data as JsonBody) : {};
+    const companyId = resolveScopedCompanyId(
+      scope,
+      optionalString(body.empresa_id || body.company_id)
+    );
 
     // Validar campos obrigatórios
     if (!body.nome) {
@@ -132,15 +146,17 @@ export async function handleFinanceiroFormasPagamentoPost(event: RequestEvent) {
 
     const { data, error } = await client
       .from('formas_pagamento')
-      .insert([{
-        company_id: companyId,
-        nome: body.nome,
-        descricao: body.descricao || null,
-        paga_comissao: body.paga_comissao !== false,
-        permite_desconto: Boolean(body.permite_desconto),
-        desconto_padrao_pct: body.desconto_padrao_pct || null,
-        ativo: body.ativo !== undefined ? body.ativo : true
-      }])
+      .insert([
+        {
+          company_id: companyId,
+          nome: body.nome,
+          descricao: body.descricao || null,
+          paga_comissao: body.paga_comissao !== false,
+          permite_desconto: Boolean(body.permite_desconto),
+          desconto_padrao_pct: body.desconto_padrao_pct || null,
+          ativo: body.ativo !== undefined ? body.ativo : true
+        }
+      ])
       .select(FORMA_PAGAMENTO_SELECT)
       .single();
 
@@ -173,12 +189,15 @@ export async function handleFinanceiroFormasPagamentoPatch(event: RequestEvent) 
     const user = await requireAuthenticatedUser(event);
     const scope = await resolveUserScope(client, user.id);
 
-    ensureModuloAccess(scope, ['financeiro', 'Formas de Pagamento'], 3, 'Sem permissão para editar formas de pagamento.');
+    ensureModuloAccess(
+      scope,
+      ['financeiro', 'Formas de Pagamento'],
+      3,
+      'Sem permissão para editar formas de pagamento.'
+    );
 
     const body =
-      bodyResult.data && typeof bodyResult.data === 'object'
-        ? (bodyResult.data as JsonBody)
-        : {};
+      bodyResult.data && typeof bodyResult.data === 'object' ? (bodyResult.data as JsonBody) : {};
 
     if (!isUuid(String(body.id || ''))) {
       return json(
@@ -195,7 +214,8 @@ export async function handleFinanceiroFormasPagamentoPatch(event: RequestEvent) 
     if (body.descricao !== undefined) updateData.descricao = body.descricao;
     if (body.paga_comissao !== undefined) updateData.paga_comissao = body.paga_comissao;
     if (body.permite_desconto !== undefined) updateData.permite_desconto = body.permite_desconto;
-    if (body.desconto_padrao_pct !== undefined) updateData.desconto_padrao_pct = body.desconto_padrao_pct;
+    if (body.desconto_padrao_pct !== undefined)
+      updateData.desconto_padrao_pct = body.desconto_padrao_pct;
     if (body.ativo !== undefined) updateData.ativo = body.ativo;
 
     const { data: existing, error: existingError } = await client
@@ -206,11 +226,17 @@ export async function handleFinanceiroFormasPagamentoPatch(event: RequestEvent) 
 
     if (existingError) throw existingError;
     if (!existing) {
-      return json({ success: false, error: 'Forma de pagamento não encontrada.' }, { status: 404, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'Forma de pagamento não encontrada.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
     }
     const scopedCompanySet = cleanStringSet(scope.companyIds);
     if (!scope.isAdmin && !scopedCompanySet.has(String(existing.company_id || '').trim())) {
-      return json({ success: false, error: 'Forma de pagamento fora do escopo.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'Forma de pagamento fora do escopo.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { data, error } = await client
@@ -240,7 +266,12 @@ export async function handleFinanceiroFormasPagamentoDelete(event: RequestEvent)
     const user = await requireAuthenticatedUser(event);
     const scope = await resolveUserScope(client, user.id);
 
-    ensureModuloAccess(scope, ['financeiro', 'Formas de Pagamento'], 4, 'Sem permissão para excluir formas de pagamento.');
+    ensureModuloAccess(
+      scope,
+      ['financeiro', 'Formas de Pagamento'],
+      4,
+      'Sem permissão para excluir formas de pagamento.'
+    );
 
     const { searchParams } = event.url;
     const id = searchParams.get('id');
@@ -260,11 +291,17 @@ export async function handleFinanceiroFormasPagamentoDelete(event: RequestEvent)
 
     if (existingError) throw existingError;
     if (!existing) {
-      return json({ success: false, error: 'Forma de pagamento não encontrada.' }, { status: 404, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'Forma de pagamento não encontrada.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
     }
     const scopedCompanySet = cleanStringSet(scope.companyIds);
     if (!scope.isAdmin && !scopedCompanySet.has(String(existing.company_id || '').trim())) {
-      return json({ success: false, error: 'Forma de pagamento fora do escopo.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'Forma de pagamento fora do escopo.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     // Verificar se há pagamentos associados (tabela vendas_pagamentos)

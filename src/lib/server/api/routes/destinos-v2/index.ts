@@ -25,7 +25,7 @@ import {
   inativarDestino,
   listarDestinos,
   obterDestino,
-  type DestinoInput,
+  type DestinoInput
 } from '$lib/server/destinos/service';
 
 export const destinosV2Routes = new Hono<ApiEnv>();
@@ -40,7 +40,7 @@ async function contexto(c: Context<ApiEnv>) {
   const baseURL =
     PUBLIC_ENVIRONMENT === 'production'
       ? 'https://vturapp.com.br'
-      : PUBLIC_APP_URL ?? 'http://localhost:5173';
+      : (PUBLIC_APP_URL ?? 'http://localhost:5173');
   const ctx = await resolveAuthContext(c.req.raw.headers, DB, BETTER_AUTH_SECRET, baseURL);
   if (!ctx) return { res: c.json({ error: 'Não autenticado.' }, 401) };
   return { ctx, db: getDb(DB) };

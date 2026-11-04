@@ -35,7 +35,7 @@ import {
   listarAnexos,
   listarClientes,
   registrarAnexo,
-  removerAnexo,
+  removerAnexo
 } from '$lib/server/clientes/service';
 
 export const clientesV2Routes = new Hono<ApiEnv>();
@@ -49,7 +49,7 @@ async function contexto(c: Context<ApiEnv>) {
   const baseURL =
     PUBLIC_ENVIRONMENT === 'production'
       ? 'https://vturapp.com.br'
-      : PUBLIC_APP_URL ?? 'http://localhost:5173';
+      : (PUBLIC_APP_URL ?? 'http://localhost:5173');
   const ctx = await resolveAuthContext(c.req.raw.headers, DB, BETTER_AUTH_SECRET, baseURL);
   if (!ctx) {
     return { res: c.json({ error: 'Não autenticado.' }, 401) };
@@ -60,12 +60,17 @@ async function contexto(c: Context<ApiEnv>) {
 function respostaErro(c: Context<ApiEnv>, err: unknown) {
   if (err instanceof ClienteError) {
     const status =
-      err.code === 'NAO_ENCONTRADO' ? 404
-      : err.code === 'DOCUMENTO_DUPLICADO' ? 409
-      : err.code === 'CONFLITO_VERSAO' ? 409
-      : err.code === 'VALIDACAO' ? 400
-      : err.code === 'ANEXO_INVALIDO' ? 400
-      : 500;
+      err.code === 'NAO_ENCONTRADO'
+        ? 404
+        : err.code === 'DOCUMENTO_DUPLICADO'
+          ? 409
+          : err.code === 'CONFLITO_VERSAO'
+            ? 409
+            : err.code === 'VALIDACAO'
+              ? 400
+              : err.code === 'ANEXO_INVALIDO'
+                ? 400
+                : 500;
     return c.json({ error: err.message, code: err.code, errors: err.errors }, status);
   }
   throw err;
@@ -96,12 +101,12 @@ clientesV2Routes.get('/', async (c) => {
     busca,
     cursor: cursor ?? undefined,
     limite: limite && Number.isInteger(limite) ? limite : undefined,
-    somenteAtivos: !incluirInativos,
+    somenteAtivos: !incluirInativos
   });
 
   return c.json({
     itens: resultado.itens.map(paraJson),
-    proximo_cursor: resultado.proximoCursor,
+    proximo_cursor: resultado.proximoCursor
   });
 });
 
@@ -221,8 +226,8 @@ clientesV2Routes.get('/:id/anexos', async (c) => {
         nome_original: a.nomeOriginal,
         content_type: a.contentType,
         tamanho_bytes: a.tamanhoBytes,
-        criado_em: a.criadoEm,
-      })),
+        criado_em: a.criadoEm
+      }))
     });
   } catch (err) {
     return respostaErro(c, err);
@@ -257,8 +262,8 @@ clientesV2Routes.post('/:id/anexos', async (c) => {
           nome_original: anexo.nomeOriginal,
           content_type: anexo.contentType,
           tamanho_bytes: anexo.tamanhoBytes,
-          criado_em: anexo.criadoEm,
-        },
+          criado_em: anexo.criadoEm
+        }
       },
       201
     );
@@ -288,8 +293,8 @@ clientesV2Routes.get('/:id/anexos/:anexoId', async (c) => {
         'content-type': anexo.contentType,
         'content-disposition': `attachment; filename="${anexo.nomeOriginal.replace(/[^\w.\- ]/g, '_')}"`,
         'cache-control': 'private, no-store',
-        'x-content-type-options': 'nosniff',
-      },
+        'x-content-type-options': 'nosniff'
+      }
     });
   } catch (err) {
     return respostaErro(c, err);
@@ -350,6 +355,6 @@ function paraJson(row: import('$lib/server/db/schema').Cliente) {
     ativo: row.ativo,
     versao: row.versao,
     criado_em: row.criadoEm,
-    atualizado_em: row.atualizadoEm,
+    atualizado_em: row.atualizadoEm
   };
 }

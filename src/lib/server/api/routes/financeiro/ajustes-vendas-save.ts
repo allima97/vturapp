@@ -137,11 +137,17 @@ export async function handleFinanceiroAjustesVendasSavePost(event: RequestEvent)
       : vendaReciboIdRaw;
 
     if (!isUuid(rawId)) {
-      return json({ error: 'Identificador do recibo invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Identificador do recibo invalido.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     if (percentualDestino === null || percentualDestino < 0 || percentualDestino >= 100) {
-      return json({ error: 'percentual_destino deve ser >= 0 e < 100.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'percentual_destino deve ser >= 0 e < 100.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     let vendedorOrigemId = '';
@@ -169,12 +175,19 @@ export async function handleFinanceiroAjustesVendasSavePost(event: RequestEvent)
         .maybeSingle();
 
       if (reciboError) throw reciboError;
-      if (!reciboRow) return json({ error: 'Recibo nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+      if (!reciboRow)
+        return json(
+          { error: 'Recibo nao encontrado.' },
+          { status: 404, headers: NO_STORE_HEADERS }
+        );
 
       const recibo = reciboRow as VendaReciboRateioRow;
       const reciboCompany = String(recibo?.vendas?.company_id || '').trim();
       if (!scope.isAdmin && !scope.companyIds.includes(reciboCompany)) {
-        return json({ error: 'Recibo fora do escopo da empresa.' }, { status: 403, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Recibo fora do escopo da empresa.' },
+          { status: 403, headers: NO_STORE_HEADERS }
+        );
       }
 
       sourceCompanyId = reciboCompany;
@@ -189,12 +202,19 @@ export async function handleFinanceiroAjustesVendasSavePost(event: RequestEvent)
         .maybeSingle();
 
       if (concErr) throw concErr;
-      if (!concRow) return json({ error: 'Recibo da conciliacao nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+      if (!concRow)
+        return json(
+          { error: 'Recibo da conciliacao nao encontrado.' },
+          { status: 404, headers: NO_STORE_HEADERS }
+        );
 
       const conciliacao = concRow as ConciliacaoReciboRateioRow;
       const concCompany = String(conciliacao?.company_id || '').trim();
       if (!scope.isAdmin && !scope.companyIds.includes(concCompany)) {
-        return json({ error: 'Recibo de conciliacao fora do escopo da empresa.' }, { status: 403, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Recibo de conciliacao fora do escopo da empresa.' },
+          { status: 403, headers: NO_STORE_HEADERS }
+        );
       }
 
       sourceCompanyId = concCompany;
@@ -211,7 +231,9 @@ export async function handleFinanceiroAjustesVendasSavePost(event: RequestEvent)
             .eq('cancelada', false)
             .maybeSingle();
           if (vendaErr) throw vendaErr;
-          vendedorOrigemId = String((vendaRow as VendaRateioFallbackRow | null)?.vendedor_id || '').trim();
+          vendedorOrigemId = String(
+            (vendaRow as VendaRateioFallbackRow | null)?.vendedor_id || ''
+          ).trim();
         }
       }
 
@@ -219,10 +241,16 @@ export async function handleFinanceiroAjustesVendasSavePost(event: RequestEvent)
     }
 
     if (!isUuid(vendedorOrigemId)) {
-      return json({ error: 'Venda sem vendedor valido para rateio.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Venda sem vendedor valido para rateio.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
     if (!isUuid(sourceCompanyId)) {
-      return json({ error: 'Recibo sem empresa valida para rateio.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Recibo sem empresa valida para rateio.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     // Desfazer rateio quando percentual_destino = 0.
@@ -247,7 +275,10 @@ export async function handleFinanceiroAjustesVendasSavePost(event: RequestEvent)
     }
 
     if (!isUuid(vendedorDestinoId)) {
-      return json({ error: 'vendedor_destino_id invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'vendedor_destino_id invalido.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     if (vendedorDestinoId === vendedorOrigemId) {
@@ -267,9 +298,7 @@ export async function handleFinanceiroAjustesVendasSavePost(event: RequestEvent)
             ? [scope.companyId]
             : [];
       const equipeIds = uniqueCleanStrings(
-        (await fetchRankingVendedoresByCompanyIds(client, gestorCompanyIds)).map(
-          (row) => row?.id
-        )
+        (await fetchRankingVendedoresByCompanyIds(client, gestorCompanyIds)).map((row) => row?.id)
       );
       const equipeSet = cleanStringSet(equipeIds);
       if (!equipeSet.has(vendedorOrigemId) || !equipeSet.has(vendedorDestinoId)) {
@@ -289,11 +318,17 @@ export async function handleFinanceiroAjustesVendasSavePost(event: RequestEvent)
       .maybeSingle();
     if (destinoError) throw destinoError;
     if (!destinoUser) {
-      return json({ error: 'Vendedor destino nao encontrado ou inativo.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Vendedor destino nao encontrado ou inativo.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
     const destino = destinoUser as DestinoUserRow;
     if (!scope.isAdmin && destino.company_id !== sourceCompanyId) {
-      return json({ error: 'Vendedor destino fora do escopo da empresa.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Vendedor destino fora do escopo da empresa.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const percentualOrigem = Math.round((100 - percentualDestino) * 100) / 100;
@@ -328,9 +363,7 @@ export async function handleFinanceiroAjustesVendasSavePost(event: RequestEvent)
     if (updateError) throw updateError;
 
     if (!Array.isArray(updatedRows) || updatedRows.length === 0) {
-      const { error: insertError } = await client
-        .from('vendas_recibos_rateio')
-        .insert(payload);
+      const { error: insertError } = await client.from('vendas_recibos_rateio').insert(payload);
       if (insertError) throw insertError;
     }
 

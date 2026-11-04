@@ -4,11 +4,11 @@
  * O hash é o scrypt de @better-auth/utils/password (node:crypto),
  * o mesmo que o Worker usa com nodejs_compat.
  */
-import { hashPassword } from "@better-auth/utils/password";
+import { hashPassword } from '@better-auth/utils/password';
 const EMAIL_PATTERN = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i;
 const HASH_PATTERN = /^[0-9a-f]{32}:[0-9a-f]{128}$/i;
-const PLATFORM_SLUG = "vtur-plataforma";
-const ADMIN_TYPE_NAME = "ADMIN";
+const PLATFORM_SLUG = 'vtur-plataforma';
+const ADMIN_TYPE_NAME = 'ADMIN';
 
 export class BootstrapRefused extends Error {
   /**
@@ -16,23 +16,23 @@ export class BootstrapRefused extends Error {
    */
   constructor(message) {
     super(message);
-    this.name = "BootstrapRefused";
+    this.name = 'BootstrapRefused';
   }
 }
 
 export const ENVIRONMENTS = {
   staging: {
-    database: "vturapp-db-staging",
-    args: ["--remote", "--env", "staging"],
+    database: 'vturapp-db-staging',
+    args: ['--remote', '--env', 'staging']
   },
   production: {
-    database: "vturapp-db",
-    args: ["--remote", "--env", "production"],
+    database: 'vturapp-db',
+    args: ['--remote', '--env', 'production']
   },
   local: {
-    database: "vturapp-db",
-    args: ["--local"],
-  },
+    database: 'vturapp-db',
+    args: ['--local']
+  }
 };
 
 /**
@@ -46,25 +46,25 @@ function sqlString(value) {
  * @param {string} sql
  */
 export function oneLine(sql) {
-  return sql.replace(/\s+/g, " ").trim();
+  return sql.replace(/\s+/g, ' ').trim();
 }
 
 /**
  * @param {string} text
  */
 export function redactSecrets(text) {
-  return String(text || "").replace(/[0-9a-f]{16,}:[0-9a-f]{32,}/gi, "[hash]");
+  return String(text || '').replace(/[0-9a-f]{16,}:[0-9a-f]{32,}/gi, '[hash]');
 }
 
 /**
  * @param {unknown} email
  */
 export function assertEmail(email) {
-  const normalized = String(email || "")
+  const normalized = String(email || '')
     .trim()
     .toLowerCase();
   if (!EMAIL_PATTERN.test(normalized)) {
-    throw new BootstrapRefused("E-mail invalido.");
+    throw new BootstrapRefused('E-mail invalido.');
   }
   return normalized;
 }
@@ -73,18 +73,16 @@ export function assertEmail(email) {
  * @param {string} source
  */
 export function moduleKeys(source) {
-  const text = String(source || "");
-  const start = text.indexOf("export const MAPA_MODULOS");
-  const end = text.indexOf("export const MODULO_ALIASES");
+  const text = String(source || '');
+  const start = text.indexOf('export const MAPA_MODULOS');
+  const end = text.indexOf('export const MODULO_ALIASES');
   if (start < 0 || end <= start) {
-    throw new BootstrapRefused("Catalogo de modulos nao encontrado.");
+    throw new BootstrapRefused('Catalogo de modulos nao encontrado.');
   }
-  const keys = [...text.slice(start, end).matchAll(/'([a-z0-9_]+)'/g)].map(
-    (match) => match[1],
-  );
+  const keys = [...text.slice(start, end).matchAll(/'([a-z0-9_]+)'/g)].map((match) => match[1]);
   const unique = [...new Set(keys)];
   if (!unique.length) {
-    throw new BootstrapRefused("Catalogo de modulos vazio.");
+    throw new BootstrapRefused('Catalogo de modulos vazio.');
   }
   return unique;
 }
@@ -121,26 +119,25 @@ export function emailExistsSql(email) {
  * @param {{ email: string, name?: string, passwordHash: string, modules?: string[], catalogSource?: string, now?: Date }} input
  */
 export function buildStatements(input) {
-  if (!HASH_PATTERN.test(String(input.passwordHash || ""))) {
-    throw new BootstrapRefused("Hash de senha invalido.");
+  if (!HASH_PATTERN.test(String(input.passwordHash || ''))) {
+    throw new BootstrapRefused('Hash de senha invalido.');
   }
   const email = assertEmail(input.email);
-  const name = String(input.name || "Administrador VTUR");
+  const name = String(input.name || 'Administrador VTUR');
   const userId = crypto.randomUUID();
-  const typeId = "00000000-0000-4000-8000-0000000000a1";
+  const typeId = '00000000-0000-4000-8000-0000000000a1';
   const now = input.now ?? new Date();
   const iso = now.toISOString();
   const millis = now.getTime();
   const modules = [
     ...new Set(
-      (input.modules?.length
-        ? input.modules
-        : moduleKeys(input.catalogSource || "")
-      ).map((item) => String(item)),
-    ),
+      (input.modules?.length ? input.modules : moduleKeys(input.catalogSource || '')).map((item) =>
+        String(item)
+      )
+    )
   ].filter((item) => /^[a-z0-9_]+$/.test(item));
   if (!modules.length) {
-    throw new BootstrapRefused("Catalogo de modulos vazio.");
+    throw new BootstrapRefused('Catalogo de modulos vazio.');
   }
   const passwordHash = String(input.passwordHash);
   const statements = [
@@ -184,20 +181,20 @@ export function buildStatements(input) {
         ${sqlString(userId)}, ${sqlString(name)}, ${sqlString(email)}, ${sqlString(typeId)},
         0, 1, '11300000000', 'Sao Paulo', 'SP', 0, 0, 1, 0
       )
-    `),
+    `)
   ];
   for (const modulo of modules) {
     statements.push(
       oneLine(`
         INSERT INTO modulo_acesso (id, usuario_id, modulo, permissao, ativo, created_at, updated_at)
         VALUES (${sqlString(crypto.randomUUID())}, ${sqlString(userId)}, ${sqlString(modulo)}, 'admin', 1, ${sqlString(iso)}, ${sqlString(iso)})
-      `),
+      `)
     );
     statements.push(
       oneLine(`
         INSERT INTO legado_modulo_acesso (id, usuario_id, modulo, permissao, ativo, created_at, updated_at)
         VALUES (${sqlString(crypto.randomUUID())}, ${sqlString(userId)}, ${sqlString(modulo)}, 'admin', 1, ${sqlString(iso)}, ${sqlString(iso)})
-      `),
+      `)
     );
   }
   return { userId, statements };
@@ -208,37 +205,30 @@ export function buildStatements(input) {
  * @param {{ email: string, password: string, name?: string, modules?: string[] }} input
  */
 export async function applyBootstrap(db, input) {
-  const password = String(input.password || "");
+  const password = String(input.password || '');
   if (password.length < 16) {
-    throw new BootstrapRefused("A senha precisa ter pelo menos 16 caracteres.");
+    throw new BootstrapRefused('A senha precisa ter pelo menos 16 caracteres.');
   }
   const email = assertEmail(input.email);
   const existing = await db.prepare(adminExistsSql()).all();
   if ((existing.results || []).length > 0) {
-    throw new BootstrapRefused(
-      "Ja existe um administrador global. Nada foi alterado.",
-    );
+    throw new BootstrapRefused('Ja existe um administrador global. Nada foi alterado.');
   }
   const emailTaken = await db.prepare(emailExistsSql(email)).all();
   if ((emailTaken.results || []).length > 0) {
-    throw new BootstrapRefused(
-      "O e-mail ja esta cadastrado. Nada foi alterado.",
-    );
+    throw new BootstrapRefused('O e-mail ja esta cadastrado. Nada foi alterado.');
   }
   const passwordHash = await hashPassword(password);
   const { userId, statements } = buildStatements({
     email,
     name: input.name,
     passwordHash,
-    modules: input.modules,
+    modules: input.modules
   });
   await db.batch(statements.map((sql) => db.prepare(sql)));
-  const created = await db
-    .prepare("SELECT id FROM user WHERE id = ?")
-    .bind(userId)
-    .first();
+  const created = await db.prepare('SELECT id FROM user WHERE id = ?').bind(userId).first();
   if (!created) {
-    throw new BootstrapRefused("O administrador nao foi gravado.");
+    throw new BootstrapRefused('O administrador nao foi gravado.');
   }
   return { userId, email };
 }
@@ -247,8 +237,8 @@ export async function applyBootstrap(db, input) {
  * @param {string} stdout
  */
 export function rowsFromWrangler(stdout) {
-  const start = stdout.indexOf("[");
-  const end = stdout.lastIndexOf("]");
+  const start = stdout.indexOf('[');
+  const end = stdout.lastIndexOf(']');
   if (start < 0 || end < start) return [];
   const parsed = JSON.parse(stdout.slice(start, end + 1));
   const rows = [];

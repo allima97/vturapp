@@ -37,7 +37,7 @@ export const RECEIPT_COUNT_KEYS: Record<string, (row: GuardedContributionRow) =>
   // relatorios/ranking.ts
   ranking: (r) => `${s(r.venda_key)}::${s(r.recibo_id) || s(r.recibo_numero)}`,
   // relatorios/destinos.ts, relatorios/clientes.ts + RPCs relatorio_destinos/clientes
-  vendas: (r) => s(r.venda_key) || s(r.recibo_id) || `${s(r.recibo_numero)}|${s(r.data_recibo)}`,
+  vendas: (r) => s(r.venda_key) || s(r.recibo_id) || `${s(r.recibo_numero)}|${s(r.data_recibo)}`
 };
 
 /**
@@ -46,7 +46,7 @@ export const RECEIPT_COUNT_KEYS: Record<string, (row: GuardedContributionRow) =>
  */
 export function findBrokenReceiptCountKey(
   before: GuardedContributionRow[],
-  after: GuardedContributionRow[],
+  after: GuardedContributionRow[]
 ): string | null {
   for (const [name, keyOf] of Object.entries(RECEIPT_COUNT_KEYS)) {
     const forward = new Map<string, string>();
@@ -84,7 +84,7 @@ async function fetchExistingReciboIds(client: DataClient, ids: string[]) {
  */
 export async function guardContributionRowsForeignKeys<T extends GuardedContributionRow>(
   client: DataClient,
-  rows: T[],
+  rows: T[]
 ): Promise<{ rows: T[]; nulledReciboIds: number }> {
   const ids = [...new Set(rows.map((row) => s(row.recibo_id)).filter(Boolean))];
   if (ids.length === 0) return { rows, nulledReciboIds: 0 };
@@ -103,7 +103,7 @@ export async function guardContributionRowsForeignKeys<T extends GuardedContribu
   const broken = findBrokenReceiptCountKey(rows, guarded);
   if (broken) {
     throw new Error(
-      `read model: recibo sem vínculo mudaria a contagem de recibos (chave "${broken}"); mês não gravado.`,
+      `read model: recibo sem vínculo mudaria a contagem de recibos (chave "${broken}"); mês não gravado.`
     );
   }
   return { rows: guarded, nulledReciboIds };

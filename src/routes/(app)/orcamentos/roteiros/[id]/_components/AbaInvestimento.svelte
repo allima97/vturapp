@@ -3,15 +3,43 @@
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import { formatBRL } from './formatadores';
-  import { type RotInvestimento, addItem, moveDown, moveUp, newInvestimento, removeItem } from './tipos';
+  import {
+    type RotInvestimento,
+    addItem,
+    moveDown,
+    moveUp,
+    newInvestimento,
+    removeItem
+  } from './tipos';
   import { ChevronDown, ChevronUp, Plus, Trash2 } from '$lib/icons';
 
-  let { INVESTIMENTO_TIPO_OPTIONS, investimentos = $bindable(), onInvestimentoChange, totalInvestimento }: { INVESTIMENTO_TIPO_OPTIONS: string[]; investimentos: RotInvestimento[]; onInvestimentoChange: (index: number, field: 'valor_por_pessoa' | 'qtd_apto' | 'valor_por_apto', rawValue: string) => void; totalInvestimento: number } = $props();
+  let {
+    INVESTIMENTO_TIPO_OPTIONS,
+    investimentos = $bindable(),
+    onInvestimentoChange,
+    totalInvestimento
+  }: {
+    INVESTIMENTO_TIPO_OPTIONS: string[];
+    investimentos: RotInvestimento[];
+    onInvestimentoChange: (
+      index: number,
+      field: 'valor_por_pessoa' | 'qtd_apto' | 'valor_por_apto',
+      rawValue: string
+    ) => void;
+    totalInvestimento: number;
+  } = $props();
 </script>
 
 <Card title="Investimento" color="clientes">
   <div class="mb-3 flex flex-wrap gap-2">
-    <Button type="button" variant="secondary" size="sm" on:click={() => { investimentos = addItem(investimentos, newInvestimento); }}>
+    <Button
+      type="button"
+      variant="secondary"
+      size="sm"
+      on:click={() => {
+        investimentos = addItem(investimentos, newInvestimento);
+      }}
+    >
       <Plus size={13} class="mr-1" />
       Adicionar linha
     </Button>
@@ -34,7 +62,9 @@
                 disabled={index === 0}
                 ariaLabel="Mover linha de investimento para cima"
                 title="Mover linha de investimento para cima"
-                on:click={() => { investimentos = moveUp(investimentos, index); }}
+                on:click={() => {
+                  investimentos = moveUp(investimentos, index);
+                }}
               >
                 <ChevronUp size={13} />
               </Button>
@@ -46,7 +76,9 @@
                 disabled={index === investimentos.length - 1}
                 ariaLabel="Mover linha de investimento para baixo"
                 title="Mover linha de investimento para baixo"
-                on:click={() => { investimentos = moveDown(investimentos, index); }}
+                on:click={() => {
+                  investimentos = moveDown(investimentos, index);
+                }}
               >
                 <ChevronDown size={13} />
               </Button>
@@ -57,7 +89,9 @@
                 class_name="text-slate-400 hover:text-red-600"
                 ariaLabel="Remover linha de investimento"
                 title="Remover linha de investimento"
-                on:click={() => { investimentos = removeItem(investimentos, index); }}
+                on:click={() => {
+                  investimentos = removeItem(investimentos, index);
+                }}
               >
                 <Trash2 size={13} />
               </Button>
@@ -79,7 +113,12 @@
                 type="number"
                 value={inv.valor_por_pessoa ?? ''}
                 class_name="w-full"
-                on:input={(e) => onInvestimentoChange(index, 'valor_por_pessoa', (e.target as HTMLInputElement).value)}
+                on:input={(e) =>
+                  onInvestimentoChange(
+                    index,
+                    'valor_por_pessoa',
+                    (e.target as HTMLInputElement).value
+                  )}
               />
             </div>
             <div>
@@ -88,7 +127,8 @@
                 type="number"
                 value={inv.qtd_apto ?? ''}
                 class_name="w-full"
-                on:input={(e) => onInvestimentoChange(index, 'qtd_apto', (e.target as HTMLInputElement).value)}
+                on:input={(e) =>
+                  onInvestimentoChange(index, 'qtd_apto', (e.target as HTMLInputElement).value)}
               />
             </div>
             <div>
@@ -106,8 +146,12 @@
       {/each}
     </div>
 
-    <div class="mt-4 rounded-lg bg-slate-100 px-4 py-2 text-right text-sm font-medium text-slate-700">
-      Total por pessoa: <span class="text-clientes-700 font-bold">R$ {formatBRL(totalInvestimento)}</span>
+    <div
+      class="mt-4 rounded-lg bg-slate-100 px-4 py-2 text-right text-sm font-medium text-slate-700"
+    >
+      Total por pessoa: <span class="text-clientes-700 font-bold"
+        >R$ {formatBRL(totalInvestimento)}</span
+      >
     </div>
   {/if}
 </Card>

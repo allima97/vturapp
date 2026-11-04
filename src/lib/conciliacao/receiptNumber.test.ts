@@ -1,7 +1,11 @@
 // Testes de caracterização: normalização de número de recibo (Fase 1).
 // Estas funções decidem se um recibo da conciliação "casa" com um recibo da venda.
 import { describe, expect, it } from 'vitest';
-import { normalizeReceiptNumber, normalizeReceiptNumberLoose, receiptNumberCore } from './receiptNumber';
+import {
+  normalizeReceiptNumber,
+  normalizeReceiptNumberLoose,
+  receiptNumberCore
+} from './receiptNumber';
 import { normalizeReceiptDisplay, normalizeReceiptKey } from './receiptNormalize';
 
 describe('normalizeReceiptNumber', () => {

@@ -19,15 +19,15 @@ Implementar políticas centralizadas e contexto de acesso, com matriz de capacid
 
 ### Funções de autorização — `src/lib/server/policy/authorize.ts`
 
-| Função | Tipo | Uso |
-|---|---|---|
-| `can(papel, recurso, acao)` | pura → boolean | verificação única |
-| `canAny(papel, recurso, acoes[])` | pura → boolean | qualquer uma das ações |
-| `canAll(papel, recurso, acoes[])` | pura → boolean | todas as ações |
-| `authorize(papel, recurso, acao, fn)` | `{ ok, value \| response }` | handlers SvelteKit |
-| `requireCan(recurso, acao)` | `MiddlewareHandler<ApiEnv>` | rotas Hono |
-| `listarCapacidades(papel)` | `string[]` | UI/depuração |
-| `temAcessoAoRecurso(papel, recurso)` | boolean | menus |
+| Função                                | Tipo                        | Uso                    |
+| ------------------------------------- | --------------------------- | ---------------------- |
+| `can(papel, recurso, acao)`           | pura → boolean              | verificação única      |
+| `canAny(papel, recurso, acoes[])`     | pura → boolean              | qualquer uma das ações |
+| `canAll(papel, recurso, acoes[])`     | pura → boolean              | todas as ações         |
+| `authorize(papel, recurso, acao, fn)` | `{ ok, value \| response }` | handlers SvelteKit     |
+| `requireCan(recurso, acao)`           | `MiddlewareHandler<ApiEnv>` | rotas Hono             |
+| `listarCapacidades(papel)`            | `string[]`                  | UI/depuração           |
+| `temAcessoAoRecurso(papel, recurso)`  | boolean                     | menus                  |
 
 ## Integração
 

@@ -1,4 +1,4 @@
-import { VTUR_LOGO_PATH } from "$lib/brand";
+import { VTUR_LOGO_PATH } from '$lib/brand';
 // Migrado para Hono de src/routes/api/v1/parametros/orcamentos-pdf/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import { registrarLog } from '$lib/server/auditLog';
@@ -31,40 +31,54 @@ export async function handleParametrosOrcamentosPdfGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['parametros_orcamentos', 'parametros'], 1, 'Sem acesso aos parâmetros de orçamento.');
+      ensureModuloAccess(
+        scope,
+        ['parametros_orcamentos', 'parametros'],
+        1,
+        'Sem acesso aos parâmetros de orçamento.'
+      );
     }
 
     const { data, error: queryError } = await client
       .from('quote_print_settings')
-      .select('id, owner_user_id, company_id, imagem_complementar_url, imagem_complementar_path, consultor_nome, filial_nome, endereco_linha1, endereco_linha2, endereco_linha3, telefone, whatsapp, whatsapp_codigo_pais, email, rodape_texto')
+      .select(
+        'id, owner_user_id, company_id, imagem_complementar_url, imagem_complementar_path, consultor_nome, filial_nome, endereco_linha1, endereco_linha2, endereco_linha3, telefone, whatsapp, whatsapp_codigo_pais, email, rodape_texto'
+      )
       .eq('owner_user_id', user.id)
       .maybeSingle();
 
     if (queryError) throw queryError;
 
-    const { data: userRow } = await client.from('users').select('nome_completo, email, company_id').eq('id', user.id).maybeSingle();
+    const { data: userRow } = await client
+      .from('users')
+      .select('nome_completo, email, company_id')
+      .eq('id', user.id)
+      .maybeSingle();
 
-    return json({
-      settings: {
-        id: data?.id || null,
-        owner_user_id: data?.owner_user_id || user.id,
-        company_id: data?.company_id || userRow?.company_id || null,
-        logo_url: VTUR_LOGO_PATH,
-        logo_path: null,
-        imagem_complementar_url: data?.imagem_complementar_url || null,
-        imagem_complementar_path: data?.imagem_complementar_path || null,
-        consultor_nome: data?.consultor_nome || userRow?.nome_completo || '',
-        filial_nome: data?.filial_nome || '',
-        endereco_linha1: data?.endereco_linha1 || '',
-        endereco_linha2: data?.endereco_linha2 || '',
-        endereco_linha3: data?.endereco_linha3 || '',
-        telefone: data?.telefone || '',
-        whatsapp: data?.whatsapp || '',
-        whatsapp_codigo_pais: data?.whatsapp_codigo_pais || '',
-        email: data?.email || userRow?.email || '',
-        rodape_texto: data?.rodape_texto || DEFAULT_FOOTER
-      }
-    }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      {
+        settings: {
+          id: data?.id || null,
+          owner_user_id: data?.owner_user_id || user.id,
+          company_id: data?.company_id || userRow?.company_id || null,
+          logo_url: VTUR_LOGO_PATH,
+          logo_path: null,
+          imagem_complementar_url: data?.imagem_complementar_url || null,
+          imagem_complementar_path: data?.imagem_complementar_path || null,
+          consultor_nome: data?.consultor_nome || userRow?.nome_completo || '',
+          filial_nome: data?.filial_nome || '',
+          endereco_linha1: data?.endereco_linha1 || '',
+          endereco_linha2: data?.endereco_linha2 || '',
+          endereco_linha3: data?.endereco_linha3 || '',
+          telefone: data?.telefone || '',
+          whatsapp: data?.whatsapp || '',
+          whatsapp_codigo_pais: data?.whatsapp_codigo_pais || '',
+          email: data?.email || userRow?.email || '',
+          rodape_texto: data?.rodape_texto || DEFAULT_FOOTER
+        }
+      },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar parâmetros do orçamento.');
   }
@@ -74,7 +88,10 @@ export async function handleParametrosOrcamentosPdfPost(event: RequestEvent) {
   try {
     const originError = rejectCrossOriginRequest(event.request);
     if (originError) return originError;
-    const bodyResult = await readJsonBodyLimited(event.request, MAX_PARAMETROS_ORCAMENTOS_PDF_BODY_BYTES);
+    const bodyResult = await readJsonBodyLimited(
+      event.request,
+      MAX_PARAMETROS_ORCAMENTOS_PDF_BODY_BYTES
+    );
     if (!bodyResult.ok) return bodyResult.response;
 
     const client = getAdminClient();
@@ -82,7 +99,12 @@ export async function handleParametrosOrcamentosPdfPost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['parametros_orcamentos', 'parametros'], 2, 'Sem permissão para salvar parâmetros de orçamento.');
+      ensureModuloAccess(
+        scope,
+        ['parametros_orcamentos', 'parametros'],
+        2,
+        'Sem permissão para salvar parâmetros de orçamento.'
+      );
     }
 
     const body =
@@ -112,13 +134,24 @@ export async function handleParametrosOrcamentosPdfPost(event: RequestEvent) {
     // Inclui campos de imagem apenas quando presentes no body (para não sobrescrever com null)
     payload.logo_url = VTUR_LOGO_PATH;
     payload.logo_path = null;
-    if ('imagem_complementar_url' in (settings || {})) payload.imagem_complementar_url = String(settings.imagem_complementar_url || '').trim() || null;
-    if ('imagem_complementar_path' in (settings || {})) payload.imagem_complementar_path = String(settings.imagem_complementar_path || '').trim() || null;
+    if ('imagem_complementar_url' in (settings || {}))
+      payload.imagem_complementar_url =
+        String(settings.imagem_complementar_url || '').trim() || null;
+    if ('imagem_complementar_path' in (settings || {}))
+      payload.imagem_complementar_path =
+        String(settings.imagem_complementar_path || '').trim() || null;
 
-    const { data: existing } = await client.from('quote_print_settings').select('id').eq('owner_user_id', user.id).maybeSingle();
+    const { data: existing } = await client
+      .from('quote_print_settings')
+      .select('id')
+      .eq('owner_user_id', user.id)
+      .maybeSingle();
 
     if (existing?.id) {
-      const { error: updateError } = await client.from('quote_print_settings').update(payload).eq('id', existing.id);
+      const { error: updateError } = await client
+        .from('quote_print_settings')
+        .update(payload)
+        .eq('id', existing.id);
       if (updateError) throw updateError;
     } else {
       const { error: insertError } = await client.from('quote_print_settings').insert(payload);
@@ -127,7 +160,12 @@ export async function handleParametrosOrcamentosPdfPost(event: RequestEvent) {
     {
       // Mesmo formato do histórico: os campos da configuração, sem dono e empresa.
       const { owner_user_id: _owner, company_id: _company, ...detalhes } = payload;
-      registrarLog(event, { userId: user.id, modulo: 'Parametros', acao: 'quote_print_settings_salvos', detalhes });
+      registrarLog(event, {
+        userId: user.id,
+        modulo: 'Parametros',
+        acao: 'quote_print_settings_salvos',
+        detalhes
+      });
     }
 
     invalidateQuoteReadModels({

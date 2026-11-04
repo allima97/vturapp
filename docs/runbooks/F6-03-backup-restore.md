@@ -2,16 +2,16 @@
 
 **Status:** APROVADO — F6  
 **Última revisão:** 2024-11-01  
-**Responsável:** Operador ou Admin  
+**Responsável:** Operador ou Admin
 
 ---
 
 ## Visão Geral
 
-| Armazenamento | Tecnologia | Mecanismo de backup |
-|---|---|---|
+| Armazenamento             | Tecnologia    | Mecanismo de backup         |
+| ------------------------- | ------------- | --------------------------- |
 | Banco de dados relacional | Cloudflare D1 | Time Travel (point-in-time) |
-| Arquivos (anexos, logos) | Cloudflare R2 | Exportação via rclone |
+| Arquivos (anexos, logos)  | Cloudflare R2 | Exportação via rclone       |
 
 ---
 
@@ -120,17 +120,20 @@ PYEOF
 ## 3. Cenários de Incidente
 
 ### 3.1 Corrupção por bug de aplicação
+
 1. Identificar janela do incidente via logs do Workers.
 2. Exportar estado atual (passo 1.2).
 3. Restaurar D1 ao snapshot anterior ao incidente.
 4. Verificar consistência D1 ↔ R2 (passo 2.4).
 
 ### 3.2 Deleção acidental de tenant
+
 1. Exportar estado atual.
 2. Restaurar D1 para ponto anterior.
 3. Extrair SQL do tenant afetado e aplicar cirurgicamente se preferir restauração parcial.
 
 ### 3.3 Indisponibilidade D1 (SLA 99.9%)
+
 - App já retorna 503 automaticamente.
 - Nenhuma ação de DBA — aguardar Cloudflare.
 
@@ -148,10 +151,10 @@ PYEOF
 
 ## 5. Variáveis
 
-| Variável | Onde obter |
-|---|---|
-| `CF_ACCOUNT_ID` | Dashboard Cloudflare → Account ID |
-| `NOME_DO_BANCO` | `wrangler.toml` → `[[d1_databases]] database_name` |
-| `NOME_DO_BUCKET` | `wrangler.toml` → `[[r2_buckets]] bucket_name` |
-| `CF_R2_ACCESS_KEY_ID` | R2 → Manage R2 API Tokens |
-| `CF_R2_SECRET_ACCESS_KEY` | R2 → Manage R2 API Tokens |
+| Variável                  | Onde obter                                         |
+| ------------------------- | -------------------------------------------------- |
+| `CF_ACCOUNT_ID`           | Dashboard Cloudflare → Account ID                  |
+| `NOME_DO_BANCO`           | `wrangler.toml` → `[[d1_databases]] database_name` |
+| `NOME_DO_BUCKET`          | `wrangler.toml` → `[[r2_buckets]] bucket_name`     |
+| `CF_R2_ACCESS_KEY_ID`     | R2 → Manage R2 API Tokens                          |
+| `CF_R2_SECRET_ACCESS_KEY` | R2 → Manage R2 API Tokens                          |

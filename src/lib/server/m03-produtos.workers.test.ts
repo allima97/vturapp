@@ -24,7 +24,7 @@ import {
   editarProduto,
   inativarProduto,
   listarProdutos,
-  obterProduto,
+  obterProduto
 } from '$lib/server/vendas/service';
 import { TIPOS_PRODUTO } from '$lib/server/db/schema';
 
@@ -74,7 +74,7 @@ describe('Suíte V — M03 Produtos (service)', () => {
       valorVendaCentavos: 70000,
       pagaComissao: true,
       permiteDesconto: true,
-      descontoPadraoPct: 500, // 5,00%
+      descontoPadraoPct: 500 // 5,00%
     });
 
     expect(p.id).toBeGreaterThan(0);
@@ -106,9 +106,12 @@ describe('Suíte V — M03 Produtos (service)', () => {
     const criado = await criarProduto(db(), {
       nome: 'Passagem SP-RJ',
       tipo: 'passagem',
-      valorVendaCentavos: 30000,
+      valorVendaCentavos: 30000
     });
-    const editado = await editarProduto(db(), criado.id, { valorVendaCentavos: 35000, notas: 'tarifa alta temporada' });
+    const editado = await editarProduto(db(), criado.id, {
+      valorVendaCentavos: 35000,
+      notas: 'tarifa alta temporada'
+    });
     expect(editado.valorVendaCentavos).toBe(35000);
     expect(editado.notas).toBe('tarifa alta temporada');
     // tipo não alterado

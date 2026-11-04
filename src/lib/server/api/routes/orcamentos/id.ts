@@ -84,7 +84,8 @@ export async function handleOrcamentosIdGet(event: RequestEvent) {
     if (!isUuid(id)) return errorResponse('ID invalido.', 400);
 
     const quoteScope = await resolveQuoteCreatorScope(client, scope, {
-      companyId: event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id'),
+      companyId:
+        event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id'),
       vendedorRaw: event.url.searchParams.get('vendedor_id')
     });
 
@@ -99,18 +100,18 @@ export async function handleOrcamentosIdGet(event: RequestEvent) {
     }
 
     // As 3 queries são completamente independentes entre si — executar em paralelo.
-    const [
-      { data: items },
-      clienteResult,
-      vendedorResult
-    ] = await Promise.all([
+    const [{ data: items }, clienteResult, vendedorResult] = await Promise.all([
       client
         .from('quote_item')
         .select(QUOTE_ITEM_SELECT_FIELDS)
         .eq('quote_id', id)
         .order('order_index', { ascending: true }),
       quote.client_id
-        ? client.from('clientes').select('id, nome, email, telefone').eq('id', quote.client_id).maybeSingle()
+        ? client
+            .from('clientes')
+            .select('id, nome, email, telefone')
+            .eq('id', quote.client_id)
+            .maybeSingle()
         : Promise.resolve({ data: null }),
       quote.created_by
         ? client.from('users').select('nome_completo').eq('id', quote.created_by).maybeSingle()
@@ -144,29 +145,32 @@ export async function handleOrcamentosIdGet(event: RequestEvent) {
     const cliente = clienteResult.data ?? null;
     const vendedor = vendedorResult.data?.nome_completo || 'Equipe VTUR';
 
-    return json({
-      id: quote.id,
-      codigo: `ORC-${quote.id.slice(0, 8).toUpperCase()}`,
-      status: quote.status_negociacao || quote.status || 'pendente',
-      status_negociacao: quote.status_negociacao,
-      total: quote.total,
-      currency: quote.currency || 'BRL',
-      client_id: quote.client_id,
-      cliente: cliente || { nome: quote.client_name || 'Cliente manual' },
-      client_name: quote.client_name || cliente?.nome || null,
-      client_whatsapp: quote.client_whatsapp || null,
-      client_email: quote.client_email || cliente?.email || null,
-      cliente_email: quote.client_email || cliente?.email,
-      created_at: quote.created_at,
-      updated_at: quote.updated_at,
-      data_criacao: quote.created_at?.slice(0, 10),
-      data_embarque: quote.data_embarque || null,
-      data_final: quote.data_final || null,
-      last_interaction_at: quote.last_interaction_at || null,
-      last_interaction_notes: quote.last_interaction_notes || null,
-      vendedor,
-      itens: itemsWithSegments
-    }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      {
+        id: quote.id,
+        codigo: `ORC-${quote.id.slice(0, 8).toUpperCase()}`,
+        status: quote.status_negociacao || quote.status || 'pendente',
+        status_negociacao: quote.status_negociacao,
+        total: quote.total,
+        currency: quote.currency || 'BRL',
+        client_id: quote.client_id,
+        cliente: cliente || { nome: quote.client_name || 'Cliente manual' },
+        client_name: quote.client_name || cliente?.nome || null,
+        client_whatsapp: quote.client_whatsapp || null,
+        client_email: quote.client_email || cliente?.email || null,
+        cliente_email: quote.client_email || cliente?.email,
+        created_at: quote.created_at,
+        updated_at: quote.updated_at,
+        data_criacao: quote.created_at?.slice(0, 10),
+        data_embarque: quote.data_embarque || null,
+        data_final: quote.data_final || null,
+        last_interaction_at: quote.last_interaction_at || null,
+        last_interaction_notes: quote.last_interaction_notes || null,
+        vendedor,
+        itens: itemsWithSegments
+      },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar orcamento.');
   }
@@ -190,7 +194,8 @@ export async function handleOrcamentosIdPatch(event: RequestEvent) {
     if (!isUuid(id)) return errorResponse('ID invalido.', 400);
 
     const quoteScope = await resolveQuoteCreatorScope(client, scope, {
-      companyId: event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id'),
+      companyId:
+        event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id'),
       vendedorRaw: event.url.searchParams.get('vendedor_id')
     });
 
@@ -238,9 +243,11 @@ export async function handleOrcamentosIdPatch(event: RequestEvent) {
       updateData.client_name = String(body.client_name ?? body.cliente_nome ?? '').trim() || null;
     }
     if (body.client_whatsapp !== undefined || body.cliente_telefone !== undefined) {
-      updateData.client_whatsapp = String(body.client_whatsapp ?? body.cliente_telefone ?? '').trim() || null;
+      updateData.client_whatsapp =
+        String(body.client_whatsapp ?? body.cliente_telefone ?? '').trim() || null;
     }
-    if (body.client_email !== undefined) updateData.client_email = String(body.client_email || '').trim() || null;
+    if (body.client_email !== undefined)
+      updateData.client_email = String(body.client_email || '').trim() || null;
     if (body.data_embarque !== undefined) updateData.data_embarque = body.data_embarque;
     if (body.data_final !== undefined) updateData.data_final = body.data_final;
 
@@ -297,7 +304,8 @@ export async function handleOrcamentosIdDelete(event: RequestEvent) {
     if (!isUuid(id)) return errorResponse('ID invalido.', 400);
 
     const quoteScope = await resolveQuoteCreatorScope(client, scope, {
-      companyId: event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id')
+      companyId:
+        event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id')
     });
 
     const { data: existingQuote, error: existingError } = await client

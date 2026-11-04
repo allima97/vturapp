@@ -43,7 +43,10 @@ export async function handleAdminPlanosGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      return json({ error: 'Somente administradores podem acessar planos.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Somente administradores podem acessar planos.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { data, error: queryError } = await client
@@ -71,14 +74,18 @@ export async function handleAdminPlanosPost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      return json({ error: 'Somente administradores podem gerenciar planos.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Somente administradores podem gerenciar planos.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const body = readPlanBody(bodyResult.data);
     const { id, nome, descricao, valor_mensal, moeda, ativo } = body;
     const planId = String(id || '').trim();
 
-    if (!String(nome || '').trim()) return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!String(nome || '').trim())
+      return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const payload = {
       nome: String(nome).trim(),
@@ -90,11 +97,20 @@ export async function handleAdminPlanosPost(event: RequestEvent) {
 
     let result;
     if (isUuid(planId)) {
-      const { data, error: updateError } = await client.from('plans').update(payload).eq('id', planId).select('id').single();
+      const { data, error: updateError } = await client
+        .from('plans')
+        .update(payload)
+        .eq('id', planId)
+        .select('id')
+        .single();
       if (updateError) throw updateError;
       result = data;
     } else {
-      const { data, error: insertError } = await client.from('plans').insert(payload).select('id').single();
+      const { data, error: insertError } = await client
+        .from('plans')
+        .insert(payload)
+        .select('id')
+        .single();
       if (insertError) throw insertError;
       result = data;
     }
@@ -119,7 +135,8 @@ export async function handleAdminPlanosDelete(event: RequestEvent) {
     }
 
     const id = String(event.url.searchParams.get('id') || '').trim();
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const { error: deleteError } = await client.from('plans').delete().eq('id', id);
     if (deleteError) throw deleteError;

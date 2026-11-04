@@ -3,7 +3,7 @@
 **Estado:** CONCLUÍDA  
 **Responsável / data:** 2026-10-26  
 **SHA:** 8bb9f19d537adf7b3b2a9d36c80436c5301a5934  
-**Branch:** main (up to date with origin/main)  
+**Branch:** main (up to date with origin/main)
 
 ## Alterações não rastreadas
 
@@ -11,50 +11,50 @@
 
 ## Versões resolvidas (package-lock.json)
 
-| Pacote | Versão resolvida |
-|---|---|
-| `@sveltejs/kit` | 2.59.0 |
-| `svelte` | 5.55.1 |
-| `vite` | 5.4.21 |
-| `@sveltejs/adapter-cloudflare` | 7.2.8 |
-| `wrangler` | 4.87.0 |
-| `hono` | 4.12.16 |
-| `tailwindcss` | 4.3.3 |
-| `flowbite` | 3.1.2 |
-| `vitest` | 2.1.9 |
-| `typescript` | 5.9.3 |
-| Node.js | 22.23.4 |
-| npm | 10.9.9 |
+| Pacote                         | Versão resolvida |
+| ------------------------------ | ---------------- |
+| `@sveltejs/kit`                | 2.59.0           |
+| `svelte`                       | 5.55.1           |
+| `vite`                         | 5.4.21           |
+| `@sveltejs/adapter-cloudflare` | 7.2.8            |
+| `wrangler`                     | 4.87.0           |
+| `hono`                         | 4.12.16          |
+| `tailwindcss`                  | 4.3.3            |
+| `flowbite`                     | 3.1.2            |
+| `vitest`                       | 2.1.9            |
+| `typescript`                   | 5.9.3            |
+| Node.js                        | 22.23.4          |
+| npm                            | 10.9.9           |
 
 > **Nota:** `@sveltejs/kit` latest em npm aponta para 3.x (breaking changes em config e Cloudflare). Manter 2.59.0 até F1 provar o upgrade com evidências.
 
 ## Inventário de arquivos (fotografia)
 
-| Tipo | Quantidade |
-|---|---|
-| `+server.ts` em `src/routes` | 259 |
-| `+page.svelte` em `src/routes` | 139 |
-| Arquivos TypeScript totais em `src/` | 829 |
-| Arquivos `*.test.ts` | 102 |
-| Componentes Svelte | 405 |
-| Migrações SQL (`supabase/migrations/`) | 10 |
+| Tipo                                   | Quantidade |
+| -------------------------------------- | ---------- |
+| `+server.ts` em `src/routes`           | 259        |
+| `+page.svelte` em `src/routes`         | 139        |
+| Arquivos TypeScript totais em `src/`   | 829        |
+| Arquivos `*.test.ts`                   | 102        |
+| Componentes Svelte                     | 405        |
+| Migrações SQL (`supabase/migrations/`) | 10         |
 
 ## Inventário de API (`docs/api-inventory.json`)
 
-| Métrica | Valor |
-|---|---|
-| Total de entradas | 258 |
-| Endpoints via Hono | 249 |
-| Endpoints só SvelteKit | 9 |
-| `GET` | 175 |
-| `POST` | 135 |
-| `DELETE` | 46 |
-| `PATCH` | 27 |
-| `PUT` | 5 |
-| Tabelas únicas referenciadas | 95 |
-| RPCs únicas | 4 (`buscar_cidades`, `gestor_equipe_base_id`, `rpc_dashboard_consultorias`, `set_gestor_vendedor_relacao`) |
-| Endpoints debug-only | 5 |
-| Endpoints com cron-secret | 3 |
+| Métrica                      | Valor                                                                                                      |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Total de entradas            | 258                                                                                                        |
+| Endpoints via Hono           | 249                                                                                                        |
+| Endpoints só SvelteKit       | 9                                                                                                          |
+| `GET`                        | 175                                                                                                        |
+| `POST`                       | 135                                                                                                        |
+| `DELETE`                     | 46                                                                                                         |
+| `PATCH`                      | 27                                                                                                         |
+| `PUT`                        | 5                                                                                                          |
+| Tabelas únicas referenciadas | 95                                                                                                         |
+| RPCs únicas                  | 4 (`buscar_cidades`, `gestor_equipe_base_id`, `rpc_dashboard_consultorias`, `set_gestor_vendedor_relacao`) |
+| Endpoints debug-only         | 5                                                                                                          |
+| Endpoints com cron-secret    | 3                                                                                                          |
 
 > Nota: 258 entradas no inventário vs 259 arquivos `+server.ts` — há uma discrepância de 1. Reconciliar em F0-02.
 
@@ -99,14 +99,14 @@ format          prettier --write .
 
 ## Problemas preexistentes identificados
 
-| ID | Problema | Destino |
-|---|---|---|
-| P01 | `npm test` chama `vitest` sem `--run`; não encerra em CI | F0-05: adaptar para `vitest run` |
-| P02 | `cf:build` inclui `scripts/patch-worker-scheduled.js` para cron | F1-02: provar cron nativo `scheduled()` antes de remover o patch |
-| P03 | Placement em Oregon ligado ao Supabase (us-west-2) | F1-01: ambiente novo com D1; rever placement para São Paulo |
-| P04 | `docs/api-inventory.json` tem 258 entradas vs 259 arquivos `+server.ts` | F0-02: reconciliar por rota + método |
-| P05 | KV usado para invalidação de cache (consistência eventual) | F4-04: rever estratégia de read model sem KV como autoridade |
-| P06 | 57 arquivos em `src/lib/` acoplados ao Supabase | Mapeamento completo em F0-02/F0-03 |
+| ID  | Problema                                                                | Destino                                                          |
+| --- | ----------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| P01 | `npm test` chama `vitest` sem `--run`; não encerra em CI                | F0-05: adaptar para `vitest run`                                 |
+| P02 | `cf:build` inclui `scripts/patch-worker-scheduled.js` para cron         | F1-02: provar cron nativo `scheduled()` antes de remover o patch |
+| P03 | Placement em Oregon ligado ao Supabase (us-west-2)                      | F1-01: ambiente novo com D1; rever placement para São Paulo      |
+| P04 | `docs/api-inventory.json` tem 258 entradas vs 259 arquivos `+server.ts` | F0-02: reconciliar por rota + método                             |
+| P05 | KV usado para invalidação de cache (consistência eventual)              | F4-04: rever estratégia de read model sem KV como autoridade     |
+| P06 | 57 arquivos em `src/lib/` acoplados ao Supabase                         | Mapeamento completo em F0-02/F0-03                               |
 
 ## Vitest workspace
 

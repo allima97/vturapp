@@ -13,12 +13,12 @@ const config = {
       }
     }),
     alias: {
-      '$components': 'src/lib/components',
-      '$stores': 'src/lib/stores',
-      '$db': 'src/lib/db',
-      '$api': 'src/lib/api',
-      '$theme': 'src/lib/theme',
-      '$utils': 'src/lib/utils'
+      $components: 'src/lib/components',
+      $stores: 'src/lib/stores',
+      $db: 'src/lib/db',
+      $api: 'src/lib/api',
+      $theme: 'src/lib/theme',
+      $utils: 'src/lib/utils'
     }
   }
 };

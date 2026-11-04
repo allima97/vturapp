@@ -13,15 +13,15 @@ import type { MuralRecado } from '$lib/server/db/schema';
 // ─── Tipos ───────────────────────────────────────────────────────────────────
 
 export interface RecadoInput {
-  assunto?: string;          // default ''
+  assunto?: string; // default ''
   conteudo: string;
-  destinatarioId?: string | null;  // null = para toda a empresa
+  destinatarioId?: string | null; // null = para toda a empresa
 }
 
 export interface ListarRecadosOpts {
-  since?: string;             // ISO timestamp; retorna apenas criados >= since
-  userId?: string;            // filtra por destinatário (null = para toda empresa)
-  limit?: number;             // default 50
+  since?: string; // ISO timestamp; retorna apenas criados >= since
+  userId?: string; // filtra por destinatário (null = para toda empresa)
+  limit?: number; // default 50
 }
 
 // ─── Erro de domínio ─────────────────────────────────────────────────────────
@@ -52,7 +52,8 @@ export async function criarRecado(
 ): Promise<MuralRecado> {
   const conteudo = dados.conteudo?.trim() ?? '';
   if (!conteudo) throw new MuralError('conteudo é obrigatório.', 'VALIDACAO');
-  if (conteudo.length > 64_000) throw new MuralError('conteudo: máximo 64 000 caracteres.', 'VALIDACAO');
+  if (conteudo.length > 64_000)
+    throw new MuralError('conteudo: máximo 64 000 caracteres.', 'VALIDACAO');
 
   const assunto = (dados.assunto ?? '').trim().slice(0, 200);
   const ts = agora();
@@ -66,7 +67,7 @@ export async function criarRecado(
       assunto,
       conteudo,
       criadoEm: ts,
-      atualizadoEm: ts,
+      atualizadoEm: ts
     })
     .returning();
 
@@ -120,7 +121,7 @@ export async function listarRecados(
   const conds = [
     eq(muralRecados.empresaId, empresaId),
     // Mensagens para toda empresa OU endereçadas ao usuário
-    or(isNull(muralRecados.destinatarioId), eq(muralRecados.destinatarioId, userId))!,
+    or(isNull(muralRecados.destinatarioId), eq(muralRecados.destinatarioId, userId))!
   ];
 
   if (opts.since) {

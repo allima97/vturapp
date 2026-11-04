@@ -46,7 +46,11 @@
   const loadGuard = createLoadGuard();
 
   $: buscaNormalizada = busca.trim().toLowerCase();
-  $: canEdit = !$permissoes.ready || $permissoes.isSystemAdmin || permissoes.can('equipe', 'edit') || permissoes.can('parametros', 'edit');
+  $: canEdit =
+    !$permissoes.ready ||
+    $permissoes.isSystemAdmin ||
+    permissoes.can('equipe', 'edit') ||
+    permissoes.can('parametros', 'edit');
 
   async function load() {
     const request = loadGuard.next();
@@ -100,13 +104,20 @@
   $: usuariosFiltrados = usuarios.filter((u) => {
     if (!buscaNormalizada) return true;
     return (
-      String(u.nome_completo || '').toLowerCase().includes(buscaNormalizada) ||
-      String(u.email || '').toLowerCase().includes(buscaNormalizada)
+      String(u.nome_completo || '')
+        .toLowerCase()
+        .includes(buscaNormalizada) ||
+      String(u.email || '')
+        .toLowerCase()
+        .includes(buscaNormalizada)
     );
   });
 
   $: equipeAtual = usuarios.filter((u) => isNaEquipe(u.id));
-  $: convitesPendentes = convites.reduce((total, convite) => total + (convite.status === 'pending' ? 1 : 0), 0);
+  $: convitesPendentes = convites.reduce(
+    (total, convite) => total + (convite.status === 'pending' ? 1 : 0),
+    0
+  );
 
   onMount(load);
 </script>
@@ -119,13 +130,8 @@
   title="Gestão de Equipe"
   subtitle="Gerencie os vendedores da sua equipe e visualize convites pendentes."
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Parâmetros', href: '/parametros' },
-    { label: 'Equipe' }
-  ]}
-  actions={[
-    { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }
-  ]}
+  breadcrumbs={[{ label: 'Parâmetros', href: '/parametros' }, { label: 'Equipe' }]}
+  actions={[{ label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }]}
 />
 
 <div class="vtur-kpi-grid vtur-kpi-grid-3 mb-6">
@@ -171,7 +177,9 @@
   {#if loading}
     <LoadingState compact={true} />
   {:else if usuariosFiltrados.length === 0}
-    <div class="rounded-vtur-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">
+    <div
+      class="rounded-vtur-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500"
+    >
       Nenhum usuário encontrado.
     </div>
   {:else}
@@ -196,9 +204,15 @@
               <td class="px-4 py-3 text-slate-600">{getTipoNome(usuario) || '-'}</td>
               <td class="px-4 py-3 text-center">
                 {#if isNaEquipe(usuario.id)}
-                  <span class="inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">Sim</span>
+                  <span
+                    class="inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700"
+                    >Sim</span
+                  >
                 {:else}
-                  <span class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">Não</span>
+                  <span
+                    class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600"
+                    >Não</span
+                  >
                 {/if}
               </td>
               {#if canEdit}
@@ -241,7 +255,9 @@
               <td class="px-4 py-3 text-slate-900">{convite.invited_email}</td>
               <td class="px-4 py-3 text-slate-600">{convite.invited_by_name || '-'}</td>
               <td class="px-4 py-3">
-                <span class="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                <span
+                  class="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700"
+                >
                   {convite.status === 'pending' ? 'Pendente' : convite.status}
                 </span>
               </td>

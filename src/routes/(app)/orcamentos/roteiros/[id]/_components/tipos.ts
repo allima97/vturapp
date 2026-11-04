@@ -102,13 +102,68 @@ export function newDia(ordem: number): RotDia {
   return { ordem, cidade: '', percurso: '', data: '', descricao: '' };
 }
 export function newHotel(ordem: number): RotHotel {
-  return { ordem, cidade: '', hotel: '', endereco: '', data_inicio: '', data_fim: '', noites: null, qtd_apto: null, apto: '', categoria: '', regime: '', tipo_tarifa: '', qtd_adultos: null, qtd_criancas: null, valor_original: null, valor_final: null };
+  return {
+    ordem,
+    cidade: '',
+    hotel: '',
+    endereco: '',
+    data_inicio: '',
+    data_fim: '',
+    noites: null,
+    qtd_apto: null,
+    apto: '',
+    categoria: '',
+    regime: '',
+    tipo_tarifa: '',
+    qtd_adultos: null,
+    qtd_criancas: null,
+    valor_original: null,
+    valor_final: null
+  };
 }
 export function newPasseio(ordem: number): RotPasseio {
-  return { ordem, cidade: '', passeio: '', fornecedor: '', data_inicio: '', data_fim: '', tipo: 'Passeio', ingressos: '', qtd_adultos: null, qtd_criancas: null, valor_original: null, valor_final: null };
+  return {
+    ordem,
+    cidade: '',
+    passeio: '',
+    fornecedor: '',
+    data_inicio: '',
+    data_fim: '',
+    tipo: 'Passeio',
+    ingressos: '',
+    qtd_adultos: null,
+    qtd_criancas: null,
+    valor_original: null,
+    valor_final: null
+  };
 }
 export function newTransporte(ordem: number): RotTransporte {
-  return { ordem, tipo: 'Aéreo', fornecedor: '', descricao: '', data_inicio: '', data_fim: '', categoria: '', observacao: '', trecho: '', cia_aerea: '', data_voo: '', classe_reserva: '', hora_saida: '', aeroporto_saida: '', duracao_voo: '', tipo_voo: 'Internacional', hora_chegada: '', aeroporto_chegada: '', tarifa_nome: '', reembolso_tipo: '', qtd_adultos: null, qtd_criancas: null, valor_total: null, taxas: null };
+  return {
+    ordem,
+    tipo: 'Aéreo',
+    fornecedor: '',
+    descricao: '',
+    data_inicio: '',
+    data_fim: '',
+    categoria: '',
+    observacao: '',
+    trecho: '',
+    cia_aerea: '',
+    data_voo: '',
+    classe_reserva: '',
+    hora_saida: '',
+    aeroporto_saida: '',
+    duracao_voo: '',
+    tipo_voo: 'Internacional',
+    hora_chegada: '',
+    aeroporto_chegada: '',
+    tarifa_nome: '',
+    reembolso_tipo: '',
+    qtd_adultos: null,
+    qtd_criancas: null,
+    valor_total: null,
+    taxas: null
+  };
 }
 export function newInvestimento(ordem: number): RotInvestimento {
   return { ordem, tipo: '', valor_por_pessoa: null, qtd_apto: null, valor_por_apto: null };
@@ -122,7 +177,11 @@ export function reorder<T extends { ordem: number }>(arr: T[]): T[] {
   return arr.map((item, i) => ({ ...item, ordem: i }));
 }
 
-export function addItem<T extends { ordem: number }>(list: T[], newFn: (o: number) => T, afterIndex: number = list.length - 1): T[] {
+export function addItem<T extends { ordem: number }>(
+  list: T[],
+  newFn: (o: number) => T,
+  afterIndex: number = list.length - 1
+): T[] {
   const next = [...list];
   next.splice(afterIndex + 1, 0, newFn(afterIndex + 1));
   return reorder(next);

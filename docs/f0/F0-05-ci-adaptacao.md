@@ -2,7 +2,7 @@
 
 **Estado:** CONCLUÍDA  
 **Responsável / data:** 2026-10-26  
-**Dependência:** F0-01  
+**Dependência:** F0-01
 
 ---
 
@@ -20,6 +20,7 @@
 ### CI / pipeline externo
 
 Nenhum arquivo de CI encontrado:
+
 - Sem `.github/workflows/`
 - Sem `.gitlab-ci.yml`
 - Sem `Makefile`
@@ -45,19 +46,19 @@ O deploy atual é manual: `npm run cf:deploy` (build local + wrangler deploy).
 
 ## Baseline de testes (estado atual)
 
-| Grupo | Critério | Quantidade |
-|---|---|---|
-| `unit` | `*.test.ts` excluindo `*.dom.test.ts` | 94 arquivos |
-| `dom` | `*.dom.test.ts` | 8 arquivos |
-| **Total** | | **102 arquivos** |
+| Grupo     | Critério                              | Quantidade       |
+| --------- | ------------------------------------- | ---------------- |
+| `unit`    | `*.test.ts` excluindo `*.dom.test.ts` | 94 arquivos      |
+| `dom`     | `*.dom.test.ts`                       | 8 arquivos       |
+| **Total** |                                       | **102 arquivos** |
 
 ### Dependências de Supabase em testes
 
 Dois arquivos de teste importam diretamente tipos/clientes Supabase:
 
-| Arquivo | Estratégia |
-|---|---|
-| `src/lib/server/vendasSave.test.ts` | Mock inline manual (`QueryMock`); não usa cliente real — portável |
+| Arquivo                                                   | Estratégia                                                                                                   |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `src/lib/server/vendasSave.test.ts`                       | Mock inline manual (`QueryMock`); não usa cliente real — portável                                            |
 | `src/lib/server/api/routes/crm/branding.contract.test.ts` | Usa `createFakeSupabase` + `vi.mock('$lib/server/v1', ...)` — precisa atualizar quando `v1.ts` for reescrito |
 
 ### Testes de conciliação (X02 — serão excluídos)
