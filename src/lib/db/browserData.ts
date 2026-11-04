@@ -46,6 +46,10 @@ function mapSession(
 
 async function readSession() {
   const result = await authClient.getSession();
+  // Falha de rede/servidor não é prova de logout: propaga para o chamador decidir.
+  if (result.error && result.error.status !== 401 && result.error.status !== 403) {
+    throw new Error(result.error.message || 'Falha ao ler a sessão.');
+  }
   return mapSession(result.data);
 }
 
@@ -361,9 +365,9 @@ export function createBrowserDataClient() {
         callback: (event: string, session: BrowserSession | null) => void | Promise<void>
       ) {
         listeners.add(callback);
-        void readSession().then((session) =>
-          callback(session ? 'SIGNED_IN' : 'INITIAL_SESSION', session)
-        );
+        void readSession()
+          .then((session) => callback(session ? 'SIGNED_IN' : 'INITIAL_SESSION', session))
+          .catch(() => {});
         return {
           data: {
             subscription: { unsubscribe: () => listeners.delete(callback) }

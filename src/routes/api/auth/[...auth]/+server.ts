@@ -21,7 +21,7 @@
 import type { RequestHandler } from './$types';
 import { createAuth } from '$lib/auth';
 
-const handler: RequestHandler = async ({ request, platform }) => {
+const handler: RequestHandler = async ({ request, platform, url }) => {
   const env = platform?.env;
 
   if (!env?.DB) {
@@ -31,10 +31,9 @@ const handler: RequestHandler = async ({ request, platform }) => {
     return new Response('BETTER_AUTH_SECRET não configurado', { status: 503 });
   }
 
-  const baseURL =
-    env.PUBLIC_ENVIRONMENT === 'production'
-      ? 'https://vturapp.com.br'
-      : (env.PUBLIC_APP_URL ?? 'http://localhost:5173');
+  // Mesma origem usada por /api/auth/login e pelo hook de sessão; uma base fixa
+  // diferente da origem acessada fazia o navegador não enxergar a sessão recém-criada.
+  const baseURL = url.origin;
 
   const auth = createAuth(
     env.DB,
