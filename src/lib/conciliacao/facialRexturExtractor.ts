@@ -35,7 +35,11 @@ const IGNORED_LOC_CANDIDATES = new Set(['PRAZO', 'DADOS', 'FILIAL', 'GRUPO', 'ST
 
 function parseCurrencyBR(value: string | null | undefined): number | null {
   if (!value) return null;
-  const clean = value.replace(/R\$\s*/gi, '').replace(/\./g, '').replace(',', '.').trim();
+  const clean = value
+    .replace(/R\$\s*/gi, '')
+    .replace(/\./g, '')
+    .replace(',', '.')
+    .trim();
   const n = parseFloat(clean);
   return isFinite(n) ? n : null;
 }
@@ -66,18 +70,26 @@ function normalizeWS(s: string) {
 }
 
 function extractLoc(text: string) {
-  const reservaTitleMatch = text.match(/Reserva\s+A[eé]rea\s*-\s*(?:[^/\n]+\/\s*){3}([A-Z0-9]{5,8})\b/i);
+  const reservaTitleMatch = text.match(
+    /Reserva\s+A[eé]rea\s*-\s*(?:[^/\n]+\/\s*){3}([A-Z0-9]{5,8})\b/i
+  );
   if (reservaTitleMatch?.[1]) return reservaTitleMatch[1].trim().toUpperCase();
 
-  const infoGeraisMatch = text.match(/informa[cç][oõ]es\s+gerais[\s\S]*?\bloc\b[\s\S]*?dados\s+adicionais\s+([A-Z0-9]{5,8})\b/i);
+  const infoGeraisMatch = text.match(
+    /informa[cç][oõ]es\s+gerais[\s\S]*?\bloc\b[\s\S]*?dados\s+adicionais\s+([A-Z0-9]{5,8})\b/i
+  );
   if (infoGeraisMatch?.[1]) return infoGeraisMatch[1].trim().toUpperCase();
 
-  const bilheteLocMatch = text.match(/n[úu]mero\s+do\s+bilhete[\s\S]*?\bloc\b[\s\S]*?\b\d{3}\s+\d{10,}\s+([A-Z0-9]{5,8})\b/i);
+  const bilheteLocMatch = text.match(
+    /n[úu]mero\s+do\s+bilhete[\s\S]*?\bloc\b[\s\S]*?\b\d{3}\s+\d{10,}\s+([A-Z0-9]{5,8})\b/i
+  );
   if (bilheteLocMatch?.[1]) return bilheteLocMatch[1].trim().toUpperCase();
 
   const fallbackMatches = [...text.matchAll(/\bloc\b[\s\n:]+([A-Z0-9]{5,8})\b/gi)];
   for (const match of fallbackMatches) {
-    const candidate = String(match[1] || '').trim().toUpperCase();
+    const candidate = String(match[1] || '')
+      .trim()
+      .toUpperCase();
     if (candidate && !IGNORED_LOC_CANDIDATES.has(candidate)) return candidate;
   }
 
@@ -85,9 +97,15 @@ function extractLoc(text: string) {
 }
 
 function extractTarifaTotals(text: string) {
-  const section = text.match(/tarifas[\s\S]*?(?=\btarifar\b|\bnotas\b|\bservi[cç]os\s+complementares\b)/i)?.[0] || text;
+  const section =
+    text.match(/tarifas[\s\S]*?(?=\btarifar\b|\bnotas\b|\bservi[cç]os\s+complementares\b)/i)?.[0] ||
+    text;
   const rows = [...section.matchAll(/(?:US\$\s*[\d.,]+\s+)?((?:R\$\s*[\d.,]+(?:\s+|$)){4,5})/gi)]
-    .map((match) => [...String(match[1] || '').matchAll(/R\$\s*[\d.,]+/gi)].map((value) => parseCurrencyBR(value[0])))
+    .map((match) =>
+      [...String(match[1] || '').matchAll(/R\$\s*[\d.,]+/gi)].map((value) =>
+        parseCurrencyBR(value[0])
+      )
+    )
     .filter((values) => values.length >= 4 && values.every((value) => value != null)) as number[][];
 
   if (rows.length === 0) return null;
@@ -120,7 +138,13 @@ function extractTarifaTotals(text: string) {
 
 export interface RexturContrato {
   loc: string;
-  passageiros: { nome: string; sobrenome: string; genero: string | null; nascimento: string | null; cpf: string }[];
+  passageiros: {
+    nome: string;
+    sobrenome: string;
+    genero: string | null;
+    nascimento: string | null;
+    cpf: string;
+  }[];
   tarifa: number | null;
   taxa_embarque: number | null;
   rc: number | null;
@@ -134,7 +158,10 @@ export interface RexturContrato {
   cpfAusente: true;
 }
 
-export function extractRexturFromText(text: string): { contratos: ContratoDraft[]; raw_text: string } {
+export function extractRexturFromText(text: string): {
+  contratos: ContratoDraft[];
+  raw_text: string;
+} {
   // ── LOC ─────────────────────────────────────────────────────────────────────
   const loc = extractLoc(text);
   if (!loc) throw new Error('LOC não encontrado. Verifique se o texto é uma Reserva Fácil Rextur.');
@@ -153,7 +180,7 @@ export function extractRexturFromText(text: string): { contratos: ContratoDraft[
 
   // Destinos: pegar cidades únicas dos segmentos
   // Formato típico: "São Paulo - Guarulhos   Nova Iorque - John F Kennedy"
-  const destinoMatch = text.match(/HK\s+([\w\sÀ-ú\/\-]+?)\s+([\w\sÀ-ú\/\-]+?)\s+\d{3}/);
+  const destinoMatch = text.match(/HK\s+([\w\sÀ-ú/-]+?)\s+([\w\sÀ-ú/-]+?)\s+\d{3}/);
   let origem = null as string | null;
   let destino = null as string | null;
   if (destinoMatch) {
@@ -167,7 +194,8 @@ export function extractRexturFromText(text: string): { contratos: ContratoDraft[
   const passageiros: PassageiroDraft[] = [];
 
   // Localizar bloco de passageiros
-  const passSection = text.match(/passageiros[\s\S]*?(?=assentos|tarifas|bilhetes|ações|pedidos)/i)?.[0] || text;
+  const passSection =
+    text.match(/passageiros[\s\S]*?(?=assentos|tarifas|bilhetes|ações|pedidos)/i)?.[0] || text;
 
   // Linhas de passageiro: "ADT  SOBRENOME  NOME  Masculino|Feminino"
   const passRegex = /ADT\s+([\w\s]+?)\s+([\w]+)\s+(Masculino|Feminino)/gi;
@@ -183,11 +211,16 @@ export function extractRexturFromText(text: string): { contratos: ContratoDraft[
     let cpf = '';
     let nascimento: string | null = null;
 
-    const ssrRegex = /SSR DOCS[^/]*\/I\/BR\/(\d{11})\/BR\/(\d{2})([A-Z]{3})(\d{4})\/[MF]\/\S+\/([\w\s]+)/gi;
+    const ssrRegex =
+      /SSR DOCS[^/]*\/I\/BR\/(\d{11})\/BR\/(\d{2})([A-Z]{3})(\d{4})\/[MF]\/\S+\/([\w\s]+)/gi;
     let sm: RegExpExecArray | null;
     while ((sm = ssrRegex.exec(text)) !== null) {
       const ssrNome = normalizeWS(sm[5]).toUpperCase();
-      if (ssrNome.includes(sobrenome) || ssrNome.includes(nome) || nomeSearch.includes(ssrNome.split('/')[0]?.trim())) {
+      if (
+        ssrNome.includes(sobrenome) ||
+        ssrNome.includes(nome) ||
+        nomeSearch.includes(ssrNome.split('/')[0]?.trim())
+      ) {
         cpf = sm[1];
         const day = sm[2];
         const mon = SSR_MONTH_MAP[sm[3].toUpperCase()] || '01';
@@ -242,7 +275,7 @@ export function extractRexturFromText(text: string): { contratos: ContratoDraft[
     valor_bruto: valorTotal,
     total: valorTotal,
     desconto: null,
-    parcelas: [{ numero: '1', valor: valorTotal, vencimento: null }],
+    parcelas: [{ numero: '1', valor: valorTotal, vencimento: null }]
   };
 
   const contrato: ContratoDraft = {
@@ -255,17 +288,17 @@ export function extractRexturFromText(text: string): { contratos: ContratoDraft[
     produto_tipo: 'Aéreo',
     contratante: {
       nome: passageiros[0]?.nome || '',
-      cpf: '',  // ausente no documento
+      cpf: '' // ausente no documento
     },
     passageiros,
     pagamentos: [pagamento],
     total_bruto: valorTotal,
     total_pago: valorTotal,
     taxas_embarque: taxaEmbarque,
-    taxa_du: rav,   // RAV/RAC é persistido em valor_rav no importador
+    taxa_du: rav, // RAV/RAC é persistido em valor_rav no importador
     rc,
     tipo_pacote: 'Passagem Facial',
-    raw_text: text,
+    raw_text: text
   };
 
   return { contratos: [contrato], raw_text: text };

@@ -6,7 +6,13 @@
   import Dialog from '$lib/components/ui/Dialog.svelte';
   import DataTable from '$lib/components/ui/DataTable.svelte';
   import Badge from '$lib/components/ui/Badge.svelte';
-  import { FieldInput, FieldSelect, FieldTextarea, LoadingState, BottomSheet } from '$lib/components/ui';
+  import {
+    FieldInput,
+    FieldSelect,
+    FieldTextarea,
+    LoadingState,
+    BottomSheet
+  } from '$lib/components/ui';
   import KPICard from '$lib/components/kpis/KPICard.svelte';
   import { toast } from '$lib/stores/ui';
   import { confirmAction } from '$lib/stores/confirm';
@@ -66,9 +72,24 @@
     colorClass: string;
     bodyClass: string;
   }> = [
-    { value: 'novo', label: 'A Fazer', colorClass: 'bg-blue-600 text-white', bodyClass: 'bg-blue-50/70' },
-    { value: 'agendado', label: 'Fazendo', colorClass: 'bg-amber-500 text-white', bodyClass: 'bg-amber-50/80' },
-    { value: 'em_andamento', label: 'Feito', colorClass: 'bg-emerald-600 text-white', bodyClass: 'bg-emerald-50/80' }
+    {
+      value: 'novo',
+      label: 'A Fazer',
+      colorClass: 'bg-blue-600 text-white',
+      bodyClass: 'bg-blue-50/70'
+    },
+    {
+      value: 'agendado',
+      label: 'Fazendo',
+      colorClass: 'bg-amber-500 text-white',
+      bodyClass: 'bg-amber-50/80'
+    },
+    {
+      value: 'em_andamento',
+      label: 'Feito',
+      colorClass: 'bg-emerald-600 text-white',
+      bodyClass: 'bg-emerald-50/80'
+    }
   ];
 
   const PRIORITY_OPTIONS: Array<{ value: TodoPrioridade; label: string }> = [
@@ -215,9 +236,14 @@
     errorMessage = null;
 
     try {
-      const payload = await apiGet<{ categorias?: TodoCategoria[]; itens?: TodoItem[] }>('/api/v1/todo/board', {
-        ts: Date.now()
-      }, controller.signal, 60_000);
+      const payload = await apiGet<{ categorias?: TodoCategoria[]; itens?: TodoItem[] }>(
+        '/api/v1/todo/board',
+        {
+          ts: Date.now()
+        },
+        controller.signal,
+        60_000
+      );
       if (requestSeq !== boardRequestSeq) return;
       categorias = Array.isArray(payload?.categorias) ? payload.categorias : [];
       itens = Array.isArray(payload?.itens) ? payload.itens : [];
@@ -266,13 +292,7 @@
         statusLabel,
         createdAtLabel,
         updatedAtLabel,
-        searchBlob: [
-          item.titulo,
-          item.descricao || '',
-          categoriaNome,
-          prioridadeLabel,
-          statusLabel
-        ]
+        searchBlob: [item.titulo, item.descricao || '', categoriaNome, prioridadeLabel, statusLabel]
           .join(' ')
           .toLowerCase()
       };
@@ -280,7 +300,8 @@
       return enriched;
     })
     .sort((left, right) => {
-      const statusOrder = STATUS_COLUMNS.findIndex((item) => item.value === left.visibleStatus) -
+      const statusOrder =
+        STATUS_COLUMNS.findIndex((item) => item.value === left.visibleStatus) -
         STATUS_COLUMNS.findIndex((item) => item.value === right.visibleStatus);
       if (statusOrder !== 0) return statusOrder;
 
@@ -300,7 +321,8 @@
     if (normalizedSearchQuery && !item.searchBlob.includes(normalizedSearchQuery)) return false;
     if (filtroStatus !== 'todas' && item.visibleStatus !== filtroStatus) return false;
     if (filtroPrioridade !== 'todas' && item.prioridade !== filtroPrioridade) return false;
-    if (filtroCategoria !== 'todas' && (item.categoria_id || 'sem_categoria') !== filtroCategoria) return false;
+    if (filtroCategoria !== 'todas' && (item.categoria_id || 'sem_categoria') !== filtroCategoria)
+      return false;
     return true;
   }
 
@@ -446,9 +468,8 @@
       });
 
       const updatedItem = payload?.item as TodoItem | undefined;
-      const nextArquivo = action === 'archive'
-        ? updatedItem?.arquivo || new Date().toISOString()
-        : null;
+      const nextArquivo =
+        action === 'archive' ? updatedItem?.arquivo || new Date().toISOString() : null;
       const nextUpdatedAt = updatedItem?.updated_at || new Date().toISOString();
 
       itens = itens.map((item) =>
@@ -563,9 +584,7 @@
   title="Tarefas"
   subtitle="Crie, categorize e acompanhe suas tarefas no board operacional do legado."
   color="operacao"
-  breadcrumbs={[
-    { label: 'Tarefas' }
-  ]}
+  breadcrumbs={[{ label: 'Tarefas' }]}
   actions={[
     { label: 'Nova categoria', onClick: openNewCategory, variant: 'secondary', icon: Tag },
     { label: 'Nova tarefa', onClick: openNewTask, variant: 'primary', icon: Plus }
@@ -586,7 +605,7 @@
     <SlidersHorizontal size={16} class="mr-2" />
     Filtros
     {#if searchQuery || filtroStatus !== 'todas' || filtroPrioridade !== 'todas' || filtroCategoria !== 'todas'}
-      <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-operacao-500"></span>
+      <span class="bg-operacao-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
     {/if}
   </Button>
 </div>
@@ -606,7 +625,10 @@
       id="todo-status-mobile"
       label="Coluna"
       bind:value={filtroStatus}
-      options={[{ value: 'todas', label: 'Todas' }, ...STATUS_COLUMNS.map((c) => ({ value: c.value, label: c.label }))]}
+      options={[
+        { value: 'todas', label: 'Todas' },
+        ...STATUS_COLUMNS.map((c) => ({ value: c.value, label: c.label }))
+      ]}
       placeholder={null}
       class_name="w-full"
     />
@@ -615,7 +637,10 @@
       id="todo-priority-mobile"
       label="Prioridade"
       bind:value={filtroPrioridade}
-      options={[{ value: 'todas', label: 'Todas' }, ...PRIORITY_OPTIONS.map((o) => ({ value: o.value, label: o.label }))]}
+      options={[
+        { value: 'todas', label: 'Todas' },
+        ...PRIORITY_OPTIONS.map((o) => ({ value: o.value, label: o.label }))
+      ]}
       placeholder={null}
       class_name="w-full"
     />
@@ -634,7 +659,7 @@
     />
 
     <div class="min-w-0">
-      <p class="mb-1.5 block text-xs font-medium leading-5 text-slate-700">Visualização</p>
+      <p class="mb-1.5 block text-xs leading-5 font-medium text-slate-700">Visualização</p>
       <div class="flex gap-2">
         <Button
           variant={viewMode === 'kanban' ? 'selected' : 'secondary'}
@@ -665,7 +690,7 @@
 </BottomSheet>
 
 <Card color="operacao" class="mb-6 hidden sm:block">
-  <div class="grid grid-cols-1 lg:grid-cols-[1.6fr_repeat(4,minmax(0,1fr))] gap-4">
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_repeat(4,minmax(0,1fr))]">
     <div>
       <FieldInput
         id="todo-search"
@@ -681,7 +706,10 @@
       id="todo-status"
       label="Coluna"
       bind:value={filtroStatus}
-      options={[{ value: 'todas', label: 'Todas' }, ...STATUS_COLUMNS.map((c) => ({ value: c.value, label: c.label }))]}
+      options={[
+        { value: 'todas', label: 'Todas' },
+        ...STATUS_COLUMNS.map((c) => ({ value: c.value, label: c.label }))
+      ]}
       placeholder={null}
       class_name="w-full"
     />
@@ -690,7 +718,10 @@
       id="todo-priority"
       label="Prioridade"
       bind:value={filtroPrioridade}
-      options={[{ value: 'todas', label: 'Todas' }, ...PRIORITY_OPTIONS.map((o) => ({ value: o.value, label: o.label }))]}
+      options={[
+        { value: 'todas', label: 'Todas' },
+        ...PRIORITY_OPTIONS.map((o) => ({ value: o.value, label: o.label }))
+      ]}
       placeholder={null}
       class_name="w-full"
     />
@@ -709,7 +740,7 @@
     />
 
     <div class="min-w-0">
-      <p class="mb-1.5 block text-xs font-medium leading-5 text-slate-700">Visualização</p>
+      <p class="mb-1.5 block text-xs leading-5 font-medium text-slate-700">Visualização</p>
       <div class="flex gap-2">
         <Button
           variant={viewMode === 'kanban' ? 'selected' : 'secondary'}
@@ -736,10 +767,12 @@
 </Card>
 
 <Card color="operacao" class="mb-6">
-  <div class="flex items-center justify-between gap-3 mb-4">
+  <div class="mb-4 flex items-center justify-between gap-3">
     <div>
       <h3 class="text-lg font-semibold text-slate-900">Categorias</h3>
-      <p class="text-sm text-slate-500">Mesmo fluxo do legado: categorias por usuario para organizar o board.</p>
+      <p class="text-sm text-slate-500">
+        Mesmo fluxo do legado: categorias por usuario para organizar o board.
+      </p>
     </div>
     <Button variant="secondary" size="sm" on:click={openNewCategory}>
       <Plus size={14} class="mr-1.5" />
@@ -748,29 +781,34 @@
   </div>
 
   {#if categorias.length === 0}
-    <div class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
-      Nenhuma categoria cadastrada. Crie categorias para agrupar tarefas como no board do `vtur-app`.
+    <div
+      class="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500"
+    >
+      Nenhuma categoria cadastrada. Crie categorias para agrupar tarefas como no board do
+      `vtur-app`.
     </div>
   {:else}
-    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
       {#each categorias as categoria}
         <Button
           variant="ghost"
           class_name="w-full justify-start rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-xs transition hover:-translate-y-0.5 hover:border-operacao-200 hover:shadow-md"
           on:click={() => openCategory(categoria)}
         >
-          <div class="flex items-start justify-between gap-3 w-full">
-            <div class="flex items-center gap-3 min-w-0">
+          <div class="flex w-full items-start justify-between gap-3">
+            <div class="flex min-w-0 items-center gap-3">
               <span
                 class="inline-block h-4 w-4 rounded-full border border-white/30"
                 style="background:{categoria.cor || '#cbd5e1'}"
               ></span>
               <div class="min-w-0">
-                <h4 class="font-semibold text-slate-900 truncate">{categoria.nome}</h4>
+                <h4 class="truncate font-semibold text-slate-900">{categoria.nome}</h4>
                 <p class="text-xs text-slate-500">Clique para editar cor e nome</p>
               </div>
             </div>
-            <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+            <span
+              class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600"
+            >
               {categoryTaskCounts.get(categoria.id) || 0}
             </span>
           </div>
@@ -795,7 +833,7 @@
   {#if loading}
     <LoadingState compact={true} />
   {:else if errorMessage}
-    <div class="px-5 py-8 text-sm text-red-600">{errorMessage}</div>
+    <div role="alert" class="px-5 py-8 text-sm text-red-600">{errorMessage}</div>
   {:else if activeItems.length === 0}
     <div class="px-5 py-12 text-center text-slate-500">
       Nenhuma tarefa ativa encontrada com os filtros atuais.
@@ -815,9 +853,9 @@
       />
     </div>
   {:else}
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4 p-5">
+    <div class="grid grid-cols-1 gap-4 p-5 xl:grid-cols-3">
       {#each statusGroups as group}
-        <div class="rounded-2xl border border-slate-200 bg-slate-50/80 overflow-hidden">
+        <div class="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/80">
           <div class="flex items-center justify-between px-4 py-3 {group.colorClass}">
             <div>
               <h4 class="font-semibold">{group.label}</h4>
@@ -825,9 +863,11 @@
             </div>
           </div>
 
-          <div class="p-3 space-y-3 min-h-56 {group.bodyClass}">
+          <div class="min-h-56 space-y-3 p-3 {group.bodyClass}">
             {#if group.items.length === 0}
-              <div class="rounded-xl border border-dashed border-slate-300 bg-white/70 px-4 py-8 text-center text-sm text-slate-500">
+              <div
+                class="rounded-xl border border-dashed border-slate-300 bg-white/70 px-4 py-8 text-center text-sm text-slate-500"
+              >
                 Nenhum item nesta coluna.
               </div>
             {:else}
@@ -837,20 +877,24 @@
                   class_name="w-full justify-start rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-xs transition hover:-translate-y-0.5 hover:border-operacao-200 hover:shadow-md"
                   on:click={() => openTask(item.id)}
                 >
-                  <div class="flex items-start justify-between gap-3 w-full">
+                  <div class="flex w-full items-start justify-between gap-3">
                     <div class="min-w-0">
-                      <h5 class="font-semibold text-slate-900 truncate">{item.titulo}</h5>
+                      <h5 class="truncate font-semibold text-slate-900">{item.titulo}</h5>
                       <div class="mt-2 flex flex-wrap items-center gap-2">
                         <span
                           class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold"
-                          style="background:{item.categoriaCor}; color:{textColorFor(item.categoriaCor)}"
+                          style="background:{item.categoriaCor}; color:{textColorFor(
+                            item.categoriaCor
+                          )}"
                         >
                           {item.categoriaNome}
                         </span>
                         <Badge color={item.prioridadeBadge} size="sm">{item.prioridadeLabel}</Badge>
                       </div>
                     </div>
-                    <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                    <span
+                      class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600"
+                    >
                       {item.updatedAtLabel}
                     </span>
                   </div>
@@ -876,7 +920,9 @@
   >
     <div>
       <h3 class="font-semibold text-slate-900">Arquivadas</h3>
-      <p class="text-sm text-slate-500">Mesmo comportamento do board legado para restaurar historico de tarefas.</p>
+      <p class="text-sm text-slate-500">
+        Mesmo comportamento do board legado para restaurar historico de tarefas.
+      </p>
     </div>
     <span class="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">
       {archivedItems.length}
@@ -920,7 +966,7 @@
     <LoadingState compact={true} />
   {:else}
     <div class="space-y-5">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div class="md:col-span-2">
           <FieldInput
             id="task-title"
@@ -946,7 +992,10 @@
           id="task-category"
           label="Categoria"
           bind:value={taskForm.categoria_id}
-          options={[{ value: '', label: 'Sem categoria' }, ...categorias.map((c) => ({ value: c.id, label: c.nome }))]}
+          options={[
+            { value: '', label: 'Sem categoria' },
+            ...categorias.map((c) => ({ value: c.id, label: c.nome }))
+          ]}
           placeholder={null}
           class_name="w-full"
         />
@@ -977,8 +1026,12 @@
         <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
           <p class="text-sm font-medium text-slate-700">Fluxo atual</p>
           <div class="mt-2 flex flex-wrap gap-2">
-            <Badge color={getPriorityBadge(taskForm.prioridade)} size="sm">{getPriorityLabel(taskForm.prioridade)}</Badge>
-            <Badge color="operacao" size="sm">{getStatusLabel(normalizeVisibleStatus(taskForm.status))}</Badge>
+            <Badge color={getPriorityBadge(taskForm.prioridade)} size="sm"
+              >{getPriorityLabel(taskForm.prioridade)}</Badge
+            >
+            <Badge color="operacao" size="sm"
+              >{getStatusLabel(normalizeVisibleStatus(taskForm.status))}</Badge
+            >
             {#if taskMeta.arquivo}
               <Badge color="gray" size="sm">Arquivada</Badge>
             {/if}
@@ -988,15 +1041,19 @@
 
       {#if selectedTaskId}
         <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-          <h4 class="text-sm font-semibold text-slate-900 mb-2">Historico do registro</h4>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-slate-600">
+          <h4 class="mb-2 text-sm font-semibold text-slate-900">Historico do registro</h4>
+          <div class="grid grid-cols-1 gap-3 text-sm text-slate-600 md:grid-cols-2">
             <div>
-              <span class="block text-xs uppercase tracking-wide text-slate-400">Criada em</span>
+              <span class="block text-xs tracking-wide text-slate-400 uppercase">Criada em</span>
               <strong class="text-slate-900">{formatDateTime(taskMeta.created_at)}</strong>
             </div>
             <div>
-              <span class="block text-xs uppercase tracking-wide text-slate-400">Ultima atualizacao</span>
-              <strong class="text-slate-900">{formatDateTime(taskMeta.updated_at || taskMeta.created_at)}</strong>
+              <span class="block text-xs tracking-wide text-slate-400 uppercase"
+                >Ultima atualizacao</span
+              >
+              <strong class="text-slate-900"
+                >{formatDateTime(taskMeta.updated_at || taskMeta.created_at)}</strong
+              >
             </div>
           </div>
         </div>
@@ -1006,7 +1063,12 @@
 
   <svelte:fragment slot="actions">
     {#if selectedTaskId && !taskLoading}
-      <Button variant="ghost" loading={taskArchiving} disabled={taskSaving} on:click={archiveCurrentTask}>
+      <Button
+        variant="ghost"
+        loading={taskArchiving}
+        disabled={taskSaving}
+        on:click={archiveCurrentTask}
+      >
         {#if taskMeta.arquivo}
           Restaurar
         {:else}
@@ -1041,16 +1103,18 @@
     />
 
     <div>
-      <p class="block text-sm font-medium text-slate-700 mb-2">Cor</p>
+      <p class="mb-2 block text-sm font-medium text-slate-700">Cor</p>
       <div class="grid grid-cols-4 gap-2">
         {#each CATEGORY_PALETTE as color}
           <Button
             variant="ghost"
-            class_name="h-10 rounded-xl border transition {categoryForm.cor === color ? 'border-slate-900 ring-2 ring-slate-200' : 'border-slate-200'}"
+            class_name="h-10 rounded-xl border transition {categoryForm.cor === color
+              ? 'border-slate-900 ring-2 ring-slate-200'
+              : 'border-slate-200'}"
             ariaLabel={`Selecionar cor ${color}`}
             on:click={() => (categoryForm.cor = color)}
           >
-            <span class="w-full h-full rounded-lg" style="background:{color}"></span>
+            <span class="h-full w-full rounded-lg" style="background:{color}"></span>
           </Button>
         {/each}
       </div>

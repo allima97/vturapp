@@ -83,7 +83,11 @@
     errorMessage = null;
 
     try {
-      const data = await apiGet<Record<string, unknown>>(`/api/v1/clientes/${clienteId}`, undefined, controller.signal);
+      const data = await apiGet<Record<string, unknown>>(
+        `/api/v1/clientes/${clienteId}`,
+        undefined,
+        controller.signal
+      );
       if (seq !== loadSeq) return;
       formData = fillClienteFormFromApi(data);
     } catch (error: unknown) {
@@ -155,7 +159,11 @@
     const seq = ++cepSeq;
     try {
       cepStatus = 'Buscando CEP...';
-      const data = await apiGet<CepResponse>('/api/v1/enderecos/cep', { cep: digits }, controller.signal);
+      const data = await apiGet<CepResponse>(
+        '/api/v1/enderecos/cep',
+        { cep: digits },
+        controller.signal
+      );
       if (seq !== cepSeq) return;
       if (data?.erro) {
         throw new Error('CEP nao encontrado.');
@@ -212,7 +220,10 @@
   <LoadingState />
 {:else if errorMessage}
   <div class="space-y-4">
-    <div class="rounded-vtur-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+    <div
+      role="alert"
+      class="rounded-vtur-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+    >
       {errorMessage}
     </div>
     <Button variant="secondary" on:click={() => goto('/clientes')}>
@@ -260,7 +271,8 @@
             label="Tipo de pessoa"
             value={formData.tipo_pessoa}
             options={tipoPessoaOptions}
-            on:change={(event) => setTipoPessoa((event.currentTarget as HTMLInputElement).value as 'PF' | 'PJ')}
+            on:change={(event) =>
+              setTipoPessoa((event.currentTarget as HTMLInputElement).value as 'PF' | 'PJ')}
           />
 
           <FieldInput
@@ -289,7 +301,13 @@
           />
 
           {#if formData.tipo_pessoa === 'PF'}
-            <FieldInput id="nascimento" label="Data de nascimento" type="date" bind:value={formData.nascimento} icon={Calendar} />
+            <FieldInput
+              id="nascimento"
+              label="Data de nascimento"
+              type="date"
+              bind:value={formData.nascimento}
+              icon={Calendar}
+            />
 
             <FieldSelect
               id="genero"
@@ -299,10 +317,18 @@
               placeholder="Selecione uma opção"
             />
 
-            <FieldInput id="nacionalidade" label="Nacionalidade" bind:value={formData.nacionalidade} />
+            <FieldInput
+              id="nacionalidade"
+              label="Nacionalidade"
+              bind:value={formData.nacionalidade}
+            />
           {/if}
 
-          <FieldInput id="tipo_cliente" label="Tipo de cliente" bind:value={formData.tipo_cliente} />
+          <FieldInput
+            id="tipo_cliente"
+            label="Tipo de cliente"
+            bind:value={formData.tipo_cliente}
+          />
 
           <FieldSelect
             id="classificacao"
@@ -381,7 +407,12 @@
             on:blur={buscarCepIfNeeded}
           />
 
-          <FieldInput id="endereco" label="Endereco" bind:value={formData.endereco} class_name="lg:col-span-2" />
+          <FieldInput
+            id="endereco"
+            label="Endereco"
+            bind:value={formData.endereco}
+            class_name="lg:col-span-2"
+          />
 
           <FieldInput id="numero" label="Numero" bind:value={formData.numero} />
 
@@ -410,7 +441,12 @@
       </Card>
 
       <div class="flex items-center justify-end gap-3">
-        <Button type="button" variant="secondary" on:click={() => goto(`/clientes/${clienteId}`)} disabled={saving}>
+        <Button
+          type="button"
+          variant="secondary"
+          on:click={() => goto(`/clientes/${clienteId}`)}
+          disabled={saving}
+        >
           <ArrowLeft size={16} class="mr-2" />
           Cancelar
         </Button>
@@ -422,7 +458,7 @@
     </form>
   {:else}
     <AcompanhantesManager
-      clienteId={clienteId}
+      {clienteId}
       editable={true}
       title="Acompanhantes do cliente"
       subtitle="Cadastro e manutencao dos acompanhantes vinculados a este cliente."

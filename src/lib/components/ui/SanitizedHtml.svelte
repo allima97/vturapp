@@ -43,7 +43,8 @@
       'viewBox',
       'width'
     ],
-    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto|tel|blob):|\/|data:image\/(?:png|jpeg|jpg|gif|webp);base64,)/i,
+    ALLOWED_URI_REGEXP:
+      /^(?:(?:https?|mailto|tel|blob):|\/|data:image\/(?:png|jpeg|jpg|gif|webp);base64,)/i,
     ALLOW_DATA_ATTR: false,
     ADD_ATTR: ['target'],
     FORCE_BODY: false
@@ -102,4 +103,5 @@
   });
 </script>
 
+<!-- eslint-disable-next-line svelte/no-at-html-tags -- o conteúdo passa por sanitize (DOMPurify) antes de renderizar -->
 {@html sanitized}

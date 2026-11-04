@@ -6,10 +6,24 @@
   import Dialog from '$lib/components/ui/Dialog.svelte';
   import DataTable from '$lib/components/ui/DataTable.svelte';
   import Badge from '$lib/components/ui/Badge.svelte';
-  import { BottomSheet, FieldCheckbox, FieldInput, FieldSelect, FieldTextarea, LoadingState } from '$lib/components/ui';
+  import {
+    BottomSheet,
+    FieldCheckbox,
+    FieldInput,
+    FieldSelect,
+    FieldTextarea,
+    LoadingState
+  } from '$lib/components/ui';
   import KPICard from '$lib/components/kpis/KPICard.svelte';
   import { toast } from '$lib/stores/ui';
-  import { CalendarDays, ExternalLink, MessageCircle, RefreshCw, Search, SlidersHorizontal } from '$lib/icons';
+  import {
+    CalendarDays,
+    ExternalLink,
+    MessageCircle,
+    RefreshCw,
+    Search,
+    SlidersHorizontal
+  } from '$lib/icons';
   import { apiGet, apiPatch, isCanceledApiError } from '$lib/services/api';
   import { addDaysISODate, currentMonthRangeISODate, todayISODateLocal } from '$lib/date';
   import { formatDate as formatDateValue } from '$lib/utils/formatters';
@@ -22,7 +36,9 @@
 
   async function loadUserProfile() {
     try {
-      const sig = await apiGet<{ signature?: string | null; nome_completo?: string | null }>('/api/v1/profile/signature');
+      const sig = await apiGet<{ signature?: string | null; nome_completo?: string | null }>(
+        '/api/v1/profile/signature'
+      );
       userNome = String(sig?.nome_completo || '').trim();
       userAssinatura = String(sig?.signature || sig?.nome_completo || '').trim();
     } catch {
@@ -38,7 +54,11 @@
   }
 
   function getPrimeiroNome(nomeCompleto: string): string {
-    return String(nomeCompleto || '').trim().split(/\s+/)[0] || nomeCompleto;
+    return (
+      String(nomeCompleto || '')
+        .trim()
+        .split(/\s+/)[0] || nomeCompleto
+    );
   }
 
   function buildMensagemFollowUp(clienteNome: string): string {
@@ -158,11 +178,16 @@
     errorMessage = null;
 
     try {
-      const payload = await apiGet<{ items?: FollowUpItem[] }>('/api/v1/dashboard/follow-ups', {
-        inicio,
-        fim,
-        status: statusFilter
-      }, controller.signal, 90_000);
+      const payload = await apiGet<{ items?: FollowUpItem[] }>(
+        '/api/v1/dashboard/follow-ups',
+        {
+          inicio,
+          fim,
+          status: statusFilter
+        },
+        controller.signal,
+        90_000
+      );
       if (requestSeq !== followUpsRequestSeq) return;
       items = Array.isArray(payload?.items) ? payload.items : [];
     } catch (error) {
@@ -211,12 +236,7 @@
     }))
     .filter((item) => {
       if (!normalizedSearchQuery) return true;
-      return [
-        item.cliente_nome,
-        item.destino_nome || '',
-        item.followUpResumo,
-        item.statusLabel
-      ]
+      return [item.cliente_nome, item.destino_nome || '', item.followUpResumo, item.statusLabel]
         .join(' ')
         .toLowerCase()
         .includes(normalizedSearchQuery);
@@ -225,7 +245,8 @@
   $: resumo = items.reduce(
     (acc, item) => {
       acc.total += 1;
-      if (!item.follow_up_fechado && String(item.data_fim || item.data_final || '') < todayIso) acc.atrasados += 1;
+      if (!item.follow_up_fechado && String(item.data_fim || item.data_final || '') < todayIso)
+        acc.atrasados += 1;
       if (!String(item.follow_up_text || '').trim()) acc.semTexto += 1;
       if (item.follow_up_fechado) acc.fechados += 1;
       return acc;
@@ -285,12 +306,8 @@
   title="Follow-up"
   subtitle="Follow-up operacional derivado de viagens e vendas, respeitando escopo por perfil."
   color="operacao"
-  breadcrumbs={[
-    { label: 'Follow-up' }
-  ]}
-  actions={[
-    { label: 'Atualizar', onClick: loadFollowUps, variant: 'secondary', icon: RefreshCw }
-  ]}
+  breadcrumbs={[{ label: 'Follow-up' }]}
+  actions={[{ label: 'Atualizar', onClick: loadFollowUps, variant: 'secondary', icon: RefreshCw }]}
 />
 
 <div class="vtur-kpi-grid mb-6">
@@ -306,13 +323,13 @@
     <SlidersHorizontal size={16} class="mr-2" />
     Filtros
     {#if searchQuery.trim() || statusFilter !== 'abertos' || inicio || fim}
-      <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-operacao-500"></span>
+      <span class="bg-operacao-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
     {/if}
   </Button>
 </div>
 
 <Card color="operacao" class="mb-6 hidden sm:block">
-  <div class="grid grid-cols-1 lg:grid-cols-[1.6fr_repeat(3,minmax(0,1fr))] gap-4">
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-[1.6fr_repeat(3,minmax(0,1fr))]">
     <FieldInput
       id="follow-search"
       label="Busca"
@@ -335,19 +352,26 @@
       class_name="w-full"
     />
 
-    <FieldInput id="follow-start" label="Inicio" type="date" bind:value={inicio} class_name="w-full" />
+    <FieldInput
+      id="follow-start"
+      label="Inicio"
+      type="date"
+      bind:value={inicio}
+      class_name="w-full"
+    />
 
-    <FieldInput id="follow-end" label="Fim" type="date" bind:value={fim} min={inicio || null} class_name="w-full" />
+    <FieldInput
+      id="follow-end"
+      label="Fim"
+      type="date"
+      bind:value={fim}
+      min={inicio || null}
+      class_name="w-full"
+    />
   </div>
 
   <div class="mt-4 flex flex-wrap gap-2">
-    <Button
-      variant="ghost"
-      size="sm"
-      on:click={resetFilters}
-    >
-      Limpar filtros
-    </Button>
+    <Button variant="ghost" size="sm" on:click={resetFilters}>Limpar filtros</Button>
   </div>
 </Card>
 
@@ -373,20 +397,35 @@
       placeholder={null}
       class_name="w-full"
     />
-    <FieldInput id="follow-start-mobile" label="Inicio" type="date" bind:value={inicio} class_name="w-full" />
-    <FieldInput id="follow-end-mobile" label="Fim" type="date" bind:value={fim} min={inicio || null} class_name="w-full" />
+    <FieldInput
+      id="follow-start-mobile"
+      label="Inicio"
+      type="date"
+      bind:value={inicio}
+      class_name="w-full"
+    />
+    <FieldInput
+      id="follow-end-mobile"
+      label="Fim"
+      type="date"
+      bind:value={fim}
+      min={inicio || null}
+      class_name="w-full"
+    />
   </div>
-  <Button variant="primary" class_name="w-full mt-2" on:click={() => (showFilterSheet = false)}>Aplicar filtros</Button>
+  <Button variant="primary" class_name="w-full mt-2" on:click={() => (showFilterSheet = false)}
+    >Aplicar filtros</Button
+  >
 </BottomSheet>
 
 <Card color="operacao">
   {#if loading}
     <LoadingState compact={true} />
   {:else if errorMessage}
-    <div class="py-8 text-sm text-red-600">{errorMessage}</div>
+    <div role="alert" class="py-8 text-sm text-red-600">{errorMessage}</div>
   {:else}
     <DataTable
-      columns={columns}
+      {columns}
       data={rows}
       color="operacao"
       loading={false}
@@ -416,9 +455,9 @@
 >
   {#if selectedItem}
     <div class="space-y-5">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-          <span class="block text-xs uppercase tracking-wide text-slate-400">Cliente</span>
+          <span class="block text-xs tracking-wide text-slate-400 uppercase">Cliente</span>
           <strong class="text-slate-900">{selectedItem.cliente_nome}</strong>
           {#if selectedItem.destino_nome}
             <p class="mt-1 text-sm text-slate-600">{selectedItem.destino_nome}</p>
@@ -426,9 +465,12 @@
         </div>
 
         <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-          <span class="block text-xs uppercase tracking-wide text-slate-400">Periodo da viagem</span>
+          <span class="block text-xs tracking-wide text-slate-400 uppercase">Periodo da viagem</span
+          >
           <strong class="text-slate-900">
-            {formatDate(selectedItem.data_inicio || selectedItem.data_embarque)} ate {formatDate(selectedItem.data_fim || selectedItem.data_final)}
+            {formatDate(selectedItem.data_inicio || selectedItem.data_embarque)} ate {formatDate(
+              selectedItem.data_fim || selectedItem.data_final
+            )}
           </strong>
           <div class="mt-2 flex flex-wrap gap-2">
             {#if form.fechado}
@@ -450,20 +492,32 @@
       />
 
       <div class="flex flex-wrap items-center gap-4">
-        <FieldCheckbox label="Marcar follow-up como fechado" bind:checked={form.fechado} color="operacao" />
+        <FieldCheckbox
+          label="Marcar follow-up como fechado"
+          bind:checked={form.fechado}
+          color="operacao"
+        />
       </div>
 
       <!-- Preview da mensagem de contato -->
       <div class="rounded-2xl border border-green-200 bg-green-50 px-4 py-3">
-        <h4 class="text-sm font-semibold text-slate-900 mb-2">Mensagem sugerida</h4>
-        <p class="text-sm text-slate-700 whitespace-pre-line leading-relaxed">{buildMensagemFollowUp(selectedItem.cliente_nome)}</p>
+        <h4 class="mb-2 text-sm font-semibold text-slate-900">Mensagem sugerida</h4>
+        <p class="text-sm leading-relaxed whitespace-pre-line text-slate-700">
+          {buildMensagemFollowUp(selectedItem.cliente_nome)}
+        </p>
       </div>
 
       <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-        <h4 class="text-sm font-semibold text-slate-900 mb-2">Contato e vinculos</h4>
+        <h4 class="mb-2 text-sm font-semibold text-slate-900">Contato e vinculos</h4>
         <div class="flex flex-wrap gap-2">
           {#if currentWhatsAppLink(selectedItem)}
-            <Button href={currentWhatsAppLink(selectedItem) || undefined} target="_blank" rel="noopener noreferrer" variant="primary" size="sm">
+            <Button
+              href={currentWhatsAppLink(selectedItem) || undefined}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="primary"
+              size="sm"
+            >
               <MessageCircle size={14} class="mr-1.5" />
               Enviar WhatsApp
             </Button>

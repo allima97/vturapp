@@ -1,7 +1,13 @@
 <script lang="ts">
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
-  import { FieldCheckbox, FieldInput, FieldSelect, FieldTextarea, LoadingState } from '$lib/components/ui';
+  import {
+    FieldCheckbox,
+    FieldInput,
+    FieldSelect,
+    FieldTextarea,
+    LoadingState
+  } from '$lib/components/ui';
   import { toast } from '$lib/stores/ui';
   import { Calendar, Phone, Save, Trash2, UserPlus, Users } from '$lib/icons';
   import { formatDate } from '$lib/utils/formatters';
@@ -182,7 +188,9 @@
     errorMessage = null;
 
     try {
-      await apiFetch(`/api/v1/clientes/${clienteId}/acompanhantes/${selectedId}`, { method: 'DELETE' });
+      await apiFetch(`/api/v1/clientes/${clienteId}/acompanhantes/${selectedId}`, {
+        method: 'DELETE'
+      });
 
       toast.success('Acompanhante removido.');
       novoAcompanhante();
@@ -201,13 +209,16 @@
     <p class="text-sm text-slate-500">{subtitle}</p>
 
     {#if errorMessage}
-      <div class="rounded-vtur-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+      <div
+        role="alert"
+        class="rounded-vtur-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+      >
         {errorMessage}
       </div>
     {/if}
 
-    <div class="overflow-x-auto rounded-vtur-xl border border-slate-200">
-      <table class="w-full text-sm table-mobile-cards">
+    <div class="rounded-vtur-xl overflow-x-auto border border-slate-200">
+      <table class="table-mobile-cards w-full text-sm">
         <thead class="bg-slate-50">
           <tr>
             <th class="px-4 py-3 text-left font-semibold text-slate-600">Nome</th>
@@ -226,7 +237,9 @@
             </tr>
           {:else if acompanhantes.length === 0}
             <tr>
-              <td colspan="5" class="px-4 py-8 text-center text-slate-500">Nenhum acompanhante cadastrado.</td>
+              <td colspan="5" class="px-4 py-8 text-center text-slate-500"
+                >Nenhum acompanhante cadastrado.</td
+              >
             </tr>
           {:else}
             {#each acompanhantes as item}
@@ -267,7 +280,9 @@
             <h3 class="text-base font-semibold text-slate-900">
               {selectedId ? 'Editar acompanhante' : 'Novo acompanhante'}
             </h3>
-            <p class="text-sm text-slate-500">Clique na linha para editar ou cadastre um novo acompanhante.</p>
+            <p class="text-sm text-slate-500">
+              Clique na linha para editar ou cadastre um novo acompanhante.
+            </p>
           </div>
 
           <div class="flex gap-2">
@@ -276,7 +291,12 @@
               Novo
             </Button>
             {#if selectedId}
-              <Button type="button" variant="danger" on:click={excluirAcompanhante} disabled={deleting}>
+              <Button
+                type="button"
+                variant="danger"
+                on:click={excluirAcompanhante}
+                disabled={deleting}
+              >
                 <Trash2 size={16} class="mr-2" />
                 Excluir
               </Button>
@@ -342,19 +362,32 @@
           />
 
           <div class="flex items-end">
-            <FieldCheckbox id="acomp-ativo" label="Acompanhante ativo" bind:checked={form.ativo} color="clientes" />
+            <FieldCheckbox
+              id="acomp-ativo"
+              label="Acompanhante ativo"
+              bind:checked={form.ativo}
+              color="clientes"
+            />
           </div>
         </div>
 
         <div class="mt-4 flex justify-end">
-          <Button type="button" variant="primary" color="clientes" on:click={salvarAcompanhante} loading={saving}>
+          <Button
+            type="button"
+            variant="primary"
+            color="clientes"
+            on:click={salvarAcompanhante}
+            loading={saving}
+          >
             <Save size={16} class="mr-2" />
             {selectedId ? 'Salvar alteracoes' : 'Salvar acompanhante'}
           </Button>
         </div>
       </div>
     {:else if acompanhantes.length === 0}
-      <div class="rounded-vtur-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">
+      <div
+        class="rounded-vtur-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500"
+      >
         <Users size={24} class="mx-auto mb-2 text-slate-400" />
         Nenhum acompanhante vinculado a este cliente.
       </div>

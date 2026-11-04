@@ -37,7 +37,12 @@
   function isPublicRoute(path: string): boolean {
     // A área da reescrita usa Better Auth; não pode depender da sessão Dados
     // que protege o aplicativo legado. Os dados seguem protegidos pela API v2.
-    return path.startsWith('/auth/') || path === '/reescrita' || path.startsWith('/reescrita/') || path === '/negado';
+    return (
+      path.startsWith('/auth/') ||
+      path === '/reescrita' ||
+      path.startsWith('/reescrita/') ||
+      path === '/negado'
+    );
   }
 
   function redirectToLogin(reason: string) {
@@ -49,10 +54,13 @@
     const sinceSession = Date.now() - lastSessionAt;
     if (sinceSession < 5000) {
       if (pendingRedirectTimer === null) {
-        pendingRedirectTimer = window.setTimeout(() => {
-          pendingRedirectTimer = null;
-          void verifySessionOrRedirect(reason);
-        }, 5000 - sinceSession + 200);
+        pendingRedirectTimer = window.setTimeout(
+          () => {
+            pendingRedirectTimer = null;
+            void verifySessionOrRedirect(reason);
+          },
+          5000 - sinceSession + 200
+        );
       }
       return;
     }
@@ -71,7 +79,10 @@
   async function verifySessionOrRedirect(reason: string) {
     if (!browser || isRedirecting || isPublicRoute(window.location.pathname)) return;
     try {
-      const { data: { session }, error } = await browserData.auth.getSession();
+      const {
+        data: { session },
+        error
+      } = await browserData.auth.getSession();
       if (session && !error) {
         lastSessionAt = Date.now();
         return;
@@ -107,7 +118,8 @@
       });
 
       if (!result.ok) {
-        if (dev) console.warn(`[Auth] Falha ao sincronizar sessão (${source}) status:`, result.status);
+        if (dev)
+          console.warn(`[Auth] Falha ao sincronizar sessão (${source}) status:`, result.status);
       }
 
       sessionSynced.set(true);
@@ -135,37 +147,37 @@
     (async () => {
       const {
         data: { subscription }
-      } = browserData.auth.onAuthStateChange(
-        async (event: string, session) => {
-          if (
-            (event === 'SIGNED_IN' ||
-              event === 'TOKEN_REFRESHED' ||
-              event === 'USER_UPDATED' ||
-              event === 'PASSWORD_RECOVERY' ||
-              event === 'MFA_CHALLENGE_VERIFIED') &&
-            session
-          ) {
-            lastSessionAt = Date.now();
-            isRedirecting = false; // cancela redirecionamento pendente
-            auth.setAuth(session.user, session);
-            await syncServerSession(session, event);
-          } else if (event === 'SIGNED_OUT') {
-            auth.clear();
-            sessionSynced.set(true);
-            // Aguarda um momento para confirmar que realmente não há sessão
-            // (pode ser uma race condition durante refresh automático do token).
-            // Em rota pública (ex.: logout intencional) não faz nada.
-            setTimeout(() => {
-              if (cancelled) return;
-              void verifySessionOrRedirect('Sessão encerrada (SIGNED_OUT)');
-            }, 800);
-          }
+      } = browserData.auth.onAuthStateChange(async (event: string, session) => {
+        if (
+          (event === 'SIGNED_IN' ||
+            event === 'TOKEN_REFRESHED' ||
+            event === 'USER_UPDATED' ||
+            event === 'PASSWORD_RECOVERY' ||
+            event === 'MFA_CHALLENGE_VERIFIED') &&
+          session
+        ) {
+          lastSessionAt = Date.now();
+          isRedirecting = false; // cancela redirecionamento pendente
+          auth.setAuth(session.user, session);
+          await syncServerSession(session, event);
+        } else if (event === 'SIGNED_OUT') {
+          auth.clear();
+          sessionSynced.set(true);
+          // Aguarda um momento para confirmar que realmente não há sessão
+          // (pode ser uma race condition durante refresh automático do token).
+          // Em rota pública (ex.: logout intencional) não faz nada.
+          setTimeout(() => {
+            if (cancelled) return;
+            void verifySessionOrRedirect('Sessão encerrada (SIGNED_OUT)');
+          }, 800);
         }
-      );
+      });
 
       unsubscribe = () => subscription.unsubscribe();
 
-      const { data: { session } } = await browserData.auth.getSession();
+      const {
+        data: { session }
+      } = await browserData.auth.getSession();
       if (cancelled) return;
 
       if (session) {
@@ -204,7 +216,8 @@
     // Verifica sessão quando a aba volta ao primeiro plano, quando a janela
     // ganha foco e periodicamente — cobre a sessão encerrada pelo sistema
     // enquanto o usuário está parado na mesma tela.
-    const handleVisibilityChange = () => void checkSession('Sessão expirada enquanto a aba estava inativa');
+    const handleVisibilityChange = () =>
+      void checkSession('Sessão expirada enquanto a aba estava inativa');
     const handleFocus = () => void checkSession('Sessão expirada (foco na janela)');
     const pollTimer = window.setInterval(
       () => void checkSession('Sessão expirada (checagem periódica)'),
@@ -223,5 +236,9 @@
     };
   });
 </script>
+
+<svelte:head>
+  <title>VTUR</title>
+</svelte:head>
 
 <slot />

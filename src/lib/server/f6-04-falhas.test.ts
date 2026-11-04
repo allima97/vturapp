@@ -27,7 +27,6 @@ function readSrc(rel: string): string {
 }
 
 describe('Suíte R — F6-04: falhas e degradação', () => {
-
   // R1 ───────────────────────────────────────────────────────────────────────
   it('R1. D1 indisponível → 503: handler de erro global cobre falhas de banco', () => {
     const src = readSrc('src/lib/server/api/app-v2.ts');
@@ -45,10 +44,21 @@ describe('Suíte R — F6-04: falhas e degradação', () => {
   });
 
   // R2 ───────────────────────────────────────────────────────────────────────
-  it('R2. R2 indisponível → upload falha mas rota de listagem não depende de R2', () => {
-    const listar = readSrc('src/lib/server/api/routes/clientes-v2/index.ts');
-    // Listagem não deve importar ou usar R2
-    expect(listar).not.toMatch(/env\.R2|env\[.R2.\]/);
+  it('R2. R2 indisponível → upload falha com 503 e rota de listagem não depende de R2', () => {
+    const src = readSrc('src/lib/server/api/routes/clientes-v2/index.ts');
+    const blocos = src.split(/clientesV2Routes\.(?=[a-z]+\()/).slice(1);
+    // Todo handler que toca o bucket responde 503 quando o binding está ausente
+    const comR2 = blocos.filter((b) => b.includes('r.env.R2'));
+    expect(comR2.length).toBeGreaterThan(0);
+    for (const bloco of comR2) {
+      expect(bloco).toContain(
+        "if (!r.env.R2) return c.json({ error: 'Armazenamento indisponível.' }, 503);"
+      );
+    }
+    // A listagem (GET /) não depende do R2
+    const listagem = blocos.find((b) => b.startsWith("get('/'"));
+    expect(listagem).toBeDefined();
+    expect(listagem!).not.toContain('env.R2');
   });
 
   it('R2b. Upload de anexo usa env.R2 — se indisponível, a rota de upload falha isoladamente', () => {
@@ -78,10 +88,11 @@ describe('Suíte R — F6-04: falhas e degradação', () => {
 
   // R4 ───────────────────────────────────────────────────────────────────────
   it('R4. Sessão inválida → 401: middleware de auth rejeita antes da rota', () => {
-    const auth = readSrc('src/lib/server/api/routes/vendas-v2/index.ts');
-    expect(auth).toContain('401');
-    // Deve ter verificação de token/sessão
-    expect(auth).toMatch(/token|session|Authorization/i);
+    const src = readSrc('src/lib/server/api/routes/vendas-v2/index.ts');
+    expect(src).toContain('401');
+    // A sessão (Better Auth) é resolvida antes do handler e rejeitada com 401
+    expect(src).toContain('resolveAuthContext');
+    expect(src).toContain('Não autenticado');
   });
 
   it('R4b. Rotas v2 aplicam middleware de auth (não expõem dados sem autenticação)', () => {

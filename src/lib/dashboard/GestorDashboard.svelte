@@ -8,7 +8,25 @@
   import { FieldInput, FieldSelect, LoadingState } from '$lib/components/ui';
   import KPIGrid from '$lib/components/kpis/KPIGrid.svelte';
   import ChartJS from '$lib/components/charts/ChartJS.svelte';
-  import { Award, BarChart2, Building2, Calendar, Clock, Eye, Gift, MapPin, MessageCircle, RefreshCw, ShoppingCart, SlidersHorizontal, Target, TrendingUp, UserPlus, Users, Wallet } from '$lib/icons';
+  import {
+    Award,
+    BarChart2,
+    Building2,
+    Calendar,
+    Clock,
+    Eye,
+    Gift,
+    MapPin,
+    MessageCircle,
+    RefreshCw,
+    ShoppingCart,
+    SlidersHorizontal,
+    Target,
+    TrendingUp,
+    UserPlus,
+    Users,
+    Wallet
+  } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { apiFetch, apiGet, isCanceledApiError } from '$lib/services/api';
   import { goto } from '$app/navigation';
@@ -33,15 +51,15 @@
     | 'comparativo_metas';
 
   const GESTOR_WIDGETS: Array<{ id: GestorWidgetId; titulo: string }> = [
-    { id: 'top_vendedores',     titulo: 'Top 3 vendedores' },
-    { id: 'timeline',          titulo: 'Evolução das vendas' },
-    { id: 'top_destinos',      titulo: 'Top destinos' },
-    { id: 'clientes',          titulo: 'Clientes que mais gastaram' },
-    { id: 'ultimas_compras',   titulo: 'Últimas compras' },
-    { id: 'followups',         titulo: 'Follow-up' },
-    { id: 'aniversariantes',   titulo: 'Aniversariantes' },
+    { id: 'top_vendedores', titulo: 'Top 3 vendedores' },
+    { id: 'timeline', titulo: 'Evolução das vendas' },
+    { id: 'top_destinos', titulo: 'Top destinos' },
+    { id: 'clientes', titulo: 'Clientes que mais gastaram' },
+    { id: 'ultimas_compras', titulo: 'Últimas compras' },
+    { id: 'followups', titulo: 'Follow-up' },
+    { id: 'aniversariantes', titulo: 'Aniversariantes' },
     { id: 'comparativo_vendas', titulo: 'Comparativo de vendas por empresa' },
-    { id: 'comparativo_metas', titulo: 'Atingimento de meta por empresa' },
+    { id: 'comparativo_metas', titulo: 'Atingimento de meta por empresa' }
   ];
 
   const PREFS_KEY = 'gestor_dashboard_widgets';
@@ -51,7 +69,10 @@
   });
 
   function loadWidgetPrefs(): Record<GestorWidgetId, boolean> {
-    const defaults = Object.fromEntries(GESTOR_WIDGETS.map((w) => [w.id, true])) as Record<GestorWidgetId, boolean>;
+    const defaults = Object.fromEntries(GESTOR_WIDGETS.map((w) => [w.id, true])) as Record<
+      GestorWidgetId,
+      boolean
+    >;
     if (typeof window === 'undefined') return defaults;
     try {
       const raw = window.localStorage.getItem(PREFS_KEY);
@@ -60,7 +81,9 @@
       for (const w of GESTOR_WIDGETS) {
         if (typeof parsed[w.id] === 'boolean') defaults[w.id] = parsed[w.id];
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     return defaults;
   }
 
@@ -102,7 +125,12 @@
   };
 
   type SummaryPayload = {
-    userCtx?: { nome: string | null; papel: string; vendedorIds: string[]; vendedorCount?: number } | null;
+    userCtx?: {
+      nome: string | null;
+      papel: string;
+      vendedorIds: string[];
+      vendedorCount?: number;
+    } | null;
     vendasAgg?: {
       totalVendas: number;
       totalTaxas: number;
@@ -133,8 +161,20 @@
   };
 
   type DashboardCompraPayload = {
-    topVendedores?: Array<{ vendedor_id: string; vendedor_nome: string; valor: number; quantidade: number }>;
-    topClientes?: Array<{ cliente_id: string | null; cliente_nome: string; data_saida: string | null; destino: string; valor: number; quantidade: number }>;
+    topVendedores?: Array<{
+      vendedor_id: string;
+      vendedor_nome: string;
+      valor: number;
+      quantidade: number;
+    }>;
+    topClientes?: Array<{
+      cliente_id: string | null;
+      cliente_nome: string;
+      data_saida: string | null;
+      destino: string;
+      valor: number;
+      quantidade: number;
+    }>;
     ultimasCompras?: DashboardCompra[];
   };
 
@@ -218,14 +258,16 @@
   }
 
   function getInitials(value: string | null | undefined) {
-    return String(value || '-')
-      .trim()
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part.charAt(0))
-      .join('')
-      .toUpperCase() || '-';
+    return (
+      String(value || '-')
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part.charAt(0))
+        .join('')
+        .toUpperCase() || '-'
+    );
   }
 
   function formatBirthdayContext(value: string | null | undefined) {
@@ -279,7 +321,9 @@
     : isMasterDashboard
       ? 'Vendas das equipes'
       : 'Vendas da equipe';
-  $: countLabel = isFiltroVendedorAtivo ? `Qtd. vendas de ${vendedorSelecionadoNome}` : 'Qtd. vendas';
+  $: countLabel = isFiltroVendedorAtivo
+    ? `Qtd. vendas de ${vendedorSelecionadoNome}`
+    : 'Qtd. vendas';
   $: metaLabel = isFiltroVendedorAtivo ? `Meta de ${vendedorSelecionadoNome}` : 'Meta da equipe';
   $: scopeLabel = isFiltroVendedorAtivo ? 'Vendedor no escopo' : 'Equipe no escopo';
   $: scopeHelperLabel = isFiltroVendedorAtivo
@@ -320,7 +364,13 @@
   }
 
   function getFollowUpTelefone(item: FollowUp) {
-    return item.cliente_whatsapp || item.cliente_telefone || item.venda?.clientes?.whatsapp || item.venda?.clientes?.telefone || null;
+    return (
+      item.cliente_whatsapp ||
+      item.cliente_telefone ||
+      item.venda?.clientes?.whatsapp ||
+      item.venda?.clientes?.telefone ||
+      null
+    );
   }
 
   function getFollowUpNotificationRange(inicio: string, fim: string) {
@@ -349,7 +399,14 @@
     if (periodoFim !== range.fim) periodoFim = range.fim;
   }
 
-  $: currentFilterKey = [filtroPeriodoModo, mesSelecionado, periodoInicio, periodoFim, empresaSelecionada, vendedorSelecionado].join('|');
+  $: currentFilterKey = [
+    filtroPeriodoModo,
+    mesSelecionado,
+    periodoInicio,
+    periodoFim,
+    empresaSelecionada,
+    vendedorSelecionado
+  ].join('|');
 
   $: timelineChartData = {
     labels: vendasAgg.timeline.map((item) => formatDate(item.date)),
@@ -389,7 +446,7 @@
     '#14b8a6', // teal-500
     '#8b5cf6', // violet-500
     '#f59e0b', // amber-500
-    '#6366f1', // indigo-500
+    '#6366f1' // indigo-500
   ];
 
   $: comparativoVendasChartData = {
@@ -398,9 +455,11 @@
       {
         label: 'Vendas no período',
         data: empresasComparativo.map((e) => e.totalVendas),
-        backgroundColor: empresasComparativo.map((_, i) => EMPRESA_COLORS[i % EMPRESA_COLORS.length]),
+        backgroundColor: empresasComparativo.map(
+          (_, i) => EMPRESA_COLORS[i % EMPRESA_COLORS.length]
+        ),
         borderRadius: 6,
-        borderSkipped: false,
+        borderSkipped: false
       }
     ]
   } satisfies ChartData;
@@ -422,7 +481,7 @@
         }),
         borderWidth: 2,
         borderRadius: 6,
-        borderSkipped: false,
+        borderSkipped: false
       },
       {
         label: 'Vendas realizadas',
@@ -432,7 +491,7 @@
           return EMPRESA_COLORS[index % EMPRESA_COLORS.length];
         }),
         borderRadius: 6,
-        borderSkipped: false,
+        borderSkipped: false
       }
     ]
   } satisfies ChartData;
@@ -447,9 +506,7 @@
       tooltip: {
         callbacks: {
           label: (ctx: TooltipItem<'bar'>) => {
-            const parsed = typeof ctx.parsed === 'object' && ctx.parsed
-              ? ctx.parsed
-              : null;
+            const parsed = typeof ctx.parsed === 'object' && ctx.parsed ? ctx.parsed : null;
             const value = parsed?.x ?? parsed?.y ?? 0;
             return ' ' + BRL_CURRENCY_FORMATTER.format(value);
           }
@@ -481,7 +538,11 @@
     ...horizontalBarOptions,
     plugins: {
       ...horizontalBarOptions.plugins,
-      legend: { display: true, position: 'bottom' as const, labels: { color: '#475569', font: { size: 12 }, boxWidth: 12 } },
+      legend: {
+        display: true,
+        position: 'bottom' as const,
+        labels: { color: '#475569', font: { size: 12 }, boxWidth: 12 }
+      }
     }
   };
 
@@ -490,9 +551,13 @@
     baseAbortController?.abort();
     const controller = new AbortController();
     baseAbortController = controller;
-    const shouldLoadVendedores = !isMasterPage || Boolean(empresaSelecionada || vendedorSelecionado);
+    const shouldLoadVendedores =
+      !isMasterPage || Boolean(empresaSelecionada || vendedorSelecionado);
     try {
-      const data = await apiGet<{ empresas: { id: string; nome: string }[]; vendedores: { id: string; nome: string }[] }>(
+      const data = await apiGet<{
+        empresas: { id: string; nome: string }[];
+        vendedores: { id: string; nome: string }[];
+      }>(
         '/api/v1/dashboard/base',
         {
           empresa_id: empresaSelecionada || undefined,
@@ -504,7 +569,10 @@
       if (requestSeq !== baseRequestSeq) return;
       empresas = data.empresas || [];
       vendedoresFiltro = data.vendedores || [];
-      if (vendedorSelecionado && !vendedoresFiltro.some((item) => item.id === vendedorSelecionado)) {
+      if (
+        vendedorSelecionado &&
+        !vendedoresFiltro.some((item) => item.id === vendedorSelecionado)
+      ) {
         vendedorSelecionado = '';
       }
     } catch (err) {
@@ -572,7 +640,9 @@
         fallbackName?: string | null;
         nome_completo?: string | null;
       }>('/api/v1/profile/signature', undefined, signal, 30_000);
-      const nome = String(payload?.signature || payload?.fallbackName || payload?.nome_completo || '').trim();
+      const nome = String(
+        payload?.signature || payload?.fallbackName || payload?.nome_completo || ''
+      ).trim();
       if (nome) assinaturaUsuario = nome;
     } catch {
       const fallback = String(userCtx?.nome || '').trim();
@@ -602,12 +672,17 @@
         followUps = [];
         return;
       }
-      const data = await apiGet<{ items: FollowUp[] }>('/api/v1/dashboard/follow-ups', {
-        ...params,
-        ...followUpRange,
-        status: 'abertos',
-        limit: 8
-      }, signal, 60_000);
+      const data = await apiGet<{ items: FollowUp[] }>(
+        '/api/v1/dashboard/follow-ups',
+        {
+          ...params,
+          ...followUpRange,
+          status: 'abertos',
+          limit: 8
+        },
+        signal,
+        60_000
+      );
       if (!isCurrentAuxiliaryRequest(requestSeq)) return;
       followUps = data.items || [];
     } catch (err) {
@@ -629,13 +704,18 @@
     }
 
     try {
-      const payload = await apiGet<DashboardCompraPayload>('/api/v1/dashboard/ultimas-compras', {
-        inicio: periodoInicio,
-        fim: periodoFim,
-        company_id: empresaSelecionada || undefined,
-        vendedor_ids: vendedorSelecionado || undefined,
-        limit: 5
-      }, signal, 60_000);
+      const payload = await apiGet<DashboardCompraPayload>(
+        '/api/v1/dashboard/ultimas-compras',
+        {
+          inicio: periodoInicio,
+          fim: periodoFim,
+          company_id: empresaSelecionada || undefined,
+          vendedor_ids: vendedorSelecionado || undefined,
+          limit: 5
+        },
+        signal,
+        60_000
+      );
       if (!isCurrentAuxiliaryRequest(requestSeq)) return;
       topVendedores = payload.topVendedores || [];
       topClientes = payload.topClientes || [];
@@ -655,11 +735,16 @@
     }
 
     try {
-      const data = await apiGet<{ items?: Aniversariante[] }>('/api/v1/dashboard/aniversariantes', {
-        dias: 30,
-        company_id: isMasterDashboard ? undefined : empresaSelecionada || undefined,
-        limit: 5
-      }, signal, 60_000);
+      const data = await apiGet<{ items?: Aniversariante[] }>(
+        '/api/v1/dashboard/aniversariantes',
+        {
+          dias: 30,
+          company_id: isMasterDashboard ? undefined : empresaSelecionada || undefined,
+          limit: 5
+        },
+        signal,
+        60_000
+      );
       if (!isCurrentAuxiliaryRequest(requestSeq)) return;
       aniversariantes = data.items || [];
     } catch (err) {
@@ -674,7 +759,8 @@
       empresasComparativo = [];
       return;
     }
-    if (widgetVisible.comparativo_vendas === false && widgetVisible.comparativo_metas === false) return;
+    if (widgetVisible.comparativo_vendas === false && widgetVisible.comparativo_metas === false)
+      return;
     loadingComparativo = true;
     try {
       const data = await apiGet<{ empresas: EmpresaComparativoItem[] }>(
@@ -734,7 +820,9 @@
 
   onMount(async () => {
     const params = new URLSearchParams(window.location.search);
-    const modoParam = String(params.get('modo') || '').trim().toLowerCase();
+    const modoParam = String(params.get('modo') || '')
+      .trim()
+      .toLowerCase();
     filtroPeriodoModo = modoParam === 'periodo' ? 'periodo' : 'mes';
 
     const inicioParam = params.get('inicio') || defaultPeriod.inicio;
@@ -778,7 +866,12 @@
   color="financeiro"
   breadcrumbs={[{ label: 'Dashboard' }]}
   actions={[
-    { label: 'Personalizar', onClick: () => (showCustomize = true), variant: 'secondary', icon: SlidersHorizontal },
+    {
+      label: 'Personalizar',
+      onClick: () => (showCustomize = true),
+      variant: 'secondary',
+      icon: SlidersHorizontal
+    },
     { label: 'Ranking', onClick: goToRanking, variant: 'secondary', icon: BarChart2 },
     { label: 'Atualizar', onClick: atualizar, variant: 'secondary', icon: RefreshCw }
   ]}
@@ -804,25 +897,34 @@
         <button
           type="button"
           on:click={() => (showCustomize = false)}
-          class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
-          aria-label="Fechar"
-        >✕</button>
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700"
+          aria-label="Fechar">✕</button
+        >
       </div>
-      <div class="flex-1 overflow-y-auto p-5 space-y-2">
-        <p class="mb-3 text-xs text-slate-500">Ative ou desative os widgets exibidos neste dashboard.</p>
+      <div class="flex-1 space-y-2 overflow-y-auto p-5">
+        <p class="mb-3 text-xs text-slate-500">
+          Ative ou desative os widgets exibidos neste dashboard.
+        </p>
         {#each GESTOR_WIDGETS as widget}
-          <label class="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-slate-100 px-4 py-3 hover:bg-slate-50 transition-colors">
+          <label
+            class="flex cursor-pointer items-center justify-between gap-3 rounded-xl border border-slate-100 px-4 py-3 transition-colors hover:bg-slate-50"
+          >
             <span class="text-sm font-medium text-slate-700">{widget.titulo}</span>
             <input
               type="checkbox"
               class="h-4 w-4 rounded-sm accent-orange-500"
               checked={widgetVisible[widget.id] !== false}
               on:change={(e) => {
-                widgetVisible = { ...widgetVisible, [widget.id]: (e.target as HTMLInputElement).checked };
+                widgetVisible = {
+                  ...widgetVisible,
+                  [widget.id]: (e.target as HTMLInputElement).checked
+                };
                 saveWidgetPrefs(widgetVisible);
-                if ((widget.id === 'comparativo_vendas' || widget.id === 'comparativo_metas')
-                    && (e.target as HTMLInputElement).checked
-                    && empresasComparativo.length === 0) {
+                if (
+                  (widget.id === 'comparativo_vendas' || widget.id === 'comparativo_metas') &&
+                  (e.target as HTMLInputElement).checked &&
+                  empresasComparativo.length === 0
+                ) {
                   void loadComparativo();
                 }
               }}
@@ -848,10 +950,28 @@
     />
 
     {#if filtroPeriodoModo === 'mes'}
-      <FieldInput id="gestor-mes" label="Mês" type="month" bind:value={mesSelecionado} class_name="w-full" />
+      <FieldInput
+        id="gestor-mes"
+        label="Mês"
+        type="month"
+        bind:value={mesSelecionado}
+        class_name="w-full"
+      />
     {:else}
-      <FieldInput id="gestor-inicio" label="Data início" type="date" bind:value={periodoInicio} class_name="w-full" />
-      <FieldInput id="gestor-fim" label="Data fim" type="date" bind:value={periodoFim} class_name="w-full" />
+      <FieldInput
+        id="gestor-inicio"
+        label="Data início"
+        type="date"
+        bind:value={periodoInicio}
+        class_name="w-full"
+      />
+      <FieldInput
+        id="gestor-fim"
+        label="Data fim"
+        type="date"
+        bind:value={periodoFim}
+        class_name="w-full"
+      />
     {/if}
 
     {#if isMasterDashboard && empresas.length > 0}
@@ -860,7 +980,10 @@
         label="Empresa"
         bind:value={empresaSelecionada}
         placeholder={null}
-        options={[{ value: '', label: 'Todas' }, ...empresas.map((item) => ({ value: item.id, label: item.nome }))]}
+        options={[
+          { value: '', label: 'Todas' },
+          ...empresas.map((item) => ({ value: item.id, label: item.nome }))
+        ]}
         class_name="w-full"
       />
     {/if}
@@ -870,7 +993,10 @@
         label="Vendedor"
         bind:value={vendedorSelecionado}
         placeholder={null}
-        options={[{ value: '', label: 'Todos' }, ...vendedoresFiltro.map((item) => ({ value: item.id, label: item.nome }))]}
+        options={[
+          { value: '', label: 'Todos' },
+          ...vendedoresFiltro.map((item) => ({ value: item.id, label: item.nome }))
+        ]}
         class_name="w-full"
       />
     {/if}
@@ -878,28 +1004,40 @@
 </Card>
 
 {#if errorMessage}
-  <div class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{errorMessage}</div>
+  <div
+    role="alert"
+    class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+  >
+    {errorMessage}
+  </div>
 {/if}
 
-<KPIGrid
-  className="mb-6"
-  columns={5}
-  {loading}
->
+<KPIGrid className="mb-6" columns={5} {loading}>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600"><TrendingUp size={18} /></div>
-    <div class="min-w-0 w-full flex-1">
+    <div
+      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600"
+    >
+      <TrendingUp size={18} />
+    </div>
+    <div class="w-full min-w-0 flex-1">
       <p class="text-xs font-medium text-slate-500 sm:text-sm">{salesLabel}</p>
       {#if loading}
         <div class="mt-1 h-7 w-28 animate-pulse rounded-sm bg-slate-200"></div>
         <div class="mt-1.5 h-3 w-20 animate-pulse rounded-sm bg-slate-100"></div>
       {:else}
-        <p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">{formatCurrency(vendasAgg.totalVendas)}</p>
-        <p class="mt-0.5 truncate text-xs text-slate-400">Líquido: {formatCurrency(vendasAgg.totalLiquido)}</p>
+        <p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">
+          {formatCurrency(vendasAgg.totalVendas)}
+        </p>
+        <p class="mt-0.5 truncate text-xs text-slate-400">
+          Líquido: {formatCurrency(vendasAgg.totalLiquido)}
+        </p>
         {#if metaTotal > 0}
           <div class="mt-1.5 w-full">
             <div class="h-1.5 w-full rounded-full bg-slate-200">
-              <div class="h-1.5 rounded-full transition-all" style={`width:${atingimentoVendasClamped.toFixed(1)}%;background:${atingimentoVendasColor};`}></div>
+              <div
+                class="h-1.5 rounded-full transition-all"
+                style={`width:${atingimentoVendasClamped.toFixed(1)}%;background:${atingimentoVendasColor};`}
+              ></div>
             </div>
             <p class="mt-0.5 text-xs text-slate-400">{atingimento.toFixed(1)}% da meta</p>
           </div>
@@ -911,7 +1049,11 @@
   </div>
 
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600"><Wallet size={18} /></div>
+    <div
+      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600"
+    >
+      <Wallet size={18} />
+    </div>
     <div class="min-w-0 flex-1">
       <p class="text-xs font-medium text-slate-500 sm:text-sm">{countLabel}</p>
       {#if loading}
@@ -919,24 +1061,35 @@
         <div class="mt-1.5 h-3 w-24 animate-pulse rounded-sm bg-slate-100"></div>
       {:else}
         <p class="text-lg font-bold text-slate-900 sm:text-2xl">{vendasAgg.qtdVendas}</p>
-        <p class="mt-0.5 truncate text-xs text-slate-400">Ticket: {formatCurrency(vendasAgg.ticketMedio)}</p>
+        <p class="mt-0.5 truncate text-xs text-slate-400">
+          Ticket: {formatCurrency(vendasAgg.ticketMedio)}
+        </p>
       {/if}
     </div>
   </div>
 
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600"><Target size={18} /></div>
-    <div class="min-w-0 w-full flex-1">
+    <div
+      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600"
+    >
+      <Target size={18} />
+    </div>
+    <div class="w-full min-w-0 flex-1">
       <p class="text-xs font-medium text-slate-500 sm:text-sm">{metaLabel}</p>
       {#if loading}
         <div class="mt-1 h-7 w-28 animate-pulse rounded-sm bg-slate-200"></div>
         <div class="mt-1.5 h-3 w-16 animate-pulse rounded-sm bg-slate-100"></div>
       {:else}
-        <p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">{formatCurrency(metaTotal)}</p>
+        <p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">
+          {formatCurrency(metaTotal)}
+        </p>
         {#if metaTotal > 0}
           <div class="mt-1.5 w-full">
             <div class="h-1.5 w-full rounded-full bg-slate-200">
-              <div class="h-1.5 rounded-full transition-all" style={`width:${atingimentoVendasClamped.toFixed(1)}%;background:${atingimentoMetaColor};`}></div>
+              <div
+                class="h-1.5 rounded-full transition-all"
+                style={`width:${atingimentoVendasClamped.toFixed(1)}%;background:${atingimentoMetaColor};`}
+              ></div>
             </div>
             <p class="mt-0.5 text-xs text-slate-400">{atingimento.toFixed(1)}%</p>
           </div>
@@ -948,32 +1101,47 @@
   </div>
 
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600"><Users size={18} /></div>
+    <div
+      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600"
+    >
+      <Users size={18} />
+    </div>
     <div class="min-w-0 flex-1">
       <p class="text-xs font-medium text-slate-500 sm:text-sm">{scopeLabel}</p>
       {#if loading}
         <div class="mt-1 h-7 w-12 animate-pulse rounded-sm bg-slate-200"></div>
         <div class="mt-1.5 h-3 w-20 animate-pulse rounded-sm bg-slate-100"></div>
       {:else}
-        <p class="text-lg font-bold text-slate-900 sm:text-2xl">{isFiltroVendedorAtivo ? 1 : teamSize}</p>
+        <p class="text-lg font-bold text-slate-900 sm:text-2xl">
+          {isFiltroVendedorAtivo ? 1 : teamSize}
+        </p>
         <p class="mt-0.5 truncate text-xs text-slate-400">{scopeHelperLabel}</p>
       {/if}
     </div>
   </div>
 
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600"><Wallet size={18} /></div>
-    <div class="min-w-0 w-full flex-1">
+    <div
+      class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600"
+    >
+      <Wallet size={18} />
+    </div>
+    <div class="w-full min-w-0 flex-1">
       <p class="text-xs font-medium text-slate-500 sm:text-sm">Seguro viagem</p>
       {#if loading}
         <div class="mt-1 h-7 w-28 animate-pulse rounded-sm bg-slate-200"></div>
         <div class="mt-1.5 h-3 w-16 animate-pulse rounded-sm bg-slate-100"></div>
       {:else}
-        <p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">{formatCurrency(vendasAgg.totalSeguro)}</p>
+        <p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">
+          {formatCurrency(vendasAgg.totalSeguro)}
+        </p>
         {#if metaSeguroTotal > 0}
           <div class="mt-1.5 w-full">
             <div class="h-1.5 w-full rounded-full bg-slate-200">
-              <div class="h-1.5 rounded-full transition-all" style={`width:${atingimentoSeguroClamped.toFixed(1)}%;background:${atingimentoSeguroColor};`}></div>
+              <div
+                class="h-1.5 rounded-full transition-all"
+                style={`width:${atingimentoSeguroClamped.toFixed(1)}%;background:${atingimentoSeguroColor};`}
+              ></div>
             </div>
             <p class="mt-0.5 text-xs text-slate-400">{atingimentoSeguro.toFixed(1)}% meta</p>
           </div>
@@ -986,265 +1154,315 @@
 </KPIGrid>
 
 {#if widgetVisible.top_vendedores !== false}
-<div class="vtur-card mb-6 p-6">
-  <div class="mb-4 flex items-center gap-3">
-    <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
-      <Award size={18} />
+  <div class="vtur-card mb-6 p-6">
+    <div class="mb-4 flex items-center gap-3">
+      <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+        <Award size={18} />
+      </div>
+      <div>
+        <h3 class="text-base font-bold text-slate-900">Top 3 vendedores</h3>
+        <p class="text-xs text-slate-500">
+          {isMasterDashboard
+            ? 'Ranking de todas as lojas do master por receita'
+            : 'Ranking da equipe por receita'}
+        </p>
+      </div>
     </div>
-    <div>
-      <h3 class="text-base font-bold text-slate-900">Top 3 vendedores</h3>
-      <p class="text-xs text-slate-500">{isMasterDashboard ? 'Ranking de todas as lojas do master por receita' : 'Ranking da equipe por receita'}</p>
-    </div>
-  </div>
-  <div class="border-t border-slate-100 pt-4">
-    {#if loading}
-      <LoadingState compact={true} />
-    {:else if topVendedores.length === 0}
-      <p class="py-6 text-center text-sm text-slate-400">Sem vendedores com compras no período.</p>
-    {:else}
-      <div class="grid gap-3 md:grid-cols-3">
-        {#each topVendedores as item, index}
-          <div class="flex items-center justify-between gap-3 rounded-xl border border-slate-100 p-3 transition-colors hover:border-orange-200 hover:bg-orange-50">
-            <div class="flex min-w-0 items-center gap-3">
-              <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-bold text-orange-700">{index + 1}</span>
-              <div class="min-w-0">
-                <p class="truncate text-sm font-semibold text-slate-900">{item.vendedor_nome}</p>
-                <p class="text-xs text-slate-500">{item.quantidade} compra(s)</p>
+    <div class="border-t border-slate-100 pt-4">
+      {#if loading}
+        <LoadingState compact={true} />
+      {:else if topVendedores.length === 0}
+        <p class="py-6 text-center text-sm text-slate-400">
+          Sem vendedores com compras no período.
+        </p>
+      {:else}
+        <div class="grid gap-3 md:grid-cols-3">
+          {#each topVendedores as item, index}
+            <div
+              class="flex items-center justify-between gap-3 rounded-xl border border-slate-100 p-3 transition-colors hover:border-orange-200 hover:bg-orange-50"
+            >
+              <div class="flex min-w-0 items-center gap-3">
+                <span
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 text-sm font-bold text-orange-700"
+                  >{index + 1}</span
+                >
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-semibold text-slate-900">{item.vendedor_nome}</p>
+                  <p class="text-xs text-slate-500">{item.quantidade} compra(s)</p>
+                </div>
               </div>
+              <p class="shrink-0 text-sm font-semibold text-slate-900">
+                {formatCurrency(item.valor)}
+              </p>
             </div>
-            <p class="shrink-0 text-sm font-semibold text-slate-900">{formatCurrency(item.valor)}</p>
-          </div>
-        {/each}
-      </div>
-    {/if}
-  </div>
-</div>
-
-<!-- Linha principal de gráficos: evolução + destinos -->
-{#if widgetVisible.timeline !== false || widgetVisible.top_destinos !== false}
-<div class="mb-6 grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
-
-  <!-- Evolução das vendas -->
-  {#if widgetVisible.timeline !== false}
-  <div class="vtur-card p-6">
-    <div class="mb-4 flex items-center gap-3">
-      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600">
-        <TrendingUp size={18} />
-      </div>
-      <div>
-        <h3 class="text-base font-bold text-slate-900">{evolucaoHeader}</h3>
-        <p class="text-xs text-slate-500">Receita por data no período selecionado</p>
-      </div>
-    </div>
-    <div class="border-t border-slate-100 pt-4">
-      {#if loading}
-        <LoadingState compact={true} />
-      {:else if vendasAgg.timeline.length === 0}
-        <p class="py-8 text-center text-sm text-slate-400">Sem vendas no período.</p>
-      {:else}
-        <ChartJS type="line" data={timelineChartData} height={220} />
-      {/if}
-    </div>
-  </div>
-  {/if}
-
-  <!-- Top destinos -->
-  {#if widgetVisible.top_destinos !== false}
-  <div class="vtur-card p-6">
-    <div class="mb-4 flex items-center gap-3">
-      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
-        <MapPin size={18} />
-      </div>
-      <div>
-        <h3 class="text-base font-bold text-slate-900">{destinosHeader}</h3>
-        <p class="text-xs text-slate-500">Destinos com maior receita</p>
-      </div>
-    </div>
-    <div class="border-t border-slate-100 pt-4">
-      {#if loading}
-        <LoadingState compact={true} />
-      {:else if vendasAgg.topDestinos.length === 0}
-        <p class="py-8 text-center text-sm text-slate-400">Sem destinos no período.</p>
-      {:else}
-        <ChartJS type="doughnut" data={destinosChartData} height={220} />
-      {/if}
-    </div>
-  </div>
-  {/if}
-
-</div>
-{/if}
-
-{#if widgetVisible.followups !== false}
-<div class="vtur-card mb-6 p-6">
-  <div class="mb-4 flex items-center justify-between gap-3">
-    <div class="flex items-center gap-3">
-      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-        <Clock size={18} />
-      </div>
-      <div>
-        <h3 class="text-base font-bold text-slate-900">{followUpHeader} ({followUps.length})</h3>
-        <p class="text-xs text-slate-500">Clientes que já retornaram e precisam de contato</p>
-      </div>
-    </div>
-    <a href="/operacao/acompanhamento" class="shrink-0 text-sm font-medium text-orange-700 transition-colors hover:text-orange-800">
-      Ver todos →
-    </a>
-  </div>
-  <div class="border-t border-slate-100 pt-4">
-    {#if loading}
-      <LoadingState compact={true} />
-    {:else if followUps.length === 0}
-      <p class="py-8 text-center text-sm text-slate-400">{followUpEmptyLabel}</p>
-    {:else}
-      <div class="overflow-x-auto">
-        <table class="min-w-full text-left text-sm">
-          <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th class="px-3 py-2 font-semibold">Cliente</th>
-              <th class="px-3 py-2 font-semibold">Destino</th>
-              <th class="px-3 py-2 font-semibold">Embarque</th>
-              <th class="px-3 py-2 font-semibold">Retorno</th>
-              <th class="px-3 py-2 text-right font-semibold">Ações</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100">
-            {#each followUps as item}
-              {@const whatsappLink = getFollowUpWhatsAppLink(item)}
-              <tr class="transition-colors hover:bg-slate-50">
-                <td class="px-3 py-3 font-medium text-slate-900">{getFollowUpCliente(item)}</td>
-                <td class="px-3 py-3 text-slate-600">{getFollowUpDestino(item) || '-'}</td>
-                <td class="px-3 py-3 text-slate-600">{formatDate(item.data_inicio || item.data_embarque || item.venda?.data_embarque)}</td>
-                <td class="px-3 py-3 text-slate-600">{formatDate(getFollowUpRetorno(item))}</td>
-                <td class="px-3 py-3">
-                  <div class="flex justify-end gap-1">
-                    {#if whatsappLink}
-                      <Button
-                        href={whatsappLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        variant="ghost"
-                        size="xs"
-                        ariaLabel="Enviar follow-up no WhatsApp"
-                        title="Enviar follow-up no WhatsApp"
-                        class_name="h-8! w-8! rounded-lg! p-0! text-green-600 hover:bg-green-50"
-                      >
-                        <MessageCircle size={15} />
-                      </Button>
-                    {/if}
-                    {#if item.cliente_id}
-                      <Button
-                        href={`/clientes/${item.cliente_id}`}
-                        variant="ghost"
-                        size="xs"
-                        ariaLabel="Ver cliente"
-                        title="Ver cliente"
-                        class_name="h-8! w-8! rounded-lg! p-0! text-slate-600"
-                      >
-                        <UserPlus size={15} />
-                      </Button>
-                    {/if}
-                    <Button
-                      href={`/operacao/viagens/${item.id}`}
-                      variant="ghost"
-                      size="xs"
-                      ariaLabel="Ver viagem"
-                      title="Ver viagem"
-                      class_name="h-8! w-8! rounded-lg! p-0! text-slate-600"
-                    >
-                      <Eye size={15} />
-                    </Button>
-                  </div>
-                </td>
-              </tr>
-            {/each}
-          </tbody>
-        </table>
-      </div>
-    {/if}
-  </div>
-</div>
-{/if}
-
-<!-- Linha de comparativos por empresa (Master/Admin) -->
-{#if canSeeCompanyComparativos && (widgetVisible.comparativo_vendas !== false || widgetVisible.comparativo_metas !== false)}
-<div class="mb-6 grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
-
-  <!-- Comparativo de vendas por empresa -->
-  {#if widgetVisible.comparativo_vendas !== false}
-  <div class="vtur-card p-6">
-    <div class="mb-4 flex items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-          <Building2 size={18} />
-        </div>
-        <div>
-          <h3 class="text-base font-bold text-slate-900">Vendas por empresa</h3>
-          <p class="text-xs text-slate-500">Receita total por empresa no período</p>
-        </div>
-      </div>
-      {#if !loadingComparativo && empresasComparativo.length > 0}
-        <span class="shrink-0 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-600">
-          {empresasComparativo.length} empresa{empresasComparativo.length !== 1 ? 's' : ''}
-        </span>
-      {/if}
-    </div>
-    <div class="border-t border-slate-100 pt-4">
-      {#if loadingComparativo}
-        <LoadingState compact={true} />
-      {:else if empresasComparativo.length === 0}
-        <p class="py-8 text-center text-sm text-slate-400">Sem dados de vendas por empresa no período.</p>
-      {:else}
-        {@const chartH = Math.max(180, empresasComparativo.length * 44)}
-        <div style="height:{chartH}px">
-          <ChartJS type="bar" data={comparativoVendasChartData} options={horizontalBarOptions} height={chartH} />
-        </div>
-      {/if}
-    </div>
-  </div>
-  {/if}
-
-  <!-- Atingimento de meta por empresa -->
-  {#if widgetVisible.comparativo_metas !== false}
-  <div class="vtur-card p-6">
-    <div class="mb-4 flex items-center gap-3">
-      <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600">
-        <Target size={18} />
-      </div>
-      <div>
-        <h3 class="text-base font-bold text-slate-900">Meta por empresa</h3>
-        <p class="text-xs text-slate-500">Meta vs. realizado por empresa</p>
-      </div>
-    </div>
-    <div class="border-t border-slate-100 pt-4">
-      {#if loadingComparativo}
-        <LoadingState compact={true} />
-      {:else if empresasComparativo.length === 0}
-        <p class="py-8 text-center text-sm text-slate-400">Sem dados por empresa no período.</p>
-      {:else if empresasComparativo.every((e) => e.totalMeta === 0)}
-        <p class="py-8 text-center text-sm text-slate-400">Nenhuma empresa com meta cadastrada.</p>
-      {:else}
-        <!-- Mini badges de atingimento -->
-        <div class="mb-3 flex flex-wrap gap-2">
-          {#each empresasComMeta as emp}
-            {@const color = EMPRESA_COLORS[empresasComparativo.indexOf(emp) % EMPRESA_COLORS.length]}
-            <span class="rounded-full px-2.5 py-0.5 text-xs font-semibold text-white"
-              style="background-color:{color}"
-              title="{emp.nome}: {emp.atingimentoPct.toFixed(1)}% da meta">
-              {emp.nome.length > 12 ? emp.nome.slice(0, 11) + '…' : emp.nome} · {emp.atingimentoPct.toFixed(0)}%
-            </span>
           {/each}
         </div>
-        {@const chartH = Math.max(180, empresasComMeta.length * 56)}
-        <div style="height:{chartH}px">
-          <ChartJS type="bar" data={comparativoMetasChartData} options={metasBarOptions} height={chartH} />
-        </div>
       {/if}
     </div>
   </div>
+
+  <!-- Linha principal de gráficos: evolução + destinos -->
+  {#if widgetVisible.timeline !== false || widgetVisible.top_destinos !== false}
+    <div class="mb-6 grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
+      <!-- Evolução das vendas -->
+      {#if widgetVisible.timeline !== false}
+        <div class="vtur-card p-6">
+          <div class="mb-4 flex items-center gap-3">
+            <div
+              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-cyan-50 text-cyan-600"
+            >
+              <TrendingUp size={18} />
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">{evolucaoHeader}</h3>
+              <p class="text-xs text-slate-500">Receita por data no período selecionado</p>
+            </div>
+          </div>
+          <div class="border-t border-slate-100 pt-4">
+            {#if loading}
+              <LoadingState compact={true} />
+            {:else if vendasAgg.timeline.length === 0}
+              <p class="py-8 text-center text-sm text-slate-400">Sem vendas no período.</p>
+            {:else}
+              <ChartJS type="line" data={timelineChartData} height={220} />
+            {/if}
+          </div>
+        </div>
+      {/if}
+
+      <!-- Top destinos -->
+      {#if widgetVisible.top_destinos !== false}
+        <div class="vtur-card p-6">
+          <div class="mb-4 flex items-center gap-3">
+            <div
+              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-600"
+            >
+              <MapPin size={18} />
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">{destinosHeader}</h3>
+              <p class="text-xs text-slate-500">Destinos com maior receita</p>
+            </div>
+          </div>
+          <div class="border-t border-slate-100 pt-4">
+            {#if loading}
+              <LoadingState compact={true} />
+            {:else if vendasAgg.topDestinos.length === 0}
+              <p class="py-8 text-center text-sm text-slate-400">Sem destinos no período.</p>
+            {:else}
+              <ChartJS type="doughnut" data={destinosChartData} height={220} />
+            {/if}
+          </div>
+        </div>
+      {/if}
+    </div>
   {/if}
 
-</div>
-{/if}
+  {#if widgetVisible.followups !== false}
+    <div class="vtur-card mb-6 p-6">
+      <div class="mb-4 flex items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div
+            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-600"
+          >
+            <Clock size={18} />
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">
+              {followUpHeader} ({followUps.length})
+            </h3>
+            <p class="text-xs text-slate-500">Clientes que já retornaram e precisam de contato</p>
+          </div>
+        </div>
+        <a
+          href="/operacao/acompanhamento"
+          class="shrink-0 text-sm font-medium text-orange-700 transition-colors hover:text-orange-800"
+        >
+          Ver todos →
+        </a>
+      </div>
+      <div class="border-t border-slate-100 pt-4">
+        {#if loading}
+          <LoadingState compact={true} />
+        {:else if followUps.length === 0}
+          <p class="py-8 text-center text-sm text-slate-400">{followUpEmptyLabel}</p>
+        {:else}
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-left text-sm">
+              <thead class="bg-slate-50 text-xs tracking-wide text-slate-500 uppercase">
+                <tr>
+                  <th class="px-3 py-2 font-semibold">Cliente</th>
+                  <th class="px-3 py-2 font-semibold">Destino</th>
+                  <th class="px-3 py-2 font-semibold">Embarque</th>
+                  <th class="px-3 py-2 font-semibold">Retorno</th>
+                  <th class="px-3 py-2 text-right font-semibold">Ações</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                {#each followUps as item}
+                  {@const whatsappLink = getFollowUpWhatsAppLink(item)}
+                  <tr class="transition-colors hover:bg-slate-50">
+                    <td class="px-3 py-3 font-medium text-slate-900">{getFollowUpCliente(item)}</td>
+                    <td class="px-3 py-3 text-slate-600">{getFollowUpDestino(item) || '-'}</td>
+                    <td class="px-3 py-3 text-slate-600"
+                      >{formatDate(
+                        item.data_inicio || item.data_embarque || item.venda?.data_embarque
+                      )}</td
+                    >
+                    <td class="px-3 py-3 text-slate-600">{formatDate(getFollowUpRetorno(item))}</td>
+                    <td class="px-3 py-3">
+                      <div class="flex justify-end gap-1">
+                        {#if whatsappLink}
+                          <Button
+                            href={whatsappLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            variant="ghost"
+                            size="xs"
+                            ariaLabel="Enviar follow-up no WhatsApp"
+                            title="Enviar follow-up no WhatsApp"
+                            class_name="h-8! w-8! rounded-lg! p-0! text-green-600 hover:bg-green-50"
+                          >
+                            <MessageCircle size={15} />
+                          </Button>
+                        {/if}
+                        {#if item.cliente_id}
+                          <Button
+                            href={`/clientes/${item.cliente_id}`}
+                            variant="ghost"
+                            size="xs"
+                            ariaLabel="Ver cliente"
+                            title="Ver cliente"
+                            class_name="h-8! w-8! rounded-lg! p-0! text-slate-600"
+                          >
+                            <UserPlus size={15} />
+                          </Button>
+                        {/if}
+                        <Button
+                          href={`/operacao/viagens/${item.id}`}
+                          variant="ghost"
+                          size="xs"
+                          ariaLabel="Ver viagem"
+                          title="Ver viagem"
+                          class_name="h-8! w-8! rounded-lg! p-0! text-slate-600"
+                        >
+                          <Eye size={15} />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          </div>
+        {/if}
+      </div>
+    </div>
+  {/if}
 
+  <!-- Linha de comparativos por empresa (Master/Admin) -->
+  {#if canSeeCompanyComparativos && (widgetVisible.comparativo_vendas !== false || widgetVisible.comparativo_metas !== false)}
+    <div class="mb-6 grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
+      <!-- Comparativo de vendas por empresa -->
+      {#if widgetVisible.comparativo_vendas !== false}
+        <div class="vtur-card p-6">
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div
+                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600"
+              >
+                <Building2 size={18} />
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-slate-900">Vendas por empresa</h3>
+                <p class="text-xs text-slate-500">Receita total por empresa no período</p>
+              </div>
+            </div>
+            {#if !loadingComparativo && empresasComparativo.length > 0}
+              <span
+                class="shrink-0 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-600"
+              >
+                {empresasComparativo.length} empresa{empresasComparativo.length !== 1 ? 's' : ''}
+              </span>
+            {/if}
+          </div>
+          <div class="border-t border-slate-100 pt-4">
+            {#if loadingComparativo}
+              <LoadingState compact={true} />
+            {:else if empresasComparativo.length === 0}
+              <p class="py-8 text-center text-sm text-slate-400">
+                Sem dados de vendas por empresa no período.
+              </p>
+            {:else}
+              {@const chartH = Math.max(180, empresasComparativo.length * 44)}
+              <div style="height:{chartH}px">
+                <ChartJS
+                  type="bar"
+                  data={comparativoVendasChartData}
+                  options={horizontalBarOptions}
+                  height={chartH}
+                />
+              </div>
+            {/if}
+          </div>
+        </div>
+      {/if}
+
+      <!-- Atingimento de meta por empresa -->
+      {#if widgetVisible.comparativo_metas !== false}
+        <div class="vtur-card p-6">
+          <div class="mb-4 flex items-center gap-3">
+            <div
+              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-violet-50 text-violet-600"
+            >
+              <Target size={18} />
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Meta por empresa</h3>
+              <p class="text-xs text-slate-500">Meta vs. realizado por empresa</p>
+            </div>
+          </div>
+          <div class="border-t border-slate-100 pt-4">
+            {#if loadingComparativo}
+              <LoadingState compact={true} />
+            {:else if empresasComparativo.length === 0}
+              <p class="py-8 text-center text-sm text-slate-400">
+                Sem dados por empresa no período.
+              </p>
+            {:else if empresasComparativo.every((e) => e.totalMeta === 0)}
+              <p class="py-8 text-center text-sm text-slate-400">
+                Nenhuma empresa com meta cadastrada.
+              </p>
+            {:else}
+              <!-- Mini badges de atingimento -->
+              <div class="mb-3 flex flex-wrap gap-2">
+                {#each empresasComMeta as emp}
+                  {@const color =
+                    EMPRESA_COLORS[empresasComparativo.indexOf(emp) % EMPRESA_COLORS.length]}
+                  <span
+                    class="rounded-full px-2.5 py-0.5 text-xs font-semibold text-white"
+                    style="background-color:{color}"
+                    title="{emp.nome}: {emp.atingimentoPct.toFixed(1)}% da meta"
+                  >
+                    {emp.nome.length > 12 ? emp.nome.slice(0, 11) + '…' : emp.nome} · {emp.atingimentoPct.toFixed(
+                      0
+                    )}%
+                  </span>
+                {/each}
+              </div>
+              {@const chartH = Math.max(180, empresasComMeta.length * 56)}
+              <div style="height:{chartH}px">
+                <ChartJS
+                  type="bar"
+                  data={comparativoMetasChartData}
+                  options={metasBarOptions}
+                  height={chartH}
+                />
+              </div>
+            {/if}
+          </div>
+        </div>
+      {/if}
+    </div>
+  {/if}
 {/if}
