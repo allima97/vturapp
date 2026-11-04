@@ -85,4 +85,32 @@ describe('cliente de dados D1', () => {
     expect(result.error).toBeNull();
     expect(result.data).toEqual(expect.arrayContaining([{ cliente_id: clienteId }]));
   });
+  it('resolve embed pelo nome da coluna FK (cliente:client_id)', async () => {
+    const clienteId = crypto.randomUUID();
+    const quoteId = crypto.randomUUID();
+    await client().from('clientes').insert({ id: clienteId, nome: 'Bia' });
+    const userId = crypto.randomUUID();
+    const user = await client().from('users').insert({ id: userId, email: `${userId}@t.com` });
+    expect(user.error).toBeNull();
+    const quote = await client().from('quote').insert({
+      id: quoteId,
+      client_id: clienteId,
+      created_by: userId,
+      status: 'draft',
+      currency: 'BRL',
+      total: 1,
+      raw_json: {},
+      status_negociacao: 'novo'
+    });
+    expect(quote.error).toBeNull();
+
+    const result = await client()
+      .from('quote')
+      .select('id, cliente:client_id (id, nome)')
+      .eq('id', quoteId)
+      .single();
+
+    expect(result.error).toBeNull();
+    expect(result.data).toMatchObject({ cliente: { id: clienteId, nome: 'Bia' } });
+  });
 });

@@ -260,9 +260,12 @@ function whereSql(table: string, filters: Filter[]) {
 }
 
 function resolveRelation(parent: string, embed: Embed) {
+  const byColumn = embed.hint
+    ? undefined
+    : fks.find((fk) => fk.table === parent && fk.column === embed.table);
   const hinted = embed.hint
     ? fks.find((fk) => fk.name === embed.hint || fk.column === embed.hint)
-    : undefined;
+    : byColumn;
   const candidates = hinted
     ? [hinted]
     : fks.filter(
@@ -270,19 +273,22 @@ function resolveRelation(parent: string, embed: Embed) {
           (fk.table === parent && fk.refTable === embed.table) ||
           (fk.table === embed.table && fk.refTable === parent)
       );
-  const chosen =
-    candidates.find((fk) => fk.table === parent && fk.refTable === embed.table) ||
-    candidates.find((fk) => fk.table === embed.table && fk.refTable === parent);
+  const chosen = byColumn
+    ? byColumn
+    : candidates.find((fk) => fk.table === parent && fk.refTable === embed.table) ||
+      candidates.find((fk) => fk.table === embed.table && fk.refTable === parent);
   if (!chosen) throw new Error(`relacao ${parent} -> ${embed.table} nao encontrada`);
-  if (chosen.table === parent && chosen.refTable === embed.table) {
+  if (byColumn || (chosen.table === parent && chosen.refTable === embed.table)) {
     return {
       kind: 'one' as const,
+      table: chosen.refTable,
       parentColumn: chosen.column,
       childColumn: chosen.refColumn
     };
   }
   return {
     kind: 'many' as const,
+    table: chosen.table,
     parentColumn: chosen.refColumn,
     childColumn: chosen.column
   };
@@ -333,7 +339,7 @@ async function hydrate(
       const related = ids.length
         ? await selectRows(
             db,
-            embed.table,
+            relation.table,
             [...leafColumns, relation.childColumn],
             [{ kind: 'in', column: relation.childColumn, values: ids }],
             [],
@@ -341,7 +347,7 @@ async function hydrate(
             null
           )
         : [];
-      await hydrate(db, embed.table, related, embed.fields);
+      await hydrate(db, relation.table, related, embed.fields);
       const byId = new Map(related.map((row) => [String(row[relation.childColumn]), row]));
       for (const row of rows) {
         const key = row[relation.parentColumn];
@@ -360,7 +366,7 @@ async function hydrate(
     const related = ids.length
       ? await selectRows(
           db,
-          embed.table,
+          relation.table,
           [...leafColumns, relation.childColumn],
           [{ kind: 'in', column: relation.childColumn, values: ids }],
           [],
@@ -368,7 +374,7 @@ async function hydrate(
           null
         )
       : [];
-    await hydrate(db, embed.table, related, embed.fields);
+    await hydrate(db, relation.table, related, embed.fields);
     const grouped = new Map<string, Array<Record<string, unknown>>>();
     for (const row of related) {
       const key = String(row[relation.childColumn]);
