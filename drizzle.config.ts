@@ -1,19 +1,19 @@
 import { defineConfig } from 'drizzle-kit';
 
 /**
- * Configuração do Drizzle Kit para migrations D1.
+ * Configuração do Drizzle Kit para inspeção/Studio.
  *
  * Uso:
- *   npm run drizzle:generate   — gera nova migration a partir do schema
  *   npm run drizzle:studio     — interface visual (requer wrangler dev)
  *
- * O driver "d1-http" é usado apenas para drizzle-studio; as migrations
- * são aplicadas via wrangler (d1:migrate:local / d1:migrate:staging).
+ * Wrangler SQL em ./drizzle é a fonte canônica aplicada por ambiente.
+ * O journal/snapshots Drizzle estão atrás da história manual 0006–0010;
+ * migrations geradas em outra pasta não devem ser aplicadas por Wrangler.
  *
  * Referência: docs/f1/F1-03-drizzle.md
  */
 export default defineConfig({
-  out: './drizzle',
+  out: './drizzle-generated',
   schema: './src/lib/server/db/schema.ts',
   dialect: 'sqlite',
 

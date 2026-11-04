@@ -1,10 +1,12 @@
 # F0-03 — Entidades, schema e RPCs
 
-**Estado:** CONCLUÍDA  
-**Responsável / data:** 2026-10-26  
+**Estado:** REABERTA — schema remoto capturado; reconciliação de entidades/regras pendente
+**Responsável / data:** revalidação em 2026-10-31
 **Dependência:** F0-01, F0-02  
 
-> **Escopo:** levantamento a partir do código-fonte (inventário de API, migrations SQL e referências no servidor). Não foram feitas consultas ao banco de produção. Schema completo de cada tabela precisará ser extraído do Supabase antes de criar o schema Drizzle — ver F2-01.
+> **Atualização de evidência:** além do inventário estático original, a CLI global Supabase do Mac gerou os tipos remotos e consultas somente de metadados foram feitas em `information_schema`/`pg_catalog`. O resultado sem linhas de negócio está em `docs/migracao/SCHEMA-LEGADO-2026-10-31.json`. O agrupamento abaixo é um mapa inicial de domínios, não a contagem completa do schema remoto.
+
+O schema remoto consultado tem **137 tabelas públicas, 6 views e 1.641 colunas**. Também há 486 constraints, 483 índices, 227 rotinas públicas, 91 triggers e 396 policies RLS públicas. A lista anterior de “95 tabelas” era incompleta. A presença de uma tabela não implica que deva ser copiada para D1: cada entidade deve ser classificada como necessária, substituída por novo modelo ou formalmente excluída, preservando as regras ativas.
 
 ## RPCs utilizadas na aplicação
 
@@ -13,7 +15,7 @@
 | `accessible_client_ids` | Resolve IDs de clientes acessíveis por combinação empresa+vendedor | `src/lib/server/v1.ts` | Substituir por query Drizzle parametrizada (lógica já documentada na migration) |
 | `company_cliente_ids` | IDs de clientes de uma empresa | `src/lib/server/clientes.ts` | Substituir por query Drizzle |
 | `can_access_cliente_by_vendedor_scope` | Verifica acesso a cliente por escopo de vendedor | `src/lib/server/clientes.ts` | Substituir por query Drizzle |
-| `check_security_rate_limit` | Rate limit persistente entre instâncias | `src/lib/server/persistentRateLimit.ts` | Substituir por tabela D1 + query Drizzle; avaliar trigger vs aplicação |
+| `check_security_rate_limit` | Rate limit persistente entre instâncias | `src/lib/server/persistentRateLimit.ts` | **SUBSTITUÍDA EM STAGING** por `security_rate_limits` e upsert atômico D1 (`drizzle/0012_security_rate_limits.sql`); fallback Supabase ainda existe sem binding D1 |
 | `gestor_equipe_base_id` | Resolve equipe base do gestor | `src/lib/server/api/routes/parametros/escalas.ts` | Substituir por query Drizzle |
 | `set_gestor_vendedor_relacao` | Cria/atualiza relação gestor↔vendedor | `src/lib/server/api/routes/equipe/relacao.ts` | Substituir por operação atômica Drizzle |
 | `fn_mark_ranking_read_model_dirty` | Marca mês do read model como dirty | `src/lib/server/vendasSave.ts` | Substituir por operação D1 (INSERT/UPDATE condicional) |
@@ -236,12 +238,13 @@ O código atual usa `Math.round(value * 100) / 100` para arredondar, indicando q
 - Percentuais de comissão e câmbio (precisão de 4 casas)
 - Cálculo de rateio de recibo
 
-## Aceite verificado
+## Aceite atualizado em 2026-10-31
 
-- [x] Todas as RPCs únicas catalogadas (14 identificadas)
-- [x] Destino de cada RPC definido (query Drizzle ou lógica de aplicação)
-- [x] 95 tabelas agrupadas por módulo de destino
+- [ ] Reconciliar as rotinas efetivamente chamadas pela aplicação com as 227 rotinas públicas remotas; distinguir RPCs de negócio, triggers e funções de extensões.
+- [ ] Mapear cada uma das 137 tabelas públicas e 6 views para migração de regra/modelo D1, substituição ou exclusão deliberada.
+- [ ] Reconciliar constraints, índices, 91 triggers e 396 policies RLS com serviços, guards e migrations D1.
+- [x] Capturar tipos e metadados do schema remoto sem ler ou exportar registros de negócio; inventário versionado em `docs/migracao/SCHEMA-LEGADO-2026-10-31.json`.
 - [x] X02 claramente separado
 - [x] Convenções de tipos Drizzle/SQLite documentadas
 - [x] Mudança crítica de modelo monetário (numeric → centavos inteiros) registrada
-- [x] Nenhum dado de produção acessado
+- [x] Nenhuma linha de negócio foi consultada ou exportada

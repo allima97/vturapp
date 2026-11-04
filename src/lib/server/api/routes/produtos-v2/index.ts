@@ -17,7 +17,7 @@
 import { Hono, type Context } from 'hono';
 import type { ApiEnv } from '../../types';
 import { resolveAuthContext } from '$lib/server/auth/context';
-import { can } from '$lib/server/policy';
+import { canForContext } from '$lib/server/policy';
 import { getDb } from '$lib/server/db/client';
 import {
   ProdutoError,
@@ -85,7 +85,7 @@ produtosV2Routes.get('/', async (c) => {
 produtosV2Routes.post('/', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'configuracoes', 'criar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'configuracoes', 'criar')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const body = await c.req.json<ProdutoInput>().catch(() => null);
   if (!body) return c.json({ error: 'Corpo JSON inválido.' }, 400);
@@ -124,7 +124,7 @@ produtosV2Routes.get('/:id', async (c) => {
 produtosV2Routes.patch('/:id', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'configuracoes', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'configuracoes', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const id = parseId(c.req.param('id'));
   if (!id) return c.json({ error: 'ID inválido.' }, 400);
@@ -147,7 +147,7 @@ produtosV2Routes.patch('/:id', async (c) => {
 produtosV2Routes.delete('/:id', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'configuracoes', 'excluir')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'configuracoes', 'excluir')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const id = parseId(c.req.param('id'));
   if (!id) return c.json({ error: 'ID inválido.' }, 400);

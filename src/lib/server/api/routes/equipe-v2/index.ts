@@ -8,7 +8,7 @@
 import { Hono } from 'hono';
 import type { ApiEnv } from '../../types';
 import { resolveAuthContext } from '$lib/server/auth/context';
-import { can } from '$lib/server/policy';
+import { canForContext } from '$lib/server/policy';
 import { getDb } from '$lib/server/db/client';
 import {
   obterEmpresa,
@@ -43,7 +43,7 @@ equipeV2Routes
   .get('/empresa', async (c) => {
     const { authCtx, db } = await resolveCtx(c);
     if (!authCtx) return c.json({ error: 'Nao autenticado.' }, 401);
-    if (!can(authCtx.papel, 'empresa', 'ler')) return c.json({ error: 'Sem permissao.' }, 403);
+    if (!canForContext(authCtx, 'empresa', 'ler')) return c.json({ error: 'Sem permissao.' }, 403);
     try {
       return c.json({ empresa: await obterEmpresa(db, authCtx.empresaId) });
     } catch (e) { return erroEmpresa(c, e); }
@@ -52,7 +52,7 @@ equipeV2Routes
   .patch('/empresa', async (c) => {
     const { authCtx, db } = await resolveCtx(c);
     if (!authCtx) return c.json({ error: 'Nao autenticado.' }, 401);
-    if (!can(authCtx.papel, 'empresa', 'editar')) return c.json({ error: 'Sem permissao.' }, 403);
+    if (!canForContext(authCtx, 'empresa', 'editar')) return c.json({ error: 'Sem permissao.' }, 403);
     let body: { nome?: string; timezone?: string; slug?: string } = {};
     try { body = await c.req.json(); } catch { /**/ }
     try {
@@ -63,7 +63,7 @@ equipeV2Routes
   .get('/membros', async (c) => {
     const { authCtx, db } = await resolveCtx(c);
     if (!authCtx) return c.json({ error: 'Nao autenticado.' }, 401);
-    if (!can(authCtx.papel, 'usuarios', 'ler')) return c.json({ error: 'Sem permissao.' }, 403);
+    if (!canForContext(authCtx, 'usuarios', 'ler')) return c.json({ error: 'Sem permissao.' }, 403);
     const inativos = c.req.query('inativos') === 'true';
     return c.json({ membros: await listarMembros(db, authCtx.empresaId, { somenteAtivos: !inativos }) });
   })
@@ -71,7 +71,7 @@ equipeV2Routes
   .get('/membros/:id', async (c) => {
     const { authCtx, db } = await resolveCtx(c);
     if (!authCtx) return c.json({ error: 'Nao autenticado.' }, 401);
-    if (!can(authCtx.papel, 'usuarios', 'ler')) return c.json({ error: 'Sem permissao.' }, 403);
+    if (!canForContext(authCtx, 'usuarios', 'ler')) return c.json({ error: 'Sem permissao.' }, 403);
     const id = parseInt(c.req.param('id'), 10);
     if (!id) return c.json({ error: 'ID invalido.' }, 400);
     try {
@@ -82,7 +82,7 @@ equipeV2Routes
   .patch('/membros/:id/papel', async (c) => {
     const { authCtx, db } = await resolveCtx(c);
     if (!authCtx) return c.json({ error: 'Nao autenticado.' }, 401);
-    if (!can(authCtx.papel, 'usuarios', 'gerenciar')) return c.json({ error: 'Sem permissao.' }, 403);
+    if (!canForContext(authCtx, 'usuarios', 'gerenciar')) return c.json({ error: 'Sem permissao.' }, 403);
     const id = parseInt(c.req.param('id'), 10);
     if (!id) return c.json({ error: 'ID invalido.' }, 400);
     let body: { papel?: string } = {};
@@ -98,7 +98,7 @@ equipeV2Routes
   .delete('/membros/:id', async (c) => {
     const { authCtx, db } = await resolveCtx(c);
     if (!authCtx) return c.json({ error: 'Nao autenticado.' }, 401);
-    if (!can(authCtx.papel, 'usuarios', 'gerenciar')) return c.json({ error: 'Sem permissao.' }, 403);
+    if (!canForContext(authCtx, 'usuarios', 'gerenciar')) return c.json({ error: 'Sem permissao.' }, 403);
     const id = parseInt(c.req.param('id'), 10);
     if (!id) return c.json({ error: 'ID invalido.' }, 400);
     try {

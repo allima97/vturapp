@@ -22,6 +22,8 @@ import type { Papel } from '$lib/server/db/schema';
 import type { ApiEnv } from '$lib/server/api/types';
 import type { Recurso, Acao } from './matrix';
 import { MATRIZ_RBAC } from './matrix';
+import type { AuthContext } from '$lib/server/auth/context';
+import { hasLegacyModuleAccess } from '$lib/server/auth/legacy-scope';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // can() — verificação pura
@@ -47,6 +49,39 @@ export function can(
   const capSet = MATRIZ_RBAC[papel];
   if (!capSet) return false;
   return capSet.has(`${recurso}:${acao}`);
+}
+
+const LEGACY_ACTION_LEVEL: Record<Acao, number> = {
+  ler: 1,
+  exportar: 1,
+  criar: 2,
+  editar: 3,
+  excluir: 4,
+  gerenciar: 5,
+};
+
+/**
+ * Autoriza usando o perfil D1 quando ele existe; usuários anteriores à
+ * provisionação continuam usando a matriz simples até serem reconciliados.
+ */
+export function canForContext(
+  ctx: AuthContext | null | undefined,
+  recurso: Recurso,
+  acao: Acao,
+): boolean {
+  if (!ctx) return false;
+  if (!ctx.legacyScope) return can(ctx.papel, recurso, acao);
+  if (acao === 'exportar') {
+    return (
+      hasLegacyModuleAccess(ctx.legacyScope, [`v2:${recurso}:exportar`], 1) ||
+      hasLegacyModuleAccess(ctx.legacyScope, [`v2:${recurso}`], 5)
+    );
+  }
+  return hasLegacyModuleAccess(
+    ctx.legacyScope,
+    [`v2:${recurso}`],
+    LEGACY_ACTION_LEVEL[acao],
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -162,7 +197,7 @@ export function requireCan(recurso: Recurso, acao: Acao): MiddlewareHandler<ApiE
       return c.json({ error: 'Não autenticado.', code: 'UNAUTHENTICATED' }, 401);
     }
 
-    if (!can(ctx.papel, recurso, acao)) {
+    if (!canForContext(ctx, recurso, acao)) {
       return c.json(
         { error: 'Sem permissão.', code: 'FORBIDDEN', recurso, acao },
         403

@@ -25,7 +25,15 @@ vi.mock('$lib/brand', () => ({ default: '' }));
 
 import { describe, it, expect, beforeAll } from 'vitest';
 import { env, applyD1Migrations } from 'cloudflare:test';
+import { eq } from 'drizzle-orm';
 import { getDb } from '$lib/server/db/client';
+import { syncTenantAccessProfile } from '$lib/server/auth/tenant-access-profile';
+import { resolveLegacyAccessScope } from '$lib/server/auth/legacy-scope';
+import { canForContext } from '$lib/server/policy';
+import type { AuthContext } from '$lib/server/auth/context';
+import { convites, membrosEmpresa, user } from '$lib/server/db/schema';
+import { aceitarConvite } from '$lib/server/invites/service';
+import type { AuthInstance } from '$lib/auth';
 import {
   obterEmpresa,
   editarEmpresa,
@@ -256,5 +264,105 @@ describe('Suíte W — M01: Empresas e Membros', () => {
     } catch (e) {
       expect((e as EmpresaError).code).toBe('NAO_ENCONTRADO');
     }
+  });
+
+  it('W14. perfil D1 — papéis simples viram permissões por recurso sem ADMIN global', async () => {
+    const db = getDb(env.DB);
+    await seedEmpresa(db);
+    await inserirMembro(db, EMPRESA_W, USER_W2, 'operador');
+    await syncTenantAccessProfile(env.DB, USER_W2, 'operador');
+
+    const scope = await resolveLegacyAccessScope(env.DB, USER_W2);
+    expect(scope?.role).toBe('OUTRO');
+    expect(scope?.isAdmin).toBe(false);
+    expect(scope?.companyIds).toEqual([EMPRESA_W]);
+
+    const ctx: AuthContext = {
+      userId: USER_W2,
+      userEmail: 'oper.w@teste.com',
+      empresaId: EMPRESA_W,
+      papel: 'operador',
+      legacyScope: scope ?? undefined,
+    };
+    expect(canForContext(ctx, 'vendas', 'ler')).toBe(true);
+    expect(canForContext(ctx, 'vendas', 'criar')).toBe(true);
+    expect(canForContext(ctx, 'vendas', 'editar')).toBe(true);
+    expect(canForContext(ctx, 'vendas', 'exportar')).toBe(true);
+    expect(canForContext(ctx, 'financeiro', 'exportar')).toBe(true);
+    expect(canForContext(ctx, 'vendas', 'excluir')).toBe(false);
+    expect(canForContext(ctx, 'auditoria', 'ler')).toBe(false);
+  });
+
+  it('W15. alteração de papel atualiza as permissões D1 no mesmo batch', async () => {
+    const db = getDb(env.DB);
+    await seedEmpresa(db);
+    const membroId = await inserirMembro(db, EMPRESA_W, USER_W2, 'operador');
+    await syncTenantAccessProfile(env.DB, USER_W2, 'operador');
+
+    await alterarPapelMembro(db, EMPRESA_W, membroId, 'visualizador');
+    const scope = await resolveLegacyAccessScope(env.DB, USER_W2);
+    const ctx: AuthContext = {
+      userId: USER_W2,
+      userEmail: 'oper.w@teste.com',
+      empresaId: EMPRESA_W,
+      papel: 'visualizador',
+      legacyScope: scope ?? undefined,
+    };
+
+    expect(canForContext(ctx, 'vendas', 'ler')).toBe(true);
+    expect(canForContext(ctx, 'vendas', 'criar')).toBe(false);
+    expect(canForContext(ctx, 'vendas', 'exportar')).toBe(false);
+    expect(canForContext(ctx, 'agenda', 'criar')).toBe(false);
+  });
+
+  it('W16. aceitar convite grava vínculo e perfil de acesso atomically em D1', async () => {
+    const db = getDb(env.DB);
+    await seedEmpresa(db);
+    const token = 'token-operador-w16';
+    const agora = new Date().toISOString();
+    await db.insert(convites).values({
+      empresaId: EMPRESA_W,
+      email: 'novo.operador@teste.com',
+      papel: 'operador',
+      token,
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+      criadoEm: agora,
+    });
+
+    const fakeAuth = {
+      api: {
+        signUpEmail: async () => {
+          await db.insert(user).values({
+            id: 'user-invite-w16',
+            name: 'Novo Operador',
+            email: 'novo.operador@teste.com',
+            emailVerified: false,
+            twoFactorEnabled: false,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+          return { user: { id: 'user-invite-w16' } };
+        },
+      },
+    } as unknown as AuthInstance;
+
+    const result = await aceitarConvite(
+      env.DB,
+      fakeAuth,
+      { token, nome: 'Novo Operador', senha: 'senha-de-teste-123' },
+      'https://vturapp.test',
+    );
+
+    const membership = await db
+      .select({ papel: membrosEmpresa.papel })
+      .from(membrosEmpresa)
+      .where(eq(membrosEmpresa.userId, result.userId))
+      .get();
+    const scope = await resolveLegacyAccessScope(env.DB, result.userId);
+
+    expect(membership?.papel).toBe('operador');
+    expect(scope?.role).toBe('OUTRO');
+    expect(scope?.companyIds).toEqual([EMPRESA_W]);
+    expect(scope?.modulePermissions['v2:vendas']).toBe('edit');
   });
 });

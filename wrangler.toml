@@ -40,11 +40,11 @@ binding = "KV_BINDING"
 id = "60fa423718914712bec4f489d41c3dd6"
 
 # ─── D1 — banco relacional principal ─────────────────────────────────────────
-# Produção: criar com `wrangler d1 create vturapp-db` e substituir o database_id.
+# D1 de produção recém-provisionado; manter migrations alinhadas com staging.
 [[d1_databases]]
 binding = "DB"
 database_name = "vturapp-db"
-database_id = "PLACEHOLDER_PROD_D1_ID"   # substituir após: wrangler d1 create vturapp-db
+database_id = "36d3da2e-b186-48f8-bb3e-4f9a14b20235"
 migrations_dir = "./drizzle"
 
 # ─── R2 — arquivos privados ───────────────────────────────────────────────────
@@ -75,12 +75,12 @@ binding = "ASSETS"
 
 [[env.staging.kv_namespaces]]
 binding = "KV_BINDING"
-id = "PLACEHOLDER_STAGING_KV_ID"   # criar com: wrangler kv namespace create vturapp-kv --env staging
+id = "10586afa5db14a7ab8d2e406ba98d5da"
 
 [[env.staging.d1_databases]]
 binding = "DB"
 database_name = "vturapp-db-staging"
-database_id = "PLACEHOLDER_STAGING_D1_ID"   # criar com: wrangler d1 create vturapp-db-staging
+database_id = "96c13e55-60e3-4e3b-9ecc-b22da019c010"
 migrations_dir = "./drizzle"
 
 [[env.staging.r2_buckets]]

@@ -22,7 +22,7 @@ function readTurnstileVerifyBody(value: unknown): TurnstileVerifyBody | null {
   };
 }
 
-export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+export const POST: RequestHandler = async ({ request, getClientAddress, platform }) => {
   try {
     const originError = rejectCrossOriginRequest(request, 'Origem inválida.');
     if (originError) return originError;
@@ -37,7 +37,7 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
     const rateLimit = await checkPersistentRateLimit('turnstile-verify', remoteIp || 'unknown', {
       max: 120,
       windowMs: 60_000
-    });
+    }, platform?.env?.DB);
     if (!rateLimit.allowed) {
       return json(
         { error: 'Muitas validações. Tente novamente em instantes.' },

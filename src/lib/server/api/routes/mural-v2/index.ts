@@ -6,7 +6,7 @@
 import { Hono } from 'hono';
 import type { ApiEnv } from '../../types';
 import { resolveAuthContext } from '$lib/server/auth/context';
-import { can } from '$lib/server/policy';
+import { canForContext } from '$lib/server/policy';
 import {
   criarRecado,
   excluirRecado,
@@ -28,7 +28,7 @@ export const muralV2Routes = new Hono<ApiEnv>()
     const baseURL = new URL(c.req.url).origin;
     const ctx = await resolveAuthContext(c.req.raw.headers, DB, BETTER_AUTH_SECRET, baseURL);
     if (!ctx) return c.json({ error: 'Não autenticado.' }, 401);
-    if (!can(ctx.papel, 'mural', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+    if (!canForContext(ctx, 'mural', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
 
     const db = getDb(DB);
     const since = c.req.query('since') ?? undefined;
@@ -52,7 +52,7 @@ export const muralV2Routes = new Hono<ApiEnv>()
     const baseURL = new URL(c.req.url).origin;
     const ctx = await resolveAuthContext(c.req.raw.headers, DB, BETTER_AUTH_SECRET, baseURL);
     if (!ctx) return c.json({ error: 'Não autenticado.' }, 401);
-    if (!can(ctx.papel, 'mural', 'criar')) return c.json({ error: 'Sem permissão.' }, 403);
+    if (!canForContext(ctx, 'mural', 'criar')) return c.json({ error: 'Sem permissão.' }, 403);
 
     const db = getDb(DB);
     let body: { assunto?: string; conteudo?: string; destinatarioId?: string } = {};
@@ -80,7 +80,7 @@ export const muralV2Routes = new Hono<ApiEnv>()
     const baseURL = new URL(c.req.url).origin;
     const ctx = await resolveAuthContext(c.req.raw.headers, DB, BETTER_AUTH_SECRET, baseURL);
     if (!ctx) return c.json({ error: 'Não autenticado.' }, 401);
-    if (!can(ctx.papel, 'mural', 'excluir')) return c.json({ error: 'Sem permissão.' }, 403);
+    if (!canForContext(ctx, 'mural', 'excluir')) return c.json({ error: 'Sem permissão.' }, 403);
 
     const db = getDb(DB);
     const id = Number(c.req.param('id'));

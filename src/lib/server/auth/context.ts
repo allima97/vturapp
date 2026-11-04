@@ -13,6 +13,7 @@
 import { eq } from 'drizzle-orm';
 import { getDb } from '$lib/server/db/client';
 import { membrosEmpresa, user, type Papel } from '$lib/server/db/schema';
+import { LegacyAccessDisabledError, resolveLegacyAccessScope, type LegacyAccessScope } from '$lib/server/auth/legacy-scope';
 import { createAuth } from '$lib/auth';
 
 export type AuthContext = {
@@ -20,6 +21,8 @@ export type AuthContext = {
   userEmail: string;
   empresaId: number;
   papel: Papel;
+  /** Presente para contas provisionadas no modelo D1 de permissões por módulo. */
+  legacyScope?: LegacyAccessScope;
 };
 
 /**
@@ -72,11 +75,20 @@ export async function resolveAuthContext(
     return null;
   }
 
+  let legacyScope: LegacyAccessScope | null;
+  try {
+    legacyScope = await resolveLegacyAccessScope(d1, sessionUser.id);
+  } catch (err) {
+    if (err instanceof LegacyAccessDisabledError) return null;
+    throw err;
+  }
+
   return {
     userId: sessionUser.id,
     userEmail: sessionUser.email,
     empresaId: userRow.empresaId,
     papel: membro.papel as Papel,
+    ...(legacyScope ? { legacyScope } : {}),
   };
 }
 

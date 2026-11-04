@@ -38,7 +38,7 @@ export async function handleAdminAuthSetPasswordPost(event: RequestEvent) {
     const rateLimit = await checkPersistentRateLimit('admin-set-password', user.id, {
       max: 20,
       windowMs: 60_000
-    });
+    }, event.platform?.env?.DB);
     if (!rateLimit.allowed) {
       return json(
         { error: 'Muitas alterações de senha. Aguarde e tente novamente.' },

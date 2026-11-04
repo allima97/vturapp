@@ -173,7 +173,7 @@ export const handleWelcomeEmailPost = async (event: RequestEvent) => {
     const user = await requireAuthenticatedUser(event);
     const client = locals.supabase;
 
-    const rl = await checkPersistentRateLimit('welcome-email', user.id, { max: 5, windowMs: 60_000 });
+    const rl = await checkPersistentRateLimit('welcome-email', user.id, { max: 5, windowMs: 60_000 }, event.platform?.env?.DB);
     if (!rl.allowed) {
       return json(
         { error: 'Muitas requisicoes. Tente novamente em instantes.' },

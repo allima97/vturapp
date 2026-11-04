@@ -16,7 +16,7 @@
 import { Hono, type Context } from 'hono';
 import type { ApiEnv } from '../../types';
 import { resolveAuthContext } from '$lib/server/auth/context';
-import { can } from '$lib/server/policy';
+import { canForContext } from '$lib/server/policy';
 import { getDb } from '$lib/server/db/client';
 import {
   DestinoError,
@@ -86,7 +86,7 @@ destinosV2Routes.post('/', async (c) => {
   if ('res' in result) return result.res;
   const { ctx, db } = result;
 
-  if (!can(ctx.papel, 'configuracoes', 'criar')) {
+  if (!canForContext(ctx, 'configuracoes', 'criar')) {
     return c.json({ error: 'Sem permissão para criar destinos.' }, 403);
   }
 
@@ -129,7 +129,7 @@ destinosV2Routes.patch('/:id', async (c) => {
   if ('res' in result) return result.res;
   const { ctx, db } = result;
 
-  if (!can(ctx.papel, 'configuracoes', 'editar')) {
+  if (!canForContext(ctx, 'configuracoes', 'editar')) {
     return c.json({ error: 'Sem permissão para editar destinos.' }, 403);
   }
 
@@ -155,7 +155,7 @@ destinosV2Routes.delete('/:id', async (c) => {
   if ('res' in result) return result.res;
   const { ctx, db } = result;
 
-  if (!can(ctx.papel, 'configuracoes', 'excluir')) {
+  if (!canForContext(ctx, 'configuracoes', 'excluir')) {
     return c.json({ error: 'Sem permissão para inativar destinos.' }, 403);
   }
 

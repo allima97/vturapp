@@ -42,7 +42,7 @@ export async function handleAdminAuthResetMfaPost(event: RequestEvent) {
     const rateLimit = await checkPersistentRateLimit('admin-reset-mfa', user.id, {
       max: 20,
       windowMs: 60_000
-    });
+    }, event.platform?.env?.DB);
     if (!rateLimit.allowed) {
       return json(
         { error: 'Muitas redefinicoes de MFA. Aguarde e tente novamente.' },

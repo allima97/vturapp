@@ -41,7 +41,8 @@ export async function handleAdminAvisosSendPost(event: RequestEvent) {
     const rateLimit = await checkPersistentRateLimit(
       'admin-avisos-send',
       `${event.getClientAddress?.() || 'unknown'}:${user.id}`,
-      { max: 20, windowMs: 60_000 }
+      { max: 20, windowMs: 60_000 },
+      event.platform?.env?.DB,
     );
     if (!rateLimit.allowed) {
       return new Response('Muitas tentativas de envio. Aguarde alguns segundos.', {

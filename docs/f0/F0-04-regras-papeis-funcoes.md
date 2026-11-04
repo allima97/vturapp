@@ -1,7 +1,7 @@
 # F0-04 — Regras, papéis e funções existentes
 
-**Estado:** CONCLUÍDA  
-**Responsável / data:** 2026-10-26  
+**Estado:** REABERTA — estruturas D1 ampliadas; guards e escopos ainda não portados
+**Responsável / data:** 2026-10-31
 **Dependência:** F0-03  
 
 > Mapeamento das regras de negócio, papéis de usuário e funções server-side existentes. Para cada função: decisão de **MANTER**, **REDESENHAR** ou **EXCLUIR**.
@@ -261,9 +261,15 @@ Funções puramente lógicas sem dependência de Supabase ou PostgreSQL:
 
 - [x] Papéis documentados com escopo, hierarquia e flag `usoIndividual`
 - [x] Níveis de permissão e herança de módulos mapeados
-- [x] Todos os guards de autenticação/autorização com decisão
-- [x] Funções de escopo de empresa/vendedor com decisão
+- [x] Decisões de portabilidade registradas para guards e escopos
+- [ ] Resolver contexto Better Auth para os seis papéis, acesso configurável e múltiplas empresas
+- [ ] Portar guards/serviços de administração para o modelo novo e eliminar consultas Supabase
+- [ ] Provar isolamento por empresa, vendedor, equipe e uso individual em todos os fluxos de leitura e escrita
 - [x] Funções de comissão separadas: lógica pura (manter) vs integração DB (redesenhar) vs X02 (excluir)
 - [x] Conciliação explicitamente marcada como EXCLUIR (X02)
-- [x] Lista de funções portáveis (zero dependência de Supabase)
+- [x] Lista de funções portáveis e dependências legadas identificadas
 - [x] Ponto de atenção: `comissao.ts` mistura X02 com válido → separar em F4-01
+
+**Atualização 2026-10-31:** a migration `0011_m01_legacy_access_model.sql` e `schema.ts` representam tipos de usuário, perfil, permissões, relações MASTER/FINANCEIRO, equipes e desligamento global de módulos. `src/lib/server/auth/legacy-scope.ts` resolve em D1 o papel efetivo, empresas acessíveis (incluindo vínculos pendentes, como no código atual), permissões por módulo/herança e equipe do gestor via cadeia `gestor_equipe_compartilhada`. A definição remota de `gestor_equipe_vendedor_ids` foi consultada como código de schema, sem dados de usuários. O fluxo de convite e alteração de papel agora provisiona/sincroniza permissões explícitas e o `AuthContext`/guards das rotas v2 consultam esse perfil sem cache. As três funções de papel v2 são projetadas como `OUTRO` com chaves `v2:*`; `ADMIN` permanece reservado ao papel global. A suíte M01 Workers prova convite, projeção de permissões, exportação seletiva, alteração operador→visualizador e revogação (16/16). Os seis papéis legados dinâmicos, escopo multiempresa de `MASTER`/`FINANCEIRO` e filtros de equipe ainda não foram conectados às rotas; por isso F2 permanece reaberta.
+
+**Atualização 2026-10-31 — limite persistente:** `check_security_rate_limit` passou a usar `security_rate_limits` em D1 via `0012_security_rate_limits.sql`, com janela fixa e chave SHA-256. Todos os chamadores existentes passam o binding D1 e a suíte Workers do domínio passou (3/3); o fallback Supabase ainda permanece para execuções sem binding e deve ser eliminado antes do corte integral.

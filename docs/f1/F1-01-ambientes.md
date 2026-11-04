@@ -21,30 +21,10 @@ Branch criada a partir do commit `8aeaa5e0` (F0 concluída).
 |---------|------|-------|---------|----------|
 | `DB` | D1 | SQLite local (automático com `--local`) | `vturapp-db-staging` | `vturapp-db` |
 | `R2` | R2 | simulação local (automático com `--local`) | `vturapp-files-staging` | `vturapp-files` |
-| `KV_BINDING` | KV | simulação local | PLACEHOLDER_STAGING_KV_ID | `60fa423718914712bec4f489d41c3dd6` (existente) |
+| `KV_BINDING` | KV | simulação local | `10586afa5db14a7ab8d2e406ba98d5da` (`vturapp-kv-staging`) | `60fa423718914712bec4f489d41c3dd6` (existente) |
 | `ASSETS` | Assets | `.svelte-kit/cloudflare` | idem | idem |
 
-**IDs de D1 e KV de staging são placeholders** — preencher após criar os recursos:
-
-```bash
-# Criar banco de staging
-npx wrangler d1 create vturapp-db-staging
-# → retorna database_id — substituir PLACEHOLDER_STAGING_D1_ID em wrangler.toml
-
-# Criar banco de produção
-npx wrangler d1 create vturapp-db
-# → retorna database_id — substituir PLACEHOLDER_PROD_D1_ID em wrangler.toml
-
-# Criar KV de staging (opcional — só se staging usar KV)
-npx wrangler kv namespace create vturapp-kv --env staging
-# → retorna id — substituir PLACEHOLDER_STAGING_KV_ID em wrangler.toml
-
-# Criar bucket R2 de produção
-npx wrangler r2 bucket create vturapp-files
-
-# Criar bucket R2 de staging
-npx wrangler r2 bucket create vturapp-files-staging
-```
+**Provisionamento real atualizado em 31/10/2026:** D1, R2 e KV de staging/prod estão criados e vinculados; IDs e migrations aplicadas estão registrados em `docs/migracao/REANALISE-BASE-D1-R2.md`. O Worker de staging ainda não existe; o Worker atual de produção segue legado com secrets Supabase. Nenhum Worker com a nova configuração foi publicado.
 
 ### Arquivos criados/atualizados
 
@@ -78,10 +58,10 @@ O placement `aws:us-west-2` (Oregon) foi mantido por enquanto — necessário pa
 
 O `scripts/patch-worker-scheduled.js` **não será portado** para a nova aplicação. Em F1-02, o handler `scheduled()` será implementado diretamente no código SvelteKit/Worker sem necessidade de patch pós-build.
 
-## Pendências (preencher pelo usuário)
+## Provisionamento dos recursos
 
-- [ ] Executar `wrangler d1 create vturapp-db` e atualizar `PLACEHOLDER_PROD_D1_ID`
-- [ ] Executar `wrangler d1 create vturapp-db-staging` e atualizar `PLACEHOLDER_STAGING_D1_ID`
-- [ ] Executar `wrangler r2 bucket create vturapp-files`
-- [ ] Executar `wrangler r2 bucket create vturapp-files-staging`
+- [x] Criar D1 de produção e staging, atualizar `wrangler.toml` e aplicar migrations
+- [x] Confirmar os buckets R2 de produção e staging
+- [x] Criar KV isolado de staging e atualizar `wrangler.toml`
 - [ ] Preencher `.dev.vars` com secrets reais para desenvolvimento
+- [ ] Configurar secrets de staging e validar o Worker sem encaminhar tráfego de produção

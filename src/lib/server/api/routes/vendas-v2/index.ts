@@ -21,7 +21,7 @@
 import { Hono, type Context } from 'hono';
 import type { ApiEnv } from '../../types';
 import { resolveAuthContext } from '$lib/server/auth/context';
-import { can } from '$lib/server/policy';
+import { canForContext } from '$lib/server/policy';
 import { getDb } from '$lib/server/db/client';
 import { validarVenda, validarVendaEdicao } from '$lib/server/vendas/validation';
 import {
@@ -94,7 +94,7 @@ function parseId(valor: string): number | null {
 vendasV2Routes.get('/resumo', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const incluirCanceladas = c.req.query('incluir_canceladas') === '1';
   const dataVendaDe = c.req.query('data_venda_de') || undefined;
@@ -121,7 +121,7 @@ vendasV2Routes.get('/resumo', async (c) => {
 vendasV2Routes.get('/parcelas', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const cursorParam = c.req.query('cursor');
   const cursor = cursorParam ? parseId(cursorParam) : undefined;
@@ -158,7 +158,7 @@ vendasV2Routes.get('/parcelas', async (c) => {
 vendasV2Routes.get('/produtos', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const busca = c.req.query('busca') || undefined;
   const tipo = c.req.query('tipo') || undefined;
@@ -180,7 +180,7 @@ vendasV2Routes.get('/produtos', async (c) => {
 vendasV2Routes.get('/formas-pagamento', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const itens = await listarFormasPagamento(r.db, r.ctx.empresaId);
   return c.json({ itens: itens.map(formaParaJson) });
@@ -193,7 +193,7 @@ vendasV2Routes.get('/formas-pagamento', async (c) => {
 vendasV2Routes.get('/', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const cursorParam = c.req.query('cursor');
   const cursor = cursorParam ? parseId(cursorParam) : undefined;
@@ -225,7 +225,7 @@ vendasV2Routes.get('/', async (c) => {
 vendasV2Routes.post('/', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'vendas', 'criar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'vendas', 'criar')) return c.json({ error: 'Sem permissão.' }, 403);
 
   let body: unknown;
   try {
@@ -254,7 +254,7 @@ vendasV2Routes.post('/', async (c) => {
 vendasV2Routes.get('/:id', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const id = parseId(c.req.param('id'));
   if (!id) return c.json({ error: 'ID inválido.' }, 400);
@@ -274,7 +274,7 @@ vendasV2Routes.get('/:id', async (c) => {
 vendasV2Routes.patch('/:id', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'vendas', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'vendas', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const id = parseId(c.req.param('id'));
   if (!id) return c.json({ error: 'ID inválido.' }, 400);
@@ -306,7 +306,7 @@ vendasV2Routes.patch('/:id', async (c) => {
 vendasV2Routes.get('/:id/pdf', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
   const id = parseId(c.req.param('id'));
   if (!id) return c.json({ error: 'ID inválido.' }, 400);
   try {
@@ -330,7 +330,7 @@ vendasV2Routes.get('/:id/pdf', async (c) => {
 vendasV2Routes.post('/:id/cancelar', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'vendas', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'vendas', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const id = parseId(c.req.param('id'));
   if (!id) return c.json({ error: 'ID inválido.' }, 400);
@@ -492,7 +492,7 @@ function parcelaParaJson(p: ParcelaItem) {
 vendasV2Routes.post('/:id/estornar', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'vendas', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'vendas', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const id = parseId(c.req.param('id'));
   if (!id) return c.json({ error: 'ID inválido.' }, 400);
@@ -540,7 +540,7 @@ vendasV2Routes.post('/:id/estornar', async (c) => {
 vendasV2Routes.get('/:id/comissao', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'vendas', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const id = parseId(c.req.param('id'));
   if (!id) return c.json({ error: 'ID inválido.' }, 400);

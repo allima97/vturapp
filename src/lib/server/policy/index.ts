@@ -9,6 +9,6 @@
  * import { can, requireCan, authorize } from '$lib/server/policy';
  */
 
-export { can, canAny, canAll, authorize, requireCan, listarCapacidades, temAcessoAoRecurso } from './authorize';
+export { can, canForContext, canAny, canAll, authorize, requireCan, listarCapacidades, temAcessoAoRecurso } from './authorize';
 export { MATRIZ_RBAC, TODAS_CAPACIDADES, RECURSOS, ACOES } from './matrix';
 export type { Recurso, Acao, PapelCapabilitySet } from './matrix';

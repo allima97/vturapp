@@ -10,7 +10,7 @@
 import { Hono, type Context } from 'hono';
 import type { ApiEnv } from '../../types';
 import { resolveAuthContext } from '$lib/server/auth/context';
-import { can } from '$lib/server/policy';
+import { canForContext } from '$lib/server/policy';
 import { getDb } from '$lib/server/db/client';
 import {
   listarAuditLogs,
@@ -42,7 +42,7 @@ auditoriaV2Routes.get('/logs', async (c) => {
   if ('res' in r) return r.res;
   const { ctx, db } = r;
 
-  if (!can(ctx.papel, 'auditoria', 'ler')) {
+  if (!canForContext(ctx, 'auditoria', 'ler')) {
     return c.json({ error: 'Sem permissão.' }, 403);
   }
 
@@ -65,7 +65,7 @@ auditoriaV2Routes.get('/lgpd/:userId', async (c) => {
   if ('res' in r) return r.res;
   const { ctx, db } = r;
 
-  if (!can(ctx.papel, 'auditoria', 'ler')) {
+  if (!canForContext(ctx, 'auditoria', 'ler')) {
     return c.json({ error: 'Sem permissão.' }, 403);
   }
 
@@ -79,7 +79,7 @@ auditoriaV2Routes.post('/lgpd/:userId/anonimizar', async (c) => {
   if ('res' in r) return r.res;
   const { ctx, db } = r;
 
-  if (!can(ctx.papel, 'auditoria', 'gerenciar')) {
+  if (!canForContext(ctx, 'auditoria', 'gerenciar')) {
     return c.json({ error: 'Sem permissão.' }, 403);
   }
 

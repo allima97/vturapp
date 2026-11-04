@@ -92,7 +92,8 @@ export async function handleAdminEmailTestPost(event: RequestEvent) {
     const rateLimit = await checkPersistentRateLimit(
       'admin-email-test',
       `${event.getClientAddress?.() || 'unknown'}:${user.id}`,
-      { max: 10, windowMs: 60_000 }
+      { max: 10, windowMs: 60_000 },
+      event.platform?.env?.DB,
     );
     if (!rateLimit.allowed) {
       return new Response('Muitas tentativas de envio. Aguarde alguns segundos.', {

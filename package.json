@@ -23,8 +23,6 @@
     "dev:cf": "wrangler dev --local",
     "cf:deploy:staging": "npm run cf:build && npx wrangler deploy --env staging",
     "legacy:patch-scheduled": "node scripts/patch-worker-scheduled.js",
-    "drizzle:generate": "drizzle-kit generate",
-    "drizzle:push:local": "drizzle-kit push --config drizzle.config.ts",
     "drizzle:studio": "drizzle-kit studio"
   },
   "devDependencies": {

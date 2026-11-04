@@ -16,6 +16,7 @@ import { eq, and, isNull } from 'drizzle-orm';
 import { getDb } from '$lib/server/db/client';
 import { convites, membrosEmpresa, user, empresas, type Papel } from '$lib/server/db/schema';
 import { sendEmailWithRetry } from '$lib/server/email/client';
+import { buildTenantAccessProfileStatements } from '$lib/server/auth/tenant-access-profile';
 import type { AuthInstance } from '$lib/auth';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -236,7 +237,7 @@ export async function getConvite(
  *   1. Validar convite (token, expirado, aceito)
  *   2. Criar usuário via Better Auth (signUpEmail)
  *   3. Atualizar user.empresa_id
- *   4. Inserir membros_empresa
+ *   4. Inserir membros_empresa e perfil explícito de permissões no D1
  *   5. Marcar convite como aceito
  *
  * @throws {ConviteError} se o convite for inválido ou o e-mail já estiver registrado
@@ -269,27 +270,22 @@ export async function aceitarConvite(
   const userId = signUpResult.user.id;
   const agora = new Date().toISOString();
 
-  // 3. Vincular user ao tenant (empresa_id)
-  await db
-    .update(user)
-    .set({ empresaId: convite.empresaId })
-    .where(eq(user.id, userId));
-
-  // 4. Criar entrada em membros_empresa
-  await db.insert(membrosEmpresa).values({
-    empresaId: convite.empresaId,
-    userId,
-    papel: convite.papel,
-    ativo: true,
-    criadoEm: agora,
-    atualizadoEm: agora,
-  });
-
-  // 5. Marcar convite como aceito
-  await db
-    .update(convites)
-    .set({ aceitadoEm: agora })
-    .where(eq(convites.token, token));
+  // 3–5. Vincular tenant, perfil de acesso e aceite numa única transação D1.
+  const accessStatements = await buildTenantAccessProfileStatements(db, userId, convite.papel, agora);
+  const statements = [
+    db.update(user).set({ empresaId: convite.empresaId }).where(eq(user.id, userId)),
+    db.insert(membrosEmpresa).values({
+      empresaId: convite.empresaId,
+      userId,
+      papel: convite.papel,
+      ativo: true,
+      criadoEm: agora,
+      atualizadoEm: agora,
+    }),
+    ...accessStatements,
+    db.update(convites).set({ aceitadoEm: agora }).where(eq(convites.token, token)),
+  ];
+  await db.batch(statements as unknown as [typeof statements[number], ...typeof statements[number][]]);
 
   return { userId, empresaId: convite.empresaId };
 }

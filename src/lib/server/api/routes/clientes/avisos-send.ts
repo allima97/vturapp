@@ -120,7 +120,8 @@ export async function handleClientesAvisosSendPost(event: RequestEvent) {
     const rateLimit = await checkPersistentRateLimit(
       'clientes-avisos-send',
       `${event.getClientAddress?.() || 'unknown'}:${user.id}`,
-      { max: 20, windowMs: 60_000 }
+      { max: 20, windowMs: 60_000 },
+      event.platform?.env?.DB,
     );
     if (!rateLimit.allowed) {
       return json(

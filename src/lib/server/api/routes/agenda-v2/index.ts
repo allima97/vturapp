@@ -8,7 +8,7 @@ import { Hono } from 'hono';
 import type { ApiEnv } from '../../types';
 import { resolveAuthContext } from '$lib/server/auth/context';
 import { getDb } from '$lib/server/db/client';
-import { can } from '$lib/server/policy';
+import { canForContext } from '$lib/server/policy';
 import {
   criarEvento,
   editarEvento,
@@ -54,7 +54,7 @@ function parseId(raw: string): number {
 agendaV2Routes.get('/eventos', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'agenda', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'agenda', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const inicio = c.req.query('inicio') ?? undefined;
   const fim = c.req.query('fim') ?? undefined;
@@ -74,7 +74,7 @@ agendaV2Routes.get('/eventos', async (c) => {
 agendaV2Routes.post('/eventos', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'agenda', 'criar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'agenda', 'criar')) return c.json({ error: 'Sem permissão.' }, 403);
 
   try {
     const body = await c.req.json();
@@ -89,7 +89,7 @@ agendaV2Routes.post('/eventos', async (c) => {
 agendaV2Routes.get('/eventos/:id', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'agenda', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'agenda', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
 
   try {
     const item = await obterItem(r.db, r.ctx.empresaId, parseId(c.req.param('id')));
@@ -103,7 +103,7 @@ agendaV2Routes.get('/eventos/:id', async (c) => {
 agendaV2Routes.patch('/eventos/:id', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'agenda', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'agenda', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
 
   try {
     const body = await c.req.json();
@@ -118,7 +118,7 @@ agendaV2Routes.patch('/eventos/:id', async (c) => {
 agendaV2Routes.delete('/eventos/:id', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'agenda', 'excluir')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'agenda', 'excluir')) return c.json({ error: 'Sem permissão.' }, 403);
 
   try {
     await excluirItem(r.db, r.ctx.empresaId, parseId(c.req.param('id')));
@@ -134,7 +134,7 @@ agendaV2Routes.delete('/eventos/:id', async (c) => {
 agendaV2Routes.get('/tarefas', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'agenda', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'agenda', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const status = c.req.query('status') ?? undefined;
   const prioridade = c.req.query('prioridade') ?? undefined;
@@ -154,7 +154,7 @@ agendaV2Routes.get('/tarefas', async (c) => {
 agendaV2Routes.post('/tarefas', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'agenda', 'criar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'agenda', 'criar')) return c.json({ error: 'Sem permissão.' }, 403);
 
   try {
     const body = await c.req.json();
@@ -169,7 +169,7 @@ agendaV2Routes.post('/tarefas', async (c) => {
 agendaV2Routes.get('/tarefas/:id', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'agenda', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'agenda', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
 
   try {
     const item = await obterItem(r.db, r.ctx.empresaId, parseId(c.req.param('id')));
@@ -183,7 +183,7 @@ agendaV2Routes.get('/tarefas/:id', async (c) => {
 agendaV2Routes.patch('/tarefas/:id', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'agenda', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'agenda', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
 
   try {
     const body = await c.req.json();
@@ -198,7 +198,7 @@ agendaV2Routes.patch('/tarefas/:id', async (c) => {
 agendaV2Routes.post('/tarefas/:id/concluir', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'agenda', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'agenda', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
 
   try {
     const item = await concluirTarefa(r.db, r.ctx.empresaId, parseId(c.req.param('id')));

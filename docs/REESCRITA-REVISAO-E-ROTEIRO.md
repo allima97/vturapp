@@ -144,22 +144,22 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 
 | Fase | Objetivo | Dependência | Estado inicial |
 |---|---|---|---|
-| F0 | Inventário, regras, baseline e validação contínua | Nenhuma | CONCLUÍDA (26/10/2026, commit `8aeaa5e0`; evidências em `docs/f0/`) |
+| F0 | Inventário, regras, baseline e validação contínua | Nenhuma | REABERTA (31/10/2026): schema remoto maior que o inventário inicial; F0-03/F0-04 em reconciliação |
 | F1 | Prova de stack em ambiente isolado | F0 | CONCLUÍDA (26/10/2026, commits `76b2b0dd`–`06dcbbf8`; evidências em `docs/f1/`) |
-| F2 | Identidade, permissões e fundação de dados | F1 | CONCLUÍDA (26/10/2026, commits `06cf08d7`–`b4a91f6b`; evidências em `docs/f2/`; baseline revalidada em `c8bb5a58`) |
+| F2 | Identidade, permissões e fundação de dados | F1 | REABERTA (31/10/2026): RBAC D1 ainda não representa todos os papéis e escopos VTUR; ver F0-04 e F2-03 |
 | F3 | Primeiro fluxo completo e base visual | F2 | EM ANDAMENTO |
 | F4 | Núcleo de vendas e financeiro | F3 | EM ANDAMENTO (F4-01 concluída 30/10/2026; F4-02 concluída 30/10/2026) |
 | F5 | Demais módulos e tarefas | F4 para dependências comerciais | PENDENTE |
-| F6 | Operação, carga, recuperação e revisão final | F3–F5 | CONCLUÍDA |
-| F7 | Ensaio de lançamento e entrada em produção | F6 | CONCLUÍDA |
+| F6 | Operação, carga, recuperação e revisão final | F3–F5 | PENDENTE: D1/R2/KV de staging e produção provisionados; Worker, fluxos integrados, carga e recuperação ainda não validados nesses ambientes |
+| F7 | Ensaio de lançamento e entrada em produção | F6 | PENDENTE: sem Worker de staging publicado; produção D1 está provisionado e migrado, mas não há virada de tráfego comprovada |
 | F8 | Estabilização e retirada das dependências antigas | F7 | PENDENTE |
 
 ### F0 — entender e estabelecer a referência
 
 - [x] F0-01: registrar branch, SHA, alterações existentes, versões resolvidas e baseline de check/testes/build; manter falhas preexistentes identificadas e com destino, sem declará-las resolvidas.
 - [x] F0-02: reconciliar inventário por **rota + método**, incluindo aliases, endpoints SvelteKit fora do Hono, auth, uploads, exports, debug, webhooks, crons e chamadas diretas ao Supabase no cliente.
-- [x] F0-03: catalogar entidades, schema disponível e RPCs referenciadas. Se faltar informação, obter apenas o schema necessário com acesso de leitura; não exportar dados pessoais para documentação. Ao mapear entidades para o Drizzle, registrar a convenção de tipos para o SQLite: booleanos → INTEGER (0/1), datas sem hora → TEXT ISO 8601, timestamps → TEXT ISO 8601 UTC, UUIDs → TEXT, valores monetários → INTEGER (centavos). O SQLite usa tipagem por afinidade e não por declaração rígida; os tipos TypeScript gerados pelo Drizzle devem expressar essas convenções explicitamente para evitar inconsistências silenciosas em runtime — especialmente após a migração do PostgreSQL, onde booleano e timestamp têm tipos nativos distintos.
-- [x] F0-04: montar mapa de regras e papéis com exemplos. Para cada função existente: manter, redesenhar ou excluir; remoções de conciliação/importadores entram como exclusão deliberada.
+- [ ] F0-03 (reaberta): reconciliar o schema remoto capturado em `docs/migracao/SCHEMA-LEGADO-2026-10-31.json` com as migrations D1 e cada domínio. Nenhum dado de negócio foi exportado. Se faltar informação, obter apenas o schema necessário com acesso de leitura; não exportar dados pessoais para documentação. Ao mapear entidades para o Drizzle, registrar a convenção de tipos para o SQLite: booleanos → INTEGER (0/1), datas sem hora → TEXT ISO 8601, timestamps → TEXT ISO 8601 UTC, UUIDs → TEXT, valores monetários → INTEGER (centavos). O SQLite usa tipagem por afinidade e não por declaração rígida; os tipos TypeScript gerados pelo Drizzle devem expressar essas convenções explicitamente para evitar inconsistências silenciosas em runtime — especialmente após a migração do PostgreSQL, onde booleano e timestamp têm tipos nativos distintos.
+- [ ] F0-04 (reaberta): fechar o mapa de regras e papéis. O sistema legado tem seis papéis, escopos multiempresa/equipe, `uso_individual` e permissões por módulo. Para cada função existente: manter, redesenhar ou excluir; remoções de conciliação/importadores entram como exclusão deliberada.
 - [x] F0-05: preparar CI em modo de execução única: tipos, testes, inventário e build. Acrescentar testes D1/Worker e E2E à medida que os fluxos existirem; não depender de mocks Supabase para provar a camada nova. E2E com Playwright sobre 3–5 fluxos críticos (login, criação de venda, acesso negado); a correção do `npm test` para modo `run` está registrada na seção 9. Para testes que acessam D1/KV/R2, usar `@cloudflare/vitest-pool-workers` — integração oficial que roda sobre o Miniflare e simula o runtime Workers com fidelidade (o uso programático direto do Miniflare é desaconselhado; o pacote segue como motor do `wrangler dev`). O projeto usa `vitest.workspace.ts` com grupos `unit`/`dom`: o pool de Workers entra como terceiro grupo, sem migrar a suíte existente. Conferir a faixa de peer dependency do Vitest antes de instalar (projeto em Vitest 2.1.9).
 - [x] F0-06: definir cenários de UX/performance e dados sintéticos; registrar requisitos de custo, volume, simultaneidade, disponibilidade e recuperação ainda desconhecidos. Estimar linhas lidas/escritas por rebuild do read model e o custo mensal projetado no D1 (cobrança por linha lida/escrita, limites diários no Free) antes de decidir onde as agregações vivem: consulta direta, tabela pré-agregada por escrita ou cron noturno.
 - [x] F0-07: registrar decisões pendentes de login, papéis, UI e escopo mínimo do lançamento. Registrar que importação histórica está DISPENSADA por decisão do usuário. Criar `docs/adr/` com um arquivo por decisão (stack, autenticação, UI, tempo real, dinheiro/datas); decisão nova ou revertida vira arquivo novo, nunca edição retroativa.
@@ -180,10 +180,10 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 
 ### F2 — identidade, autorização e estrutura de dados
 
-- [x] F2-01: definir schema inicial por domínio, constraints, índices e dono único de migrations; criar seeds de referência permitidos e fixtures sintéticas.
+- [ ] F2-01: schema inicial não representa ainda todos os domínios/regras legados; consolidar o catálogo canônico D1, constraints, índices, migrations e fixtures.
 - [x] F2-02: implementar conta, convite, verificação, recuperação, logout, revogação e gestão de sessões conforme seção 5. Bootstrap sem acesso público residual. E-mails de conta (verificação, recuperação, convite) são da plataforma, não da empresa: definir remetente e provedor próprios, separados das configurações de e-mail por empresa.
-- [x] F2-03: implementar políticas centralizadas e contexto de acesso; incluir matriz de capacidades e escopos reais do VTUR, sem hierarquia inventada.
-- [x] F2-04: provar isolamento entre empresas, equipes e uso individual em leitura, gravação e agregação; provar bloqueio imediato na próxima requisição após revogação, ressalvadas operações já iniciadas.
+- [ ] F2-03: convites/alteração de papel e guards v2 agora usam permissões D1; integrar os seis tipos legados e decisões de acesso administrativo/configurável.
+- [ ] F2-04: provar isolamento entre empresas, equipes e uso individual em leitura, gravação e agregação; provar revogação na próxima requisição.
 - [x] F2-05: validação de entrada, erros consistentes, CSRF/origem, CSP compatível com o framework, headers, auditoria e limitador de abuso com política de falhas.
 - [x] F2-06: proibir endpoints de debug em produção por teste do roteamento final, incluindo caminhos alternativos; revisão de segredos, dependências e logs.
 
@@ -220,20 +220,20 @@ Limitar tamanho e tipos, validar conteúdo além da extensão/MIME declarado, tr
 
 ### F6 — operação e verificação integrada
 
-- [x] F6-01: carga com volume representativo e empresas simultâneas; medir p50/p95, erros, filas, SQL lido/escrito, armazenamento e custo. Testar dados frios, não só cache aquecido.
-- [x] F6-02: auditoria de segurança baseada nos requisitos aplicáveis de OWASP ASVS, com foco em auth, isolamento, arquivos, XSS/CSRF, abuso, exportação e vazamento em logs/caches. Registrar achados e correções.
-- [x] F6-03: teste de backup/restauração D1 e recuperação dos arquivos R2; documentar consistência entre metadados e objetos e exclusões acidentais. Time Travel do D1 não restaura R2. [Recuperação D1](https://developers.cloudflare.com/d1/reference/time-travel/).
-- [x] F6-04: teste de falha de e-mail, upload, banco, fila, rede e repetição de tarefa; alertas com ação e correlação, sem dados pessoais desnecessários.
-- [x] F6-05: revisão de acessibilidade, navegação mobile, privacidade e experiência dos papéis reais; corrigir bloqueios antes do lançamento.
+- [ ] F6-01: carga com volume representativo e empresas simultâneas; medir p50/p95, erros, filas, SQL lido/escrito, armazenamento e custo. Testar dados frios, não só cache aquecido.
+- [ ] F6-02: auditoria de segurança baseada nos requisitos aplicáveis de OWASP ASVS, com foco em auth, isolamento, arquivos, XSS/CSRF, abuso, exportação e vazamento em logs/caches. Registrar achados e correções.
+- [ ] F6-03: teste de backup/restauração D1 e recuperação dos arquivos R2; documentar consistência entre metadados e objetos e exclusões acidentais. Time Travel do D1 não restaura R2. [Recuperação D1](https://developers.cloudflare.com/d1/reference/time-travel/).
+- [ ] F6-04: teste de falha de e-mail, upload, banco, fila, rede e repetição de tarefa; alertas com ação e correlação, sem dados pessoais desnecessários.
+- [ ] F6-05: revisão de acessibilidade, navegação mobile, privacidade e experiência dos papéis reais; corrigir bloqueios antes do lançamento.
 
 **Aceite:** cenários de recuperação executados, riscos críticos de segurança/negócio resolvidos, custos e limites conhecidos; metas de recuperação e performance acordadas e demonstradas, ou limitações explicitamente aceitas.
 
 ### F7 — ensaiar e lançar a base nova
 
-- [x] F7-01: ensaio em banco/bucket vazios: migrations do zero, seeds mínimos, bootstrap, convite e primeiro cadastro/venda; nenhum usuário ou arquivo antigo importado.
-- [x] F7-02: release vinculada a SHA e migrations exatas; staging validado, configuração de domínio, e-mail, passkeys, cookies e jobs conferida. Aplicar migração por ambiente explicitamente.
-- [x] F7-03: definir reversão da aplicação e correção/restauração dos dados. Depois das primeiras gravações reais, voltar ao sistema antigo não recupera esses registros; priorizar correção compatível ou recuperação ensaiada.
-- [x] F7-04: publicar na janela combinada e verificar o domínio real: login, permissão, fluxo principal, arquivo privado, documento e cron. Registrar evidências sem expor dados pessoais.
+- [ ] F7-01: ensaio em banco/bucket vazios: migrations do zero, seeds mínimos, bootstrap, convite e primeiro cadastro/venda; nenhum usuário ou arquivo antigo importado.
+- [ ] F7-02: release vinculada a SHA e migrations exatas; staging validado, configuração de domínio, e-mail, passkeys, cookies e jobs conferida. Aplicar migração por ambiente explicitamente.
+- [ ] F7-03: definir reversão da aplicação e correção/restauração dos dados. Depois das primeiras gravações reais, voltar ao sistema antigo não recupera esses registros; priorizar correção compatível ou recuperação ensaiada.
+- [ ] F7-04: publicar na janela combinada e verificar o domínio real: login, permissão, fluxo principal, arquivo privado, documento e cron. Registrar evidências sem expor dados pessoais.
 
 **Aceite:** aplicação nova operacional na versão validada, observabilidade ativa e plano de resposta utilizável. Upload de build sozinho não encerra a fase.
 
@@ -252,7 +252,7 @@ O inventário inicial abaixo precisa ser reconciliado na F0. Não confundir pres
 
 | ID | Domínio | Dependências / risco principal | Estado |
 |---|---|---|---|
-| M01 | Empresas, usuários, vínculos e permissões | F2; administração de sistema separada do escopo comercial | CONCLUÍDO (31/10/2026) |
+| M01 | Empresas, usuários, vínculos e permissões | F2; administração de sistema separada do escopo comercial | REABERTO (31/10/2026): projeção D1 dos 3 papéis v2 pronta; 6 papéis legados, multiempresa e administração de permissões pendentes |
 | M02 | Clientes, acompanhantes e relacionamento | F3; propriedade, documentos e dados pessoais | CONCLUÍDO (31/10/2026) |
 | M03 | Produtos, tarifas, regras e fornecedores | Cadastros globais versus empresa; precisão e vigência | CONCLUÍDO (31/10/2026) |
 | M04 | Venda manual, itens, recibos e pagamentos | F4; atomicidade, retry, moeda e cancelamento | CONCLUÍDO (31/10/2026) |
@@ -739,8 +739,7 @@ Estabilização e retirada do legado Supabase/v1.
 
 ### Estado final da reescrita
 
-Todas as fases F0–F8 estão documentadas e os artefatos de código/documentação
-estão commitados. O deploy em produção depende de:
+A reescrita continua parcial. F0, F2, F6, F7 e F8 têm pendências para atingir paridade D1/R2 e retirar Supabase. A publicação em produção depende de:
 1. Substituir PLACEHOLDERs no `wrangler.toml` por IDs reais do Cloudflare
 2. Configurar secrets com `wrangler secret put`
 3. Seguir `docs/f7/F7-02-release-checklist.md` antes do deploy

@@ -282,7 +282,7 @@ export const handleConvitesSendPost = async (event: RequestEvent) => {
     const user = await requireAuthenticatedUser(event);
     const adminClient = getAdminClient();
 
-    const rl = await checkPersistentRateLimit('convites-send', user.id, { max: 10, windowMs: 60_000 });
+    const rl = await checkPersistentRateLimit('convites-send', user.id, { max: 10, windowMs: 60_000 }, event.platform?.env?.DB);
     if (!rl.allowed) {
       return noStoreJson(
         { error: 'Muitas requisicoes. Tente novamente em instantes.' },

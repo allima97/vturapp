@@ -34,3 +34,60 @@ INSERT OR IGNORE INTO membros_empresa (empresa_id, user_id, papel, ativo, criado
   (2, 'usr-beta-admin-001', 'admin',        1, '2026-02-20T14:00:00.000Z', '2026-02-20T14:00:00.000Z'),
   (2, 'usr-beta-oper-001',  'operador',     1, '2026-02-20T14:00:00.000Z', '2026-02-20T14:00:00.000Z'),
   (2, 'usr-beta-view-001',  'visualizador', 1, '2026-02-20T14:00:00.000Z', '2026-02-20T14:00:00.000Z');
+
+-- PERFIS D1: os papéis simples de empresa são projetados como OUTRO com
+-- permissões v2 explícitas. `ADMIN` fica reservado ao administrador global.
+INSERT OR IGNORE INTO user_types (id, name, description, created_at)
+VALUES ('vtur-builtin-outro', 'OUTRO', 'Perfil de empresa com capacidades explícitas por módulo.', '2026-01-01T00:00:00.000Z');
+
+INSERT OR IGNORE INTO user_profiles (user_id, user_type_id, uso_individual, ativo, participa_ranking, updated_at)
+SELECT id, (SELECT id FROM user_types WHERE name = 'OUTRO'), 0, 1, 0, '2026-01-01T00:00:00.000Z'
+FROM user
+WHERE email IN (
+  'admin@alfa-viagens.test', 'operador@alfa-viagens.test', 'view@alfa-viagens.test',
+  'admin@beta-turismo.test', 'operador@beta-turismo.test', 'view@beta-turismo.test'
+);
+
+WITH permissions(role, modulo, permissao) AS (VALUES
+  ('admin', 'v2:empresa', 'admin'),
+  ('admin', 'v2:usuarios', 'admin'),
+  ('admin', 'v2:convites', 'admin'),
+  ('admin', 'v2:vendas', 'admin'),
+  ('admin', 'v2:clientes', 'admin'),
+  ('admin', 'v2:financeiro', 'admin'),
+  ('admin', 'v2:relatorios', 'admin'),
+  ('admin', 'v2:configuracoes', 'admin'),
+  ('admin', 'v2:auditoria', 'admin'),
+  ('admin', 'v2:agenda', 'admin'),
+  ('admin', 'v2:mural', 'admin'),
+  ('operador', 'v2:empresa', 'view'),
+  ('operador', 'v2:usuarios', 'view'),
+  ('operador', 'v2:convites', 'view'),
+  ('operador', 'v2:vendas', 'edit'),
+  ('operador', 'v2:vendas:exportar', 'view'),
+  ('operador', 'v2:clientes', 'edit'),
+  ('operador', 'v2:financeiro', 'view'),
+  ('operador', 'v2:financeiro:exportar', 'view'),
+  ('operador', 'v2:relatorios', 'view'),
+  ('operador', 'v2:relatorios:exportar', 'view'),
+  ('operador', 'v2:configuracoes', 'view'),
+  ('operador', 'v2:agenda', 'admin'),
+  ('operador', 'v2:mural', 'admin'),
+  ('visualizador', 'v2:empresa', 'view'),
+  ('visualizador', 'v2:vendas', 'view'),
+  ('visualizador', 'v2:clientes', 'view'),
+  ('visualizador', 'v2:relatorios', 'view'),
+  ('visualizador', 'v2:agenda', 'view'),
+  ('visualizador', 'v2:mural', 'view')
+)
+INSERT OR IGNORE INTO modulo_acesso (id, usuario_id, modulo, permissao, ativo, created_at, updated_at)
+SELECT lower(hex(randomblob(16))), u.id, p.modulo, p.permissao, 1,
+       '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z'
+FROM user AS u
+JOIN permissions AS p
+  ON p.role = CASE
+    WHEN u.email LIKE 'admin@%' THEN 'admin'
+    WHEN u.email LIKE 'operador@%' THEN 'operador'
+    WHEN u.email LIKE 'view@%' THEN 'visualizador'
+  END
+WHERE u.email LIKE '%@alfa-viagens.test' OR u.email LIKE '%@beta-turismo.test';

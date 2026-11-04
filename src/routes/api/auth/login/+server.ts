@@ -27,7 +27,7 @@ function readLoginBody(value: unknown): LoginRequestBody | null {
   };
 }
 
-export const POST: RequestHandler = async ({ request, cookies, getClientAddress }) => {
+export const POST: RequestHandler = async ({ request, cookies, getClientAddress, platform }) => {
   try {
     const originError = rejectCrossOriginRequest(request, 'Origem inválida.');
     if (originError) return originError;
@@ -57,7 +57,7 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
     const rateLimit = await checkPersistentRateLimit('auth-login', `${remoteIp || 'unknown'}:${email.toLowerCase()}`, {
       max: 12,
       windowMs: 60_000
-    });
+    }, platform?.env?.DB);
     if (!rateLimit.allowed) {
       return json(
         { error: 'Muitas tentativas de login. Tente novamente em instantes.' },

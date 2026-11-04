@@ -298,7 +298,7 @@ async function checkPublicApiRateLimit(event: Parameters<Handle>[0]['event'], ru
 	const result = await checkPersistentRateLimit('public-api', `${rule.prefix}:${resolveClientAddress(event)}`, {
 		max: rule.limit,
 		windowMs: rule.windowMs
-	});
+	}, event.platform?.env?.DB);
 	return result.allowed ? null : result.retryAfterSeconds;
 }
 

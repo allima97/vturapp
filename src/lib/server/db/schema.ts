@@ -16,7 +16,8 @@
  *   - auth:        session, account, verification (Better Auth — ADR-005 exception)
  */
 
-import { index, integer, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
+import { check, index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DOMÍNIO: IDENTITY — empresas
@@ -776,3 +777,283 @@ export const auditLogs = sqliteTable(
 
 export type AuditLog    = typeof auditLogs.$inferSelect;
 export type NovoAuditLog = typeof auditLogs.$inferInsert;
+
+// ─── M01/F2: modelo de identidade e escopos compatível com o legado ──────────
+// Estas tabelas formam o destino do modelo antigo (papéis, módulos, vínculos
+// multiempresa e equipes). As rotas só podem migrar quando os guards também
+// consultarem este modelo; o AuthContext simplificado permanece em transição.
+
+export type LegacyPermissionLevel = 'none' | 'view' | 'create' | 'edit' | 'delete' | 'admin';
+
+export const userTypes = sqliteTable(
+  'user_types',
+  {
+    id: text('id').primaryKey(),
+    name: text('name').notNull(),
+    description: text('description'),
+    createdAt: text('created_at').notNull(),
+  },
+  (t) => ({ idxName: uniqueIndex('idx_user_types_name').on(t.name) }),
+);
+
+export const userProfiles = sqliteTable(
+  'user_profiles',
+  {
+    userId: text('user_id')
+      .primaryKey()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    userTypeId: text('user_type_id').references(() => userTypes.id, {
+      onDelete: 'set null',
+    }),
+    usoIndividual: integer('uso_individual', { mode: 'boolean' })
+      .notNull()
+      .default(true),
+    ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
+    participaRanking: integer('participa_ranking', { mode: 'boolean' })
+      .notNull()
+      .default(false),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (t) => ({
+    checkUsoIndividual: check(
+      'ck_user_profiles_uso_individual',
+      sql`${t.usoIndividual} IN (0, 1)`,
+    ),
+    checkAtivo: check('ck_user_profiles_ativo', sql`${t.ativo} IN (0, 1)`),
+    checkRanking: check(
+      'ck_user_profiles_participa_ranking',
+      sql`${t.participaRanking} IN (0, 1)`,
+    ),
+  }),
+);
+
+export const userTypeDefaultPerms = sqliteTable(
+  'user_type_default_perms',
+  {
+    id: text('id').primaryKey(),
+    userTypeId: text('user_type_id')
+      .notNull()
+      .references(() => userTypes.id, { onDelete: 'cascade' }),
+    modulo: text('modulo').notNull(),
+    permissao: text('permissao').notNull().default('none'),
+    ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (t) => ({
+    idxTypeModule: uniqueIndex('idx_user_type_default_perms_type_module').on(
+      t.userTypeId,
+      t.modulo,
+    ),
+    idxTypeActive: index('idx_user_type_default_perms_type').on(
+      t.userTypeId,
+      t.ativo,
+    ),
+    checkPermission: check(
+      'ck_user_type_default_perms_permission',
+      sql`${t.permissao} IN ('none', 'view', 'create', 'edit', 'delete', 'admin')`,
+    ),
+    checkModule: check(
+      'ck_user_type_default_perms_module',
+      sql`length(trim(${t.modulo})) > 0`,
+    ),
+  }),
+);
+
+export const moduloAcesso = sqliteTable(
+  'modulo_acesso',
+  {
+    id: text('id').primaryKey(),
+    usuarioId: text('usuario_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    modulo: text('modulo').notNull(),
+    permissao: text('permissao').notNull().default('none'),
+    ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+  },
+  (t) => ({
+    idxUserModule: uniqueIndex('idx_modulo_acesso_user_module').on(
+      t.usuarioId,
+      t.modulo,
+    ),
+    idxUserActive: index('idx_modulo_acesso_user_active').on(
+      t.usuarioId,
+      t.ativo,
+    ),
+    checkPermission: check(
+      'ck_modulo_acesso_permission',
+      sql`${t.permissao} IN ('none', 'view', 'create', 'edit', 'delete', 'admin')`,
+    ),
+    checkModule: check(
+      'ck_modulo_acesso_module',
+      sql`length(trim(${t.modulo})) > 0`,
+    ),
+  }),
+);
+
+export const masterEmpresas = sqliteTable(
+  'master_empresas',
+  {
+    id: text('id').primaryKey(),
+    masterId: text('master_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    companyId: integer('company_id')
+      .notNull()
+      .references(() => empresas.id, { onDelete: 'cascade' }),
+    status: text('status').notNull().default('pending'),
+    createdAt: text('created_at').notNull(),
+    approvedAt: text('approved_at'),
+    approvedBy: text('approved_by').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+  },
+  (t) => ({
+    idxMasterCompany: uniqueIndex('idx_master_empresas_pair').on(
+      t.masterId,
+      t.companyId,
+    ),
+    idxCompanyStatus: index('idx_master_empresas_company_status').on(
+      t.companyId,
+      t.status,
+    ),
+    checkStatus: check(
+      'ck_master_empresas_status',
+      sql`${t.status} IN ('pending', 'approved', 'rejected')`,
+    ),
+  }),
+);
+
+export const financeiroEmpresas = sqliteTable(
+  'financeiro_empresas',
+  {
+    id: text('id').primaryKey(),
+    financeiroId: text('financeiro_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    companyId: integer('company_id')
+      .notNull()
+      .references(() => empresas.id, { onDelete: 'cascade' }),
+    status: text('status').notNull().default('approved'),
+    createdAt: text('created_at').notNull(),
+    approvedAt: text('approved_at'),
+    createdBy: text('created_by').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+  },
+  (t) => ({
+    idxFinanceiroCompany: uniqueIndex('idx_financeiro_empresas_pair').on(
+      t.financeiroId,
+      t.companyId,
+    ),
+    idxCompanyStatus: index('idx_financeiro_empresas_company_status').on(
+      t.companyId,
+      t.status,
+    ),
+    checkStatus: check(
+      'ck_financeiro_empresas_status',
+      sql`${t.status} IN ('pending', 'approved', 'rejected')`,
+    ),
+  }),
+);
+
+export const gestorVendedor = sqliteTable(
+  'gestor_vendedor',
+  {
+    id: text('id').primaryKey(),
+    gestorId: text('gestor_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    vendedorId: text('vendedor_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    companyId: integer('company_id')
+      .notNull()
+      .references(() => empresas.id, { onDelete: 'cascade' }),
+    podeModificar: integer('pode_modificar', { mode: 'boolean' })
+      .notNull()
+      .default(false),
+    createdAt: text('created_at').notNull(),
+    ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
+  },
+  (t) => ({
+    idxGestorVendedorCompany: uniqueIndex('idx_gestor_vendedor_pair').on(
+      t.gestorId,
+      t.vendedorId,
+      t.companyId,
+    ),
+    idxGestorTeam: index('idx_gestor_vendedor_team').on(
+      t.gestorId,
+      t.companyId,
+      t.ativo,
+    ),
+    idxVendedorTeam: index('idx_gestor_vendedor_member').on(
+      t.vendedorId,
+      t.companyId,
+      t.ativo,
+    ),
+    checkDifferentUsers: check(
+      'ck_gestor_vendedor_distinct_users',
+      sql`${t.gestorId} <> ${t.vendedorId}`,
+    ),
+  }),
+);
+
+export const gestorEquipeCompartilhada = sqliteTable(
+  'gestor_equipe_compartilhada',
+  {
+    gestorId: text('gestor_id')
+      .primaryKey()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    gestorBaseId: text('gestor_base_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    createdAt: text('created_at').notNull(),
+    createdBy: text('created_by').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+  },
+  (t) => ({
+    checkDifferentManagers: check(
+      'ck_gestor_equipe_compartilhada_distinct',
+      sql`${t.gestorId} <> ${t.gestorBaseId}`,
+    ),
+  }),
+);
+
+export const systemModuleSettings = sqliteTable(
+  'system_module_settings',
+  {
+    moduleKey: text('module_key').primaryKey(),
+    enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
+    reason: text('reason'),
+    updatedAt: text('updated_at').notNull(),
+    updatedBy: text('updated_by').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+  },
+  (t) => ({
+    checkEnabled: check(
+      'ck_system_module_settings_enabled',
+      sql`${t.enabled} IN (0, 1)`,
+    ),
+  }),
+);
+
+export const securityRateLimits = sqliteTable(
+  'security_rate_limits',
+  {
+    scope: text('scope').notNull(),
+    keyHash: text('key_hash').notNull(),
+    windowStartMs: integer('window_start_ms').notNull(),
+    expiresAtMs: integer('expires_at_ms').notNull(),
+    hits: integer('hits').notNull().default(0),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.scope, t.keyHash], name: 'pk_security_rate_limits' }),
+    idxExpiresAt: index('idx_security_rate_limits_expires_at').on(t.expiresAtMs),
+    checkHits: check('ck_security_rate_limits_hits', sql`${t.hits} >= 0`),
+  }),
+);

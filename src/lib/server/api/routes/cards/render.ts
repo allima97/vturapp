@@ -24,7 +24,8 @@ export async function handleCardsRenderGet(event: import('@sveltejs/kit').Reques
     const rateLimit = await checkPersistentRateLimit(
       `cards-render-${format}`,
       event.getClientAddress?.() || 'unknown',
-      { max: format === "png" ? 80 : 240, windowMs: 60_000 }
+      { max: format === "png" ? 80 : 240, windowMs: 60_000 },
+      event.platform?.env?.DB,
     );
     if (!rateLimit.allowed) {
       return new Response(

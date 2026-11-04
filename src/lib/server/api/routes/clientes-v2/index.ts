@@ -22,7 +22,7 @@
 import { Hono, type Context } from 'hono';
 import type { ApiEnv } from '../../types';
 import { resolveAuthContext } from '$lib/server/auth/context';
-import { can } from '$lib/server/policy';
+import { canForContext } from '$lib/server/policy';
 import { getDb } from '$lib/server/db/client';
 import { r2Download } from '$lib/server/r2/client';
 import {
@@ -83,7 +83,7 @@ function parseId(valor: string): number | null {
 clientesV2Routes.get('/', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'clientes', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'clientes', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const busca = c.req.query('busca') || undefined;
   const cursorParam = c.req.query('cursor');
@@ -112,7 +112,7 @@ clientesV2Routes.get('/', async (c) => {
 clientesV2Routes.post('/', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'clientes', 'criar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'clientes', 'criar')) return c.json({ error: 'Sem permissão.' }, 403);
 
   let body: unknown;
   try {
@@ -136,7 +136,7 @@ clientesV2Routes.post('/', async (c) => {
 clientesV2Routes.get('/:id', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'clientes', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'clientes', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const id = parseId(c.req.param('id'));
   if (!id) return c.json({ error: 'ID inválido.' }, 400);
@@ -156,7 +156,7 @@ clientesV2Routes.get('/:id', async (c) => {
 clientesV2Routes.patch('/:id', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'clientes', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'clientes', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const id = parseId(c.req.param('id'));
   if (!id) return c.json({ error: 'ID inválido.' }, 400);
@@ -188,7 +188,7 @@ clientesV2Routes.patch('/:id', async (c) => {
 clientesV2Routes.delete('/:id', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'clientes', 'excluir')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'clientes', 'excluir')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const id = parseId(c.req.param('id'));
   if (!id) return c.json({ error: 'ID inválido.' }, 400);
@@ -208,7 +208,7 @@ clientesV2Routes.delete('/:id', async (c) => {
 clientesV2Routes.get('/:id/anexos', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'clientes', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'clientes', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
 
   const id = parseId(c.req.param('id'));
   if (!id) return c.json({ error: 'ID inválido.' }, 400);
@@ -232,7 +232,7 @@ clientesV2Routes.get('/:id/anexos', async (c) => {
 clientesV2Routes.post('/:id/anexos', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'clientes', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'clientes', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
   if (!r.env.R2) return c.json({ error: 'Armazenamento indisponível.' }, 503);
 
   const id = parseId(c.req.param('id'));
@@ -270,7 +270,7 @@ clientesV2Routes.post('/:id/anexos', async (c) => {
 clientesV2Routes.get('/:id/anexos/:anexoId', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'clientes', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'clientes', 'ler')) return c.json({ error: 'Sem permissão.' }, 403);
   if (!r.env.R2) return c.json({ error: 'Armazenamento indisponível.' }, 503);
 
   const id = parseId(c.req.param('id'));
@@ -299,7 +299,7 @@ clientesV2Routes.get('/:id/anexos/:anexoId', async (c) => {
 clientesV2Routes.delete('/:id/anexos/:anexoId', async (c) => {
   const r = await contexto(c);
   if ('res' in r) return r.res;
-  if (!can(r.ctx.papel, 'clientes', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
+  if (!canForContext(r.ctx, 'clientes', 'editar')) return c.json({ error: 'Sem permissão.' }, 403);
   if (!r.env.R2) return c.json({ error: 'Armazenamento indisponível.' }, 503);
 
   const id = parseId(c.req.param('id'));

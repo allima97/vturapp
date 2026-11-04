@@ -32,7 +32,7 @@ function sanitizePayload(payload: unknown) {
   };
 }
 
-export const handleClientErrorPost = async ({ request, getClientAddress }: RequestEvent) => {
+export const handleClientErrorPost = async ({ request, getClientAddress, platform }: RequestEvent) => {
   try {
     const originError = rejectCrossOriginRequest(request, 'Origem inválida.');
     if (originError) return originError;
@@ -41,7 +41,7 @@ export const handleClientErrorPost = async ({ request, getClientAddress }: Reque
     const rateLimit = await checkPersistentRateLimit('client-error', clientAddress || 'unknown', {
       max: 30,
       windowMs: 60_000
-    });
+    }, platform?.env?.DB);
     if (!rateLimit.allowed) {
       return json(
         { error: 'Muitas requisições.' },

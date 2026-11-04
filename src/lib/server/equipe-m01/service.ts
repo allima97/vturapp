@@ -14,6 +14,7 @@
 import { and, eq } from 'drizzle-orm';
 import type { DrizzleDb } from '$lib/server/db/client';
 import { empresas, membrosEmpresa, user, PAPEIS, type Papel } from '$lib/server/db/schema';
+import { buildTenantAccessProfileStatements } from '$lib/server/auth/tenant-access-profile';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tipos
@@ -209,15 +210,22 @@ export async function alterarPapelMembro(
   await obterMembro(db, empresaId, membroId);
 
   const agora = new Date().toISOString();
-  await db
-    .update(membrosEmpresa)
-    .set({ papel: novoPapel, atualizadoEm: agora })
-    .where(
-      and(
-        eq(membrosEmpresa.id, membroId),
-        eq(membrosEmpresa.empresaId, empresaId)
-      )
-    );
+  const [target] = await db
+    .select({ userId: membrosEmpresa.userId })
+    .from(membrosEmpresa)
+    .where(and(eq(membrosEmpresa.id, membroId), eq(membrosEmpresa.empresaId, empresaId)))
+    .limit(1);
+  if (!target) throw new EmpresaError('Membro não encontrado.', 'NAO_ENCONTRADO');
+
+  const accessStatements = await buildTenantAccessProfileStatements(db, target.userId, novoPapel, agora);
+  const statements = [
+    db
+      .update(membrosEmpresa)
+      .set({ papel: novoPapel, atualizadoEm: agora })
+      .where(and(eq(membrosEmpresa.id, membroId), eq(membrosEmpresa.empresaId, empresaId))),
+    ...accessStatements,
+  ];
+  await db.batch(statements as unknown as [typeof statements[number], ...typeof statements[number][]]);
 
   return obterMembro(db, empresaId, membroId);
 }
