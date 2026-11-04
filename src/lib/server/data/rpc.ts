@@ -402,6 +402,56 @@ async function setRelacao(db: D1Database, args: Record<string, unknown>) {
   return ok({ ok: true, ativo: Boolean(ativo) });
 }
 
+async function dashboardConsultorias(
+  db: D1Database,
+  args: Record<string, unknown>,
+) {
+  const companyId = String(args.p_company_id || "").trim();
+  const inicio = String(args.p_inicio || "");
+  const fim = String(args.p_fim || "");
+  let creatorIds = ids(args.p_vendedor_ids);
+  if (creatorIds.length === 0 && companyId) {
+    const users = await db
+      .prepare(
+        `
+      SELECT user.id AS id
+      FROM legado_users AS user
+      LEFT JOIN legado_user_types AS type ON type.id = user.user_type_id
+      WHERE user.company_id = ?1
+        AND user.active = 1
+        AND COALESCE(user.uso_individual, 0) = 0
+        AND lower(COALESCE(user.nome_completo, user.email, '')) NOT IN ('baixa rac', 'equipe vtur')
+        AND (
+          upper(COALESCE(type.name, '')) LIKE '%VENDEDOR%'
+          OR (upper(COALESCE(type.name, '')) LIKE '%GESTOR%' AND COALESCE(user.participa_ranking, 0) = 1)
+        )
+    `,
+      )
+      .bind(companyId)
+      .all<{ id: string }>();
+    creatorIds = (users.results || []).map((row) => row.id);
+    if (creatorIds.length === 0) return ok([]);
+  }
+  const filters = ["fechada = 0", "data_hora >= ?", "data_hora <= ?"];
+  const binds: unknown[] = [inicio, fim];
+  if (creatorIds.length > 0) {
+    filters.push(`created_by IN (${placeholders(creatorIds)})`);
+    binds.push(...creatorIds);
+  }
+  const rows = await db
+    .prepare(
+      `
+    SELECT id, cliente_nome, data_hora, lembrete, destino, orcamento_id
+    FROM legado_consultorias_online
+    WHERE ${filters.join(" AND ")}
+    ORDER BY data_hora ASC
+  `,
+    )
+    .bind(...binds)
+    .all();
+  return ok(rows.results || []);
+}
+
 export async function runRpc(
   db: D1Database,
   name: string,
@@ -435,6 +485,8 @@ export async function runRpc(
         return setRelacao(db, args);
       case "check_security_rate_limit":
         return missing(name);
+      case "rpc_dashboard_consultorias":
+        return dashboardConsultorias(db, args);
       default:
         return missing(name);
     }
