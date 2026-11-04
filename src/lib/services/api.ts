@@ -78,11 +78,31 @@ function buildQueryString(
 
 let unauthorizedRedirectStarted = false;
 
-function handleUnauthorized() {
+// Um 401 de uma rota pode vir de regra da própria rota (ex.: usuário sem empresa),
+// não de sessão expirada. Só desloga se o servidor confirmar que não há sessão.
+async function hasActiveSession(): Promise<boolean> {
+  try {
+    const response = await fetch('/api/auth/get-session', {
+      credentials: 'same-origin',
+      headers: { accept: 'application/json' }
+    });
+    if (!response.ok) return response.status >= 500;
+    const data = (await response.json().catch(() => null)) as { user?: unknown } | null;
+    return Boolean(data?.user);
+  } catch {
+    return true;
+  }
+}
+
+async function handleUnauthorized() {
   if (!browser || unauthorizedRedirectStarted) return;
   const path = window.location.pathname;
   if (path.startsWith('/auth/')) return;
   unauthorizedRedirectStarted = true;
+  if (await hasActiveSession()) {
+    unauthorizedRedirectStarted = false;
+    return;
+  }
   toast.warning('Sua sessão expirou. Faça login novamente.', 6000);
   const next = `${path}${window.location.search || ''}`;
   // Navegação completa (não goto): descarta o estado da tela e os dados em
