@@ -264,7 +264,12 @@ function resolveRelation(parent: string, embed: Embed) {
     ? undefined
     : fks.find((fk) => fk.table === parent && fk.column === embed.table);
   const hinted = embed.hint
-    ? fks.find((fk) => fk.name === embed.hint || fk.column === embed.hint)
+    ? fks.find(
+        (fk) =>
+          (fk.name === embed.hint || fk.column === embed.hint) &&
+          ((fk.table === parent && fk.refTable === embed.table) ||
+            (fk.table === embed.table && fk.refTable === parent))
+      )
     : byColumn;
   const candidates = hinted
     ? [hinted]

@@ -90,7 +90,9 @@ describe('cliente de dados D1', () => {
     const quoteId = crypto.randomUUID();
     await client().from('clientes').insert({ id: clienteId, nome: 'Bia' });
     const userId = crypto.randomUUID();
-    const user = await client().from('users').insert({ id: userId, email: `${userId}@t.com` });
+    const user = await client()
+      .from('users')
+      .insert({ id: userId, email: `${userId}@t.com` });
     expect(user.error).toBeNull();
     const quote = await client().from('quote').insert({
       id: quoteId,
@@ -112,5 +114,13 @@ describe('cliente de dados D1', () => {
 
     expect(result.error).toBeNull();
     expect(result.data).toMatchObject({ cliente: { id: clienteId, nome: 'Bia' } });
+  });
+  it('resolve hint de coluna FK compartilhada entre tabelas (vendedor:users!vendedor_id)', async () => {
+    const result = await client()
+      .from('vendas')
+      .select('id, vendedor:users!vendedor_id (id)')
+      .limit(1);
+
+    expect(result.error).toBeNull();
   });
 });
