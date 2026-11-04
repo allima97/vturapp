@@ -1,15 +1,49 @@
 import type { DataContext, QueryResult } from "./types";
 
-const PUBLIC_BUCKETS = new Set([
-  "campanhas",
-  "mural-recados",
-  "message-template-themes",
-  "quotes",
-  "system-docs",
-]);
+/** Regras capturadas em docs/migracao/SCHEMA-LEGADO-2026-10-31.json (storage.buckets). */
+export const BUCKET_RULES: Record<
+  string,
+  { public: boolean; maxBytes: number | null; mime: string[] | null }
+> = {
+  campanhas: { public: true, maxBytes: null, mime: null },
+  "master-docs": { public: false, maxBytes: null, mime: null },
+  "message-template-themes": { public: true, maxBytes: null, mime: null },
+  "mural-recados": { public: true, maxBytes: null, mime: null },
+  "profile-avatars": { public: true, maxBytes: null, mime: null },
+  quotes: { public: false, maxBytes: null, mime: null },
+  "system-docs": { public: true, maxBytes: null, mime: null },
+  viagens: {
+    public: true,
+    maxBytes: 2_097_152,
+    mime: [
+      "application/pdf",
+      "application/jpg",
+      "application/jpeg",
+      "application/png",
+      "application/doc",
+      "image/jpeg",
+      "image/png",
+      "image/jpg",
+    ],
+  },
+  "viagens-documentos": { public: false, maxBytes: null, mime: null },
+  "voucher-assets": { public: false, maxBytes: null, mime: null },
+};
 
 export function isPublicBucket(bucket: string) {
-  return PUBLIC_BUCKETS.has(bucket);
+  return Boolean(BUCKET_RULES[bucket]?.public);
+}
+
+export function validateStorageUpload(
+  bucket: string,
+  size: number,
+  contentType: string,
+) {
+  const rule = BUCKET_RULES[bucket];
+  if (!rule) return "bucket desconhecido";
+  if (rule.maxBytes != null && size > rule.maxBytes) return "arquivo excede o limite do bucket";
+  if (rule.mime && !rule.mime.includes(contentType)) return "tipo de arquivo nao permitido";
+  return null;
 }
 
 export function storageKey(bucket: string, path: string) {
@@ -95,6 +129,16 @@ export function createStorageApi(context: DataContext) {
                 hint: null,
               },
             } satisfies QueryResult;
+          const bytes = await bodyBytes(body);
+          const size = bytes.byteLength;
+          const contentType = options?.contentType || "application/octet-stream";
+          const rejected = validateStorageUpload(bucket, size, contentType);
+          if (rejected) {
+            return {
+              data: null,
+              error: { message: rejected, code: "422", details: null, hint: null },
+            } satisfies QueryResult;
+          }
           const key = storageKey(bucket, path);
           if (!options?.upsert) {
             const existing = await context.r2.head(key);
@@ -109,10 +153,8 @@ export function createStorageApi(context: DataContext) {
                 },
               };
           }
-          await context.r2.put(key, (await bodyBytes(body)) as ArrayBuffer, {
-            httpMetadata: {
-              contentType: options?.contentType || "application/octet-stream",
-            },
+          await context.r2.put(key, bytes as ArrayBuffer, {
+            httpMetadata: { contentType },
           });
           return { data: { path }, error: null };
         },
