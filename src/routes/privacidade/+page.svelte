@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { PUBLIC_ENVIRONMENT, PUBLIC_TURNSTILE_SITE_KEY } from '$env/static/public';
+  import { env as publicEnv } from '$env/dynamic/public';
 
   const DPO_EMAIL = 'dpo@vtur.com.br';
   const EMPRESA_NOME = 'Vtur Tecnologia Ltda';
@@ -138,7 +138,7 @@
           <h2>4. Compartilhamento de Dados</h2>
           <p>Compartilhamos dados apenas nas situações necessárias:</p>
           <ul>
-            <li><strong>Fornecedores de tecnologia:</strong> Supabase (infraestrutura de banco de dados, EUA — cláusulas contratuais padrão), Cloudflare (CDN e segurança).</li>
+            <li><strong>Fornecedores de tecnologia:</strong> Dados (infraestrutura de banco de dados, EUA — cláusulas contratuais padrão), Cloudflare (CDN e segurança).</li>
             <li><strong>Parceiros de viagem:</strong> hotéis, companhias aéreas, operadoras — apenas dados necessários para a prestação do serviço contratado.</li>
             <li><strong>Autoridades:</strong> quando exigido por lei ou ordem judicial.</li>
           </ul>
@@ -255,7 +255,7 @@
               <!-- Turnstile widget -->
               <div
                 class="cf-turnstile"
-                data-sitekey={PUBLIC_TURNSTILE_SITE_KEY || (PUBLIC_ENVIRONMENT === 'production' ? '' : '1x00000000000000000000AA')}
+                data-sitekey={publicEnv.PUBLIC_TURNSTILE_SITE_KEY || (publicEnv.PUBLIC_ENVIRONMENT === 'production' ? '' : '1x00000000000000000000AA')}
                 data-callback="onTurnstileSuccess"
               ></div>
 

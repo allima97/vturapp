@@ -9,7 +9,7 @@ import {
 } from "$lib/server/v1";
 import type { RequestEvent } from "@sveltejs/kit";
 
-type SupabaseAdminClient = ReturnType<typeof getAdminClient>;
+type DadosAdminClient = ReturnType<typeof getAdminClient>;
 
 type MuralAttachmentRow = Record<string, unknown> & {
   storage_bucket?: string | null;
@@ -91,7 +91,7 @@ export async function requireMuralScope(event: RequestEvent, minLevel = 1) {
 }
 
 export async function assertCompanyAccess(
-  _client: SupabaseAdminClient,
+  _client: DadosAdminClient,
   scope: UserScope,
   companyId: string,
 ) {
@@ -107,7 +107,7 @@ export async function assertCompanyAccess(
   return null;
 }
 
-export async function fetchRecados(client: SupabaseAdminClient, companyId: string) {
+export async function fetchRecados(client: DadosAdminClient, companyId: string) {
   const baseSelect =
     "id, company_id, sender_id, receiver_id, assunto, conteudo, created_at, sender_deleted, receiver_deleted, sender:sender_id(id, nome_completo, email), receiver:receiver_id(id, nome_completo, email), leituras:mural_recados_leituras(read_at, user_id, user:user_id(id, nome_completo, email))";
   const selectWithAttachments = `${baseSelect}, arquivos:mural_recados_arquivos(id, company_id, recado_id, uploaded_by, file_name, storage_bucket, storage_path, mime_type, size_bytes, created_at)`;
@@ -139,7 +139,7 @@ export async function fetchRecados(client: SupabaseAdminClient, companyId: strin
 }
 
 async function withSignedAttachmentUrls(
-  client: SupabaseAdminClient,
+  client: DadosAdminClient,
   recados: MuralRecadoRow[],
 ) {
   const files = recados.flatMap((recado) =>
@@ -164,7 +164,7 @@ async function withSignedAttachmentUrls(
   return recados;
 }
 
-export async function fetchUsuariosEmpresa(client: SupabaseAdminClient, companyId: string) {
+export async function fetchUsuariosEmpresa(client: DadosAdminClient, companyId: string) {
   const { data, error } = await client
     .from("users")
     .select("id, nome_completo, email, user_types(name)")

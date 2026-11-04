@@ -13,7 +13,7 @@ import {
   toErrorResponse
 } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
-import { cleanStringSet, chunkArray, dedupeById, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { cleanStringSet, chunkArray, dedupeById, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const MAX_OPERACAO_RECADO_BODY_BYTES = 64 * 1024;
 const PT_BR_COLLATOR = new Intl.Collator('pt-BR');
@@ -77,7 +77,7 @@ export async function handleOperacaoRecadosGet(event: RequestEvent) {
     const fetchRecados = async () => {
       if (scope.isAdmin) return buildRecadosQuery();
       if (allowedCompanyIds[0] === NO_MATCH_COMPANY_ID) return { data: [], error: null };
-      if (allowedCompanyIds.length <= SUPABASE_IN_BATCH_SIZE) return buildRecadosQuery(allowedCompanyIds);
+      if (allowedCompanyIds.length <= QUERY_IN_BATCH_SIZE) return buildRecadosQuery(allowedCompanyIds);
 
       const rows: RecadoRow[] = [];
       for (const batch of chunkArray(allowedCompanyIds)) {
@@ -123,7 +123,7 @@ export async function handleOperacaoRecadosGet(event: RequestEvent) {
     const fetchUsuarios = async () => {
       if (scope.isAdmin) return buildUsersQuery();
       if (allowedCompanyIds[0] === NO_MATCH_COMPANY_ID) return { data: [], error: null };
-      if (allowedCompanyIds.length <= SUPABASE_IN_BATCH_SIZE) return buildUsersQuery(allowedCompanyIds);
+      if (allowedCompanyIds.length <= QUERY_IN_BATCH_SIZE) return buildUsersQuery(allowedCompanyIds);
 
       const rows: UsuarioRow[] = [];
       for (const batch of chunkArray(allowedCompanyIds)) {

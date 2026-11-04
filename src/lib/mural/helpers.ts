@@ -1,4 +1,3 @@
-import { env as publicEnv } from '$env/dynamic/public';
 import { encodeStoragePathSegment, sanitizeHref } from '$lib/security/url';
 
 export type EmpresaOption = {
@@ -137,14 +136,9 @@ export function formatBadge(count: number) {
 
 export function buildAttachmentUrl(bucket?: string | null, path?: string | null) {
   if (!bucket || !path) return '';
-  const supabaseUrl = publicEnv.PUBLIC_SUPABASE_URL;
-  if (!supabaseUrl) return '';
   const bucketSegment = encodeStoragePathSegment(bucket);
   const pathSegment = encodeStoragePathSegment(path);
-  return sanitizeHref(`${supabaseUrl}/storage/v1/object/public/${bucketSegment}/${pathSegment}`, [
-    'http:',
-    'https:'
-  ]);
+  return `/api/arquivos/publico/${bucketSegment}/${pathSegment}`;
 }
 
 export function safeAttachmentHref(rawUrl?: string | null, bucket?: string | null, path?: string | null) {

@@ -14,7 +14,7 @@ import {
 } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { rejectCrossOriginRequest } from '$lib/server/requestGuards';
-import { cleanStringSet, chunkArray, dedupeById, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { cleanStringSet, chunkArray, dedupeById, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 type DocumentoViagemRow = {
   id?: string | null;
@@ -58,7 +58,7 @@ export async function handleOperacaoDocumentosViagensGet(event: RequestEvent) {
     const fetchRows = async () => {
       if (scope.isAdmin) return buildQuery();
       if (allowedCompanyIds[0] === NO_MATCH_COMPANY_ID) return { data: [], error: null };
-      if (allowedCompanyIds.length <= SUPABASE_IN_BATCH_SIZE) return buildQuery(allowedCompanyIds);
+      if (allowedCompanyIds.length <= QUERY_IN_BATCH_SIZE) return buildQuery(allowedCompanyIds);
 
       const rows: DocumentoViagemRow[] = [];
       for (const batch of chunkArray(allowedCompanyIds)) {

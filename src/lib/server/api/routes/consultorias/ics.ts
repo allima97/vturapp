@@ -36,7 +36,7 @@ export const handleConsultoriasIcsGet = async (event: RequestEvent) => {
       return json({ error: "ID invalido." }, { status: 400, headers: NO_STORE_HEADERS });
     }
 
-    const client = locals.supabase;
+    const client = locals.dados;
 
     const baseQuery = client
       .from("consultorias_online")

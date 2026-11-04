@@ -100,7 +100,7 @@ export function gerarComprovanteHtml(
         pag.parcelas.map((par, idx) => /* html */`
           <tr>
             ${idx === 0
-              ? `<td rowspan="${pag.parcelas.length}">${esc(pag.formaPagamentoId?.toString())}</td>`
+              ? `<td rowspan="${pag.parcelas.length}">${esc(String((pag as { formaId?: number | null }).formaId ?? ''))}</td>`
               : ''}
             <td class="num">${par.numero}</td>
             <td style="white-space:nowrap">${formatarData(par.vencimento)}</td>
@@ -215,7 +215,7 @@ export function gerarComprovanteHtml(
     </div>
     <div class="campo">
       <span class="label">Destino</span>
-      <span class="valor">${esc(venda.destino ?? '—')}</span>
+      <span class="valor">${esc((venda as { destino?: string | null }).destino ?? '—')}</span>
     </div>
   </div>
 

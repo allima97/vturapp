@@ -107,6 +107,7 @@ describe('Suíte X — M11: Dashboard', () => {
         data_fim_servico: null,
         numero_recibo: null,
         numero_reserva: null,
+        notas: null,
       }],
     }));
 

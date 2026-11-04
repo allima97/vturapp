@@ -16,10 +16,5 @@ PUBLIC_ENVIRONMENT=development
 # Cloudflare Turnstile (chave de teste — sempre aprova)
 PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
 TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
-
-# ── LEGADO (manter enquanto aplicação Supabase estiver ativa) ─────────────────
-PUBLIC_SUPABASE_URL=https://seu-projeto.supabase.co
-PUBLIC_SUPABASE_ANON_KEY=sua-anon-key
-SUPABASE_SERVICE_ROLE_KEY=sua-service-role-key
-CRON_SECRET=segredo-do-cron-legado
+CRON_SECRET=segredo-do-cron
 WORKER_BASE_URL=http://localhost:8787

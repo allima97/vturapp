@@ -2,7 +2,7 @@
   import { dev } from '$app/environment';
   import { onMount } from 'svelte';
   import { apiDelete, apiFetch, apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
-  import { createSupabaseBrowserClient } from '$lib/db/supabase';
+  import { createBrowserDataClient } from '$lib/db/browserData';
   import { assinarRecadosDaEmpresa } from '$lib/realtime/muralRecados';
   import { createLoadGuard } from '$lib/utils/loadGuard';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
@@ -94,7 +94,7 @@
   const companyContextId = () => empresaSelecionada || userCompanyId || '';
 
   // Fase 6.1: além da atualização a cada 15 s (mantida como está), recado novo aparece na hora
-  // via Supabase Realtime. O aviso só dispara uma nova busca na API do mural.
+  // via Dados Realtime. O aviso só dispara uma nova busca na API do mural.
   let pararRealtime: (() => void) | null = null;
   let realtimeCompanyId = '';
 
@@ -126,7 +126,7 @@
       realtimeCompanyId = companyId;
       let client = null;
       try {
-        client = createSupabaseBrowserClient();
+        client = createBrowserDataClient();
       } catch {
         client = null;
       }

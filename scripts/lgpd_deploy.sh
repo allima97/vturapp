@@ -4,10 +4,7 @@
 
 set -e
 cd "$(dirname "$0")/.."
-echo "📋 Aplicando migration LGPD no Supabase..."
-npx supabase db push 2>/dev/null || \
-  npx supabase migration up 2>/dev/null || \
-  echo "ℹ️  Aplique manualmente: supabase/migrations/20261023000000_lgpd_infrastructure.sql"
+echo "A infraestrutura LGPD esta na migration D1. Aplique com: npm run d1:migrate:staging"
 
 echo "🚀 Push do vturapp..."
 git push origin main

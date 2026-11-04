@@ -64,7 +64,7 @@ export async function handleTodoBoardGet(event: RequestEvent) {
         }
 
         return {
-          categorias: (categoriasResp.data || []).map((row) => ({
+          categorias: (categoriasResp.data || []).map((row: any) => ({
             id: String(row.id),
             nome: String(row.nome || ""),
             cor: row.cor ? String(row.cor) : null,

@@ -1,5 +1,3 @@
-import { env as publicEnv } from '$env/dynamic/public';
-
 const THEME_BUCKET = 'message-template-themes';
 
 export type ThemeAssetMeta = {
@@ -19,11 +17,10 @@ function cleanStoragePath(value?: string | null) {
     .replace(/^message-template-themes\//, '');
 }
 
-function buildSupabaseStorageUrl(path?: string | null) {
+function buildDadosStorageUrl(path?: string | null) {
   const storagePath = cleanStoragePath(path);
-  const supabaseUrl = String(publicEnv.PUBLIC_SUPABASE_URL || '').trim().replace(/\/+$/, '');
-  if (!storagePath || !supabaseUrl) return '';
-  return `${supabaseUrl}/storage/v1/object/public/${THEME_BUCKET}/${storagePath}`;
+  if (!storagePath) return '';
+  return `/api/arquivos/publico/${THEME_BUCKET}/${storagePath.split('/').map(encodeURIComponent).join('/')}`;
 }
 
 function resolveAssetUrl(theme?: ThemeAssetMeta | null) {
@@ -35,9 +32,9 @@ function resolveAssetUrl(theme?: ThemeAssetMeta | null) {
     !rawAssetUrl.startsWith('/') &&
     !rawAssetUrl.startsWith('data:');
 
-  const storageUrl = buildSupabaseStorageUrl(storagePath || (assetLooksLikeStoredPath ? rawAssetUrl : ''));
-  const isLegacySupabaseStorageUrl = /\/storage\/v1\/object\/public\/message-template-themes\//i.test(rawAssetUrl);
-  if (storageUrl && (isLegacySupabaseStorageUrl || assetLooksLikeStoredPath || !rawAssetUrl)) return storageUrl;
+  const storageUrl = buildDadosStorageUrl(storagePath || (assetLooksLikeStoredPath ? rawAssetUrl : ''));
+  const isLegacyDadosStorageUrl = /\/storage\/v1\/object\/public\/message-template-themes\//i.test(rawAssetUrl);
+  if (storageUrl && (isLegacyDadosStorageUrl || assetLooksLikeStoredPath || !rawAssetUrl)) return storageUrl;
   return rawAssetUrl;
 }
 

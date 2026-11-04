@@ -19,7 +19,7 @@ import {
   scopeCacheTags,
 } from "$lib/server/readModelCache";
 import { DYNAMIC_READ_HEADERS } from "$lib/server/httpCache";
-import { chunkArray, SUPABASE_IN_BATCH_SIZE } from "$lib/utils/array";
+import { chunkArray, QUERY_IN_BATCH_SIZE } from "$lib/utils/array";
 
 type TarefaClienteRow = {
   id: string;
@@ -103,7 +103,7 @@ export async function handleTarefasClientesGet(event: RequestEvent) {
         };
 
         const fetchRows = async () => {
-          if (companyIds.length <= SUPABASE_IN_BATCH_SIZE) {
+          if (companyIds.length <= QUERY_IN_BATCH_SIZE) {
             return buildQuery();
           }
 

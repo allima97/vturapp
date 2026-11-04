@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient } from '$lib/server/data';
 import {
   ensureModuloAccess,
   fetchRankingVendedoresByCompanyIds,
@@ -219,7 +219,7 @@ export function mapTodoRow(row: TodoDbRow): TodoItem | null {
 }
 
 export async function resolveFollowUpFilters(
-  client: SupabaseClient,
+  client: DataClient,
   scope: UserScope,
   searchParams: URLSearchParams
 ) {

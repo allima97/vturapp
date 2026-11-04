@@ -13,20 +13,13 @@ compatibility_date = "2026-04-19"
 #     wrangler secret put BETTER_AUTH_SECRET --env staging
 #     wrangler secret put RESEND_API_KEY --env staging
 #
-#   Supabase (legado — manter enquanto aplicação antiga estiver ativa):
-#     wrangler secret put PUBLIC_SUPABASE_URL
-#     wrangler secret put PUBLIC_SUPABASE_ANON_KEY
-#     wrangler secret put SUPABASE_SERVICE_ROLE_KEY
-#
-#   Cron (legado — substituído pelo handler scheduled() nativo em F1-02):
+#   Cron (handler scheduled() nativo):
 #     wrangler secret put CRON_SECRET
 #     wrangler secret put WORKER_BASE_URL
 #
 # ─────────────────────────────────────────────────────────────────────────────
 # PLACEMENT
-# Oregon (aws:us-west-2) era necessário pela proximidade com Supabase.
-# Com D1 (distribuído), avaliar remoção em F1-02 após medir latência.
-# Manter por enquanto para não afetar a aplicação legada.
+# Oregon permanece como placement atual. Reavaliar latencia com D1 antes de mudar.
 [placement]
 region = "aws:us-west-2"
 

@@ -1,8 +1,8 @@
+import type { DataClient } from '$lib/server/data';
 // Migrado para Hono de src/routes/api/v1/vendas/[id]/+server.ts — corpo IDÊNTICO ao original
 // (só o nome/assinatura do handler mudou). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json, error } from "@sveltejs/kit";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   ensureModuloAccess,
   getAdminClient,
@@ -109,7 +109,7 @@ function isVendaDestinoFkError(err: unknown) {
   return errorLike?.code === "23503" && text.includes("vendas_destino_id_fkey");
 }
 
-async function fetchVendaBase(client: SupabaseClient, id: string, lite = false) {
+async function fetchVendaBase(client: DataClient, id: string, lite = false) {
   const selectClauses = lite ? [VENDA_BASE_SELECT_LEGACY] : [VENDA_BASE_SELECT, VENDA_BASE_SELECT_LEGACY];
   let lastError: unknown = null;
 
@@ -128,7 +128,7 @@ async function fetchVendaBase(client: SupabaseClient, id: string, lite = false) 
   throw lastError;
 }
 
-async function fetchVendaRecibos(client: SupabaseClient, id: string, lite = false) {
+async function fetchVendaRecibos(client: DataClient, id: string, lite = false) {
   const detailQuery = client
     .from("vendas_recibos")
     .select(lite ? RECIBOS_LITE_SELECT : RECIBOS_DETAIL_SELECT)
@@ -149,7 +149,7 @@ async function fetchVendaRecibos(client: SupabaseClient, id: string, lite = fals
   return data || [];
 }
 
-async function fetchVendaPagamentos(client: SupabaseClient, id: string) {
+async function fetchVendaPagamentos(client: DataClient, id: string) {
   const { data, error: pagamentosError } = await client
     .from("vendas_pagamentos")
     .select(PAGAMENTOS_SELECT)
@@ -161,7 +161,7 @@ async function fetchVendaPagamentos(client: SupabaseClient, id: string) {
 }
 
 async function hydrateVendaPayload(
-  client: SupabaseClient,
+  client: DataClient,
   id: string,
   data: unknown,
   opts: { lite?: boolean } = {},

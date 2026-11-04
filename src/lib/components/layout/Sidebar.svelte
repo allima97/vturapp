@@ -4,7 +4,7 @@
   import { dev } from '$app/environment';
   import { page } from '$app/stores';
   import { auth } from '$lib/stores/auth';
-  import { createSupabaseBrowserClient } from '$lib/db/supabase';
+  import { createBrowserDataClient } from '$lib/db/browserData';
   import { apiPost } from '$lib/services/api';
   import { sidebar, isMobile, toast } from '$lib/stores/ui';
   import { permissoes } from '$lib/stores/permissoes';
@@ -389,8 +389,8 @@
 
       try {
         refreshingPerms = true;
-        const supabase = createSupabaseBrowserClient();
-        await permissoes.refresh(supabase);
+        const dados = createBrowserDataClient();
+        await permissoes.refresh(dados);
         toast.success('Permissões atualizadas após recarregar a página.');
       } catch (error) {
         if (dev) console.error('Erro ao atualizar permissoes apos reload:', error);
@@ -815,7 +815,7 @@
 
       <div class="vtur-sidebar__profile">
         <div class="vtur-sidebar__avatar">
-          {userDisplayName.slice(0, 2).toUpperCase()}
+          {String(userDisplayName || '').slice(0, 2).toUpperCase()}
         </div>
         <div class="vtur-sidebar__profile-copy">
           <p class="vtur-sidebar__profile-name">{userDisplayName}</p>

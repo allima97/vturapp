@@ -252,13 +252,13 @@ O inventário inicial abaixo precisa ser reconciliado na F0. Não confundir pres
 
 | ID | Domínio | Dependências / risco principal | Estado |
 |---|---|---|---|
-| M01 | Empresas, usuários, vínculos e permissões | F2; administração de sistema separada do escopo comercial | REABERTO (31/10/2026): projeção D1 dos 3 papéis v2 pronta; 6 papéis legados, multiempresa e administração de permissões pendentes |
+| M01 | Empresas, usuários, vínculos e permissões | F2; administração de sistema separada do escopo comercial | CONCLUÍDO (04/11/2026): seis papéis, escopos e permissões por módulo no D1; matriz v2 de três papéis permanece em /api/v2 |
 | M02 | Clientes, acompanhantes e relacionamento | F3; propriedade, documentos e dados pessoais | CONCLUÍDO (31/10/2026) |
 | M03 | Produtos, tarifas, regras e fornecedores | Cadastros globais versus empresa; precisão e vigência | CONCLUÍDO (31/10/2026) |
 | M04 | Venda manual, itens, recibos e pagamentos | F4; atomicidade, retry, moeda e cancelamento | CONCLUÍDO (31/10/2026) |
-| M05 | Comissões e caixa | M04; conciliação excluída, sem referência indireta | EXCLUÍDO (ADR-006) |
-| M06 | Viagens, vouchers, dossiês e documentos | M02/M04; acesso a arquivos e marca VTUR | EXCLUÍDO (ADR-006) |
-| M07 | Orçamentos, roteiros e circuitos | M02/M03; versões, preços e exportação | ADIADO |
+| M05 | Comissões e caixa | M04; conciliação excluída do produto novo | EXCLUÍDO do escopo v2; telas ainda presentes leem o catálogo D1 vazio |
+| M06 | Viagens, vouchers, dossiês e documentos | M02/M04; arquivos no R2 | EXCLUÍDO do escopo v2; telas ainda presentes usam D1/R2, sem SDK antigo |
+| M07 | Orçamentos, roteiros e circuitos | M02/M03; versões, preços e exportação | ADIADO no v2; telas atuais usam o catálogo D1 e arquivos R2 |
 | M08 | Agenda, tarefas, campanhas e SAC | Regras próprias, notificações e vínculo com equipe | CONCLUÍDO (31/10/2026) |
 | M09 | Recados, mural, avisos e push | Entrega, escopo, duplicação e conexão revogada | CONCLUÍDO (31/10/2026) |
 | M10 | Destinos, cidades, países e referências | M06/M07 referenciam destinos e cidades: provável antecipação na ordem de execução. Origem/licença dos seeds e busca com acentos | CONCLUÍDO (31/10/2026) |
@@ -795,3 +795,26 @@ Próximos módulos disponíveis:
   M11 — Dashboards, ranking, metas
   M08 — Agenda, tarefas
 ```
+
+## Passagem de trabalho — 04/11/2026 (corte do Postgres/Auth/Storage remotos)
+
+ID: F8-02 / M01
+Estado: CONCLUÍDA no código da aplicação
+Responsável / data: agente, 04/11/2026
+Dependências: migrations 0000–0012 já aplicadas nos D1 vazios; 0013 ainda não aplicada remotamente
+
+O que mudou:
+- O aplicativo não importa mais o SDK antigo. Sessão é Better Auth. Consultas do app atual e da API v1 passam pelo cliente D1 em `src/lib/server/data`. Arquivos passam pelo binding R2.
+- `drizzle/0013_legado_catalogo.sql` cria o catálogo legado (prefixo `legado_`) ao lado do modelo novo, para não colidir com `vendas`, `clientes` e as demais tabelas v2. O banco começa vazio.
+- Papéis ADMIN, MASTER, FINANCEIRO, GESTOR, VENDEDOR e OUTRO, escopos e `modulo_acesso` continuam nas rotas atuais, agora lendo D1.
+- O journal Drizzle foi alinhado até `0013_legado_catalogo`. A fonte aplicada continua sendo o SQL de `./drizzle`.
+
+Pendências que exigem ação manual (sem credencial neste ambiente):
+- `npm run d1:migrate:staging` e `npm run d1:migrate:prod` para aplicar `0013_legado_catalogo.sql`.
+- Publicar o Worker só quando o usuário decidir (`npm run cf:deploy:staging`). Não há secret do banco antigo para manter.
+- Conferir `BETTER_AUTH_SECRET` e `RESEND_API_KEY` nos ambientes.
+- MFA: o segredo TOTP aparece para digitação manual; a imagem ainda não é um QR escaneável.
+- Leitura de painéis que dependia de funções SQL de read model cai no cálculo em tempo real quando a função não existe no D1.
+
+Risco: a cadeia 0013 é grande e ainda não foi aplicada nos D1 remotos. Aplicar em staging antes de produção.
+Próximo passo operacional: migrations remotas e ensaio em staging com dados sintéticos.

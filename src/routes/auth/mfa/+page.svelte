@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
-  import { supabase } from "$lib/db/supabase";
+  import { browserData as dados } from "$lib/db/browserData";
   import { permissoes } from "$lib/stores/permissoes";
   import Button from "$lib/components/ui/Button.svelte";
   import Card from "$lib/components/ui/Card.svelte";
@@ -40,7 +40,7 @@
       const params = new URLSearchParams(window.location.search);
       nextPath = normalizeNextPath(params.get("next"));
 
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData } = await dados.auth.getSession();
       if (!sessionData?.session?.user) {
         goto("/auth/login");
         return;
@@ -48,14 +48,14 @@
 
       // Verifica se já está em AAL2
       const { data: aalData } =
-        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        await dados.auth.mfa.getAuthenticatorAssuranceLevel();
       if (aalData?.currentLevel === "aal2") {
         goto(nextPath);
         return;
       }
 
       // Busca fatores TOTP verificados
-      const { data: factorsData } = await supabase.auth.mfa.listFactors();
+      const { data: factorsData } = await dados.auth.mfa.listFactors();
       const verifiedFactor = factorsData?.totp?.find(
         (f: VerifiedTotpFactor) => f.status === "verified",
       );
@@ -103,10 +103,10 @@
 
     try {
       const { data: challengeData, error: challengeError } =
-        await supabase.auth.mfa.challenge({ factorId });
+        await dados.auth.mfa.challenge({ factorId });
       if (challengeError) throw challengeError;
 
-      const { error: verifyError } = await supabase.auth.mfa.verify({
+      const { error: verifyError } = await dados.auth.mfa.verify({
         factorId,
         challengeId: challengeData.id,
         code,
@@ -114,8 +114,8 @@
       if (verifyError) throw verifyError;
 
       // Atualiza permissões e redireciona
-      const supabaseClient = supabase;
-      await permissoes.refresh(supabaseClient);
+      const dadosClient = dados;
+      await permissoes.refresh(dadosClient);
       goto(nextPath);
     } catch (err: unknown) {
       const msg = toUserMessage(err, "").toLowerCase();

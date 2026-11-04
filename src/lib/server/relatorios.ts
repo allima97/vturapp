@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient } from '$lib/server/data';
 import { isEquipeVturNome } from '$lib/conciliacao/baixaRac';
 import { todayISODateLocal } from '$lib/date';
 import {
@@ -221,7 +221,7 @@ function buildSalesSelect(
 }
 
 export async function fetchSalesReportRows(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     dataInicio?: string | null;
     dataFim?: string | null;
@@ -371,7 +371,7 @@ export async function fetchSalesReportRows(
   });
 }
 
-export async function fetchLatestPaymentForms(client: SupabaseClient, vendaIds: string[]) {
+export async function fetchLatestPaymentForms(client: DataClient, vendaIds: string[]) {
   const ids = uniqueCleanStrings(vendaIds);
   const forms = new Map<string, string>();
 

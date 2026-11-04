@@ -82,7 +82,7 @@ describe('M12 — auditoria (Suíte U)', () => {
       userAgent: 'vitest',
     });
 
-    const logs = await db.select().from(auditLogs).where();
+    const logs = await db.select().from(auditLogs);
     expect(logs).toHaveLength(1);
     expect(logs[0].modulo).toBe('Vendas');
     expect(logs[0].acao).toBe('venda_criada');
@@ -235,7 +235,7 @@ describe('M12 — auditoria (Suíte U)', () => {
     await anonimizarTitularAuditLogs(db, EMPRESA_U, USER_U1);
 
     // Log da empresa V deve permanecer com userId
-    const [logV] = await db.select().from(auditLogs).where();
+    const [logV] = await db.select().from(auditLogs);
     // filtra manualmente
     const { logs: logsU } = await listarAuditLogs(db, EMPRESA_U);
     expect(logsU.every((l) => l.userId === null)).toBe(true);

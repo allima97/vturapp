@@ -15,7 +15,7 @@
  */
 
 import { writable, derived, get } from 'svelte/store';
-import type { SupabaseClient, User } from '@supabase/supabase-js';
+import type { User } from '$lib/stores/auth';
 import { toUserMessage } from '$lib/utils/errors';
 import {
   MAPA_MODULOS,
@@ -190,9 +190,9 @@ function createPermissoesStore() {
   };
 
   // ------------------------------------------------------------------
-  // INIT — carrega tudo do Supabase
+  // INIT — carrega tudo do Dados
   // ------------------------------------------------------------------
-  async function init(supabase: SupabaseClient): Promise<void> {
+  async function init(dados: { auth: { getUser: () => Promise<any>; getSession: () => Promise<any> }; from: (table: string) => any }): Promise<void> {
     update((s) => ({ ...s, loading: true, error: null }));
 
     try {
@@ -200,7 +200,7 @@ function createPermissoesStore() {
       try {
         const {
           data: { user: directUser },
-        } = await supabase.auth.getUser();
+        } = await dados.auth.getUser();
         user = directUser;
       } catch (getUserError) {
         if (!isTransientNetworkError(getUserError)) {
@@ -209,7 +209,7 @@ function createPermissoesStore() {
 
         const {
           data: { session },
-        } = await supabase.auth.getSession();
+        } = await dados.auth.getSession();
         user = session?.user ?? null;
       }
 
@@ -219,7 +219,7 @@ function createPermissoesStore() {
       }
 
       // 1. Perfil do usuário
-      const { data: profile, error: profileErr } = await supabase
+      const { data: profile, error: profileErr } = await dados
         .from('users')
         .select('id, email, uso_individual, user_types(name)')
         .eq('id', user.id)
@@ -244,7 +244,7 @@ function createPermissoesStore() {
 
       // 2. Permissões por módulo (modulo_acesso)
       // Carrega TODOS os registros (ativo ou não) para pickBestPermissao
-      const { data: acessosRaw, error: acessosErr } = await supabase
+      const { data: acessosRaw, error: acessosErr } = await dados
         .from('modulo_acesso')
         .select('modulo, permissao, ativo')
         .eq('usuario_id', user.id);
@@ -273,13 +273,13 @@ function createPermissoesStore() {
       // 3. Módulos desabilitados globalmente
       let disabledModules: string[] = [];
       try {
-        const settingsResp = await supabase
+        const settingsResp = await dados
           .from('system_module_settings')
           .select('module_key, enabled')
           .eq('enabled', false);
 
         if (!settingsResp.error) {
-          disabledModules = (settingsResp.data || []).map((m) =>
+          disabledModules = (settingsResp.data || []).map((m: any) =>
             String(m.module_key || '').toLowerCase(),
           );
         } else {
@@ -289,13 +289,13 @@ function createPermissoesStore() {
 
           // Compatibilidade com bases antigas que ainda usam system_module_catalog.
           if (relationMissing) {
-            const legacyResp = await supabase
+            const legacyResp = await dados
               .from('system_module_catalog')
               .select('key, enabled')
               .eq('enabled', false);
 
             if (!legacyResp.error) {
-              disabledModules = (legacyResp.data || []).map((m) =>
+              disabledModules = (legacyResp.data || []).map((m: any) =>
                 String(m.key || '').toLowerCase(),
               );
             }
@@ -438,8 +438,8 @@ function createPermissoesStore() {
   // ------------------------------------------------------------------
   // refresh — recarrega permissões
   // ------------------------------------------------------------------
-  async function refresh(supabase: SupabaseClient): Promise<void> {
-    await init(supabase);
+  async function refresh(dados: { auth: { getUser: () => Promise<any>; getSession: () => Promise<any> }; from: (table: string) => any }): Promise<void> {
+    await init(dados);
   }
 
   // ------------------------------------------------------------------

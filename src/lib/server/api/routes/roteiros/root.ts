@@ -109,7 +109,7 @@ export async function handleRoteirosPost(event: RequestEvent) {
     const bodyResult = await readJsonBodyLimited(event.request, MAX_ROTEIRO_BODY_BYTES);
     if (!bodyResult.ok) return bodyResult.response;
 
-    const supabase = event.locals.supabase;
+    const dados = event.locals.dados;
     const { session, user } = await event.locals.safeGetSession();
     if (!session || !user) {
       return new Response('Sessao invalida.', { status: 401, headers: NO_STORE_HEADERS });
@@ -127,7 +127,7 @@ export async function handleRoteirosPost(event: RequestEvent) {
     }
 
     // Buscar company_id do usuário
-    const { data: userProfile } = await supabase
+    const { data: userProfile } = await dados
       .from('users')
       .select('company_id')
       .eq('id', user.id)
@@ -151,7 +151,7 @@ export async function handleRoteirosPost(event: RequestEvent) {
         updatePayload.itinerario_config = itinerario_config || null;
       }
 
-      let { error: updateError } = await supabase
+      let { error: updateError } = await dados
         .from('roteiro_personalizado')
         .update(updatePayload)
         .eq('id', roteiroIdFromBody)
@@ -159,7 +159,7 @@ export async function handleRoteirosPost(event: RequestEvent) {
 
       if (updateError && hasItinerarioConfig && isMissingItinerarioConfigColumn(updateError)) {
         delete updatePayload.itinerario_config;
-        ({ error: updateError } = await supabase
+        ({ error: updateError } = await dados
           .from('roteiro_personalizado')
           .update(updatePayload)
           .eq('id', roteiroIdFromBody)
@@ -182,7 +182,7 @@ export async function handleRoteirosPost(event: RequestEvent) {
         insertPayload.itinerario_config = itinerario_config || null;
       }
 
-      let { data: inserted, error: insertError } = await supabase
+      let { data: inserted, error: insertError } = await dados
         .from('roteiro_personalizado')
         .insert(insertPayload)
         .select('id')
@@ -190,7 +190,7 @@ export async function handleRoteirosPost(event: RequestEvent) {
 
       if (insertError && hasItinerarioConfig && isMissingItinerarioConfigColumn(insertError)) {
         delete insertPayload.itinerario_config;
-        ({ data: inserted, error: insertError } = await supabase
+        ({ data: inserted, error: insertError } = await dados
           .from('roteiro_personalizado')
           .insert(insertPayload)
           .select('id')
@@ -205,7 +205,7 @@ export async function handleRoteirosPost(event: RequestEvent) {
 
     // Salva dias se fornecidos
     if (Array.isArray(dias) && dias.length > 0) {
-      await supabase.from('roteiro_dia').delete().eq('roteiro_id', roteiroId);
+      await dados.from('roteiro_dia').delete().eq('roteiro_id', roteiroId);
 
       const diasRows = dias.map((dia, index: number) => {
         const day = isRecord(dia) ? (dia as RoteiroDiaDraft) : {};
@@ -221,7 +221,7 @@ export async function handleRoteirosPost(event: RequestEvent) {
       });
 
       if (diasRows.length > 0) {
-        const { error: diasError } = await supabase.from('roteiro_dia').insert(diasRows);
+        const { error: diasError } = await dados.from('roteiro_dia').insert(diasRows);
         if (diasError && !String(diasError.code || '').includes('42P01')) throw diasError;
       }
     }
@@ -238,7 +238,7 @@ export async function handleRoteirosDelete(event: RequestEvent) {
     const originError = rejectCrossOriginRequest(event.request);
     if (originError) return originError;
 
-    const supabase = event.locals.supabase;
+    const dados = event.locals.dados;
     const { session, user } = await event.locals.safeGetSession();
     if (!session || !user) {
       return new Response('Sessao invalida.', { status: 401, headers: NO_STORE_HEADERS });
@@ -248,7 +248,7 @@ export async function handleRoteirosDelete(event: RequestEvent) {
     if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     // RLS garante que só o dono pode excluir
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await dados
       .from('roteiro_personalizado')
       .delete()
       .eq('id', id)
@@ -270,7 +270,7 @@ export async function handleRoteirosPatch(event: RequestEvent) {
     const bodyResult = await readJsonBodyLimited(event.request, MAX_ROTEIRO_BODY_BYTES);
     if (!bodyResult.ok) return bodyResult.response;
 
-    const supabase = event.locals.supabase;
+    const dados = event.locals.dados;
     const { session, user } = await event.locals.safeGetSession();
     if (!session || !user) {
       return new Response('Sessao invalida.', { status: 401, headers: NO_STORE_HEADERS });
@@ -291,7 +291,7 @@ export async function handleRoteirosPatch(event: RequestEvent) {
 
       if (!termo && !tipo) return json({ sugestoes: [] }, { headers: NO_STORE_HEADERS });
 
-      let query = supabase
+      let query = dados
         .from('roteiro_sugestoes')
         .select(ROTEIRO_SUGESTAO_SELECT)
         .order('uso_count', { ascending: false })
@@ -319,14 +319,14 @@ export async function handleRoteirosPatch(event: RequestEvent) {
       const normalizedValor = safeValor.toLowerCase();
 
       // Buscar company_id
-      const { data: userProfile } = await supabase
+      const { data: userProfile } = await dados
         .from('users')
         .select('company_id')
         .eq('id', user.id)
         .maybeSingle();
       const companyId = (userProfile as UserCompanyRow | null)?.company_id || null;
 
-      const { data: existing } = await supabase
+      const { data: existing } = await dados
         .from('roteiro_sugestoes')
         .select('id, uso_count')
         .eq('tipo', safeTipo)
@@ -335,14 +335,14 @@ export async function handleRoteirosPatch(event: RequestEvent) {
       const existingSuggestion = existing as RoteiroSugestaoRow | null;
 
       if (existingSuggestion) {
-        await supabase
+        await dados
           .from('roteiro_sugestoes')
           .update({ uso_count: (existingSuggestion.uso_count || 0) + 1 })
           .eq('id', existingSuggestion.id);
         return json({ ok: true, id: existingSuggestion.id }, { headers: NO_STORE_HEADERS });
       }
 
-      const { data: inserted, error: insertError } = await supabase
+      const { data: inserted, error: insertError } = await dados
         .from('roteiro_sugestoes')
         .insert({ tipo: safeTipo, valor: safeValor, company_id: companyId, valor_normalizado: normalizedValor })
         .select('id')
@@ -358,7 +358,7 @@ export async function handleRoteirosPatch(event: RequestEvent) {
       if (!isUuid(suggestionId)) {
         return json({ error: 'ID invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
       }
-      await supabase.from('roteiro_sugestoes').delete().eq('id', suggestionId);
+      await dados.from('roteiro_sugestoes').delete().eq('id', suggestionId);
       return json({ ok: true }, { headers: NO_STORE_HEADERS });
     }
 

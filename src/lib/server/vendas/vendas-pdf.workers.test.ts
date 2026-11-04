@@ -37,7 +37,7 @@ import type { VendaNormalizada } from './validation';
 // Infra de autenticação simulada (mesmo padrão dos demais workers tests)
 // ─────────────────────────────────────────────────────────────────────────────
 
-const MIGRATIONS = (env as Record<string, unknown>).TEST_MIGRATIONS as Parameters<
+const MIGRATIONS = (env as unknown as Record<string, unknown>).TEST_MIGRATIONS as Parameters<
   typeof applyD1Migrations
 >[1];
 

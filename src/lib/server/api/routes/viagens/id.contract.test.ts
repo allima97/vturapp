@@ -6,7 +6,7 @@
  * status, o mesmo corpo e fazer o mesmo conjunto de consultas.
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createFakeSupabase, sortedQueryLog, type FakeSupabase } from '$lib/server/testing/fakeSupabase';
+import { createFakeDados, sortedQueryLog, type FakeDados } from '$lib/server/testing/fakeDados';
 
 const state = vi.hoisted(() => ({
   db: null as unknown,
@@ -100,7 +100,7 @@ function event(id: string) {
 }
 
 async function call(id: string, scope: Record<string, unknown>, userId: string) {
-  const db: FakeSupabase = createFakeSupabase(tables());
+  const db: FakeDados = createFakeDados(tables());
   state.db = db;
   state.scope = scope;
   state.userId = userId;

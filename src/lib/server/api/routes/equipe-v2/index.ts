@@ -5,7 +5,7 @@
  * Membros:  GET /membros, GET /membros/:id,
  *           PATCH /membros/:id/papel, DELETE /membros/:id
  */
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import type { ApiEnv } from '../../types';
 import { resolveAuthContext } from '$lib/server/auth/context';
 import { canForContext } from '$lib/server/policy';
@@ -23,14 +23,14 @@ import { PAPEIS, type Papel } from '$lib/server/db/schema';
 
 export const equipeV2Routes = new Hono<ApiEnv>();
 
-async function resolveCtx(c: Parameters<typeof equipeV2Routes.get>[1] extends (c: infer C) => unknown ? C : never) {
+async function resolveCtx(c: Context<ApiEnv>) {
   const { DB, BETTER_AUTH_SECRET } = c.env;
   const baseURL = new URL(c.req.url).origin;
   const authCtx = await resolveAuthContext(c.req.raw.headers, DB, BETTER_AUTH_SECRET, baseURL);
   return { authCtx, db: getDb(DB) };
 }
 
-function erroEmpresa(c: Parameters<typeof equipeV2Routes.get>[1] extends (c: infer C) => unknown ? C : never, err: unknown) {
+function erroEmpresa(c: Context<ApiEnv>, err: unknown) {
   if (err instanceof EmpresaError) {
     const status = err.code === 'NAO_ENCONTRADO' ? 404 : err.code === 'SEM_PERMISSAO' ? 403 : 400;
     return c.json({ error: err.message }, status);

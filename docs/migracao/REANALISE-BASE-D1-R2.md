@@ -1,8 +1,32 @@
 # Reanálise da migração integral para D1 e R2
 
-**Data:** 2026-10-31  
-**Branch/SHA analisados:** `reescrita/f2-identidade-autorizacao` / `b2f3a460`  
-**Estado:** migração parcial; não autoriza desligar o Supabase.
+**Data:** 2026-11-04  
+**Branch de trabalho:** `cursor/migracao-d1-r2-sem-supabase-d46b`  
+**Estado:** o código da aplicação não consome mais o SDK, Auth, Storage nem RPCs remotos. Os D1 remotos ainda precisam receber a migration `0013` antes do deploy. Não desligar o projeto antigo até o ensaio de staging.
+
+## Corte realizado em 04/11/2026
+
+- Sessão do app, login, logout, recuperação de senha e 2FA usam Better Auth e a tabela `mfa_fatores`.
+- `getAdminClient()` e `locals.dados` executam SQL no D1. As tabelas do catálogo legado ficam em `legado_*`, para conviver com o modelo novo (`vendas`, `clientes`, `user` etc.).
+- Uploads, downloads e URLs de arquivo usam o binding R2. Buckets de leitura pública no Worker: `campanhas`, `mural-recados`, `message-template-themes`, `quotes`, `system-docs`. Os demais exigem sessão ou URL assinada.
+- O limite persistente fica só no D1 (`security_rate_limits`) ou na memória do isolate. O fallback remoto foi removido.
+- `rg -i supabase src` não encontra consumidor. `@supabase/ssr`, `@supabase/supabase-js` e o CLI `supabase` saíram do `package.json`.
+- Nenhum Worker foi publicado e nenhuma migration foi aplicada em D1 remoto nesta etapa.
+
+### Comandos manuais
+
+```bash
+npm run d1:migrate:staging
+npm run d1:migrate:prod
+# só depois do ensaio local/staging
+npm run cf:deploy:staging
+```
+
+Segredos que continuam necessários: `BETTER_AUTH_SECRET`, `RESEND_API_KEY`. Não configurar URL, anon key nem service role do banco antigo.
+
+**Data anterior:** 2026-10-31  
+**Branch/SHA analisados então:** `reescrita/f2-identidade-autorizacao` / `b2f3a460`  
+**Estado naquela data:** migração parcial.
 
 Este documento separa o que o código demonstra do que ainda é hipótese ou decisão pendente. A decisão vigente de iniciar com banco e buckets vazios permanece: não transferir usuários, senhas, vendas, arquivos ou sessões antigas. Isso não dispensa reproduzir as regras de negócio necessárias no sistema novo.
 
@@ -64,16 +88,16 @@ A CLI global do Mac (`supabase` 2.122.0) funciona. O erro anterior veio do biná
 
 Foi obtido um inventário remoto de metadados usando `supabase gen types ... --linked` e consultas somente `SELECT` a `information_schema`/`pg_catalog`. Nenhuma linha de negócio foi consultada ou exportada. O resultado está em [`SCHEMA-LEGADO-2026-10-31.json`](./SCHEMA-LEGADO-2026-10-31.json), com UUIDs e e-mails literais em expressões de policy mascarados.
 
-| Schema/objeto | Contagem observada |
-|---|---:|
-| `public` — tabelas | 137 |
-| `public` — views | 6 |
-| `public` — colunas | 1.641 |
-| `public` — constraints / indexes | 486 / 483 |
-| `public` — rotinas / triggers | 227 / 91 |
-| `public` — tabelas com RLS / policies | 137 / 396 |
-| `storage` — buckets / policies / triggers | 10 / 33 / 7 |
-| `auth` — tabelas gerenciadas | 27 |
+| Schema/objeto                             | Contagem observada |
+| ----------------------------------------- | -----------------: |
+| `public` — tabelas                        |                137 |
+| `public` — views                          |                  6 |
+| `public` — colunas                        |              1.641 |
+| `public` — constraints / indexes          |          486 / 483 |
+| `public` — rotinas / triggers             |           227 / 91 |
+| `public` — tabelas com RLS / policies     |          137 / 396 |
+| `storage` — buckets / policies / triggers |        10 / 33 / 7 |
+| `auth` — tabelas gerenciadas              |                 27 |
 
 O CLI Supabase está instalado globalmente em `/opt/homebrew/bin/supabase`; a falha anterior era do binário Linux incluído em `node_modules`, não do Mac. `supabase migration list --linked` confirmou conexão autenticada. O dump SQL completo ainda não foi obtido: `supabase db dump --linked --schema public` exige o daemon Docker/Colima, que não estava ligado nesta sessão. As funções estão catalogadas por assinatura, não por corpo; regras de RPC e triggers ainda devem ser cruzadas com as migrations versionadas e com a implementação antiga antes de portar os domínios.
 

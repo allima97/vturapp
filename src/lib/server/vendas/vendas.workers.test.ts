@@ -42,7 +42,7 @@ import {
 } from './service';
 import type { VendaNormalizada, VendaEdicaoNormalizada } from './validation';
 
-const MIGRATIONS = (env as Record<string, unknown>).TEST_MIGRATIONS as Parameters<
+const MIGRATIONS = (env as unknown as Record<string, unknown>).TEST_MIGRATIONS as Parameters<
   typeof applyD1Migrations
 >[1];
 
@@ -297,7 +297,7 @@ describe('D. Detalhe de venda', () => {
 
   it('lança NAO_ENCONTRADA para ID inexistente', async () => {
     await expect(obterVenda(db(), EMPRESA_A, 99999)).rejects.toSatisfy(
-      (e: VendaError) => e instanceof VendaError && e.code === 'NAO_ENCONTRADA'
+      (e: unknown) => e instanceof VendaError && e.code === 'NAO_ENCONTRADA'
     );
   });
 });
@@ -322,7 +322,7 @@ describe('E. Cancelamento e concorrência', () => {
   it('rejeita cancelamento com versão desatualizada', async () => {
     const v = await criarVenda(db(), EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
     await expect(cancelarVenda(db(), EMPRESA_A, v.id, 99)).rejects.toSatisfy(
-      (e: VendaError) => e instanceof VendaError && e.code === 'CONFLITO_VERSAO'
+      (e: unknown) => e instanceof VendaError && e.code === 'CONFLITO_VERSAO'
     );
   });
 
@@ -330,7 +330,7 @@ describe('E. Cancelamento e concorrência', () => {
     const v = await criarVenda(db(), EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
     await cancelarVenda(db(), EMPRESA_A, v.id, 1);
     await expect(cancelarVenda(db(), EMPRESA_A, v.id, 2)).rejects.toSatisfy(
-      (e: VendaError) => e instanceof VendaError && e.code === 'CANCELADA'
+      (e: unknown) => e instanceof VendaError && e.code === 'CANCELADA'
     );
   });
 });
@@ -344,7 +344,7 @@ describe('F. Isolamento de tenant', () => {
     const v = await criarVenda(db(), EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
 
     await expect(obterVenda(db(), EMPRESA_B, v.id)).rejects.toSatisfy(
-      (e: VendaError) => e instanceof VendaError && e.code === 'NAO_ENCONTRADA'
+      (e: unknown) => e instanceof VendaError && e.code === 'NAO_ENCONTRADA'
     );
   });
 
@@ -352,7 +352,7 @@ describe('F. Isolamento de tenant', () => {
     const v = await criarVenda(db(), EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
 
     await expect(cancelarVenda(db(), EMPRESA_B, v.id, 1)).rejects.toSatisfy(
-      (e: VendaError) => e instanceof VendaError && e.code === 'NAO_ENCONTRADA'
+      (e: unknown) => e instanceof VendaError && e.code === 'NAO_ENCONTRADA'
     );
   });
 

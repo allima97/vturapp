@@ -1042,6 +1042,8 @@ export const systemModuleSettings = sqliteTable(
   }),
 );
 
+export * from './legadoSchema';
+
 export const securityRateLimits = sqliteTable(
   'security_rate_limits',
   {

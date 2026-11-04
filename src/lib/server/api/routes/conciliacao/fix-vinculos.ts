@@ -1,3 +1,4 @@
+import type { DataClient } from '$lib/server/data';
 // Migrado para Hono de src/routes/api/v1/conciliacao/fix-vinculos/+server.ts — corpo IDÊNTICO ao original
 // (só o nome/assinatura do handler e caminhos de import relativos mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
@@ -16,7 +17,6 @@ import type { RequestEvent } from '@sveltejs/kit';
  * revisao manual: o erro pode estar na venda, na conciliacao ou em um rateio.
  */
 import { json } from '@sveltejs/kit';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { buildConciliacaoMetrics } from '$lib/conciliacao/business';
 import { normalizeReceiptKey } from '$lib/conciliacao/receiptNormalize';
 import {
@@ -375,7 +375,7 @@ function receiptLabel(recibo: ReceiptAuditRow) {
   return reserva ? `${numero} / ${reserva}` : numero;
 }
 
-async function fetchUsersMap(client: SupabaseClient, ids: string[]) {
+async function fetchUsersMap(client: DataClient, ids: string[]) {
   const uniqueIds = uniqueCleanStrings(ids);
   const map = new Map<string, string>();
   for (let index = 0; index < uniqueIds.length; index += 200) {

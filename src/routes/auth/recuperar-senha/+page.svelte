@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { supabase } from '$lib/db/supabase';
+  import { browserData as dados } from '$lib/db/browserData';
   import { env as publicEnv } from '$env/dynamic/public';
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
@@ -56,7 +56,7 @@
         }
       }
 
-      const { error: authError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      const { error: authError } = await dados.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/auth/nova-senha`
       });
 

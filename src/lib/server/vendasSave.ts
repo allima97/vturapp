@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { DataClient } from '$lib/server/data';
 import { normalizeText } from "$lib/normalizeText";
 import {
   isRankingEligibleUser,
@@ -63,8 +63,8 @@ type TipoProdutoLookupRow = {
   ativo?: boolean | null;
 };
 
-type LookupClient = Pick<SupabaseClient, "from">;
-type MutationClient = Pick<SupabaseClient, "from" | "rpc">;
+type LookupClient = Pick<DataClient, "from">;
+type MutationClient = Pick<DataClient, "from" | "rpc">;
 
 type PagamentoParcelaInput = {
   valor?: unknown;
@@ -622,7 +622,7 @@ export async function ensureReciboReservaUnicos(params: {
 
   // Busca IDs de vendas canceladas para excluir da validação.
   // Usamos consulta separada para não depender de filtragem de join PostgREST
-  // (que pode ser instável dependendo da versão do PostgREST/supabase-js).
+  // (que pode ser instável dependendo da versão do PostgREST/dados-js).
   const cancelledVendaIds = await fetchCancelledVendaIds(client, companyId);
 
   if (receiptKeys.length > 0) {

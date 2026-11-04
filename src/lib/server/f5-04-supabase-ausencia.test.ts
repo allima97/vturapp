@@ -1,20 +1,20 @@
 /**
- * Suíte N — F5-04: Auditoria de ausência de Supabase na stack v2
+ * Suíte N — F5-04: Auditoria de ausência de Dados na stack v2
  *
  * Prova estática (leitura de arquivos fonte) que a stack nova não depende
- * de Supabase em nenhum caminho de execução do app-v2.
+ * de Dados em nenhum caminho de execução do app-v2.
  *
  * Testes:
- *  N1.  app-v2.ts não importa @supabase/supabase-js
- *  N2.  app-v2.ts não importa createSupabaseServerClient nem getAdminClient
- *  N3.  sveltekit-v2.ts não importa @supabase/supabase-js
- *  N4.  sveltekit-v2.ts não passa event.locals.supabase para o Hono app
- *  N5.  src/routes/api/v2/[...path]/+server.ts não importa Supabase
- *  N6.  ApiEnv.Bindings não inclui campo SupabaseClient
- *  N7.  Nenhuma rota montada em app-v2 importa @supabase/supabase-js
- *  N8.  wrangler.toml não define SUPABASE_URL nem SUPABASE_ANON_KEY como vars ativos
- *  N9.  sveltekit-v2.ts declara explicitamente "sem Supabase em v2"
- *  N10. app-v2.ts não monta rotas que importam Supabase (conciliação, viagens, pagamentos)
+ *  N1.  app-v2.ts não importa @dados/dados-js
+ *  N2.  app-v2.ts não importa createDadosServerClient nem getAdminClient
+ *  N3.  sveltekit-v2.ts não importa @dados/dados-js
+ *  N4.  sveltekit-v2.ts não passa event.locals.dados para o Hono app
+ *  N5.  src/routes/api/v2/[...path]/+server.ts não importa Dados
+ *  N6.  ApiEnv.Bindings não inclui campo DataClient
+ *  N7.  Nenhuma rota montada em app-v2 importa @dados/dados-js
+ *  N8.  wrangler.toml não define DADOS_URL nem DADOS_ANON_KEY como vars ativos
+ *  N9.  sveltekit-v2.ts declara explicitamente "sem Dados em v2"
+ *  N10. app-v2.ts não monta rotas que importam Dados (conciliação, viagens, pagamentos)
  */
 
 import { describe, it, expect } from 'vitest';
@@ -42,8 +42,8 @@ const ROTAS_MONTADAS_V2 = [
   'src/lib/server/api/routes/tenant-proof/index.ts',
 ];
 
-// Rotas legadas com Supabase — NÃO devem aparecer em app-v2
-const ROTAS_LEGADAS_SUPABASE = [
+// Rotas legadas com Dados — NÃO devem aparecer em app-v2
+const ROTAS_LEGADAS_DADOS = [
   'conciliacao',
   'viagens',
   'pagamentos',
@@ -51,89 +51,89 @@ const ROTAS_LEGADAS_SUPABASE = [
   'consultorias',
 ];
 
-describe('Suíte N — F5-04: auditoria Supabase na stack v2', () => {
+describe('Suíte N — F5-04: auditoria Dados na stack v2', () => {
   // N1 ────────────────────────────────────────────────────────────────────────
-  it('N1. app-v2.ts não importa @supabase/supabase-js', () => {
+  it('N1. app-v2.ts não importa @dados/dados-js', () => {
     const src = readSrc(APP_V2);
-    expect(src).not.toMatch(/@supabase\/supabase-js/);
-    expect(src).not.toMatch(/@supabase\/ssr/);
+    expect(src).not.toMatch(/@dados\/dados-js/);
+    expect(src).not.toMatch(/@dados\/ssr/);
   });
 
   // N2 ────────────────────────────────────────────────────────────────────────
-  it('N2. app-v2.ts não importa createSupabaseServerClient nem getAdminClient', () => {
+  it('N2. app-v2.ts não importa createDadosServerClient nem getAdminClient', () => {
     const src = readSrc(APP_V2);
-    expect(src).not.toMatch(/createSupabaseServerClient/);
+    expect(src).not.toMatch(/createDadosServerClient/);
     expect(src).not.toMatch(/getAdminClient/);
-    expect(src).not.toMatch(/supabaseClient/i);
+    expect(src).not.toMatch(/dadosClient/i);
   });
 
   // N3 ────────────────────────────────────────────────────────────────────────
-  it('N3. sveltekit-v2.ts não importa @supabase/supabase-js', () => {
+  it('N3. sveltekit-v2.ts não importa @dados/dados-js', () => {
     const src = readSrc(SVELTEKIT_V2);
-    expect(src).not.toMatch(/@supabase\/supabase-js/);
-    expect(src).not.toMatch(/@supabase\/ssr/);
+    expect(src).not.toMatch(/@dados\/dados-js/);
+    expect(src).not.toMatch(/@dados\/ssr/);
   });
 
   // N4 ────────────────────────────────────────────────────────────────────────
-  it('N4. sveltekit-v2.ts não injeta event.locals.supabase nas bindings', () => {
+  it('N4. sveltekit-v2.ts não injeta event.locals.dados nas bindings', () => {
     const src = readSrc(SVELTEKIT_V2);
-    expect(src).not.toMatch(/locals\.supabase/);
-    expect(src).not.toMatch(/supabase\s*:/);
+    expect(src).not.toMatch(/locals\.dados/);
+    expect(src).not.toMatch(/dados\s*:/);
   });
 
   // N5 ────────────────────────────────────────────────────────────────────────
-  it('N5. src/routes/api/v2/+server.ts não importa Supabase', () => {
+  it('N5. src/routes/api/v2/+server.ts não importa Dados', () => {
     const src = readSrc(SK_ROUTE_V2);
-    expect(src).not.toMatch(/@supabase/);
-    expect(src).not.toMatch(/supabase/i);
+    expect(src).not.toMatch(/@dados/);
+    expect(src).not.toMatch(/dados/i);
   });
 
   // N6 ────────────────────────────────────────────────────────────────────────
-  it('N6. ApiEnv.Bindings não declara campo SupabaseClient', () => {
+  it('N6. ApiEnv.Bindings não declara campo DataClient', () => {
     const src = readSrc(TYPES);
-    // Não pode ter um campo cujo tipo seja SupabaseClient
-    expect(src).not.toMatch(/SupabaseClient/);
-    expect(src).not.toMatch(/@supabase\/supabase-js/);
+    // Não pode ter um campo cujo tipo seja DataClient
+    expect(src).not.toMatch(/DataClient/);
+    expect(src).not.toMatch(/@dados\/dados-js/);
     // event: RequestEvent é o campo legado presente (comentado como futuro a remover)
-    // Apenas verificar que não há supabase como Binding type
-    expect(src).not.toMatch(/supabase\s*:\s*SupabaseClient/);
+    // Apenas verificar que não há dados como Binding type
+    expect(src).not.toMatch(/dados\s*:\s*DataClient/);
   });
 
   // N7 ────────────────────────────────────────────────────────────────────────
-  it('N7. nenhuma rota montada em app-v2 importa @supabase/supabase-js', () => {
+  it('N7. nenhuma rota montada em app-v2 importa @dados/dados-js', () => {
     for (const rota of ROTAS_MONTADAS_V2) {
       const src = readSrc(rota);
-      expect(src, `rota ${rota} não deve importar @supabase`).not.toMatch(/@supabase/);
-      expect(src, `rota ${rota} não deve referenciar supabase`).not.toMatch(/supabaseClient/i);
+      expect(src, `rota ${rota} não deve importar @dados`).not.toMatch(/@dados/);
+      expect(src, `rota ${rota} não deve referenciar dados`).not.toMatch(/dadosClient/i);
     }
   });
 
   // N8 ────────────────────────────────────────────────────────────────────────
-  it('N8. wrangler.toml não ativa SUPABASE_URL nem SUPABASE_ANON_KEY como vars', () => {
+  it('N8. wrangler.toml não ativa DADOS_URL nem DADOS_ANON_KEY como vars', () => {
     const src = readSrc(WRANGLER);
     // Pode conter comentados (#) mas não como var ativo
     const linhasAtivas = src
       .split('\n')
       .filter((l) => !l.trim().startsWith('#'))
       .join('\n');
-    expect(linhasAtivas).not.toMatch(/SUPABASE_URL\s*=/);
-    expect(linhasAtivas).not.toMatch(/SUPABASE_ANON_KEY\s*=/);
-    expect(linhasAtivas).not.toMatch(/SUPABASE_SERVICE_ROLE_KEY\s*=/);
+    expect(linhasAtivas).not.toMatch(/DADOS_URL\s*=/);
+    expect(linhasAtivas).not.toMatch(/DADOS_ANON_KEY\s*=/);
+    expect(linhasAtivas).not.toMatch(/DADOS_SERVICE_ROLE_KEY\s*=/);
   });
 
   // N9 ────────────────────────────────────────────────────────────────────────
-  it('N9. sveltekit-v2.ts declara explicitamente ausência de Supabase', () => {
+  it('N9. sveltekit-v2.ts declara explicitamente ausência de Dados', () => {
     const src = readSrc(SVELTEKIT_V2);
     // O arquivo deve conter comentário documental explícito
-    expect(src).toMatch(/sem Supabase/i);
+    expect(src).toMatch(/sem Dados/i);
     // E passa event: null (não injeta o event.locals do SvelteKit)
     expect(src).toMatch(/event\s*:\s*null/);
   });
 
   // N10 ───────────────────────────────────────────────────────────────────────
-  it('N10. app-v2.ts não monta rotas legadas com Supabase', () => {
+  it('N10. app-v2.ts não monta rotas legadas com Dados', () => {
     const src = readSrc(APP_V2);
-    for (const rota of ROTAS_LEGADAS_SUPABASE) {
+    for (const rota of ROTAS_LEGADAS_DADOS) {
       expect(src, `app-v2 não deve montar rota ${rota}`).not.toMatch(
         new RegExp(`routes/${rota}`)
       );

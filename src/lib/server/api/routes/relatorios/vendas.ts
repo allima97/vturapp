@@ -61,7 +61,7 @@ import {
   cleanStringSet,
   chunkArray,
   dedupeById as dedupeRowsById,
-  SUPABASE_IN_BATCH_SIZE,
+  QUERY_IN_BATCH_SIZE,
   uniqueCleanStrings,
 } from "$lib/utils/array";
 import { toCleanString as toStr, toFiniteNumber as toNum } from "$lib/utils/values";
@@ -1306,7 +1306,7 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
         !clienteId &&
         !scope.isAdmin &&
         vendedorIds.length === 0 &&
-        accessibleClientIds.length > SUPABASE_IN_BATCH_SIZE
+        accessibleClientIds.length > QUERY_IN_BATCH_SIZE
       ) {
         const batchRows = await Promise.all(
           chunkArray(accessibleClientIds).map((batch) =>

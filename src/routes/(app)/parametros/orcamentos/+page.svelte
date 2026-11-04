@@ -6,7 +6,7 @@
   import Button from '$lib/components/ui/Button.svelte';
   import { FieldInput, FieldTextarea, FileDropzone, LoadingState } from '$lib/components/ui';
   import { toast } from '$lib/stores/ui';
-  import { createSupabaseBrowserClient } from '$lib/db/supabase';
+  import { createBrowserDataClient } from '$lib/db/browserData';
   import { apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
   import { Save, RefreshCw, FileText, Upload, ImageIcon, X } from '$lib/icons';
@@ -122,10 +122,10 @@
         };
 
         // Gera URLs assinadas para preview (imagens privadas no storage)
-        const supabase = createSupabaseBrowserClient();
+        const dados = createBrowserDataClient();
 
         if (s.imagem_complementar_path) {
-          const { data } = await supabase.storage.from(LOGO_BUCKET).createSignedUrl(s.imagem_complementar_path, 3600);
+          const { data } = await dados.storage.from(LOGO_BUCKET).createSignedUrl(s.imagem_complementar_path, 3600);
           if (!loadGuard.isCurrent(request.seq)) return;
           complementoPreview = data?.signedUrl || s.imagem_complementar_url || null;
         } else if (s.imagem_complementar_url) {
@@ -141,7 +141,7 @@
   }
 
   async function uploadImagem(
-    supabase: ReturnType<typeof createSupabaseBrowserClient>,
+    dados: ReturnType<typeof createBrowserDataClient>,
     userId: string,
     file: File | null,
     existingUrl: string | null,
@@ -158,7 +158,7 @@
     const ext = getFileExtension(file);
     const path = `branding/${userId}/${storageName}.${ext}`;
 
-    const { error: uploadErr } = await supabase.storage
+    const { error: uploadErr } = await dados.storage
       .from(LOGO_BUCKET)
       .upload(path, file, {
         upsert: true,
@@ -175,13 +175,13 @@
   async function save() {
     saving = true;
     try {
-      const supabase = createSupabaseBrowserClient();
-      const { data: authData } = await supabase.auth.getUser();
+      const dados = createBrowserDataClient();
+      const { data: authData } = await dados.auth.getUser();
       const userId = authData?.user?.id;
       if (!userId) throw new Error('Usuário não autenticado.');
 
       // Faz upload das imagens se houver arquivo novo
-      const complementoInfo = await uploadImagem(supabase, userId, complementoFile, settings.imagem_complementar_url, settings.imagem_complementar_path, 'imagem-complementar');
+      const complementoInfo = await uploadImagem(dados, userId, complementoFile, settings.imagem_complementar_url, settings.imagem_complementar_path, 'imagem-complementar');
 
       await apiPost('/api/v1/parametros/orcamentos-pdf', {
         settings: {
@@ -193,7 +193,7 @@
 
       // Atualiza preview com URL assinada após salvar
       if (complementoInfo.path) {
-        const { data } = await supabase.storage.from(LOGO_BUCKET).createSignedUrl(complementoInfo.path, 3600);
+        const { data } = await dados.storage.from(LOGO_BUCKET).createSignedUrl(complementoInfo.path, 3600);
         complementoPreview = data?.signedUrl || complementoInfo.url || null;
       }
 

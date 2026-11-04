@@ -15,7 +15,7 @@ import {
 } from '$lib/server/v1';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
-import { cleanStringSet, chunkArray, dedupeById, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { cleanStringSet, chunkArray, dedupeById, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const MAX_ADMIN_COMPANY_BODY_BYTES = 32 * 1024;
 const PT_BR_COLLATOR = new Intl.Collator('pt-BR');
@@ -83,7 +83,7 @@ async function loadCompaniesWithBilling(client: ReturnType<typeof getAdminClient
   };
 
   const loadWithBilling = async () => {
-    if (!companyIds || companyIds.length <= SUPABASE_IN_BATCH_SIZE) {
+    if (!companyIds || companyIds.length <= QUERY_IN_BATCH_SIZE) {
       const withBilling = await buildBillingQuery(companyIds);
       if (withBilling.error) throw withBilling.error;
       return withBilling.data || [];
@@ -132,7 +132,7 @@ export async function handleAdminEmpresasGet(event: RequestEvent) {
     const accessibleCompanyIds = scope.isAdmin ? null : getAccessibleCompanyIds(scope);
     const rows = await loadCompaniesWithBilling(client, accessibleCompanyIds);
 
-    const companyIds = rows.map((row) => row.id);
+    const companyIds = rows.map((row: any) => row.id);
     let masterLinkCounts = new Map<string, number>();
 
     try {
@@ -154,7 +154,7 @@ export async function handleAdminEmpresasGet(event: RequestEvent) {
     }
 
     return json({
-      items: rows.map((row) => ({
+      items: rows.map((row: any) => ({
         id: row.id,
         nome_fantasia: row.nome_fantasia || '',
         nome_empresa: row.nome_empresa || '',

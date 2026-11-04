@@ -292,14 +292,14 @@
     }
     previewingPdf = true;
     try {
-      const [{ createSupabaseBrowserClient }, { openQuotePreview }] = await Promise.all([
-        import("$lib/db/supabase"),
+      const [{ createBrowserDataClient }, { openQuotePreview }] = await Promise.all([
+        import("$lib/db/browserData"),
         import("$lib/quote/exportQuotePdfClient")
       ]);
-      const supabaseBrowser = createSupabaseBrowserClient();
+      const dadosBrowser = createBrowserDataClient();
       await openQuotePreview({
         quoteId: orcamentoId,
-        supabase: supabaseBrowser,
+        dados: dadosBrowser,
         showBudgetItems: exportShowBudgetItems === "sim",
         showBudgetDetails: exportShowBudgetDetails === "sim",
         showItemValues: exportShowItemValues === "sim",

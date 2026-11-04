@@ -28,7 +28,7 @@ import { chunkArray } from '$lib/utils/array';
 import { carregarTermosNaoComissionaveis } from '$lib/server/naoComissionavelTermos';
 
 
-const SUPABASE_IN_BATCH_SIZE = 150;
+const QUERY_IN_BATCH_SIZE = 150;
 
 type ConciliacaoListRow = {
   id?: string | null;
@@ -135,7 +135,7 @@ async function fetchBatched<T>(
   ) => PromiseLike<{ data: T[] | null; error: unknown }>,
 ) {
   const batchResults = await Promise.all(
-    chunkArray(values, SUPABASE_IN_BATCH_SIZE).map(async (batch) => {
+    chunkArray(values, QUERY_IN_BATCH_SIZE).map(async (batch) => {
       const { data, error } = await loader(batch);
       if (error) throw error;
       return data || [];

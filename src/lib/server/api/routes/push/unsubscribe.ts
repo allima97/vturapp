@@ -32,7 +32,7 @@ export const handlePushUnsubscribePost = async (event: RequestEvent) => {
     if (!bodyResult.ok) return bodyResult.response;
 
     const user = await requireAuthenticatedUser(event);
-    const client = locals.supabase;
+    const client = locals.dados;
 
     const body = readPushUnsubscribeBody(bodyResult.data);
     const endpoint = String(body?.endpoint || "").trim();

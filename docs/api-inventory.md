@@ -2,8 +2,8 @@
 
 Gerado por `node scripts/api-inventory.mjs` — **não editar à mão**. JSON completo em `docs/api-inventory.json`.
 
-- Endpoints: **259** (126 gravam no banco)
-- Domínios: 51
+- Endpoints: **270** (126 gravam no banco)
+- Domínios: 53
 - Migrados para Hono: **248** (marcados com <sub>hono</sub>)
 
 ## Pontos de atenção (detectados automaticamente)
@@ -71,18 +71,33 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/v1/agenda/range` <sub>hono</sub> | GET | ✔ | ✔ | Vendedor |  |  | agenda_itens(R), users(R) | — | — |
 | `/v1/agenda/update` <sub>hono</sub> | PATCH POST | ✔ | ✔ | Admin | ✔ | ✔ | agenda_itens(R/U) | — | — |
 
-### auth (10)
+### arquivos (5)
+
+| Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
+|---|---|:-:|:-:|---|:-:|:-:|---|---|---|
+| `/arquivos` | POST | ✔ |  |  |  |  | — | — | — |
+| `/arquivos/assinado/[exp]/[signature]/[bucket]/[...path]` | GET |  |  |  |  |  | — | — | — |
+| `/arquivos/assinatura` | POST | ✔ |  |  |  |  | — | — | — |
+| `/arquivos/baixar` | GET | ✔ |  |  |  |  | — | — | — |
+| `/arquivos/publico/[bucket]/[...path]` | GET |  |  |  |  |  | — | — | — |
+
+### auth (15)
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
 | `/auth/[...auth]` | GET POST |  |  |  |  |  | — | — | — |
+| `/auth/codigo` | POST |  |  |  |  |  | — | — | — |
 | `/auth/convite/activate` | POST |  |  |  | ✔ | ✔ | user_convites(R/U), users(UP) | — | — |
 | `/auth/login` <sub>turnstile</sub> | POST |  |  |  | ✔ | ✔ | — | — | — |
+| `/auth/mfa/fatores` | DELETE GET POST |  |  |  |  |  | — | — | — |
+| `/auth/mfa/nivel` | GET |  |  |  |  |  | — | — | — |
+| `/auth/mfa/verificar` | POST |  |  |  |  |  | — | — | — |
 | `/auth/passkeys` | DELETE GET | ✔ |  |  | ✔ | ✔ | — | — | — |
 | `/auth/passkeys/login/options` | POST |  |  |  | ✔ | ✔ | — | — | — |
 | `/auth/passkeys/login/verify` | POST |  |  |  | ✔ | ✔ | — | — | — |
 | `/auth/passkeys/register/options` | POST | ✔ |  |  |  |  | — | — | — |
 | `/auth/passkeys/register/verify` | POST | ✔ |  |  | ✔ | ✔ | — | — | — |
+| `/auth/senha` | POST |  |  |  |  |  | — | — | — |
 | `/auth/set-session` | POST |  |  |  | ✔ | ✔ | — | — | — |
 | `/auth/turnstile/verify` <sub>turnstile</sub> | POST |  |  |  | ✔ | ✔ | — | — | — |
 
@@ -184,6 +199,12 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
 | `/v1/cron/alerta-comissao` <sub>hono cron-secret</sub> | GET POST |  |  |  |  | ✔ | — | — | — |
 | `/v1/cron/lembretes-consultoria` <sub>hono cron-secret</sub> | POST |  |  |  |  | ✔ | — | — | — |
+
+### dados (1)
+
+| Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
+|---|---|:-:|:-:|---|:-:|:-:|---|---|---|
+| `/dados/consulta` | POST | ✔ |  |  |  |  | — | — | — |
 
 ### dashboard (11)
 

@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { DataClient } from '$lib/server/data';
 import {
   fetchEffectiveConciliacaoReceipts,
   fetchSuppressedConciliacaoReceipts,
@@ -142,7 +142,7 @@ function collectDestinationCityIds(rows: VendaAggregateRow[]) {
 }
 
 async function fetchDestinationCityNames(
-  client: SupabaseClient,
+  client: DataClient,
   rows: VendaAggregateRow[],
 ): Promise<DestinationCityNameMap> {
   const ids = uniqueCleanStrings(collectDestinationCityIds(rows)).sort();
@@ -422,7 +422,7 @@ function normalizeReceiptRows(
 }
 
 async function fetchBaixaRacVendedorIds(
-  client: SupabaseClient,
+  client: DataClient,
   companyIds: string[],
 ) {
   if (companyIds.length === 0) return [] as string[];
@@ -450,7 +450,7 @@ async function fetchBaixaRacVendedorIds(
 }
 
 async function fetchConciliacaoCompanyIds(
-  client: SupabaseClient,
+  client: DataClient,
   companyIds: string[],
 ) {
   if (companyIds.length === 0) return [] as string[];
@@ -483,7 +483,7 @@ async function fetchConciliacaoCompanyIds(
 }
 
 async function carregarTermosNaoComissionaveis(
-  client: SupabaseClient,
+  client: DataClient,
 ): Promise<string[]> {
   return getCachedReadModel({
     key: buildReadModelCacheKey("vendas-kpis:termos-nao-comissionaveis", {}),
@@ -499,7 +499,7 @@ async function carregarTermosNaoComissionaveis(
 }
 
 async function fetchNaoComissionadoPorVenda(
-  client: SupabaseClient,
+  client: DataClient,
   vendaIds: string[],
   termosNaoComissionaveis: string[],
 ) {
@@ -564,7 +564,7 @@ function getConciliacaoIds(item: ConciliacaoIdSource) {
 }
 
 async function fetchResolvedRowsUncached(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     dataInicio: string;
     dataFim: string;
@@ -673,7 +673,7 @@ async function fetchResolvedRowsUncached(
                   .in("vendedor_destino_id", vendedorBatch)
                   .not("conciliacao_recibo_id", "is", null)
                   .in("company_id", companyBatch)
-                  .then(({ data, error: splitConcErr }) => {
+                  .then(({ data, error: splitConcErr }: { data: any; error: any }) => {
                     if (splitConcErr) {
                       logServerError("[vendas-kpis] split conciliation indisponivel", splitConcErr);
                     } else {
@@ -879,7 +879,7 @@ async function fetchResolvedRowsUncached(
 }
 
 async function fetchResolvedRows(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     dataInicio: string;
     dataFim: string;
@@ -926,7 +926,7 @@ async function fetchResolvedRows(
 }
 
 export async function fetchAndComputeVendasKpis(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     dataInicio: string;
     dataFim: string;
@@ -940,7 +940,7 @@ export async function fetchAndComputeVendasKpis(
 }
 
 async function fetchAndComputeVendasKpisLegacy(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     dataInicio: string;
     dataFim: string;
@@ -1164,7 +1164,7 @@ async function fetchAndComputeVendasKpisLegacy(
 }
 
 export async function fetchVendasKpiReciboContributionsRaw(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     dataInicio: string;
     dataFim: string;
@@ -1464,7 +1464,7 @@ export async function fetchVendasKpiReciboContributionsRaw(
 }
 
 export async function fetchVendasKpiReciboContributions(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     dataInicio: string;
     dataFim: string;
@@ -1578,7 +1578,7 @@ function hasDashboardSummaryData(summary?: VendasKpiDashboardSummary | null) {
 }
 
 export async function fetchVendasKpiDashboardSummary(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     dataInicio: string;
     dataFim: string;
@@ -1646,7 +1646,7 @@ export async function fetchVendasKpiDashboardSummary(
 }
 
 export async function fetchAndComputeVendasTimeline(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     dataInicio: string;
     dataFim: string;

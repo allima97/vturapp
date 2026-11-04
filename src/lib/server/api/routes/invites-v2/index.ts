@@ -1,7 +1,7 @@
 /**
  * Rotas Hono para convites F2 — /api/v2/invites.
  *
- * Usa Better Auth + D1 diretamente (sem Supabase).
+ * Usa Better Auth + D1 diretamente (sem Dados).
  * Auth context resolvido via resolveAuthContext() do helper F2-02.
  *
  * Endpoints:

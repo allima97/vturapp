@@ -3,7 +3,8 @@
   import { goto } from '$app/navigation';
   import { dev } from '$app/environment';
   import { env as publicEnv } from '$env/dynamic/public';
-  import { supabase, isMockMode } from '$lib/db/supabase';
+  import { browserData, isMockMode } from '$lib/db/browserData';
+  import type { Session, User } from '$lib/stores/auth';
   import { auth } from '$lib/stores/auth';
   import { toUserMessage } from '$lib/utils/errors';
   import Button from '$lib/components/ui/Button.svelte';
@@ -11,7 +12,6 @@
   import TurnstileWidget from '$lib/components/auth/TurnstileWidget.svelte';
   import { FieldCheckbox, FieldInput } from '$lib/components/ui';
   import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
-  import type { Session, User } from '@supabase/supabase-js';
   import { Mail, Lock, Eye, EyeOff, AlertCircle, TestTube, Clock, Fingerprint } from '$lib/icons';
   
   let email = '';
@@ -97,7 +97,7 @@
 
   async function syncSessionInBrowser(session: LoginSession) {
     const result = await withTimeout(
-      supabase.auth.setSession({
+      browserData.auth.setSession({
         access_token: session.access_token,
         refresh_token: session.refresh_token
       }) as Promise<BrowserSessionResult>,
@@ -175,7 +175,7 @@
 
     try {
       if (mockMode) {
-        const { data, error: authError } = await supabase.auth.signInWithPassword({
+        const { data, error: authError } = await browserData.auth.signInWithPassword({
           email,
           password
         });

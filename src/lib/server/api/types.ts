@@ -22,7 +22,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 export type ApiEnv = {
   Bindings: {
     // ── SvelteKit ────────────────────────────────────────────────────────
-    /** RequestEvent original — disponível enquanto auth estiver em Supabase */
+    /** RequestEvent original — disponível enquanto auth estiver em Dados */
     event: RequestEvent;
 
     // ── Cloudflare Workers (novos) ───────────────────────────────────────

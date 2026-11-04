@@ -1,8 +1,8 @@
+import type { DataClient } from '$lib/server/data';
 // Migrado para Hono de src/routes/api/v1/relatorios/ranking/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from "@sveltejs/kit";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   ensureModuloAccess,
   fetchRankingVendedoresByCompanyIds,
@@ -135,7 +135,7 @@ function isSeguroRankingContribution(contribution: RankingContributionRow) {
  * Mantém conciliação, vendas manuais, REXTUR, rateio e regras não-comissionáveis em um só lugar.
  */
 async function buildRankingSimple(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     dataInicio: string;
     dataFim: string;

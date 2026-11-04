@@ -19,7 +19,7 @@ import {
   scopeCacheTags
 } from '$lib/server/readModelCache';
 import { resolveCompanyClienteIds } from '$lib/server/clientes';
-import { chunkArray, dedupeById, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { chunkArray, dedupeById, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const PT_BR_COLLATOR = new Intl.Collator('pt-BR');
 const PT_BR_BASE_COLLATOR = new Intl.Collator('pt-BR', { sensitivity: 'base' });
@@ -191,7 +191,7 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
         : null;
 
       if (companyClientIds && companyClientIds.length === 0) return { data: [], error: null };
-      if (companyClientIds && companyClientIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (companyClientIds && companyClientIds.length <= QUERY_IN_BATCH_SIZE) {
         return buildClientesQuery(activeCompanyIds, companyClientIds);
       }
       if (companyClientIds) {
@@ -211,7 +211,7 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
         };
       }
 
-      if (activeCompanyIds.length <= SUPABASE_IN_BATCH_SIZE) return buildClientesQuery(activeCompanyIds);
+      if (activeCompanyIds.length <= QUERY_IN_BATCH_SIZE) return buildClientesQuery(activeCompanyIds);
 
       const rows: ClienteRow[] = [];
       for (const batch of chunkArray(activeCompanyIds)) {
@@ -296,7 +296,7 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
 
     const fetchFormasBase = async () => {
       if (!includeFormas) return { data: [], error: null };
-      if (activeCompanyIds.length <= SUPABASE_IN_BATCH_SIZE) return buildFormasQuery(activeCompanyIds);
+      if (activeCompanyIds.length <= QUERY_IN_BATCH_SIZE) return buildFormasQuery(activeCompanyIds);
 
       const rows: FormaPagamentoRow[] = [];
       for (const batch of chunkArray(activeCompanyIds)) {
@@ -323,7 +323,7 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
     const fetchEmpresasBase = async () => {
       if (!includeEmpresas) return { data: [], error: null };
       if (activeCompanyIds.length === 0) return { data: [], error: null };
-      if (activeCompanyIds.length <= SUPABASE_IN_BATCH_SIZE) return buildEmpresasQuery(activeCompanyIds);
+      if (activeCompanyIds.length <= QUERY_IN_BATCH_SIZE) return buildEmpresasQuery(activeCompanyIds);
 
       const rows: EmpresaRow[] = [];
       for (const batch of chunkArray(activeCompanyIds)) {

@@ -6,7 +6,7 @@
  * e que a resposta e as gravações do handler continuam as mesmas.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createFakeSupabase, sortedQueryLog, type FakeSupabase } from '$lib/server/testing/fakeSupabase';
+import { createFakeDados, sortedQueryLog, type FakeDados } from '$lib/server/testing/fakeDados';
 
 type LogCall = { userId?: string | null; modulo: string; acao: string; detalhes: unknown };
 
@@ -90,9 +90,9 @@ async function logs() {
 }
 
 describe('auditoria (formato do histórico da tabela logs)', () => {
-  let db: FakeSupabase;
+  let db: FakeDados;
   beforeEach(() => {
-    db = createFakeSupabase({
+    db = createFakeDados({
       cidades: [{ id: UUID_A, nome: 'Lisboa', descricao: null, subdivisao_id: UUID_SUB }],
       escala_mes: [{ id: UUID_MES, company_id: 'c-1', gestor_id: 'g-1' }],
       escala_dia: [],

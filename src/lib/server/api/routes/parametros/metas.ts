@@ -1,8 +1,8 @@
+import type { DataClient } from '$lib/server/data';
 // Migrado para Hono de src/routes/api/v1/parametros/metas/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from "@sveltejs/kit";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { currentMonthRangeISODate, monthRangeFromKey } from "$lib/date";
 import {
   ensureModuloAccess,
@@ -153,7 +153,7 @@ function normalizeProdutoMetas(items: MetaProdutoInput[] | null | undefined) {
 }
 
 async function loadScopedVendedores(
-  client: SupabaseClient,
+  client: DataClient,
   scope: Awaited<ReturnType<typeof resolveUserScope>>,
 ) {
   const sortByName = (rows: RankingUserRow[]) =>
@@ -205,7 +205,7 @@ async function loadScopedVendedores(
   return data ? [data] : [];
 }
 
-async function loadProdutosDiferenciados(client: SupabaseClient) {
+async function loadProdutosDiferenciados(client: DataClient) {
   return getCachedReadModel<ProdutoDiferenciadoRow[]>({
     key: buildReadModelCacheKey("parametros-metas:produtos-diferenciados", {}),
     tags: [READ_MODEL_TAGS.catalog, READ_MODEL_TAGS.metas, READ_MODEL_TAGS.comissoes],
@@ -250,7 +250,7 @@ async function loadProdutosDiferenciados(client: SupabaseClient) {
   });
 }
 
-async function loadProdutoMetas(client: SupabaseClient, metaIds: string[]) {
+async function loadProdutoMetas(client: DataClient, metaIds: string[]) {
   if (metaIds.length === 0) return new Map<string, ProdutoMetaRow[]>();
 
   const rows = await getCachedReadModel<ProdutoMetaRow[]>({
@@ -293,7 +293,7 @@ async function loadProdutoMetas(client: SupabaseClient, metaIds: string[]) {
 }
 
 async function assertTargetAllowed(
-  client: SupabaseClient,
+  client: DataClient,
   scope: Awaited<ReturnType<typeof resolveUserScope>>,
   vendedorId: string,
 ) {
@@ -309,7 +309,7 @@ async function assertTargetAllowed(
 }
 
 async function findExistingMetaId(
-  client: SupabaseClient,
+  client: DataClient,
   vendedorId: string,
   periodo: string,
 ) {
@@ -339,7 +339,7 @@ async function findExistingMetaId(
   return String(data?.[0]?.id || "");
 }
 
-async function resolveMetaUserScope(client: SupabaseClient, userId: string): Promise<"vendedor" | "gestor"> {
+async function resolveMetaUserScope(client: DataClient, userId: string): Promise<"vendedor" | "gestor"> {
   try {
     const { data, error } = await client
       .from("users")
@@ -362,7 +362,7 @@ async function resolveMetaUserScope(client: SupabaseClient, userId: string): Pro
 }
 
 async function upsertMeta(
-  client: SupabaseClient,
+  client: DataClient,
   input: MetaInput,
   fallbackPeriod?: string,
 ) {

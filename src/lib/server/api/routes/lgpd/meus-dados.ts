@@ -48,7 +48,7 @@ export async function handleLgpdMeusDadosGet(event: RequestEvent) {
         contato_dpo: 'privacidade@vturapp.com.br',
         politica_privacidade: '/privacidade',
       },
-      historico_acessos: (logs ?? []).map((l) => ({
+      historico_acessos: (logs ?? []).map((l: any) => ({
         modulo: l.modulo,
         acao: l.acao,
         data: l.created_at,

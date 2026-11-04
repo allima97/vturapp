@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { supabase } from '$lib/db/supabase';
+  import { browserData as dados } from '$lib/db/browserData';
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import FieldInput from '$lib/components/ui/form/FieldInput.svelte';
@@ -25,7 +25,7 @@
       const code = url.searchParams.get('code');
 
       if (code) {
-        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        const { error: exchangeError } = await dados.auth.exchangeCodeForSession(code);
         if (exchangeError) throw exchangeError;
         // Limpa a URL
         url.searchParams.delete('code');
@@ -41,7 +41,7 @@
           const type = params.get('type');
 
           if (type === 'recovery' && accessToken && refreshToken) {
-            const { error: sessionError } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+            const { error: sessionError } = await dados.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
             if (sessionError) throw sessionError;
             window.history.replaceState({}, '', window.location.pathname);
             validLink = true;
@@ -49,7 +49,7 @@
         }
 
         if (!validLink) {
-          const { data } = await supabase.auth.getUser();
+          const { data } = await dados.auth.getUser();
           validLink = Boolean(data?.user?.id);
         }
       }
@@ -73,7 +73,7 @@
     error = null;
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({ password });
+      const { error: updateError } = await dados.auth.updateUser({ password });
       if (updateError) throw updateError;
       success = true;
       setTimeout(() => goto('/auth/login'), 2500);

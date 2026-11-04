@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient } from '$lib/server/data';
 
 // Erro com status HTTP — capturável pelo catch local das rotas sem ser interceptado pelo SvelteKit
 export class ApiError extends Error {
@@ -377,7 +377,7 @@ export function ensureAssignablePermissionSet(
   }
 }
 
-export async function listManagedUsers(client: SupabaseClient, scope: UserScope) {
+export async function listManagedUsers(client: DataClient, scope: UserScope) {
   const rows: ManagedUserRow[] = [];
   const fetchUsers = async (filters?: { companyIds?: string[] | null; ownUserId?: string | null }) => {
     let query = client
@@ -441,7 +441,7 @@ export async function listManagedUsers(client: SupabaseClient, scope: UserScope)
   return rows.filter((row) => isUserInScope(scope, row));
 }
 
-export async function loadManagedUser(client: SupabaseClient, scope: UserScope, userId: string) {
+export async function loadManagedUser(client: DataClient, scope: UserScope, userId: string) {
   const { data, error: queryError } = await client
     .from('users')
     .select(
@@ -476,7 +476,7 @@ export async function loadManagedUser(client: SupabaseClient, scope: UserScope, 
   return row;
 }
 
-export async function loadManagedUserTypes(client: SupabaseClient, scope: UserScope) {
+export async function loadManagedUserTypes(client: DataClient, scope: UserScope) {
   const { data, error: queryError } = await client
     .from('user_types')
     .select('id, name, description, created_at')
@@ -494,7 +494,7 @@ export async function loadManagedUserTypes(client: SupabaseClient, scope: UserSc
   });
 }
 
-export async function loadManagedCompanies(client: SupabaseClient, scope: UserScope) {
+export async function loadManagedCompanies(client: DataClient, scope: UserScope) {
   const rows: ManagedCompanyRow[] = [];
   const fetchCompanies = async (companyIds?: string[] | null) => {
     let query = client
@@ -537,7 +537,7 @@ export async function loadManagedCompanies(client: SupabaseClient, scope: UserSc
 }
 
 export async function loadFinanceiroCompanyIds(
-  client: SupabaseClient,
+  client: DataClient,
   scope: UserScope,
   financeiroId: string,
 ) {
@@ -578,7 +578,7 @@ export async function loadFinanceiroCompanyIds(
 }
 
 export async function syncFinanceiroCompanyLinks(
-  client: SupabaseClient,
+  client: DataClient,
   scope: UserScope,
   financeiroId: string,
   companyIds: string[],
@@ -670,7 +670,7 @@ export async function syncFinanceiroCompanyLinks(
   }
 }
 
-export async function loadUserPermissions(client: SupabaseClient, userId: string) {
+export async function loadUserPermissions(client: DataClient, userId: string) {
   const { data, error: queryError } = await client
     .from('modulo_acesso')
     .select('id, usuario_id, modulo, permissao, ativo')
@@ -681,7 +681,7 @@ export async function loadUserPermissions(client: SupabaseClient, userId: string
   return (data || []) as ManagedPermissionRow[];
 }
 
-export async function loadUserTypeDefaultPermissions(client: SupabaseClient, userTypeId: string) {
+export async function loadUserTypeDefaultPermissions(client: DataClient, userTypeId: string) {
   const { data, error: queryError } = await client
     .from('user_type_default_perms')
     .select('id, user_type_id, modulo, permissao, ativo')
@@ -726,7 +726,7 @@ export function buildPermissionMatrix(
 }
 
 export async function saveUserPermissions(
-  client: SupabaseClient,
+  client: DataClient,
   userId: string,
   permissions: Array<{ modulo: string; permissao: string; ativo: boolean }>
 ) {
@@ -775,7 +775,7 @@ export async function saveUserPermissions(
 }
 
 export async function saveDefaultPermissions(
-  client: SupabaseClient,
+  client: DataClient,
   userTypeId: string,
   permissions: Array<{ modulo: string; permissao: string; ativo: boolean }>
 ) {
@@ -826,7 +826,7 @@ export async function saveDefaultPermissions(
   invalidateReadModelCache({ tags: [READ_MODEL_TAGS.users] });
 }
 
-export async function syncUserTypeDefaultPermissions(client: SupabaseClient, userId: string, userTypeId?: string | null) {
+export async function syncUserTypeDefaultPermissions(client: DataClient, userId: string, userTypeId?: string | null) {
   const normalizedUserTypeId = String(userTypeId || '').trim();
   if (!normalizedUserTypeId) return;
 
@@ -889,7 +889,7 @@ export async function createOrReuseAuthUser(
   return { userId, created: true };
 }
 
-export async function loadSystemModuleSettings(client: SupabaseClient) {
+export async function loadSystemModuleSettings(client: DataClient) {
   const { data, error: queryError } = await client
     .from('system_module_settings')
     .select('module_key, enabled, reason, updated_at, updated_by');
@@ -913,7 +913,7 @@ export async function loadSystemModuleSettings(client: SupabaseClient) {
 }
 
 export async function saveSystemModuleSettings(
-  client: SupabaseClient,
+  client: DataClient,
   payload: Array<{ module_key: string; enabled: boolean; reason?: string | null; updated_by?: string | null }>
 ) {
   for (const item of payload) {
@@ -948,7 +948,7 @@ export async function saveSystemModuleSettings(
   }
 }
 
-export async function loadAvisoTemplates(client: SupabaseClient): Promise<AvisoTemplatePayload[]> {
+export async function loadAvisoTemplates(client: DataClient): Promise<AvisoTemplatePayload[]> {
   const { data, error: queryError } = await client
     .from('admin_avisos_templates')
     .select('id, nome, assunto, mensagem, ativo, sender_key')
@@ -979,7 +979,7 @@ export async function loadAvisoTemplates(client: SupabaseClient): Promise<AvisoT
   }));
 }
 
-export async function loadEmailSettings(client: SupabaseClient) {
+export async function loadEmailSettings(client: DataClient) {
   const { data, error: queryError } = await client
     .from('admin_email_settings')
     .select(

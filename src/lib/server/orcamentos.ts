@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient } from '$lib/server/data';
 import {
   fetchVendedorIdsByCompanyIds,
   parseUuidList,
@@ -14,7 +14,7 @@ export type QuoteCreatorScope = {
 };
 
 export async function resolveQuoteCreatorScope(
-  client: SupabaseClient,
+  client: DataClient,
   scope: UserScope,
   options: {
     companyId?: string | null;
