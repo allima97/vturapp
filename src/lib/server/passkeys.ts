@@ -1,41 +1,14 @@
 import type {
-  AuthenticationResponseJSON,
   AuthenticatorTransportFuture,
-  RegistrationResponseJSON,
-  WebAuthnCredential
+  RegistrationResponseJSON
 } from '@simplewebauthn/server';
-import {
-  generateAuthenticationOptions,
-  generateRegistrationOptions,
-  verifyAuthenticationResponse,
-  verifyRegistrationResponse
-} from '@simplewebauthn/server';
+import { generateRegistrationOptions, verifyRegistrationResponse } from '@simplewebauthn/server';
 import type { RequestEvent } from '@sveltejs/kit';
 import { error, json } from '@sveltejs/kit';
-import { getDataContext } from '$lib/server/data';
-import { openUserSession } from '$lib/server/data/authApi';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { getAdminClient, isProductionRuntime, isUuid, logServerError } from '$lib/server/v1';
 
 const PASSKEY_CHALLENGE_TTL_MS = 5 * 60 * 1000;
-
-type PasskeyRow = {
-  id: string;
-  user_id: string;
-  user_email: string;
-  name: string;
-  credential_id: string;
-  public_key: string;
-  counter: number | string | null;
-  transports: AuthenticatorTransportFuture[] | string[] | null;
-  device_type: string | null;
-  backed_up: boolean | null;
-  aaguid: string | null;
-  origin: string | null;
-  rp_id: string | null;
-  last_used_at: string | null;
-  created_at: string;
-};
 
 type ChallengeRow = {
   id: string;
@@ -55,12 +28,6 @@ type ErrorDetails = {
   } | null;
 };
 
-type DadosLinkData = {
-  properties?: {
-    hashed_token?: string | null;
-  } | null;
-};
-
 type ExistingPasskeyRow = {
   credential_id?: string | null;
   transports?: unknown;
@@ -77,25 +44,6 @@ function bytesToBase64Url(bytes: Uint8Array) {
   }
 
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-}
-
-function base64UrlToBytes(value: string) {
-  const base64 = value
-    .replace(/-/g, '+')
-    .replace(/_/g, '/')
-    .padEnd(Math.ceil(value.length / 4) * 4, '=');
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index);
-  }
-
-  return bytes;
-}
-
-function randomCredentialId() {
-  return bytesToBase64Url(crypto.getRandomValues(new Uint8Array(32)));
 }
 
 function getPasskeyRp(event: RequestEvent) {
@@ -222,30 +170,6 @@ async function consumeChallenge(challengeId: string) {
   if (updateError) {
     logServerError('[passkeys] falha ao marcar challenge como usado', updateError);
   }
-}
-
-async function createDadosSessionForUser(event: RequestEvent, userId: string) {
-  const context = getDataContext();
-  if (!context) throw error(500, 'Banco indisponivel.');
-  context.cookies = {
-    get: (name) => event.cookies.get(name),
-    set: (name, value, options) =>
-      event.cookies.set(name, value, { path: '/', ...(options || {}) }),
-    delete: (name, options) => event.cookies.delete(name, { path: '/', ...(options || {}) })
-  };
-  const admin = getAdminClient();
-  const { data: userData, error: userError } = await admin.auth.admin.getUserById(userId);
-  const user = userData?.user;
-  if (userError || !user?.email) {
-    logServerError('[passkeys] falha ao buscar usuario auth', userError);
-    throw error(401, 'Usuário da passkey não encontrado.');
-  }
-  await openUserSession(context, userId);
-  return {
-    user,
-    session: { access_token: 'cookie', refresh_token: 'cookie', user },
-    storageKey: 'sessao'
-  };
 }
 
 export async function listPasskeys(userId: string) {
@@ -396,129 +320,6 @@ export async function verifyRegistration(params: {
       logServerError('[passkeys] falha ao salvar passkey', insertError);
       throw error(500, 'Erro ao salvar passkey.');
     }
-  } finally {
-    await consumeChallenge(challenge.id);
-  }
-}
-
-export async function buildAuthenticationOptions(event: RequestEvent, email?: string | null) {
-  const admin = getAdminClient();
-  const { rpID } = getPasskeyRp(event);
-  const normalizedEmail = normalizeEmail(email);
-
-  let passkeys: Array<Pick<PasskeyRow, 'user_id' | 'credential_id' | 'transports'>> = [];
-  let challengeUserId: string | null = null;
-  if (normalizedEmail) {
-    const { data, error: listError } = await admin
-      .from('auth_passkeys')
-      .select('user_id, credential_id, transports')
-      .eq('user_email', normalizedEmail);
-
-    if (listError) {
-      logServerError('[passkeys] falha ao buscar passkeys por email', listError);
-      if (isMissingPasskeyTable(listError)) passkeyUnavailable();
-      throw error(500, 'Erro ao preparar login por passkey.');
-    }
-
-    passkeys = (data || []) as Array<Pick<PasskeyRow, 'user_id' | 'credential_id' | 'transports'>>;
-    challengeUserId = passkeys[0]?.user_id || null;
-  }
-
-  const allowCredentials = normalizedEmail
-    ? passkeys.length > 0
-      ? passkeys.map((row) => ({
-          id: row.credential_id,
-          transports: normalizeTransports(row.transports)
-        }))
-      : [{ id: randomCredentialId(), transports: [] }]
-    : undefined;
-
-  const options = await generateAuthenticationOptions({
-    rpID,
-    allowCredentials,
-    timeout: 60000,
-    userVerification: 'required'
-  });
-
-  const challengeId = await storeChallenge({
-    userId: challengeUserId,
-    type: 'authentication',
-    challenge: options.challenge
-  });
-
-  return { challengeId, options };
-}
-
-export async function verifyAuthentication(params: {
-  event: RequestEvent;
-  challengeId: string;
-  response: AuthenticationResponseJSON;
-}) {
-  const challenge = await getChallenge(params.challengeId, 'authentication');
-  try {
-    const admin = getAdminClient();
-    const { data: passkey, error: passkeyError } = await admin
-      .from('auth_passkeys')
-      .select(
-        'id, user_id, user_email, name, credential_id, public_key, counter, transports, device_type, backed_up, aaguid, origin, rp_id, last_used_at, created_at'
-      )
-      .eq('credential_id', params.response.id)
-      .maybeSingle();
-
-    if (passkeyError) {
-      logServerError('[passkeys] falha ao buscar credencial', passkeyError);
-      if (isMissingPasskeyTable(passkeyError)) passkeyUnavailable();
-      throw error(500, 'Erro ao validar passkey.');
-    }
-
-    if (!passkey) {
-      throw error(401, 'Passkey não cadastrada neste sistema.');
-    }
-
-    const row = passkey as PasskeyRow;
-    if (challenge.user_id && challenge.user_id !== row.user_id) {
-      throw error(403, 'Passkey não pertence à solicitação de login.');
-    }
-
-    const { origin, rpID } = getPasskeyRp(params.event);
-    const credential: WebAuthnCredential = {
-      id: row.credential_id,
-      publicKey: base64UrlToBytes(row.public_key),
-      counter: Number(row.counter || 0),
-      transports: normalizeTransports(row.transports)
-    };
-
-    const verification = await verifyAuthenticationResponse({
-      response: params.response,
-      expectedChallenge: challenge.challenge,
-      expectedOrigin: origin,
-      expectedRPID: rpID,
-      credential,
-      requireUserVerification: true
-    });
-
-    if (!verification.verified) {
-      throw error(401, 'Passkey inválida.');
-    }
-
-    const { authenticationInfo } = verification;
-    const { error: updateError } = await admin
-      .from('auth_passkeys')
-      .update({
-        counter: authenticationInfo.newCounter,
-        device_type: authenticationInfo.credentialDeviceType,
-        backed_up: authenticationInfo.credentialBackedUp,
-        origin: authenticationInfo.origin,
-        rp_id: authenticationInfo.rpID,
-        last_used_at: new Date().toISOString()
-      })
-      .eq('id', row.id);
-
-    if (updateError) {
-      logServerError('[passkeys] passkey validada, mas contador nao foi atualizado', updateError);
-    }
-
-    return createDadosSessionForUser(params.event, row.user_id);
   } finally {
     await consumeChallenge(challenge.id);
   }

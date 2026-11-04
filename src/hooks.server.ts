@@ -246,12 +246,6 @@ const PUBLIC_API_RATE_LIMITS: RateLimitRule[] = [
   },
   { prefix: '/api/auth/login', methods: ['POST'], limit: 8, windowMs: 60_000 },
   {
-    prefix: '/api/auth/passkeys/login',
-    methods: ['POST'],
-    limit: 12,
-    windowMs: 60_000
-  },
-  {
     prefix: '/api/auth/set-session',
     methods: ['POST'],
     limit: 40,
@@ -569,7 +563,6 @@ const authGuard: Handle = async ({ event, resolve }) => {
     '/api/v2',
     '/api/auth/login',
     '/api/auth/convite/activate',
-    '/api/auth/passkeys/login',
     '/api/auth/set-session',
     '/api/auth/turnstile/verify',
     '/api/v1/cards',

@@ -11,21 +11,18 @@
   import Card from '$lib/components/ui/Card.svelte';
   import TurnstileWidget from '$lib/components/auth/TurnstileWidget.svelte';
   import { FieldCheckbox, FieldInput } from '$lib/components/ui';
-  import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
-  import { Mail, Lock, Eye, EyeOff, AlertCircle, TestTube, Clock, Fingerprint } from '$lib/icons';
+  import { Mail, Lock, Eye, EyeOff, AlertCircle, TestTube, Clock } from '$lib/icons';
 
   let email = '';
   let password = '';
   let showPassword = false;
   let loading = false;
-  let passkeyLoading = false;
   let error: string | null = null;
   let mockMode = false;
   let sessionExpired = false;
   let turnstileToken = '';
   let turnstileWidget: { reset?: () => void } | null = null;
   let redirectTarget = '/';
-  let passkeySupported = false;
 
   $: turnstileEnabled =
     !mockMode && Boolean(String(publicEnv.PUBLIC_TURNSTILE_SITE_KEY || '').trim());
@@ -141,7 +138,6 @@
 
   onMount(() => {
     mockMode = dev && isMockMode();
-    passkeySupported = !mockMode && window.isSecureContext && browserSupportsWebAuthn();
     // Auto-preenchimento somente no dev local; preview/producao nunca exibem credencial padrao.
     if (mockMode) {
       email = 'admin@vtur.com';
@@ -249,88 +245,6 @@
       }
     } finally {
       loading = false;
-    }
-  }
-
-  async function handlePasskeyLogin() {
-    if (loading || passkeyLoading) return;
-
-    if (!window.isSecureContext) {
-      error = 'Passkeys exigem HTTPS ou localhost.';
-      return;
-    }
-
-    if (!browserSupportsWebAuthn()) {
-      error = 'Este navegador não suporta passkeys.';
-      return;
-    }
-
-    passkeyLoading = true;
-    error = null;
-
-    try {
-      const optionsResponse = await fetchWithTimeout(
-        '/api/auth/passkeys/login/options',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email.trim() || null })
-        },
-        12000
-      );
-      const optionsPayload = (await optionsResponse.json().catch(() => ({}))) as {
-        options?: any;
-        challengeId?: string;
-        error?: string;
-      };
-      if (!optionsResponse.ok) {
-        throw new Error(optionsPayload.error || 'Erro ao preparar login por passkey.');
-      }
-
-      const assertion = await startAuthentication({ optionsJSON: optionsPayload.options });
-      const verifyResponse = await fetchWithTimeout(
-        '/api/auth/passkeys/login/verify',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            challengeId: optionsPayload.challengeId,
-            response: assertion
-          })
-        },
-        20000
-      );
-      const payload = (await verifyResponse.json().catch(() => ({}))) as LoginResponsePayload;
-      if (!verifyResponse.ok) {
-        throw new Error(payload.error || 'Não foi possível entrar com passkey.');
-      }
-
-      const session = payload.session;
-      if (!session?.access_token || !session?.refresh_token) {
-        throw new Error('Sessão não retornada pelo servidor.');
-      }
-
-      await syncSessionOnServer(session);
-
-      void syncSessionInBrowser(session).catch((browserSyncError) => {
-        if (dev)
-          console.warn(
-            '[passkey-login] Sessão gravada no servidor, mas o storage do navegador não respondeu:',
-            browserSyncError
-          );
-      });
-
-      auth.setAuth(payload.user ?? null, session);
-      await finishLogin();
-    } catch (err: unknown) {
-      const message = toUserMessage(err, '').trim();
-      if (message.includes('The operation either timed out or was not allowed')) {
-        error = 'A autenticação por passkey foi cancelada ou expirou.';
-      } else {
-        error = message || 'Não foi possível entrar com passkey.';
-      }
-    } finally {
-      passkeyLoading = false;
     }
   }
 
@@ -458,31 +372,6 @@
           Entrar
         </Button>
       </form>
-
-      {#if passkeySupported}
-        <div class="my-5 flex items-center gap-3">
-          <div class="h-px flex-1 bg-slate-200"></div>
-          <span class="text-xs font-semibold tracking-[0.12em] text-slate-400 uppercase">ou</span>
-          <div class="h-px flex-1 bg-slate-200"></div>
-        </div>
-
-        <Button
-          type="button"
-          variant="secondary"
-          size="lg"
-          loading={passkeyLoading}
-          disabled={loading}
-          class_name="w-full"
-          on:click={handlePasskeyLogin}
-        >
-          <Fingerprint size={18} class="mr-2" />
-          Entrar com passkey
-        </Button>
-        <p class="mt-2 text-center text-xs leading-relaxed text-slate-500">
-          Use uma passkey cadastrada no perfil. Se informar o e-mail acima, o sistema tenta
-          localizar somente as passkeys dessa conta.
-        </p>
-      {/if}
 
       <!-- Convite -->
       <div class="mt-6 text-center text-sm">
