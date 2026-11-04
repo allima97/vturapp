@@ -46,6 +46,23 @@ describe('cliente de dados D1', () => {
     expect(listed.data).toEqual([expect.objectContaining({ id })]);
   });
 
+  it('update nao troca a chave primaria da linha', async () => {
+    const id = crypto.randomUUID();
+    await client()
+      .from('admin_avisos_templates')
+      .insert({ id, nome: 'Aviso', assunto: 'A', mensagem: 'M', sender_key: 'sistema' });
+
+    const updated = await client()
+      .from('admin_avisos_templates')
+      .update({ nome: 'Novo' })
+      .eq('id', id)
+      .select('id, nome')
+      .single();
+
+    expect(updated.error).toBeNull();
+    expect(updated.data).toMatchObject({ id, nome: 'Novo' });
+  });
+
   it('resolve clientes acessiveis com a regra de escopo', async () => {
     const companyId = crypto.randomUUID();
     const clienteId = crypto.randomUUID();

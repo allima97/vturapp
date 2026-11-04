@@ -398,7 +398,9 @@ function prepareWrite(
   for (const key of Object.keys(out)) {
     if (!columns[key]) delete out[key];
   }
+  // Em UPDATE nunca se gera id: trocaria a chave primária da linha (quebra FKs ou orfana filhos).
   if (
+    mode === 'insert' &&
     columns.id &&
     (out.id === undefined || out.id === null) &&
     tables[table].primaryKey.includes('id')
