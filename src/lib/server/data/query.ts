@@ -613,16 +613,33 @@ export function createDataClient(context: DataContext): DataClient {
               count = Number(counted?.total || 0);
             }
             if (head) return { data: null, error: null, count };
+            const requested = new Set(columns);
+            const relationColumns = [
+              ...new Set(
+                fields.flatMap((field) => {
+                  if (!("embed" in field)) return [];
+                  const relation = resolveRelation(table, field.embed);
+                  return requested.has(relation.parentColumn)
+                    ? []
+                    : [relation.parentColumn];
+                }),
+              ),
+            ];
             const rows = await selectRows(
               db,
               table,
-              explicitColumns ? columns : [],
+              explicitColumns ? [...columns, ...relationColumns] : [],
               filters,
               order,
               limit,
               offset,
             );
             await hydrate(db, table, rows, fields);
+            if (explicitColumns) {
+              for (const row of rows) {
+                for (const column of relationColumns) delete row[column];
+              }
+            }
             return finish(rows, count);
           }
           if (operation === "insert" || operation === "upsert") {

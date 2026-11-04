@@ -811,8 +811,9 @@ O que mudou:
 
 Pendências que exigem ação manual (sem credencial neste ambiente):
 - Staging já recebeu a 0013. Produção: `npm run d1:migrate:prod` (`--remote --env production`).
-- Publicar de novo o Worker de staging (`npm run cf:deploy:staging`) depois da flag `nodejs_compat`.
+- Publicar de novo o Worker de staging (`npm run cf:deploy:staging`) depois da flag `nodejs_compat`. O deploy de `2b5e6264` já respondeu em staging.
 - Conferir `BETTER_AUTH_SECRET` e `RESEND_API_KEY` nos ambientes.
+- Criar o primeiro administrador num banco vazio: `npm run bootstrap:admin -- --env staging --email admin@vtur.com.br`. A senha fica em `.secrets/bootstrap-admin-staging.txt` (modo 600). O mesmo comando com `--env production` vale depois, no banco de produção vazio.
 - O 2FA gera um SVG `otpauth://totp/...` escaneável; o segredo continua visível para entrada manual.
 - Leitura de painéis que dependia de funções SQL de read model cai no cálculo em tempo real quando a função não existe no D1.
 

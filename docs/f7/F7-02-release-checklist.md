@@ -30,6 +30,7 @@ npm run d1:migrate:staging
 
 - [ ] Migrations aplicadas em staging
 - [ ] Resultado verificado: `wrangler d1 migrations list vturapp-db-staging --env staging` → nenhuma pendente
+- [ ] Primeiro administrador criado com `npm run bootstrap:admin -- --env staging --email admin@vtur.com.br` (a senha fica em `.secrets/bootstrap-admin-staging.txt`, modo 600)
 
 ### Produção
 

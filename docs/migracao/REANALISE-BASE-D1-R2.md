@@ -2,7 +2,7 @@
 
 **Data:** 2026-11-04  
 **Branch de trabalho:** `cursor/migracao-d1-r2-sem-supabase-d46b`  
-**Estado:** o código não consome mais o SDK remoto. Em 04/11/2026 a 0013 já foi aplicada no D1 de staging (177 tabelas, `foreign_key_check` vazio). O deploy de staging foi recusado por `node:crypto`; a correção é `compatibility_flags = ["nodejs_compat"]` na raiz (produção) e em `[env.staging]`.
+**Estado:** o código não consome mais o SDK remoto. Staging (`2b5e6264`) está no ar em `https://vturapp-staging.allima97.workers.dev`. O D1 de staging tem as 14 migrations e começa vazio. O primeiro administrador global entra por `npm run bootstrap:admin`.
 
 ## Corte realizado em 04/11/2026
 
@@ -20,6 +20,11 @@
 npm run d1:migrate:staging   # vturapp-db-staging --remote --env staging
 npm run d1:migrate:prod      # vturapp-db --remote --env production
 npm run cf:deploy:staging
+
+# Primeiro administrador, só enquanto não existir perfil global ADMIN.
+# A senha aleatória fica em .secrets/bootstrap-admin-<env>.txt (modo 600) e não aparece no terminal.
+npm run bootstrap:admin -- --env staging --email admin@vtur.com.br
+npm run bootstrap:admin -- --env production --email admin@vtur.com.br
 ```
 
 Segredos que continuam necessários: `BETTER_AUTH_SECRET`, `RESEND_API_KEY`. Não configurar URL, anon key nem service role do banco antigo.
