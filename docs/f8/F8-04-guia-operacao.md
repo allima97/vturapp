@@ -54,8 +54,8 @@ wrangler d1 execute vturapp-db --local \
 ## 3. Deploy
 
 ```bash
-# Staging
-npm run d1:migrate:staging   # migrations primeiro
+# Staging (migrations no D1 remoto, depois o Worker)
+npm run d1:migrate:staging
 wrangler deploy --env staging
 
 # Produção

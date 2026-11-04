@@ -1,6 +1,7 @@
 import { serializeSignedCookie } from "better-call";
 import { hashPassword } from "better-auth/crypto";
 import { createAuth } from "$lib/auth";
+import { otpauthUri, qrDataUrl } from "./qr";
 import type { AuthSession, AuthUser, DataContext, QueryError } from "./types";
 
 const AAL_COOKIE = "vtur_aal";
@@ -122,11 +123,6 @@ async function codeMatches(secret: string, code: string) {
     [-1, 0, 1].map((step) => totpCode(secret, now + step * 30000)),
   );
   return checks.includes(code);
-}
-
-function qrSvg(secret: string) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#fff"/><text x="16" y="128" font-size="14" font-family="monospace">${secret}</text></svg>`;
-  return `data:image/svg+xml;utf-8,${encodeURIComponent(svg)}`;
 }
 
 async function signAal(secret: string, userId: string, exp: number) {
@@ -409,7 +405,15 @@ export function createAuthApi(context: DataContext) {
           )
           .run();
         return {
-          data: { id, totp: { qr_code: qrSvg(secret), secret } },
+          data: {
+            id,
+            totp: {
+              qr_code: qrDataUrl(
+                otpauthUri(user.email || user.name || user.id, secret),
+              ),
+              secret,
+            },
+          },
           error: null,
         };
       },

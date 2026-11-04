@@ -2,7 +2,7 @@
 
 **Data:** 2026-11-04  
 **Branch de trabalho:** `cursor/migracao-d1-r2-sem-supabase-d46b`  
-**Estado:** o código da aplicação não consome mais o SDK, Auth, Storage nem RPCs remotos. Os D1 remotos ainda precisam receber a migration `0013` antes do deploy. Não desligar o projeto antigo até o ensaio de staging.
+**Estado:** o código não consome mais o SDK remoto. Em 04/11/2026 a 0013 já foi aplicada no D1 de staging (177 tabelas, `foreign_key_check` vazio). O deploy de staging foi recusado por `node:crypto`; a correção é `compatibility_flags = ["nodejs_compat"]` na raiz (produção) e em `[env.staging]`.
 
 ## Corte realizado em 04/11/2026
 
@@ -16,9 +16,9 @@
 ### Comandos manuais
 
 ```bash
-npm run d1:migrate:staging
-npm run d1:migrate:prod
-# só depois do ensaio local/staging
+# Wrangler 4 aplica no D1 local se faltar --remote. Os scripts já incluem a flag.
+npm run d1:migrate:staging   # vturapp-db-staging --remote --env staging
+npm run d1:migrate:prod      # vturapp-db --remote --env production
 npm run cf:deploy:staging
 ```
 

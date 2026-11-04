@@ -801,7 +801,7 @@ Próximos módulos disponíveis:
 ID: F8-02 / M01
 Estado: CONCLUÍDA no código da aplicação
 Responsável / data: agente, 04/11/2026
-Dependências: migrations 0000–0012 já aplicadas nos D1 vazios; 0013 ainda não aplicada remotamente
+Dependências: 0013 aplicada no D1 de staging em 04/11/2026; produção ainda precisa de `npm run d1:migrate:prod`
 
 O que mudou:
 - O aplicativo não importa mais o SDK antigo. Sessão é Better Auth. Consultas do app atual e da API v1 passam pelo cliente D1 em `src/lib/server/data`. Arquivos passam pelo binding R2.
@@ -810,11 +810,11 @@ O que mudou:
 - O journal Drizzle foi alinhado até `0013_legado_catalogo`. A fonte aplicada continua sendo o SQL de `./drizzle`.
 
 Pendências que exigem ação manual (sem credencial neste ambiente):
-- `npm run d1:migrate:staging` e `npm run d1:migrate:prod` para aplicar `0013_legado_catalogo.sql`.
-- Publicar o Worker só quando o usuário decidir (`npm run cf:deploy:staging`). Não há secret do banco antigo para manter.
+- Staging já recebeu a 0013. Produção: `npm run d1:migrate:prod` (`--remote --env production`).
+- Publicar de novo o Worker de staging (`npm run cf:deploy:staging`) depois da flag `nodejs_compat`.
 - Conferir `BETTER_AUTH_SECRET` e `RESEND_API_KEY` nos ambientes.
-- MFA: o segredo TOTP aparece para digitação manual; a imagem ainda não é um QR escaneável.
+- O 2FA gera um SVG `otpauth://totp/...` escaneável; o segredo continua visível para entrada manual.
 - Leitura de painéis que dependia de funções SQL de read model cai no cálculo em tempo real quando a função não existe no D1.
 
-Risco: a cadeia 0013 é grande e ainda não foi aplicada nos D1 remotos. Aplicar em staging antes de produção.
-Próximo passo operacional: migrations remotas e ensaio em staging com dados sintéticos.
+Risco: o primeiro deploy de staging falhou em `node:crypto` antes da flag. Produção ainda não recebeu a 0013.
+Próximo passo operacional: novo `cf:deploy:staging` e, depois do ensaio, `d1:migrate:prod` + deploy de produção.

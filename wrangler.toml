@@ -1,6 +1,11 @@
 name = "vturapp"
 main = ".svelte-kit/cloudflare/_worker.js"
 compatibility_date = "2026-04-19"
+# Better Auth escolhe node:crypto (scrypt) no export "workerd".
+# Sem esta flag a Cloudflare recusa o script: No such module "node:crypto".
+# A raiz, [env.staging] e [env.production] repetem a flag. Bindings de D1/R2
+# não são herdados entre ambientes, então cada um declara os seus.
+compatibility_flags = ["nodejs_compat"]
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SECRETS — configure via wrangler secret (nunca neste arquivo):
@@ -58,6 +63,8 @@ crons = ["*/5 * * * *", "7 6 * * *"]
 # ─────────────────────────────────────────────────────────────────────────────
 [env.staging]
 name = "vturapp-staging"
+compatibility_date = "2026-04-19"
+compatibility_flags = ["nodejs_compat"]
 
 [env.staging.placement]
 region = "aws:us-west-2"
@@ -81,4 +88,38 @@ binding = "R2"
 bucket_name = "vturapp-files-staging"
 
 [env.staging.triggers]
+crons = ["*/5 * * * *", "7 6 * * *"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AMBIENTE: production
+# Mesmos recursos da raiz, para `wrangler deploy --env production` e
+# `d1:migrate:prod` resolverem o banco remoto com nodejs_compat.
+# ─────────────────────────────────────────────────────────────────────────────
+[env.production]
+name = "vturapp"
+compatibility_date = "2026-04-19"
+compatibility_flags = ["nodejs_compat"]
+
+[env.production.placement]
+region = "aws:us-west-2"
+
+[env.production.assets]
+directory = ".svelte-kit/cloudflare"
+binding = "ASSETS"
+
+[[env.production.kv_namespaces]]
+binding = "KV_BINDING"
+id = "60fa423718914712bec4f489d41c3dd6"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "vturapp-db"
+database_id = "36d3da2e-b186-48f8-bb3e-4f9a14b20235"
+migrations_dir = "./drizzle"
+
+[[env.production.r2_buckets]]
+binding = "R2"
+bucket_name = "vturapp-files"
+
+[env.production.triggers]
 crons = ["*/5 * * * *", "7 6 * * *"]
