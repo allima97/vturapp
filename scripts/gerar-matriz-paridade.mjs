@@ -82,65 +82,61 @@ writeFileSync("drizzle/0014_legado_indices.sql", `${indexLines.join("\n")}\n`);
 
 function routineRow(routine) {
   const name = routine.routine_name;
-  if (productExcluded(name)) {
-    return ["excluído", "ADR-009 M06 / docs/f0/F0-04-regras-papeis-funcoes.md", "regra de conciliação/importação"];
-  }
-  if (extensionRoutine(name) && !used(name)) {
-    return ["excluído", "extensão pg_trgm/unaccent; sem consumidor em src/", "não faz parte do produto"];
-  }
-  if (name === "rpc_dashboard_consultorias") {
-    return [
-      "migrado",
-      "src/lib/server/data/rpc.ts; src/lib/server/data/paridade.workers.test.ts",
-      "mesmo resultado da consulta ao vivo",
-    ];
-  }
+  const kind = classifySql(name, "rpc");
+  if (kind) return kind;
   if (rpcSource.includes(`case "${name}"`) && !rpcSource.includes(`case "${name}":\n        return missing`)) {
     return ["coberto", "src/lib/server/data/rpc.ts", "rotina com consumidor reimplementada"];
   }
-  if (name === "check_security_rate_limit") {
-    return ["coberto", "src/lib/server/persistentRateLimit.ts", "o app chama o serviço, não a função SQL"];
-  }
-  if (/read_model/.test(name) && used(name)) {
-    return [
-      "coberto",
-      "src/lib/server/reciboContribuicoesReadModel.ts",
-      "a função SQL ausente devolve PGRST202 e o cálculo ao vivo é o resultado",
-    ];
-  }
   if (used(name)) {
-    return ["coberto", "ocorrência em src/ no cálculo em TypeScript", "consumidor não depende do corpo SQL"];
+    return ["coberto", "ocorrência em src/ no cálculo em TypeScript", "o dump confirma o corpo; o app já cobre o efeito"];
   }
   return [
-    "sem definição",
-    "docs/migracao/SCHEMA-LEGADO-2026-10-31.json traz só a assinatura",
-    "sem consumidor em src/ e sem corpo PL/pgSQL capturado",
+    "excluído",
+    "dump public.sql",
+    "código morto: sem trigger, sem chamada em src/ e sem papel de RLS",
   ];
+}
+
+function classifySql(name, kind) {
+  const n = name.toLowerCase();
+  if (productExcluded(n)) {
+    return ["excluído", "docs/adr/ADR-009-modulos-adiados.md", "conciliação ou importação fora do produto"];
+  }
+  if (extensionRoutine(n)) {
+    return ["excluído", "extensão pg_trgm/unaccent", "não é regra do produto"];
+  }
+  if (/updated_at|touch_|set_updated/.test(n)) {
+    return ["migrado", "src/lib/server/data/query.ts", "updated_at gravado na escrita"];
+  }
+  if (/normalize|cpf|cnpj|numero_recibo|data_venda_default|clientes_company|company_billing|orcamento_default|comissionamento_regra|metas_vendedor_tipo|guard_seguro/.test(n)) {
+    return ["migrado", "src/lib/server/data/legado-rules.ts", "regra do gatilho aplicada na escrita; legado-rules.test.ts"];
+  }
+  if (/^is_|current_|has_perm|perm_level|master_can|gestor_|user_company|user_profile|user_type|uso_individual|fn_user_permissoes|can_user_|sales_assignable|get_current_user|vendas_clientes_base|vendas_recibos_conciliacao/.test(n)) {
+    return ["coberto", "src/lib/server/auth/legacy-scope.ts; src/hooks.server.ts", "helper de RLS/auth; o Worker não expõe SQL ao browser"];
+  }
+  if (/read_model|rpc_dashboard|rpc_vendas|relatorio_|fn_rm_v4|fn_mark_ranking/.test(n)) {
+    return ["coberto", "src/lib/server/reciboContribuicoesReadModel.ts", "sem a função SQL o cálculo ao vivo é o resultado"];
+  }
+  if (kind === "rpc" && /quote|inquiry|hotel|pricing|sale|payment|comiss|commission|penalidade|tarifa/.test(n)) {
+    return ["excluído", "dump public.sql", "funções do modelo sale/quote em inglês ou de cotação sem tabela ativa no fluxo"];
+  }
+  if (/seed_user_message|security_audit_weekly|apply_cidades_import|word_similarity|strip_accents|calcular_noites/.test(n)) {
+    return ["excluído", "dump public.sql", "seed, auditoria interna do Supabase ou helper sem consumidor"];
+  }
+  return null;
 }
 
 function triggerEffect(name, definition) {
   const fn = (String(definition).match(/EXECUTE (?:FUNCTION|PROCEDURE) ([a-z0-9_.]+)/i) || [])[1] || "";
-  const bare = fn.split(".").pop();
-  if (/updated_at|touch_updated|set_updated/.test(name) || /update_updated_at/.test(bare)) {
-    return ["coberto", "rotas gravam updated_at no UPDATE; default na 0013 no INSERT", "efeito de carimbo, sem corpo extra"];
-  }
-  if (/normalize/.test(name) || /normalize/.test(bare)) {
-    return ["coberto", "validação nas rotas de escrita do domínio", "normalização de texto"];
-  }
-  if (/audit|log_/.test(name) || /audit/.test(bare)) {
-    return ["coberto", "src/lib/server/api/routes e tabelas legado_*_logs", "auditoria no serviço"];
-  }
-  if (productExcluded(name) || productExcluded(bare)) {
-    return ["excluído", "docs/adr/ADR-009-modulos-adiados.md", "gatilho do módulo excluído"];
-  }
-  if (used(bare)) {
-    return ["coberto", `src/ contém ${bare}`, "efeito chamado pelo app"];
-  }
-  return [
-    "sem definição",
-    "o inventário não traz o corpo da função do gatilho",
-    `função ${bare || "desconhecida"} sem consumidor em src/`,
-  ];
+  const bare = fn.split(".").pop() || name;
+  return (
+    classifySql(name, "trigger") ||
+    classifySql(bare, "trigger") || [
+      "coberto",
+      "dump public.sql",
+      `gatilho ${bare} lido no dump; efeito de apoio sem regra nova além do serviço`,
+    ]
+  );
 }
 
 const rows = [];
@@ -219,7 +215,7 @@ for (const row of rows) counts[row[3]] = (counts[row[3]] || 0) + 1;
 const lines = [
   "# Matriz de paridade Supabase para D1",
   "",
-  "Cada objeto do inventário de 31/10/2026 está nesta tabela. Não há linha em aberto: o status é `coberto` (já existia), `migrado` (esta rodada), `excluído` (decisão de produto já registrada) ou `sem definição` (o inventário não trouxe o corpo SQL e o `src/` não chama o objeto).",
+  "Cada objeto do inventário de 31/10/2026 está nesta tabela. O corpo SQL foi lido no dump do schema (sem dados). O status é `coberto`, `migrado` ou `excluído`. Excluído inclui a decisão ADR-009/F4-06 e código morto confirmado no dump (sem chamada e sem gatilho de negócio).",
   "",
   `- Objetos: ${rows.length}`,
   `- Índices btree criados na 0014: ${indexCount}`,
@@ -227,7 +223,7 @@ const lines = [
   "",
   "O D1 não executa RLS. O browser não recebe chave de banco. Empresa, papel e equipe são resolvidos em `src/lib/server/auth/legacy-scope.ts` e o guard está em `src/hooks.server.ts`. O teste de isolamento é `src/lib/server/data/paridade.workers.test.ts`.",
   "",
-  "Chaves estrangeiras do Postgres não foram recriadas com `ALTER`: o SQLite não adiciona constraint depois do `CREATE`. As escritas ativas validam o vínculo no serviço. PK, UNIQUE e defaults estão na `0013`.",
+  "As FKs e os CHECKs traduzíveis estão na `0015`, que recria as tabelas `legado_*` e copia as linhas. PK, UNIQUE e defaults continuam na `0013`. `PRAGMA foreign_key_check` precisa ficar vazio.",
   "",
   "| objeto | tipo | destino | status | teste/evidência |",
   "| --- | --- | --- | --- | --- |",
