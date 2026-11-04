@@ -224,13 +224,16 @@
 
       await syncSessionOnServer(session);
 
-      void syncSessionInBrowser(session).catch((browserSyncError) => {
+      // Precisa concluir antes de navegar: a página seguinte lê a sessão do storage do navegador.
+      try {
+        await syncSessionInBrowser(session);
+      } catch (browserSyncError) {
         if (dev)
           console.warn(
             '[login] Sessão gravada no servidor, mas o storage do navegador não respondeu:',
             browserSyncError
           );
-      });
+      }
 
       auth.setAuth(payload.user ?? null, session);
       await finishLogin();

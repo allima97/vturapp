@@ -188,6 +188,24 @@
           await syncServerSession(session, 'mount');
         }
       } else {
+        // Sessão válida no servidor mas ausente no navegador: restaura antes de desistir.
+        const serverSession = data.session;
+        if (serverSession?.access_token && serverSession?.refresh_token) {
+          try {
+            const { data: restored, error: restoreError } = await browserData.auth.setSession({
+              access_token: serverSession.access_token,
+              refresh_token: serverSession.refresh_token
+            });
+            if (cancelled) return;
+            if (restored?.session && !restoreError) {
+              lastSessionAt = Date.now();
+              sessionSynced.set(true);
+              return;
+            }
+          } catch (restoreErr) {
+            if (dev) console.warn('[Auth] Falha ao restaurar sessão no navegador:', restoreErr);
+          }
+        }
         sessionSynced.set(true);
         // Sem sessão no navegador em rota protegida: vai para o login.
         if (!isPublicRoute(window.location.pathname)) {
