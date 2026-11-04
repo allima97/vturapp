@@ -106,7 +106,7 @@ describe('cliente de dados D1', () => {
 
     const result = await client()
       .from('quote')
-      .select('id, cliente:client_id (id, nome)')
+      .select('id, cliente:client_id (id, nome), quote_item (id, title)')
       .eq('id', quoteId)
       .single();
 
