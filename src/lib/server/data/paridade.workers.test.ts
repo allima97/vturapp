@@ -55,8 +55,48 @@ describe("paridade das rotinas com consumidor", () => {
     expect(ids).not.toContain(clienteB);
   });
 
+  it("aplica nome, documento, vinculo e cobranca na escrita", async () => {
+    const company = await client()
+      .from("companies")
+      .insert({
+        nome_empresa: "agencia do vale",
+        nome_fantasia: "agencia do vale",
+        cnpj: "12.345.678/0001-99",
+      })
+      .select("id, cnpj")
+      .single();
+    expect(company.error).toBeNull();
+    expect(company.data.cnpj).toBe("12345678000199");
+    const billing = await env.DB.prepare(
+      "SELECT status FROM legado_company_billing WHERE company_id = ?",
+    )
+      .bind(company.data.id)
+      .first<{ status: string }>();
+    expect(billing?.status).toBe("trial");
+
+    const cliente = await client()
+      .from("clientes")
+      .insert({
+        nome: "MARIA DAS DORES",
+        cpf: "12345678901",
+        company_id: company.data.id,
+      })
+      .select("id, nome, cpf")
+      .single();
+    expect(cliente.error).toBeNull();
+    expect(cliente.data.nome).toBe("Maria das Dores");
+    expect(cliente.data.cpf).toBe("123.456.789-01");
+    const link = await env.DB.prepare(
+      "SELECT 1 AS ok FROM legado_clientes_company WHERE company_id = ? AND cliente_id = ?",
+    )
+      .bind(company.data.id, cliente.data.id)
+      .first();
+    expect(link).toBeTruthy();
+  });
+
   it("a rotina de consultorias coincide com a consulta ao vivo", async () => {
     const company = crypto.randomUUID();
+    const otherCompany = crypto.randomUUID();
     const typeId = crypto.randomUUID();
     const seller = crypto.randomUUID();
     const other = crypto.randomUUID();
@@ -65,6 +105,12 @@ describe("paridade das rotinas com consumidor", () => {
     const otherId = crypto.randomUUID();
     await env.DB.batch([
       env.DB.prepare(
+        "INSERT INTO legado_companies (id, nome_empresa, nome_fantasia, cnpj, active) VALUES (?, 'C', 'C', ?, 1)",
+      ).bind(company, company.replace(/-/g, "").slice(0, 14)),
+      env.DB.prepare(
+        "INSERT INTO legado_companies (id, nome_empresa, nome_fantasia, cnpj, active) VALUES (?, 'D', 'D', ?, 1)",
+      ).bind(otherCompany, otherCompany.replace(/-/g, "").slice(0, 14)),
+      env.DB.prepare(
         "INSERT INTO legado_user_types (id, name) VALUES (?, 'VENDEDOR')",
       ).bind(typeId),
       env.DB.prepare(
@@ -72,7 +118,7 @@ describe("paridade das rotinas com consumidor", () => {
       ).bind(seller, company, typeId),
       env.DB.prepare(
         "INSERT INTO legado_users (id, nome_completo, email, company_id, user_type_id, active, uso_individual, participa_ranking) VALUES (?, 'Bia', 'bia@example.com', ?, ?, 1, 0, 0)",
-      ).bind(other, crypto.randomUUID(), typeId),
+      ).bind(other, otherCompany, typeId),
       env.DB.prepare(
         `INSERT INTO legado_consultorias_online
           (id, cliente_nome, data_hora, lembrete, destino, created_by, fechada, lembrete_envios)

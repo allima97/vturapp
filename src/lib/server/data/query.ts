@@ -1,4 +1,9 @@
 import meta from "./legado-meta.json";
+import {
+  applyLegadoAfterInsert,
+  applyLegadoRowRules,
+  applyLegadoWriteEffects,
+} from "./legado-rules";
 import type { DataClient, DataContext, QueryError, QueryResult } from "./types";
 import { runRpc } from "./rpc";
 import { createAuthApi } from "./authApi";
@@ -408,7 +413,11 @@ async function hydrate(
   }
 }
 
-function prepareWrite(table: string, value: Record<string, unknown>) {
+function prepareWrite(
+  table: string,
+  value: Record<string, unknown>,
+  mode: "insert" | "update" = "insert",
+) {
   const columns = tables[table].columns;
   const out: Record<string, unknown> = {};
   for (const [key, raw] of Object.entries(value)) {
@@ -417,6 +426,13 @@ function prepareWrite(table: string, value: Record<string, unknown>) {
     if (raw && typeof raw === "object" && columns[key].kind !== "json")
       continue;
     out[key] = coerce(columns[key], raw);
+  }
+  applyLegadoRowRules(table, out, mode);
+  if (columns.updated_at && mode === "update") {
+    out.updated_at = new Date().toISOString();
+  }
+  for (const key of Object.keys(out)) {
+    if (!columns[key]) delete out[key];
   }
   if (
     columns.id &&
@@ -646,6 +662,7 @@ export function createDataClient(context: DataContext): DataClient {
             const written: Array<Record<string, unknown>> = [];
             for (const row of payload) {
               const values = prepareWrite(table, row);
+              await applyLegadoWriteEffects(db, table, values);
               const keys = Object.keys(values);
               if (keys.length === 0) continue;
               const binds = keys.map((key) => values[key]);
@@ -664,11 +681,15 @@ export function createDataClient(context: DataContext): DataClient {
               const rowResult = await bound(db, sql, binds).first<
                 Record<string, unknown>
               >();
-              if (rowResult) written.push(presentRow(table, rowResult));
+              if (rowResult) {
+                written.push(presentRow(table, rowResult));
+                if (operation === "insert") await applyLegadoAfterInsert(db, table, values);
+              }
             }
             return finish(written, null);
           }
-          const values = prepareWrite(table, payload[0] || {});
+          const values = prepareWrite(table, payload[0] || {}, "update");
+          await applyLegadoWriteEffects(db, table, values);
           const where = whereSql(table, filters);
           if (operation === "update") {
             const keys = Object.keys(values);
