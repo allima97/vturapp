@@ -193,6 +193,8 @@ const AUTHENTICATED_API_UPLOAD_MAX_BODY_BYTES = 20 * 1024 * 1024;
 function buildCspPolicy() {
   const connectSrc = [
     "'self'",
+    // Turnstile carrega recursos do desafio via fetch de data: URIs (erro 600010 sem isso)
+    'data:',
     'https://challenges.cloudflare.com',
     'https://cloudflareinsights.com'
   ];
