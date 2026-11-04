@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createFakeSupabase } from '$lib/server/testing/fakeSupabase';
+import { createFakeDados } from '$lib/server/testing/fakeDados';
 import {
   findBrokenReceiptCountKey,
   guardContributionRowsForeignKeys,
@@ -15,7 +15,7 @@ function row(p: Partial<GuardedContributionRow> & { extra?: string }): GuardedCo
 }
 
 const client = () =>
-  createFakeSupabase({ vendas_recibos: [{ id: REAL }] }) as unknown as Parameters<typeof guardContributionRowsForeignKeys>[0];
+  createFakeDados({ vendas_recibos: [{ id: REAL }] }) as unknown as Parameters<typeof guardContributionRowsForeignKeys>[0];
 
 describe('guardContributionRowsForeignKeys', () => {
   it('recibo_id inexistente (id da conciliação) vira null; recibo real fica', async () => {

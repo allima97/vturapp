@@ -178,9 +178,8 @@ describe('K. PDF — comprovante de venda (unit)', () => {
   it('K11. escaping: caracteres HTML em campos de texto não geram tags abertas', () => {
     const html = gerarComprovanteHtml(vendaBase({
       destino: '<script>alert(1)</script>',
-      // numeroVenda com & para testar &amp;
       numeroVenda: 'VD & TEST',
-    }));
+    } as Parameters<typeof vendaBase>[0]));
     expect(html).not.toContain('<script>alert');
     expect(html).toContain('&lt;script&gt;');
     expect(html).toContain('VD &amp; TEST');

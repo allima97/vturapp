@@ -4,7 +4,7 @@
  * Agenda:  GET/POST /agenda, GET/PATCH/DELETE /agenda/:id
  * Tarefas: GET/POST /tarefas, GET/PATCH /tarefas/:id, POST /tarefas/:id/concluir
  */
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import type { ApiEnv } from '../../types';
 import { resolveAuthContext } from '$lib/server/auth/context';
 import { getDb } from '$lib/server/db/client';
@@ -26,7 +26,7 @@ export const agendaV2Routes = new Hono<ApiEnv>();
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-async function contexto(c: Parameters<typeof agendaV2Routes.get>[1] extends (c: infer C) => unknown ? C : never) {
+async function contexto(c: Context<ApiEnv>) {
   const baseURL = new URL(c.req.url).origin;
   const ctx = await resolveAuthContext(c.req.raw.headers, c.env.DB, c.env.BETTER_AUTH_SECRET, baseURL);
   if (!ctx) return { res: c.json({ error: 'Não autenticado.' }, 401) };
@@ -34,7 +34,7 @@ async function contexto(c: Parameters<typeof agendaV2Routes.get>[1] extends (c: 
   return { ctx, db };
 }
 
-function respostaErro(c: Parameters<typeof agendaV2Routes.get>[1] extends (c: infer C) => unknown ? C : never, err: unknown) {
+function respostaErro(c: Context<ApiEnv>, err: unknown) {
   if (err instanceof AgendaError) {
     const status = err.code === 'NAO_ENCONTRADO' ? 404 : err.code === 'SEM_PERMISSAO' ? 403 : 400;
     return c.json({ error: err.message }, status);

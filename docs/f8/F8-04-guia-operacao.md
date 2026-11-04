@@ -54,14 +54,24 @@ wrangler d1 execute vturapp-db --local \
 ## 3. Deploy
 
 ```bash
-# Staging
-npm run d1:migrate:staging   # migrations primeiro
+# Staging (migrations no D1 remoto, depois o Worker)
+npm run d1:migrate:staging
 wrangler deploy --env staging
 
 # Produção
 npm run d1:migrate:prod
 wrangler deploy --env production
 ```
+
+### Primeiro administrador
+
+O banco novo não tem usuário. O comando abaixo cria o administrador global `admin@vtur.com.br` (conta Better Auth, perfil ADMIN, permissões e empresa da plataforma). Ele recusa a execução se já existir um ADMIN global.
+
+```bash
+npm run bootstrap:admin -- --env staging --email admin@vtur.com.br
+```
+
+A senha aleatória é gravada só em `.secrets/bootstrap-admin-staging.txt`, com permissão 600. Esse diretório está no `.gitignore`. O terminal mostra o caminho, não a senha. Em produção, troque `--env staging` por `--env production`; o arquivo passa a ser `.secrets/bootstrap-admin-production.txt`.
 
 **Antes de qualquer deploy:** preencher `docs/f7/F7-02-release-checklist.md`.
 

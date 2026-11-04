@@ -12,7 +12,7 @@ import {
 } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
-import { cleanStringSet, chunkArray, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { cleanStringSet, chunkArray, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const TEMPLATE_DISPATCH_SELECT =
   'id, user_id, company_id, cliente_id, template_id, canal, categoria, status, recipient_name, recipient_contact, subject, sent_at, sent_day, created_at, updated_at';
@@ -68,7 +68,7 @@ export const handleClientesTemplateDispatchesGet = async (event: RequestEvent) =
     };
 
     const fetchItems = async () => {
-      if (scope.isAdmin || scope.companyIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (scope.isAdmin || scope.companyIds.length <= QUERY_IN_BATCH_SIZE) {
         const { data, error } = await buildQuery(scope.companyIds);
         if (error) throw error;
         return data || [];

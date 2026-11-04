@@ -18,7 +18,7 @@ import {
   READ_MODEL_TAGS,
   scopeCacheTags,
 } from "$lib/server/readModelCache";
-import { chunkArray, SUPABASE_IN_BATCH_SIZE } from "$lib/utils/array";
+import { chunkArray, QUERY_IN_BATCH_SIZE } from "$lib/utils/array";
 
 type ViagemClienteRow = {
   id: string;
@@ -111,7 +111,7 @@ export async function handleViagensClientesGet(event: RequestEvent) {
 
         const fetchClientes = async () => {
           if (scopedClientIds && scopedClientIds.length > 0) {
-            if (scopedClientIds.length <= SUPABASE_IN_BATCH_SIZE) {
+            if (scopedClientIds.length <= QUERY_IN_BATCH_SIZE) {
               return buildQuery(scopedClientIds);
             }
 
@@ -129,7 +129,7 @@ export async function handleViagensClientesGet(event: RequestEvent) {
             return { data: dedupeClientes(rows).slice(0, 200), error: null };
           }
 
-          if (companyIds.length > SUPABASE_IN_BATCH_SIZE) {
+          if (companyIds.length > QUERY_IN_BATCH_SIZE) {
             const rows: ViagemClienteRow[] = [];
             for (const batch of chunkArray(companyIds)) {
               const result = await buildQuery(undefined, batch);

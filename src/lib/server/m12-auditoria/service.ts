@@ -2,7 +2,7 @@
  * M12 — Auditoria, privacidade e administração operacional.
  *
  * Serviço para gravação e consulta da trilha de auditoria v2 (D1).
- * Não usa Supabase — totalmente compatível com Workers runtime.
+ * Não usa Dados — totalmente compatível com Workers runtime.
  *
  * LGPD Art. 46: campos sensíveis (CPF, senha, token) são removidos
  * de `detalhes` antes da gravação.

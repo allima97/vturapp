@@ -1,3 +1,4 @@
+import type { DataClient } from '$lib/server/data';
 /**
  * Cálculo de comissão do servidor — vtur-svelte
  *
@@ -8,7 +9,6 @@
  *   3. Calcula pctMetaGeral e aplica regras (igual ao mesmo useMemo)
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { ReportReceiptRow, ReportVendaRow } from '$lib/server/relatorios';
 import {
   calcularPctFixoProduto,
@@ -129,14 +129,14 @@ function roundMoney(v: number) {
   return Number(v.toFixed(2));
 }
 
-const SUPABASE_IN_BATCH_SIZE = 150;
+const QUERY_IN_BATCH_SIZE = 150;
 
 async function fetchBatched<T>(
   values: string[],
   loader: (batch: string[]) => PromiseLike<{ data: T[] | null; error: unknown }>
 ) {
   const batchResults = await Promise.all(
-    chunkArray(values, SUPABASE_IN_BATCH_SIZE).map(async (batch) => {
+    chunkArray(values, QUERY_IN_BATCH_SIZE).map(async (batch) => {
       const { data, error } = await loader(batch);
       return { data: data || [], error };
     })
@@ -400,7 +400,7 @@ function getRegraPacote(
 // ---------------------------------------------------------------------------
 
 async function fetchParametros(
-  client: SupabaseClient,
+  client: DataClient,
   companyIds: string[]
 ): Promise<ParametrosComissao> {
   const defaultParams: ParametrosComissao = {
@@ -452,7 +452,7 @@ async function fetchParametros(
   };
 }
 
-async function fetchRegras(client: SupabaseClient, companyIds: string[]): Promise<Record<string, Regra>> {
+async function fetchRegras(client: DataClient, companyIds: string[]): Promise<Record<string, Regra>> {
   const scopedCompanyIds = uniqueIds(companyIds);
   const selectWithCompany =
     'id, company_id, tipo, meta_nao_atingida, meta_atingida, super_meta, commission_tier (faixa, de_pct, ate_pct, inc_pct_meta, inc_pct_comissao)';
@@ -484,7 +484,7 @@ async function fetchRegras(client: SupabaseClient, companyIds: string[]): Promis
 
     if (!error) {
       const companyRuleResults = await Promise.all(
-        chunkArray(scopedCompanyIds, SUPABASE_IN_BATCH_SIZE).map((batch) =>
+        chunkArray(scopedCompanyIds, QUERY_IN_BATCH_SIZE).map((batch) =>
           baseQuery(selectWithCompany).in('company_id', batch)
         )
       );
@@ -528,7 +528,7 @@ async function fetchRegras(client: SupabaseClient, companyIds: string[]): Promis
 
 // vtur-app busca product_commission_rule SEM FILTRO por produto_id (busca tudo)
 async function fetchRegraProdutoMap(
-  client: SupabaseClient
+  client: DataClient
 ): Promise<Record<string, RegraProduto>> {
   const { data, error } = await client
     .from('product_commission_rule')
@@ -554,7 +554,7 @@ async function fetchRegraProdutoMap(
 
 // vtur-app busca product_commission_rule_pacote SEM FILTRO por produto_id (busca tudo)
 async function fetchRegraProdutoPacoteMap(
-  client: SupabaseClient
+  client: DataClient
 ): Promise<Record<string, Record<string, RegraProduto>>> {
   const { data, error } = await client
     .from('product_commission_rule_pacote')
@@ -580,7 +580,7 @@ async function fetchRegraProdutoPacoteMap(
   return map;
 }
 
-async function fetchRegraTipoPacoteMap(client: SupabaseClient): Promise<Record<string, RegraPacote>> {
+async function fetchRegraTipoPacoteMap(client: DataClient): Promise<Record<string, RegraPacote>> {
   const { data, error } = await client
     .from('tipo_pacotes')
     .select('nome, rule_id, fix_meta_nao_atingida, fix_meta_atingida, fix_super_meta')
@@ -605,7 +605,7 @@ async function fetchRegraTipoPacoteMap(client: SupabaseClient): Promise<Record<s
 
 // vtur-app busca tipo_produtos SEM FILTRO (busca todos os tipos de produto)
 async function fetchTipoProdutoMap(
-  client: SupabaseClient
+  client: DataClient
 ): Promise<Record<string, TipoProdutoRow>> {
   const tryFetch = async (cols: string) => {
     return client.from('tipo_produtos').select(cols).order('nome', { ascending: true }).limit(2000);
@@ -633,7 +633,7 @@ async function fetchTipoProdutoMap(
 }
 
 async function fetchMetas(
-  client: SupabaseClient,
+  client: DataClient,
   vendedorIds: string[],
   periodo: string
 ): Promise<{ metaPlanejada: number; metaProdutoMap: Record<string, number> }> {
@@ -683,7 +683,7 @@ async function fetchMetas(
 // ---------------------------------------------------------------------------
 
 export async function fetchCommissionContext(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     companyIds?: string[];
     vendedorIds?: string[];
@@ -1135,7 +1135,7 @@ function groupRowsByVendedorPeriod(rows: ReportVendaRow[]): ReportVendaRow[][] {
 }
 
 export async function resolveGroupedVendaCommissions(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     companyIds?: string[];
     rows: ReportVendaRow[];
@@ -1167,7 +1167,7 @@ export async function resolveGroupedVendaCommissions(
 }
 
 export async function resolveGroupedReceiptCommissions(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     companyIds?: string[];
     rows: ReportVendaRow[];

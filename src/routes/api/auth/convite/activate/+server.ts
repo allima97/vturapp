@@ -201,7 +201,7 @@ export const POST: RequestHandler = async (event) => {
     if (updateInviteErr) throw updateInviteErr;
     if (!updatedInvite?.id) {
       if (createdAuthUser) {
-        await adminClient.auth.admin.deleteUser(authUserId).catch((cleanupErr) => {
+        await adminClient.auth.admin.deleteUser(authUserId).catch((cleanupErr: any) => {
           logServerError('[auth/convite/activate] falha ao limpar usuario criado em corrida', cleanupErr);
         });
       }

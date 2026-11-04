@@ -36,7 +36,7 @@ import {
   chunkArray,
   dedupeById as dedupeRowsById,
   filterBatches,
-  SUPABASE_IN_BATCH_SIZE,
+  QUERY_IN_BATCH_SIZE,
   uniqueCleanStrings
 } from '$lib/utils/array';
 
@@ -207,7 +207,7 @@ export async function handleClientesListGet(event: RequestEvent) {
 
       const fetchLookupRows = async () => {
         if (!scopedClientIds) {
-          if (companyIds.length > SUPABASE_IN_BATCH_SIZE) {
+          if (companyIds.length > QUERY_IN_BATCH_SIZE) {
             const rows: ClienteLookupRow[] = [];
             for (const batch of chunkArray(companyIds)) {
               const result = await buildLookupQuery(undefined, batch);
@@ -229,7 +229,7 @@ export async function handleClientesListGet(event: RequestEvent) {
           return buildLookupQuery();
         }
 
-        if (scopedClientIds.length <= SUPABASE_IN_BATCH_SIZE) {
+        if (scopedClientIds.length <= QUERY_IN_BATCH_SIZE) {
           return buildLookupQuery(scopedClientIds);
         }
 
@@ -293,8 +293,8 @@ export async function handleClientesListGet(event: RequestEvent) {
       (!busca || canPushBuscaToDb) &&
       !statusQuery &&
       !aniversarioHojeQuery &&
-      companyIds.length <= SUPABASE_IN_BATCH_SIZE &&
-      (!scopedClientIds || scopedClientIds.length <= SUPABASE_IN_BATCH_SIZE);
+      companyIds.length <= QUERY_IN_BATCH_SIZE &&
+      (!scopedClientIds || scopedClientIds.length <= QUERY_IN_BATCH_SIZE);
     const canUseScopeAggregateSummaries =
       summaryFastPath &&
       canUseCompanyScope &&
@@ -347,8 +347,8 @@ export async function handleClientesListGet(event: RequestEvent) {
         return buildClientsQuery(scopedClientIds || undefined, true);
       }
 
-      if (!scopedClientIds || scopedClientIds.length <= SUPABASE_IN_BATCH_SIZE) {
-        if (!scopedClientIds && companyIds.length > SUPABASE_IN_BATCH_SIZE) {
+      if (!scopedClientIds || scopedClientIds.length <= QUERY_IN_BATCH_SIZE) {
+        if (!scopedClientIds && companyIds.length > QUERY_IN_BATCH_SIZE) {
           const rows: ClienteBaseRow[] = [];
           for (const batch of chunkArray(companyIds)) {
             const result = await buildClientsQuery(undefined, false, batch);
@@ -530,7 +530,7 @@ export async function handleClientesListGet(event: RequestEvent) {
       const normalizedCreatorIds = uniqueCleanStrings(creatorIdsFilter);
       if (normalizedCreatorIds.length === 0) return { data: [], error: null };
 
-      if (normalizedCreatorIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (normalizedCreatorIds.length <= QUERY_IN_BATCH_SIZE) {
         return buildQuotesQuery(undefined, normalizedCreatorIds);
       }
 

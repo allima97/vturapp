@@ -4,7 +4,7 @@
   import Card from "$lib/components/ui/Card.svelte";
   import Button from "$lib/components/ui/Button.svelte";
   import LoadingState from "$lib/components/ui/LoadingState.svelte";
-  import { supabase } from "$lib/db/supabase";
+  import { browserData as dados } from "$lib/db/browserData";
   import { ApiError, apiFetch, isCanceledApiError } from "$lib/services/api";
   import { toUserMessage } from "$lib/utils/errors";
   import { createLoadGuard } from "$lib/utils/loadGuard";
@@ -34,7 +34,7 @@
 
     // Test session
     const { data: sessionData, error: sessionError } =
-      await supabase.auth.getSession();
+      await dados.auth.getSession();
 
     if (sessionError) {
       sessionInfo = `Erro: ${sessionError.message}`;

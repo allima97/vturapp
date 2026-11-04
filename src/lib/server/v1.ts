@@ -1,4 +1,4 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { getDataClient, type DataClient } from '$lib/server/data';
 import { env as publicEnv } from "$env/dynamic/public";
 import { env as privateEnv } from "$env/dynamic/private";
 import { json, type RequestEvent } from "@sveltejs/kit";
@@ -130,26 +130,8 @@ type UsersProfileRow = {
   user_types: { name: string | null } | { name: string | null }[] | null;
 };
 
-let adminClient: SupabaseClient | null = null;
-
 export function getAdminClient() {
-  if (!adminClient) {
-    const supabaseUrl = publicEnv.PUBLIC_SUPABASE_URL;
-    const supabaseKey = privateEnv.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !supabaseKey) {
-      throw new Error(
-        "Variaveis de ambiente do Supabase nao configuradas: PUBLIC_SUPABASE_URL ou SUPABASE_SERVICE_ROLE_KEY",
-      );
-    }
-    adminClient = createClient(supabaseUrl, supabaseKey, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    });
-  }
-
-  return adminClient;
+  return getDataClient();
 }
 
 export function isUuid(value?: string | null) {
@@ -273,7 +255,7 @@ export function isRankingEligibleUser(row: RankingUserRow) {
 }
 
 export async function fetchRankingVendedoresByCompanyIds(
-  client: SupabaseClient,
+  client: DataClient,
   companyIds: string[],
 ) {
   const scopedCompanyIds = collectUniqueUuidValues(companyIds);
@@ -387,7 +369,7 @@ export async function requireAuthenticatedUser(event: RequestEvent) {
   return user;
 }
 
-async function fetchPermissions(client: SupabaseClient, userId: string) {
+async function fetchPermissions(client: DataClient, userId: string) {
   const { data, error: permissionsError } = await client
     .from("modulo_acesso")
     .select("modulo, permissao, ativo")
@@ -407,7 +389,7 @@ async function fetchPermissions(client: SupabaseClient, userId: string) {
 }
 
 export async function fetchGestorEquipeIdsComGestor(
-  client: SupabaseClient,
+  client: DataClient,
   gestorId: string,
 ) {
   if (!gestorId) return [];
@@ -453,7 +435,7 @@ export async function fetchGestorEquipeIdsComGestor(
  * (uso_individual = vendedores isolados que nunca aparecem no escopo de outros).
  */
 export async function fetchVendedorIdsByCompanyIds(
-  client: SupabaseClient,
+  client: DataClient,
   companyIds: string[],
 ): Promise<string[]> {
   if (companyIds.length === 0) return [];
@@ -470,7 +452,7 @@ export async function fetchVendedorIdsByCompanyIds(
 }
 
 export async function fetchMasterEmpresas(
-  client: SupabaseClient,
+  client: DataClient,
   masterId: string,
 ) {
   const scopedMasterId = String(masterId || "").trim();
@@ -509,7 +491,7 @@ export async function fetchMasterEmpresas(
 }
 
 export async function fetchFinanceiroEmpresas(
-  client: SupabaseClient,
+  client: DataClient,
   financeiroId: string,
 ) {
   const scopedFinanceiroId = String(financeiroId || "").trim();
@@ -552,7 +534,7 @@ export async function fetchFinanceiroEmpresas(
 }
 
 async function resolveUserScopeUncached(
-  client: SupabaseClient,
+  client: DataClient,
   userId: string,
 ): Promise<UserScope> {
   const { data, error: profileError } = await client
@@ -614,7 +596,7 @@ async function resolveUserScopeUncached(
 }
 
 export async function resolveUserScope(
-  client: SupabaseClient,
+  client: DataClient,
   userId: string,
 ): Promise<UserScope> {
   const key = buildReadModelCacheKey("user-scope", { userId });
@@ -686,7 +668,7 @@ export function ensureModuloAccess(
 }
 
 export async function resolveScopedVendedorIds(
-  client: SupabaseClient,
+  client: DataClient,
   scope: UserScope,
   requestedRaw?: string | null,
 ) {
@@ -796,7 +778,7 @@ export function resolveScopedCompanyId(
 }
 
 export async function resolveAccessibleClientIds(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     companyIds: string[];
     vendedorIds: string[];
@@ -828,7 +810,7 @@ export async function resolveAccessibleClientIds(
     kvTtlSeconds: 120,
     loader: async () => {
       // Substitui o cruzamento de lotes em JS por uma única chamada RPC
-      // (função accessible_client_ids, ver supabase/migrations) que reproduz
+      // (função accessible_client_ids, ver dados/migrations) que reproduz
       // exatamente a mesma lógica de OR entre as três condições.
       const { data, error } = await client.rpc("accessible_client_ids", {
         p_company_ids: companyIds,

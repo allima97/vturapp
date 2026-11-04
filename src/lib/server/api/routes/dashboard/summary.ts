@@ -25,7 +25,7 @@ import {
 } from "$lib/server/readModelCache";
 import { fetchDashboardMetasSummaryRpc } from "$lib/server/reciboContribuicoesReadModel";
 import { DYNAMIC_READ_HEADERS } from "$lib/server/httpCache";
-import { cleanStringSet, chunkArray, SUPABASE_IN_BATCH_SIZE, uniqueCleanStrings } from "$lib/utils/array";
+import { cleanStringSet, chunkArray, QUERY_IN_BATCH_SIZE, uniqueCleanStrings } from "$lib/utils/array";
 import { toFiniteNumber as toNum } from "$lib/utils/values";
 
 // ---------------------------------------------------------------------------
@@ -528,7 +528,7 @@ export async function handleDashboardSummaryGet(event: RequestEvent) {
         const fetchQuotesByIds = async (field: "created_by" | "client_id", ids: string[]) => {
           const normalizedIds = uniqueCleanStrings(ids);
           if (normalizedIds.length === 0) return [] as DashboardQuoteRow[];
-          if (normalizedIds.length <= SUPABASE_IN_BATCH_SIZE) {
+          if (normalizedIds.length <= QUERY_IN_BATCH_SIZE) {
             const { data, error } = await buildQuotesQuery().in(field, normalizedIds);
             if (error) throw error;
             return (data || []) as DashboardQuoteRow[];

@@ -18,8 +18,9 @@
     "test:watch": "vitest --dir src",
     "d1:local:create": "wrangler d1 execute vturapp-db --local --command \"SELECT 1\"",
     "d1:migrate:local": "wrangler d1 migrations apply vturapp-db --local",
-    "d1:migrate:staging": "wrangler d1 migrations apply vturapp-db-staging --env staging",
-    "d1:migrate:prod": "wrangler d1 migrations apply vturapp-db --env production",
+    "d1:migrate:staging": "wrangler d1 migrations apply vturapp-db-staging --remote --env staging",
+    "d1:migrate:prod": "wrangler d1 migrations apply vturapp-db --remote --env production",
+    "bootstrap:admin": "node scripts/bootstrap-admin.mjs",
     "dev:cf": "wrangler dev --local",
     "cf:deploy:staging": "npm run cf:build && npx wrangler deploy --env staging",
     "legacy:patch-scheduled": "node scripts/patch-worker-scheduled.js",
@@ -42,7 +43,6 @@
     "prettier": "^3.3.2",
     "prettier-plugin-svelte": "^3.2.6",
     "prettier-plugin-tailwindcss": "^0.8.1",
-    "supabase": "^2.92.1",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "tailwindcss": "^4.3.3",
@@ -61,8 +61,6 @@
     "@fullcalendar/timegrid": "^6.1.20",
     "@simplewebauthn/browser": "^13.3.0",
     "@simplewebauthn/server": "^13.3.0",
-    "@supabase/ssr": "^0.8.0",
-    "@supabase/supabase-js": "^2.0.0",
     "better-auth": "^1.7.13",
     "chart.js": "^4.5.1",
     "dompurify": "^3.4.2",
@@ -76,7 +74,8 @@
     "lucide-svelte": "^1.0.1",
     "pdfjs-dist": "^5.7.284",
     "svelte-bottom-sheet": "^2.3.0",
-    "tailwind-merge": "^3.7.0"
+    "tailwind-merge": "^3.7.0",
+    "uqr": "^0.1.3"
   },
   "type": "module",
   "overrides": {

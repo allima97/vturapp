@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient } from '$lib/server/data';
 import { buildConciliacaoMetrics, isConciliacaoEfetivada } from '$lib/conciliacao/business';
 import { normalizeReceiptKey } from '$lib/conciliacao/receiptNormalize';
 import { findEquipeVturVendedor } from '$lib/conciliacao/baixaRac';
@@ -13,7 +13,7 @@ import {
 import { cleanStringSet, chunkArray, uniqueCleanStrings, uniqueValues } from '$lib/utils/array';
 
 const EPS = 0.01;
-const SUPABASE_IN_BATCH_SIZE = 150;
+const QUERY_IN_BATCH_SIZE = 150;
 
 type Actor = 'cron' | 'user';
 
@@ -343,7 +343,7 @@ function getCurrentMonthRange() {
 }
 
 async function insertConciliacaoNumericAudit(params: {
-  client: SupabaseClient;
+  client: DataClient;
   companyId: string;
   conciliacaoReciboId: string;
   vendaId?: string | null;
@@ -382,7 +382,7 @@ async function insertConciliacaoNumericAudit(params: {
 }
 
 async function persistExecutionLog(params: {
-  client: SupabaseClient;
+  client: DataClient;
   companyId: string;
   actor: Actor;
   actorUserId?: string | null;
@@ -410,7 +410,7 @@ async function persistExecutionLog(params: {
 }
 
 async function moveDuplicateRateioToWinner(params: {
-  client: SupabaseClient;
+  client: DataClient;
   winnerId: string;
   loserIds: string[];
 }) {
@@ -425,7 +425,7 @@ async function moveDuplicateRateioToWinner(params: {
     const rateios: DuplicateRateioRow[] = [];
     const loserIdSet = cleanStringSet(params.loserIds);
     const idsToLookup = uniqueCleanStrings([params.winnerId, ...params.loserIds]);
-    for (const batch of chunkArray(idsToLookup, SUPABASE_IN_BATCH_SIZE)) {
+    for (const batch of chunkArray(idsToLookup, QUERY_IN_BATCH_SIZE)) {
       const { data, error } = await params.client
         .from('vendas_recibos_rateio')
         .select('id, conciliacao_recibo_id')
@@ -449,7 +449,7 @@ async function moveDuplicateRateioToWinner(params: {
     const rateiosToDelete = winnerHasRateio ? loserRateios : extraLoserRateios;
     const idsToDelete = uniqueCleanStrings(rateiosToDelete.map((row) => row?.id));
     if (idsToDelete.length > 0) {
-      for (const batch of chunkArray(idsToDelete, SUPABASE_IN_BATCH_SIZE)) {
+      for (const batch of chunkArray(idsToDelete, QUERY_IN_BATCH_SIZE)) {
         const { error: deleteError } = await params.client.from('vendas_recibos_rateio').delete().in('id', batch);
         if (deleteError) throw deleteError;
       }
@@ -464,7 +464,7 @@ async function moveDuplicateRateioToWinner(params: {
 }
 
 async function cleanupDuplicateConciliacaoRowsCompany(params: {
-  client: SupabaseClient;
+  client: DataClient;
   companyId: string;
   onlyCurrentMonth?: boolean;
   month?: string | null;
@@ -534,7 +534,7 @@ async function cleanupDuplicateConciliacaoRowsCompany(params: {
 
     await moveDuplicateRateioToWinner({ client, winnerId: String(winner.id), loserIds });
 
-    for (const batch of chunkArray(loserIds, SUPABASE_IN_BATCH_SIZE)) {
+    for (const batch of chunkArray(loserIds, QUERY_IN_BATCH_SIZE)) {
       const { error: changesError } = await client
         .from('conciliacao_recibo_changes')
         .update({ conciliacao_recibo_id: winner.id })
@@ -542,7 +542,7 @@ async function cleanupDuplicateConciliacaoRowsCompany(params: {
       if (changesError) throw changesError;
     }
 
-    for (const batch of chunkArray(loserIds, SUPABASE_IN_BATCH_SIZE)) {
+    for (const batch of chunkArray(loserIds, QUERY_IN_BATCH_SIZE)) {
       const { error: deleteError } = await client.from('conciliacao_recibos').delete().in('id', batch);
       if (deleteError) throw deleteError;
     }
@@ -553,7 +553,7 @@ async function cleanupDuplicateConciliacaoRowsCompany(params: {
 }
 
 async function fetchReciboCandidates(params: {
-  client: SupabaseClient;
+  client: DataClient;
   numero: string;
   companyId: string;
 }): Promise<ReciboMatchRow[]> {
@@ -621,7 +621,7 @@ async function fetchReciboCandidates(params: {
 
   const vendaIds = uniqueCleanStrings(candidates.map((row) => row.venda_id));
   const vendas: VendaCompanySellerRow[] = [];
-  for (const batch of chunkArray(vendaIds, SUPABASE_IN_BATCH_SIZE)) {
+  for (const batch of chunkArray(vendaIds, QUERY_IN_BATCH_SIZE)) {
     const { data, error } = await client
       .from('vendas')
       .select('id, company_id, vendedor_id')
@@ -649,7 +649,7 @@ async function fetchReciboCandidates(params: {
 }
 
 async function fetchRexturReciboCandidatesByReserva(params: {
-  client: SupabaseClient;
+  client: DataClient;
   reserva: string;
   companyId: string;
 }): Promise<ReciboMatchRow[]> {
@@ -702,7 +702,7 @@ async function fetchRexturReciboCandidatesByReserva(params: {
 
   const vendaIds = uniqueCleanStrings(candidates.map((row) => row.venda_id));
   const vendas: VendaCompanySellerRow[] = [];
-  for (const batch of chunkArray(vendaIds, SUPABASE_IN_BATCH_SIZE)) {
+  for (const batch of chunkArray(vendaIds, QUERY_IN_BATCH_SIZE)) {
     const { data, error } = await client
       .from('vendas')
       .select('id, company_id, vendedor_id')
@@ -770,7 +770,7 @@ function selectBestReciboMatch(params: {
 }
 
 async function findReciboByNumero(params: {
-  client: SupabaseClient;
+  client: DataClient;
   numero: string;
   companyId: string;
   valorLancamento?: number | null;
@@ -790,7 +790,7 @@ async function findReciboByNumero(params: {
 }
 
 async function findRexturReciboByReserva(params: {
-  client: SupabaseClient;
+  client: DataClient;
   reserva: string;
   companyId: string;
   valorLancamento?: number | null;
@@ -852,7 +852,7 @@ export type DiagnosticoCronologico = {
  * intermediários sejam importados ou marcados como "sem movimento".
  */
 export async function diagnosticarLacunasCronologicas(params: {
-  client: SupabaseClient;
+  client: DataClient;
   companyId: string;
 }): Promise<DiagnosticoCronologico> {
   const { client, companyId } = params;
@@ -942,7 +942,7 @@ export async function diagnosticarLacunasCronologicas(params: {
 
 /** Versão interna sem diagnóstico completo — usada no filtro da query de reconciliação. */
 async function resolverFronteiraCronologica(params: {
-  client: SupabaseClient;
+  client: DataClient;
   companyId: string;
 }): Promise<string | null> {
   const result = await diagnosticarLacunasCronologicas(params);
@@ -956,7 +956,7 @@ async function reconcilePendentesCompany(params: {
   onlyCurrentMonth?: boolean;
   actor?: Actor;
   actorUserId?: string | null;
-  client: SupabaseClient;
+  client: DataClient;
 }): Promise<ReconcileResult> {
   const limit = Math.max(1, Math.min(500, Number(params.limit || 200)));
   const actor = params.actor || 'user';
@@ -995,7 +995,7 @@ async function reconcilePendentesCompany(params: {
     // sua conciliação é puramente por atribuição manual e não depende de sequência.
     // A fronteira bloqueia apenas registros sem vendedor que aguardam matching automático.
     // Como não dá para filtrar "sem vendedor E além da fronteira" em uma única query
-    // Supabase de forma limpa, buscamos todos os pendentes e aplicamos a fronteira
+    // Dados de forma limpa, buscamos todos os pendentes e aplicamos a fronteira
     // no loop (ver filtro abaixo após o fetch).
   }
 
@@ -1275,7 +1275,7 @@ async function recalculateConciliacaoMetricsCompany(params: {
   companyId: string;
   actor?: Actor;
   actorUserId?: string | null;
-  client: SupabaseClient;
+  client: DataClient;
 }): Promise<{ scanned: number; recalculated: number; updateErrors: number }> {
   const batchSize = Math.max(50, Math.min(2000, Number(params.batchSize || 500)));
   const monthRange = resolveMonthDateRange(params.month);
@@ -1312,7 +1312,7 @@ async function recalculateConciliacaoMetricsCompany(params: {
 
     const uniqueReciboIdsToFetch = uniqueCleanStrings(reciboIdsToFetch);
     if (uniqueReciboIdsToFetch.length > 0) {
-      for (const batch of chunkArray(uniqueReciboIdsToFetch, SUPABASE_IN_BATCH_SIZE)) {
+      for (const batch of chunkArray(uniqueReciboIdsToFetch, QUERY_IN_BATCH_SIZE)) {
         const { data: recibos } = await client
           .from('vendas_recibos')
           .select('id, valor_total, valor_taxas')
@@ -1454,7 +1454,7 @@ async function recalculateConciliadosCompany(params: {
   companyId: string;
   actor?: Actor;
   actorUserId?: string | null;
-  client: SupabaseClient;
+  client: DataClient;
 }) {
   const result = await recalculateConciliacaoMetricsCompany({
     month: params.month,
@@ -1478,7 +1478,7 @@ export async function reconcilePendentes(params: {
   cleanupDuplicatesOnly?: boolean;
   actor?: Actor;
   actorUserId?: string | null;
-  client: SupabaseClient;
+  client: DataClient;
 }): Promise<ReconcileResult> {
   const actor = params.actor || 'user';
   const actorUserId = params.actorUserId || null;

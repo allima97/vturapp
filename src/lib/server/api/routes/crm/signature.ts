@@ -62,7 +62,7 @@ export async function handleCrmSignaturePost(event: RequestEvent) {
     if (!bodyResult.ok) return bodyResult.response;
 
     const user = await requireAuthenticatedUser(event);
-    const client = event.locals.supabase;
+    const client = event.locals.dados;
     const { assinatura } = readCrmSignatureBody(bodyResult.data);
 
     const row = {

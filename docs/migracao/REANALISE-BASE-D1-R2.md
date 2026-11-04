@@ -1,8 +1,39 @@
 # Reanálise da migração integral para D1 e R2
 
-**Data:** 2026-10-31  
-**Branch/SHA analisados:** `reescrita/f2-identidade-autorizacao` / `b2f3a460`  
-**Estado:** migração parcial; não autoriza desligar o Supabase.
+**Data:** 2026-11-04  
+**Branch de trabalho:** `cursor/migracao-d1-r2-sem-supabase-d46b`  
+**Estado:** o código não consome mais o SDK remoto. Staging (`2b5e6264`) está no ar em `https://vturapp-staging.allima97.workers.dev`. O D1 de staging tem as 14 migrations e começa vazio. O primeiro administrador global entra por `npm run bootstrap:admin`.
+
+## Corte realizado em 04/11/2026
+
+- Sessão do app, login, logout, recuperação de senha e 2FA usam Better Auth e a tabela `mfa_fatores`.
+- `getAdminClient()` e `locals.dados` executam SQL no D1. As tabelas do catálogo legado ficam em `legado_*`, para conviver com o modelo novo (`vendas`, `clientes`, `user` etc.).
+- Uploads, downloads e URLs de arquivo usam o binding R2. Buckets de leitura pública no Worker: `campanhas`, `mural-recados`, `message-template-themes`, `quotes`, `system-docs`. Os demais exigem sessão ou URL assinada.
+- O limite persistente fica só no D1 (`security_rate_limits`) ou na memória do isolate. O fallback remoto foi removido.
+- `rg -i supabase src` não encontra consumidor. `@supabase/ssr`, `@supabase/supabase-js` e o CLI `supabase` saíram do `package.json`.
+- Nenhum Worker foi publicado e nenhuma migration foi aplicada em D1 remoto nesta etapa.
+
+### Comandos manuais
+
+```bash
+# Wrangler 4 aplica no D1 local se faltar --remote. Os scripts já incluem a flag.
+npm run d1:migrate:staging   # vturapp-db-staging --remote --env staging
+npm run d1:migrate:prod      # vturapp-db --remote --env production
+npm run cf:deploy:staging
+
+# Primeiro administrador, só enquanto não existir perfil global ADMIN.
+# A senha aleatória fica em .secrets/bootstrap-admin-<env>.txt (modo 600) e não aparece no terminal.
+npm run bootstrap:admin -- --env staging --email admin@vtur.com.br
+npm run bootstrap:admin -- --env production --email admin@vtur.com.br
+```
+
+Segredos que continuam necessários: `BETTER_AUTH_SECRET`, `RESEND_API_KEY`. Não configurar URL, anon key nem service role do banco antigo.
+
+A matriz objeto a objeto está em `docs/migracao/MATRIZ-PARIDADE-SUPABASE-D1.md`. A `0014` adiciona os índices btree simples. A `0015` recria o catálogo com as FKs e os CHECKs do dump.
+
+**Data anterior:** 2026-10-31  
+**Branch/SHA analisados então:** `reescrita/f2-identidade-autorizacao` / `b2f3a460`  
+**Estado naquela data:** migração parcial.
 
 Este documento separa o que o código demonstra do que ainda é hipótese ou decisão pendente. A decisão vigente de iniciar com banco e buckets vazios permanece: não transferir usuários, senhas, vendas, arquivos ou sessões antigas. Isso não dispensa reproduzir as regras de negócio necessárias no sistema novo.
 
@@ -64,16 +95,16 @@ A CLI global do Mac (`supabase` 2.122.0) funciona. O erro anterior veio do biná
 
 Foi obtido um inventário remoto de metadados usando `supabase gen types ... --linked` e consultas somente `SELECT` a `information_schema`/`pg_catalog`. Nenhuma linha de negócio foi consultada ou exportada. O resultado está em [`SCHEMA-LEGADO-2026-10-31.json`](./SCHEMA-LEGADO-2026-10-31.json), com UUIDs e e-mails literais em expressões de policy mascarados.
 
-| Schema/objeto | Contagem observada |
-|---|---:|
-| `public` — tabelas | 137 |
-| `public` — views | 6 |
-| `public` — colunas | 1.641 |
-| `public` — constraints / indexes | 486 / 483 |
-| `public` — rotinas / triggers | 227 / 91 |
-| `public` — tabelas com RLS / policies | 137 / 396 |
-| `storage` — buckets / policies / triggers | 10 / 33 / 7 |
-| `auth` — tabelas gerenciadas | 27 |
+| Schema/objeto                             | Contagem observada |
+| ----------------------------------------- | -----------------: |
+| `public` — tabelas                        |                137 |
+| `public` — views                          |                  6 |
+| `public` — colunas                        |              1.641 |
+| `public` — constraints / indexes          |          486 / 483 |
+| `public` — rotinas / triggers             |           227 / 91 |
+| `public` — tabelas com RLS / policies     |          137 / 396 |
+| `storage` — buckets / policies / triggers |        10 / 33 / 7 |
+| `auth` — tabelas gerenciadas              |                 27 |
 
 O CLI Supabase está instalado globalmente em `/opt/homebrew/bin/supabase`; a falha anterior era do binário Linux incluído em `node_modules`, não do Mac. `supabase migration list --linked` confirmou conexão autenticada. O dump SQL completo ainda não foi obtido: `supabase db dump --linked --schema public` exige o daemon Docker/Colima, que não estava ligado nesta sessão. As funções estão catalogadas por assinatura, não por corpo; regras de RPC e triggers ainda devem ser cruzadas com as migrations versionadas e com a implementação antiga antes de portar os domínios.
 

@@ -43,7 +43,7 @@ export async function handleLgpdSolicitacoesGet(event: RequestEvent) {
 
     // Identifica solicitações com prazo vencido (> 15 dias sem resposta)
     const agora = new Date().toISOString();
-    const items = (data ?? []).map((s) => ({
+    const items = (data ?? []).map((s: any) => ({
       ...s,
       prazo_vencido: s.status === 'recebida' || s.status === 'em_analise'
         ? s.prazo_legal < agora

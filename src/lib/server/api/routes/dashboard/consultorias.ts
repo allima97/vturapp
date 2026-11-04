@@ -17,7 +17,7 @@ import {
   scopeCacheTags,
 } from "$lib/server/readModelCache";
 import { NO_STORE_HEADERS, SHORT_DYNAMIC_READ_HEADERS } from "$lib/server/httpCache";
-import { chunkArray, SUPABASE_IN_BATCH_SIZE } from "$lib/utils/array";
+import { chunkArray, QUERY_IN_BATCH_SIZE } from "$lib/utils/array";
 
 const NO_STORE_TEXT_HEADERS = {
   "Content-Type": "text/plain; charset=utf-8",
@@ -152,7 +152,7 @@ export async function handleDashboardConsultoriasGet(event: RequestEvent) {
           },
         );
         if (rpcErr) throw rpcErr;
-        return { items: (rpcData || []).slice(0, limit) };
+        return { items: (Array.isArray(rpcData) ? rpcData : []).slice(0, limit) };
       } catch (rpcError: unknown) {
         if (!isRpcMissing(rpcError, "rpc_dashboard_consultorias"))
           throw rpcError;
@@ -188,7 +188,7 @@ export async function handleDashboardConsultoriasGet(event: RequestEvent) {
         return (data || []) as DashboardConsultoriaRow[];
       };
 
-      if (creatorIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (creatorIds.length <= QUERY_IN_BATCH_SIZE) {
         return {
           items: await fetchRows(creatorIds.length > 0 ? creatorIds : undefined),
         };

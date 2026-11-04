@@ -3,7 +3,7 @@
  *
  * Diferenças em relação ao sveltekit.ts (v1):
  *   - Injeta BETTER_AUTH_SECRET e RESEND_API_KEY nos bindings
- *   - Não injeta `event` (legado Supabase) — v2 não depende de Supabase
+ *   - Não injeta `event` (legado Dados) — v2 não depende de Dados
  *   - Injeta PUBLIC_APP_URL e PUBLIC_ENVIRONMENT para resolução de base URL
  *
  * Uso em +server.ts:
@@ -29,7 +29,7 @@ export async function apiHandlerV2(event: RequestEvent): Promise<Response> {
     PUBLIC_APP_URL: platformEnv?.PUBLIC_APP_URL,
     PUBLIC_ENVIRONMENT: platformEnv?.PUBLIC_ENVIRONMENT,
 
-    // ── NOTE: sem `event` (sem Supabase em v2) ───────────────────────────
+    // ── NOTE: sem `event` (sem Dados em v2) ───────────────────────────
     event: null as unknown as RequestEvent, // satisfaz o tipo ApiEnv; nunca usado em v2
   });
 }

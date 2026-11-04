@@ -6,7 +6,7 @@
  * status, o mesmo corpo e fazer o mesmo conjunto de consultas.
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createFakeSupabase, sortedQueryLog, type FakeSupabase } from '$lib/server/testing/fakeSupabase';
+import { createFakeDados, sortedQueryLog, type FakeDados } from '$lib/server/testing/fakeDados';
 
 const state = vi.hoisted(() => ({
   db: null as unknown,
@@ -112,9 +112,9 @@ const cenarios: Array<[string, string, { companyIds: string[]; vendedorIds: stri
 ];
 
 describe('GET /api/v1/clientes/historico: contrato', () => {
-  let db: FakeSupabase;
+  let db: FakeDados;
   beforeEach(() => {
-    db = createFakeSupabase(tables());
+    db = createFakeDados(tables());
     state.db = db;
   });
 

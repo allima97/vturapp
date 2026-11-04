@@ -16,7 +16,7 @@ import {
 import { validateUploadedFile } from '$lib/server/uploadValidation';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readFormDataBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
-import { cleanStringSet, chunkArray, dedupeById, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { cleanStringSet, chunkArray, dedupeById, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const VOUCHER_ASSET_BUCKET = 'voucher-assets';
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -29,7 +29,7 @@ const PT_BR_COLLATOR = new Intl.Collator('pt-BR');
 const mutationError = (message: string, status: number) =>
   json({ success: false, error: message }, { status, headers: NO_STORE_HEADERS });
 
-type SupabaseAdminClient = ReturnType<typeof getAdminClient>;
+type DadosAdminClient = ReturnType<typeof getAdminClient>;
 
 type VoucherAssetRow = Record<string, unknown> & {
   id?: string | null;
@@ -92,7 +92,7 @@ function buildStoragePath(params: {
   return `${params.companyId}/${params.provider}/${params.assetKind}/${Date.now()}-${crypto.randomUUID()}.${safeExtension}`;
 }
 
-async function withPreviewUrl(client: SupabaseAdminClient, asset: VoucherAssetRow) {
+async function withPreviewUrl(client: DadosAdminClient, asset: VoucherAssetRow) {
   try {
     if (!asset.storage_bucket || !asset.storage_path) {
       return { ...asset, preview_url: null };
@@ -167,7 +167,7 @@ export async function handleVoucherAssetsGet(event: RequestEvent) {
     };
 
     const fetchAssets = async () => {
-      if (companyIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (companyIds.length <= QUERY_IN_BATCH_SIZE) {
         return buildQuery();
       }
 

@@ -1,6 +1,6 @@
 /** Relatório de Performance: escopo de acesso e montagem dos dados a partir do banco (banco falso). */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createFakeSupabase } from '$lib/server/testing/fakeSupabase';
+import { createFakeDados } from '$lib/server/testing/fakeDados';
 
 const C1 = '11111111-1111-4111-8111-111111111111';
 const C2 = '22222222-2222-4222-8222-222222222222';
@@ -42,7 +42,7 @@ import { handleRelatoriosPerformanceGet } from './performance';
 const scopeBase = { userId: U1, isAdmin: false, isMaster: false, isGestor: true, isFinanceiro: false, isVendedor: false, companyId: C1, companyIds: [C1], permissoes: { relatorios: 'view' }, papel: 'GESTOR', tipoNome: 'GESTOR', usoIndividual: false };
 
 function db() {
-  return createFakeSupabase({
+  return createFakeDados({
     companies: [{ id: C1, nome_fantasia: 'LOJA SHOPPING CENTER NORTE', owner_user_id: U2 }],
     users: [{ id: U1, nome_completo: 'Ana', company_id: C1 }, { id: U2, nome_completo: 'Katia Nishida', company_id: C1 }],
     parametros_comissao: [{ company_id: C1, usar_taxas_na_meta: true, foco_valor: 'bruto' }],

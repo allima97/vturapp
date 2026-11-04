@@ -1,6 +1,5 @@
 import { VTUR_LOGO_URL } from "$lib/brand";
 import type { RequestEvent } from '@sveltejs/kit';
-import { env as publicEnv } from '$env/dynamic/public';
 import { buildCardFontFaceCss } from '$lib/cards/cardFonts';
 import { resolveThemeAssetMeta } from '$lib/cards/themeAssetMeta';
 import {
@@ -95,16 +94,7 @@ function limitText(value: string | null | undefined, maxLength = MAX_TEXT_PARAM_
 }
 
 function trustedImageOrigins(appOrigin: string) {
-  const origins = new Set<string>([appOrigin]);
-  const supabaseUrl = String(publicEnv.PUBLIC_SUPABASE_URL || "").trim();
-  if (supabaseUrl) {
-    try {
-      origins.add(new URL(supabaseUrl).origin);
-    } catch {
-      // Ignora configuração inválida; a validação abaixo permanece fechada para externos.
-    }
-  }
-  return origins;
+  return new Set<string>([appOrigin]);
 }
 
 function isTrustedImageUrl(parsed: URL, appOrigin: string) {
@@ -552,7 +542,7 @@ async function resolveInlineImageHref(sourceUrl: string, appOrigin: string) {
 
 export async function renderCardSvg(event: RequestEvent): Promise<CardRenderResult> {
   const url = new URL(event.request.url);
-  const client = event.locals.supabase;
+  const client = event.locals.dados;
   const sessionContext = await event.locals.safeGetSession().catch(() => ({ user: null }));
   const canReadStoredRows = Boolean(sessionContext?.user);
 

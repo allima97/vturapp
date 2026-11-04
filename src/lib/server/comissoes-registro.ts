@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient } from '$lib/server/data';
 import type { ReportVendaRow } from '$lib/server/relatorios';
 import type { ResolvedReceiptCommission, ResolvedVendaCommission } from '$lib/server/comissoes';
 import { chunkArray, uniqueCleanStrings as uniqueIds } from '$lib/utils/array';
@@ -57,13 +57,13 @@ function getPeriodFromDate(dateIso?: string | null) {
   return { mes: now.getMonth() + 1, ano: now.getFullYear() };
 }
 
-const SUPABASE_IN_BATCH_SIZE = 150;
+const QUERY_IN_BATCH_SIZE = 150;
 
 function buildFilterBatches(filters: Array<{ column: string; values: string[] }>) {
   return filters.reduce<Array<Array<{ column: string; values: string[] }>>>(
     (groups, filter) =>
       groups.flatMap((group) =>
-        chunkArray(filter.values, SUPABASE_IN_BATCH_SIZE).map((values) => [
+        chunkArray(filter.values, QUERY_IN_BATCH_SIZE).map((values) => [
           ...group,
           { column: filter.column, values }
         ])
@@ -91,7 +91,7 @@ export function buildPersistedReciboComissaoKey(
 }
 
 export async function fetchPersistedComissoes(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     vendaIds?: string[];
     reciboIds?: string[];
@@ -152,7 +152,7 @@ export async function fetchPersistedComissoes(
 }
 
 export async function persistPaidComissoes(params: {
-  client: SupabaseClient;
+  client: DataClient;
   userId: string;
   rows: ReportVendaRow[];
   resolvedByKey: Map<string, ResolvedVendaCommission>;
@@ -240,7 +240,7 @@ export type PersistReceiptPaymentRow = {
 };
 
 export async function persistPaidReceiptComissoes(params: {
-  client: SupabaseClient;
+  client: DataClient;
   userId: string;
   rows: PersistReceiptPaymentRow[];
   resolvedByKey: Map<string, ResolvedReceiptCommission>;

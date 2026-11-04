@@ -21,7 +21,7 @@ import {
   scopeCacheTags,
 } from "$lib/server/readModelCache";
 import { DYNAMIC_READ_HEADERS } from "$lib/server/httpCache";
-import { chunkArray, dedupeById as dedupeRowsById, SUPABASE_IN_BATCH_SIZE } from "$lib/utils/array";
+import { chunkArray, dedupeById as dedupeRowsById, QUERY_IN_BATCH_SIZE } from "$lib/utils/array";
 
 type ViagemClienteRow = {
   id: string | null;
@@ -151,7 +151,7 @@ export async function handleViagensClienteIdGet(event: RequestEvent) {
         };
 
         let data: ViagemClienteRow[] = [];
-        if (companyIds.length > SUPABASE_IN_BATCH_SIZE) {
+        if (companyIds.length > QUERY_IN_BATCH_SIZE) {
           for (const batch of chunkArray(companyIds)) {
             data.push(...(await fetchViagens(batch)));
           }

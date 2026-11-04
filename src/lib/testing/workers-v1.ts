@@ -2,7 +2,7 @@
  * Minimal legacy API bridge for Workers integration tests.
  *
  * The v2 Hono middleware imports these two helpers from the v1 module, whose
- * production implementation also initializes Supabase and SvelteKit dynamic
+ * production implementation also initializes Dados and SvelteKit dynamic
  * environment modules. The Workers project exercises v2 with D1/R2 and does
  * not need those legacy integrations.
  */

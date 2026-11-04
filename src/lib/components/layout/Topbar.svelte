@@ -21,8 +21,8 @@
 
   $: currentUser = $auth.user;
   $: userDisplayName =
-    currentUser?.user_metadata?.nome_completo ||
-    currentUser?.user_metadata?.nome ||
+    String(currentUser?.user_metadata?.nome_completo || '') ||
+    String(currentUser?.user_metadata?.nome || '') ||
     currentUser?.email?.split('@')[0] ||
     'Usuario';
   $: userEmail = currentUser?.email || 'Sem email';
@@ -74,7 +74,7 @@
       });
       if (!response.ok) throw new Error('logout_failed');
       // Usa window.location.assign em vez de goto() para evitar uncaught promise
-      // quando o Supabase dispara SIGNED_OUT via BroadcastChannel ao mesmo tempo
+      // quando o Dados dispara SIGNED_OUT via BroadcastChannel ao mesmo tempo
       window.location.assign('/auth/login');
     } catch {
       toast.error('Erro ao fazer logout.');

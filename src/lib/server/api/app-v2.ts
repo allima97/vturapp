@@ -1,7 +1,7 @@
 /**
  * App Hono da API /api/v2 — F2: identidade e autorização.
  *
- * Rotas F2 usam Better Auth + D1 diretamente (sem Supabase).
+ * Rotas F2 usam Better Auth + D1 diretamente (sem Dados).
  * Paralelo ao app-v1 existente; não altera as rotas /api/v1/*.
  *
  * Middlewares globais (F2-05 / F2-06):

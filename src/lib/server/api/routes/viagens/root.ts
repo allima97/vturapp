@@ -22,7 +22,7 @@ import {
   READ_MODEL_TAGS,
   scopeCacheTags,
 } from "$lib/server/readModelCache";
-import { chunkArray, SUPABASE_IN_BATCH_SIZE } from "$lib/utils/array";
+import { chunkArray, QUERY_IN_BATCH_SIZE } from "$lib/utils/array";
 
 const DEFAULT_LIST_LIMIT = 300;
 const MAX_LIST_LIMIT = 500;
@@ -337,7 +337,7 @@ export async function handleViagensGet(event: RequestEvent) {
           ) => ViagensListQueryBuilder,
           limitRows: number,
         ) => {
-          const companyBatches = companyIds.length > SUPABASE_IN_BATCH_SIZE ? chunkArray(companyIds) : [companyIds];
+          const companyBatches = companyIds.length > QUERY_IN_BATCH_SIZE ? chunkArray(companyIds) : [companyIds];
           const batchRows = await Promise.all(companyBatches.map(async (batch) => {
             const result = await configure(buildQuery(selectFields, batch)).limit(limitRows);
             if (result.error) throw result.error;
@@ -373,7 +373,7 @@ export async function handleViagensGet(event: RequestEvent) {
             ),
             ordenar,
           ).slice(from, to + 1);
-        } else if (companyIds.length > SUPABASE_IN_BATCH_SIZE) {
+        } else if (companyIds.length > QUERY_IN_BATCH_SIZE) {
           const rows = await fetchBatchedViagens(VIAGENS_LIST_SELECT, (query) => query, to + 1);
           scopedData = sortViagemRows(mergeUniqueViagemRows(rows), ordenar).slice(from, to + 1);
         } else {

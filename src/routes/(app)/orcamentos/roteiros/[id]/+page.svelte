@@ -4,7 +4,7 @@
   import { goto } from '$app/navigation';
   import { browser } from '$app/environment';
   import { onDestroy, onMount } from 'svelte';
-  import { supabase } from '$lib/db/supabase';
+  import { browserData as dados } from '$lib/db/browserData';
   import { construirLinkWhatsApp } from '$lib/whatsapp';
   import { mergeImportedRoteiroAereo, parseImportedRoteiroAereo } from '$lib/roteiroAereoImport';
   import { parseImportedRoteiroHotels } from '$lib/roteiroHotelImport';
@@ -904,7 +904,7 @@
     if (!storagePath) return null;
 
     try {
-      const { data: blob, error } = await supabase.storage.from('quotes').download(storagePath);
+      const { data: blob, error } = await dados.storage.from('quotes').download(storagePath);
       if (error || !blob) return null;
       const dataUrl = await blobToDataUrl(blob, guessMimeFromPath(storagePath));
       return dataUrl || null;

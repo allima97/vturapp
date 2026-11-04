@@ -1,3 +1,4 @@
+import type { DataClient } from '$lib/dataClientTypes';
 /**
  * Lógica de Rateio de Vendas — vtur-svelte
  *
@@ -11,11 +12,10 @@
  *  - rateio_source_recibo_id preserva o ID original (sem sufixo ::rateio:)
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   cleanStringSet,
   chunkArray,
-  SUPABASE_IN_BATCH_SIZE,
+  QUERY_IN_BATCH_SIZE,
   uniqueCleanStrings
 } from '$lib/utils/array';
 import { toCleanString as toStr, toFiniteNumber as toNumber } from '$lib/utils/values';
@@ -132,7 +132,7 @@ export function cloneReciboWithFactor<T extends ReciboLike>(
  * Portabilizado fielmente do vtur-app fetchRateioByReciboIds().
  */
 export async function fetchRateioByReciboIds(
-  client: SupabaseClient,
+  client: DataClient,
   reciboIds: string[]
 ): Promise<Map<string, RateioRow>> {
   const ids = uniqueCleanStrings((reciboIds || []).map((id) => normalizeReciboLookupId(id)));
@@ -142,7 +142,7 @@ export async function fetchRateioByReciboIds(
 
   const byConcReciboRows: RateioRow[] = [];
 
-  for (const chunk of chunkArray(ids, SUPABASE_IN_BATCH_SIZE)) {
+  for (const chunk of chunkArray(ids, QUERY_IN_BATCH_SIZE)) {
     const { data: byVendaRecibo, error: byVendaErr } = await client
       .from('vendas_recibos_rateio')
       .select(
@@ -176,7 +176,7 @@ export async function fetchRateioByReciboIds(
   // Cross-reference: conciliacao_recibo_id -> venda_recibo_id
   const concIds = uniqueCleanStrings(byConcReciboRows.map((row) => row?.conciliacao_recibo_id)).filter(isUuid);
   if (concIds.length > 0) {
-    for (const chunk of chunkArray(concIds, SUPABASE_IN_BATCH_SIZE)) {
+    for (const chunk of chunkArray(concIds, QUERY_IN_BATCH_SIZE)) {
       const { data: concRows, error: concErr } = await client
         .from('conciliacao_recibos')
         .select('id, venda_recibo_id')
@@ -202,7 +202,7 @@ export async function fetchRateioByReciboIds(
  * Portabilizado fielmente do vtur-app fetchSplitSaleIdsForDestinationVendedores().
  */
 export async function fetchSplitSaleIdsForDestinationVendedores(
-  client: SupabaseClient,
+  client: DataClient,
   options: {
     companyId?: string | null;
     companyIds?: string[] | null;
@@ -215,9 +215,9 @@ export async function fetchSplitSaleIdsForDestinationVendedores(
 
   const splitRows: SplitRateioLookupRow[] = [];
   const companyBatches =
-    scopedCompanyIds.length > 0 ? chunkArray(scopedCompanyIds, SUPABASE_IN_BATCH_SIZE) : [null];
+    scopedCompanyIds.length > 0 ? chunkArray(scopedCompanyIds, QUERY_IN_BATCH_SIZE) : [null];
   for (const companyBatch of companyBatches) {
-    for (const vendedorBatch of chunkArray(scopedVendedorIds, SUPABASE_IN_BATCH_SIZE)) {
+    for (const vendedorBatch of chunkArray(scopedVendedorIds, QUERY_IN_BATCH_SIZE)) {
       let splitQuery = client
         .from('vendas_recibos_rateio')
         .select('venda_recibo_id, conciliacao_recibo_id')
@@ -241,7 +241,7 @@ export async function fetchSplitSaleIdsForDestinationVendedores(
   const vendaIds = new Set<string>();
 
   if (vendaReciboIds.length > 0) {
-    for (const batch of chunkArray(vendaReciboIds, SUPABASE_IN_BATCH_SIZE)) {
+    for (const batch of chunkArray(vendaReciboIds, QUERY_IN_BATCH_SIZE)) {
       const { data: recibosRows, error: recibosErr } = await client
         .from('vendas_recibos')
         .select('id, venda_id')
@@ -255,7 +255,7 @@ export async function fetchSplitSaleIdsForDestinationVendedores(
   }
 
   if (concReciboIds.length > 0) {
-    for (const batch of chunkArray(concReciboIds, SUPABASE_IN_BATCH_SIZE)) {
+    for (const batch of chunkArray(concReciboIds, QUERY_IN_BATCH_SIZE)) {
       const { data: concRows, error: concErr } = await client
         .from('conciliacao_recibos')
         .select('id, venda_id')

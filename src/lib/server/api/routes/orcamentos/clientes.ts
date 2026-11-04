@@ -19,7 +19,7 @@ import {
   READ_MODEL_TAGS,
   scopeCacheTags,
 } from "$lib/server/readModelCache";
-import { chunkArray, SUPABASE_IN_BATCH_SIZE } from "$lib/utils/array";
+import { chunkArray, QUERY_IN_BATCH_SIZE } from "$lib/utils/array";
 
 type OrcamentoClienteRow = {
   id: string;
@@ -114,7 +114,7 @@ export async function handleOrcamentosClientesGet(event: RequestEvent) {
           return query;
         };
 
-        if (scopedClientIds && scopedClientIds.length > SUPABASE_IN_BATCH_SIZE) {
+        if (scopedClientIds && scopedClientIds.length > QUERY_IN_BATCH_SIZE) {
           const rows: OrcamentoClienteRow[] = [];
           for (const batch of chunkArray(scopedClientIds)) {
             const { data, error } = await buildQuery(batch);
@@ -126,7 +126,7 @@ export async function handleOrcamentosClientesGet(event: RequestEvent) {
           return dedupeClientes(rows).slice(0, 500);
         }
 
-        if (!scopedClientIds && companyIds.length > SUPABASE_IN_BATCH_SIZE) {
+        if (!scopedClientIds && companyIds.length > QUERY_IN_BATCH_SIZE) {
           const rows: OrcamentoClienteRow[] = [];
           for (const batch of chunkArray(companyIds)) {
             const { data, error } = await buildQuery(undefined, batch);

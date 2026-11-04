@@ -144,13 +144,13 @@ drizzle/
 npm run d1:migrate:local
 # → wrangler d1 migrations apply vturapp-db --local
 
-# Staging
+# Staging (D1 remoto; Wrangler 4 sem --remote grava só no D1 local)
 npm run d1:migrate:staging
-# → wrangler d1 migrations apply vturapp-db-staging --env staging
+# → wrangler d1 migrations apply vturapp-db-staging --remote --env staging
 
 # Produção
 npm run d1:migrate:prod
-# → wrangler d1 migrations apply vturapp-db --env production
+# → wrangler d1 migrations apply vturapp-db --remote --env production
 ```
 
 ### Gerar nova migration após alterar schema

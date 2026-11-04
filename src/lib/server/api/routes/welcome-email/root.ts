@@ -171,7 +171,7 @@ export const handleWelcomeEmailPost = async (event: RequestEvent) => {
     if (payloadError) return payloadError;
 
     const user = await requireAuthenticatedUser(event);
-    const client = locals.supabase;
+    const client = locals.dados;
 
     const rl = await checkPersistentRateLimit('welcome-email', user.id, { max: 5, windowMs: 60_000 }, event.platform?.env?.DB);
     if (!rl.allowed) {

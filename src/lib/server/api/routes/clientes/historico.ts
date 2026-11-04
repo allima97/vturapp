@@ -25,7 +25,7 @@ function sortByDateDesc<T>(items: T[], getDate: (item: T) => string | null) {
   );
 }
 
-const SUPABASE_IN_BATCH_SIZE = 150;
+const QUERY_IN_BATCH_SIZE = 150;
 
 type ClienteHistoricoVenda = {
   id: string;
@@ -110,7 +110,7 @@ async function fetchBatched<T>(
   loader: (batch: string[]) => PromiseLike<{ data: T[] | null; error: unknown }>
 ) {
   const batchResults = await Promise.all(
-    chunkArray(values, SUPABASE_IN_BATCH_SIZE).map(async (batch) => {
+    chunkArray(values, QUERY_IN_BATCH_SIZE).map(async (batch) => {
       const { data, error } = await loader(batch);
       if (error) throw error;
       return data || [];
@@ -166,9 +166,9 @@ export async function handleClientesHistoricoGet(event: RequestEvent) {
         const fetchScopedVendas = async (buildBaseQuery: () => ScopedVendasQuery) => {
           const rows: VendaHistoricoRow[] = [];
           const companyBatches =
-            filters.companyIds.length > 0 ? chunkArray(filters.companyIds, SUPABASE_IN_BATCH_SIZE) : [null];
+            filters.companyIds.length > 0 ? chunkArray(filters.companyIds, QUERY_IN_BATCH_SIZE) : [null];
           const vendedorBatches =
-            filters.vendedorIds.length > 0 ? chunkArray(filters.vendedorIds, SUPABASE_IN_BATCH_SIZE) : [null];
+            filters.vendedorIds.length > 0 ? chunkArray(filters.vendedorIds, QUERY_IN_BATCH_SIZE) : [null];
 
           for (const companyBatch of companyBatches) {
             for (const vendedorBatch of vendedorBatches) {
@@ -196,7 +196,7 @@ export async function handleClientesHistoricoGet(event: RequestEvent) {
           )
           .eq('client_id', clienteId)
           .order('created_at', { ascending: false })
-          .then((response) => response);
+          .then((response: any) => response);
         // Se o titular falhar antes, a resposta dos orçamentos é descartada sem gerar rejeição solta.
         quotesPromise.then(undefined, () => undefined);
 

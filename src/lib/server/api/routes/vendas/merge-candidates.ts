@@ -14,7 +14,7 @@ import {
 } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { fetchSaleForScope } from '$lib/server/salesScope';
-import { chunkArray, SUPABASE_IN_BATCH_SIZE, uniqueCleanStrings } from '$lib/utils/array';
+import { chunkArray, QUERY_IN_BATCH_SIZE, uniqueCleanStrings } from '$lib/utils/array';
 
 type MergeCandidateSaleRow = {
   id?: string | null;
@@ -107,7 +107,7 @@ export async function handleVendasMergeCandidatesGet(event: RequestEvent) {
       .neq('id', currentSale.id)
       .order('data_venda', { ascending: false });
 
-    if (companyIds.length > 0 && companyIds.length <= SUPABASE_IN_BATCH_SIZE) {
+    if (companyIds.length > 0 && companyIds.length <= QUERY_IN_BATCH_SIZE) {
       query = query.in('company_id', companyIds);
     }
 
@@ -115,7 +115,7 @@ export async function handleVendasMergeCandidatesGet(event: RequestEvent) {
     if (salesError) throw salesError;
 
     const scopedSalesData = ((salesData || []) as MergeCandidateSaleRow[]).filter((row) => {
-      if (companyIds.length === 0 || companyIds.length <= SUPABASE_IN_BATCH_SIZE) return true;
+      if (companyIds.length === 0 || companyIds.length <= QUERY_IN_BATCH_SIZE) return true;
       return companyScopeSet.has(String(row?.company_id || '').trim());
     });
 

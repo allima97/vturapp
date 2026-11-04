@@ -132,7 +132,7 @@ describe('carregarTermosNaoComissionaveis', () => {
   it.each([
     ['tabela vazia', { data: [] }, false],
     ['data null', { data: null }, false],
-    ['erro do Supabase', { error: { message: 'permission denied' } }, true],
+    ['erro do Dados', { error: { message: 'permission denied' } }, true],
     ['exceção', { throws: new Error('network') }, true],
   ] as const)('%s → lista padrão', async (_label, result, reportsError) => {
     const onError = vi.fn();

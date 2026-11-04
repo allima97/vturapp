@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createFakeSupabase } from '$lib/server/testing/fakeSupabase';
+import { createFakeDados } from '$lib/server/testing/fakeDados';
 import {
   currentMonthStartBrazil,
   markNightlyReadModelMonthsDirty,
@@ -60,7 +60,7 @@ describe('rodada noturna do read model', () => {
   });
 
   it('marca como dirty em um único upsert, só para empresas ativas', async () => {
-    const db = createFakeSupabase({
+    const db = createFakeDados({
       companies: [
         { id: EMP, active: true },
         { id: 'e3cfd4d6-d533-4629-8f51-22cdf9211d9e', active: false },

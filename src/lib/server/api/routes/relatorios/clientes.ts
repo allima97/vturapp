@@ -1,8 +1,8 @@
+import type { DataClient } from '$lib/server/data';
 // Migrado para Hono de src/routes/api/v1/relatorios/clientes/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from "@sveltejs/kit";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   ensureModuloAccess,
   getAdminClient,
@@ -118,7 +118,7 @@ function toClienteDisplayItem(
   };
 }
 
-async function fetchClientesByIds(client: SupabaseClient, ids: string[]) {
+async function fetchClientesByIds(client: DataClient, ids: string[]) {
   const clientesById = new Map<string, ClienteLookupRow>();
   const cleanIds = uniqueCleanStrings(ids);
   if (cleanIds.length === 0) return clientesById;

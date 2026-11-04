@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { DataClient } from '$lib/dataClientTypes';
 import {
   calcularValorVendaReal,
   isConciliacaoEfetivada,
@@ -214,7 +214,7 @@ function isSeguroPorComissao(valorComissao: unknown, valorBase: unknown) {
   return isSeguroPercentual((comissao / base) * 100);
 }
 
-function carregarTermosNaoComissionaveis(client: SupabaseClient): Promise<string[]> {
+function carregarTermosNaoComissionaveis(client: DataClient): Promise<string[]> {
   return carregarTermosNaoComissionaveisBase(client, {
     onError: (error) =>
       logSourceWarning(
@@ -395,7 +395,7 @@ export function filterRecibosCanceladosMesmoMes<
 }
 
 export async function fetchSuppressedConciliacaoReceipts(params: {
-  client: SupabaseClient;
+  client: DataClient;
   companyId: string | null;
   companyIds?: string[] | null;
   inicio: string;
@@ -502,7 +502,7 @@ export async function fetchSuppressedConciliacaoReceipts(params: {
 }
 
 export async function fetchEffectiveConciliacaoReceipts(params: {
-  client: SupabaseClient;
+  client: DataClient;
   companyId: string | null;
   companyIds?: string[] | null;
   inicio: string;

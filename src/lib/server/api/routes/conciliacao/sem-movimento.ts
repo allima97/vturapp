@@ -139,7 +139,7 @@ export async function handleConciliacaoSemMovimentoPost(event: RequestEvent) {
     if (error) {
       if (isTableMissingError(error, 'conciliacao_dias_sem_movimento')) {
         return json(
-          { error: 'A tabela de dias sem movimento ainda não foi provisionada no ambiente. Execute a migração 20260430_conciliacao_dias_sem_movimento.sql no Supabase.' },
+          { error: 'A tabela de dias sem movimento ainda não foi provisionada no ambiente. Execute a migração 20260430_conciliacao_dias_sem_movimento.sql no Dados.' },
           { status: 503, headers: NO_STORE_HEADERS }
         );
       }

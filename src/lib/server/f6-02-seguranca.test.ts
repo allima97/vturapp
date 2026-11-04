@@ -41,8 +41,9 @@ async function buildApp() {
     TURNSTILE_SECRET_KEY: 'test',
     VITE_PUBLIC_TURNSTILE_SITE_KEY: 'test',
     CF_PAGES_URL: 'http://localhost:5173',
-  } as unknown as Parameters<typeof createApiAppV2>[0];
-  return createApiAppV2(fakeEnv);
+  } as unknown as Record<string, unknown>;
+  void fakeEnv;
+  return createApiAppV2();
 }
 
 // ── Suíte Q: Análise estática ─────────────────────────────────────────────────

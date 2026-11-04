@@ -1,9 +1,9 @@
+import type { DataClient } from '$lib/server/data';
 // Migrado para Hono de src/routes/api/v1/parametros/escalas/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import { registrarLog } from '$lib/server/auditLog';
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   ensureModuloAccess,
   fetchVendedorIdsByCompanyIds,
@@ -25,7 +25,7 @@ import {
 import { fetchWithTimeout } from '$lib/server/fetchWithTimeout';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
-import { cleanStringSet, chunkArray, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { cleanStringSet, chunkArray, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const MAX_PARAMETROS_ESCALAS_BODY_BYTES = 512 * 1024;
 const PT_BR_COLLATOR = new Intl.Collator('pt-BR');
@@ -142,7 +142,7 @@ async function fetchFeriadosNacionais(ano: number, periodo: string) {
   }
 }
 
-async function resolveEquipeIds(client: SupabaseClient, scope: Awaited<ReturnType<typeof resolveUserScope>>) {
+async function resolveEquipeIds(client: DataClient, scope: Awaited<ReturnType<typeof resolveUserScope>>) {
   if (scope.isGestor) {
     const companyIds = scope.companyIds.length > 0
       ? scope.companyIds
@@ -169,7 +169,7 @@ async function resolveEquipeIds(client: SupabaseClient, scope: Awaited<ReturnTyp
   return [scope.userId];
 }
 
-async function ensureEscalaMes(client: SupabaseClient, scope: Awaited<ReturnType<typeof resolveUserScope>>, periodo: string) {
+async function ensureEscalaMes(client: DataClient, scope: Awaited<ReturnType<typeof resolveUserScope>>, periodo: string) {
   const periodoFull = normalizePeriod(periodo);
   if (!periodoFull) throw new Error('Período inválido.');
 
@@ -264,7 +264,7 @@ export async function handleParametrosEscalasGet(event: RequestEvent) {
 
         const fetchMeses = async () => {
           const companyIdsFilter = (scope.companyIds || []).filter(Boolean);
-          if (scope.isAdmin || companyIdsFilter.length <= SUPABASE_IN_BATCH_SIZE) {
+          if (scope.isAdmin || companyIdsFilter.length <= QUERY_IN_BATCH_SIZE) {
             return buildMesQuery(companyIdsFilter);
           }
 
@@ -295,9 +295,9 @@ export async function handleParametrosEscalasGet(event: RequestEvent) {
         // Busca dias da escala para o período selecionado
         let dias: EscalaDiaRow[] = [];
         if (periodo && meses && meses.length > 0) {
-          const mesIds = meses.map((m) => String(m.id || '')).filter(Boolean);
+          const mesIds = meses.map((m: any) => String(m.id || '')).filter(Boolean);
           for (const mesBatch of chunkArray(mesIds)) {
-            for (const equipeBatch of (equipeIds.length > SUPABASE_IN_BATCH_SIZE ? chunkArray(equipeIds) : [equipeIds])) {
+            for (const equipeBatch of (equipeIds.length > QUERY_IN_BATCH_SIZE ? chunkArray(equipeIds) : [equipeIds])) {
               let diasQuery = client
                 .from('escala_dia')
                 .select('id, escala_mes_id, usuario_id, data, tipo, hora_inicio, hora_fim, observacao, usuario:users!usuario_id(id, nome_completo)')
@@ -353,7 +353,7 @@ export async function handleParametrosEscalasGet(event: RequestEvent) {
             return feriadosQuery;
           };
           const companyIdsFilter = (scope.companyIds || []).filter(Boolean);
-          if (scope.isAdmin || companyIdsFilter.length <= SUPABASE_IN_BATCH_SIZE) {
+          if (scope.isAdmin || companyIdsFilter.length <= QUERY_IN_BATCH_SIZE) {
             const { data } = await buildFeriadosQuery(companyIdsFilter);
             return data || [];
           }
@@ -399,7 +399,7 @@ export async function handleParametrosEscalasGet(event: RequestEvent) {
 
 // Auditoria (mesmo formato do histórico da tabela logs): empresa e gestor vêm do mês da escala.
 // Lidos em background, depois da resposta, para não atrasar o salvamento.
-async function escalaMesAuditInfo(client: SupabaseClient, escalaMesId: string) {
+async function escalaMesAuditInfo(client: DataClient, escalaMesId: string) {
   const { data } = await client
     .from('escala_mes')
     .select('company_id, gestor_id')
@@ -415,7 +415,7 @@ async function escalaMesAuditInfo(client: SupabaseClient, escalaMesId: string) {
 }
 
 async function escalaLoteAuditDetalhes(
-  client: SupabaseClient,
+  client: DataClient,
   scope: Awaited<ReturnType<typeof resolveUserScope>>,
   escalaMesId: string,
   usuarioId: string,

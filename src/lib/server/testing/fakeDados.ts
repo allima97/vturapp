@@ -17,7 +17,7 @@ export type FakeQueryLog = {
   values?: Row | Row[];
 };
 
-export type FakeSupabase = {
+export type FakeDados = {
   from: (table: string) => FakeBuilder;
   log: FakeQueryLog[];
   stats: { inFlight: number; maxInFlight: number };
@@ -41,10 +41,10 @@ export interface FakeBuilder extends PromiseLike<Result> {
   maybeSingle: () => Promise<Result>;
 }
 
-export function createFakeSupabase(
+export function createFakeDados(
   tables: Record<string, Row[]>,
   { delayMs = 5 }: { delayMs?: number } = {}
-): FakeSupabase {
+): FakeDados {
   const log: FakeQueryLog[] = [];
   const stats = { inFlight: 0, maxInFlight: 0 };
 

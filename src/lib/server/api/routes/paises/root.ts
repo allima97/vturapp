@@ -80,7 +80,7 @@ export async function handlePaisesGet(event: RequestEvent) {
         let items = data || [];
         if (q) {
           const qLower = q.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          items = items.filter((item) =>
+          items = items.filter((item: any) =>
             String(item.nome || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(qLower) ||
             String(item.codigo_iso || '').toLowerCase().includes(qLower)
           );

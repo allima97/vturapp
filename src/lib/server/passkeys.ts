@@ -12,7 +12,8 @@ import {
 } from '@simplewebauthn/server';
 import type { RequestEvent } from '@sveltejs/kit';
 import { error, json } from '@sveltejs/kit';
-import { createSupabaseServerClient, getSupabaseAuthStorageKey } from '$lib/db/supabase';
+import { getDataContext } from '$lib/server/data';
+import { openUserSession } from '$lib/server/data/authApi';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { getAdminClient, isProductionRuntime, isUuid, logServerError } from '$lib/server/v1';
 
@@ -54,7 +55,7 @@ type ErrorDetails = {
   } | null;
 };
 
-type SupabaseLinkData = {
+type DadosLinkData = {
   properties?: {
     hashed_token?: string | null;
   } | null;
@@ -216,55 +217,26 @@ async function consumeChallenge(challengeId: string) {
   }
 }
 
-async function createSupabaseSessionForUser(event: RequestEvent, userId: string) {
+async function createDadosSessionForUser(event: RequestEvent, userId: string) {
+  const context = getDataContext();
+  if (!context) throw error(500, 'Banco indisponivel.');
+  context.cookies = {
+    get: (name) => event.cookies.get(name),
+    set: (name, value, options) => event.cookies.set(name, value, { path: '/', ...(options || {}) }),
+    delete: (name, options) => event.cookies.delete(name, { path: '/', ...(options || {}) }),
+  };
   const admin = getAdminClient();
   const { data: userData, error: userError } = await admin.auth.admin.getUserById(userId);
   const user = userData?.user;
-
   if (userError || !user?.email) {
     logServerError('[passkeys] falha ao buscar usuario auth', userError);
     throw error(401, 'Usuário da passkey não encontrado.');
   }
-
-  const { data: linkData, error: linkError } = await admin.auth.admin.generateLink({
-    type: 'magiclink',
-    email: user.email
-  });
-
-  const tokenHash = (linkData as SupabaseLinkData | null)?.properties?.hashed_token;
-  if (linkError || !tokenHash) {
-    logServerError('[passkeys] falha ao gerar sessao Supabase', linkError);
-    throw error(500, 'Erro ao criar sessão por passkey.');
-  }
-
-  const supabase = createSupabaseServerClient({
-    get: (name) => event.cookies.get(name),
-    getAll: () => event.cookies.getAll().map((cookie) => ({ name: cookie.name, value: cookie.value })),
-    set: (name, value, options) => {
-      event.cookies.set(name, value, { ...options, path: '/' });
-    },
-    remove: (name, options) => {
-      event.cookies.delete(name, { ...options, path: '/' });
-    }
-  });
-
-  const { data, error: verifyError } = await supabase.auth.verifyOtp({
-    token_hash: tokenHash,
-    type: 'magiclink'
-  });
-
-  if (verifyError || !data.session) {
-    logServerError('[passkeys] falha ao verificar magic link interno', verifyError);
-    throw error(401, 'Passkey validada, mas a sessão não foi criada.');
-  }
-
-  event.cookies.delete('sb-access-token', { path: '/' });
-  event.cookies.delete('sb-refresh-token', { path: '/' });
-
+  await openUserSession(context, userId);
   return {
-    user: data.user,
-    session: data.session,
-    storageKey: getSupabaseAuthStorageKey()
+    user,
+    session: { access_token: 'cookie', refresh_token: 'cookie', user },
+    storageKey: 'sessao',
   };
 }
 
@@ -526,7 +498,7 @@ export async function verifyAuthentication(params: {
       logServerError('[passkeys] passkey validada, mas contador nao foi atualizado', updateError);
     }
 
-    return createSupabaseSessionForUser(params.event, row.user_id);
+    return createDadosSessionForUser(params.event, row.user_id);
   } finally {
     await consumeChallenge(challenge.id);
   }

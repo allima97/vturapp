@@ -10,19 +10,16 @@ declare global {
 
     /**
      * Locals preenchidos pelo hooks.server.ts.
-     *
-     * F2-02: adicionados campos Better Auth + tenant.
-     * Os campos Supabase permanecem para as rotas existentes até F5+.
+     * Sessao e dados vem de Better Auth + D1.
      */
     interface Locals {
-      // ── Legado Supabase (remover em F5-04) ──────────────────────────────
-      supabase: import('@supabase/supabase-js').SupabaseClient;
+      dados: import('$lib/server/data').DataClient;
       safeGetSession(): Promise<{
-        session: import('@supabase/supabase-js').Session | null;
-        user: import('@supabase/supabase-js').User | null;
+        session: import('$lib/server/data').AuthSession | null;
+        user: import('$lib/server/data').AuthUser | null;
       }>;
-      session?: import('@supabase/supabase-js').Session | null;
-      user?: import('@supabase/supabase-js').User | null;
+      session?: import('$lib/server/data').AuthSession | null;
+      user?: import('$lib/server/data').AuthUser | null;
       userType?: string;
       isSystemAdmin?: boolean;
       acessos?: Record<string, string>;
@@ -69,9 +66,8 @@ declare global {
     }
 
     interface PageData {
-      // ── Legado Supabase (remover em F5-04) ──────────────────────────────
-      session: import('@supabase/supabase-js').Session | null;
-      user: import('@supabase/supabase-js').User | null;
+      session: import('$lib/server/data').AuthSession | null;
+      user: import('$lib/server/data').AuthUser | null;
     }
 
     interface PageState {
@@ -99,11 +95,6 @@ declare global {
         PUBLIC_ENVIRONMENT?: string;
         PUBLIC_TURNSTILE_SITE_KEY?: string;
         TURNSTILE_SECRET_KEY?: string;
-
-        // ── Legado Supabase (remover em F5-04) ───────────────────────────
-        PUBLIC_SUPABASE_URL?: string;
-        PUBLIC_SUPABASE_ANON_KEY?: string;
-        SUPABASE_SERVICE_ROLE_KEY?: string;
         CRON_SECRET?: string;
         WORKER_BASE_URL?: string;
       };

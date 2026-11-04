@@ -90,12 +90,12 @@ export async function handleTarefasGet(event: RequestEvent) {
         const items = (data || [])
           .map(mapTodoRow)
           .filter(Boolean)
-          .filter((row) => {
+          .filter((row: any) => {
             if (!row) return false;
             if (!status || status === "todas") return true;
             return normalizeVisibleTodoStatus(row.status) === status;
           })
-          .map((row) => ({
+          .map((row: any) => ({
             ...row,
             categoria_nome:
               categoriasMap.get(String(row?.categoria_id || "")) ||

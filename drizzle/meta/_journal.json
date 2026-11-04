@@ -43,6 +43,76 @@
       "when": 1793364365246,
       "tag": "0005_f4_vendas",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1793500000000,
+      "tag": "0006_f4_04_indices",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1793600000000,
+      "tag": "0007_m10_destinos",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1793700000000,
+      "tag": "0008_m08_agenda",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1793800000000,
+      "tag": "0009_m09_mural",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1793900000000,
+      "tag": "0010_m12_auditoria",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1794000000000,
+      "tag": "0011_m01_legacy_access_model",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1794100000000,
+      "tag": "0012_security_rate_limits",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1794200000000,
+      "tag": "0013_legado_catalogo",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1794300000000,
+      "tag": "0014_legado_indices",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1794400000000,
+      "tag": "0015_legado_fks",
+      "breakpoints": true
     }
   ]
 }

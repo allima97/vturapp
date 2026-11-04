@@ -1,7 +1,7 @@
+import type { DataClient } from '$lib/server/data';
 // Migrado para Hono de src/routes/api/v1/viagens/dossie-batch/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import { json, type RequestEvent } from "@sveltejs/kit";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   ensureModuloAccess,
   getAdminClient,
@@ -62,7 +62,7 @@ function vendedorOwnsViagem(userId: string, viagem: ViagemDossieBatchRow) {
 }
 
 async function loadDossie(
-  client: SupabaseClient,
+  client: DataClient,
   viagemId: string,
   companyId: string,
   userId: string,
@@ -189,7 +189,7 @@ async function loadDossie(
     grau_parentesco?: string | null;
     data_nascimento?: string | null;
   }> = [];
-  const clienteBaseId = firstVendedorRelation(detalhe?.venda)?.cliente_id || null;
+  const clienteBaseId = (firstVendedorRelation(detalhe?.venda) as { cliente_id?: string | null } | null)?.cliente_id || null;
   if (clienteBaseId) {
     const { data } = await client
       .from("cliente_acompanhantes")

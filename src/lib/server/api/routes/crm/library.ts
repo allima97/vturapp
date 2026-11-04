@@ -1,7 +1,7 @@
+import type { DataClient } from '$lib/server/data';
 import { VTUR_LOGO_PATH } from "$lib/brand";
 // Migrado para Hono de src/routes/api/v1/crm/library/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAdminClient, logServerError, requireAuthenticatedUser, resolveUserScope } from '$lib/server/v1';
 import {
   OFFICIAL_CARD_THEMES,
@@ -182,7 +182,7 @@ function mergeMessagesWithOfficial(userId: string, companyId: string | null, the
   return Array.from(merged.values());
 }
 
-async function fetchThemes(client: SupabaseClient): Promise<ThemeFetchResult> {
+async function fetchThemes(client: DataClient): Promise<ThemeFetchResult> {
   const result = await client.from("user_message_template_themes").select(THEME_SELECT).order("nome");
   return {
     data: ((result.data || []) as LegacyThemeRow[]).map((row) => ({
@@ -195,7 +195,7 @@ async function fetchThemes(client: SupabaseClient): Promise<ThemeFetchResult> {
 
 export async function handleCrmLibraryGet(event: import('@sveltejs/kit').RequestEvent) {
   try {
-    const authClient = event.locals.supabase;
+    const authClient = event.locals.dados;
     const user = await requireAuthenticatedUser(event);
     const scope = await resolveUserScope(authClient, user.id);
     const userId = user.id;
@@ -219,7 +219,7 @@ export async function handleCrmLibraryGet(event: import('@sveltejs/kit').Request
     }
     if (currentCompanyId) masterCompanyIds.add(currentCompanyId);
 
-    const dataClient: SupabaseClient = getAdminClient();
+    const dataClient: DataClient = getAdminClient();
 
     const [catsResp, themesResp, messagesResp, sigResp, settingsResp] = await Promise.all([
       dataClient

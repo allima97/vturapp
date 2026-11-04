@@ -33,8 +33,39 @@ export default defineWorkspace([
     }
   },
   defineWorkersProject({
+    plugins: [
+      {
+        name: 'better-auth-telemetry-sem-fs',
+        enforce: 'pre',
+        resolveId(id) {
+          if (id === '@better-auth/telemetry') {
+            return new URL(
+              './node_modules/@better-auth/telemetry/dist/index.mjs',
+              import.meta.url
+            ).pathname;
+          }
+        }
+      }
+    ],
+    ssr: {
+      noExternal: ['better-auth', '@better-auth/telemetry', '@better-auth/core'],
+      resolve: {
+        conditions: ['workerd', 'worker', 'browser', 'module', 'import', 'default']
+      }
+    },
     resolve: {
       alias: {
+        '@better-auth/telemetry': new URL(
+          './node_modules/@better-auth/telemetry/dist/index.mjs',
+          import.meta.url
+        ).pathname,
+        '$test/request-store': new URL(
+          './node_modules/@sveltejs/kit/src/exports/internal/server.js',
+          import.meta.url
+        ).pathname,
+        '$app/environment': new URL('./src/lib/testing/app-environment.ts', import.meta.url).pathname,
+        '$env/dynamic/private': new URL('./src/lib/testing/env-dynamic.ts', import.meta.url).pathname,
+        '$env/dynamic/public': new URL('./src/lib/testing/env-dynamic.ts', import.meta.url).pathname,
         '$lib/server/v1': new URL('./src/lib/testing/workers-v1.ts', import.meta.url).pathname,
         '$lib/auth': new URL('./src/lib/testing/workers-auth.ts', import.meta.url).pathname,
         $lib: new URL('./src/lib', import.meta.url).pathname

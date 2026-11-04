@@ -20,21 +20,22 @@
 
 ```bash
 # Verificar quais estão pendentes
-wrangler d1 migrations list vturapp-db-staging --env staging
+wrangler d1 migrations list vturapp-db-staging --remote --env staging
 
-# Aplicar explicitamente (nunca "auto-apply" em produção)
+# Aplicar explicitamente no D1 remoto (nunca "auto-apply" em produção)
 npm run d1:migrate:staging
 # equivale a:
-# wrangler d1 migrations apply vturapp-db-staging --env staging
+# wrangler d1 migrations apply vturapp-db-staging --remote --env staging
 ```
 
 - [ ] Migrations aplicadas em staging
 - [ ] Resultado verificado: `wrangler d1 migrations list vturapp-db-staging --env staging` → nenhuma pendente
+- [ ] Primeiro administrador criado com `npm run bootstrap:admin -- --env staging --email admin@vtur.com.br` (a senha fica em `.secrets/bootstrap-admin-staging.txt`, modo 600)
 
 ### Produção
 
 ```bash
-wrangler d1 migrations list vturapp-db --env production
+wrangler d1 migrations list vturapp-db --remote --env production
 npm run d1:migrate:prod
 ```
 

@@ -23,7 +23,7 @@ import {
   scopeCacheTags
 } from '$lib/server/readModelCache';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
-import { chunkArray, dedupeById, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { chunkArray, dedupeById, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const MAX_PAGAMENTO_BODY_BYTES = 64 * 1024;
 type PagamentoListRow = {
@@ -145,7 +145,7 @@ export async function handlePagamentosGet(event: RequestEvent) {
       ttlMs: 120_000,
       staleTtlMs: 600_000,
       loader: async () => {
-        if (companyIds.length > SUPABASE_IN_BATCH_SIZE) {
+        if (companyIds.length > QUERY_IN_BATCH_SIZE) {
           const rows: PagamentoListRow[] = [];
           let total = 0;
           for (const batch of chunkArray(companyIds)) {

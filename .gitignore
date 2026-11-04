@@ -27,3 +27,4 @@ src/src/
 # Wrangler dev secrets (nunca versionar)
 .dev.vars
 !.dev.vars.example
+.secrets/

@@ -1,8 +1,8 @@
+import type { DataClient } from '$lib/server/data';
 // Migrado para Hono de src/routes/api/v1/pagamentos/[id]/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import {
   ensureModuloAccess,
@@ -46,7 +46,7 @@ function invalidatePagamentoReadModels(companyId: string | null | undefined, use
 }
 
 async function resolvePagamentoComScope(
-  client: SupabaseClient,
+  client: DataClient,
   id: string
 ): Promise<{ pagamento: PagamentoScopeRow; companyId: string | null } | null> {
   const { data, error } = await client

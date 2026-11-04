@@ -116,7 +116,7 @@ export async function handleOrcamentosIdGet(event: RequestEvent) {
         ? client.from('users').select('nome_completo').eq('id', quote.created_by).maybeSingle()
         : Promise.resolve({ data: null })
     ]);
-    const itemIds = (items || []).map((item) => item.id).filter(Boolean);
+    const itemIds = (items || []).map((item: any) => item.id).filter(Boolean);
     const { data: itemSegments, error: itemSegmentsError } =
       itemIds.length > 0
         ? await client
@@ -136,7 +136,7 @@ export async function handleOrcamentosIdGet(event: RequestEvent) {
       segmentMap.set(itemId, list);
     }
 
-    const itemsWithSegments = (items || []).map((item) => ({
+    const itemsWithSegments = (items || []).map((item: any) => ({
       ...item,
       segments: segmentMap.get(String(item.id || '')) || []
     }));

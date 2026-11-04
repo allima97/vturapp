@@ -1,3 +1,4 @@
+import type { DataClient } from '$lib/server/data';
 /**
  * GET /api/v1/relatorios/performance?company_id=&mes=AAAA-MM
  *
@@ -8,7 +9,6 @@
  */
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   ensureModuloAccess,
   fetchRankingVendedoresByCompanyIds,
@@ -39,7 +39,7 @@ const str = (v: unknown) => (v == null ? '' : String(v));
 const uniq = (values: Array<string | null | undefined>) =>
   Array.from(new Set(values.map((v) => str(v).trim()).filter(isUuid)));
 
-async function selectIn(client: SupabaseClient, table: string, columns: string, column: string, ids: string[]): Promise<Row[]> {
+async function selectIn(client: DataClient, table: string, columns: string, column: string, ids: string[]): Promise<Row[]> {
   if (ids.length === 0) return [];
   const partes = await Promise.all(
     chunkArray(ids).map(async (lote) => {
@@ -52,7 +52,7 @@ async function selectIn(client: SupabaseClient, table: string, columns: string, 
 }
 
 /** cidade_id → { cidade, país } */
-async function resolverCidades(client: SupabaseClient, cidadeIds: string[]) {
+async function resolverCidades(client: DataClient, cidadeIds: string[]) {
   const cidades = await selectIn(client, 'cidades', 'id, nome, subdivisao_id', 'id', uniq(cidadeIds));
   const subdivisoes = await selectIn(client, 'subdivisoes', 'id, pais_id', 'id', uniq(cidades.map((c) => str(c.subdivisao_id))));
   const paises = await selectIn(client, 'paises', 'id, nome', 'id', uniq(subdivisoes.map((s) => str(s.pais_id))));
@@ -62,7 +62,7 @@ async function resolverCidades(client: SupabaseClient, cidadeIds: string[]) {
   );
 }
 
-async function enriquecerContribuicoes(client: SupabaseClient, contribs: VendasKpiReciboContribution[]) {
+async function enriquecerContribuicoes(client: DataClient, contribs: VendasKpiReciboContribution[]) {
   const vendaIds = uniq(contribs.map((c) => c.vendaId));
   const reciboIds = uniq(contribs.map((c) => c.reciboId));
   const [vendas, recibos] = await Promise.all([
@@ -96,7 +96,7 @@ async function enriquecerContribuicoes(client: SupabaseClient, contribs: VendasK
   });
 }
 
-async function buscarPassageiros(client: SupabaseClient, vendaIds: string[]): Promise<PassageiroVenda[]> {
+async function buscarPassageiros(client: DataClient, vendaIds: string[]): Promise<PassageiroVenda[]> {
   const viagens = await selectIn(client, 'viagens', 'id, venda_id', 'venda_id', vendaIds);
   const vendaPorViagem = new Map(viagens.map((v) => [str(v.id), str(v.venda_id)]));
   const pax = await selectIn(client, 'viagem_passageiros', 'viagem_id, cliente_id', 'viagem_id', uniq(viagens.map((v) => str(v.id))));
@@ -111,7 +111,7 @@ async function buscarPassageiros(client: SupabaseClient, vendaIds: string[]): Pr
     }));
 }
 
-async function buscarOrcamentos(client: SupabaseClient, userIds: string[], inicio: string, fim: string): Promise<OrcamentoPerformance[]> {
+async function buscarOrcamentos(client: DataClient, userIds: string[], inicio: string, fim: string): Promise<OrcamentoPerformance[]> {
   if (userIds.length === 0) return [];
   const quotes = (
     await Promise.all(

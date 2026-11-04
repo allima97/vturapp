@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient } from '$lib/server/data';
 import { DEFAULT_NAO_COMISSIONAVEIS } from '$lib/naoComissionavel';
 import { normalizeText } from '$lib/normalizeText';
 import { uniqueCleanStrings } from '$lib/utils/array';
@@ -15,7 +15,7 @@ import { uniqueCleanStrings } from '$lib/utils/array';
  *  - usa `termo_normalizado` e, se vazio, `termo`;
  *  - normaliza (sem acento, minúsculo, espaços colapsados, trim), remove
  *    vazios e duplicados mantendo a ordem;
- *  - lista vazia, erro do Supabase ou exceção → DEFAULT_NAO_COMISSIONAVEIS.
+ *  - lista vazia, erro do Dados ou exceção → DEFAULT_NAO_COMISSIONAVEIS.
  *
  * A normalização é a mesma que isFormaNaoComissionavel aplica na comparação,
  * então o resultado final (forma comissiona ou não) não muda.
@@ -27,7 +27,7 @@ type TermoNaoComissionavelRow = {
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type ClientLike = Pick<SupabaseClient<any, any, any>, 'from'>;
+type ClientLike = Pick<DataClient, 'from'>;
 
 export function normalizarTermoNaoComissionavel(value?: string | null) {
   return normalizeText(value || '', { trim: true, collapseWhitespace: true });
