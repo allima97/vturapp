@@ -29,6 +29,8 @@ npm run bootstrap:admin -- --env production --email admin@vtur.com.br
 
 Segredos que continuam necessários: `BETTER_AUTH_SECRET`, `RESEND_API_KEY`. Não configurar URL, anon key nem service role do banco antigo.
 
+A matriz objeto a objeto está em `docs/migracao/MATRIZ-PARIDADE-SUPABASE-D1.md`. A `0014` adiciona os índices btree simples do catálogo.
+
 **Data anterior:** 2026-10-31  
 **Branch/SHA analisados então:** `reescrita/f2-identidade-autorizacao` / `b2f3a460`  
 **Estado naquela data:** migração parcial.
