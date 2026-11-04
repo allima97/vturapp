@@ -73,7 +73,8 @@ export const POST: RequestHandler = async (event) => {
     const rateLimit = await checkPersistentRateLimit(
       'auth-convite-activate',
       `${event.getClientAddress?.() || 'unknown'}:${email || inviteId || 'empty'}`,
-      { max: 8, windowMs: 60_000 }
+      { max: 8, windowMs: 60_000 },
+      event.platform?.env?.DB,
     );
     if (!rateLimit.allowed) {
       return json(
@@ -200,7 +201,7 @@ export const POST: RequestHandler = async (event) => {
     if (updateInviteErr) throw updateInviteErr;
     if (!updatedInvite?.id) {
       if (createdAuthUser) {
-        await adminClient.auth.admin.deleteUser(authUserId).catch((cleanupErr) => {
+        await adminClient.auth.admin.deleteUser(authUserId).catch((cleanupErr: any) => {
           logServerError('[auth/convite/activate] falha ao limpar usuario criado em corrida', cleanupErr);
         });
       }

@@ -1,0 +1,3 @@
+-- Migration placeholder arquivado: não contém SQL e nunca deve ser aplicada.
+-- Wrangler descobre todos os .sql do primeiro nível de migrations_dir; este
+-- arquivo fica fora desse caminho para não ser registrado em d1_migrations.

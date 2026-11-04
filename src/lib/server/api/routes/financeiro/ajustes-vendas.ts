@@ -21,7 +21,7 @@ import {
   cleanStringSet,
   chunkArray,
   dedupeById,
-  SUPABASE_IN_BATCH_SIZE,
+  QUERY_IN_BATCH_SIZE,
   uniqueCleanStrings
 } from '$lib/utils/array';
 
@@ -200,7 +200,7 @@ export async function handleFinanceiroAjustesVendasGet(event: RequestEvent) {
     };
 
     const fetchRows = async () => {
-      if (companyIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (companyIds.length <= QUERY_IN_BATCH_SIZE) {
         return buildQuery();
       }
 

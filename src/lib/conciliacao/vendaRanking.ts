@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient } from '$lib/dataClientTypes';
 import { calcularValorVendaReal, resolveConciliacaoStatus } from '$lib/conciliacao/business';
 import { normalizeReceiptKey } from '$lib/conciliacao/receiptNormalize';
 import { pickConciliacaoSourceRow } from '$lib/conciliacao/source';
@@ -15,7 +15,7 @@ type VendaRankingReciboInput = {
 };
 
 type VendaRankingParams = {
-  client: SupabaseClient;
+  client: DataClient;
   vendaId: string;
   companyId: string;
   recibos: VendaRankingReciboInput[];
@@ -281,7 +281,7 @@ function isTableMissingError(error: unknown) {
   return code === '42p01' || message.includes('does not exist') || message.includes('relation');
 }
 
-async function fetchRateioMaps(client: SupabaseClient, reciboIds: string[], concIds: string[]) {
+async function fetchRateioMaps(client: DataClient, reciboIds: string[], concIds: string[]) {
   const byVendaRecibo = new Map<string, RateioRow>();
   const byConciliacao = new Map<string, RateioRow>();
 

@@ -28,13 +28,13 @@
 
   const integracoes: Integracao[] = [
     {
-      id: 'supabase',
-      nome: 'Supabase',
+      id: 'dados',
+      nome: 'Dados',
       descricao: 'Banco de dados e autenticação',
       icone: '🔷',
       status: 'conectado',
       campos: [
-        { nome: 'URL', valor: 'https://xyz.supabase.co', tipo: 'text' },
+        { nome: 'URL', valor: 'https://xyz.dados.co', tipo: 'text' },
         { nome: 'API Key', valor: '••••••••••••••••', tipo: 'password' }
       ]
     },

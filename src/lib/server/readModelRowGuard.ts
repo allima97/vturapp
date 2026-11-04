@@ -1,3 +1,4 @@
+import type { DataClient } from '$lib/server/data';
 /**
  * Proteção das linhas do read model antes de gravar (25/09/2026).
  *
@@ -16,7 +17,6 @@
  * nenhuma contagem muda, em nenhum filtro. Se não for, o mês não é gravado e
  * o comportamento fica como antes (cálculo na hora).
  */
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { chunkArray } from '$lib/utils/array';
 
 export type GuardedContributionRow = {
@@ -66,7 +66,7 @@ export function findBrokenReceiptCountKey(
 }
 
 /** Busca quais recibo_id existem em vendas_recibos. Erro de consulta → lança (mês fica como antes). */
-async function fetchExistingReciboIds(client: SupabaseClient, ids: string[]) {
+async function fetchExistingReciboIds(client: DataClient, ids: string[]) {
   const existing = new Set<string>();
   for (const batch of chunkArray(ids)) {
     const { data, error } = await client.from('vendas_recibos').select('id').in('id', batch);
@@ -83,7 +83,7 @@ async function fetchExistingReciboIds(client: SupabaseClient, ids: string[]) {
  * Lança erro se isso mudaria alguma contagem (o chamador marca o mês como 'error').
  */
 export async function guardContributionRowsForeignKeys<T extends GuardedContributionRow>(
-  client: SupabaseClient,
+  client: DataClient,
   rows: T[],
 ): Promise<{ rows: T[]; nulledReciboIds: number }> {
   const ids = [...new Set(rows.map((row) => s(row.recibo_id)).filter(Boolean))];

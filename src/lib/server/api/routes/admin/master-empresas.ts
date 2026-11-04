@@ -11,7 +11,7 @@ import {
   resolveUserScope,
   toErrorResponse
 } from '$lib/server/v1';
-import { cleanStringSet, chunkArray, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { cleanStringSet, chunkArray, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const MAX_MASTER_EMPRESAS_BODY_BYTES = 16 * 1024;
 
@@ -54,7 +54,7 @@ export async function handleAdminMasterEmpresasGet(event: RequestEvent) {
 
       const accessible = getAccessibleCompanyIds(scope);
       if (!accessible.length) return [];
-      if (accessible.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (accessible.length <= QUERY_IN_BATCH_SIZE) {
         const { data, error: queryError } = await buildQuery(accessible);
         if (queryError) throw queryError;
         return data || [];

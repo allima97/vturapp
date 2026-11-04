@@ -1,4 +1,4 @@
-import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient, QueryError } from '$lib/server/data';
 import { isUuid, resolveScopedCompanyIds, type UserScope } from '$lib/server/v1';
 import {
   buildReadModelCacheKey,
@@ -6,13 +6,13 @@ import {
   READ_MODEL_TAGS,
   scopeCacheTags
 } from '$lib/server/readModelCache';
-import { chunkArray, dedupeById, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { chunkArray, dedupeById, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
-type RowsResult<T> = { data: T[] | null; error: PostgrestError | null };
-type SingleResult<T> = { data: T | null; error: PostgrestError | null };
+type RowsResult<T> = { data: T[] | null; error: QueryError | null };
+type SingleResult<T> = { data: T | null; error: QueryError | null };
 
 function isMissingColumnOrRelation(err: unknown) {
-  const error = err as Partial<PostgrestError> | null | undefined;
+  const error = err as Partial<QueryError> | null | undefined;
   const code = String(error?.code || '');
   const message = String(error?.message || '');
   return (
@@ -86,7 +86,7 @@ function normalizeFornecedor(row: FornecedorRecord) {
   };
 }
 
-export async function fetchFornecedores(client: SupabaseClient, scope: UserScope, params: URLSearchParams) {
+export async function fetchFornecedores(client: DataClient, scope: UserScope, params: URLSearchParams) {
   const requestedCompanyId = String(params.get('empresa_id') || '').trim();
   const companyIds = resolveScopedCompanyIds(scope, requestedCompanyId);
 
@@ -114,7 +114,7 @@ export async function fetchFornecedores(client: SupabaseClient, scope: UserScope
 
       const baseRows: Array<{ id?: string | null }> = [];
       let totalCount = 0;
-      const companyBatches = companyIds.length > SUPABASE_IN_BATCH_SIZE ? chunkArray(companyIds) : [companyIds];
+      const companyBatches = companyIds.length > QUERY_IN_BATCH_SIZE ? chunkArray(companyIds) : [companyIds];
       for (const batch of companyBatches) {
         const base = await buildBaseQuery(batch);
         if (base.error) throw base.error;
@@ -193,7 +193,7 @@ export async function fetchFornecedores(client: SupabaseClient, scope: UserScope
   });
 }
 
-export async function fetchFornecedorById(client: SupabaseClient, id: string) {
+export async function fetchFornecedorById(client: DataClient, id: string) {
   const row = await optionalSingle<FornecedorRecord>(
     client
       .from('fornecedores')

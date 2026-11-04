@@ -20,6 +20,7 @@
   import { uniqueFieldId } from "./form/fieldId";
   import type { ModuleColor } from "$lib/theme/colors";
   import type { ComponentType } from "svelte";
+  import Card from './Card.svelte';
 
   type SortDirection = "asc" | "desc" | null;
   type RowKey = string;
@@ -93,6 +94,7 @@
   export let pageSizeOptions: number[] = [10, 25, 50, 100];
   export let serverSide: boolean = false;
   export let totalItems: number = 0;
+  export let showRowCount: boolean = true;
   export let page: number = 1;
   export let filters: FilterOption[] = [];
   export let title: string = "";
@@ -336,11 +338,11 @@
   $: tableColumnCount =
     columns.length +
     (selectable ? 1 : 0) +
-    ($$slots["row-actions"] || $$slots.actions ? 1 : 0);
+    ($$slots["row-actions"] || $$slots.actions || $$slots["row-actions-cell"] ? 1 : 0);
 </script>
 
-<div class="datatable-card vtur-card overflow-hidden">
-  {#if title || searchable || filterable || exportable}
+<Card class="datatable-card overflow-hidden" padding="none">
+  {#if title || searchable || filterable || exportable || $$slots["row-actions-cell"]}
     <div
       class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between px-5 pt-4 pb-4"
     >
@@ -546,7 +548,7 @@
                 {/if}
               </th>
             {/each}
-            {#if $$slots["row-actions"] || $$slots.actions}
+            {#if $$slots["row-actions"] || $$slots.actions || $$slots["row-actions-cell"]}
               <th class="px-6 py-3 text-right">Ações</th>
             {/if}
           </tr>
@@ -574,7 +576,7 @@
                     ></div>
                   </td>
                 {/each}
-                {#if $$slots["row-actions"] || $$slots.actions}
+                {#if $$slots["row-actions"] || $$slots.actions || $$slots["row-actions-cell"]}
                   <td class="px-6 py-2">
                     <div class="ml-auto h-8 w-20 rounded-lg bg-slate-100"></div>
                   </td>
@@ -637,13 +639,14 @@
                     {/if}
                   </td>
                 {/each}
-                {#if $$slots["row-actions"] || $$slots.actions}
+                {#if $$slots["row-actions"] || $$slots.actions || $$slots["row-actions-cell"]}
                   <td
                     class="px-6 py-3 text-right td-actions"
                     on:click|stopPropagation
                   >
                     <slot name="row-actions" {row} />
                     <slot name="actions" {row} />
+                    <slot name="row-actions-cell" {row} />
                   </td>
                 {/if}
               </tr>
@@ -660,7 +663,7 @@
       </p>
     {/if}
 
-    {#if pagination && totalRecords > 0}
+    {#if showRowCount && pagination && totalRecords > 0}
       <div class="vtur-table-pagination">
         <div class="text-sm text-slate-500">
           Mostrando <span class="font-medium">{startIndex}</span> a
@@ -731,4 +734,4 @@
       </div>
     {/if}
   </div>
-</div>
+</Card>

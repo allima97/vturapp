@@ -1,6 +1,6 @@
 import { dev } from '$app/environment';
 import { normalizeText } from '$lib/normalizeText';
-import { supabase as supabaseBrowser } from '$lib/db/supabase';
+import { browserData as dadosBrowser } from '$lib/db/browserData';
 import {
   calcularNaoComissionavelPorVenda as calcularNaoComissionavelPorVendaShared,
   calcularNaoComissionavelResumo,
@@ -35,7 +35,7 @@ export async function carregarTermosNaoComissionaveis(options: { force?: boolean
 
   termosLoadPromise = (async () => {
     try {
-      const { data, error } = await supabaseBrowser
+      const { data, error } = await dadosBrowser
         .from("parametros_pagamentos_nao_comissionaveis")
         .select("termo, termo_normalizado, ativo")
         .eq("ativo", true)

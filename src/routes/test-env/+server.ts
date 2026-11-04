@@ -1,5 +1,4 @@
 import { json } from '@sveltejs/kit';
-import { env as privateEnv } from '$env/dynamic/private';
 import { env as publicEnv } from '$env/dynamic/public';
 import {
   getAdminClient,
@@ -31,16 +30,11 @@ export async function GET(event) {
       return json({ error: 'Acesso negado.' }, { status: 403, headers: DEBUG_HEADERS });
     }
 
-    const publicUrl = publicEnv.PUBLIC_SUPABASE_URL;
-    const publicAnonKey = publicEnv.PUBLIC_SUPABASE_ANON_KEY;
-    const serviceKey = privateEnv.SUPABASE_SERVICE_ROLE_KEY;
-
     return json(
       {
         runtime: 'cloudflare-worker',
-        publicSupabaseUrlPresent: Boolean(publicUrl),
-        publicSupabaseAnonKeyPresent: Boolean(publicAnonKey),
-        serviceRoleKeyPresent: Boolean(serviceKey),
+        d1Present: Boolean(event.platform?.env?.DB),
+        r2Present: Boolean(event.platform?.env?.R2),
         publicEnvironment: publicEnv.PUBLIC_ENVIRONMENT ?? null
       },
       { headers: DEBUG_HEADERS }

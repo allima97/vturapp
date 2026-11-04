@@ -17,11 +17,11 @@ type ViaCepResponse = {
   erro?: boolean;
 };
 
-export const handleEnderecosCepGet = async ({ url, fetch, getClientAddress }: RequestEvent) => {
+export const handleEnderecosCepGet = async ({ url, fetch, getClientAddress, platform }: RequestEvent) => {
   const rateLimit = await checkPersistentRateLimit('cep', getClientAddress() || 'unknown', {
     max: 120,
     windowMs: 60_000
-  });
+  }, platform?.env?.DB);
   if (!rateLimit.allowed) {
     return json(
       { error: 'Muitas requisições. Tente novamente em instantes.' },

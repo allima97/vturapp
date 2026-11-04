@@ -18,7 +18,7 @@ import {
   cleanStringSet,
   chunkArray,
   dedupeById,
-  SUPABASE_IN_BATCH_SIZE,
+  QUERY_IN_BATCH_SIZE,
   uniqueCleanStrings
 } from '$lib/utils/array';
 
@@ -198,7 +198,7 @@ export async function handleFinanceiroAjustesVendasListGet(event: RequestEvent) 
     };
 
     const fetchVendaRows = async () => {
-      if (companyIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (companyIds.length <= QUERY_IN_BATCH_SIZE) {
         return buildVendaQuery();
       }
 
@@ -258,7 +258,7 @@ export async function handleFinanceiroAjustesVendasListGet(event: RequestEvent) 
     };
 
     const fetchConciliacaoRows = async () => {
-      if (companyIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (companyIds.length <= QUERY_IN_BATCH_SIZE) {
         return buildConciliacaoQuery();
       }
 
@@ -310,7 +310,7 @@ export async function handleFinanceiroAjustesVendasListGet(event: RequestEvent) 
 
       const rateioDataRows: AjusteRateioRow[] = [];
       let rateioError: unknown = null;
-      const companyBatches = companyIds.length > SUPABASE_IN_BATCH_SIZE ? chunkArray(companyIds) : [companyIds];
+      const companyBatches = companyIds.length > QUERY_IN_BATCH_SIZE ? chunkArray(companyIds) : [companyIds];
       for (const batch of companyBatches) {
         let scopedRateioQuery = buildRateioQuery();
         if (batch.length === 1) {

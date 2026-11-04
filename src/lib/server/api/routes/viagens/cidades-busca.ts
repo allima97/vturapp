@@ -24,7 +24,7 @@ export async function handleViagensCidadesBuscaGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['operacao_viagens', 'viagens', 'operacao'], 1, 'Sem acesso a Viagens.');
+      ensureModuloAccess(scope, ['operacao_viagens', 'viagens', 'operacao', 'operacao_vouchers', 'vouchers'], 1, 'Sem acesso a Viagens.');
     }
 
     const query = String(event.url.searchParams.get('q') || '').trim();

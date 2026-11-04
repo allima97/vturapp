@@ -1,19 +1,19 @@
+import type { DataClient } from '$lib/dataClientTypes';
 /**
- * Fase 6.1: aviso em tempo real de recado novo/alterado no mural (Supabase Realtime).
+ * Fase 6.1: aviso em tempo real de recado novo/alterado no mural (Dados Realtime).
  *
  * Só avisa que algo mudou; quem busca os dados continua sendo a API do mural
  * (/api/v1/mural/recados), com as mesmas regras de visibilidade. O Realtime respeita o RLS
  * de `mural_recados` (cada usuário só recebe o que pode ver). A tabela já está na publicação
- * `supabase_realtime`. Se o Realtime não conectar, a tela segue com a atualização periódica.
+ * `dados_realtime`. Se o Realtime não conectar, a tela segue com a atualização periódica.
  */
-import type { SupabaseClient } from '@supabase/supabase-js';
 
 type CanalMinimo = {
   on: (...args: unknown[]) => CanalMinimo;
   subscribe: (cb?: (status: string) => void) => unknown;
 };
 
-export type ClienteRealtime = Pick<SupabaseClient, 'channel' | 'removeChannel'>;
+export type ClienteRealtime = Pick<DataClient, 'channel' | 'removeChannel'>;
 
 export function assinarRecadosDaEmpresa(
   client: ClienteRealtime | null | undefined,
@@ -33,7 +33,7 @@ export function assinarRecadosDaEmpresa(
     }, 300);
   };
 
-  let canal: ReturnType<SupabaseClient['channel']> | null = null;
+  let canal: ReturnType<DataClient['channel']> | null = null;
   try {
     canal = client.channel(`mural-recados:${companyId}:${Math.random().toString(36).slice(2, 8)}`);
     (canal as unknown as CanalMinimo)

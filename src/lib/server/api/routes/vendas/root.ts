@@ -21,7 +21,7 @@ import {
   READ_MODEL_TAGS,
   scopeCacheTags
 } from '$lib/server/readModelCache';
-import { chunkArray, dedupeById as dedupeRowsById, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { chunkArray, dedupeById as dedupeRowsById, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 type VendaRow = {
   id: string;
@@ -144,9 +144,9 @@ export async function handleVendasGet(event: RequestEvent) {
 
         let data: VendaRow[] = [];
         const shouldBatchClients =
-          !clienteId && !scope.isAdmin && !hasSellerScope && accessibleClientIds.length > SUPABASE_IN_BATCH_SIZE;
-        const shouldBatchCompanies = companyIds.length > SUPABASE_IN_BATCH_SIZE;
-        const shouldBatchVendedores = shouldApplySellerScope && vendedorIds.length > SUPABASE_IN_BATCH_SIZE;
+          !clienteId && !scope.isAdmin && !hasSellerScope && accessibleClientIds.length > QUERY_IN_BATCH_SIZE;
+        const shouldBatchCompanies = companyIds.length > QUERY_IN_BATCH_SIZE;
+        const shouldBatchVendedores = shouldApplySellerScope && vendedorIds.length > QUERY_IN_BATCH_SIZE;
 
         if (shouldBatchClients || shouldBatchCompanies || shouldBatchVendedores) {
           const clientBatches = shouldBatchClients ? chunkArray(accessibleClientIds) : [undefined];

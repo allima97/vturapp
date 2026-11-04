@@ -33,11 +33,11 @@ function clampText(value: string | null, fallback: string, maxLength: number) {
   return normalized || fallback;
 }
 
-export const handleCardsAniversarioSvgGet = async ({ request, getClientAddress }: RequestEvent) => {
+export const handleCardsAniversarioSvgGet = async ({ request, getClientAddress, platform }: RequestEvent) => {
   const rateLimit = await checkPersistentRateLimit('cards-aniversario', getClientAddress() || 'unknown', {
     max: 240,
     windowMs: 60_000
-  });
+  }, platform?.env?.DB);
   if (!rateLimit.allowed) {
     return new Response(
       JSON.stringify({ error: "rate_limited", message: "Muitas requisições. Tente novamente em instantes." }),

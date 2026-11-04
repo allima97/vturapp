@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { DataClient } from '$lib/server/data';
 import { isUuid } from "$lib/vendas/rateio";
 import { getAdminClient, logServerError } from "$lib/server/v1";
 import { buildReadModelCacheKey, registerSalesReadModelDirtyMarker } from "$lib/server/readModelCache";
@@ -579,7 +579,7 @@ export function isStatusReady(row?: StatusRow | null, nowMs: number = Date.now()
 }
 
 async function fetchStatusRows(
-  client: SupabaseClient,
+  client: DataClient,
   companyIds: string[],
   monthStarts: string[],
 ) {
@@ -632,7 +632,7 @@ async function runLimited<T>(
 }
 
 async function upsertStatus(
-  client: SupabaseClient,
+  client: DataClient,
   companyId: string,
   mes: string,
   values: Partial<StatusRow> & { last_error?: string | null },
@@ -700,7 +700,7 @@ registerSalesReadModelDirtyMarker((scope) => {
 });
 
 async function rebuildMonth(
-  client: SupabaseClient,
+  client: DataClient,
   companyId: string,
   monthKey: string,
   rawLoader: RawLoader,
@@ -781,7 +781,7 @@ async function rebuildMonth(
 }
 
 async function ensureReadModelReady(
-  client: SupabaseClient,
+  client: DataClient,
   params: ReadModelParams,
   rawLoader: RawLoader,
 ) {
@@ -814,7 +814,7 @@ async function ensureReadModelReady(
 }
 
 async function readPersistentContributions(
-  client: SupabaseClient,
+  client: DataClient,
   params: ReadModelParams,
 ) {
   const companyIds = normalizeIds(params.companyIds);
@@ -895,7 +895,7 @@ async function readPersistentContributions(
 }
 
 function scheduleReadModelEnsure(
-  client: SupabaseClient,
+  client: DataClient,
   params: ReadModelParams,
   rawLoader: RawLoader,
   executionContext?: ReciboContribuicoesReadModelOptions["executionContext"],
@@ -929,7 +929,7 @@ function scheduleReadModelEnsure(
 }
 
 export function scheduleReciboContribuicoesReadModelEnsure(
-  _client: SupabaseClient,
+  _client: DataClient,
   params: ReadModelParams,
   rawLoader: RawLoader,
   executionContext?: ReciboContribuicoesReadModelOptions["executionContext"],
@@ -973,7 +973,7 @@ async function fetchReadModelRebuiltAt(params: ReadModelParams): Promise<string 
 }
 
 export async function fetchDashboardSummaryReadModelRpc(
-  _client: SupabaseClient,
+  _client: DataClient,
   params: ReadModelParams,
 ): Promise<ReadModelDashboardSummary | null> {
   if (readModelUnavailable) return null;
@@ -1015,7 +1015,7 @@ export async function fetchDashboardSummaryReadModelRpc(
 }
 
 export async function fetchCompanyComparativoReadModelRpc(
-  _client: SupabaseClient,
+  _client: DataClient,
   params: {
     dataInicio: string;
     dataFim: string;
@@ -1063,7 +1063,7 @@ export async function fetchCompanyComparativoReadModelRpc(
 }
 
 export async function fetchDashboardMetasSummaryRpc(
-  _client: SupabaseClient,
+  _client: DataClient,
   params: {
     dataInicio: string;
     dataFim: string;
@@ -1106,7 +1106,7 @@ export async function fetchDashboardMetasSummaryRpc(
 }
 
 export async function fetchDashboardComprasResumoRpc(
-  _client: SupabaseClient,
+  _client: DataClient,
   params: {
     dataInicio: string;
     dataFim: string;
@@ -1149,7 +1149,7 @@ export async function fetchDashboardComprasResumoRpc(
 }
 
 export async function fetchRelatorioProdutosReadModelRpc(
-  _client: SupabaseClient,
+  _client: DataClient,
   params: {
     dataInicio: string;
     dataFim: string;
@@ -1195,7 +1195,7 @@ export async function fetchRelatorioProdutosReadModelRpc(
 }
 
 export async function fetchRelatorioDestinosReadModelRpc(
-  _client: SupabaseClient,
+  _client: DataClient,
   params: {
     dataInicio: string;
     dataFim: string;
@@ -1238,7 +1238,7 @@ export async function fetchRelatorioDestinosReadModelRpc(
 }
 
 export async function fetchRelatorioClientesReadModelRpc(
-  _client: SupabaseClient,
+  _client: DataClient,
   params: {
     dataInicio: string;
     dataFim: string;
@@ -1282,7 +1282,7 @@ export async function fetchRelatorioClientesReadModelRpc(
 }
 
 export async function fetchReciboContribuicoesReadModel(
-  _client: SupabaseClient,
+  _client: DataClient,
   params: ReadModelParams,
   rawLoader: RawLoader,
   rebuildRawLoader: RawLoader = rawLoader,

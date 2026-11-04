@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { supabase } from '$lib/db/supabase';
+  import { browserData as dados } from '$lib/db/browserData';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
@@ -63,7 +63,7 @@
     const request = factorsGuard.next();
     loading = true;
     try {
-      const { data, error: factorsError } = await supabase.auth.mfa.listFactors();
+      const { data, error: factorsError } = await dados.auth.mfa.listFactors();
       if (factorsError) throw factorsError;
       if (!factorsGuard.isCurrent(request.seq)) return;
       factors = data?.totp || [];
@@ -93,16 +93,16 @@
     enrolling = true;
     error = null;
     try {
-      const { data, error: enrollError } = await supabase.auth.mfa.enroll({
+      const { data, error: enrollError } = await dados.auth.mfa.enroll({
         factorType: 'totp',
         friendlyName: 'Autenticador VTUR'
       });
       if (enrollError) throw enrollError;
 
       enrollmentData = {
-        factorId: data.id,
-        qrCode: data.totp.qr_code,
-        secret: data.totp.secret
+        factorId: String(data.id || ''),
+        qrCode: data.totp?.qr_code || '',
+        secret: data.totp?.secret || ''
       };
     } catch (err: unknown) {
       error = toUserMessage(err, 'Erro ao iniciar configuração 2FA.');
@@ -123,12 +123,12 @@
     verifying = true;
     error = null;
     try {
-      const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
+      const { data: challengeData, error: challengeError } = await dados.auth.mfa.challenge({
         factorId: enrollmentData.factorId
       });
       if (challengeError) throw challengeError;
 
-      const { error: verifyError } = await supabase.auth.mfa.verify({
+      const { error: verifyError } = await dados.auth.mfa.verify({
         factorId: enrollmentData.factorId,
         challengeId: challengeData.id,
         code
@@ -155,7 +155,7 @@
     removing = true;
     error = null;
     try {
-      const { error: unenrollError } = await supabase.auth.mfa.unenroll({ factorId });
+      const { error: unenrollError } = await dados.auth.mfa.unenroll({ factorId });
       if (unenrollError) throw unenrollError;
 
       toast.success('Fator 2FA removido.');
@@ -400,7 +400,7 @@
           <p class="text-sm text-slate-600 text-center">
             Abra seu aplicativo autenticador e escaneie o QR Code abaixo.
           </p>
-          <!-- QR Code como imagem SVG/PNG do Supabase -->
+          <!-- QR Code como imagem SVG/PNG do Dados -->
           <div class="rounded-xl border border-slate-200 bg-white p-4">
             <img src={enrollmentData.qrCode} alt="QR Code 2FA" class="h-48 w-48" />
           </div>

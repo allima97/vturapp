@@ -1,7 +1,200 @@
 {
   "generatedBy": "scripts/api-inventory.mjs",
-  "count": 258,
+  "count": 270,
   "endpoints": [
+    {
+      "route": "/api/arquivos",
+      "file": "src/routes/api/arquivos/+server.ts",
+      "hono": null,
+      "methods": [
+        "POST"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": false,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/data"
+      ],
+      "mutates": false,
+      "lines": 22
+    },
+    {
+      "route": "/api/arquivos/assinado/[exp]/[signature]/[bucket]/[...path]",
+      "file": "src/routes/api/arquivos/assinado/[exp]/[signature]/[bucket]/[...path]/+server.ts",
+      "hono": null,
+      "methods": [
+        "GET"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": false,
+        "resolveUserScope": false,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/data",
+        "$lib/server/data/storageApi"
+      ],
+      "mutates": false,
+      "lines": 22
+    },
+    {
+      "route": "/api/arquivos/assinatura",
+      "file": "src/routes/api/arquivos/assinatura/+server.ts",
+      "hono": null,
+      "methods": [
+        "POST"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": false,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/data"
+      ],
+      "mutates": false,
+      "lines": 20
+    },
+    {
+      "route": "/api/arquivos/baixar",
+      "file": "src/routes/api/arquivos/baixar/+server.ts",
+      "hono": null,
+      "methods": [
+        "GET"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": false,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/data",
+        "$lib/server/data/storageApi"
+      ],
+      "mutates": false,
+      "lines": 19
+    },
+    {
+      "route": "/api/arquivos/publico/[bucket]/[...path]",
+      "file": "src/routes/api/arquivos/publico/[bucket]/[...path]/+server.ts",
+      "hono": null,
+      "methods": [
+        "GET"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": false,
+        "resolveUserScope": false,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/data",
+        "$lib/server/data/storageApi"
+      ],
+      "mutates": false,
+      "lines": 15
+    },
+    {
+      "route": "/api/auth/[...auth]",
+      "file": "src/routes/api/auth/[...auth]/+server.ts",
+      "hono": null,
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": false,
+        "resolveUserScope": false,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/auth"
+      ],
+      "mutates": false,
+      "lines": 51
+    },
+    {
+      "route": "/api/auth/codigo",
+      "file": "src/routes/api/auth/codigo/+server.ts",
+      "hono": null,
+      "methods": [
+        "POST"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": false,
+        "resolveUserScope": false,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/data"
+      ],
+      "mutates": false,
+      "lines": 14
+    },
     {
       "route": "/api/auth/convite/activate",
       "file": "src/routes/api/auth/convite/activate/+server.ts",
@@ -38,7 +231,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 216
+      "lines": 217
     },
     {
       "route": "/api/auth/login",
@@ -62,7 +255,7 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
-        "$lib/db/supabase",
+        "$lib/auth",
         "$lib/server/httpCache",
         "$lib/server/persistentRateLimit",
         "$lib/server/requestGuards",
@@ -70,7 +263,90 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 109
+      "lines": 180
+    },
+    {
+      "route": "/api/auth/mfa/fatores",
+      "file": "src/routes/api/auth/mfa/fatores/+server.ts",
+      "hono": null,
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": false,
+        "resolveUserScope": false,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/data"
+      ],
+      "mutates": false,
+      "lines": 31
+    },
+    {
+      "route": "/api/auth/mfa/nivel",
+      "file": "src/routes/api/auth/mfa/nivel/+server.ts",
+      "hono": null,
+      "methods": [
+        "GET"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": false,
+        "resolveUserScope": false,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/data"
+      ],
+      "mutates": false,
+      "lines": 10
+    },
+    {
+      "route": "/api/auth/mfa/verificar",
+      "file": "src/routes/api/auth/mfa/verificar/+server.ts",
+      "hono": null,
+      "methods": [
+        "POST"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": false,
+        "resolveUserScope": false,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/data"
+      ],
+      "mutates": false,
+      "lines": 20
     },
     {
       "route": "/api/auth/passkeys",
@@ -221,6 +497,33 @@
       "lines": 60
     },
     {
+      "route": "/api/auth/senha",
+      "file": "src/routes/api/auth/senha/+server.ts",
+      "hono": null,
+      "methods": [
+        "POST"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": false,
+        "resolveUserScope": false,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/data"
+      ],
+      "mutates": false,
+      "lines": 16
+    },
+    {
       "route": "/api/auth/set-session",
       "file": "src/routes/api/auth/set-session/+server.ts",
       "hono": null,
@@ -242,13 +545,11 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
-        "$lib/db/supabase",
         "$lib/server/httpCache",
-        "$lib/server/requestGuards",
-        "$lib/server/v1"
+        "$lib/server/requestGuards"
       ],
       "mutates": false,
-      "lines": 82
+      "lines": 36
     },
     {
       "route": "/api/auth/turnstile/verify",
@@ -280,6 +581,33 @@
       ],
       "mutates": false,
       "lines": 71
+    },
+    {
+      "route": "/api/dados/consulta",
+      "file": "src/routes/api/dados/consulta/+server.ts",
+      "hono": null,
+      "methods": [
+        "POST"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": false,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/data"
+      ],
+      "mutates": false,
+      "lines": 73
     },
     {
       "route": "/api/v1/[...path]",
@@ -484,7 +812,7 @@
         "$lib/utils/html"
       ],
       "mutates": false,
-      "lines": 150
+      "lines": 151
     },
     {
       "route": "/api/v1/admin/crm",
@@ -599,7 +927,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 202
+      "lines": 203
     },
     {
       "route": "/api/v1/admin/empresas",
@@ -1602,7 +1930,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 101
+      "lines": 102
     },
     {
       "route": "/api/v1/cidades",
@@ -2054,7 +2382,7 @@
         "$lib/utils/html"
       ],
       "mutates": true,
-      "lines": 276
+      "lines": 277
     },
     {
       "route": "/api/v1/clientes/avisos/templates",
@@ -2377,9 +2705,6 @@
         "debugOnly": false
       },
       "tables": {
-        "companies": [
-          "select"
-        ],
         "master_empresas": [
           "select"
         ],
@@ -2406,7 +2731,7 @@
         "$lib/utils/html"
       ],
       "mutates": false,
-      "lines": 568
+      "lines": 487
     },
     {
       "route": "/api/v1/conciliacao",
@@ -2710,6 +3035,7 @@
         "$lib/conciliacao/receiptNormalize",
         "$lib/date",
         "$lib/server/api/sveltekit",
+        "$lib/server/data",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
@@ -2767,6 +3093,7 @@
         "$lib/conciliacao/business",
         "$lib/server/api/sveltekit",
         "$lib/server/conciliacaoReconcile",
+        "$lib/server/data",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
@@ -3406,16 +3733,10 @@
         "debugOnly": false
       },
       "tables": {
-        "companies": [
-          "select"
-        ],
         "crm_template_categories": [
           "select"
         ],
         "master_empresas": [
-          "select"
-        ],
-        "quote_print_settings": [
           "select"
         ],
         "user_crm_assinaturas": [
@@ -3428,15 +3749,17 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
+        "$lib/brand",
         "$lib/cards/officialLibrary",
         "$lib/cards/themeAssetMeta",
         "$lib/server/api/sveltekit",
+        "$lib/server/data",
         "$lib/server/httpCache",
         "$lib/server/v1",
         "$lib/utils/errors"
       ],
       "mutates": false,
-      "lines": 518
+      "lines": 345
     },
     {
       "route": "/api/v1/crm/signature",
@@ -5615,23 +5938,17 @@
         "adminClient": true,
         "debugOnly": false
       },
-      "tables": {
-        "cidades": [
-          "select"
-        ]
-      },
-      "rpcs": [
-        "buscar_cidades"
-      ],
+      "tables": {},
+      "rpcs": [],
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/geocoding",
         "$lib/server/httpCache",
-        "$lib/server/readModelCache",
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 100
+      "lines": 55
     },
     {
       "route": "/api/v1/orcamentos/cliente-create",
@@ -6170,6 +6487,7 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/data",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
@@ -6177,47 +6495,6 @@
       ],
       "mutates": true,
       "lines": 185
-    },
-    {
-      "route": "/api/v1/pagamentos/[id]/conciliar",
-      "file": "src/routes/api/v1/pagamentos/[id]/conciliar/+server.ts",
-      "hono": "src/lib/server/api/routes/pagamentos/id-conciliar.ts",
-      "methods": [
-        "POST"
-      ],
-      "guards": {
-        "requireAuthenticatedUser": true,
-        "resolveUserScope": true,
-        "roles": [
-          "isAdmin"
-        ],
-        "rejectCrossOrigin": true,
-        "bodyLimit": true,
-        "cronSecret": false,
-        "turnstile": false,
-        "adminClient": true,
-        "debugOnly": false
-      },
-      "tables": {
-        "vendas_pagamentos": [
-          "select",
-          "update"
-        ]
-      },
-      "rpcs": [],
-      "invalidations": [
-        "invalidatePagamentoReadModels",
-        "invalidateReadModelCache"
-      ],
-      "imports": [
-        "$lib/server/api/sveltekit",
-        "$lib/server/httpCache",
-        "$lib/server/readModelCache",
-        "$lib/server/requestGuards",
-        "$lib/server/v1"
-      ],
-      "mutates": true,
-      "lines": 109
     },
     {
       "route": "/api/v1/pagamentos/upload",
@@ -6429,6 +6706,7 @@
         "invalidateUserReadModels"
       ],
       "imports": [
+        "$lib/brand",
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
@@ -6436,7 +6714,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 126
+      "lines": 105
     },
     {
       "route": "/api/v1/parametros/equipe",
@@ -6541,6 +6819,7 @@
         "$lib/date",
         "$lib/server/api/sveltekit",
         "$lib/server/auditLog",
+        "$lib/server/data",
         "$lib/server/fetchWithTimeout",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
@@ -6598,6 +6877,7 @@
       "imports": [
         "$lib/date",
         "$lib/server/api/sveltekit",
+        "$lib/server/data",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
@@ -6674,9 +6954,6 @@
       "tables": {
         "quote_print_settings": [
           "select"
-        ],
-        "users": [
-          "select"
         ]
       },
       "rpcs": [],
@@ -6684,6 +6961,7 @@
         "invalidateQuoteReadModels"
       ],
       "imports": [
+        "$lib/brand",
         "$lib/server/api/sveltekit",
         "$lib/server/auditLog",
         "$lib/server/httpCache",
@@ -6692,7 +6970,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 147
+      "lines": 148
     },
     {
       "route": "/api/v1/parametros/regras-produto-pacote",
@@ -6915,21 +7193,15 @@
         "adminClient": false,
         "debugOnly": false
       },
-      "tables": {
-        "cidades": [
-          "select"
-        ]
-      },
-      "rpcs": [
-        "buscar_cidades"
-      ],
+      "tables": {},
+      "rpcs": [],
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
-        "$lib/server/v1"
+        "$lib/server/geocoding"
       ],
       "mutates": false,
-      "lines": 64
+      "lines": 46
     },
     {
       "route": "/api/v1/preferencias/delete",
@@ -7583,18 +7855,16 @@
         "debugOnly": false
       },
       "tables": {},
-      "rpcs": [
-        "buscar_cidades"
-      ],
+      "rpcs": [],
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/geocoding",
         "$lib/server/httpCache",
-        "$lib/server/readModelCache",
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 67
+      "lines": 58
     },
     {
       "route": "/api/v1/relatorios/clientes",
@@ -7625,6 +7895,7 @@
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/data",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/readModelRebuild",
@@ -7861,6 +8132,7 @@
       "imports": [
         "$lib/date",
         "$lib/server/api/sveltekit",
+        "$lib/server/data",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/readModelRebuild",
@@ -8335,13 +8607,14 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
+        "$lib/roteiroOpcionais",
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 729
+      "lines": 741
     },
     {
       "route": "/api/v1/roteiros/sugestoes-busca",
@@ -8635,6 +8908,7 @@
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/data",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
@@ -9057,6 +9331,7 @@
         "$lib/server/api/sveltekit",
         "$lib/server/auditLog",
         "$lib/server/clientes",
+        "$lib/server/data",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
@@ -9292,21 +9567,20 @@
       },
       "tables": {
         "cidades": [
+          "insert",
           "select"
         ]
       },
-      "rpcs": [
-        "buscar_cidades"
-      ],
+      "rpcs": [],
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/geocoding",
         "$lib/server/httpCache",
-        "$lib/server/readModelCache",
         "$lib/server/v1"
       ],
-      "mutates": false,
-      "lines": 234
+      "mutates": true,
+      "lines": 172
     },
     {
       "route": "/api/v1/vendas/complementares",
@@ -10043,6 +10317,7 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/data",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
@@ -10074,23 +10349,17 @@
         "adminClient": true,
         "debugOnly": false
       },
-      "tables": {
-        "cidades": [
-          "select"
-        ]
-      },
-      "rpcs": [
-        "buscar_cidades"
-      ],
+      "tables": {},
+      "rpcs": [],
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/geocoding",
         "$lib/server/httpCache",
-        "$lib/server/readModelCache",
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 99
+      "lines": 50
     },
     {
       "route": "/api/v1/viagens/cliente/[id]",
@@ -10307,6 +10576,7 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/data",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
@@ -10635,6 +10905,37 @@
       ],
       "mutates": true,
       "lines": 320
+    },
+    {
+      "route": "/api/v2/[...path]",
+      "file": "src/routes/api/v2/[...path]/+server.ts",
+      "hono": null,
+      "methods": [
+        "DELETE",
+        "GET",
+        "PATCH",
+        "POST",
+        "PUT"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": false,
+        "resolveUserScope": false,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/api/sveltekit-v2"
+      ],
+      "mutates": false,
+      "lines": 17
     }
   ]
 }

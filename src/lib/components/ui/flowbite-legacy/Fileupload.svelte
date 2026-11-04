@@ -34,7 +34,7 @@ let inputCls = twMerge(base, sizes[size ?? "md"], inputClass);
   </div>
 {:else}
   <Input {...$$restProps} class={twMerge(inputClass, $$props.class)} let:props>
-    <input type="file" on:change on:keyup on:keydown on:keypress on:focus on:blur on:click on:mouseover on:mouseenter on:mouseleave on:paste bind:files {...props} />
+    <input type="file" on:change on:keyup on:keydown on:keypress on:focus on:blur on:click on:mouseover on:mouseenter on:mouseleave on:paste bind:files {...props} bind:this={fileInputRef} />
   </Input>
 {/if}
 

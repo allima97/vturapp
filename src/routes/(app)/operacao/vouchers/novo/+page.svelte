@@ -22,6 +22,7 @@
   import WizardEtapas from './_components/WizardEtapas.svelte';
   import ImportacaoVoucher from './_components/ImportacaoVoucher.svelte';
   import { formatDateBR } from './_components/formatters';
+  import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
   import type { WizardForm } from './_components/types';
   import { 
     createEmptyVoucherImport, 
@@ -884,13 +885,12 @@
                               bind:value={dia.titulo}
                               placeholder="Ex: Lisboa - Chegada"
                             />
-                            <FieldInput
+                            <CidadeDestinoAutocomplete
                               id={`voucher-dia-cidade-${i}`}
                               label="Cidade"
-                              type="text"
-                              value={dia.cidade || ''}
-                              on:input={(e) => dia.cidade = (e.currentTarget as HTMLInputElement).value}
+                              bind:value={dia.cidade}
                               placeholder="Nome da cidade"
+                              endpoint="/api/v1/viagens/cidades-busca"
                             />
                           </div>
                           <FieldTextarea
@@ -1005,12 +1005,13 @@
                       {#if activeHotelIndexes.includes(i)}
                         <div class="p-4 space-y-4 border-t border-slate-100" transition:slide>
                           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <FieldInput
+                            <CidadeDestinoAutocomplete
                               id={`voucher-hotel-cidade-${i}`}
                               label="Cidade"
                               required={true}
                               bind:value={hotel.cidade}
                               placeholder="Nome da cidade"
+                              endpoint="/api/v1/viagens/cidades-busca"
                             />
                             <FieldInput
                               id={`voucher-hotel-nome-${i}`}

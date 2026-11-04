@@ -30,7 +30,7 @@ export const POST: RequestHandler = async (event) => {
     const rateLimit = await checkPersistentRateLimit('passkey-login-verify', event.getClientAddress?.() || 'unknown', {
       max: 30,
       windowMs: 60_000
-    });
+    }, event.platform?.env?.DB);
     if (!rateLimit.allowed) {
       return json(
         { error: 'Muitas tentativas de passkey. Tente novamente em instantes.' },

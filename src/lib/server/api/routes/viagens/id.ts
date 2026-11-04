@@ -1,8 +1,8 @@
+import type { DataClient } from '$lib/server/data';
 // Migrado para Hono de src/routes/api/v1/viagens/[id]/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from "@sveltejs/kit";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   ensureModuloAccess,
   getAdminClient,
@@ -72,7 +72,7 @@ type ViagemUpdateData = {
 };
 
 async function hasViagemAccessByResponsavel(
-  client: SupabaseClient,
+  client: DataClient,
   scope: UserScope,
   userId: string,
   responsavelUserId?: string | null,
@@ -90,7 +90,7 @@ async function hasViagemAccessByResponsavel(
 }
 
 async function hasViagemAccessByVenda(
-  client: SupabaseClient,
+  client: DataClient,
   scope: UserScope,
   userId: string,
   vendaId?: string | null,
@@ -118,7 +118,7 @@ async function hasViagemAccessByVenda(
 }
 
 async function hasViagemAccessByCliente(
-  client: SupabaseClient,
+  client: DataClient,
   scope: UserScope,
   userId: string,
   clienteId?: string | null,
@@ -303,7 +303,7 @@ export async function handleViagensIdGet(event: RequestEvent) {
       const produtoIds = [
         ...new Set(
           (recibosData || [])
-            .map((r) => r.produto_id || r.produto_resolvido_id)
+            .map((r: any) => r.produto_id || r.produto_resolvido_id)
             .filter(Boolean),
         ),
       ];
@@ -319,7 +319,7 @@ export async function handleViagensIdGet(event: RequestEvent) {
         }
       }
 
-      venda.recibos = (recibosData || []).map((r) => ({
+      venda.recibos = (recibosData || []).map((r: any) => ({
         ...r,
         produto_nome:
           produtosMap.get(r.produto_id || r.produto_resolvido_id) ||

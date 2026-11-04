@@ -1,0 +1,4066 @@
+{
+  "tables": {
+    "admin_avisos_templates": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "assunto": { "kind": "text", "nullable": false },
+        "mensagem": { "kind": "text", "nullable": false },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "sender_key": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "admin_email_settings": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "singleton": { "kind": "boolean", "nullable": false },
+        "smtp_host": { "kind": "text", "nullable": true },
+        "smtp_port": { "kind": "integer", "nullable": true },
+        "smtp_secure": { "kind": "boolean", "nullable": false },
+        "smtp_user": { "kind": "text", "nullable": true },
+        "smtp_pass": { "kind": "text", "nullable": true },
+        "alerta_from_email": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "admin_from_email": { "kind": "text", "nullable": true },
+        "avisos_from_email": { "kind": "text", "nullable": true },
+        "financeiro_from_email": { "kind": "text", "nullable": true },
+        "suporte_from_email": { "kind": "text", "nullable": true },
+        "resend_api_key": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "admin_system_settings": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "singleton": { "kind": "boolean", "nullable": false },
+        "maintenance_enabled": { "kind": "boolean", "nullable": false },
+        "maintenance_message": { "kind": "text", "nullable": true },
+        "updated_by": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "agenda_itens": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": true },
+        "user_id": { "kind": "text", "nullable": true },
+        "tipo": { "kind": "text", "nullable": false },
+        "titulo": { "kind": "text", "nullable": false },
+        "descricao": { "kind": "text", "nullable": true },
+        "start_date": { "kind": "text", "nullable": true },
+        "end_date": { "kind": "text", "nullable": true },
+        "all_day": { "kind": "boolean", "nullable": true },
+        "status": { "kind": "text", "nullable": true },
+        "done": { "kind": "boolean", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true },
+        "start_at": { "kind": "text", "nullable": true },
+        "end_at": { "kind": "text", "nullable": true },
+        "categoria_id": { "kind": "text", "nullable": true },
+        "prioridade": { "kind": "text", "nullable": true },
+        "arquivo": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "airline_iata_aliases": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "airline_code_id": { "kind": "text", "nullable": false },
+        "alias": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "airline_iata_codes": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "iata_code": { "kind": "text", "nullable": false },
+        "airline_name": { "kind": "text", "nullable": false },
+        "active": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "auth_passkey_challenges": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "user_id": { "kind": "text", "nullable": true },
+        "type": { "kind": "text", "nullable": false },
+        "challenge": { "kind": "text", "nullable": false },
+        "expires_at": { "kind": "text", "nullable": false },
+        "used_at": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "auth_passkeys": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "user_id": { "kind": "text", "nullable": false },
+        "user_email": { "kind": "text", "nullable": false },
+        "name": { "kind": "text", "nullable": false },
+        "credential_id": { "kind": "text", "nullable": false },
+        "public_key": { "kind": "text", "nullable": false },
+        "counter": { "kind": "integer", "nullable": false },
+        "transports": { "kind": "json", "nullable": false },
+        "device_type": { "kind": "text", "nullable": true },
+        "backed_up": { "kind": "boolean", "nullable": false },
+        "aaguid": { "kind": "text", "nullable": true },
+        "origin": { "kind": "text", "nullable": true },
+        "rp_id": { "kind": "text", "nullable": true },
+        "last_used_at": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "auth_signup_debug": {
+      "columns": {
+        "id": { "kind": "integer", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "auth_user_id": { "kind": "text", "nullable": true },
+        "auth_email": { "kind": "text", "nullable": true },
+        "err": { "kind": "text", "nullable": true },
+        "detail": { "kind": "text", "nullable": true },
+        "hint": { "kind": "text", "nullable": true },
+        "context": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "campanhas": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "titulo": { "kind": "text", "nullable": false },
+        "imagem_url": { "kind": "text", "nullable": true },
+        "imagem_path": { "kind": "text", "nullable": true },
+        "link_url": { "kind": "text", "nullable": true },
+        "link_instagram": { "kind": "text", "nullable": true },
+        "link_facebook": { "kind": "text", "nullable": true },
+        "data_campanha": { "kind": "text", "nullable": false },
+        "validade_ate": { "kind": "text", "nullable": true },
+        "regras": { "kind": "text", "nullable": true },
+        "status": { "kind": "text", "nullable": false },
+        "created_by": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "arquivada_em": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "cidades": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "subdivisao_id": { "kind": "text", "nullable": true },
+        "nome": { "kind": "text", "nullable": false },
+        "latitude": { "kind": "real", "nullable": true },
+        "longitude": { "kind": "real", "nullable": true },
+        "populacao": { "kind": "integer", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true },
+        "descricao": { "kind": "text", "nullable": true },
+        "grau_importancia": { "kind": "integer", "nullable": true },
+        "nome_ptBR": { "kind": "text", "nullable": true },
+        "estado_nome": { "kind": "text", "nullable": true },
+        "pais_nome": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "cidades_import_staging": {
+      "columns": {
+        "id": { "kind": "integer", "nullable": false },
+        "cidade": { "kind": "text", "nullable": false },
+        "pais": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "cidades_import_targets": {
+      "columns": {
+        "cidade_key": { "kind": "text", "nullable": true },
+        "pais_id": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": []
+    },
+    "cidades_import_targets_norm": {
+      "columns": {
+        "pais_id": { "kind": "text", "nullable": true },
+        "cidade_key": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": []
+    },
+    "cidades_norm_cache": {
+      "columns": {
+        "id": { "kind": "text", "nullable": true },
+        "subdivisao_id": { "kind": "text", "nullable": true },
+        "pais_id": { "kind": "text", "nullable": true },
+        "nome_key": { "kind": "text", "nullable": true },
+        "nome_pt_key": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": []
+    },
+    "circuito_datas": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "circuito_id": { "kind": "text", "nullable": false },
+        "data_inicio": { "kind": "text", "nullable": false },
+        "cidade_inicio_id": { "kind": "text", "nullable": true },
+        "dias_extra_antes": { "kind": "integer", "nullable": false },
+        "dias_extra_depois": { "kind": "integer", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "circuito_dias": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "circuito_id": { "kind": "text", "nullable": false },
+        "dia_numero": { "kind": "integer", "nullable": false },
+        "titulo": { "kind": "text", "nullable": true },
+        "descricao": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "circuito_dias_cidades": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "circuito_dia_id": { "kind": "text", "nullable": false },
+        "cidade_id": { "kind": "text", "nullable": false },
+        "ordem": { "kind": "integer", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "circuitos": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "codigo": { "kind": "text", "nullable": true },
+        "operador": { "kind": "text", "nullable": true },
+        "resumo": { "kind": "text", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "cliente_acompanhantes": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "cliente_id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "nome_completo": { "kind": "text", "nullable": false },
+        "cpf": { "kind": "text", "nullable": true },
+        "rg": { "kind": "text", "nullable": true },
+        "telefone": { "kind": "text", "nullable": true },
+        "grau_parentesco": { "kind": "text", "nullable": true },
+        "data_nascimento": { "kind": "text", "nullable": true },
+        "observacoes": { "kind": "text", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_by": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "cliente_template_dispatches": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "user_id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": true },
+        "cliente_id": { "kind": "text", "nullable": false },
+        "template_id": { "kind": "text", "nullable": true },
+        "canal": { "kind": "text", "nullable": false },
+        "categoria": { "kind": "text", "nullable": false },
+        "status": { "kind": "text", "nullable": false },
+        "recipient_name": { "kind": "text", "nullable": true },
+        "recipient_contact": { "kind": "text", "nullable": true },
+        "subject": { "kind": "text", "nullable": true },
+        "sent_at": { "kind": "text", "nullable": false },
+        "sent_day": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "clientes": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "nascimento": { "kind": "text", "nullable": true },
+        "cpf": { "kind": "text", "nullable": true },
+        "telefone": { "kind": "text", "nullable": true },
+        "email": { "kind": "text", "nullable": true },
+        "endereco": { "kind": "text", "nullable": true },
+        "complemento": { "kind": "text", "nullable": true },
+        "cidade": { "kind": "text", "nullable": true },
+        "estado": { "kind": "text", "nullable": true },
+        "notas": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true },
+        "whatsapp": { "kind": "text", "nullable": true },
+        "rg": { "kind": "text", "nullable": true },
+        "genero": { "kind": "text", "nullable": true },
+        "nacionalidade": { "kind": "text", "nullable": true },
+        "tipo_cliente": { "kind": "text", "nullable": true },
+        "tags": { "kind": "json", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "company_id": { "kind": "text", "nullable": true },
+        "cep": { "kind": "text", "nullable": true },
+        "numero": { "kind": "text", "nullable": true },
+        "active": { "kind": "boolean", "nullable": true },
+        "classificacao": { "kind": "text", "nullable": true },
+        "created_by": { "kind": "text", "nullable": true },
+        "tipo_pessoa": { "kind": "text", "nullable": true },
+        "lgpd_anonimizado": { "kind": "boolean", "nullable": false },
+        "lgpd_anonimizado_em": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "clientes_company": {
+      "columns": {
+        "company_id": { "kind": "text", "nullable": false },
+        "cliente_id": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["company_id", "cliente_id"]
+    },
+    "comissionamento_geral": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "produto_id": { "kind": "text", "nullable": false },
+        "meta_nao_atingida": { "kind": "real", "nullable": true },
+        "meta_atingida": { "kind": "real", "nullable": true },
+        "super_meta": { "kind": "real", "nullable": true },
+        "diferenciado": { "kind": "real", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "comissoes": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "venda_id": { "kind": "text", "nullable": true },
+        "vendedor_id": { "kind": "text", "nullable": true },
+        "regra_id": { "kind": "text", "nullable": true },
+        "valor_venda": { "kind": "real", "nullable": false },
+        "valor_comissionavel": { "kind": "real", "nullable": false },
+        "percentual_aplicado": { "kind": "real", "nullable": false },
+        "valor_comissao": { "kind": "real", "nullable": false },
+        "status": { "kind": "text", "nullable": false },
+        "data_pagamento": { "kind": "text", "nullable": true },
+        "observacoes_pagamento": { "kind": "text", "nullable": true },
+        "pago_por": { "kind": "text", "nullable": true },
+        "mes_referencia": { "kind": "integer", "nullable": true },
+        "ano_referencia": { "kind": "integer", "nullable": true },
+        "company_id": { "kind": "text", "nullable": true },
+        "created_by": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "recibo_id": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "commission_rule": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "descricao": { "kind": "text", "nullable": true },
+        "tipo": { "kind": "text", "nullable": false },
+        "meta_nao_atingida": { "kind": "real", "nullable": true },
+        "meta_atingida": { "kind": "real", "nullable": true },
+        "super_meta": { "kind": "real", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": true },
+        "created_by": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "commission_tier": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "rule_id": { "kind": "text", "nullable": false },
+        "faixa": { "kind": "text", "nullable": false },
+        "de_pct": { "kind": "real", "nullable": false },
+        "ate_pct": { "kind": "real", "nullable": false },
+        "inc_pct_meta": { "kind": "real", "nullable": false },
+        "inc_pct_comissao": { "kind": "real", "nullable": false },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "companies": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "nome_empresa": { "kind": "text", "nullable": false },
+        "nome_fantasia": { "kind": "text", "nullable": false },
+        "cnpj": { "kind": "text", "nullable": false },
+        "endereco": { "kind": "text", "nullable": true },
+        "telefone": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true },
+        "cidade": { "kind": "text", "nullable": true },
+        "estado": { "kind": "text", "nullable": true },
+        "owner_user_id": { "kind": "text", "nullable": true },
+        "active": { "kind": "boolean", "nullable": false },
+        "logo_url": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "company_billing": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "plan_id": { "kind": "text", "nullable": true },
+        "status": { "kind": "text", "nullable": false },
+        "valor_mensal": { "kind": "real", "nullable": true },
+        "ultimo_pagamento": { "kind": "text", "nullable": true },
+        "proximo_vencimento": { "kind": "text", "nullable": true },
+        "inicio_cobranca": { "kind": "text", "nullable": true },
+        "trial_ends_at": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "company_billing_events": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "billing_id": { "kind": "text", "nullable": true },
+        "tipo": { "kind": "text", "nullable": false },
+        "status": { "kind": "text", "nullable": false },
+        "valor": { "kind": "real", "nullable": true },
+        "moeda": { "kind": "text", "nullable": false },
+        "referencia": { "kind": "text", "nullable": true },
+        "vencimento": { "kind": "text", "nullable": true },
+        "pago_em": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "conciliacao_dias_sem_movimento": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "data": { "kind": "text", "nullable": false },
+        "marcado_por": { "kind": "text", "nullable": true },
+        "marcado_em": { "kind": "text", "nullable": false },
+        "observacao": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "conciliacao_execucoes": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "actor": { "kind": "text", "nullable": false },
+        "actor_user_id": { "kind": "text", "nullable": true },
+        "checked": { "kind": "integer", "nullable": false },
+        "reconciled": { "kind": "integer", "nullable": false },
+        "updated_taxes": { "kind": "integer", "nullable": false },
+        "still_pending": { "kind": "integer", "nullable": false },
+        "status": { "kind": "text", "nullable": false },
+        "error_message": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "conciliacao_recibo_changes": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "conciliacao_recibo_id": { "kind": "text", "nullable": true },
+        "venda_id": { "kind": "text", "nullable": true },
+        "venda_recibo_id": { "kind": "text", "nullable": true },
+        "numero_recibo": { "kind": "text", "nullable": true },
+        "field": { "kind": "text", "nullable": false },
+        "old_value": { "kind": "real", "nullable": true },
+        "new_value": { "kind": "real", "nullable": true },
+        "actor": { "kind": "text", "nullable": false },
+        "changed_by": { "kind": "text", "nullable": true },
+        "changed_at": { "kind": "text", "nullable": false },
+        "reverted_at": { "kind": "text", "nullable": true },
+        "reverted_by": { "kind": "text", "nullable": true },
+        "revert_reason": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "conciliacao_recibos": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "documento": { "kind": "text", "nullable": false },
+        "movimento_data": { "kind": "text", "nullable": true },
+        "status": { "kind": "text", "nullable": false },
+        "descricao": { "kind": "text", "nullable": true },
+        "valor_lancamentos": { "kind": "real", "nullable": true },
+        "valor_taxas": { "kind": "real", "nullable": true },
+        "valor_descontos": { "kind": "real", "nullable": true },
+        "valor_abatimentos": { "kind": "real", "nullable": true },
+        "valor_calculada_loja": { "kind": "real", "nullable": true },
+        "valor_visao_master": { "kind": "real", "nullable": true },
+        "valor_opfax": { "kind": "real", "nullable": true },
+        "valor_saldo": { "kind": "real", "nullable": true },
+        "origem": { "kind": "text", "nullable": true },
+        "raw": { "kind": "json", "nullable": true },
+        "conciliado": { "kind": "boolean", "nullable": false },
+        "match_total": { "kind": "boolean", "nullable": true },
+        "match_taxas": { "kind": "boolean", "nullable": true },
+        "sistema_valor_total": { "kind": "real", "nullable": true },
+        "sistema_valor_taxas": { "kind": "real", "nullable": true },
+        "diff_total": { "kind": "real", "nullable": true },
+        "diff_taxas": { "kind": "real", "nullable": true },
+        "venda_id": { "kind": "text", "nullable": true },
+        "venda_recibo_id": { "kind": "text", "nullable": true },
+        "imported_by": { "kind": "text", "nullable": true },
+        "last_checked_at": { "kind": "text", "nullable": true },
+        "conciliado_em": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "ranking_vendedor_id": { "kind": "text", "nullable": true },
+        "ranking_produto_id": { "kind": "text", "nullable": true },
+        "ranking_assigned_by": { "kind": "text", "nullable": true },
+        "ranking_assigned_at": { "kind": "text", "nullable": true },
+        "descricao_chave": { "kind": "text", "nullable": false },
+        "valor_venda_real": { "kind": "real", "nullable": true },
+        "valor_comissao_loja": { "kind": "real", "nullable": true },
+        "percentual_comissao_loja": { "kind": "real", "nullable": true },
+        "faixa_comissao": { "kind": "text", "nullable": true },
+        "is_seguro_viagem": { "kind": "boolean", "nullable": false },
+        "is_baixa_rac": { "kind": "boolean", "nullable": false },
+        "valor_nao_comissionavel": { "kind": "real", "nullable": true },
+        "numero_reserva": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "consultorias_online": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "cliente_id": { "kind": "text", "nullable": true },
+        "cliente_nome": { "kind": "text", "nullable": false },
+        "data_hora": { "kind": "text", "nullable": false },
+        "lembrete": { "kind": "text", "nullable": false },
+        "destino": { "kind": "text", "nullable": true },
+        "quantidade_pessoas": { "kind": "integer", "nullable": false },
+        "orcamento_id": { "kind": "text", "nullable": true },
+        "taxa_consultoria": { "kind": "real", "nullable": false },
+        "notas": { "kind": "text", "nullable": true },
+        "created_by": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "lembrete_enviado_em": { "kind": "text", "nullable": true },
+        "lembrete_envios": { "kind": "json", "nullable": false },
+        "fechada": { "kind": "boolean", "nullable": false },
+        "fechada_em": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "crm_message_templates": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "slug": { "kind": "text", "nullable": false },
+        "title": { "kind": "text", "nullable": false },
+        "category": { "kind": "text", "nullable": false },
+        "description": { "kind": "text", "nullable": true },
+        "subject_type": { "kind": "text", "nullable": false },
+        "message_template": { "kind": "text", "nullable": false },
+        "theme_key": { "kind": "text", "nullable": false },
+        "layout_key": { "kind": "text", "nullable": false },
+        "logo_position": { "kind": "text", "nullable": false },
+        "is_active": { "kind": "boolean", "nullable": false },
+        "sort_order": { "kind": "integer", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "crm_template_categories": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "descricao": { "kind": "text", "nullable": true },
+        "icone": { "kind": "text", "nullable": false },
+        "sort_order": { "kind": "integer", "nullable": false },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "dashboard_widgets": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "usuario_id": { "kind": "text", "nullable": false },
+        "widget": { "kind": "text", "nullable": false },
+        "ordem": { "kind": "integer", "nullable": false },
+        "visivel": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true },
+        "settings": { "kind": "json", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "documentos_viagens": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "uploaded_by": { "kind": "text", "nullable": true },
+        "file_name": { "kind": "text", "nullable": false },
+        "display_name": { "kind": "text", "nullable": true },
+        "storage_bucket": { "kind": "text", "nullable": false },
+        "storage_path": { "kind": "text", "nullable": false },
+        "mime_type": { "kind": "text", "nullable": true },
+        "size_bytes": { "kind": "integer", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": true },
+        "updated_by": { "kind": "text", "nullable": true },
+        "title": { "kind": "text", "nullable": true },
+        "template_text": { "kind": "text", "nullable": true },
+        "template_fields": { "kind": "json", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "escala_dia": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "escala_mes_id": { "kind": "text", "nullable": false },
+        "usuario_id": { "kind": "text", "nullable": false },
+        "data": { "kind": "text", "nullable": false },
+        "tipo": { "kind": "text", "nullable": false },
+        "hora_inicio": { "kind": "text", "nullable": true },
+        "hora_fim": { "kind": "text", "nullable": true },
+        "observacao": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "escala_horario_usuario": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "usuario_id": { "kind": "text", "nullable": false },
+        "seg_inicio": { "kind": "text", "nullable": true },
+        "seg_fim": { "kind": "text", "nullable": true },
+        "ter_inicio": { "kind": "text", "nullable": true },
+        "ter_fim": { "kind": "text", "nullable": true },
+        "qua_inicio": { "kind": "text", "nullable": true },
+        "qua_fim": { "kind": "text", "nullable": true },
+        "qui_inicio": { "kind": "text", "nullable": true },
+        "qui_fim": { "kind": "text", "nullable": true },
+        "sex_inicio": { "kind": "text", "nullable": true },
+        "sex_fim": { "kind": "text", "nullable": true },
+        "sab_inicio": { "kind": "text", "nullable": true },
+        "sab_fim": { "kind": "text", "nullable": true },
+        "dom_inicio": { "kind": "text", "nullable": true },
+        "dom_fim": { "kind": "text", "nullable": true },
+        "feriado_inicio": { "kind": "text", "nullable": true },
+        "feriado_fim": { "kind": "text", "nullable": true },
+        "auto_aplicar": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "escala_mes": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "gestor_id": { "kind": "text", "nullable": false },
+        "periodo": { "kind": "text", "nullable": false },
+        "status": { "kind": "text", "nullable": false },
+        "observacoes": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "estados": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "pais_id": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "feriados": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "data": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "tipo": { "kind": "text", "nullable": false },
+        "estado": { "kind": "text", "nullable": true },
+        "cidade": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "financeiro_empresas": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "financeiro_id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "status": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "approved_at": { "kind": "text", "nullable": true },
+        "created_by": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "formas_pagamento": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "descricao": { "kind": "text", "nullable": true },
+        "paga_comissao": { "kind": "boolean", "nullable": false },
+        "permite_desconto": { "kind": "boolean", "nullable": false },
+        "desconto_padrao_pct": { "kind": "real", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "fornecedores": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "localizacao": { "kind": "text", "nullable": false },
+        "nome_completo": { "kind": "text", "nullable": false },
+        "nome_fantasia": { "kind": "text", "nullable": true },
+        "cnpj": { "kind": "text", "nullable": true },
+        "cep": { "kind": "text", "nullable": true },
+        "cidade": { "kind": "text", "nullable": true },
+        "estado": { "kind": "text", "nullable": true },
+        "telefone": { "kind": "text", "nullable": true },
+        "whatsapp": { "kind": "text", "nullable": true },
+        "telefone_emergencia": { "kind": "text", "nullable": true },
+        "responsavel": { "kind": "text", "nullable": true },
+        "tipo_faturamento": { "kind": "text", "nullable": false },
+        "principais_servicos": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "gestor_equipe_compartilhada": {
+      "columns": {
+        "gestor_id": { "kind": "text", "nullable": false },
+        "gestor_base_id": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "created_by": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["gestor_id"]
+    },
+    "gestor_vendedor": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "gestor_id": { "kind": "text", "nullable": true },
+        "vendedor_id": { "kind": "text", "nullable": true },
+        "company_id": { "kind": "text", "nullable": true },
+        "pode_modificar": { "kind": "boolean", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "historico_viagens_real": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "venda_id": { "kind": "text", "nullable": false },
+        "cliente_id": { "kind": "text", "nullable": false },
+        "destino_id": { "kind": "text", "nullable": false },
+        "data_viagem": { "kind": "text", "nullable": true },
+        "produto": { "kind": "text", "nullable": true },
+        "valor": { "kind": "real", "nullable": true },
+        "recibos": { "kind": "json", "nullable": true },
+        "notas": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true },
+        "valor_total": { "kind": "real", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "inquiry": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "origin": { "kind": "text", "nullable": false },
+        "client_id": { "kind": "text", "nullable": true },
+        "assigned_seller_id": { "kind": "text", "nullable": true },
+        "country_id": { "kind": "text", "nullable": true },
+        "city_id": { "kind": "text", "nullable": true },
+        "destination_id": { "kind": "text", "nullable": true },
+        "checkin": { "kind": "text", "nullable": true },
+        "checkout": { "kind": "text", "nullable": true },
+        "adults": { "kind": "integer", "nullable": false },
+        "children": { "kind": "integer", "nullable": false },
+        "currency_preference": { "kind": "text", "nullable": false },
+        "status": { "kind": "text", "nullable": false },
+        "notes": { "kind": "text", "nullable": true },
+        "assigned_at": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "inquiry_preference": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "inquiry_id": { "kind": "text", "nullable": false },
+        "preference_key": { "kind": "text", "nullable": false },
+        "preference_value": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "lgpd_atividades_tratamento": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "finalidade": { "kind": "text", "nullable": false },
+        "base_legal": { "kind": "text", "nullable": false },
+        "dados_tratados": { "kind": "json", "nullable": false },
+        "titulares": { "kind": "json", "nullable": false },
+        "compartilhamento": { "kind": "text", "nullable": true },
+        "retencao_meses": { "kind": "integer", "nullable": true },
+        "medidas_seguranca": { "kind": "text", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "lgpd_consentimentos": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "cliente_id": { "kind": "text", "nullable": true },
+        "titular_email": { "kind": "text", "nullable": true },
+        "titular_cpf": { "kind": "text", "nullable": true },
+        "finalidade": { "kind": "text", "nullable": false },
+        "consentido": { "kind": "boolean", "nullable": false },
+        "origem": { "kind": "text", "nullable": false },
+        "ip_origem": { "kind": "text", "nullable": true },
+        "user_agent": { "kind": "text", "nullable": true },
+        "versao_politica": { "kind": "text", "nullable": true },
+        "revogado_em": { "kind": "text", "nullable": true },
+        "revogado_motivo": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "lgpd_solicitacoes": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "tipo": { "kind": "text", "nullable": false },
+        "titular_nome": { "kind": "text", "nullable": false },
+        "titular_email": { "kind": "text", "nullable": false },
+        "titular_cpf": { "kind": "text", "nullable": true },
+        "company_id": { "kind": "text", "nullable": true },
+        "cliente_id": { "kind": "text", "nullable": true },
+        "user_id": { "kind": "text", "nullable": true },
+        "descricao": { "kind": "text", "nullable": false },
+        "status": { "kind": "text", "nullable": false },
+        "resposta": { "kind": "text", "nullable": true },
+        "respondido_por": { "kind": "text", "nullable": true },
+        "respondido_em": { "kind": "text", "nullable": true },
+        "prazo_legal": { "kind": "text", "nullable": false },
+        "ip_origem": { "kind": "text", "nullable": true },
+        "user_agent": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "logs": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "user_id": { "kind": "text", "nullable": true },
+        "modulo": { "kind": "text", "nullable": false },
+        "acao": { "kind": "text", "nullable": false },
+        "detalhes": { "kind": "json", "nullable": true },
+        "ip": { "kind": "text", "nullable": true },
+        "user_agent": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "master_documents": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "master_id": { "kind": "text", "nullable": false },
+        "uploaded_by": { "kind": "text", "nullable": false },
+        "doc_type": { "kind": "text", "nullable": false },
+        "file_name": { "kind": "text", "nullable": false },
+        "storage_bucket": { "kind": "text", "nullable": false },
+        "storage_path": { "kind": "text", "nullable": false },
+        "mime_type": { "kind": "text", "nullable": true },
+        "size_bytes": { "kind": "integer", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "master_empresas": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "master_id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "status": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "approved_at": { "kind": "text", "nullable": true },
+        "approved_by": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "menu_prefs": {
+      "columns": {
+        "user_id": { "kind": "text", "nullable": false },
+        "prefs": { "kind": "json", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["user_id"]
+    },
+    "message_templates_v2": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true },
+        "created_by": { "kind": "text", "nullable": true },
+        "scope": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": true },
+        "gestor_id": { "kind": "text", "nullable": true },
+        "nome": { "kind": "text", "nullable": false },
+        "slug": { "kind": "text", "nullable": false },
+        "categoria": { "kind": "text", "nullable": false },
+        "ocasiao": { "kind": "text", "nullable": true },
+        "description": { "kind": "text", "nullable": true },
+        "tags": { "kind": "json", "nullable": true },
+        "theme_id": { "kind": "text", "nullable": true },
+        "assunto": { "kind": "text", "nullable": true },
+        "titulo": { "kind": "text", "nullable": false },
+        "corpo": { "kind": "text", "nullable": false },
+        "assinatura_padrao": { "kind": "text", "nullable": true },
+        "required_vars": { "kind": "json", "nullable": true },
+        "optional_vars": { "kind": "json", "nullable": true },
+        "title_style_override": { "kind": "json", "nullable": true },
+        "greeting_style_override": { "kind": "json", "nullable": true },
+        "body_style_override": { "kind": "json", "nullable": true },
+        "signature_style_override": { "kind": "json", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": true },
+        "is_default": { "kind": "boolean", "nullable": true },
+        "is_favorite": { "kind": "boolean", "nullable": true },
+        "usage_count": { "kind": "integer", "nullable": true },
+        "last_used_at": { "kind": "text", "nullable": true },
+        "metadata": { "kind": "json", "nullable": true },
+        "version": { "kind": "integer", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "metas_vendedor": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "vendedor_id": { "kind": "text", "nullable": false },
+        "periodo": { "kind": "text", "nullable": false },
+        "meta_geral": { "kind": "real", "nullable": false },
+        "meta_diferenciada": { "kind": "real", "nullable": false },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "template_id": { "kind": "text", "nullable": true },
+        "scope": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "metas_vendedor_produto": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "meta_vendedor_id": { "kind": "text", "nullable": false },
+        "produto_id": { "kind": "text", "nullable": false },
+        "valor": { "kind": "real", "nullable": false },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "minhas_preferencias": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "created_by": { "kind": "text", "nullable": false },
+        "tipo_produto_id": { "kind": "text", "nullable": true },
+        "cidade_id": { "kind": "text", "nullable": true },
+        "nome": { "kind": "text", "nullable": false },
+        "localizacao": { "kind": "text", "nullable": true },
+        "classificacao": { "kind": "text", "nullable": true },
+        "observacao": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": true },
+        "updated_by": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "minhas_preferencias_shares": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "preferencia_id": { "kind": "text", "nullable": false },
+        "shared_by": { "kind": "text", "nullable": false },
+        "shared_with": { "kind": "text", "nullable": false },
+        "status": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "accepted_at": { "kind": "text", "nullable": true },
+        "revoked_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "modulo_acesso": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "usuario_id": { "kind": "text", "nullable": false },
+        "modulo": { "kind": "text", "nullable": false },
+        "permissao": { "kind": "text", "nullable": false },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "modulo_acesso_backup": {
+      "columns": {
+        "id": { "kind": "text", "nullable": true },
+        "usuario_id": { "kind": "text", "nullable": true },
+        "modulo": { "kind": "text", "nullable": true },
+        "permissao": { "kind": "text", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": []
+    },
+    "mural_recado_respostas": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "recado_id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "sender_id": { "kind": "text", "nullable": false },
+        "conteudo": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "mural_recados": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "sender_id": { "kind": "text", "nullable": false },
+        "receiver_id": { "kind": "text", "nullable": true },
+        "assunto": { "kind": "text", "nullable": true },
+        "conteudo": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "sender_deleted": { "kind": "boolean", "nullable": false },
+        "receiver_deleted": { "kind": "boolean", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "mural_recados_arquivos": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "recado_id": { "kind": "text", "nullable": false },
+        "uploaded_by": { "kind": "text", "nullable": true },
+        "file_name": { "kind": "text", "nullable": false },
+        "storage_bucket": { "kind": "text", "nullable": false },
+        "storage_path": { "kind": "text", "nullable": false },
+        "mime_type": { "kind": "text", "nullable": true },
+        "size_bytes": { "kind": "integer", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "mural_recados_leituras": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "recado_id": { "kind": "text", "nullable": false },
+        "user_id": { "kind": "text", "nullable": false },
+        "read_at": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "paises": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "codigo_iso": { "kind": "text", "nullable": false },
+        "continente": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "parametros_cambios": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "owner_user_id": { "kind": "text", "nullable": true },
+        "moeda": { "kind": "text", "nullable": false },
+        "data": { "kind": "text", "nullable": false },
+        "valor": { "kind": "real", "nullable": false },
+        "observacoes": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "parametros_comissao": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": true },
+        "owner_user_id": { "kind": "text", "nullable": true },
+        "usar_taxas_na_meta": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true },
+        "foco_valor": { "kind": "text", "nullable": false },
+        "modo_corporativo": { "kind": "boolean", "nullable": false },
+        "politica_cancelamento": { "kind": "text", "nullable": false },
+        "foco_faturamento": { "kind": "text", "nullable": true },
+        "exportacao_pdf": { "kind": "boolean", "nullable": true },
+        "exportacao_excel": { "kind": "boolean", "nullable": true },
+        "conciliacao_sobrepoe_vendas": { "kind": "boolean", "nullable": false },
+        "mfa_obrigatorio": { "kind": "boolean", "nullable": false },
+        "conciliacao_regra_ativa": { "kind": "boolean", "nullable": false },
+        "conciliacao_meta_nao_atingida": { "kind": "real", "nullable": true },
+        "conciliacao_meta_atingida": { "kind": "real", "nullable": true },
+        "conciliacao_super_meta": { "kind": "real", "nullable": true },
+        "conciliacao_tipo": { "kind": "text", "nullable": false },
+        "conciliacao_tiers": { "kind": "json", "nullable": false },
+        "conciliacao_faixas_loja": { "kind": "json", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "parametros_pagamentos_nao_comissionaveis": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "termo": { "kind": "text", "nullable": false },
+        "termo_normalizado": { "kind": "text", "nullable": false },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "created_by": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": false },
+        "updated_by": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "parametros_sistema": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": true },
+        "usar_taxas_na_meta": { "kind": "boolean", "nullable": false },
+        "foco_valor": { "kind": "text", "nullable": false },
+        "modo_corporativo": { "kind": "boolean", "nullable": false },
+        "politica_cancelamento": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "plans": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "descricao": { "kind": "text", "nullable": true },
+        "valor_mensal": { "kind": "real", "nullable": false },
+        "moeda": { "kind": "text", "nullable": false },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "product_commission_rule": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "produto_id": { "kind": "text", "nullable": false },
+        "rule_id": { "kind": "text", "nullable": false },
+        "fix_meta_nao_atingida": { "kind": "real", "nullable": true },
+        "fix_meta_atingida": { "kind": "real", "nullable": true },
+        "fix_super_meta": { "kind": "real", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "product_commission_rule_pacote": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "produto_id": { "kind": "text", "nullable": false },
+        "tipo_pacote": { "kind": "text", "nullable": false },
+        "rule_id": { "kind": "text", "nullable": true },
+        "fix_meta_nao_atingida": { "kind": "real", "nullable": true },
+        "fix_meta_atingida": { "kind": "real", "nullable": true },
+        "fix_super_meta": { "kind": "real", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "produtos": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "cidade_id": { "kind": "text", "nullable": true },
+        "informacoes_importantes": { "kind": "text", "nullable": true },
+        "atracao_principal": { "kind": "text", "nullable": true },
+        "melhor_epoca": { "kind": "text", "nullable": true },
+        "duracao_sugerida": { "kind": "text", "nullable": true },
+        "nivel_preco": { "kind": "text", "nullable": true },
+        "imagem_url": { "kind": "text", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true },
+        "tipo_produto": { "kind": "text", "nullable": true },
+        "destino": { "kind": "text", "nullable": true },
+        "fornecedor_id": { "kind": "text", "nullable": true },
+        "todas_as_cidades": { "kind": "boolean", "nullable": false },
+        "valor_neto": { "kind": "real", "nullable": true },
+        "margem": { "kind": "real", "nullable": true },
+        "valor_venda": { "kind": "real", "nullable": true },
+        "moeda": { "kind": "text", "nullable": true },
+        "cambio": { "kind": "real", "nullable": true },
+        "valor_em_reais": { "kind": "real", "nullable": true },
+        "circuito_id": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "produtos_tarifas": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "produto_id": { "kind": "text", "nullable": false },
+        "acomodacao": { "kind": "text", "nullable": false },
+        "qte_pax": { "kind": "integer", "nullable": false },
+        "tipo": { "kind": "text", "nullable": true },
+        "validade_de": { "kind": "text", "nullable": false },
+        "validade_ate": { "kind": "text", "nullable": false },
+        "valor_neto": { "kind": "real", "nullable": false },
+        "padrao": { "kind": "text", "nullable": false },
+        "margem": { "kind": "real", "nullable": true },
+        "valor_venda": { "kind": "real", "nullable": false },
+        "moeda": { "kind": "text", "nullable": false },
+        "cambio": { "kind": "real", "nullable": false },
+        "valor_em_reais": { "kind": "real", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "quote": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "created_by": { "kind": "text", "nullable": false },
+        "client_id": { "kind": "text", "nullable": true },
+        "status": { "kind": "text", "nullable": false },
+        "currency": { "kind": "text", "nullable": false },
+        "total": { "kind": "real", "nullable": false },
+        "average_confidence": { "kind": "real", "nullable": true },
+        "source_file_path": { "kind": "text", "nullable": true },
+        "source_file_url": { "kind": "text", "nullable": true },
+        "raw_json": { "kind": "json", "nullable": false },
+        "status_negociacao": { "kind": "text", "nullable": false },
+        "subtotal": { "kind": "real", "nullable": true },
+        "taxes": { "kind": "real", "nullable": true },
+        "client_name": { "kind": "text", "nullable": true },
+        "client_whatsapp": { "kind": "text", "nullable": true },
+        "client_email": { "kind": "text", "nullable": true },
+        "destino_cidade_id": { "kind": "text", "nullable": true },
+        "data_embarque": { "kind": "text", "nullable": true },
+        "data_final": { "kind": "text", "nullable": true },
+        "last_interaction_at": { "kind": "text", "nullable": true },
+        "last_interaction_notes": { "kind": "text", "nullable": true },
+        "roteiro_id": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "quote_import_log": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "quote_id": { "kind": "text", "nullable": false },
+        "level": { "kind": "text", "nullable": false },
+        "message": { "kind": "text", "nullable": true },
+        "payload": { "kind": "json", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "quote_item": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "quote_id": { "kind": "text", "nullable": false },
+        "item_type": { "kind": "text", "nullable": false },
+        "title": { "kind": "text", "nullable": true },
+        "product_name": { "kind": "text", "nullable": true },
+        "city_name": { "kind": "text", "nullable": true },
+        "quantity": { "kind": "integer", "nullable": false },
+        "unit_price": { "kind": "real", "nullable": false },
+        "total_amount": { "kind": "real", "nullable": false },
+        "start_date": { "kind": "text", "nullable": true },
+        "end_date": { "kind": "text", "nullable": true },
+        "currency": { "kind": "text", "nullable": false },
+        "confidence": { "kind": "real", "nullable": true },
+        "raw": { "kind": "json", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "order_index": { "kind": "integer", "nullable": false },
+        "taxes_amount": { "kind": "real", "nullable": false },
+        "cidade_id": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "quote_item_segment": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "quote_item_id": { "kind": "text", "nullable": false },
+        "segment_type": { "kind": "text", "nullable": false },
+        "data": { "kind": "json", "nullable": false },
+        "order_index": { "kind": "integer", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "quote_print_settings": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "owner_user_id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": true },
+        "logo_url": { "kind": "text", "nullable": true },
+        "consultor_nome": { "kind": "text", "nullable": true },
+        "filial_nome": { "kind": "text", "nullable": true },
+        "endereco_linha1": { "kind": "text", "nullable": true },
+        "endereco_linha2": { "kind": "text", "nullable": true },
+        "endereco_linha3": { "kind": "text", "nullable": true },
+        "telefone": { "kind": "text", "nullable": true },
+        "whatsapp": { "kind": "text", "nullable": true },
+        "email": { "kind": "text", "nullable": true },
+        "rodape_texto": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "logo_path": { "kind": "text", "nullable": true },
+        "imagem_complementar_url": { "kind": "text", "nullable": true },
+        "imagem_complementar_path": { "kind": "text", "nullable": true },
+        "whatsapp_codigo_pais": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "ranking_read_model_status": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "modelo": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "mes": { "kind": "text", "nullable": false },
+        "status": { "kind": "text", "nullable": false },
+        "dirty_at": { "kind": "text", "nullable": true },
+        "rebuilt_at": { "kind": "text", "nullable": true },
+        "last_error": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "ranking_recibo_contribuicoes": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "source_key": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "mes": { "kind": "text", "nullable": false },
+        "data_recibo": { "kind": "text", "nullable": false },
+        "vendedor_id": { "kind": "text", "nullable": false },
+        "cliente_id": { "kind": "text", "nullable": true },
+        "venda_id": { "kind": "text", "nullable": true },
+        "recibo_id": { "kind": "text", "nullable": true },
+        "venda_key": { "kind": "text", "nullable": false },
+        "recibo_numero": { "kind": "text", "nullable": true },
+        "produto_id": { "kind": "text", "nullable": true },
+        "produto_nome": { "kind": "text", "nullable": true },
+        "destino_nome": { "kind": "text", "nullable": true },
+        "valor_bruto": { "kind": "real", "nullable": false },
+        "valor_taxas": { "kind": "real", "nullable": false },
+        "valor_seguro": { "kind": "real", "nullable": false },
+        "is_seguro": { "kind": "boolean", "nullable": false },
+        "fator": { "kind": "real", "nullable": false },
+        "source_bruto": { "kind": "real", "nullable": false },
+        "source_taxas": { "kind": "real", "nullable": false },
+        "origem": { "kind": "text", "nullable": false },
+        "built_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "recibos": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "venda_id": { "kind": "text", "nullable": false },
+        "produto_id": { "kind": "text", "nullable": false },
+        "valor": { "kind": "real", "nullable": false },
+        "descricao": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "roteiro_dia": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "created_by": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": true },
+        "roteiro_id": { "kind": "text", "nullable": true },
+        "cidade": { "kind": "text", "nullable": false },
+        "data": { "kind": "text", "nullable": true },
+        "ordem": { "kind": "integer", "nullable": true },
+        "descricao": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": true },
+        "percurso": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "roteiro_hotel": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "roteiro_id": { "kind": "text", "nullable": false },
+        "cidade": { "kind": "text", "nullable": true },
+        "hotel": { "kind": "text", "nullable": true },
+        "data_inicio": { "kind": "text", "nullable": true },
+        "data_fim": { "kind": "text", "nullable": true },
+        "noites": { "kind": "integer", "nullable": true },
+        "apto": { "kind": "text", "nullable": true },
+        "categoria": { "kind": "text", "nullable": true },
+        "regime": { "kind": "text", "nullable": true },
+        "ordem": { "kind": "integer", "nullable": true },
+        "endereco": { "kind": "text", "nullable": true },
+        "qtd_apto": { "kind": "integer", "nullable": true },
+        "tipo_tarifa": { "kind": "text", "nullable": true },
+        "qtd_adultos": { "kind": "integer", "nullable": true },
+        "qtd_criancas": { "kind": "integer", "nullable": true },
+        "valor_original": { "kind": "real", "nullable": true },
+        "valor_final": { "kind": "real", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "roteiro_investimento": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "roteiro_id": { "kind": "text", "nullable": false },
+        "tipo": { "kind": "text", "nullable": true },
+        "valor_por_pessoa": { "kind": "real", "nullable": true },
+        "qtd_apto": { "kind": "integer", "nullable": true },
+        "valor_por_apto": { "kind": "real", "nullable": true },
+        "ordem": { "kind": "integer", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "roteiro_pagamento": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "roteiro_id": { "kind": "text", "nullable": false },
+        "servico": { "kind": "text", "nullable": true },
+        "valor_total_com_taxas": { "kind": "real", "nullable": true },
+        "taxas": { "kind": "real", "nullable": true },
+        "forma_pagamento": { "kind": "text", "nullable": true },
+        "ordem": { "kind": "integer", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "roteiro_passeio": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "roteiro_id": { "kind": "text", "nullable": false },
+        "cidade": { "kind": "text", "nullable": true },
+        "passeio": { "kind": "text", "nullable": true },
+        "data_inicio": { "kind": "text", "nullable": true },
+        "tipo": { "kind": "text", "nullable": true },
+        "ingressos": { "kind": "text", "nullable": true },
+        "ordem": { "kind": "integer", "nullable": true },
+        "data_fim": { "kind": "text", "nullable": true },
+        "fornecedor": { "kind": "text", "nullable": true },
+        "qtd_adultos": { "kind": "integer", "nullable": true },
+        "qtd_criancas": { "kind": "integer", "nullable": true },
+        "valor_original": { "kind": "real", "nullable": true },
+        "valor_final": { "kind": "real", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "roteiro_personalizado": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "created_by": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": true },
+        "nome": { "kind": "text", "nullable": false },
+        "duracao": { "kind": "integer", "nullable": true },
+        "inicio_cidade": { "kind": "text", "nullable": true },
+        "fim_cidade": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true },
+        "inclui_texto": { "kind": "text", "nullable": true },
+        "nao_inclui_texto": { "kind": "text", "nullable": true },
+        "informacoes_importantes": { "kind": "text", "nullable": true },
+        "mostrar_pagamento_pdf": { "kind": "boolean", "nullable": false },
+        "mostrar_informacoes_pdf": { "kind": "boolean", "nullable": false },
+        "mostrar_rodape_pdf": { "kind": "boolean", "nullable": false },
+        "opcionais": { "kind": "json", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "roteiro_sugestoes": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": true },
+        "tipo": { "kind": "text", "nullable": false },
+        "valor": { "kind": "text", "nullable": false },
+        "uso_count": { "kind": "integer", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "roteiro_transporte": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "roteiro_id": { "kind": "text", "nullable": false },
+        "tipo": { "kind": "text", "nullable": true },
+        "fornecedor": { "kind": "text", "nullable": true },
+        "descricao": { "kind": "text", "nullable": true },
+        "data_inicio": { "kind": "text", "nullable": true },
+        "data_fim": { "kind": "text", "nullable": true },
+        "categoria": { "kind": "text", "nullable": true },
+        "observacao": { "kind": "text", "nullable": true },
+        "ordem": { "kind": "integer", "nullable": true },
+        "trecho": { "kind": "text", "nullable": true },
+        "cia_aerea": { "kind": "text", "nullable": true },
+        "data_voo": { "kind": "text", "nullable": true },
+        "classe_reserva": { "kind": "text", "nullable": true },
+        "hora_saida": { "kind": "text", "nullable": true },
+        "aeroporto_saida": { "kind": "text", "nullable": true },
+        "duracao_voo": { "kind": "text", "nullable": true },
+        "tipo_voo": { "kind": "text", "nullable": true },
+        "hora_chegada": { "kind": "text", "nullable": true },
+        "aeroporto_chegada": { "kind": "text", "nullable": true },
+        "tarifa_nome": { "kind": "text", "nullable": true },
+        "reembolso_tipo": { "kind": "text", "nullable": true },
+        "qtd_adultos": { "kind": "integer", "nullable": true },
+        "qtd_criancas": { "kind": "integer", "nullable": true },
+        "valor_total": { "kind": "real", "nullable": true },
+        "taxas": { "kind": "real", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "sac_controle": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "recibo": { "kind": "text", "nullable": true },
+        "tour": { "kind": "text", "nullable": true },
+        "data_solicitacao": { "kind": "text", "nullable": true },
+        "motivo": { "kind": "text", "nullable": true },
+        "contratante_pax": { "kind": "text", "nullable": true },
+        "ok_quando": { "kind": "text", "nullable": true },
+        "created_by": { "kind": "text", "nullable": true },
+        "updated_by": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "status": { "kind": "text", "nullable": true },
+        "responsavel": { "kind": "text", "nullable": true },
+        "prazo": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "sac_interacoes": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "sac_id": { "kind": "text", "nullable": false },
+        "data_interacao": { "kind": "text", "nullable": true },
+        "descricao": { "kind": "text", "nullable": false },
+        "created_by": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "security_audit_weekly_runs": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "ran_at": { "kind": "text", "nullable": false },
+        "status": { "kind": "text", "nullable": false },
+        "missing_policy_count": { "kind": "integer", "nullable": false },
+        "broad_policy_count": { "kind": "integer", "nullable": false },
+        "overlapping_table_count": { "kind": "integer", "nullable": false },
+        "unforced_critical_count": { "kind": "integer", "nullable": false },
+        "pagamentos_company_mismatch": { "kind": "integer", "nullable": false },
+        "bucket_public": { "kind": "boolean", "nullable": false },
+        "details": { "kind": "json", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "security_rate_limits": {
+      "columns": {
+        "scope": { "kind": "text", "nullable": false },
+        "key_hash": { "kind": "text", "nullable": false },
+        "window_start": { "kind": "text", "nullable": false },
+        "expires_at": { "kind": "text", "nullable": false },
+        "hits": { "kind": "integer", "nullable": false }
+      },
+      "primaryKey": ["scope", "key_hash"]
+    },
+    "servico_fornecedor_price": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "servico_fornecedor_id": { "kind": "text", "nullable": false },
+        "moeda": { "kind": "text", "nullable": false },
+        "valor_base": { "kind": "real", "nullable": false },
+        "tipo_valor": { "kind": "text", "nullable": false },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "servico_fornecedor_price_period": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "servico_fornecedor_price_id": { "kind": "text", "nullable": false },
+        "data_inicio": { "kind": "text", "nullable": false },
+        "data_fim": { "kind": "text", "nullable": false },
+        "ajuste_tipo": { "kind": "text", "nullable": false },
+        "ajuste_valor": { "kind": "real", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "servico_price": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "servico_id": { "kind": "text", "nullable": false },
+        "moeda": { "kind": "text", "nullable": false },
+        "valor_base": { "kind": "real", "nullable": false },
+        "tipo_valor": { "kind": "text", "nullable": false },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "servico_price_period": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "servico_price_id": { "kind": "text", "nullable": false },
+        "data_inicio": { "kind": "text", "nullable": false },
+        "data_fim": { "kind": "text", "nullable": false },
+        "ajuste_tipo": { "kind": "text", "nullable": false },
+        "ajuste_valor": { "kind": "real", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "servicos": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "tipo": { "kind": "text", "nullable": false },
+        "descricao": { "kind": "text", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "servicos_fornecedor": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "fornecedor_id": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "tipo": { "kind": "text", "nullable": false },
+        "descricao": { "kind": "text", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "subdivisoes": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "pais_id": { "kind": "text", "nullable": false },
+        "codigo_admin1": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "tipo": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "system_documentation": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "slug": { "kind": "text", "nullable": false },
+        "markdown": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "updated_by": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "system_documentation_section_versions": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "section_id": { "kind": "text", "nullable": false },
+        "slug": { "kind": "text", "nullable": false },
+        "role_scope": { "kind": "text", "nullable": false },
+        "module_key": { "kind": "text", "nullable": false },
+        "route_pattern": { "kind": "text", "nullable": true },
+        "title": { "kind": "text", "nullable": false },
+        "summary": { "kind": "text", "nullable": true },
+        "content_markdown": { "kind": "text", "nullable": false },
+        "tone": { "kind": "text", "nullable": false },
+        "sort_order": { "kind": "integer", "nullable": false },
+        "is_active": { "kind": "boolean", "nullable": false },
+        "action": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "created_by": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "system_documentation_sections": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "slug": { "kind": "text", "nullable": false },
+        "role_scope": { "kind": "text", "nullable": false },
+        "module_key": { "kind": "text", "nullable": false },
+        "route_pattern": { "kind": "text", "nullable": true },
+        "title": { "kind": "text", "nullable": false },
+        "summary": { "kind": "text", "nullable": true },
+        "content_markdown": { "kind": "text", "nullable": false },
+        "tone": { "kind": "text", "nullable": false },
+        "sort_order": { "kind": "integer", "nullable": false },
+        "is_active": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "created_by": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": false },
+        "updated_by": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "system_documentation_versions": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "doc_id": { "kind": "text", "nullable": false },
+        "slug": { "kind": "text", "nullable": false },
+        "markdown": { "kind": "text", "nullable": false },
+        "action": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "created_by": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "system_module_settings": {
+      "columns": {
+        "module_key": { "kind": "text", "nullable": false },
+        "enabled": { "kind": "boolean", "nullable": false },
+        "reason": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": false },
+        "updated_by": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["module_key"]
+    },
+    "tipo_pacotes": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "rule_id": { "kind": "text", "nullable": true },
+        "fix_meta_nao_atingida": { "kind": "real", "nullable": true },
+        "fix_meta_atingida": { "kind": "real", "nullable": true },
+        "fix_super_meta": { "kind": "real", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "tipo_produtos": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "tipo": { "kind": "text", "nullable": false },
+        "regra_comissionamento": { "kind": "text", "nullable": false },
+        "soma_na_meta": { "kind": "boolean", "nullable": false },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": true },
+        "usa_meta_produto": { "kind": "boolean", "nullable": false },
+        "meta_produto_valor": { "kind": "real", "nullable": true },
+        "comissao_produto_meta_pct": { "kind": "real", "nullable": true },
+        "descontar_meta_geral": { "kind": "boolean", "nullable": false },
+        "exibe_kpi_comissao": { "kind": "boolean", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "todo_categorias": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": true },
+        "user_id": { "kind": "text", "nullable": true },
+        "nome": { "kind": "text", "nullable": false },
+        "cor": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "user_convites": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "invited_user_id": { "kind": "text", "nullable": true },
+        "invited_email": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": true },
+        "user_type_id": { "kind": "text", "nullable": true },
+        "invited_by": { "kind": "text", "nullable": false },
+        "invited_by_role": { "kind": "text", "nullable": false },
+        "status": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "accepted_at": { "kind": "text", "nullable": true },
+        "cancelled_at": { "kind": "text", "nullable": true },
+        "expires_at": { "kind": "text", "nullable": false },
+        "uso_individual": { "kind": "boolean", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "user_crm_assinaturas": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "user_id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": true },
+        "nome": { "kind": "text", "nullable": false },
+        "linha1": { "kind": "text", "nullable": true },
+        "linha1_font_size": { "kind": "integer", "nullable": false },
+        "linha1_italic": { "kind": "boolean", "nullable": false },
+        "linha2": { "kind": "text", "nullable": true },
+        "linha2_font_size": { "kind": "integer", "nullable": false },
+        "linha2_italic": { "kind": "boolean", "nullable": false },
+        "linha3": { "kind": "text", "nullable": true },
+        "linha3_font_size": { "kind": "integer", "nullable": false },
+        "linha3_italic": { "kind": "boolean", "nullable": false },
+        "is_default": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "user_message_template_themes": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "user_id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": true },
+        "categoria": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "asset_url": { "kind": "text", "nullable": false },
+        "storage_path": { "kind": "text", "nullable": true },
+        "width_px": { "kind": "integer", "nullable": false },
+        "height_px": { "kind": "integer", "nullable": false },
+        "title_style": { "kind": "json", "nullable": false },
+        "body_style": { "kind": "json", "nullable": false },
+        "signature_style": { "kind": "json", "nullable": false },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "categoria_id": { "kind": "text", "nullable": true },
+        "scope": { "kind": "text", "nullable": false },
+        "greeting_text": { "kind": "text", "nullable": true },
+        "mensagem_max_linhas": { "kind": "integer", "nullable": false },
+        "mensagem_max_palavras": { "kind": "integer", "nullable": false },
+        "assinatura_max_linhas": { "kind": "integer", "nullable": false },
+        "assinatura_max_palavras": { "kind": "integer", "nullable": false },
+        "logo_url": { "kind": "text", "nullable": true },
+        "logo_path": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "user_message_templates": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "user_id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": true },
+        "nome": { "kind": "text", "nullable": false },
+        "categoria": { "kind": "text", "nullable": true },
+        "assunto": { "kind": "text", "nullable": true },
+        "titulo": { "kind": "text", "nullable": false },
+        "corpo": { "kind": "text", "nullable": false },
+        "assinatura": { "kind": "text", "nullable": true },
+        "template_base_url": { "kind": "text", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "theme_id": { "kind": "text", "nullable": true },
+        "title_style": { "kind": "json", "nullable": false },
+        "body_style": { "kind": "json", "nullable": false },
+        "signature_style": { "kind": "json", "nullable": false },
+        "layout_key": { "kind": "text", "nullable": false },
+        "scope": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "user_type_default_perms": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "user_type_id": { "kind": "text", "nullable": false },
+        "modulo": { "kind": "text", "nullable": false },
+        "permissao": { "kind": "text", "nullable": false },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "user_types": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "name": { "kind": "text", "nullable": false },
+        "description": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "users": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "nome_completo": { "kind": "text", "nullable": true },
+        "cpf": { "kind": "text", "nullable": true },
+        "data_nascimento": { "kind": "text", "nullable": true },
+        "telefone": { "kind": "text", "nullable": true },
+        "cidade": { "kind": "text", "nullable": true },
+        "estado": { "kind": "text", "nullable": true },
+        "user_type_id": { "kind": "text", "nullable": true },
+        "uso_individual": { "kind": "boolean", "nullable": true },
+        "company_id": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true },
+        "active": { "kind": "boolean", "nullable": false },
+        "email": { "kind": "text", "nullable": true },
+        "rg": { "kind": "text", "nullable": true },
+        "whatsapp": { "kind": "text", "nullable": true },
+        "cep": { "kind": "text", "nullable": true },
+        "endereco": { "kind": "text", "nullable": true },
+        "numero": { "kind": "text", "nullable": true },
+        "complemento": { "kind": "text", "nullable": true },
+        "created_by_gestor": { "kind": "boolean", "nullable": false },
+        "welcome_email_sent": { "kind": "boolean", "nullable": false },
+        "participa_ranking": { "kind": "boolean", "nullable": false },
+        "must_change_password": { "kind": "boolean", "nullable": false },
+        "password_changed_at": { "kind": "text", "nullable": true },
+        "avatar_url": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "v_gestor_vendedor_details": {
+      "columns": {
+        "id": { "kind": "text", "nullable": true },
+        "gestor_nome": { "kind": "text", "nullable": true },
+        "gestor_cpf": { "kind": "text", "nullable": true },
+        "vendedor_nome": { "kind": "text", "nullable": true },
+        "vendedor_cpf": { "kind": "text", "nullable": true },
+        "company_name": { "kind": "text", "nullable": true },
+        "pode_modificar": { "kind": "boolean", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": []
+    },
+    "v_users_complete": {
+      "columns": {
+        "id": { "kind": "text", "nullable": true },
+        "nome_completo": { "kind": "text", "nullable": true },
+        "cpf": { "kind": "text", "nullable": true },
+        "data_nascimento": { "kind": "text", "nullable": true },
+        "telefone": { "kind": "text", "nullable": true },
+        "cidade": { "kind": "text", "nullable": true },
+        "estado": { "kind": "text", "nullable": true },
+        "user_type": { "kind": "text", "nullable": true },
+        "user_type_description": { "kind": "text", "nullable": true },
+        "uso_individual": { "kind": "boolean", "nullable": true },
+        "company_name": { "kind": "text", "nullable": true },
+        "company_cnpj": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": []
+    },
+    "vendas": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "cliente_id": { "kind": "text", "nullable": false },
+        "destino_id": { "kind": "text", "nullable": false },
+        "data_lancamento": { "kind": "text", "nullable": false },
+        "data_embarque": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true },
+        "produto_id": { "kind": "text", "nullable": true },
+        "valor_total": { "kind": "real", "nullable": true },
+        "status": { "kind": "text", "nullable": true },
+        "notas": { "kind": "text", "nullable": true },
+        "numero_venda": { "kind": "text", "nullable": true },
+        "cancelada": { "kind": "boolean", "nullable": false },
+        "vendedor_id": { "kind": "text", "nullable": true },
+        "destino_cidade_id": { "kind": "text", "nullable": true },
+        "data_final": { "kind": "text", "nullable": true },
+        "desconto_comercial_aplicado": { "kind": "boolean", "nullable": true },
+        "desconto_comercial_valor": { "kind": "real", "nullable": true },
+        "valor_total_bruto": { "kind": "real", "nullable": true },
+        "valor_total_pago": { "kind": "real", "nullable": true },
+        "valor_taxas": { "kind": "real", "nullable": true },
+        "valor_nao_comissionado": { "kind": "real", "nullable": true },
+        "company_id": { "kind": "text", "nullable": true },
+        "data_venda": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "vendas_pagamentos": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "venda_id": { "kind": "text", "nullable": false },
+        "forma_pagamento_id": { "kind": "text", "nullable": true },
+        "company_id": { "kind": "text", "nullable": false },
+        "forma_nome": { "kind": "text", "nullable": true },
+        "operacao": { "kind": "text", "nullable": true },
+        "plano": { "kind": "text", "nullable": true },
+        "valor_bruto": { "kind": "real", "nullable": true },
+        "desconto_valor": { "kind": "real", "nullable": true },
+        "valor_total": { "kind": "real", "nullable": true },
+        "parcelas": { "kind": "json", "nullable": true },
+        "parcelas_qtd": { "kind": "integer", "nullable": true },
+        "parcelas_valor": { "kind": "real", "nullable": true },
+        "vencimento_primeira": { "kind": "text", "nullable": true },
+        "paga_comissao": { "kind": "boolean", "nullable": true },
+        "observacoes": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "venda_recibo_id": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "vendas_recibos": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "venda_id": { "kind": "text", "nullable": false },
+        "produto_id": { "kind": "text", "nullable": true },
+        "numero_recibo": { "kind": "text", "nullable": true },
+        "valor_total": { "kind": "real", "nullable": true },
+        "valor_taxas": { "kind": "real", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true },
+        "updated_at": { "kind": "text", "nullable": true },
+        "data_inicio": { "kind": "text", "nullable": true },
+        "data_fim": { "kind": "text", "nullable": true },
+        "produto_resolvido_id": { "kind": "text", "nullable": true },
+        "numero_reserva": { "kind": "text", "nullable": true },
+        "contrato_path": { "kind": "text", "nullable": true },
+        "contrato_url": { "kind": "text", "nullable": true },
+        "tipo_pacote": { "kind": "text", "nullable": true },
+        "valor_rav": { "kind": "real", "nullable": true },
+        "valor_du": { "kind": "real", "nullable": true },
+        "data_venda": { "kind": "text", "nullable": true },
+        "cancelado_por_conciliacao_em": { "kind": "text", "nullable": true },
+        "cancelado_por_conciliacao_observacao": {
+          "kind": "text",
+          "nullable": true
+        },
+        "numero_recibo_normalizado": { "kind": "text", "nullable": true },
+        "destino_cidade_id": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "vendas_recibos_complementares": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "venda_id": { "kind": "text", "nullable": false },
+        "recibo_id": { "kind": "text", "nullable": false },
+        "created_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "vendas_recibos_notas": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "venda_id": { "kind": "text", "nullable": false },
+        "recibo_id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "notas": { "kind": "json", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "vendas_recibos_rateio": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "venda_recibo_id": { "kind": "text", "nullable": true },
+        "company_id": { "kind": "text", "nullable": false },
+        "vendedor_origem_id": { "kind": "text", "nullable": false },
+        "vendedor_destino_id": { "kind": "text", "nullable": false },
+        "percentual_origem": { "kind": "real", "nullable": false },
+        "percentual_destino": { "kind": "real", "nullable": false },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "observacao": { "kind": "text", "nullable": true },
+        "created_by": { "kind": "text", "nullable": true },
+        "updated_by": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "conciliacao_recibo_id": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "viagem_acompanhantes": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "viagem_id": { "kind": "text", "nullable": false },
+        "acompanhante_id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "papel": { "kind": "text", "nullable": true },
+        "documento_url": { "kind": "text", "nullable": true },
+        "observacoes": { "kind": "text", "nullable": true },
+        "created_by": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "viagem_documentos": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "viagem_id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "titulo": { "kind": "text", "nullable": false },
+        "tipo": { "kind": "text", "nullable": true },
+        "url": { "kind": "text", "nullable": true },
+        "mime_type": { "kind": "text", "nullable": true },
+        "size_bytes": { "kind": "integer", "nullable": true },
+        "expires_at": { "kind": "text", "nullable": true },
+        "created_by": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "viagem_passageiros": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "viagem_id": { "kind": "text", "nullable": false },
+        "cliente_id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "papel": { "kind": "text", "nullable": false },
+        "observacoes": { "kind": "text", "nullable": true },
+        "created_by": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "viagem_servicos": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "viagem_id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "tipo": { "kind": "text", "nullable": true },
+        "fornecedor": { "kind": "text", "nullable": true },
+        "descricao": { "kind": "text", "nullable": true },
+        "status": { "kind": "text", "nullable": true },
+        "data_inicio": { "kind": "text", "nullable": true },
+        "data_fim": { "kind": "text", "nullable": true },
+        "valor": { "kind": "real", "nullable": true },
+        "moeda": { "kind": "text", "nullable": true },
+        "voucher_url": { "kind": "text", "nullable": true },
+        "observacoes": { "kind": "text", "nullable": true },
+        "created_by": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "viagens": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "venda_id": { "kind": "text", "nullable": true },
+        "orcamento_id": { "kind": "text", "nullable": true },
+        "company_id": { "kind": "text", "nullable": false },
+        "responsavel_user_id": { "kind": "text", "nullable": true },
+        "origem": { "kind": "text", "nullable": true },
+        "destino": { "kind": "text", "nullable": true },
+        "data_inicio": { "kind": "text", "nullable": true },
+        "data_fim": { "kind": "text", "nullable": true },
+        "status": { "kind": "text", "nullable": false },
+        "observacoes": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "cliente_id": { "kind": "text", "nullable": true },
+        "recibo_id": { "kind": "text", "nullable": true },
+        "follow_up_text": { "kind": "text", "nullable": true },
+        "follow_up_fechado": { "kind": "boolean", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "voucher_assets": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "created_by": { "kind": "text", "nullable": true },
+        "updated_by": { "kind": "text", "nullable": true },
+        "provider": { "kind": "text", "nullable": false },
+        "asset_kind": { "kind": "text", "nullable": false },
+        "label": { "kind": "text", "nullable": true },
+        "storage_bucket": { "kind": "text", "nullable": false },
+        "storage_path": { "kind": "text", "nullable": false },
+        "mime_type": { "kind": "text", "nullable": true },
+        "size_bytes": { "kind": "integer", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "ordem": { "kind": "integer", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "voucher_dias": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "voucher_id": { "kind": "text", "nullable": false },
+        "dia_numero": { "kind": "integer", "nullable": false },
+        "titulo": { "kind": "text", "nullable": true },
+        "descricao": { "kind": "text", "nullable": false },
+        "data_referencia": { "kind": "text", "nullable": true },
+        "cidade": { "kind": "text", "nullable": true },
+        "ordem": { "kind": "integer", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "voucher_hoteis": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "voucher_id": { "kind": "text", "nullable": false },
+        "cidade": { "kind": "text", "nullable": false },
+        "hotel": { "kind": "text", "nullable": false },
+        "endereco": { "kind": "text", "nullable": true },
+        "data_inicio": { "kind": "text", "nullable": true },
+        "data_fim": { "kind": "text", "nullable": true },
+        "noites": { "kind": "integer", "nullable": true },
+        "telefone": { "kind": "text", "nullable": true },
+        "contato": { "kind": "text", "nullable": true },
+        "status": { "kind": "text", "nullable": true },
+        "observacao": { "kind": "text", "nullable": true },
+        "ordem": { "kind": "integer", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
+    "vouchers": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "company_id": { "kind": "text", "nullable": false },
+        "created_by": { "kind": "text", "nullable": true },
+        "updated_by": { "kind": "text", "nullable": true },
+        "provider": { "kind": "text", "nullable": false },
+        "nome": { "kind": "text", "nullable": false },
+        "codigo_sistema": { "kind": "text", "nullable": true },
+        "codigo_fornecedor": { "kind": "text", "nullable": true },
+        "reserva_online": { "kind": "text", "nullable": true },
+        "operador": { "kind": "text", "nullable": true },
+        "resumo": { "kind": "text", "nullable": true },
+        "data_inicio": { "kind": "text", "nullable": true },
+        "data_fim": { "kind": "text", "nullable": true },
+        "ativo": { "kind": "boolean", "nullable": false },
+        "created_at": { "kind": "text", "nullable": false },
+        "updated_at": { "kind": "text", "nullable": false },
+        "passageiros": { "kind": "text", "nullable": true },
+        "tipo_acomodacao": { "kind": "text", "nullable": true },
+        "extra_data": { "kind": "json", "nullable": false },
+        "viagem_id": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": ["id"]
+    },
+    "vw_cidades_localizacao": {
+      "columns": {
+        "cidade_id": { "kind": "text", "nullable": true },
+        "cidade_nome": { "kind": "text", "nullable": true },
+        "subdivisao_id": { "kind": "text", "nullable": true },
+        "subdivisao_nome": { "kind": "text", "nullable": true },
+        "subdivisao_codigo": { "kind": "text", "nullable": true },
+        "subdivisao_tipo": { "kind": "text", "nullable": true },
+        "pais_id": { "kind": "text", "nullable": true },
+        "pais_nome": { "kind": "text", "nullable": true },
+        "pais_codigo_iso": { "kind": "text", "nullable": true },
+        "continente": { "kind": "text", "nullable": true },
+        "latitude": { "kind": "real", "nullable": true },
+        "longitude": { "kind": "real", "nullable": true },
+        "populacao": { "kind": "integer", "nullable": true },
+        "descricao": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": []
+    },
+    "vw_cidades_localizacao_busca": {
+      "columns": {
+        "cidade_id": { "kind": "text", "nullable": true },
+        "cidade_nome": { "kind": "text", "nullable": true },
+        "subdivisao_id": { "kind": "text", "nullable": true },
+        "subdivisao_nome": { "kind": "text", "nullable": true },
+        "subdivisao_codigo": { "kind": "text", "nullable": true },
+        "subdivisao_tipo": { "kind": "text", "nullable": true },
+        "pais_id": { "kind": "text", "nullable": true },
+        "pais_nome": { "kind": "text", "nullable": true },
+        "pais_codigo_iso": { "kind": "text", "nullable": true },
+        "continente": { "kind": "text", "nullable": true },
+        "latitude": { "kind": "real", "nullable": true },
+        "longitude": { "kind": "real", "nullable": true },
+        "populacao": { "kind": "integer", "nullable": true },
+        "descricao": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": true },
+        "label": { "kind": "text", "nullable": true },
+        "search_text": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": []
+    },
+    "vw_produtos_comissionamento": {
+      "columns": {
+        "produto_id": { "kind": "text", "nullable": true },
+        "tipo": { "kind": "text", "nullable": true },
+        "regra_comissionamento": { "kind": "text", "nullable": true },
+        "soma_na_meta": { "kind": "boolean", "nullable": true },
+        "meta_nao_atingida": { "kind": "real", "nullable": true },
+        "meta_atingida": { "kind": "real", "nullable": true },
+        "super_meta": { "kind": "real", "nullable": true },
+        "diferenciado": { "kind": "real", "nullable": true },
+        "comissionamento_ativo": { "kind": "boolean", "nullable": true }
+      },
+      "primaryKey": []
+    },
+    "vw_soma_meta_placeholder": {
+      "columns": {
+        "produto_id": { "kind": "text", "nullable": true },
+        "tipo": { "kind": "text", "nullable": true },
+        "soma_na_meta": { "kind": "boolean", "nullable": true },
+        "regra_comissionamento": { "kind": "text", "nullable": true }
+      },
+      "primaryKey": []
+    }
+  },
+  "fks": [
+    {
+      "name": "admin_system_settings_updated_by_fkey",
+      "table": "admin_system_settings",
+      "column": "updated_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "agenda_itens_categoria_id_fkey",
+      "table": "agenda_itens",
+      "column": "categoria_id",
+      "refTable": "todo_categorias",
+      "refColumn": "id"
+    },
+    {
+      "name": "airline_iata_aliases_airline_code_id_fkey",
+      "table": "airline_iata_aliases",
+      "column": "airline_code_id",
+      "refTable": "airline_iata_codes",
+      "refColumn": "id"
+    },
+    {
+      "name": "campanhas_company_id_fkey",
+      "table": "campanhas",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "campanhas_created_by_fkey",
+      "table": "campanhas",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "cidades_subdivisao_id_fkey",
+      "table": "cidades",
+      "column": "subdivisao_id",
+      "refTable": "subdivisoes",
+      "refColumn": "id"
+    },
+    {
+      "name": "circuito_datas_cidade_inicio_id_fkey",
+      "table": "circuito_datas",
+      "column": "cidade_inicio_id",
+      "refTable": "cidades",
+      "refColumn": "id"
+    },
+    {
+      "name": "circuito_datas_circuito_id_fkey",
+      "table": "circuito_datas",
+      "column": "circuito_id",
+      "refTable": "circuitos",
+      "refColumn": "id"
+    },
+    {
+      "name": "circuito_dias_circuito_id_fkey",
+      "table": "circuito_dias",
+      "column": "circuito_id",
+      "refTable": "circuitos",
+      "refColumn": "id"
+    },
+    {
+      "name": "circuito_dias_cidades_cidade_id_fkey",
+      "table": "circuito_dias_cidades",
+      "column": "cidade_id",
+      "refTable": "cidades",
+      "refColumn": "id"
+    },
+    {
+      "name": "circuito_dias_cidades_circuito_dia_id_fkey",
+      "table": "circuito_dias_cidades",
+      "column": "circuito_dia_id",
+      "refTable": "circuito_dias",
+      "refColumn": "id"
+    },
+    {
+      "name": "cliente_acompanhantes_cliente_id_fkey",
+      "table": "cliente_acompanhantes",
+      "column": "cliente_id",
+      "refTable": "clientes",
+      "refColumn": "id"
+    },
+    {
+      "name": "cliente_acompanhantes_company_id_fkey",
+      "table": "cliente_acompanhantes",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "cliente_acompanhantes_created_by_fkey",
+      "table": "cliente_acompanhantes",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "cliente_template_dispatches_cliente_id_fkey",
+      "table": "cliente_template_dispatches",
+      "column": "cliente_id",
+      "refTable": "clientes",
+      "refColumn": "id"
+    },
+    {
+      "name": "cliente_template_dispatches_company_id_fkey",
+      "table": "cliente_template_dispatches",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "cliente_template_dispatches_template_id_fkey",
+      "table": "cliente_template_dispatches",
+      "column": "template_id",
+      "refTable": "user_message_templates",
+      "refColumn": "id"
+    },
+    {
+      "name": "cliente_template_dispatches_user_id_fkey",
+      "table": "cliente_template_dispatches",
+      "column": "user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "clientes_company_id_fkey",
+      "table": "clientes",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "clientes_created_by_fkey",
+      "table": "clientes",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "clientes_company_cliente_id_fkey",
+      "table": "clientes_company",
+      "column": "cliente_id",
+      "refTable": "clientes",
+      "refColumn": "id"
+    },
+    {
+      "name": "clientes_company_company_id_fkey",
+      "table": "clientes_company",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "comissoes_company_id_fkey",
+      "table": "comissoes",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "comissoes_created_by_fkey",
+      "table": "comissoes",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "comissoes_pago_por_fkey",
+      "table": "comissoes",
+      "column": "pago_por",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "comissoes_recibo_id_fkey",
+      "table": "comissoes",
+      "column": "recibo_id",
+      "refTable": "vendas_recibos",
+      "refColumn": "id"
+    },
+    {
+      "name": "comissoes_venda_id_fkey",
+      "table": "comissoes",
+      "column": "venda_id",
+      "refTable": "vendas",
+      "refColumn": "id"
+    },
+    {
+      "name": "comissoes_vendedor_id_fkey",
+      "table": "comissoes",
+      "column": "vendedor_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "commission_rule_company_id_fkey",
+      "table": "commission_rule",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "commission_rule_created_by_fkey",
+      "table": "commission_rule",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "commission_tier_rule_id_fkey",
+      "table": "commission_tier",
+      "column": "rule_id",
+      "refTable": "commission_rule",
+      "refColumn": "id"
+    },
+    {
+      "name": "company_billing_company_id_fkey",
+      "table": "company_billing",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "company_billing_plan_id_fkey",
+      "table": "company_billing",
+      "column": "plan_id",
+      "refTable": "plans",
+      "refColumn": "id"
+    },
+    {
+      "name": "company_billing_events_billing_id_fkey",
+      "table": "company_billing_events",
+      "column": "billing_id",
+      "refTable": "company_billing",
+      "refColumn": "id"
+    },
+    {
+      "name": "company_billing_events_company_id_fkey",
+      "table": "company_billing_events",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_dias_sem_movimento_company_id_fkey",
+      "table": "conciliacao_dias_sem_movimento",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_dias_sem_movimento_marcado_por_fkey",
+      "table": "conciliacao_dias_sem_movimento",
+      "column": "marcado_por",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_execucoes_actor_user_id_fkey",
+      "table": "conciliacao_execucoes",
+      "column": "actor_user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_execucoes_company_id_fkey",
+      "table": "conciliacao_execucoes",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_recibo_changes_changed_by_fkey",
+      "table": "conciliacao_recibo_changes",
+      "column": "changed_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_recibo_changes_company_id_fkey",
+      "table": "conciliacao_recibo_changes",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_recibo_changes_conciliacao_recibo_id_fkey",
+      "table": "conciliacao_recibo_changes",
+      "column": "conciliacao_recibo_id",
+      "refTable": "conciliacao_recibos",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_recibo_changes_reverted_by_fkey",
+      "table": "conciliacao_recibo_changes",
+      "column": "reverted_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_recibo_changes_venda_id_fkey",
+      "table": "conciliacao_recibo_changes",
+      "column": "venda_id",
+      "refTable": "vendas",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_recibo_changes_venda_recibo_id_fkey",
+      "table": "conciliacao_recibo_changes",
+      "column": "venda_recibo_id",
+      "refTable": "vendas_recibos",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_recibos_company_id_fkey",
+      "table": "conciliacao_recibos",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_recibos_imported_by_fkey",
+      "table": "conciliacao_recibos",
+      "column": "imported_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_recibos_ranking_assigned_by_fkey",
+      "table": "conciliacao_recibos",
+      "column": "ranking_assigned_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_recibos_ranking_produto_id_fkey",
+      "table": "conciliacao_recibos",
+      "column": "ranking_produto_id",
+      "refTable": "tipo_produtos",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_recibos_ranking_vendedor_id_fkey",
+      "table": "conciliacao_recibos",
+      "column": "ranking_vendedor_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_recibos_venda_id_fkey",
+      "table": "conciliacao_recibos",
+      "column": "venda_id",
+      "refTable": "vendas",
+      "refColumn": "id"
+    },
+    {
+      "name": "conciliacao_recibos_venda_recibo_id_fkey",
+      "table": "conciliacao_recibos",
+      "column": "venda_recibo_id",
+      "refTable": "vendas_recibos",
+      "refColumn": "id"
+    },
+    {
+      "name": "consultorias_online_cliente_id_fkey",
+      "table": "consultorias_online",
+      "column": "cliente_id",
+      "refTable": "clientes",
+      "refColumn": "id"
+    },
+    {
+      "name": "consultorias_online_created_by_fkey",
+      "table": "consultorias_online",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "dashboard_widgets_usuario_id_fkey",
+      "table": "dashboard_widgets",
+      "column": "usuario_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "documentos_viagens_company_id_fkey",
+      "table": "documentos_viagens",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "documentos_viagens_updated_by_fkey",
+      "table": "documentos_viagens",
+      "column": "updated_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "documentos_viagens_uploaded_by_fkey",
+      "table": "documentos_viagens",
+      "column": "uploaded_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "escala_dia_escala_mes_id_fkey",
+      "table": "escala_dia",
+      "column": "escala_mes_id",
+      "refTable": "escala_mes",
+      "refColumn": "id"
+    },
+    {
+      "name": "escala_dia_usuario_id_fkey",
+      "table": "escala_dia",
+      "column": "usuario_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "escala_horario_usuario_company_id_fkey",
+      "table": "escala_horario_usuario",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "escala_horario_usuario_usuario_id_fkey",
+      "table": "escala_horario_usuario",
+      "column": "usuario_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "escala_mes_company_id_fkey",
+      "table": "escala_mes",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "escala_mes_gestor_id_fkey",
+      "table": "escala_mes",
+      "column": "gestor_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "feriados_company_id_fkey",
+      "table": "feriados",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "financeiro_empresas_company_id_fkey",
+      "table": "financeiro_empresas",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "financeiro_empresas_created_by_fkey",
+      "table": "financeiro_empresas",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "financeiro_empresas_financeiro_id_fkey",
+      "table": "financeiro_empresas",
+      "column": "financeiro_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "formas_pagamento_company_id_fkey",
+      "table": "formas_pagamento",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "fornecedores_company_id_fkey",
+      "table": "fornecedores",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "gestor_equipe_compartilhada_created_by_fkey",
+      "table": "gestor_equipe_compartilhada",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "gestor_equipe_compartilhada_gestor_base_id_fkey",
+      "table": "gestor_equipe_compartilhada",
+      "column": "gestor_base_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "gestor_equipe_compartilhada_gestor_id_fkey",
+      "table": "gestor_equipe_compartilhada",
+      "column": "gestor_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "gestor_vendedor_company_id_fkey",
+      "table": "gestor_vendedor",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "gestor_vendedor_gestor_id_fkey",
+      "table": "gestor_vendedor",
+      "column": "gestor_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "gestor_vendedor_vendedor_id_fkey",
+      "table": "gestor_vendedor",
+      "column": "vendedor_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "historico_viagens_real_cliente_id_fkey",
+      "table": "historico_viagens_real",
+      "column": "cliente_id",
+      "refTable": "clientes",
+      "refColumn": "id"
+    },
+    {
+      "name": "historico_viagens_real_destino_id_fkey",
+      "table": "historico_viagens_real",
+      "column": "destino_id",
+      "refTable": "produtos",
+      "refColumn": "id"
+    },
+    {
+      "name": "historico_viagens_real_venda_id_fkey",
+      "table": "historico_viagens_real",
+      "column": "venda_id",
+      "refTable": "vendas",
+      "refColumn": "id"
+    },
+    {
+      "name": "inquiry_preference_inquiry_id_fkey",
+      "table": "inquiry_preference",
+      "column": "inquiry_id",
+      "refTable": "inquiry",
+      "refColumn": "id"
+    },
+    {
+      "name": "logs_user_id_fkey",
+      "table": "logs",
+      "column": "user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "master_documents_master_id_fkey",
+      "table": "master_documents",
+      "column": "master_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "master_documents_uploaded_by_fkey",
+      "table": "master_documents",
+      "column": "uploaded_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "master_empresas_approved_by_fkey",
+      "table": "master_empresas",
+      "column": "approved_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "master_empresas_company_id_fkey",
+      "table": "master_empresas",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "master_empresas_master_id_fkey",
+      "table": "master_empresas",
+      "column": "master_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "menu_prefs_user_id_fkey",
+      "table": "menu_prefs",
+      "column": "user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "message_templates_v2_company_id_fkey",
+      "table": "message_templates_v2",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "message_templates_v2_gestor_id_fkey",
+      "table": "message_templates_v2",
+      "column": "gestor_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "metas_vendedor_produto_meta_vendedor_id_fkey",
+      "table": "metas_vendedor_produto",
+      "column": "meta_vendedor_id",
+      "refTable": "metas_vendedor",
+      "refColumn": "id"
+    },
+    {
+      "name": "metas_vendedor_produto_produto_id_fkey",
+      "table": "metas_vendedor_produto",
+      "column": "produto_id",
+      "refTable": "tipo_produtos",
+      "refColumn": "id"
+    },
+    {
+      "name": "minhas_preferencias_cidade_id_fkey",
+      "table": "minhas_preferencias",
+      "column": "cidade_id",
+      "refTable": "cidades",
+      "refColumn": "id"
+    },
+    {
+      "name": "minhas_preferencias_company_id_fkey",
+      "table": "minhas_preferencias",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "minhas_preferencias_created_by_fkey",
+      "table": "minhas_preferencias",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "minhas_preferencias_tipo_produto_id_fkey",
+      "table": "minhas_preferencias",
+      "column": "tipo_produto_id",
+      "refTable": "tipo_produtos",
+      "refColumn": "id"
+    },
+    {
+      "name": "minhas_preferencias_updated_by_fkey",
+      "table": "minhas_preferencias",
+      "column": "updated_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "minhas_preferencias_shares_company_id_fkey",
+      "table": "minhas_preferencias_shares",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "minhas_preferencias_shares_preferencia_id_fkey",
+      "table": "minhas_preferencias_shares",
+      "column": "preferencia_id",
+      "refTable": "minhas_preferencias",
+      "refColumn": "id"
+    },
+    {
+      "name": "minhas_preferencias_shares_shared_by_fkey",
+      "table": "minhas_preferencias_shares",
+      "column": "shared_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "minhas_preferencias_shares_shared_with_fkey",
+      "table": "minhas_preferencias_shares",
+      "column": "shared_with",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "modulo_acesso_usuario_id_fkey",
+      "table": "modulo_acesso",
+      "column": "usuario_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "mural_recado_respostas_company_id_fkey",
+      "table": "mural_recado_respostas",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "mural_recado_respostas_recado_id_fkey",
+      "table": "mural_recado_respostas",
+      "column": "recado_id",
+      "refTable": "mural_recados",
+      "refColumn": "id"
+    },
+    {
+      "name": "mural_recado_respostas_sender_id_fkey",
+      "table": "mural_recado_respostas",
+      "column": "sender_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "mural_recados_company_id_fkey",
+      "table": "mural_recados",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "mural_recados_receiver_id_fkey",
+      "table": "mural_recados",
+      "column": "receiver_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "mural_recados_sender_id_fkey",
+      "table": "mural_recados",
+      "column": "sender_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "mural_recados_arquivos_company_id_fkey",
+      "table": "mural_recados_arquivos",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "mural_recados_arquivos_recado_id_fkey",
+      "table": "mural_recados_arquivos",
+      "column": "recado_id",
+      "refTable": "mural_recados",
+      "refColumn": "id"
+    },
+    {
+      "name": "mural_recados_arquivos_uploaded_by_fkey",
+      "table": "mural_recados_arquivos",
+      "column": "uploaded_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "mural_recados_leituras_company_id_fkey",
+      "table": "mural_recados_leituras",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "mural_recados_leituras_recado_id_fkey",
+      "table": "mural_recados_leituras",
+      "column": "recado_id",
+      "refTable": "mural_recados",
+      "refColumn": "id"
+    },
+    {
+      "name": "mural_recados_leituras_user_id_fkey",
+      "table": "mural_recados_leituras",
+      "column": "user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "parametros_cambios_company_id_fkey",
+      "table": "parametros_cambios",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "parametros_cambios_owner_user_id_fkey",
+      "table": "parametros_cambios",
+      "column": "owner_user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "parametros_comissao_company_id_fkey",
+      "table": "parametros_comissao",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "parametros_comissao_owner_user_id_fkey",
+      "table": "parametros_comissao",
+      "column": "owner_user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "parametros_pagamentos_nao_comissionaveis_created_by_fkey",
+      "table": "parametros_pagamentos_nao_comissionaveis",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "parametros_pagamentos_nao_comissionaveis_updated_by_fkey",
+      "table": "parametros_pagamentos_nao_comissionaveis",
+      "column": "updated_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "parametros_sistema_company_id_fkey",
+      "table": "parametros_sistema",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "product_commission_rule_produto_id_fkey",
+      "table": "product_commission_rule",
+      "column": "produto_id",
+      "refTable": "tipo_produtos",
+      "refColumn": "id"
+    },
+    {
+      "name": "product_commission_rule_rule_id_fkey",
+      "table": "product_commission_rule",
+      "column": "rule_id",
+      "refTable": "commission_rule",
+      "refColumn": "id"
+    },
+    {
+      "name": "product_commission_rule_pacote_produto_id_fkey",
+      "table": "product_commission_rule_pacote",
+      "column": "produto_id",
+      "refTable": "tipo_produtos",
+      "refColumn": "id"
+    },
+    {
+      "name": "product_commission_rule_pacote_rule_id_fkey",
+      "table": "product_commission_rule_pacote",
+      "column": "rule_id",
+      "refTable": "commission_rule",
+      "refColumn": "id"
+    },
+    {
+      "name": "produtos_circuito_id_fkey",
+      "table": "produtos",
+      "column": "circuito_id",
+      "refTable": "circuitos",
+      "refColumn": "id"
+    },
+    {
+      "name": "produtos_fornecedor_id_fkey",
+      "table": "produtos",
+      "column": "fornecedor_id",
+      "refTable": "fornecedores",
+      "refColumn": "id"
+    },
+    {
+      "name": "produtos_tipo_produto_fkey",
+      "table": "produtos",
+      "column": "tipo_produto",
+      "refTable": "tipo_produtos",
+      "refColumn": "id"
+    },
+    {
+      "name": "produtos_tarifas_produto_id_fkey",
+      "table": "produtos_tarifas",
+      "column": "produto_id",
+      "refTable": "produtos",
+      "refColumn": "id"
+    },
+    {
+      "name": "quote_client_id_fkey",
+      "table": "quote",
+      "column": "client_id",
+      "refTable": "clientes",
+      "refColumn": "id"
+    },
+    {
+      "name": "quote_destino_cidade_id_fkey",
+      "table": "quote",
+      "column": "destino_cidade_id",
+      "refTable": "cidades",
+      "refColumn": "id"
+    },
+    {
+      "name": "quote_roteiro_id_fkey",
+      "table": "quote",
+      "column": "roteiro_id",
+      "refTable": "roteiro_personalizado",
+      "refColumn": "id"
+    },
+    {
+      "name": "quote_import_log_quote_id_fkey",
+      "table": "quote_import_log",
+      "column": "quote_id",
+      "refTable": "quote",
+      "refColumn": "id"
+    },
+    {
+      "name": "quote_item_cidade_id_fkey",
+      "table": "quote_item",
+      "column": "cidade_id",
+      "refTable": "cidades",
+      "refColumn": "id"
+    },
+    {
+      "name": "quote_item_quote_id_fkey",
+      "table": "quote_item",
+      "column": "quote_id",
+      "refTable": "quote",
+      "refColumn": "id"
+    },
+    {
+      "name": "quote_item_segment_quote_item_id_fkey",
+      "table": "quote_item_segment",
+      "column": "quote_item_id",
+      "refTable": "quote_item",
+      "refColumn": "id"
+    },
+    {
+      "name": "quote_print_settings_company_id_fkey",
+      "table": "quote_print_settings",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "quote_print_settings_owner_user_id_fkey",
+      "table": "quote_print_settings",
+      "column": "owner_user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "ranking_read_model_status_company_id_fkey",
+      "table": "ranking_read_model_status",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "ranking_recibo_contribuicoes_cliente_id_fkey",
+      "table": "ranking_recibo_contribuicoes",
+      "column": "cliente_id",
+      "refTable": "clientes",
+      "refColumn": "id"
+    },
+    {
+      "name": "ranking_recibo_contribuicoes_company_id_fkey",
+      "table": "ranking_recibo_contribuicoes",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "ranking_recibo_contribuicoes_produto_id_fkey",
+      "table": "ranking_recibo_contribuicoes",
+      "column": "produto_id",
+      "refTable": "tipo_produtos",
+      "refColumn": "id"
+    },
+    {
+      "name": "ranking_recibo_contribuicoes_recibo_id_fkey",
+      "table": "ranking_recibo_contribuicoes",
+      "column": "recibo_id",
+      "refTable": "vendas_recibos",
+      "refColumn": "id"
+    },
+    {
+      "name": "ranking_recibo_contribuicoes_venda_id_fkey",
+      "table": "ranking_recibo_contribuicoes",
+      "column": "venda_id",
+      "refTable": "vendas",
+      "refColumn": "id"
+    },
+    {
+      "name": "ranking_recibo_contribuicoes_vendedor_id_fkey",
+      "table": "ranking_recibo_contribuicoes",
+      "column": "vendedor_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "recibos_produto_id_fkey",
+      "table": "recibos",
+      "column": "produto_id",
+      "refTable": "tipo_produtos",
+      "refColumn": "id"
+    },
+    {
+      "name": "recibos_venda_id_fkey",
+      "table": "recibos",
+      "column": "venda_id",
+      "refTable": "vendas",
+      "refColumn": "id"
+    },
+    {
+      "name": "roteiro_dia_company_id_fkey",
+      "table": "roteiro_dia",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "roteiro_dia_roteiro_id_fkey",
+      "table": "roteiro_dia",
+      "column": "roteiro_id",
+      "refTable": "roteiro_personalizado",
+      "refColumn": "id"
+    },
+    {
+      "name": "roteiro_hotel_roteiro_id_fkey",
+      "table": "roteiro_hotel",
+      "column": "roteiro_id",
+      "refTable": "roteiro_personalizado",
+      "refColumn": "id"
+    },
+    {
+      "name": "roteiro_investimento_roteiro_id_fkey",
+      "table": "roteiro_investimento",
+      "column": "roteiro_id",
+      "refTable": "roteiro_personalizado",
+      "refColumn": "id"
+    },
+    {
+      "name": "roteiro_pagamento_roteiro_id_fkey",
+      "table": "roteiro_pagamento",
+      "column": "roteiro_id",
+      "refTable": "roteiro_personalizado",
+      "refColumn": "id"
+    },
+    {
+      "name": "roteiro_passeio_roteiro_id_fkey",
+      "table": "roteiro_passeio",
+      "column": "roteiro_id",
+      "refTable": "roteiro_personalizado",
+      "refColumn": "id"
+    },
+    {
+      "name": "roteiro_personalizado_company_id_fkey",
+      "table": "roteiro_personalizado",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "roteiro_sugestoes_company_id_fkey",
+      "table": "roteiro_sugestoes",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "roteiro_transporte_roteiro_id_fkey",
+      "table": "roteiro_transporte",
+      "column": "roteiro_id",
+      "refTable": "roteiro_personalizado",
+      "refColumn": "id"
+    },
+    {
+      "name": "sac_controle_company_id_fkey",
+      "table": "sac_controle",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "sac_controle_created_by_fkey",
+      "table": "sac_controle",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "sac_controle_updated_by_fkey",
+      "table": "sac_controle",
+      "column": "updated_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "sac_interacoes_created_by_fkey",
+      "table": "sac_interacoes",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "sac_interacoes_sac_id_fkey",
+      "table": "sac_interacoes",
+      "column": "sac_id",
+      "refTable": "sac_controle",
+      "refColumn": "id"
+    },
+    {
+      "name": "servico_fornecedor_price_servico_fornecedor_id_fkey",
+      "table": "servico_fornecedor_price",
+      "column": "servico_fornecedor_id",
+      "refTable": "servicos_fornecedor",
+      "refColumn": "id"
+    },
+    {
+      "name": "servico_fornecedor_price_period_price_id_fkey",
+      "table": "servico_fornecedor_price_period",
+      "column": "servico_fornecedor_price_id",
+      "refTable": "servico_fornecedor_price",
+      "refColumn": "id"
+    },
+    {
+      "name": "servico_price_servico_id_fkey",
+      "table": "servico_price",
+      "column": "servico_id",
+      "refTable": "servicos",
+      "refColumn": "id"
+    },
+    {
+      "name": "servico_price_period_servico_price_id_fkey",
+      "table": "servico_price_period",
+      "column": "servico_price_id",
+      "refTable": "servico_price",
+      "refColumn": "id"
+    },
+    {
+      "name": "servicos_fornecedor_fornecedor_id_fkey",
+      "table": "servicos_fornecedor",
+      "column": "fornecedor_id",
+      "refTable": "fornecedores",
+      "refColumn": "id"
+    },
+    {
+      "name": "subdivisoes_pais_id_fkey",
+      "table": "subdivisoes",
+      "column": "pais_id",
+      "refTable": "paises",
+      "refColumn": "id"
+    },
+    {
+      "name": "system_documentation_updated_by_fkey",
+      "table": "system_documentation",
+      "column": "updated_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "system_documentation_section_versions_created_by_fkey",
+      "table": "system_documentation_section_versions",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "system_documentation_section_versions_section_id_fkey",
+      "table": "system_documentation_section_versions",
+      "column": "section_id",
+      "refTable": "system_documentation_sections",
+      "refColumn": "id"
+    },
+    {
+      "name": "system_documentation_sections_created_by_fkey",
+      "table": "system_documentation_sections",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "system_documentation_sections_updated_by_fkey",
+      "table": "system_documentation_sections",
+      "column": "updated_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "system_documentation_versions_created_by_fkey",
+      "table": "system_documentation_versions",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "system_documentation_versions_doc_id_fkey",
+      "table": "system_documentation_versions",
+      "column": "doc_id",
+      "refTable": "system_documentation",
+      "refColumn": "id"
+    },
+    {
+      "name": "system_module_settings_updated_by_fkey",
+      "table": "system_module_settings",
+      "column": "updated_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "tipo_pacotes_rule_id_fkey",
+      "table": "tipo_pacotes",
+      "column": "rule_id",
+      "refTable": "commission_rule",
+      "refColumn": "id"
+    },
+    {
+      "name": "user_convites_company_id_fkey",
+      "table": "user_convites",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "user_convites_invited_by_fkey",
+      "table": "user_convites",
+      "column": "invited_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "user_convites_invited_user_id_fkey",
+      "table": "user_convites",
+      "column": "invited_user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "user_convites_user_type_id_fkey",
+      "table": "user_convites",
+      "column": "user_type_id",
+      "refTable": "user_types",
+      "refColumn": "id"
+    },
+    {
+      "name": "user_crm_assinaturas_company_id_fkey",
+      "table": "user_crm_assinaturas",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "user_message_template_themes_categoria_id_fkey",
+      "table": "user_message_template_themes",
+      "column": "categoria_id",
+      "refTable": "crm_template_categories",
+      "refColumn": "id"
+    },
+    {
+      "name": "user_message_template_themes_company_id_fkey",
+      "table": "user_message_template_themes",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "user_message_template_themes_user_id_fkey",
+      "table": "user_message_template_themes",
+      "column": "user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "user_message_templates_company_id_fkey",
+      "table": "user_message_templates",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "user_message_templates_theme_id_fkey",
+      "table": "user_message_templates",
+      "column": "theme_id",
+      "refTable": "user_message_template_themes",
+      "refColumn": "id"
+    },
+    {
+      "name": "user_message_templates_user_id_fkey",
+      "table": "user_message_templates",
+      "column": "user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "user_type_default_perms_user_type_id_fkey",
+      "table": "user_type_default_perms",
+      "column": "user_type_id",
+      "refTable": "user_types",
+      "refColumn": "id"
+    },
+    {
+      "name": "users_company_id_fkey",
+      "table": "users",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "users_user_type_id_fkey",
+      "table": "users",
+      "column": "user_type_id",
+      "refTable": "user_types",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_cliente_id_fkey",
+      "table": "vendas",
+      "column": "cliente_id",
+      "refTable": "clientes",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_company_id_fkey",
+      "table": "vendas",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_destino_cidade_id_fkey",
+      "table": "vendas",
+      "column": "destino_cidade_id",
+      "refTable": "cidades",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_destino_id_fkey",
+      "table": "vendas",
+      "column": "destino_id",
+      "refTable": "produtos",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_produto_id_fkey",
+      "table": "vendas",
+      "column": "produto_id",
+      "refTable": "tipo_produtos",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_vendedor_id_fkey",
+      "table": "vendas",
+      "column": "vendedor_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_pagamentos_company_id_fkey",
+      "table": "vendas_pagamentos",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_pagamentos_forma_pagamento_id_fkey",
+      "table": "vendas_pagamentos",
+      "column": "forma_pagamento_id",
+      "refTable": "formas_pagamento",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_pagamentos_venda_id_fkey",
+      "table": "vendas_pagamentos",
+      "column": "venda_id",
+      "refTable": "vendas",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_pagamentos_venda_recibo_id_fkey",
+      "table": "vendas_pagamentos",
+      "column": "venda_recibo_id",
+      "refTable": "vendas_recibos",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_recibos_destino_cidade_id_fkey",
+      "table": "vendas_recibos",
+      "column": "destino_cidade_id",
+      "refTable": "cidades",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_recibos_produto_id_fkey",
+      "table": "vendas_recibos",
+      "column": "produto_id",
+      "refTable": "tipo_produtos",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_recibos_produto_resolvido_id_fkey",
+      "table": "vendas_recibos",
+      "column": "produto_resolvido_id",
+      "refTable": "produtos",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_recibos_venda_id_fkey",
+      "table": "vendas_recibos",
+      "column": "venda_id",
+      "refTable": "vendas",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_recibos_complementares_recibo_id_fkey",
+      "table": "vendas_recibos_complementares",
+      "column": "recibo_id",
+      "refTable": "vendas_recibos",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_recibos_complementares_venda_id_fkey",
+      "table": "vendas_recibos_complementares",
+      "column": "venda_id",
+      "refTable": "vendas",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_recibos_notas_company_id_fkey",
+      "table": "vendas_recibos_notas",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_recibos_notas_recibo_id_fkey",
+      "table": "vendas_recibos_notas",
+      "column": "recibo_id",
+      "refTable": "vendas_recibos",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_recibos_notas_venda_id_fkey",
+      "table": "vendas_recibos_notas",
+      "column": "venda_id",
+      "refTable": "vendas",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_recibos_rateio_company_id_fkey",
+      "table": "vendas_recibos_rateio",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_recibos_rateio_conciliacao_recibo_id_fkey",
+      "table": "vendas_recibos_rateio",
+      "column": "conciliacao_recibo_id",
+      "refTable": "conciliacao_recibos",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_recibos_rateio_created_by_fkey",
+      "table": "vendas_recibos_rateio",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_recibos_rateio_updated_by_fkey",
+      "table": "vendas_recibos_rateio",
+      "column": "updated_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_recibos_rateio_venda_recibo_id_fkey",
+      "table": "vendas_recibos_rateio",
+      "column": "venda_recibo_id",
+      "refTable": "vendas_recibos",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_recibos_rateio_vendedor_destino_id_fkey",
+      "table": "vendas_recibos_rateio",
+      "column": "vendedor_destino_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "vendas_recibos_rateio_vendedor_origem_id_fkey",
+      "table": "vendas_recibos_rateio",
+      "column": "vendedor_origem_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagem_acompanhantes_acompanhante_id_fkey",
+      "table": "viagem_acompanhantes",
+      "column": "acompanhante_id",
+      "refTable": "cliente_acompanhantes",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagem_acompanhantes_company_id_fkey",
+      "table": "viagem_acompanhantes",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagem_acompanhantes_created_by_fkey",
+      "table": "viagem_acompanhantes",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagem_acompanhantes_viagem_id_fkey",
+      "table": "viagem_acompanhantes",
+      "column": "viagem_id",
+      "refTable": "viagens",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagem_documentos_company_id_fkey",
+      "table": "viagem_documentos",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagem_documentos_created_by_fkey",
+      "table": "viagem_documentos",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagem_documentos_viagem_id_fkey",
+      "table": "viagem_documentos",
+      "column": "viagem_id",
+      "refTable": "viagens",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagem_passageiros_cliente_id_fkey",
+      "table": "viagem_passageiros",
+      "column": "cliente_id",
+      "refTable": "clientes",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagem_passageiros_company_id_fkey",
+      "table": "viagem_passageiros",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagem_passageiros_created_by_fkey",
+      "table": "viagem_passageiros",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagem_passageiros_viagem_id_fkey",
+      "table": "viagem_passageiros",
+      "column": "viagem_id",
+      "refTable": "viagens",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagem_servicos_company_id_fkey",
+      "table": "viagem_servicos",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagem_servicos_created_by_fkey",
+      "table": "viagem_servicos",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagem_servicos_viagem_id_fkey",
+      "table": "viagem_servicos",
+      "column": "viagem_id",
+      "refTable": "viagens",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagens_cliente_id_fkey",
+      "table": "viagens",
+      "column": "cliente_id",
+      "refTable": "clientes",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagens_company_id_fkey",
+      "table": "viagens",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagens_recibo_id_fkey",
+      "table": "viagens",
+      "column": "recibo_id",
+      "refTable": "vendas_recibos",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagens_responsavel_user_id_fkey",
+      "table": "viagens",
+      "column": "responsavel_user_id",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "viagens_venda_id_fkey",
+      "table": "viagens",
+      "column": "venda_id",
+      "refTable": "vendas",
+      "refColumn": "id"
+    },
+    {
+      "name": "voucher_assets_company_id_fkey",
+      "table": "voucher_assets",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "voucher_assets_created_by_fkey",
+      "table": "voucher_assets",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "voucher_assets_updated_by_fkey",
+      "table": "voucher_assets",
+      "column": "updated_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "voucher_dias_voucher_id_fkey",
+      "table": "voucher_dias",
+      "column": "voucher_id",
+      "refTable": "vouchers",
+      "refColumn": "id"
+    },
+    {
+      "name": "voucher_hoteis_voucher_id_fkey",
+      "table": "voucher_hoteis",
+      "column": "voucher_id",
+      "refTable": "vouchers",
+      "refColumn": "id"
+    },
+    {
+      "name": "vouchers_company_id_fkey",
+      "table": "vouchers",
+      "column": "company_id",
+      "refTable": "companies",
+      "refColumn": "id"
+    },
+    {
+      "name": "vouchers_created_by_fkey",
+      "table": "vouchers",
+      "column": "created_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "vouchers_updated_by_fkey",
+      "table": "vouchers",
+      "column": "updated_by",
+      "refTable": "users",
+      "refColumn": "id"
+    },
+    {
+      "name": "vouchers_viagem_id_fkey",
+      "table": "vouchers",
+      "column": "viagem_id",
+      "refTable": "viagens",
+      "refColumn": "id"
+    }
+  ]
+}

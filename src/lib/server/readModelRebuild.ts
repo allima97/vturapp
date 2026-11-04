@@ -1,3 +1,4 @@
+import type { DataClient } from '$lib/server/data';
 /**
  * readModelRebuild.ts
  *
@@ -17,7 +18,6 @@
  *   4. Expõe rebuildReadModelForCompanyMonth() para o endpoint/cron
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { getAdminClient, logServerError } from '$lib/server/v1';
 import { fetchVendasKpiReciboContributionsRaw } from '$lib/server/vendas-kpis';
 import { chunkArray, uniqueCleanStrings } from '$lib/utils/array';
@@ -174,7 +174,7 @@ function buildSourceKey(
 }
 
 async function fetchDirtyEntries(
-  client: SupabaseClient,
+  client: DataClient,
   companyIds: string[],
   monthKeys: string[],
 ): Promise<Array<{ company_id: string; mes: string; monthKey: string }>> {
@@ -221,7 +221,7 @@ async function fetchDirtyEntries(
  * no próximo acesso/cron.
  */
 export async function finishRebuildIfUnchanged(
-  client: SupabaseClient,
+  client: DataClient,
   modelo: string,
   companyId: string,
   mes: string,
@@ -246,7 +246,7 @@ export async function finishRebuildIfUnchanged(
 }
 
 async function upsertStatus(
-  client: SupabaseClient,
+  client: DataClient,
   companyId: string,
   mes: string,
   values: Record<string, unknown>,
@@ -265,7 +265,7 @@ async function upsertStatus(
 }
 
 async function rebuildOneMonth(
-  client: SupabaseClient,
+  client: DataClient,
   companyId: string,
   monthKey: string,
 ): Promise<{ rebuilt: boolean; rows: number; error?: string }> {
@@ -378,7 +378,7 @@ async function rebuildOneMonth(
  * Usada pelo endpoint POST/GET e pelo cron.
  */
 export async function rebuildReadModelForCompanyMonth(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     companyIds: string[];
     monthKeys: string[];
@@ -551,7 +551,7 @@ export function triggerRebuildAsync(params: {
  * Útil quando o trigger do banco pode não ter coberto a operação.
  */
 export async function markDirtyForCompany(
-  client: SupabaseClient,
+  client: DataClient,
   companyId: string,
   dataVenda: string,
 ) {
@@ -654,7 +654,7 @@ export function selectNightlyDirtyMonths(params: {
 
 /** Rodada noturna: marca os meses como 'dirty'. A reconstrução fica com o cron de 5 min. */
 export async function markNightlyReadModelMonthsDirty(
-  client: SupabaseClient,
+  client: DataClient,
   now: Date = new Date(),
 ): Promise<{ companies: number; marked: number }> {
   const { data: companies, error: companiesError } = await client

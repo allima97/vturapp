@@ -1,5 +1,5 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { supabase as supabaseBrowser } from '$lib/db/supabase';
+import type { DataClient } from '$lib/dataClientTypes';
+import { browserData as dadosBrowser } from '$lib/db/browserData';
 import { normalizeText } from '$lib/normalizeText';
 
 type NumeroLookup = {
@@ -48,16 +48,16 @@ type MinimalQuery<T extends QueryResultRow> = PromiseLike<{
   limit(count: number): MinimalQuery<T>;
 };
 
-type MinimalSupabaseFrom = {
+type MinimalDadosFrom = {
   select<T extends QueryResultRow>(columns: string): MinimalQuery<T>;
 };
 
-type MinimalSupabaseClient = {
-  from(table: string): MinimalSupabaseFrom;
+type MinimalDataClient = {
+  from(table: string): MinimalDadosFrom;
 };
 
-function asMinimalClient(sb: SupabaseClient): MinimalSupabaseClient {
-  return sb as unknown as MinimalSupabaseClient;
+function asMinimalClient(sb: DataClient): MinimalDataClient {
+  return sb as unknown as MinimalDataClient;
 }
 
 function normalizeNumero(valor?: string | null) {
@@ -79,7 +79,7 @@ function uniqueNonEmpty(values: string[]) {
 }
 
 async function fetchCancelledVendaIdsBrowser(
-  sb: SupabaseClient,
+  sb: DataClient,
   companyId?: string | null,
 ): Promise<Set<string>> {
   let query = asMinimalClient(sb)
@@ -97,7 +97,7 @@ async function fetchCancelledVendaIdsBrowser(
 }
 
 async function fetchClienteIdMapBrowser(
-  sb: SupabaseClient,
+  sb: DataClient,
   vendaIds: string[],
 ): Promise<Map<string, string>> {
   const map = new Map<string, string>();
@@ -115,13 +115,13 @@ async function fetchClienteIdMapBrowser(
 }
 
 export async function findReciboReservaDuplicado(params: {
-  client?: SupabaseClient;
+  client?: DataClient;
   numeros: NumeroLookup[];
   ignoreVendaId?: string | null;
   companyId?: string | null;
 }): Promise<Duplicidade | null> {
   const { client, numeros, ignoreVendaId, companyId } = params;
-  const sb = client || supabaseBrowser;
+  const sb = client || dadosBrowser;
   const recibos = uniqueNonEmpty(numeros.map((n) => n.numero_recibo || ""));
   const reservas = uniqueNonEmpty(numeros.map((n) => n.numero_reserva || ""));
 
@@ -240,7 +240,7 @@ export async function findReciboReservaDuplicado(params: {
 }
 
 export async function ensureReciboReservaUnicos(params: {
-  client?: SupabaseClient;
+  client?: DataClient;
   numeros: NumeroLookup[];
   ignoreVendaId?: string | null;
   companyId?: string | null;

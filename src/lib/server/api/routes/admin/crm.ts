@@ -73,7 +73,7 @@ export async function handleAdminCrmGet(event: RequestEvent) {
     return json(
       {
         categorias: categorias || [],
-        temas: (temas || []).map((tema) => ({
+        temas: (temas || []).map((tema: any) => ({
           ...tema,
           asset_url: resolveThemeAssetMeta(tema).asset_url
         })),

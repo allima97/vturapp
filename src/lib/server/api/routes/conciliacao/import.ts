@@ -1,8 +1,8 @@
+import type { DataClient } from '$lib/server/data';
 // Migrado para Hono de src/routes/api/v1/conciliacao/import/+server.ts — corpo IDÊNTICO ao original
 // (só o nome/assinatura do handler e caminhos de import relativos mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from "@sveltejs/kit";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   ensureModuloAccess,
   fetchRankingVendedoresByCompanyIds,
@@ -235,7 +235,7 @@ type ConciliacaoLinhaLinkInput = ConciliacaoLinhaInput & {
 };
 
 async function fetchReciboCandidates(params: {
-  client: SupabaseClient;
+  client: DataClient;
   numero: string;
   companyId: string;
 }): Promise<ReciboCandidate[]> {
@@ -322,7 +322,7 @@ async function fetchReciboCandidates(params: {
 }
 
 async function findReciboByNumero(params: {
-  client: SupabaseClient;
+  client: DataClient;
   companyId: string;
   numero: string;
   valorLancamento?: number | null;
@@ -380,7 +380,7 @@ async function findReciboByNumero(params: {
 }
 
 async function findRexturReciboByReserva(params: {
-  client: SupabaseClient;
+  client: DataClient;
   companyId: string;
   reserva?: string | null;
   valorLancamento?: number | null;
@@ -410,11 +410,11 @@ async function findRexturReciboByReserva(params: {
       valor_taxas: row?.valor_taxas ?? null,
       vendedor_id: null as string | null,
     }))
-    .filter((row) => row.id && row.venda_id);
+    .filter((row: any) => row.id && row.venda_id);
 
   if (recibos.length === 0) return null;
 
-  const vendaIds = uniqueCleanStrings(recibos.map((row) => row.venda_id));
+  const vendaIds = uniqueCleanStrings(recibos.map((row: any) => row.venda_id));
   const vendaMap = new Map<string, string | null>();
   for (const batch of chunkArray(vendaIds)) {
     const { data: vendas } = await params.client
@@ -434,8 +434,8 @@ async function findRexturReciboByReserva(params: {
   }
 
   const candidatos = recibos
-    .filter((row) => vendaMap.has(row.venda_id))
-    .map((row) => ({
+    .filter((row: any) => vendaMap.has(row.venda_id))
+    .map((row: any) => ({
       ...row,
       vendedor_id: vendaMap.get(row.venda_id) || null,
     }));
@@ -445,12 +445,12 @@ async function findRexturReciboByReserva(params: {
 
   const targetTotal = Number(params.valorLancamento || 0);
   const targetTaxas = Number(params.valorTaxas || 0);
-  const porValor = candidatos.filter((item) =>
+  const porValor = candidatos.filter((item: any) =>
     params.valorLancamento == null
       ? true
       : matches(Number(item?.valor_total || 0), targetTotal),
   );
-  const porTaxas = porValor.filter((item) =>
+  const porTaxas = porValor.filter((item: any) =>
     params.valorTaxas == null
       ? true
       : matches(Number(item?.valor_taxas || 0), targetTaxas),

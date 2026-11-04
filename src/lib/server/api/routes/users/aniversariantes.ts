@@ -11,9 +11,9 @@ import {
 } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
 import { parseISODateParts, todayISODateLocal } from '$lib/date';
-import { chunkArray, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { chunkArray, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
-type SupabaseRelation<T> = T | T[] | null | undefined;
+type DadosRelation<T> = T | T[] | null | undefined;
 
 type AniversarianteUserRow = {
   id: string;
@@ -21,11 +21,11 @@ type AniversarianteUserRow = {
   email: string | null;
   data_nascimento: string | null;
   company_id: string | null;
-  user_types?: SupabaseRelation<{ name?: string | null }>;
-  companies?: SupabaseRelation<{ nome_fantasia?: string | null }>;
+  user_types?: DadosRelation<{ name?: string | null }>;
+  companies?: DadosRelation<{ nome_fantasia?: string | null }>;
 };
 
-function firstRelation<T>(value: SupabaseRelation<T>): T | null {
+function firstRelation<T>(value: DadosRelation<T>): T | null {
   if (Array.isArray(value)) return value[0] ?? null;
   return value ?? null;
 }
@@ -54,7 +54,7 @@ export async function handleUsersAniversariantesGet(event: RequestEvent) {
     };
 
     const rows: AniversarianteUserRow[] = [];
-    if (companyIds.length > SUPABASE_IN_BATCH_SIZE) {
+    if (companyIds.length > QUERY_IN_BATCH_SIZE) {
       for (const batch of chunkArray(companyIds)) {
         const { data, error: queryError } = await buildQuery(batch);
         if (queryError) throw queryError;

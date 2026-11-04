@@ -25,7 +25,7 @@ import {
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateClientReadModels } from '$lib/server/readModelCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest, rejectLargePayload } from '$lib/server/requestGuards';
-import { chunkArray, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { chunkArray, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const MAX_CLIENTE_UPDATE_BODY_BYTES = 128 * 1024;
 const MAX_CLIENTE_DELETE_BODY_BYTES = 8 * 1024;
@@ -137,7 +137,7 @@ async function fetchResumoRelacionamentos(
   };
 
   let quotesData: QuoteResumoRow[] = [];
-  if (filters.vendedorIds.length > SUPABASE_IN_BATCH_SIZE) {
+  if (filters.vendedorIds.length > QUERY_IN_BATCH_SIZE) {
     for (const batch of chunkArray(filters.vendedorIds)) {
       const { data, error: quotesError } = await buildQuotesQuery(batch);
       if (quotesError) throw quotesError;

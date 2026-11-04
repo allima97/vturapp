@@ -1,5 +1,5 @@
 import { browser } from '$app/environment';
-import { supabase } from '$lib/db/supabase';
+import { browserData } from '$lib/db/browserData';
 
 const SESSION_SYNC_TIMEOUT_MS = 600;
 const SESSION_SYNC_COOLDOWN_MS = 60_000;
@@ -25,7 +25,7 @@ export async function ensureServerSessionCookie() {
     try {
       const {
         data: { session }
-      } = await supabase.auth.getSession();
+      } = await browserData.auth.getSession();
       if (!session) return;
 
       await fetch('/api/auth/set-session', {

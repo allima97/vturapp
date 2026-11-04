@@ -10,7 +10,7 @@ import {
   READ_MODEL_TAGS,
   scopeCacheTags
 } from '$lib/server/readModelCache';
-import { chunkArray, dedupeById, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { chunkArray, dedupeById, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const PT_BR_COLLATOR = new Intl.Collator('pt-BR');
 
@@ -28,7 +28,7 @@ export async function handleUserContextGet(event: RequestEvent) {
 
     const fetchEmpresas = async () => {
       if (scope.companyIds.length === 0) return { data: [], error: null };
-      if (scope.companyIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (scope.companyIds.length <= QUERY_IN_BATCH_SIZE) {
         return client
           .from('companies')
           .select('id, nome_fantasia, nome_empresa')
@@ -86,7 +86,7 @@ export async function handleUserContextGet(event: RequestEvent) {
           user_id: user.id,
           company_id: scope.companyId,
           company_ids: scope.companyIds,
-          empresas: (empresas.data || []).map((row) => ({
+          empresas: (empresas.data || []).map((row: any) => ({
             id: String(row.id || ''),
             nome: String(row.nome_fantasia || row.nome_empresa || 'Empresa sem nome')
           })),

@@ -18,11 +18,11 @@ function clampInt(value: string | null, fallback: number, min: number, max: numb
   return Math.min(max, Math.max(min, Math.trunc(parsed)));
 }
 
-export const handleQrGet = async ({ url, fetch, getClientAddress }: RequestEvent) => {
+export const handleQrGet = async ({ url, fetch, getClientAddress, platform }: RequestEvent) => {
   const rateLimit = await checkPersistentRateLimit('qr', getClientAddress() || 'unknown', {
     max: 120,
     windowMs: 60_000
-  });
+  }, platform?.env?.DB);
   if (!rateLimit.allowed) {
     return json(
       { error: 'Muitas requisições. Tente novamente em instantes.' },

@@ -28,7 +28,7 @@ import { toFiniteNumber as toNum } from '$lib/utils/values';
 
 const MAX_COMISSOES_PAYMENT_BODY_BYTES = 64 * 1024;
 
-const SUPABASE_IN_BATCH_SIZE = 150;
+const QUERY_IN_BATCH_SIZE = 150;
 
 type CommissionPaymentBody = {
   comissao_ids?: Array<string | number>;
@@ -53,7 +53,7 @@ async function fetchBatched<T>(
   loader: (batch: string[]) => PromiseLike<{ data: T[] | null; error: unknown }>
 ) {
   const batchResults = await Promise.all(
-    chunkArray(values, SUPABASE_IN_BATCH_SIZE).map(async (batch) => {
+    chunkArray(values, QUERY_IN_BATCH_SIZE).map(async (batch) => {
       const { data, error } = await loader(batch);
       if (error) throw error;
       return data || [];
@@ -322,11 +322,11 @@ export async function handleFinanceiroComissoesPagamentoPut(event: RequestEvent)
     const reciboIds = uniqueIds(comissao_ids);
     const updatedRows: MutationIdRow[] = [];
     const companyBatches =
-      companyIds.length > SUPABASE_IN_BATCH_SIZE
-        ? chunkArray(companyIds, SUPABASE_IN_BATCH_SIZE)
+      companyIds.length > QUERY_IN_BATCH_SIZE
+        ? chunkArray(companyIds, QUERY_IN_BATCH_SIZE)
         : [companyIds];
 
-    for (const batch of chunkArray(reciboIds, SUPABASE_IN_BATCH_SIZE)) {
+    for (const batch of chunkArray(reciboIds, QUERY_IN_BATCH_SIZE)) {
       for (const companyBatch of companyBatches) {
         let query = client
           .from('comissoes')
@@ -404,11 +404,11 @@ export async function handleFinanceiroComissoesPagamentoDelete(event: RequestEve
     const reciboIds = uniqueIds(comissao_ids);
     const cancelledRows: MutationIdRow[] = [];
     const companyBatches =
-      companyIds.length > SUPABASE_IN_BATCH_SIZE
-        ? chunkArray(companyIds, SUPABASE_IN_BATCH_SIZE)
+      companyIds.length > QUERY_IN_BATCH_SIZE
+        ? chunkArray(companyIds, QUERY_IN_BATCH_SIZE)
         : [companyIds];
 
-    for (const batch of chunkArray(reciboIds, SUPABASE_IN_BATCH_SIZE)) {
+    for (const batch of chunkArray(reciboIds, QUERY_IN_BATCH_SIZE)) {
       for (const companyBatch of companyBatches) {
         let query = client
           .from('comissoes')

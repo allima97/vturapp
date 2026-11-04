@@ -1,4 +1,4 @@
-import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient, QueryError } from '$lib/server/data';
 import type { UserScope } from '$lib/server/v1';
 import { isUuid, normalizeText, parseIntSafe, sanitizePostgrestSearchTerm } from '$lib/server/v1';
 import {
@@ -8,8 +8,8 @@ import {
   scopeCacheTags
 } from '$lib/server/readModelCache';
 
-type QueryResult<T> = { data: T[] | null; error: PostgrestError | null };
-type OptionalResult<T> = { data: T | null; error: PostgrestError | null };
+type QueryResult<T> = { data: T[] | null; error: QueryError | null };
+type OptionalResult<T> = { data: T | null; error: QueryError | null };
 type CatalogRow = Record<string, unknown> & {
   id?: string;
   nome?: string;
@@ -25,7 +25,7 @@ type CatalogRow = Record<string, unknown> & {
 };
 
 function isMissingColumnOrRelation(err: unknown) {
-  const error = err as Partial<PostgrestError> | null | undefined;
+  const error = err as Partial<QueryError> | null | undefined;
   const code = String(error?.code || '');
   const message = String(error?.message || '');
   return (
@@ -99,7 +99,7 @@ export type ProdutoTarifaItem = {
 };
 
 export async function fetchProdutosBase(
-  client: SupabaseClient,
+  client: DataClient,
   scope: UserScope,
   params: URLSearchParams
 ) {
@@ -235,8 +235,8 @@ export async function fetchProdutosBase(
   if (produtosResp.error) throw produtosResp.error;
 
   const cidadesMap = new Map<string, CatalogRow>();
-  for (const row of cidadesBase) cidadesMap.set(String(row.id), { ...row });
-  for (const row of cidadesComPais) {
+  for (const row of cidadesBase as CatalogRow[]) cidadesMap.set(String(row.id), { ...row });
+  for (const row of cidadesComPais as CatalogRow[]) {
     cidadesMap.set(String(row.id), {
       ...(cidadesMap.get(String(row.id)) || {}),
       ...row
@@ -288,7 +288,7 @@ export async function fetchProdutosBase(
   };
 }
 
-export async function fetchProdutoById(client: SupabaseClient, id: string) {
+export async function fetchProdutoById(client: DataClient, id: string) {
   const base = await optionalSingle<ProdutoBaseItem>(
     client
       .from('produtos')
@@ -354,7 +354,7 @@ export async function fetchProdutoById(client: SupabaseClient, id: string) {
   };
 }
 
-export async function fetchProdutoTarifas(client: SupabaseClient, produtoId: string) {
+export async function fetchProdutoTarifas(client: DataClient, produtoId: string) {
   if (!isUuid(produtoId)) return [] as ProdutoTarifaItem[];
 
   const rows = await optionalRows<ProdutoTarifaItem>(

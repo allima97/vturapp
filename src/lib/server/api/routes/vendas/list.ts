@@ -27,7 +27,7 @@ import {
   READ_MODEL_TAGS,
   scopeCacheTags
 } from '$lib/server/readModelCache';
-import { cleanStringSet, chunkArray, SUPABASE_IN_BATCH_SIZE, uniqueCleanStrings } from '$lib/utils/array';
+import { cleanStringSet, chunkArray, QUERY_IN_BATCH_SIZE, uniqueCleanStrings } from '$lib/utils/array';
 
 const PT_BR_COLLATOR = new Intl.Collator('pt-BR');
 
@@ -385,9 +385,9 @@ async function fetchScopedVendaIds(
 
   const runQuery = async (configure?: (query: VendaIdQuery) => VendaIdQuery) => {
     const companyBatches =
-      params.companyIds.length > SUPABASE_IN_BATCH_SIZE ? chunkArray(params.companyIds) : [params.companyIds];
+      params.companyIds.length > QUERY_IN_BATCH_SIZE ? chunkArray(params.companyIds) : [params.companyIds];
     const vendedorBatches =
-      params.vendedorIds.length > SUPABASE_IN_BATCH_SIZE ? chunkArray(params.vendedorIds) : [params.vendedorIds];
+      params.vendedorIds.length > QUERY_IN_BATCH_SIZE ? chunkArray(params.vendedorIds) : [params.vendedorIds];
 
     for (const companyBatch of companyBatches) {
       for (const vendedorBatch of vendedorBatches) {
@@ -455,7 +455,7 @@ async function resolveVendaSearchIds(
   }
 
   const companyBatches =
-    params.companyIds.length > SUPABASE_IN_BATCH_SIZE ? chunkArray(params.companyIds) : [params.companyIds];
+    params.companyIds.length > QUERY_IN_BATCH_SIZE ? chunkArray(params.companyIds) : [params.companyIds];
 
   // --- Disparar todos os lookups de candidatos em PARALELO ---
   const [reciboVendaIds, clienteIds, vendedorIds, destinoAndProdutoIds] = await Promise.all([
@@ -782,15 +782,15 @@ async function fetchVendaRowsWithFallback(
 
   const runBaseQuery = async (selectClause: string) => {
     const shouldBatchVendaFilter =
-      !params.useRange && params.vendaIds.length > SUPABASE_IN_BATCH_SIZE;
+      !params.useRange && params.vendaIds.length > QUERY_IN_BATCH_SIZE;
     const shouldBatchClientFilter =
       !shouldBatchVendaFilter &&
       !params.scopeIsAdmin &&
       !params.clienteId &&
       params.vendedorIds.length === 0 &&
-      params.accessibleClientIds.length > SUPABASE_IN_BATCH_SIZE;
-    const shouldBatchCompanyFilter = !params.useRange && params.companyIds.length > SUPABASE_IN_BATCH_SIZE;
-    const shouldBatchVendedorFilter = !params.useRange && params.vendedorIds.length > SUPABASE_IN_BATCH_SIZE;
+      params.accessibleClientIds.length > QUERY_IN_BATCH_SIZE;
+    const shouldBatchCompanyFilter = !params.useRange && params.companyIds.length > QUERY_IN_BATCH_SIZE;
+    const shouldBatchVendedorFilter = !params.useRange && params.vendedorIds.length > QUERY_IN_BATCH_SIZE;
 
     if (shouldBatchVendaFilter || shouldBatchClientFilter || shouldBatchCompanyFilter || shouldBatchVendedorFilter) {
       const rows: VendaRow[] = [];
@@ -1019,12 +1019,12 @@ export async function handleVendasListGet(event: RequestEvent) {
       !all &&
       !openId &&
       !includeKpis &&
-      (!searchQuery || (searchPrefilter.applied && searchVendaIds.length <= SUPABASE_IN_BATCH_SIZE)) &&
+      (!searchQuery || (searchPrefilter.applied && searchVendaIds.length <= QUERY_IN_BATCH_SIZE)) &&
       canPushStatusToDb &&
       !tipoQuery &&
-      companyIds.length <= SUPABASE_IN_BATCH_SIZE &&
-      effectiveVendedorIds.length <= SUPABASE_IN_BATCH_SIZE &&
-      accessibleClientIds.length <= SUPABASE_IN_BATCH_SIZE;
+      companyIds.length <= QUERY_IN_BATCH_SIZE &&
+      effectiveVendedorIds.length <= QUERY_IN_BATCH_SIZE &&
+      accessibleClientIds.length <= QUERY_IN_BATCH_SIZE;
 
     const vendedoresPromise = includeVendedores
       ? (async () => {

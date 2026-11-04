@@ -125,7 +125,7 @@ export const handleDocumentacaoGet = async (event: RequestEvent) => {
       if (!error && data && data.length > 0) {
         return json(
           {
-            sections: data.map((doc) => ({
+            sections: data.map((doc: any) => ({
               id: doc.id,
               slug: doc.slug,
               role_scope: 'all',

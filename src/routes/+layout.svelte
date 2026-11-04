@@ -1,14 +1,15 @@
 <script lang="ts">
   import '../app.css';
+  import '$lib/styles/reescrita.css';
   import { onMount } from 'svelte';
   import { beforeNavigate } from '$app/navigation';
   import { browser, dev } from '$app/environment';
-  import { supabase } from '$lib/db/supabase';
+  import { browserData } from '$lib/db/browserData';
+  import type { Session, User } from '$lib/stores/auth';
   import { abortInFlightApiReads } from '$lib/services/api';
   import { auth, sessionSynced } from '$lib/stores/auth';
   import { toast } from '$lib/stores/ui';
   import type { LayoutData } from './$types';
-  import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 
   type RootLayoutData = LayoutData & {
     session?: Session | null;
@@ -34,7 +35,9 @@
   }
 
   function isPublicRoute(path: string): boolean {
-    return path.startsWith('/auth/') || path === '/negado';
+    // A área da reescrita usa Better Auth; não pode depender da sessão Dados
+    // que protege o aplicativo legado. Os dados seguem protegidos pela API v2.
+    return path.startsWith('/auth/') || path === '/reescrita' || path.startsWith('/reescrita/') || path === '/negado';
   }
 
   function redirectToLogin(reason: string) {
@@ -62,13 +65,13 @@
     window.location.assign(`/auth/login?session_expired=1&next=${encodeURIComponent(next)}`);
   }
 
-  // Fonte da verdade é a sessão do cliente Supabase — NÃO o auth store, que já
+  // Fonte da verdade é a sessão do cliente Dados — NÃO o auth store, que já
   // é limpo no SIGNED_OUT (antes a checagem exigia get(auth).user, que nesse
   // momento era sempre null, e por isso o redirecionamento nunca acontecia).
   async function verifySessionOrRedirect(reason: string) {
     if (!browser || isRedirecting || isPublicRoute(window.location.pathname)) return;
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
+      const { data: { session }, error } = await browserData.auth.getSession();
       if (session && !error) {
         lastSessionAt = Date.now();
         return;
@@ -132,8 +135,8 @@
     (async () => {
       const {
         data: { subscription }
-      } = supabase.auth.onAuthStateChange(
-        async (event: AuthChangeEvent, session: Session | null) => {
+      } = browserData.auth.onAuthStateChange(
+        async (event: string, session) => {
           if (
             (event === 'SIGNED_IN' ||
               event === 'TOKEN_REFRESHED' ||
@@ -162,7 +165,7 @@
 
       unsubscribe = () => subscription.unsubscribe();
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session } } = await browserData.auth.getSession();
       if (cancelled) return;
 
       if (session) {

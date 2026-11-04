@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { DataClient } from '$lib/dataClientTypes';
 import { normalizeText } from '$lib/normalizeText';
 import { logServerError } from '$lib/server/v1';
 import type { ReciboRelacionado } from './reciboReservaValidator';
@@ -38,14 +38,14 @@ export interface ReciboComplementarRow {
  * Cria vínculos automáticos "Viaja Com" entre recibos de diferentes
  * contratantes que compartilham a mesma reserva.
  *
- * @param params.client - Cliente Supabase
+ * @param params.client - Cliente Dados
  * @param params.vendaId - ID da venda atual
  * @param params.recibosNovos - Recibos recém-criados
  * @param params.recibosRelacionados - Recibos existentes com mesma reserva
  * @returns Número de vínculos criados
  */
 export async function criarVinculosViajaComAutomaticos(params: {
-  client: SupabaseClient;
+  client: DataClient;
   vendaId: string;
   recibosNovos: { id: string; numero_reserva?: string | null }[];
   recibosRelacionados?: ReciboRelacionado[] | null;
@@ -124,12 +124,12 @@ export async function criarVinculosViajaComAutomaticos(params: {
 /**
  * Busca todos os recibos complementares ("Viaja Com") de uma venda.
  *
- * @param params.client - Cliente Supabase
+ * @param params.client - Cliente Dados
  * @param params.vendaId - ID da venda
  * @returns Lista de recibos complementares com informações do cliente
  */
 export async function buscarRecibosComplementares(params: {
-  client: SupabaseClient;
+  client: DataClient;
   vendaId: string;
 }): Promise<ReciboComplementarRow[]> {
   const { client, vendaId } = params;

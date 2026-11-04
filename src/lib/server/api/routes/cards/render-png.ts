@@ -22,7 +22,7 @@ export async function handleCardsRenderPngGet(event: import('@sveltejs/kit').Req
     const rateLimit = await checkPersistentRateLimit('cards-render-png', event.getClientAddress?.() || 'unknown', {
       max: 80,
       windowMs: 60_000
-    });
+    }, event.platform?.env?.DB);
     if (!rateLimit.allowed) {
       return new Response(
         JSON.stringify({ error: "rate_limited", message: "Muitas requisições. Tente novamente em instantes." }),

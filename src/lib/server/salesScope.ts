@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient } from '$lib/server/data';
 import type { UserScope } from '$lib/server/v1';
 import { isUuid } from '$lib/server/v1';
 import { cleanStringSet } from '$lib/utils/array';
@@ -18,7 +18,7 @@ type SaleScopeParams = {
 };
 
 type FetchSaleForScopeParams = SaleScopeParams & {
-  client: SupabaseClient;
+  client: DataClient;
   saleId: string;
   extraSelect?: string;
 };

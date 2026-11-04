@@ -54,7 +54,7 @@
         })
       });
 
-      const payload = await response.json().catch(() => ({}));
+      const payload = (await response.json().catch(() => ({}))) as { error?: string };
       if (!response.ok) throw new Error(payload.error || 'Erro ao ativar conta');
 
       success = true;

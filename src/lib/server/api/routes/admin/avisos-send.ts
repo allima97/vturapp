@@ -41,7 +41,8 @@ export async function handleAdminAvisosSendPost(event: RequestEvent) {
     const rateLimit = await checkPersistentRateLimit(
       'admin-avisos-send',
       `${event.getClientAddress?.() || 'unknown'}:${user.id}`,
-      { max: 20, windowMs: 60_000 }
+      { max: 20, windowMs: 60_000 },
+      event.platform?.env?.DB,
     );
     if (!rateLimit.allowed) {
       return new Response('Muitas tentativas de envio. Aguarde alguns segundos.', {
@@ -124,7 +125,7 @@ export async function handleAdminAvisosSendPost(event: RequestEvent) {
       })
     }, 12_000);
 
-    const payload = await response.json().catch(() => ({}));
+    const payload = (await response.json().catch(() => ({}))) as { message?: string; error?: string; id?: string };
     if (!response.ok) {
       logServerError('[admin/avisos/send] Falha no provedor de e-mail', {
         status: response.status,

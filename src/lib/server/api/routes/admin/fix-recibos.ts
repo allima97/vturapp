@@ -322,9 +322,9 @@ async function searchUsers(event: RequestEvent, scope: Awaited<ReturnType<typeof
   const scopedCompanySet = cleanStringSet(scope.companyIds);
   return adminJson({
     usuarios: (data || [])
-      .filter((row) => scope.isAdmin || scopedCompanySet.has(String(row.company_id || '').trim()))
+      .filter((row: any) => scope.isAdmin || scopedCompanySet.has(String(row.company_id || '').trim()))
       .filter(isRankingEligibleUser)
-      .map((row) => ({
+      .map((row: any) => ({
         id: row.id,
         nome_completo: row.nome_completo || row.email || row.id,
         email: row.email || null,

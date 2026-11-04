@@ -3,7 +3,8 @@
   import { goto } from '$app/navigation';
   import { dev } from '$app/environment';
   import { env as publicEnv } from '$env/dynamic/public';
-  import { supabase, isMockMode } from '$lib/db/supabase';
+  import { browserData, isMockMode } from '$lib/db/browserData';
+  import type { Session, User } from '$lib/stores/auth';
   import { auth } from '$lib/stores/auth';
   import { toUserMessage } from '$lib/utils/errors';
   import Button from '$lib/components/ui/Button.svelte';
@@ -11,7 +12,6 @@
   import TurnstileWidget from '$lib/components/auth/TurnstileWidget.svelte';
   import { FieldCheckbox, FieldInput } from '$lib/components/ui';
   import { browserSupportsWebAuthn, startAuthentication } from '@simplewebauthn/browser';
-  import type { Session, User } from '@supabase/supabase-js';
   import { Mail, Lock, Eye, EyeOff, AlertCircle, TestTube, Clock, Fingerprint } from '$lib/icons';
   
   let email = '';
@@ -86,7 +86,7 @@
       },
       12000
     );
-    const payload = await response.json().catch(() => ({}));
+    const payload = (await response.json().catch(() => ({}))) as LoginResponsePayload;
 
     if (!response.ok) {
       throw new Error(payload.error || 'Login autenticado, mas o servidor não gravou a sessão.');
@@ -97,7 +97,7 @@
 
   async function syncSessionInBrowser(session: LoginSession) {
     const result = await withTimeout(
-      supabase.auth.setSession({
+      browserData.auth.setSession({
         access_token: session.access_token,
         refresh_token: session.refresh_token
       }) as Promise<BrowserSessionResult>,
@@ -175,7 +175,7 @@
 
     try {
       if (mockMode) {
-        const { data, error: authError } = await supabase.auth.signInWithPassword({
+        const { data, error: authError } = await browserData.auth.signInWithPassword({
           email,
           password
         });
@@ -200,7 +200,7 @@
           turnstile_token: turnstileToken
         })
       }, 20000);
-      const payload = await res.json().catch(() => ({} as LoginResponsePayload));
+      const payload = (await res.json().catch(() => ({}))) as LoginResponsePayload;
       if (!res.ok) {
         if (res.status === 401) throw new Error('Email ou senha incorretos.');
         if (res.status === 403) {
@@ -258,7 +258,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.trim() || null })
       }, 12000);
-      const optionsPayload = await optionsResponse.json().catch(() => ({}));
+      const optionsPayload = (await optionsResponse.json().catch(() => ({}))) as { options?: any; challengeId?: string; error?: string };
       if (!optionsResponse.ok) {
         throw new Error(optionsPayload.error || 'Erro ao preparar login por passkey.');
       }
@@ -272,7 +272,7 @@
           response: assertion
         })
       }, 20000);
-      const payload = await verifyResponse.json().catch(() => ({} as LoginResponsePayload));
+      const payload = (await verifyResponse.json().catch(() => ({}))) as LoginResponsePayload;
       if (!verifyResponse.ok) {
         throw new Error(payload.error || 'Não foi possível entrar com passkey.');
       }

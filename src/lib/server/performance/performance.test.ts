@@ -31,7 +31,7 @@ describe('Relatório de Performance: regras confirmadas pelo usuário', () => {
     expect(businessDaContribuicao(c({ destinoPais: null }))).toBe('Não informado');
   });
 
-  it('meta até D-1 por dias corridos, ICM e gap; venda RA = REXTUR; variação sobre o ano anterior', () => {
+  it('meta até D-1 por dias corridos, ICM e gap; variação sobre o ano anterior', () => {
     const r = montarRelatorioPerformance(entrada({
       atual: [c({ bruto: 18000 }), c({ vendaId: 'v2', vendaKey: 'v2', reciboNumero: 'REXTUR', bruto: 2000, vendedorId: 'u2' })],
       anoAnterior: [c({ bruto: 16000 }), c({ reciboNumero: 'REXTUR', bruto: 4000 })],
@@ -43,8 +43,6 @@ describe('Relatório de Performance: regras confirmadas pelo usuário', () => {
     expect(r.vendas.gapAteCorte).toBe(-4000);
     expect(r.vendas.gapMes).toBe(-10000);
     expect(r.vendas.variacaoAnoAnterior).toBe(0);
-    expect(r.vendas.vendaRA).toBe(2000);
-    expect(r.vendas.variacaoVendaRA).toBe(-50);
     expect(r.topVendedores.map((v) => [v.nome, v.pct])).toEqual([['Ana', 90], ['Bruno', 10]]);
   });
 

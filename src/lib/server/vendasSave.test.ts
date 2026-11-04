@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient } from '$lib/server/data';
 import { describe, expect, it } from 'vitest';
 
 import { ensureReciboReservaUnicos } from '$lib/server/vendasSave';
@@ -47,7 +47,7 @@ function createClientMock(results: Record<string, QueryResult>) {
     from(table: string) {
       return new QueryMock(table, results);
     }
-  } as unknown as Pick<SupabaseClient, 'from'>;
+  } as unknown as Pick<DataClient, 'from'>;
 }
 
 describe('ensureReciboReservaUnicos', () => {

@@ -16,7 +16,7 @@ import { titleCaseNome } from '$lib/normalizeText';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateClientReadModels } from '$lib/server/readModelCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
-import { chunkArray, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { chunkArray, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const MAX_CLIENTE_RESOLVE_IMPORT_BODY_BYTES = 128 * 1024;
 
@@ -123,7 +123,7 @@ export async function handleClientesResolveImportPost(event: RequestEvent) {
     };
 
     const findExistingCliente = async () => {
-      if (scope.isAdmin || allowedCompanyIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (scope.isAdmin || allowedCompanyIds.length <= QUERY_IN_BATCH_SIZE) {
         const { data, error } = await buildExistingQuery(allowedCompanyIds).maybeSingle();
         if (error) throw error;
         return data || null;

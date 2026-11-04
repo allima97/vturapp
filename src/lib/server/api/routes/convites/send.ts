@@ -203,7 +203,7 @@ async function enviarEmailResend(params: {
       error: readErrorField(err, "message") || err
     };
   }
-  const data = await resp.json().catch(() => ({}));
+  const data = (await resp.json().catch(() => ({}))) as { id?: string };
   if (!resp.ok) {
     logServerError("[convites/send] falha no Resend", new Error("Resend provider error"), {
       status: resp.status,
@@ -282,7 +282,7 @@ export const handleConvitesSendPost = async (event: RequestEvent) => {
     const user = await requireAuthenticatedUser(event);
     const adminClient = getAdminClient();
 
-    const rl = await checkPersistentRateLimit('convites-send', user.id, { max: 10, windowMs: 60_000 });
+    const rl = await checkPersistentRateLimit('convites-send', user.id, { max: 10, windowMs: 60_000 }, event.platform?.env?.DB);
     if (!rl.allowed) {
       return noStoreJson(
         { error: 'Muitas requisicoes. Tente novamente em instantes.' },

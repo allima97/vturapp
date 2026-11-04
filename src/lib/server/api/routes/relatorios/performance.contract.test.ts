@@ -1,6 +1,6 @@
 /** Relatório de Performance: escopo de acesso e montagem dos dados a partir do banco (banco falso). */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createFakeSupabase } from '$lib/server/testing/fakeSupabase';
+import { createFakeDados } from '$lib/server/testing/fakeDados';
 
 const C1 = '11111111-1111-4111-8111-111111111111';
 const C2 = '22222222-2222-4222-8222-222222222222';
@@ -42,7 +42,7 @@ import { handleRelatoriosPerformanceGet } from './performance';
 const scopeBase = { userId: U1, isAdmin: false, isMaster: false, isGestor: true, isFinanceiro: false, isVendedor: false, companyId: C1, companyIds: [C1], permissoes: { relatorios: 'view' }, papel: 'GESTOR', tipoNome: 'GESTOR', usoIndividual: false };
 
 function db() {
-  return createFakeSupabase({
+  return createFakeDados({
     companies: [{ id: C1, nome_fantasia: 'LOJA SHOPPING CENTER NORTE', owner_user_id: U2 }],
     users: [{ id: U1, nome_completo: 'Ana', company_id: C1 }, { id: U2, nome_completo: 'Katia Nishida', company_id: C1 }],
     parametros_comissao: [{ company_id: C1, usar_taxas_na_meta: true, foco_valor: 'bruto' }],
@@ -105,14 +105,14 @@ describe('GET /api/v1/relatorios/performance', () => {
   it('gestor: própria empresa, dados até D-1 e mesmo período do ano anterior', async () => {
     const res = await handleRelatoriosPerformanceGet(evento('mes=2026-09'));
     expect(res.status).toBe(200);
-    const body = await res.json();
+    const body: any = await res.json();
     expect(st.contrib.mock.calls.map((c) => [c[1].dataInicio, c[1].dataFim, c[1].companyIds])).toEqual([
       ['2026-09-01', '2026-09-24', [C1]],
       ['2025-09-01', '2025-09-24', [C1]],
     ]);
     expect(body.empresa).toEqual({ id: C1, nome: 'LOJA SHOPPING CENTER NORTE', responsavel: 'Katia Nishida' });
     expect(body.dadosAte).toBe('2026-09-24');
-    expect(body.vendas).toMatchObject({ vendaMes: 10000, metaMes: 30000, metaAteCorte: 24000, passageiros: 3, vendaRA: 4000, variacaoAnoAnterior: 25 });
+    expect(body.vendas).toMatchObject({ vendaMes: 10000, metaMes: 30000, metaAteCorte: 24000, passageiros: 3, variacaoAnoAnterior: 25 });
     expect(body.business.map((b: any) => [b.nome, b.pct])).toEqual([['Nacional', 60], ['Internacional', 0], ['Marítimo', 0], ['Consolidadora', 40]]);
     expect(body.topDestinosNacional[0]).toMatchObject({ nome: 'MACEIÓ', pct: 100 });
     expect(body.topDestinosInternacional[0]).toMatchObject({ nome: 'LISBOA', pct: 100 });
@@ -142,7 +142,7 @@ describe('GET /api/v1/relatorios/performance', () => {
 
   it('mês passado vai até o último dia', async () => {
     const res = await handleRelatoriosPerformanceGet(evento('mes=2026-08'));
-    const body = await res.json();
+    const body: any = await res.json();
     expect(body.dadosAte).toBe('2026-08-31');
     expect(body.vendas.metaAteCorte).toBe(body.vendas.metaMes);
   });

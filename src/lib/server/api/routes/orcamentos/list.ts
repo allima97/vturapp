@@ -22,7 +22,7 @@ import {
   scopeCacheTags
 } from '$lib/server/readModelCache';
 import { resolveQuoteCreatorScope } from '$lib/server/orcamentos';
-import { chunkArray, SUPABASE_IN_BATCH_SIZE, uniqueCleanStrings } from '$lib/utils/array';
+import { chunkArray, QUERY_IN_BATCH_SIZE, uniqueCleanStrings } from '$lib/utils/array';
 
 type OrcamentoRow = {
   id: string;
@@ -189,7 +189,7 @@ export async function handleOrcamentosListGet(event: RequestEvent) {
     };
 
     const fetchQuoteRows = async (selectClause: string) => {
-      if (!shouldFilterByCreatorIds || scopedCreatorIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (!shouldFilterByCreatorIds || scopedCreatorIds.length <= QUERY_IN_BATCH_SIZE) {
         return buildQuoteQuery(selectClause, shouldFilterByCreatorIds ? scopedCreatorIds : undefined);
       }
 

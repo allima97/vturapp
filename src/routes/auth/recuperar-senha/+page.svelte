@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { supabase } from '$lib/db/supabase';
+  import { browserData as dados } from '$lib/db/browserData';
   import { env as publicEnv } from '$env/dynamic/public';
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
@@ -50,13 +50,13 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ turnstile_token: turnstileToken })
         });
-        const verifyPayload = await verifyRes.json().catch(() => ({}));
+        const verifyPayload = (await verifyRes.json().catch(() => ({}))) as { error?: string };
         if (!verifyRes.ok) {
           throw new Error(verifyPayload.error || 'Não foi possível validar o desafio de segurança.');
         }
       }
 
-      const { error: authError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      const { error: authError } = await dados.auth.resetPasswordForEmail(email.trim(), {
         redirectTo: `${window.location.origin}/auth/nova-senha`
       });
 

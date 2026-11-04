@@ -5,7 +5,7 @@ import { json } from '@sveltejs/kit';
 import { getAdminClient, requireAuthenticatedUser, resolveAccessibleClientIds, resolveScopedCompanyIds, resolveScopedVendedorIds, resolveUserScope, sanitizePostgrestSearchTerm, toErrorResponse } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
 import { canUseCompanyClienteScope, ensureClienteModuloAccess, resolveCompanyClienteIds } from '$lib/server/clientes';
-import { chunkArray, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { chunkArray, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 type ClienteLookupRow = {
   id: string;
@@ -83,7 +83,7 @@ export async function handleClientesGet(event: RequestEvent) {
 
     const fetchClientes = async () => {
       if (scopedClientIds) {
-        if (scopedClientIds.length <= SUPABASE_IN_BATCH_SIZE) {
+        if (scopedClientIds.length <= QUERY_IN_BATCH_SIZE) {
           return buildQuery(scopedClientIds);
         }
 
@@ -99,7 +99,7 @@ export async function handleClientesGet(event: RequestEvent) {
         return { data: dedupeClientes(rows).slice(0, search ? 50 : 300), error: null };
       }
 
-      if (companyIds.length > SUPABASE_IN_BATCH_SIZE) {
+      if (companyIds.length > QUERY_IN_BATCH_SIZE) {
         const rows: ClienteLookupRow[] = [];
         for (const batch of chunkArray(companyIds)) {
           const result = await buildQuery(undefined, batch);

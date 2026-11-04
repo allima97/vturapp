@@ -175,7 +175,7 @@ async function enviarEmailResend(params: {
       text: params.text,
     }),
   }, 12_000);
-  const data = await resp.json().catch(() => ({}));
+  const data = (await resp.json().catch(() => ({}))) as { id?: string };
   if (!resp.ok || !data?.id) {
     return {
       ok: false,
@@ -412,6 +412,7 @@ export const handleClientesTemplatesSendPost = async (event: RequestEvent) => {
       "email-template-send",
       user.id,
       { max: 10, windowMs: 60_000 },
+      event.platform?.env?.DB,
     );
     if (!rl.allowed) {
       return json(
