@@ -50,6 +50,10 @@ it('preserva opcionais quando clientes antigos não enviam o campo', async () =>
   expect((await save({ id: 'existing' })).status).toBe(200);
   expect(db.query.update.mock.calls[0][0]).not.toHaveProperty('opcionais');
 });
+it('cria roteiro com opcionais vazio quando o cliente não envia o campo', async () => {
+  expect((await save({})).status).toBe(200);
+  expect(db.query.insert.mock.calls[0][0]).toHaveProperty('opcionais', []);
+});
 it('rejeita opcionais inválidos antes de qualquer gravação', async () => {
   expect((await save({ opcionais: [{ cidade: '', passeios: [] }] })).status).toBe(400);
   expect(db.from).not.toHaveBeenCalled();

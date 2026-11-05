@@ -176,7 +176,9 @@ export async function handleRoteirosPost(event: RequestEvent) {
         inicio_cidade: String(inicio_cidade || '').trim() || null,
         fim_cidade: String(fim_cidade || '').trim() || null,
         created_by: user.id,
-        company_id: companyId
+        company_id: companyId,
+        // D1 não tem DEFAULT '[]' como o Supabase: insert precisa sempre enviar a coluna
+        opcionais: []
       };
       if (hasItinerarioConfig) {
         insertPayload.itinerario_config = itinerario_config || null;

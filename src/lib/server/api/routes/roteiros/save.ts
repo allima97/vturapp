@@ -341,7 +341,8 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
         created_by: user.id,
         company_id: companyId,
         nome,
-        ...(opcionais !== undefined ? { opcionais } : {}),
+        // D1 não tem DEFAULT '[]' como o Supabase: insert precisa sempre enviar a coluna
+        opcionais: opcionais !== undefined ? opcionais : [],
         duracao: body.duracao || null,
         inicio_cidade: body.inicio_cidade || null,
         fim_cidade: body.fim_cidade || null,
