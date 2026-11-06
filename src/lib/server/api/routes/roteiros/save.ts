@@ -270,7 +270,11 @@ function isMissingOnConflictConstraint(error: unknown) {
     typeof error === 'object' && error !== null ? (error as Record<string, unknown>) : null;
   const code = String(errorRecord?.code || '');
   const msg = String(errorRecord?.message || '');
-  return code === '42P10' || /unique or exclusion constraint/i.test(msg);
+  return (
+    code === '42P10' ||
+    /unique or exclusion constraint/i.test(msg) ||
+    /on conflict clause does not match/i.test(msg)
+  );
 }
 
 function isDuplicateOrdensUnique(error: unknown) {
