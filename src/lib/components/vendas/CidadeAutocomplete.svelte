@@ -36,6 +36,7 @@
   let showOptions = false;
   let loading = false;
   let searchTimer: ReturnType<typeof setTimeout> | null = null;
+  let searchAbort: AbortController | null = null;
   let ensuringId = '';
 
   const DIACRITICS_RE = /[\u0300-\u036f]/g;
@@ -241,9 +242,16 @@
   async function searchCities(term: string) {
     const query = term.trim();
     if (query.length < 2) {
+      searchAbort?.abort();
+      searchAbort = null;
+      loading = false;
       searchResults = [];
       return;
     }
+
+    searchAbort?.abort();
+    const controller = new AbortController();
+    searchAbort = controller;
 
     loading = true;
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -251,14 +259,16 @@
         const payload = await apiGet(
           '/api/v1/vendas/cidades-busca',
           { q: query, limite: maxResults },
-          undefined,
+          controller.signal,
           30_000
         );
+        if (controller.signal.aborted || searchAbort !== controller) return;
         const items = sortCities(uniqueCities(parseItems(payload)), query).slice(0, maxResults);
         searchResults = items;
         dispatch('loaded', items);
         break;
       } catch {
+        if (controller.signal.aborted || searchAbort !== controller) return;
         if (attempt < 2) {
           await new Promise((r) => setTimeout(r, 250));
         } else {
@@ -266,7 +276,10 @@
         }
       }
     }
-    loading = false;
+    if (searchAbort === controller) {
+      searchAbort = null;
+      loading = false;
+    }
   }
 
   function handleInput(event: Event) {
@@ -309,6 +322,7 @@
 
   onDestroy(() => {
     if (searchTimer) clearTimeout(searchTimer);
+    searchAbort?.abort();
   });
 </script>
 
