@@ -368,9 +368,9 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
         return new Response('ID invalido.', { status: 400, headers: NO_STORE_HEADERS });
 
       const { data: existing, error: existingError } = await applyRoteiroScope(
-        client.from('roteiro_personalizado').select('id').eq('id', roteiroId).maybeSingle(),
+        client.from('roteiro_personalizado').select('id').eq('id', roteiroId),
         scope
-      );
+      ).maybeSingle();
       if (existingError) throw existingError;
       if (!existing)
         return new Response('Roteiro nao encontrado.', { status: 404, headers: NO_STORE_HEADERS });
