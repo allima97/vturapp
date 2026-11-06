@@ -44,10 +44,7 @@ export type DataContext = {
 
 export interface DataClient {
   from: (table: string) => any;
-  rpc: (
-    name: string,
-    args?: Record<string, unknown>,
-  ) => Promise<QueryResult<any>>;
+  rpc: (name: string, args?: Record<string, unknown>) => Promise<QueryResult<any>>;
   storage: any;
   auth: any;
   channel: (name: string) => any;
@@ -57,15 +54,13 @@ export interface DataClient {
 export interface QueryBuilder extends PromiseLike<QueryResult> {
   select: (
     columns?: string,
-    options?: { count?: "exact" | "planned" | "estimated"; head?: boolean },
+    options?: { count?: 'exact' | 'planned' | 'estimated'; head?: boolean }
   ) => QueryBuilder;
-  insert: (
-    values: Record<string, unknown> | Array<Record<string, unknown>>,
-  ) => QueryBuilder;
+  insert: (values: Record<string, unknown> | Array<Record<string, unknown>>) => QueryBuilder;
   update: (values: Record<string, unknown>) => QueryBuilder;
   upsert: (
     values: Record<string, unknown> | Array<Record<string, unknown>>,
-    options?: { onConflict?: string },
+    options?: { onConflict?: string }
   ) => QueryBuilder;
   delete: () => QueryBuilder;
   eq: (column: string, value: unknown) => QueryBuilder;
@@ -81,10 +76,7 @@ export interface QueryBuilder extends PromiseLike<QueryResult> {
   not: (column: string, operator: string, value: unknown) => QueryBuilder;
   or: (filters: string) => QueryBuilder;
   match: (filters: Record<string, unknown>) => QueryBuilder;
-  order: (
-    column: string,
-    options?: { ascending?: boolean; nullsFirst?: boolean },
-  ) => QueryBuilder;
+  order: (column: string, options?: { ascending?: boolean; nullsFirst?: boolean }) => QueryBuilder;
   limit: (count: number) => QueryBuilder;
   range: (from: number, to: number) => QueryBuilder;
   single: () => Promise<QueryResult>;
@@ -95,14 +87,11 @@ export interface StorageBucket {
   upload: (
     path: string,
     body: unknown,
-    options?: { contentType?: string; upsert?: boolean; cacheControl?: string },
+    options?: { contentType?: string; upsert?: boolean; cacheControl?: string }
   ) => Promise<QueryResult>;
   download: (path: string) => Promise<QueryResult>;
   remove: (paths: string[]) => Promise<QueryResult>;
-  createSignedUrl: (
-    path: string,
-    expiresIn: number,
-  ) => Promise<QueryResult<{ signedUrl: string }>>;
+  createSignedUrl: (path: string, expiresIn: number) => Promise<QueryResult<{ signedUrl: string }>>;
   getPublicUrl: (path: string) => { data: { publicUrl: string } };
 }
 
@@ -116,10 +105,7 @@ export interface AuthApi {
     error: QueryError | null;
   }>;
   signOut: () => Promise<{ error: QueryError | null }>;
-  signInWithPassword: (credentials: {
-    email: string;
-    password: string;
-  }) => Promise<{
+  signInWithPassword: (credentials: { email: string; password: string }) => Promise<{
     data: { session: AuthSession | null; user: AuthUser | null };
     error: QueryError | null;
   }>;
@@ -128,25 +114,17 @@ export interface AuthApi {
   }) => Promise<{ data: { user: AuthUser | null }; error: QueryError | null }>;
   resetPasswordForEmail: (
     email: string,
-    options?: { redirectTo?: string },
+    options?: { redirectTo?: string }
   ) => Promise<{ data: Record<string, never>; error: QueryError | null }>;
-  exchangeCodeForSession: (
-    code: string,
-  ) => Promise<{
+  exchangeCodeForSession: (code: string) => Promise<{
     data: { session: AuthSession | null; user: AuthUser | null };
     error: QueryError | null;
   }>;
-  setSession: (tokens: {
-    access_token: string;
-    refresh_token: string;
-  }) => Promise<{
+  setSession: (tokens: { access_token: string; refresh_token: string }) => Promise<{
     data: { session: AuthSession | null };
     error: QueryError | null;
   }>;
-  verifyOtp: (params: {
-    token_hash?: string;
-    type?: string;
-  }) => Promise<{
+  verifyOtp: (params: { token_hash?: string; type?: string }) => Promise<{
     data: { session: AuthSession | null; user: AuthUser | null };
     error: QueryError | null;
   }>;
@@ -162,27 +140,18 @@ export interface AuthApi {
       data: { currentLevel: string; nextLevel: string };
       error: QueryError | null;
     }>;
-    enroll: (params?: {
-      factorType?: string;
-      friendlyName?: string;
-    }) => Promise<{
+    enroll: (params?: { factorType?: string; friendlyName?: string }) => Promise<{
       data: { id: string; totp: { qr_code: string; secret: string } };
       error: QueryError | null;
     }>;
     challenge: (params: {
       factorId: string;
     }) => Promise<{ data: { id: string }; error: QueryError | null }>;
-    verify: (params: {
-      factorId: string;
-      challengeId: string;
-      code: string;
-    }) => Promise<{
+    verify: (params: { factorId: string; challengeId: string; code: string }) => Promise<{
       data: { user: AuthUser | null };
       error: QueryError | null;
     }>;
-    unenroll: (params: {
-      factorId: string;
-    }) => Promise<{ error: QueryError | null }>;
+    unenroll: (params: { factorId: string }) => Promise<{ error: QueryError | null }>;
   };
   admin: {
     listUsers: (params?: {
@@ -190,19 +159,15 @@ export interface AuthApi {
       perPage?: number;
     }) => Promise<{ data: { users: AuthUser[] }; error: QueryError | null }>;
     getUserById: (
-      userId: string,
+      userId: string
     ) => Promise<{ data: { user: AuthUser | null }; error: QueryError | null }>;
-    createUser: (params: {
-      email: string;
-      password: string;
-      email_confirm?: boolean;
-    }) => Promise<{
+    createUser: (params: { email: string; password: string; email_confirm?: boolean }) => Promise<{
       data: { user: AuthUser | null };
       error: QueryError | null;
     }>;
     updateUserById: (
       userId: string,
-      values: { password?: string; email?: string },
+      values: { password?: string; email?: string }
     ) => Promise<{ data: { user: AuthUser | null }; error: QueryError | null }>;
     deleteUser: (userId: string) => Promise<{ error: QueryError | null }>;
     generateLink: (params: {
@@ -217,9 +182,7 @@ export interface AuthApi {
       error: QueryError | null;
     }>;
     mfa: {
-      listFactors: (params: {
-        userId: string;
-      }) => Promise<{
+      listFactors: (params: { userId: string }) => Promise<{
         data: {
           totp: Array<Record<string, unknown>>;
           factors?: Array<Record<string, unknown>>;
@@ -232,9 +195,9 @@ export interface AuthApi {
       }) => Promise<{ error: QueryError | null }>;
     };
   };
-  onAuthStateChange: (
-    callback: (event: string, session: AuthSession | null) => void,
-  ) => { data: { subscription: { unsubscribe: () => void } } };
+  onAuthStateChange: (callback: (event: string, session: AuthSession | null) => void) => {
+    data: { subscription: { unsubscribe: () => void } };
+  };
 }
 
 export interface RealtimeChannel {

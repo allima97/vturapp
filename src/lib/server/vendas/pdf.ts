@@ -77,13 +77,15 @@ export function gerarComprovanteHtml(
 ): string {
   const nomeEmpresa = opts.nomeEmpresa ?? 'VTUR Turismo';
   const geradoEm =
-    opts.geradoEm ??
-    new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    opts.geradoEm ?? new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
   // ── Seção: itens ──────────────────────────────────────────────────────────
-  const itensHtml = venda.itens.length === 0
-    ? '<tr><td colspan="5" style="text-align:center;color:#666">Nenhum item</td></tr>'
-    : venda.itens.map((it) => /* html */`
+  const itensHtml =
+    venda.itens.length === 0
+      ? '<tr><td colspan="5" style="text-align:center;color:#666">Nenhum item</td></tr>'
+      : venda.itens
+          .map(
+            (it) => /* html */ `
       <tr>
         <td>${esc(it.descricao)}</td>
         <td style="white-space:nowrap">${formatarData(it.dataServico)}</td>
@@ -91,30 +93,39 @@ export function gerarComprovanteHtml(
         <td class="num">${formatarBRL(it.valorNetoCentavos)}</td>
         <td class="num">${formatarBRL(it.valorTotalCentavos)}</td>
       </tr>
-    `).join('');
+    `
+          )
+          .join('');
 
   // ── Seção: pagamentos / parcelas ──────────────────────────────────────────
-  const pagamentosHtml = venda.pagamentos.length === 0
-    ? '<tr><td colspan="5" style="text-align:center;color:#666">Nenhum pagamento</td></tr>'
-    : venda.pagamentos.flatMap((pag) =>
-        pag.parcelas.map((par, idx) => /* html */`
+  const pagamentosHtml =
+    venda.pagamentos.length === 0
+      ? '<tr><td colspan="5" style="text-align:center;color:#666">Nenhum pagamento</td></tr>'
+      : venda.pagamentos
+          .flatMap((pag) =>
+            pag.parcelas.map(
+              (par, idx) => /* html */ `
           <tr>
-            ${idx === 0
-              ? `<td rowspan="${pag.parcelas.length}">${esc(String((pag as { formaId?: number | null }).formaId ?? ''))}</td>`
-              : ''}
+            ${
+              idx === 0
+                ? `<td rowspan="${pag.parcelas.length}">${esc(String((pag as { formaId?: number | null }).formaId ?? ''))}</td>`
+                : ''
+            }
             <td class="num">${par.numero}</td>
             <td style="white-space:nowrap">${formatarData(par.vencimento)}</td>
             <td class="num">${formatarBRL(par.valorCentavos)}</td>
             <td class="num">${formatarBRL(pag.valorTotalCentavos)}</td>
           </tr>
-        `)
-      ).join('');
+        `
+            )
+          )
+          .join('');
 
   const canceladaBanner = venda.cancelada
     ? `<div class="cancelada-banner">⚠ VENDA CANCELADA</div>`
     : '';
 
-  return /* html */`<!DOCTYPE html>
+  return /* html */ `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">

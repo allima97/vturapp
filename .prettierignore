@@ -1,0 +1,9 @@
+# Arquivos gerados ou externos que não devem ser reformatados
+package-lock.json
+docs/api-inventory.json
+docs/api-inventory.md
+drizzle/
+static/
+supabase/
+tmp/
+logo/

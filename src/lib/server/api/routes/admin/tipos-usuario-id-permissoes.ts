@@ -10,10 +10,7 @@ import {
   loadUserTypeDefaultPermissions,
   saveDefaultPermissions
 } from '$lib/server/admin';
-import {
-  agruparModulosPorSecao,
-  MODULOS_ADMIN_PERMISSOES
-} from '$lib/admin/modules';
+import { agruparModulosPorSecao, MODULOS_ADMIN_PERMISSOES } from '$lib/admin/modules';
 import {
   getAdminClient,
   requireAuthenticatedUser,
@@ -48,7 +45,10 @@ export async function handleAdminTiposUsuarioIdPermissoesGet(event: RequestEvent
 
     const userTypes = await loadManagedUserTypes(client, scope);
     if (!userTypes.some((row) => row.id === userTypeId)) {
-      return new Response('Tipo de usuario fora do escopo.', { status: 403, headers: NO_STORE_HEADERS });
+      return new Response('Tipo de usuario fora do escopo.', {
+        status: 403,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const rows = await loadUserTypeDefaultPermissions(client, userTypeId);
@@ -68,7 +68,10 @@ export async function handleAdminTiposUsuarioIdPermissoesPost(event: RequestEven
   try {
     const originError = rejectCrossOriginRequest(event.request);
     if (originError) return originError;
-    const bodyResult = await readJsonBodyLimited(event.request, MAX_TIPO_USUARIO_PERMISSOES_BODY_BYTES);
+    const bodyResult = await readJsonBodyLimited(
+      event.request,
+      MAX_TIPO_USUARIO_PERMISSOES_BODY_BYTES
+    );
     if (!bodyResult.ok) return bodyResult.response;
 
     const client = getAdminClient();
@@ -81,7 +84,10 @@ export async function handleAdminTiposUsuarioIdPermissoesPost(event: RequestEven
 
     const userTypes = await loadManagedUserTypes(client, scope);
     if (!userTypes.some((row) => row.id === userTypeId)) {
-      return new Response('Tipo de usuario fora do escopo.', { status: 403, headers: NO_STORE_HEADERS });
+      return new Response('Tipo de usuario fora do escopo.', {
+        status: 403,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const permissions = Array.isArray(body.permissions) ? body.permissions : [];

@@ -61,7 +61,11 @@ function parseObjectBody(text: string): CommissionRuleBody {
 }
 
 function normalizeTipo(value: unknown): 'GERAL' | 'ESCALONAVEL' {
-  return String(value || '').trim().toUpperCase() === 'ESCALONAVEL' ? 'ESCALONAVEL' : 'GERAL';
+  return String(value || '')
+    .trim()
+    .toUpperCase() === 'ESCALONAVEL'
+    ? 'ESCALONAVEL'
+    : 'GERAL';
 }
 
 function normalizeNumber(value: unknown, fallback = 0) {
@@ -75,7 +79,9 @@ function sanitizeTiers(value: unknown): TierPayload[] {
   return value
     .map((tier: unknown) => {
       const record = tier && typeof tier === 'object' ? (tier as Record<string, unknown>) : {};
-      const faixa = String(record.faixa || '').trim().toUpperCase();
+      const faixa = String(record.faixa || '')
+        .trim()
+        .toUpperCase();
       if (faixa !== 'PRE' && faixa !== 'POS') return null;
 
       return {
@@ -117,7 +123,10 @@ async function requireAccess(event: RequestEvent, minLevel: number) {
   };
 }
 
-function canAccessRuleCompany(companyId: string | null | undefined, allowedCompanySet: Set<string>) {
+function canAccessRuleCompany(
+  companyId: string | null | undefined,
+  allowedCompanySet: Set<string>
+) {
   if (!companyId) return true;
   if (allowedCompanySet.size === 0) return true;
   return allowedCompanySet.has(companyId);
@@ -140,7 +149,10 @@ function invalidateCommissionRuleReadModels(params?: {
   invalidateCommissionReadModels(params);
 }
 
-function resolveWritableCompanyId(access: Awaited<ReturnType<typeof requireAccess>>, requested: string) {
+function resolveWritableCompanyId(
+  access: Awaited<ReturnType<typeof requireAccess>>,
+  requested: string
+) {
   if (access.scope.isAdmin) {
     return isUuid(requested) ? requested : null;
   }
@@ -193,7 +205,9 @@ async function ensureRuleWriteAccess(
 
   const rule = await getRuleCompanyForWrite(access.client, id);
   if (!rule.exists) {
-    return { error: new Response('Regra não encontrada.', { status: 404, headers: NO_STORE_HEADERS }) };
+    return {
+      error: new Response('Regra não encontrada.', { status: 404, headers: NO_STORE_HEADERS })
+    };
   }
 
   if (rule.legacySchema) {
@@ -235,7 +249,9 @@ export async function handleParametrosCommissionRulesGet(event: RequestEvent) {
 
     const primary = await client
       .from('commission_rule')
-      .select('id, nome, descricao, tipo, meta_nao_atingida, meta_atingida, super_meta, ativo, company_id, created_by, commission_tier(id, faixa, de_pct, ate_pct, inc_pct_meta, inc_pct_comissao, ativo)')
+      .select(
+        'id, nome, descricao, tipo, meta_nao_atingida, meta_atingida, super_meta, ativo, company_id, created_by, commission_tier(id, faixa, de_pct, ate_pct, inc_pct_meta, inc_pct_comissao, ativo)'
+      )
       .order('nome', { ascending: true });
 
     data = primary.data as CommissionRuleRow[] | null;
@@ -244,7 +260,9 @@ export async function handleParametrosCommissionRulesGet(event: RequestEvent) {
     if (error && isMissingColumnError(error)) {
       const fallback = await client
         .from('commission_rule')
-        .select('id, nome, descricao, tipo, meta_nao_atingida, meta_atingida, super_meta, ativo, commission_tier(id, faixa, de_pct, ate_pct, inc_pct_meta, inc_pct_comissao, ativo)')
+        .select(
+          'id, nome, descricao, tipo, meta_nao_atingida, meta_atingida, super_meta, ativo, commission_tier(id, faixa, de_pct, ate_pct, inc_pct_meta, inc_pct_comissao, ativo)'
+        )
         .order('nome', { ascending: true });
 
       data = fallback.data as CommissionRuleRow[] | null;
@@ -261,17 +279,11 @@ export async function handleParametrosCommissionRulesGet(event: RequestEvent) {
       items = [];
     } else if (!access.scope.isAdmin) {
       items = items.filter((rule) =>
-        canAccessRuleCompany(
-          String(rule?.company_id || '').trim() || null,
-          scopedCompanySet
-        )
+        canAccessRuleCompany(String(rule?.company_id || '').trim() || null, scopedCompanySet)
       );
     } else if (scopedCompanyIds.length > 0) {
       items = items.filter((rule) =>
-        canAccessRuleCompany(
-          String(rule?.company_id || '').trim() || null,
-          scopedCompanySet
-        )
+        canAccessRuleCompany(String(rule?.company_id || '').trim() || null, scopedCompanySet)
       );
     }
 
@@ -285,7 +297,10 @@ export async function handleParametrosCommissionRulesPost(event: RequestEvent) {
   try {
     const originError = rejectCrossOriginRequest(event.request);
     if (originError) return originError;
-    const textResult = await readTextBodyLimited(event.request, MAX_PARAMETROS_COMMISSION_RULES_BODY_BYTES);
+    const textResult = await readTextBodyLimited(
+      event.request,
+      MAX_PARAMETROS_COMMISSION_RULES_BODY_BYTES
+    );
     if (!textResult.ok) return textResult.response;
 
     const access = await requireAccess(event, 3);
@@ -423,7 +438,10 @@ export async function handleParametrosCommissionRulesPatch(event: RequestEvent) 
   try {
     const originError = rejectCrossOriginRequest(event.request);
     if (originError) return originError;
-    const textResult = await readTextBodyLimited(event.request, MAX_PARAMETROS_COMMISSION_RULES_BODY_BYTES);
+    const textResult = await readTextBodyLimited(
+      event.request,
+      MAX_PARAMETROS_COMMISSION_RULES_BODY_BYTES
+    );
     if (!textResult.ok) return textResult.response;
 
     const access = await requireAccess(event, 3);
@@ -481,7 +499,10 @@ export async function handleParametrosCommissionRulesDelete(event: RequestEvent)
   try {
     const originError = rejectCrossOriginRequest(event.request);
     if (originError) return originError;
-    const textResult = await readTextBodyLimited(event.request, MAX_PARAMETROS_COMMISSION_RULES_BODY_BYTES);
+    const textResult = await readTextBodyLimited(
+      event.request,
+      MAX_PARAMETROS_COMMISSION_RULES_BODY_BYTES
+    );
     if (!textResult.ok) return textResult.response;
 
     const access = await requireAccess(event, 3);

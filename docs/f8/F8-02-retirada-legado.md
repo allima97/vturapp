@@ -16,11 +16,11 @@
 npm uninstall @supabase/supabase-js @supabase/ssr supabase
 ```
 
-| Pacote | Versão atual | Status |
-|---|---|---|
-| `@supabase/supabase-js` | ^2.0.0 | REMOVER após F8-03 |
-| `@supabase/ssr` | ^0.8.0 | REMOVER após F8-03 |
-| `supabase` (CLI) | ^2.92.1 | REMOVER após F8-03 |
+| Pacote                  | Versão atual | Status             |
+| ----------------------- | ------------ | ------------------ |
+| `@supabase/supabase-js` | ^2.0.0       | REMOVER após F8-03 |
+| `@supabase/ssr`         | ^0.8.0       | REMOVER após F8-03 |
+| `supabase` (CLI)        | ^2.92.1      | REMOVER após F8-03 |
 
 **Pré-requisito:** nenhuma rota v1 ativa em produção (verificar Analytics antes).
 
@@ -35,38 +35,38 @@ npm uninstall @supabase/supabase-js @supabase/ssr supabase
 
 Arquivos com referências Supabase fora do contexto de servidor:
 
-| Arquivo | Referência | Ação |
-|---|---|---|
-| `src/lib/stores/auth.ts` | `createClient` Supabase | Reescrever com Better Auth client |
-| `src/lib/stores/permissoes.ts` | `supabase.from(...)` | Reescrever com fetch `/api/v2/` |
-| `src/lib/mural/helpers.ts` | Supabase realtime | Substituir por polling (ADR-008) |
-| `src/lib/quote/exportQuotePdfClient.ts` | Supabase storage | Substituir por R2 presigned URL |
-| `src/lib/cards/themeAssetMeta.ts` | Supabase storage | Substituir por R2 |
-| `src/lib/conciliacao/source.ts` | Supabase query | M06 ADIADO — manter até decisão |
-| `src/lib/conciliacao/vendaRanking.ts` | Supabase query | M06 ADIADO |
-| `src/lib/conciliacao/baixaRac.ts` | Supabase query | M06 ADIADO |
+| Arquivo                                 | Referência              | Ação                              |
+| --------------------------------------- | ----------------------- | --------------------------------- |
+| `src/lib/stores/auth.ts`                | `createClient` Supabase | Reescrever com Better Auth client |
+| `src/lib/stores/permissoes.ts`          | `supabase.from(...)`    | Reescrever com fetch `/api/v2/`   |
+| `src/lib/mural/helpers.ts`              | Supabase realtime       | Substituir por polling (ADR-008)  |
+| `src/lib/quote/exportQuotePdfClient.ts` | Supabase storage        | Substituir por R2 presigned URL   |
+| `src/lib/cards/themeAssetMeta.ts`       | Supabase storage        | Substituir por R2                 |
+| `src/lib/conciliacao/source.ts`         | Supabase query          | M06 ADIADO — manter até decisão   |
+| `src/lib/conciliacao/vendaRanking.ts`   | Supabase query          | M06 ADIADO                        |
+| `src/lib/conciliacao/baixaRac.ts`       | Supabase query          | M06 ADIADO                        |
 
 ---
 
-## 3. Módulos Servidor Legado (src/lib/server/*.ts)
+## 3. Módulos Servidor Legado (src/lib/server/\*.ts)
 
 Arquivos que usam Supabase no servidor e ainda não têm equivalente v2:
 
-| Arquivo | Função | Ação |
-|---|---|---|
-| `clientes.ts` | Supabase queries clientes | SUBSTITUÍDO por `clientes/service.ts` — apagar |
-| `admin.ts` | Supabase admin SDK | Avaliar migração para Better Auth admin |
-| `vendasSave.ts` | Supabase insert vendas | SUBSTITUÍDO por `vendas/service.ts` — apagar |
-| `readModelRebuild.ts` | Cron rebuild Supabase | OBSOLETO por ADR-007 — apagar |
-| `readModelRowGuard.ts` | Guard do read model | OBSOLETO — apagar com rebuild |
-| `conciliacaoReconcile.ts` | Supabase conciliação | M06 ADIADO — manter com aviso |
-| `comissoes.ts` | Supabase comissões | M05 EXCLUÍDO — manter como arquivo morto |
-| `comissoes-registro.ts` | Supabase comissões | M05 EXCLUÍDO — manter como arquivo morto |
-| `fornecedores.ts` | Supabase fornecedores | M03 ADIADO — manter |
-| `relatorios.ts` | Supabase relatórios | Avaliar na fase de relatórios |
-| `passkeys.ts` | Supabase passkeys | SUBSTITUÍDO por Better Auth — apagar |
-| `salesScope.ts` | Helper de escopo Supabase | OBSOLETO — apagar |
-| `vendas-kpis.ts` | KPIs via Supabase | Reescrever via D1 em F9+ |
+| Arquivo                   | Função                    | Ação                                           |
+| ------------------------- | ------------------------- | ---------------------------------------------- |
+| `clientes.ts`             | Supabase queries clientes | SUBSTITUÍDO por `clientes/service.ts` — apagar |
+| `admin.ts`                | Supabase admin SDK        | Avaliar migração para Better Auth admin        |
+| `vendasSave.ts`           | Supabase insert vendas    | SUBSTITUÍDO por `vendas/service.ts` — apagar   |
+| `readModelRebuild.ts`     | Cron rebuild Supabase     | OBSOLETO por ADR-007 — apagar                  |
+| `readModelRowGuard.ts`    | Guard do read model       | OBSOLETO — apagar com rebuild                  |
+| `conciliacaoReconcile.ts` | Supabase conciliação      | M06 ADIADO — manter com aviso                  |
+| `comissoes.ts`            | Supabase comissões        | M05 EXCLUÍDO — manter como arquivo morto       |
+| `comissoes-registro.ts`   | Supabase comissões        | M05 EXCLUÍDO — manter como arquivo morto       |
+| `fornecedores.ts`         | Supabase fornecedores     | M03 ADIADO — manter                            |
+| `relatorios.ts`           | Supabase relatórios       | Avaliar na fase de relatórios                  |
+| `passkeys.ts`             | Supabase passkeys         | SUBSTITUÍDO por Better Auth — apagar           |
+| `salesScope.ts`           | Helper de escopo Supabase | OBSOLETO — apagar                              |
+| `vendas-kpis.ts`          | KPIs via Supabase         | Reescrever via D1 em F9+                       |
 
 ---
 
@@ -87,6 +87,7 @@ Rotas v1 candidatas a desativação (após tráfego = 0 por 7 dias):
 - `/api/v1/invites/*` → equivalente em `/api/v2/invites/*`
 
 **Procedimento:**
+
 1. Adicionar header de deprecação: `Deprecation: true`, `Sunset: <data>`
 2. Aguardar 30 dias (ou acordo com usuários da API)
 3. Remover rota do `sveltekit-v1.ts` ou `app-v1.ts`
@@ -108,6 +109,7 @@ wrangler secret list --env production
 ```
 
 No Supabase Dashboard:
+
 - [ ] Revogar API keys do projeto (após dados exportados)
 - [ ] Desativar webhooks Supabase apontando para Workers
 - [ ] Cancelar plano Supabase (decidir conforme F8-03)
@@ -116,11 +118,11 @@ No Supabase Dashboard:
 
 ## 6. Crons e Webhooks a Remover
 
-| Cron/Webhook | Plataforma | Status |
-|---|---|---|
-| Rebuild do read model | Workers (cron nightly) | REMOVIDO em F5-02 (ADR-007) |
-| Webhook Supabase → Worker | Supabase | Verificar e remover |
-| Edge Function Supabase (se houver) | Supabase | Inventariar e remover |
+| Cron/Webhook                       | Plataforma             | Status                      |
+| ---------------------------------- | ---------------------- | --------------------------- |
+| Rebuild do read model              | Workers (cron nightly) | REMOVIDO em F5-02 (ADR-007) |
+| Webhook Supabase → Worker          | Supabase               | Verificar e remover         |
+| Edge Function Supabase (se houver) | Supabase               | Inventariar e remover       |
 
 ---
 
@@ -146,4 +148,4 @@ No Supabase Dashboard:
 9. Verificar: npm run check, npm run build, npm run test
 ```
 
-*Gerado em F8-02. Cada remoção deve ser um commit atômico e revisado.*
+_Gerado em F8-02. Cada remoção deve ser um commit atômico e revisado._

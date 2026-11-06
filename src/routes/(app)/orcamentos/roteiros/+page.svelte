@@ -51,13 +51,14 @@
       label: 'Duração',
       sortable: true,
       width: '100px',
-      formatter: (v: number | null) => v ? `${v} dias` : '-'
+      formatter: (v: number | null) => (v ? `${v} dias` : '-')
     },
     {
       key: 'cidades_visitadas',
       label: 'Cidades Visitadas',
       sortable: false,
-      formatter: (_v: unknown, row: Roteiro) => mergeCidadesVisitadas(row.inicio_cidade, row.fim_cidade) || '-'
+      formatter: (_v: unknown, row: Roteiro) =>
+        mergeCidadesVisitadas(row.inicio_cidade, row.fim_cidade) || '-'
     },
     {
       key: 'updated_at',
@@ -76,7 +77,11 @@
     const seq = ++loadSeq;
     if (!silent) loading = true;
     try {
-      const payload = await apiGet<{ roteiros?: Roteiro[] }>('/api/v1/roteiros', undefined, controller.signal);
+      const payload = await apiGet<{ roteiros?: Roteiro[] }>(
+        '/api/v1/roteiros',
+        undefined,
+        controller.signal
+      );
       if (seq !== loadSeq) return;
       roteiros = payload.roteiros || [];
     } catch (err) {
@@ -104,7 +109,10 @@
   }
 
   async function save() {
-    if (!form.nome.trim()) { toast.error('Nome obrigatório.'); return; }
+    if (!form.nome.trim()) {
+      toast.error('Nome obrigatório.');
+      return;
+    }
     saving = true;
     try {
       await apiPost('/api/v1/roteiros', {
@@ -153,10 +161,7 @@
   title="Roteiros Personalizados"
   subtitle="Crie e gerencie roteiros de viagem para usar nos orçamentos."
   color="clientes"
-  breadcrumbs={[
-    { label: 'Orçamentos', href: '/orcamentos' },
-    { label: 'Roteiros' }
-  ]}
+  breadcrumbs={[{ label: 'Orçamentos', href: '/orcamentos' }, { label: 'Roteiros' }]}
   actions={[
     { label: 'Atualizar', onClick: () => load(), variant: 'secondary', icon: RefreshCw },
     { label: 'Novo Roteiro', onClick: openNew, variant: 'primary', icon: Plus }
@@ -214,7 +219,7 @@
       placeholder="Ex: Europa Clássica 10 dias"
       required={true}
     />
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <FieldInput
         id="rot-duracao"
         label="Duração (dias)"

@@ -2,11 +2,7 @@ import type { ItemNavegacao } from '$lib/stores/navegacao';
 
 /** Minúsculas e sem acentos: "Conciliação" → "conciliacao". */
 export function normalizarBusca(texto: string): string {
-  return texto
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim();
+  return texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 }
 
 /** Remove itens repetidos (mesmo endereço), mantendo o primeiro. */
@@ -44,6 +40,13 @@ export function filtrarItens(itens: ItemNavegacao[], busca: string): ItemNavegac
 }
 
 /** Ctrl+K (Windows/Linux) ou ⌘K (Mac). */
-export function isAtalhoBusca(event: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | 'altKey' | 'shiftKey'>): boolean {
-  return (event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'k';
+export function isAtalhoBusca(
+  event: Pick<KeyboardEvent, 'key' | 'ctrlKey' | 'metaKey' | 'altKey' | 'shiftKey'>
+): boolean {
+  return (
+    (event.ctrlKey || event.metaKey) &&
+    !event.altKey &&
+    !event.shiftKey &&
+    event.key.toLowerCase() === 'k'
+  );
 }

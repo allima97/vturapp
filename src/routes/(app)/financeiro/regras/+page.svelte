@@ -3,17 +3,16 @@
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
-  import { FieldCheckbox, FieldInput, FieldSelect, FieldTextarea, LoadingState, SimpleTable } from '$lib/components/ui';
-  import Dialog from '$lib/components/ui/Dialog.svelte';
   import {
-    CheckCircle2,
-    CircleOff,
-    Edit2,
-    GitBranch,
-    Percent,
-    Plus,
-    Trash2
-  } from '$lib/icons';
+    FieldCheckbox,
+    FieldInput,
+    FieldSelect,
+    FieldTextarea,
+    LoadingState,
+    SimpleTable
+  } from '$lib/components/ui';
+  import Dialog from '$lib/components/ui/Dialog.svelte';
+  import { CheckCircle2, CircleOff, Edit2, GitBranch, Percent, Plus, Trash2 } from '$lib/icons';
   import { apiFetch, apiGet, isCanceledApiError } from '$lib/services/api';
   import { toast } from '$lib/stores/ui';
   import { permissoes } from '$lib/stores/permissoes';
@@ -120,14 +119,16 @@
   }
 
   function cloneTiers(tiers?: Tier[]): Tier[] {
-    return (tiers || []).map((tier): Tier => ({
-      id: tier.id,
-      faixa: tier.faixa === 'POS' ? 'POS' : 'PRE',
-      de_pct: normalizeNumber(tier.de_pct),
-      ate_pct: normalizeNumber(tier.ate_pct),
-      inc_pct_meta: normalizeNumber(tier.inc_pct_meta),
-      inc_pct_comissao: normalizeNumber(tier.inc_pct_comissao)
-    }));
+    return (tiers || []).map(
+      (tier): Tier => ({
+        id: tier.id,
+        faixa: tier.faixa === 'POS' ? 'POS' : 'PRE',
+        de_pct: normalizeNumber(tier.de_pct),
+        ate_pct: normalizeNumber(tier.ate_pct),
+        inc_pct_meta: normalizeNumber(tier.inc_pct_meta),
+        inc_pct_comissao: normalizeNumber(tier.inc_pct_comissao)
+      })
+    );
   }
 
   function normalizeRule(raw: unknown): Rule {
@@ -171,11 +172,7 @@
       const data = await apiGet<{
         company_id?: string | null;
         empresas?: EmpresaOption[];
-      }>(
-        '/api/v1/user/context',
-        undefined,
-        request.signal
-      );
+      }>('/api/v1/user/context', undefined, request.signal);
 
       if (!contextGuard.isCurrent(request.seq)) return false;
       empresas = Array.isArray(data.empresas) ? data.empresas : [];
@@ -459,7 +456,8 @@
       await loadRules({ silent: true });
       closeConfirm();
     } catch (err) {
-      const fallback = confirmMode === 'inativar' ? 'Erro ao inativar regra.' : 'Erro ao excluir regra.';
+      const fallback =
+        confirmMode === 'inativar' ? 'Erro ao inativar regra.' : 'Erro ao excluir regra.';
       const message = toUserMessage(err, fallback);
       errorMessage = message;
       toast.error(message);
@@ -482,22 +480,17 @@
   title="Regras de Comissão"
   subtitle="Defina percentuais fixos ou faixas escalonáveis compartilhadas pela operação."
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Financeiro', href: '/financeiro' },
-    { label: 'Regras' }
-  ]}
-  actions={
-    showForm || !canEditRules
-      ? []
-      : [
-          {
-            label: 'Nova Regra',
-            onClick: openCreateForm,
-            variant: 'primary',
-            icon: Plus
-          }
-        ]
-  }
+  breadcrumbs={[{ label: 'Financeiro', href: '/financeiro' }, { label: 'Regras' }]}
+  actions={showForm || !canEditRules
+    ? []
+    : [
+        {
+          label: 'Nova Regra',
+          onClick: openCreateForm,
+          variant: 'primary',
+          icon: Plus
+        }
+      ]}
 />
 
 {#if canSelectEmpresa}
@@ -558,17 +551,21 @@
 </div>
 
 {#if errorMessage}
-  <div role="alert" class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+  <div
+    role="alert"
+    class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+  >
     {errorMessage}
   </div>
 {/if}
 
 {#if showForm}
-  <Card title={editId ? 'Editar regra de comissão' : 'Nova regra de comissão'} color="financeiro" class="mb-6">
-    <form
-      class="space-y-5"
-      on:submit|preventDefault={saveRule}
-    >
+  <Card
+    title={editId ? 'Editar regra de comissão' : 'Nova regra de comissão'}
+    color="financeiro"
+    class="mb-6"
+  >
+    <form class="space-y-5" on:submit|preventDefault={saveRule}>
       <div class="grid grid-cols-1 gap-4 xl:grid-cols-4">
         <FieldInput
           id="regra-nome"
@@ -643,7 +640,7 @@
       {/if}
 
       {#if form.tipo === 'ESCALONAVEL'}
-        <div class="rounded-vtur-xl border border-financeiro-200 bg-financeiro-50/40 p-4">
+        <div class="rounded-vtur-xl border-financeiro-200 bg-financeiro-50/40 border p-4">
           <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 class="text-base font-semibold text-slate-900">Faixas escalonáveis</h3>
@@ -663,81 +660,83 @@
           </div>
 
           {#if form.tiers.length === 0}
-            <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500">
+            <div
+              class="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500"
+            >
               Nenhuma faixa adicionada ainda.
             </div>
           {:else}
             <SimpleTable tableClass="min-w-full divide-y divide-slate-200" color="financeiro">
-                <thead class="bg-white/70">
-                  <tr class="text-left text-slate-600">
-                    <th class="px-3 py-2 font-medium">Faixa</th>
-                    <th class="px-3 py-2 font-medium">De (%)</th>
-                    <th class="px-3 py-2 font-medium">Até (%)</th>
-                    <th class="px-3 py-2 font-medium">Inc. Meta (%)</th>
-                    <th class="px-3 py-2 font-medium">Inc. Comissão (%)</th>
-                    <th class="px-3 py-2 font-medium text-right">Ações</th>
+              <thead class="bg-white/70">
+                <tr class="text-left text-slate-600">
+                  <th class="px-3 py-2 font-medium">Faixa</th>
+                  <th class="px-3 py-2 font-medium">De (%)</th>
+                  <th class="px-3 py-2 font-medium">Até (%)</th>
+                  <th class="px-3 py-2 font-medium">Inc. Meta (%)</th>
+                  <th class="px-3 py-2 font-medium">Inc. Comissão (%)</th>
+                  <th class="px-3 py-2 text-right font-medium">Ações</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200 bg-white">
+                {#each form.tiers as tier, index}
+                  <tr>
+                    <td class="px-3 py-2">
+                      <FieldSelect
+                        class_name="min-w-[110px]"
+                        value={tier.faixa}
+                        options={faixaOptions}
+                        on:change={(event) => handleTierFaixaChange(index, event)}
+                      />
+                    </td>
+                    <td class="px-3 py-2">
+                      <FieldInput
+                        type="number"
+                        step="0.01"
+                        value={String(tier.de_pct)}
+                        on:input={(event) => handleTierInput(index, 'de_pct', event)}
+                        class_name="min-w-[120px]"
+                      />
+                    </td>
+                    <td class="px-3 py-2">
+                      <FieldInput
+                        type="number"
+                        step="0.01"
+                        value={String(tier.ate_pct)}
+                        on:input={(event) => handleTierInput(index, 'ate_pct', event)}
+                        class_name="min-w-[120px]"
+                      />
+                    </td>
+                    <td class="px-3 py-2">
+                      <FieldInput
+                        type="number"
+                        step="0.01"
+                        value={String(tier.inc_pct_meta)}
+                        on:input={(event) => handleTierInput(index, 'inc_pct_meta', event)}
+                        class_name="min-w-[140px]"
+                      />
+                    </td>
+                    <td class="px-3 py-2">
+                      <FieldInput
+                        type="number"
+                        step="0.01"
+                        value={String(tier.inc_pct_comissao)}
+                        on:input={(event) => handleTierInput(index, 'inc_pct_comissao', event)}
+                        class_name="min-w-[160px]"
+                      />
+                    </td>
+                    <td class="px-3 py-2 text-right">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="danger"
+                        on:click={() => removeTier(index)}
+                      >
+                        Remover
+                      </Button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 bg-white">
-                  {#each form.tiers as tier, index}
-                    <tr>
-                      <td class="px-3 py-2">
-                        <FieldSelect
-                          class_name="min-w-[110px]"
-                          value={tier.faixa}
-                          options={faixaOptions}
-                          on:change={(event) => handleTierFaixaChange(index, event)}
-                        />
-                      </td>
-                      <td class="px-3 py-2">
-                        <FieldInput
-                          type="number"
-                          step="0.01"
-                          value={String(tier.de_pct)}
-                          on:input={(event) => handleTierInput(index, 'de_pct', event)}
-                          class_name="min-w-[120px]"
-                        />
-                      </td>
-                      <td class="px-3 py-2">
-                        <FieldInput
-                          type="number"
-                          step="0.01"
-                          value={String(tier.ate_pct)}
-                          on:input={(event) => handleTierInput(index, 'ate_pct', event)}
-                          class_name="min-w-[120px]"
-                        />
-                      </td>
-                      <td class="px-3 py-2">
-                        <FieldInput
-                          type="number"
-                          step="0.01"
-                          value={String(tier.inc_pct_meta)}
-                          on:input={(event) => handleTierInput(index, 'inc_pct_meta', event)}
-                          class_name="min-w-[140px]"
-                        />
-                      </td>
-                      <td class="px-3 py-2">
-                        <FieldInput
-                          type="number"
-                          step="0.01"
-                          value={String(tier.inc_pct_comissao)}
-                          on:input={(event) => handleTierInput(index, 'inc_pct_comissao', event)}
-                          class_name="min-w-[160px]"
-                        />
-                      </td>
-                      <td class="px-3 py-2 text-right">
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="danger"
-                          on:click={() => removeTier(index)}
-                        >
-                          Remover
-                        </Button>
-                      </td>
-                    </tr>
-                  {/each}
-                </tbody>
+                {/each}
+              </tbody>
             </SimpleTable>
           {/if}
         </div>
@@ -755,17 +754,18 @@
   </Card>
 {/if}
 
-<Card
-  title="Regras cadastradas"
-  color="financeiro"
->
+<Card title="Regras cadastradas" color="financeiro">
   {#if loading}
     <LoadingState compact={true} />
   {:else if rules.length === 0}
-    <div class="rounded-2xl border border-dashed border-slate-300 px-4 py-10 text-center text-slate-500">
+    <div
+      class="rounded-2xl border border-dashed border-slate-300 px-4 py-10 text-center text-slate-500"
+    >
       <Percent size={42} class="mx-auto mb-3 opacity-40" />
       <p class="font-medium text-slate-700">Nenhuma regra cadastrada</p>
-      <p class="mt-1 text-sm">Crie a primeira regra para estruturar percentuais e faixas da operação.</p>
+      <p class="mt-1 text-sm">
+        Crie a primeira regra para estruturar percentuais e faixas da operação.
+      </p>
       {#if !showForm && canEditRules}
         <div class="mt-4">
           <Button type="button" variant="primary" on:click={openCreateForm}>
@@ -782,11 +782,15 @@
             <div class="min-w-0 flex-1 space-y-4">
               <div class="flex flex-wrap items-center gap-2">
                 <h3 class="text-lg font-semibold text-slate-900">{rule.nome}</h3>
-                <span class="inline-flex rounded-full bg-slate-900 px-2.5 py-1 text-xs font-medium text-white">
+                <span
+                  class="inline-flex rounded-full bg-slate-900 px-2.5 py-1 text-xs font-medium text-white"
+                >
                   {rule.tipo === 'ESCALONAVEL' ? 'Escalonável' : 'Geral'}
                 </span>
                 <span
-                  class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium {rule.ativo ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-700'}"
+                  class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium {rule.ativo
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-slate-200 text-slate-700'}"
                 >
                   {rule.ativo ? 'Ativa' : 'Inativa'}
                 </span>
@@ -798,19 +802,25 @@
 
               <div class="grid grid-cols-1 gap-3 md:grid-cols-3">
                 <div class="rounded-xl border border-slate-200 bg-white px-3 py-3">
-                  <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Meta não atingida</p>
+                  <p class="text-xs font-medium tracking-wide text-slate-500 uppercase">
+                    Meta não atingida
+                  </p>
                   <p class="mt-1 text-lg font-semibold text-slate-900">
                     {formatPercent(rule.meta_nao_atingida)}%
                   </p>
                 </div>
                 <div class="rounded-xl border border-slate-200 bg-white px-3 py-3">
-                  <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Meta atingida</p>
+                  <p class="text-xs font-medium tracking-wide text-slate-500 uppercase">
+                    Meta atingida
+                  </p>
                   <p class="mt-1 text-lg font-semibold text-slate-900">
                     {formatPercent(rule.meta_atingida)}%
                   </p>
                 </div>
                 <div class="rounded-xl border border-slate-200 bg-white px-3 py-3">
-                  <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Super meta</p>
+                  <p class="text-xs font-medium tracking-wide text-slate-500 uppercase">
+                    Super meta
+                  </p>
                   <p class="mt-1 text-lg font-semibold text-slate-900">
                     {formatPercent(rule.super_meta)}%
                   </p>
@@ -839,7 +849,9 @@
                                   {formatPercent(tier.de_pct)}% até {formatPercent(tier.ate_pct)}%
                                 </span>
                                 <span class="text-slate-500">
-                                  Meta +{formatPercent(tier.inc_pct_meta)}% | Comissão +{formatPercent(tier.inc_pct_comissao)}%
+                                  Meta +{formatPercent(tier.inc_pct_meta)}% | Comissão +{formatPercent(
+                                    tier.inc_pct_comissao
+                                  )}%
                                 </span>
                               </div>
                             </div>
@@ -860,7 +872,12 @@
                 </Button>
 
                 {#if rule.ativo}
-                  <Button type="button" size="sm" variant="outline" on:click={() => askInactivate(rule)}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    on:click={() => askInactivate(rule)}
+                  >
                     <CircleOff size={16} class="mr-1" />
                     Inativar
                   </Button>
@@ -896,13 +913,18 @@
     <div class="space-y-3 text-sm text-slate-600">
       <p>
         {#if confirmMode === 'inativar'}
-          A regra <strong class="text-slate-900">{selectedRule.nome}</strong> será marcada como inativa e deixará de ser considerada na operação.
+          A regra <strong class="text-slate-900">{selectedRule.nome}</strong> será marcada como inativa
+          e deixará de ser considerada na operação.
         {:else}
-          A regra <strong class="text-slate-900">{selectedRule.nome}</strong> e suas faixas vinculadas serão removidas permanentemente.
+          A regra <strong class="text-slate-900">{selectedRule.nome}</strong> e suas faixas vinculadas
+          serão removidas permanentemente.
         {/if}
       </p>
       <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3">
-        <p><strong>Tipo:</strong> {selectedRule.tipo === 'ESCALONAVEL' ? 'Escalonável' : 'Geral'}</p>
+        <p>
+          <strong>Tipo:</strong>
+          {selectedRule.tipo === 'ESCALONAVEL' ? 'Escalonável' : 'Geral'}
+        </p>
         <p><strong>Faixas:</strong> {selectedRule.commission_tier?.length || 0}</p>
       </div>
     </div>

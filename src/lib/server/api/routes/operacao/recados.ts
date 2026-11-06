@@ -50,18 +50,22 @@ export async function handleOperacaoRecadosGet(event: RequestEvent) {
       // Busca recados enviados ou recebidos pelo usuário atual
       let query = client
         .from('mural_recados')
-        .select(`
+        .select(
+          `
           id, company_id, sender_id, receiver_id, assunto, conteudo, created_at,
           sender_deleted, receiver_deleted,
           sender:users!sender_id(id, nome_completo, email),
           receiver:users!receiver_id(id, nome_completo, email)
-        `)
+        `
+        )
         .order('created_at', { ascending: false })
         .limit(200);
 
       if (receiverId) {
         // Thread específica
-        query = query.or(`and(sender_id.eq.${scope.userId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${scope.userId})`);
+        query = query.or(
+          `and(sender_id.eq.${scope.userId},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${scope.userId})`
+        );
       } else {
         // Todos os recados do usuário
         query = query.or(`sender_id.eq.${scope.userId},receiver_id.eq.${scope.userId}`);
@@ -77,7 +81,8 @@ export async function handleOperacaoRecadosGet(event: RequestEvent) {
     const fetchRecados = async () => {
       if (scope.isAdmin) return buildRecadosQuery();
       if (allowedCompanyIds[0] === NO_MATCH_COMPANY_ID) return { data: [], error: null };
-      if (allowedCompanyIds.length <= QUERY_IN_BATCH_SIZE) return buildRecadosQuery(allowedCompanyIds);
+      if (allowedCompanyIds.length <= QUERY_IN_BATCH_SIZE)
+        return buildRecadosQuery(allowedCompanyIds);
 
       const rows: RecadoRow[] = [];
       for (const batch of chunkArray(allowedCompanyIds)) {
@@ -88,7 +93,9 @@ export async function handleOperacaoRecadosGet(event: RequestEvent) {
 
       return {
         data: dedupeById(rows)
-          .sort((left, right) => String(right?.created_at || '').localeCompare(String(left?.created_at || '')))
+          .sort((left, right) =>
+            String(right?.created_at || '').localeCompare(String(left?.created_at || ''))
+          )
           .slice(0, 200),
         error: null
       };
@@ -97,7 +104,10 @@ export async function handleOperacaoRecadosGet(event: RequestEvent) {
     const { data, error: queryError } = await fetchRecados();
     if (queryError) {
       // Tabela recados pode não existir em todos os ambientes
-      if (String(queryError.code || '').includes('42P01') || String(queryError.message || '').includes('does not exist')) {
+      if (
+        String(queryError.code || '').includes('42P01') ||
+        String(queryError.message || '').includes('does not exist')
+      ) {
         return json({ items: [], usuarios: [] }, { headers: DYNAMIC_READ_HEADERS });
       }
       throw queryError;
@@ -123,7 +133,8 @@ export async function handleOperacaoRecadosGet(event: RequestEvent) {
     const fetchUsuarios = async () => {
       if (scope.isAdmin) return buildUsersQuery();
       if (allowedCompanyIds[0] === NO_MATCH_COMPANY_ID) return { data: [], error: null };
-      if (allowedCompanyIds.length <= QUERY_IN_BATCH_SIZE) return buildUsersQuery(allowedCompanyIds);
+      if (allowedCompanyIds.length <= QUERY_IN_BATCH_SIZE)
+        return buildUsersQuery(allowedCompanyIds);
 
       const rows: UsuarioRow[] = [];
       for (const batch of chunkArray(allowedCompanyIds)) {
@@ -136,7 +147,10 @@ export async function handleOperacaoRecadosGet(event: RequestEvent) {
       return {
         data: dedupeById(rows)
           .sort((left, right) =>
-            PT_BR_COLLATOR.compare(String(left?.nome_completo || ''), String(right?.nome_completo || ''))
+            PT_BR_COLLATOR.compare(
+              String(left?.nome_completo || ''),
+              String(right?.nome_completo || '')
+            )
           )
           .slice(0, 100),
         error: null
@@ -146,7 +160,10 @@ export async function handleOperacaoRecadosGet(event: RequestEvent) {
     const { data: usersData, error: usersError } = await fetchUsuarios();
     if (usersError) throw usersError;
 
-    return json({ items: data || [], usuarios: usersData || [] }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      { items: data || [], usuarios: usersData || [] },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar recados.');
   }
@@ -166,9 +183,7 @@ export async function handleOperacaoRecadosPost(event: RequestEvent) {
     const allowedCompanySet = cleanStringSet(allowedCompanyIds);
 
     const body =
-      bodyResult.data && typeof bodyResult.data === 'object'
-        ? (bodyResult.data as JsonBody)
-        : {};
+      bodyResult.data && typeof bodyResult.data === 'object' ? (bodyResult.data as JsonBody) : {};
     const { receiver_id, assunto, conteudo } = body;
 
     if (!String(conteudo || '').trim()) {
@@ -186,17 +201,23 @@ export async function handleOperacaoRecadosPost(event: RequestEvent) {
         .eq('active', true)
         .maybeSingle();
       if (receiverError) throw receiverError;
-      if (!receiver) return json({ error: 'Destinatário não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+      if (!receiver)
+        return json(
+          { error: 'Destinatário não encontrado.' },
+          { status: 404, headers: NO_STORE_HEADERS }
+        );
       receiverCompanyId = String((receiver as ReceiverRow)?.company_id || '').trim() || null;
       if (!scope.isAdmin && !allowedCompanySet.has(receiverCompanyId || '')) {
-        return json({ error: 'Destinatário fora do escopo da empresa.' }, { status: 403, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Destinatário fora do escopo da empresa.' },
+          { status: 403, headers: NO_STORE_HEADERS }
+        );
       }
     }
 
-    const payloadCompanyId =
-      receiverCompanyId
-        ? receiverCompanyId
-        : scope.companyId || allowedCompanyIds.find((id) => id !== NO_MATCH_COMPANY_ID) || null;
+    const payloadCompanyId = receiverCompanyId
+      ? receiverCompanyId
+      : scope.companyId || allowedCompanyIds.find((id) => id !== NO_MATCH_COMPANY_ID) || null;
     if (!payloadCompanyId && !scope.isAdmin) {
       return json({ error: 'Empresa inválida.' }, { status: 400, headers: NO_STORE_HEADERS });
     }
@@ -211,7 +232,11 @@ export async function handleOperacaoRecadosPost(event: RequestEvent) {
       receiver_deleted: false
     };
 
-    const { data, error: insertError } = await client.from('mural_recados').insert(payload).select('id').single();
+    const { data, error: insertError } = await client
+      .from('mural_recados')
+      .insert(payload)
+      .select('id')
+      .single();
     if (insertError) throw insertError;
 
     return json({ ok: true, id: data?.id }, { headers: NO_STORE_HEADERS });
@@ -230,11 +255,17 @@ export async function handleOperacaoRecadosDelete(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     const id = String(event.url.searchParams.get('id') || '').trim();
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     // Marca como deletado pelo remetente ou destinatário
-    const { data: recado } = await client.from('mural_recados').select('sender_id, receiver_id').eq('id', id).maybeSingle();
-    if (!recado) return json({ error: 'Recado não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    const { data: recado } = await client
+      .from('mural_recados')
+      .select('sender_id, receiver_id')
+      .eq('id', id)
+      .maybeSingle();
+    if (!recado)
+      return json({ error: 'Recado não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
 
     const isSender = recado.sender_id === scope.userId;
     const isReceiver = recado.receiver_id === scope.userId;

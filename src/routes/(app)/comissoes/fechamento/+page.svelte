@@ -8,7 +8,14 @@
   import KPICard from '$lib/components/kpis/KPICard.svelte';
   import { toast } from '$lib/stores/ui';
   import { apiGet } from '$lib/services/api';
-  import { Calculator, DollarSign, RefreshCw, SlidersHorizontal, TrendingUp, Users } from '$lib/icons';
+  import {
+    Calculator,
+    DollarSign,
+    RefreshCw,
+    SlidersHorizontal,
+    TrendingUp,
+    Users
+  } from '$lib/icons';
   import { parseISODateParts, todayISODateLocal } from '$lib/date';
   import { formatCurrency, formatDate } from '$lib/utils/formatters';
   import { createDebouncedReloader } from '$lib/utils/autoReload';
@@ -60,9 +67,9 @@
   let loading = true;
 
   const todayParts = parseISODateParts(todayISODateLocal());
-  let filtroMes    = todayParts?.month || new Date().getMonth() + 1;
+  let filtroMes = todayParts?.month || new Date().getMonth() + 1;
   let filtroMesValue = String(filtroMes);
-  let filtroAno    = todayParts?.year || new Date().getFullYear();
+  let filtroAno = todayParts?.year || new Date().getFullYear();
   let filtroVendedor = '';
   let filtroStatus = 'todas';
   let empresaId = '';
@@ -87,10 +94,10 @@
     },
     { totalComissoes: 0, totalVendas: 0, pendentes: 0, vendedores: new Set<string>() }
   );
-  $: totalComissoes    = comissoesStats.totalComissoes;
-  $: totalVendas       = comissoesStats.totalVendas;
-  $: pendentes         = comissoesStats.pendentes;
-  $: vendedoresUnicos  = comissoesStats.vendedores.size;
+  $: totalComissoes = comissoesStats.totalComissoes;
+  $: totalVendas = comissoesStats.totalVendas;
+  $: pendentes = comissoesStats.pendentes;
+  $: vendedoresUnicos = comissoesStats.vendedores.size;
 
   // ─── Colunas da tabela ──────────────────────────────────────────────────────
   function formatCurrencySafe(value: number) {
@@ -98,36 +105,54 @@
   }
 
   const columns = [
-    { key: 'numero_venda', label: 'Venda',    sortable: true, width: '120px' },
-    { key: 'vendedor',     label: 'Vendedor', sortable: true },
-    { key: 'cliente',      label: 'Cliente',  sortable: true },
+    { key: 'numero_venda', label: 'Venda', sortable: true, width: '120px' },
+    { key: 'vendedor', label: 'Vendedor', sortable: true },
+    { key: 'cliente', label: 'Cliente', sortable: true },
     {
-      key: 'data_venda', label: 'Data', sortable: true, width: '110px',
+      key: 'data_venda',
+      label: 'Data',
+      sortable: true,
+      width: '110px',
       formatter: (v: string) => formatDate(v)
     },
     {
-      key: 'valor_venda', label: 'Valor Venda', sortable: true, align: 'right' as const,
+      key: 'valor_venda',
+      label: 'Valor Venda',
+      sortable: true,
+      align: 'right' as const,
       formatter: (v: number) => formatCurrencySafe(v)
     },
     {
-      key: 'percentual_aplicado', label: '%', sortable: true, width: '70px', align: 'center' as const,
+      key: 'percentual_aplicado',
+      label: '%',
+      sortable: true,
+      width: '70px',
+      align: 'center' as const,
       formatter: (v: number) => `${v ?? 10}%`
     },
     {
-      key: 'valor_comissao', label: 'Comissão', sortable: true, align: 'right' as const,
+      key: 'valor_comissao',
+      label: 'Comissão',
+      sortable: true,
+      align: 'right' as const,
       formatter: (v: number) => formatCurrencySafe(v)
     },
     {
-      key: 'status', label: 'Status', sortable: true, width: '110px',
+      key: 'status',
+      label: 'Status',
+      sortable: true,
+      width: '110px',
       formatter: (v: string) => {
         const norm = v?.toLowerCase();
         const styles: Record<string, string> = {
           pendente: 'bg-amber-100 text-amber-700',
-          pago:     'bg-green-100 text-green-700',
-          cancelada:'bg-red-100 text-red-700'
+          pago: 'bg-green-100 text-green-700',
+          cancelada: 'bg-red-100 text-red-700'
         };
         const labels: Record<string, string> = {
-          pendente: 'Pendente', pago: 'Pago', cancelada: 'Cancelada'
+          pendente: 'Pendente',
+          pago: 'Pago',
+          cancelada: 'Cancelada'
         };
         return `<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
           styles[norm] ?? 'bg-slate-100 text-slate-600'
@@ -143,13 +168,17 @@
 
     loading = true;
     try {
-      const data = await apiGet<ComissoesResponse>('/api/v1/financeiro/comissoes/calcular', {
-        status: filtroStatus !== 'todas' ? filtroStatus : undefined,
-        mes: filtroMes,
-        ano: filtroAno,
-        vendedor_id: filtroVendedor || undefined,
-        empresa_id: empresaId || undefined
-      }, abortController.signal);
+      const data = await apiGet<ComissoesResponse>(
+        '/api/v1/financeiro/comissoes/calcular',
+        {
+          status: filtroStatus !== 'todas' ? filtroStatus : undefined,
+          mes: filtroMes,
+          ano: filtroAno,
+          vendedor_id: filtroVendedor || undefined,
+          empresa_id: empresaId || undefined
+        },
+        abortController.signal
+      );
       comissoes = data.items ?? [];
     } catch (err: unknown) {
       if (err instanceof DOMException && err.name === 'AbortError') return;
@@ -168,7 +197,9 @@
       if (filtroVendedor && !vendedores.some((v) => v.id === filtroVendedor)) {
         filtroVendedor = '';
       }
-    } catch { /* silencioso */ }
+    } catch {
+      /* silencioso */
+    }
   }
 
   async function loadUserContext() {
@@ -187,10 +218,24 @@
   }
 
   function handleExport() {
-    if (comissoes.length === 0) { toast.info('Nenhuma comissão para exportar.'); return; }
-    const headers = ['Venda', 'Vendedor', 'Cliente', 'Data', 'Valor Venda', '%', 'Comissão', 'Status'];
+    if (comissoes.length === 0) {
+      toast.info('Nenhuma comissão para exportar.');
+      return;
+    }
+    const headers = [
+      'Venda',
+      'Vendedor',
+      'Cliente',
+      'Data',
+      'Valor Venda',
+      '%',
+      'Comissão',
+      'Status'
+    ];
     const rows = comissoes.map((c) => [
-      c.numero_venda, c.vendedor, c.cliente,
+      c.numero_venda,
+      c.vendedor,
+      c.cliente,
       c.data_venda ? formatDate(c.data_venda) : '',
       c.valor_venda.toFixed(2),
       c.percentual_aplicado ?? 10,
@@ -244,9 +289,10 @@
 
   $: {
     const parsedMonth = Number.parseInt(filtroMesValue, 10);
-    filtroMes = Number.isInteger(parsedMonth) && parsedMonth >= 1 && parsedMonth <= 12
-      ? parsedMonth
-      : todayParts?.month || new Date().getMonth() + 1;
+    filtroMes =
+      Number.isInteger(parsedMonth) && parsedMonth >= 1 && parsedMonth <= 12
+        ? parsedMonth
+        : todayParts?.month || new Date().getMonth() + 1;
   }
 
   const statusOptions = [
@@ -285,21 +331,26 @@
   title="Fechamento de Comissões"
   subtitle="Visualize e exporte o fechamento de comissões por período e vendedor."
   color="comissoes"
-  breadcrumbs={[
-    { label: 'Comissões', href: '/comissoes' },
-    { label: 'Fechamento' }
-  ]}
-  actions={[
-    { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }
-  ]}
+  breadcrumbs={[{ label: 'Comissões', href: '/comissoes' }, { label: 'Fechamento' }]}
+  actions={[{ label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }]}
 />
 
 <!-- KPIs -->
 <div class="vtur-kpi-grid mb-6">
-  <KPICard title="Total comissões" value={formatCurrencySafe(totalComissoes)} color="comissoes" icon={DollarSign}  />
-  <KPICard title="Total vendas"    value={formatCurrencySafe(totalVendas)}    color="comissoes" icon={TrendingUp}  />
-  <KPICard title="Pendentes"       value={pendentes}                       color="comissoes" icon={Calculator}  />
-  <KPICard title="Vendedores"      value={vendedoresUnicos}                color="comissoes" icon={Users}       />
+  <KPICard
+    title="Total comissões"
+    value={formatCurrencySafe(totalComissoes)}
+    color="comissoes"
+    icon={DollarSign}
+  />
+  <KPICard
+    title="Total vendas"
+    value={formatCurrencySafe(totalVendas)}
+    color="comissoes"
+    icon={TrendingUp}
+  />
+  <KPICard title="Pendentes" value={pendentes} color="comissoes" icon={Calculator} />
+  <KPICard title="Vendedores" value={vendedoresUnicos} color="comissoes" icon={Users} />
 </div>
 
 <!-- Mobile: botão de filtros -->
@@ -308,14 +359,14 @@
     <SlidersHorizontal size={16} class="mr-2" />
     Filtros
     {#if filtroVendedor || filtroStatus !== 'todas'}
-      <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-comissoes-500"></span>
+      <span class="bg-comissoes-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
     {/if}
   </Button>
 </div>
 
 <!-- Filtros -->
 <Card color="comissoes" class="mb-6 hidden sm:block">
-  <div class="flex flex-wrap gap-4 items-end">
+  <div class="flex flex-wrap items-end gap-4">
     <FieldSelect
       id="fech-mes"
       label="Mês"

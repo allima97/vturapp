@@ -25,14 +25,14 @@ cobrindo:
 
 ### Tabelas criadas
 
-| Tabela | Propósito | empresa_id |
-|--------|-----------|-----------|
-| `produtos` | Catálogo global de produtos/destinos | ❌ global |
-| `formas_pagamento` | Formas de pagamento por empresa | ✅ |
-| `vendas` | Cabeçalho da venda | ✅ |
-| `venda_itens` | Recibos/serviços da venda | ✅ |
-| `venda_pagamentos` | Pagamentos da venda | ✅ |
-| `venda_parcelas` | Parcelas de cada pagamento | ✅ |
+| Tabela             | Propósito                            | empresa_id |
+| ------------------ | ------------------------------------ | ---------- |
+| `produtos`         | Catálogo global de produtos/destinos | ❌ global  |
+| `formas_pagamento` | Formas de pagamento por empresa      | ✅         |
+| `vendas`           | Cabeçalho da venda                   | ✅         |
+| `venda_itens`      | Recibos/serviços da venda            | ✅         |
+| `venda_pagamentos` | Pagamentos da venda                  | ✅         |
+| `venda_parcelas`   | Parcelas de cada pagamento           | ✅         |
 
 ### Decisões de design
 
@@ -52,13 +52,13 @@ cobrindo:
 
 Todos os valores em centavos inteiros:
 
-| Campo | Exemplo | Armazenado |
-|-------|---------|-----------|
-| `valor_bruto` | R$ 600,00 | `600000` |
-| `valor_taxas` | R$ 50,00 | `5000` |
-| `valor_total` | R$ 605,00 | `605000` |
-| `cambio` | 5,1234/USD | `51234` (4 casas) |
-| `desconto_pct` | 10,50% | `1050` (2 casas) |
+| Campo          | Exemplo    | Armazenado        |
+| -------------- | ---------- | ----------------- |
+| `valor_bruto`  | R$ 600,00  | `600000`          |
+| `valor_taxas`  | R$ 50,00   | `5000`            |
+| `valor_total`  | R$ 605,00  | `605000`          |
+| `cambio`       | 5,1234/USD | `51234` (4 casas) |
+| `desconto_pct` | 10,50%     | `1050` (2 casas)  |
 
 Utilitário: `reaisToCentavos(v: unknown): number`
 
@@ -131,14 +131,14 @@ Formato: `VTUR-AAAA-NNNNN` (sequencial por empresa).
 
 ## 6. API (`/api/v2/vendas`)
 
-| Método | Endpoint | Ação | Permissão |
-|--------|----------|------|-----------|
-| GET | `/api/v2/vendas` | Listar (cursor + filtros) | vendas:ler |
-| POST | `/api/v2/vendas` | Criar | vendas:criar |
-| GET | `/api/v2/vendas/:id` | Detalhe completo | vendas:ler |
-| POST | `/api/v2/vendas/:id/cancelar` | Cancelar (exige versao) | vendas:editar |
-| GET | `/api/v2/vendas/produtos` | Lista global de produtos | vendas:ler |
-| GET | `/api/v2/vendas/formas-pagamento` | Formas da empresa | vendas:ler |
+| Método | Endpoint                          | Ação                      | Permissão     |
+| ------ | --------------------------------- | ------------------------- | ------------- |
+| GET    | `/api/v2/vendas`                  | Listar (cursor + filtros) | vendas:ler    |
+| POST   | `/api/v2/vendas`                  | Criar                     | vendas:criar  |
+| GET    | `/api/v2/vendas/:id`              | Detalhe completo          | vendas:ler    |
+| POST   | `/api/v2/vendas/:id/cancelar`     | Cancelar (exige versao)   | vendas:editar |
+| GET    | `/api/v2/vendas/produtos`         | Lista global de produtos  | vendas:ler    |
+| GET    | `/api/v2/vendas/formas-pagamento` | Formas da empresa         | vendas:ler    |
 
 ### POST /api/v2/vendas — body mínimo
 
@@ -146,21 +146,25 @@ Formato: `VTUR-AAAA-NNNNN` (sequencial por empresa).
 {
   "data_venda": "2024-11-01",
   "chave_idempotencia": "550e8400-e29b-41d4-a716-446655440000",
-  "itens": [{
-    "descricao": "Pacote Cancún 7 noites",
-    "valor_bruto": "6000.00",
-    "valor_taxas": "50.00"
-  }],
-  "pagamentos": [{
-    "forma_nome": "Cartão de Crédito",
-    "valor_bruto": "6050.00",
-    "parcelas_qtd": 3,
-    "parcelas": [
-      { "numero": 1, "valor": "2016.67", "vencimento": "2024-12-01" },
-      { "numero": 2, "valor": "2016.67", "vencimento": "2025-01-01" },
-      { "numero": 3, "valor": "2016.66", "vencimento": "2025-02-01" }
-    ]
-  }]
+  "itens": [
+    {
+      "descricao": "Pacote Cancún 7 noites",
+      "valor_bruto": "6000.00",
+      "valor_taxas": "50.00"
+    }
+  ],
+  "pagamentos": [
+    {
+      "forma_nome": "Cartão de Crédito",
+      "valor_bruto": "6050.00",
+      "parcelas_qtd": 3,
+      "parcelas": [
+        { "numero": 1, "valor": "2016.67", "vencimento": "2024-12-01" },
+        { "numero": 2, "valor": "2016.67", "vencimento": "2025-01-01" },
+        { "numero": 3, "valor": "2016.66", "vencimento": "2025-02-01" }
+      ]
+    }
+  ]
 }
 ```
 
@@ -168,15 +172,15 @@ Formato: `VTUR-AAAA-NNNNN` (sequencial por empresa).
 
 ## 7. Testes Workers (vendas.workers.test.ts)
 
-| Suíte | Cobertura |
-|-------|-----------|
-| A. Criação | Transação, totais calculados, número sequencial |
+| Suíte           | Cobertura                                                      |
+| --------------- | -------------------------------------------------------------- |
+| A. Criação      | Transação, totais calculados, número sequencial                |
 | B. Idempotência | Mesma chave → mesma venda; chaves distintas → vendas distintas |
-| C. Listagem | Cursor pagination, filtros (canceladas) |
-| D. Detalhe | Venda com itens + pagamentos + parcelas |
-| E. Cancelamento | Lógico, concorrência otimista, já cancelada |
-| F. Isolamento | Empresa B não lê/cancela venda da empresa A |
-| G. Status | derivarStatus() — todos os 4 estados |
+| C. Listagem     | Cursor pagination, filtros (canceladas)                        |
+| D. Detalhe      | Venda com itens + pagamentos + parcelas                        |
+| E. Cancelamento | Lógico, concorrência otimista, já cancelada                    |
+| F. Isolamento   | Empresa B não lê/cancela venda da empresa A                    |
+| G. Status       | derivarStatus() — todos os 4 estados                           |
 
 ---
 

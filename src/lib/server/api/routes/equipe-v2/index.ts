@@ -17,7 +17,7 @@ import {
   obterMembro,
   alterarPapelMembro,
   revogarMembroM01,
-  EmpresaError,
+  EmpresaError
 } from '$lib/server/equipe-m01/service';
 import { PAPEIS, type Papel } from '$lib/server/db/schema';
 
@@ -46,18 +46,27 @@ equipeV2Routes
     if (!canForContext(authCtx, 'empresa', 'ler')) return c.json({ error: 'Sem permissao.' }, 403);
     try {
       return c.json({ empresa: await obterEmpresa(db, authCtx.empresaId) });
-    } catch (e) { return erroEmpresa(c, e); }
+    } catch (e) {
+      return erroEmpresa(c, e);
+    }
   })
 
   .patch('/empresa', async (c) => {
     const { authCtx, db } = await resolveCtx(c);
     if (!authCtx) return c.json({ error: 'Nao autenticado.' }, 401);
-    if (!canForContext(authCtx, 'empresa', 'editar')) return c.json({ error: 'Sem permissao.' }, 403);
+    if (!canForContext(authCtx, 'empresa', 'editar'))
+      return c.json({ error: 'Sem permissao.' }, 403);
     let body: { nome?: string; timezone?: string; slug?: string } = {};
-    try { body = await c.req.json(); } catch { /**/ }
+    try {
+      body = await c.req.json();
+    } catch {
+      /**/
+    }
     try {
       return c.json({ empresa: await editarEmpresa(db, authCtx.empresaId, body) });
-    } catch (e) { return erroEmpresa(c, e); }
+    } catch (e) {
+      return erroEmpresa(c, e);
+    }
   })
 
   .get('/membros', async (c) => {
@@ -65,7 +74,9 @@ equipeV2Routes
     if (!authCtx) return c.json({ error: 'Nao autenticado.' }, 401);
     if (!canForContext(authCtx, 'usuarios', 'ler')) return c.json({ error: 'Sem permissao.' }, 403);
     const inativos = c.req.query('inativos') === 'true';
-    return c.json({ membros: await listarMembros(db, authCtx.empresaId, { somenteAtivos: !inativos }) });
+    return c.json({
+      membros: await listarMembros(db, authCtx.empresaId, { somenteAtivos: !inativos })
+    });
   })
 
   .get('/membros/:id', async (c) => {
@@ -76,32 +87,46 @@ equipeV2Routes
     if (!id) return c.json({ error: 'ID invalido.' }, 400);
     try {
       return c.json({ membro: await obterMembro(db, authCtx.empresaId, id) });
-    } catch (e) { return erroEmpresa(c, e); }
+    } catch (e) {
+      return erroEmpresa(c, e);
+    }
   })
 
   .patch('/membros/:id/papel', async (c) => {
     const { authCtx, db } = await resolveCtx(c);
     if (!authCtx) return c.json({ error: 'Nao autenticado.' }, 401);
-    if (!canForContext(authCtx, 'usuarios', 'gerenciar')) return c.json({ error: 'Sem permissao.' }, 403);
+    if (!canForContext(authCtx, 'usuarios', 'gerenciar'))
+      return c.json({ error: 'Sem permissao.' }, 403);
     const id = parseInt(c.req.param('id'), 10);
     if (!id) return c.json({ error: 'ID invalido.' }, 400);
     let body: { papel?: string } = {};
-    try { body = await c.req.json(); } catch { /**/ }
+    try {
+      body = await c.req.json();
+    } catch {
+      /**/
+    }
     if (!body.papel || !PAPEIS.includes(body.papel as Papel)) {
       return c.json({ error: 'Papel invalido. Valores aceitos: ' + PAPEIS.join(', ') }, 422);
     }
     try {
-      return c.json({ membro: await alterarPapelMembro(db, authCtx.empresaId, id, body.papel as Papel) });
-    } catch (e) { return erroEmpresa(c, e); }
+      return c.json({
+        membro: await alterarPapelMembro(db, authCtx.empresaId, id, body.papel as Papel)
+      });
+    } catch (e) {
+      return erroEmpresa(c, e);
+    }
   })
 
   .delete('/membros/:id', async (c) => {
     const { authCtx, db } = await resolveCtx(c);
     if (!authCtx) return c.json({ error: 'Nao autenticado.' }, 401);
-    if (!canForContext(authCtx, 'usuarios', 'gerenciar')) return c.json({ error: 'Sem permissao.' }, 403);
+    if (!canForContext(authCtx, 'usuarios', 'gerenciar'))
+      return c.json({ error: 'Sem permissao.' }, 403);
     const id = parseInt(c.req.param('id'), 10);
     if (!id) return c.json({ error: 'ID invalido.' }, 400);
     try {
       return c.json({ membro: await revogarMembroM01(db, authCtx.empresaId, id) });
-    } catch (e) { return erroEmpresa(c, e); }
+    } catch (e) {
+      return erroEmpresa(c, e);
+    }
   });

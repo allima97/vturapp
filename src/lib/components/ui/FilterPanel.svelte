@@ -19,7 +19,7 @@
 </script>
 
 <div class={className}>
-  <Card header={title} color={color}>
+  <Card header={title} {color}>
     <div class="flex flex-col items-end gap-4 lg:flex-row">
       <div class={`flex-1 ${fieldsClass}`.trim()}>
         <slot />

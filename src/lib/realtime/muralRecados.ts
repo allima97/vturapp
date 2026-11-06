@@ -37,7 +37,16 @@ export function assinarRecadosDaEmpresa(
   try {
     canal = client.channel(`mural-recados:${companyId}:${Math.random().toString(36).slice(2, 8)}`);
     (canal as unknown as CanalMinimo)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'mural_recados', filter: `company_id=eq.${companyId}` }, avisar)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'mural_recados',
+          filter: `company_id=eq.${companyId}`
+        },
+        avisar
+      )
       .subscribe((status: string) => onStatus?.(status));
   } catch {
     canal = null;

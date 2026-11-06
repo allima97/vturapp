@@ -38,7 +38,10 @@ class QueryMock {
     onfulfilled?: ((value: QueryResult) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
   ) {
-    return Promise.resolve(this.results[this.table] || { data: [], error: null }).then(onfulfilled, onrejected);
+    return Promise.resolve(this.results[this.table] || { data: [], error: null }).then(
+      onfulfilled,
+      onrejected
+    );
   }
 }
 

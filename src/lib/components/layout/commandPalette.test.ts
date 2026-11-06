@@ -7,7 +7,7 @@ const itens = [
   { secao: 'FINANCEIRO', nome: 'Vendas / Pagamentos', href: '/vendas' },
   { secao: 'FINANCEIRO', nome: 'Comissionamento', href: '/financeiro/comissoes' },
   { secao: 'CADASTROS', nome: 'Cidades', href: '/cadastros/cidades' },
-  { secao: 'OPERAÇÃO', nome: 'Últimas Compras', href: '/operacao/ultimas-compras' },
+  { secao: 'OPERAÇÃO', nome: 'Últimas Compras', href: '/operacao/ultimas-compras' }
 ];
 
 describe('busca rápida (Ctrl+K)', () => {
@@ -18,12 +18,18 @@ describe('busca rápida (Ctrl+K)', () => {
   });
 
   it('sem texto mostra o menu inteiro, sem endereços repetidos', () => {
-    expect(filtrarItens(itens, '').map((i) => i.href)).toEqual(semRepetidos(itens).map((i) => i.href));
+    expect(filtrarItens(itens, '').map((i) => i.href)).toEqual(
+      semRepetidos(itens).map((i) => i.href)
+    );
     expect(filtrarItens(itens, '').filter((i) => i.href === '/vendas')).toHaveLength(1);
   });
 
   it('nome que começa com o texto vem antes; a seção também conta', () => {
-    expect(filtrarItens(itens, 'c').map((i) => i.nome).slice(0, 3)).toEqual(['Clientes', 'Comissionamento', 'Cidades']);
+    expect(
+      filtrarItens(itens, 'c')
+        .map((i) => i.nome)
+        .slice(0, 3)
+    ).toEqual(['Clientes', 'Comissionamento', 'Cidades']);
     expect(filtrarItens(itens, 'financeiro').map((i) => i.nome)).toEqual(['Comissionamento']);
     expect(filtrarItens(itens, 'financeiro com').map((i) => i.nome)).toEqual(['Comissionamento']);
   });

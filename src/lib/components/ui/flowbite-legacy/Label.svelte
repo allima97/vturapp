@@ -1,20 +1,21 @@
-<script>// @ts-nocheck (cópia do Flowbite-Svelte 0.48.6, ver README.md)
-import { twMerge } from "tailwind-merge";
-export let color = "gray";
-export let defaultClass = "text-sm rtl:text-right font-medium block";
-export let show = true;
-let node;
-const colorClasses = {
-  gray: "text-gray-900 dark:text-gray-300",
-  green: "text-green-700 dark:text-green-500",
-  red: "text-red-700 dark:text-red-500",
-  disabled: "text-gray-400 dark:text-gray-500 grayscale contrast-50"
-};
-$: {
-  const control = node?.control;
-  color = control?.disabled ? "disabled" : color;
-}
-$: labelClass = twMerge(defaultClass, colorClasses[color], $$props.class);
+<script>
+  // @ts-nocheck (cópia do Flowbite-Svelte 0.48.6, ver README.md)
+  import { twMerge } from 'tailwind-merge';
+  export let color = 'gray';
+  export let defaultClass = 'text-sm rtl:text-right font-medium block';
+  export let show = true;
+  let node;
+  const colorClasses = {
+    gray: 'text-gray-900 dark:text-gray-300',
+    green: 'text-green-700 dark:text-green-500',
+    red: 'text-red-700 dark:text-red-500',
+    disabled: 'text-gray-400 dark:text-gray-500 grayscale contrast-50'
+  };
+  $: {
+    const control = node?.control;
+    color = control?.disabled ? 'disabled' : color;
+  }
+  $: labelClass = twMerge(defaultClass, colorClasses[color], $$props.class);
 </script>
 
 {#if show}

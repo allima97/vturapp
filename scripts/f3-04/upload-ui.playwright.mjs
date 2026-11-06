@@ -20,7 +20,10 @@ const mark = (label, start) => {
 };
 
 const executablePath = process.env.CHROMIUM_PATH; // opcional: apontar para um headless shell já presente no cache
-const browser = await chromium.launch({ headless: true, ...(executablePath ? { executablePath } : {}) });
+const browser = await chromium.launch({
+  headless: true,
+  ...(executablePath ? { executablePath } : {})
+});
 const context = await browser.newContext({ acceptDownloads: true });
 const page = await context.newPage();
 
@@ -69,13 +72,22 @@ try {
 
   const baixado = readFileSync(baixadoPath);
   const iguais = baixado.equals(pdfBytes);
-  console.log('Download:', download.suggestedFilename(), baixado.length, 'bytes; conteúdo idêntico ao enviado:', iguais);
+  console.log(
+    'Download:',
+    download.suggestedFilename(),
+    baixado.length,
+    'bytes; conteúdo idêntico ao enviado:',
+    iguais
+  );
   if (!iguais) {
     writeFileSync(join(here, 'f3-04-result.json'), JSON.stringify({ ok: false, metrics }, null, 2));
     process.exitCode = 1;
   } else {
     console.log('Métricas (ms):', JSON.stringify(metrics));
-    writeFileSync(join(here, 'f3-04-result.json'), JSON.stringify({ ok: true, metrics, bytes: pdfBytes.length }, null, 2));
+    writeFileSync(
+      join(here, 'f3-04-result.json'),
+      JSON.stringify({ ok: true, metrics, bytes: pdfBytes.length }, null, 2)
+    );
   }
 } finally {
   await browser.close();

@@ -109,15 +109,13 @@ type RankingReadModelRow = {
 function isExecutionContextLike(value: unknown): value is ExecutionContextLike {
   return Boolean(
     value &&
-      typeof value === 'object' &&
-      typeof (value as { waitUntil?: unknown }).waitUntil === 'function',
+    typeof value === 'object' &&
+    typeof (value as { waitUntil?: unknown }).waitUntil === 'function'
   );
 }
 
 export function getPlatformExecutionContext(platform: unknown): ExecutionContextLike | null {
-  const ctx = platform && typeof platform === 'object'
-    ? (platform as { ctx?: unknown }).ctx
-    : null;
+  const ctx = platform && typeof platform === 'object' ? (platform as { ctx?: unknown }).ctx : null;
   return isExecutionContextLike(ctx) ? ctx : null;
 }
 
@@ -156,7 +154,7 @@ function toUuidOrNull(value?: string | null): string | null {
 function buildSourceKey(
   contribution: ReciboContributionRow,
   companyId: string,
-  mes: string,
+  mes: string
 ): string {
   return [
     companyId,
@@ -167,7 +165,7 @@ function buildSourceKey(
     contribution.reciboDate,
     contribution.factor,
     contribution.bruto,
-    contribution.taxas,
+    contribution.taxas
   ]
     .map((p) => String(p ?? '').replace(/\|/g, '/'))
     .join('|');
@@ -176,7 +174,7 @@ function buildSourceKey(
 async function fetchDirtyEntries(
   client: DataClient,
   companyIds: string[],
-  monthKeys: string[],
+  monthKeys: string[]
 ): Promise<Array<{ company_id: string; mes: string; monthKey: string }>> {
   let query = client
     .from(TABLE_STATUS)
@@ -185,10 +183,10 @@ async function fetchDirtyEntries(
     // dirty + error (no máximo 1x por hora) + 'rebuilding' preso (Worker encerrado no meio do rebuild)
     .or(
       `status.eq.dirty,and(status.eq.error,updated_at.lt.${new Date(
-        Date.now() - ERROR_RETRY_MS,
+        Date.now() - ERROR_RETRY_MS
       ).toISOString()}),and(status.eq.rebuilding,updated_at.lt.${new Date(
-        Date.now() - STALE_REBUILDING_MS,
-      ).toISOString()})`,
+        Date.now() - STALE_REBUILDING_MS
+      ).toISOString()})`
     );
 
   if (companyIds.length > 0) query = query.in('company_id', companyIds);
@@ -207,7 +205,7 @@ async function fetchDirtyEntries(
   return ((data || []) as DirtyStatusRow[]).map((row) => ({
     company_id: String(row.company_id),
     mes: String(row.mes).slice(0, 10),
-    monthKey: monthKeyFromDate(String(row.mes).slice(0, 10)),
+    monthKey: monthKeyFromDate(String(row.mes).slice(0, 10))
   }));
 }
 
@@ -224,7 +222,7 @@ export async function finishRebuildIfUnchanged(
   client: DataClient,
   modelo: string,
   companyId: string,
-  mes: string,
+  mes: string
 ): Promise<boolean> {
   const now = new Date().toISOString();
   const { data, error } = await client
@@ -234,7 +232,7 @@ export async function finishRebuildIfUnchanged(
       dirty_at: null,
       rebuilt_at: now,
       last_error: null,
-      updated_at: now,
+      updated_at: now
     })
     .eq('modelo', modelo)
     .eq('company_id', companyId)
@@ -249,7 +247,7 @@ async function upsertStatus(
   client: DataClient,
   companyId: string,
   mes: string,
-  values: Record<string, unknown>,
+  values: Record<string, unknown>
 ) {
   const { error } = await client.from(TABLE_STATUS).upsert(
     {
@@ -257,9 +255,9 @@ async function upsertStatus(
       company_id: companyId,
       mes,
       ...values,
-      updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     },
-    { onConflict: 'modelo,company_id,mes' },
+    { onConflict: 'modelo,company_id,mes' }
   );
   if (error) throw error;
 }
@@ -267,7 +265,7 @@ async function upsertStatus(
 async function rebuildOneMonth(
   client: DataClient,
   companyId: string,
-  monthKey: string,
+  monthKey: string
 ): Promise<{ rebuilt: boolean; rows: number; error?: string }> {
   const progressKey = `${companyId}|${monthKey}`;
   if (inProgressKeys.has(progressKey)) {
@@ -285,7 +283,7 @@ async function rebuildOneMonth(
       status: 'rebuilding',
       dirty_at: null,
       rebuilt_at: null,
-      last_error: null,
+      last_error: null
     });
 
     // Calcular contribuições usando o pipeline raw (sem cache do read model)
@@ -294,7 +292,7 @@ async function rebuildOneMonth(
       dataFim,
       companyIds: [companyId],
       vendedorIds: [],
-      accessibleClientIds: [],
+      accessibleClientIds: []
     });
 
     // Converter contributions para linhas da tabela
@@ -326,7 +324,7 @@ async function rebuildOneMonth(
           source_bruto: Number(Number(contribution.sourceBruto).toFixed(2)),
           source_taxas: Number(Number(contribution.sourceTaxas).toFixed(2)),
           origem: contribution.origem || 'ranking_ts',
-          built_at: new Date().toISOString(),
+          built_at: new Date().toISOString()
         };
       })
       .filter((row): row is RankingReadModelRow => Boolean(row));
@@ -364,7 +362,7 @@ async function rebuildOneMonth(
       status: 'error',
       dirty_at: new Date().toISOString(),
       rebuilt_at: null,
-      last_error: errMsg,
+      last_error: errMsg
     }).catch(() => undefined);
 
     return { rebuilt: false, rows: 0, error: errMsg };
@@ -383,7 +381,7 @@ export async function rebuildReadModelForCompanyMonth(
     companyIds: string[];
     monthKeys: string[];
     rebuildAll?: boolean;
-  },
+  }
 ): Promise<{
   processed: number;
   rebuilt: number;
@@ -391,11 +389,7 @@ export async function rebuildReadModelForCompanyMonth(
   skipped: number;
   details: Array<{ company_id: string; month: string; status: string; rows?: number }>;
 }> {
-  const dirtyEntries = await fetchDirtyEntries(
-    client,
-    params.companyIds,
-    params.monthKeys,
-  );
+  const dirtyEntries = await fetchDirtyEntries(client, params.companyIds, params.monthKeys);
 
   // Se não há dirty mas foram passados company_ids + month_keys explícitos,
   // forçar rebuild mesmo sem status dirty (útil para rebuild manual)
@@ -419,14 +413,23 @@ export async function rebuildReadModelForCompanyMonth(
     const progressKey = `${entry.company_id}|${entry.monthKey}`;
     if (inProgressKeys.has(progressKey)) {
       skipped++;
-      details.push({ company_id: entry.company_id, month: entry.monthKey, status: 'skipped_in_progress' });
+      details.push({
+        company_id: entry.company_id,
+        month: entry.monthKey,
+        status: 'skipped_in_progress'
+      });
       continue;
     }
 
     const result = await rebuildOneMonth(client, entry.company_id, entry.monthKey);
     if (result.rebuilt) {
       rebuilt++;
-      details.push({ company_id: entry.company_id, month: entry.monthKey, status: 'rebuilt', rows: result.rows });
+      details.push({
+        company_id: entry.company_id,
+        month: entry.monthKey,
+        status: 'rebuilt',
+        rows: result.rows
+      });
     } else if (result.error) {
       errors++;
       details.push({ company_id: entry.company_id, month: entry.monthKey, status: 'error' });
@@ -441,7 +444,7 @@ export async function rebuildReadModelForCompanyMonth(
     rebuilt,
     errors,
     skipped,
-    details,
+    details
   };
 }
 
@@ -467,9 +470,7 @@ export function triggerRebuildAsync(params: {
   }
   if (companyIds.length === 0) return;
 
-  const monthKey = params.dataVenda
-    ? monthKeyFromDate(params.dataVenda)
-    : currentMonthKey();
+  const monthKey = params.dataVenda ? monthKeyFromDate(params.dataVenda) : currentMonthKey();
 
   // Sempre incluir o mês anterior caso a venda caia na virada
   const prevMonth = previousMonthKey();
@@ -517,7 +518,7 @@ export function triggerRebuildAsync(params: {
           const mes = monthStartFromKey(mk);
           await upsertStatus(client, companyId, mes, {
             status: 'dirty',
-            dirty_at: new Date().toISOString(),
+            dirty_at: new Date().toISOString()
           }).catch(() => undefined);
         }
       }
@@ -525,7 +526,7 @@ export function triggerRebuildAsync(params: {
       await rebuildReadModelForCompanyMonth(client, {
         companyIds: toProcess.companyIds,
         monthKeys: toProcess.monthKeys,
-        rebuildAll: false,
+        rebuildAll: false
       });
     } catch (err) {
       logServerError('[read-model] triggerRebuildAsync falhou', err);
@@ -553,14 +554,14 @@ export function triggerRebuildAsync(params: {
 export async function markDirtyForCompany(
   client: DataClient,
   companyId: string,
-  dataVenda: string,
+  dataVenda: string
 ) {
   const monthKey = monthKeyFromDate(dataVenda);
   const mes = monthStartFromKey(monthKey);
   try {
     await upsertStatus(client, companyId, mes, {
       status: 'dirty',
-      dirty_at: new Date().toISOString(),
+      dirty_at: new Date().toISOString()
     });
   } catch (err) {
     logServerError('[read-model] markDirtyForCompany falhou', err);
@@ -592,7 +593,7 @@ export function currentMonthStartBrazil(now: Date = new Date()): string {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Sao_Paulo',
     year: 'numeric',
-    month: '2-digit',
+    month: '2-digit'
   }).formatToParts(now);
   const year = parts.find((p) => p.type === 'year')?.value || '1970';
   const month = parts.find((p) => p.type === 'month')?.value || '01';
@@ -630,10 +631,10 @@ export function selectNightlyDirtyMonths(params: {
   alwaysRefreshMonths?: number;
 }): Array<{ company_id: string; mes: string }> {
   const alwaysRefresh = new Set(
-    params.monthStarts.slice(0, params.alwaysRefreshMonths ?? NIGHTLY_ALWAYS_REFRESH_MONTHS),
+    params.monthStarts.slice(0, params.alwaysRefreshMonths ?? NIGHTLY_ALWAYS_REFRESH_MONTHS)
   );
   const statusMap = new Map(
-    params.statuses.map((row) => [`${row.company_id}|${String(row.mes).slice(0, 10)}`, row]),
+    params.statuses.map((row) => [`${row.company_id}|${String(row.mes).slice(0, 10)}`, row])
   );
   const selected: Array<{ company_id: string; mes: string }> = [];
   for (const companyId of params.companyIds) {
@@ -643,7 +644,8 @@ export function selectNightlyDirtyMonths(params: {
       if (state === 'dirty' || state === 'error' || state === 'rebuilding') continue;
       const rebuiltAt = status?.rebuilt_at ? Date.parse(status.rebuilt_at) : NaN;
       const builtBeforeMonthEnded =
-        state === 'ready' && (!Number.isFinite(rebuiltAt) || rebuiltAt < monthEndInstantBrazil(mes));
+        state === 'ready' &&
+        (!Number.isFinite(rebuiltAt) || rebuiltAt < monthEndInstantBrazil(mes));
       if (alwaysRefresh.has(mes) || !status || builtBeforeMonthEnded) {
         selected.push({ company_id: companyId, mes });
       }
@@ -655,7 +657,7 @@ export function selectNightlyDirtyMonths(params: {
 /** Rodada noturna: marca os meses como 'dirty'. A reconstrução fica com o cron de 5 min. */
 export async function markNightlyReadModelMonthsDirty(
   client: DataClient,
-  now: Date = new Date(),
+  now: Date = new Date()
 ): Promise<{ companies: number; marked: number }> {
   const { data: companies, error: companiesError } = await client
     .from('companies')
@@ -663,7 +665,7 @@ export async function markNightlyReadModelMonthsDirty(
     .eq('active', true);
   if (companiesError) throw companiesError;
   const companyIds = uniqueCleanStrings(
-    ((companies || []) as Array<{ id?: string | null }>).map((row) => row?.id),
+    ((companies || []) as Array<{ id?: string | null }>).map((row) => row?.id)
   ).filter(isUuidLike);
   if (companyIds.length === 0) return { companies: 0, marked: 0 };
 
@@ -692,9 +694,9 @@ export async function markNightlyReadModelMonthsDirty(
         mes: entry.mes,
         status: 'dirty',
         dirty_at: nowIso,
-        updated_at: nowIso,
+        updated_at: nowIso
       })),
-      { onConflict: 'modelo,company_id,mes' },
+      { onConflict: 'modelo,company_id,mes' }
     );
     if (error) throw error;
   }

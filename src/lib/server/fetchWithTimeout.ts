@@ -4,7 +4,7 @@ export async function fetchWithTimeout(
   input: RequestInfo | URL,
   init: RequestInit = {},
   timeoutMs = DEFAULT_TIMEOUT_MS,
-  fetcher: typeof fetch = fetch,
+  fetcher: typeof fetch = fetch
 ) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -15,17 +15,17 @@ export async function fetchWithTimeout(
     if (parentSignal.aborted) {
       controller.abort();
     } else {
-      parentSignal.addEventListener("abort", abortFromParent, { once: true });
+      parentSignal.addEventListener('abort', abortFromParent, { once: true });
     }
   }
 
   try {
     return await fetcher(input, {
       ...init,
-      signal: controller.signal,
+      signal: controller.signal
     });
   } finally {
     clearTimeout(timeout);
-    parentSignal?.removeEventListener("abort", abortFromParent);
+    parentSignal?.removeEventListener('abort', abortFromParent);
   }
 }

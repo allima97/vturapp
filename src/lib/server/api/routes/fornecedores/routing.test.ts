@@ -13,11 +13,15 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
 vi.mock('./root', () => ({ handleFornecedoresGet: spy('handleFornecedoresGet') }));
-vi.mock('./id', () => ({ handleFornecedoresIdGet: spy('handleFornecedoresIdGet'), handleFornecedoresIdPut: spy('handleFornecedoresIdPut'), handleFornecedoresIdDelete: spy('handleFornecedoresIdDelete') }));
+vi.mock('./id', () => ({
+  handleFornecedoresIdGet: spy('handleFornecedoresIdGet'),
+  handleFornecedoresIdPut: spy('handleFornecedoresIdPut'),
+  handleFornecedoresIdDelete: spy('handleFornecedoresIdDelete')
+}));
 vi.mock('./create', () => ({ handleFornecedoresCreatePost: spy('handleFornecedoresCreatePost') }));
 
 import { apiApp } from '../../app';
@@ -25,16 +29,16 @@ import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 
 const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/fornecedores', 'handleFornecedoresGet', {}],
-  ['GET', '/api/v1/fornecedores/id-123', 'handleFornecedoresIdGet', {"id": "id-123"}],
-  ['PUT', '/api/v1/fornecedores/id-123', 'handleFornecedoresIdPut', {"id": "id-123"}],
-  ['DELETE', '/api/v1/fornecedores/id-123', 'handleFornecedoresIdDelete', {"id": "id-123"}],
-  ['POST', '/api/v1/fornecedores/create', 'handleFornecedoresCreatePost', {}],
+  ['GET', '/api/v1/fornecedores/id-123', 'handleFornecedoresIdGet', { id: 'id-123' }],
+  ['PUT', '/api/v1/fornecedores/id-123', 'handleFornecedoresIdPut', { id: 'id-123' }],
+  ['DELETE', '/api/v1/fornecedores/id-123', 'handleFornecedoresIdDelete', { id: 'id-123' }],
+  ['POST', '/api/v1/fornecedores/create', 'handleFornecedoresCreatePost', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/fornecedores'],
   ['PATCH', '/api/v1/fornecedores/id-123'],
-  ['PATCH', '/api/v1/fornecedores/create'],
+  ['PATCH', '/api/v1/fornecedores/create']
 ];
 
 function ev(method: string, path: string) {

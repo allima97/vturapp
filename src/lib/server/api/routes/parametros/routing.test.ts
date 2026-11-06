@@ -13,21 +13,65 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./cambios', () => ({ handleParametrosCambiosGet: spy('handleParametrosCambiosGet'), handleParametrosCambiosPost: spy('handleParametrosCambiosPost'), handleParametrosCambiosDelete: spy('handleParametrosCambiosDelete') }));
-vi.mock('./commission-rules', () => ({ handleParametrosCommissionRulesGet: spy('handleParametrosCommissionRulesGet'), handleParametrosCommissionRulesPost: spy('handleParametrosCommissionRulesPost'), handleParametrosCommissionRulesPatch: spy('handleParametrosCommissionRulesPatch'), handleParametrosCommissionRulesDelete: spy('handleParametrosCommissionRulesDelete') }));
-vi.mock('./empresa', () => ({ handleParametrosEmpresaGet: spy('handleParametrosEmpresaGet'), handleParametrosEmpresaPatch: spy('handleParametrosEmpresaPatch') }));
-vi.mock('./equipe', () => ({ handleParametrosEquipeGet: spy('handleParametrosEquipeGet'), handleParametrosEquipePost: spy('handleParametrosEquipePost') }));
-vi.mock('./escalas', () => ({ handleParametrosEscalasGet: spy('handleParametrosEscalasGet'), handleParametrosEscalasPost: spy('handleParametrosEscalasPost') }));
-vi.mock('./metas', () => ({ handleParametrosMetasGet: spy('handleParametrosMetasGet'), handleParametrosMetasPost: spy('handleParametrosMetasPost'), handleParametrosMetasDelete: spy('handleParametrosMetasDelete') }));
-vi.mock('./nao-comissionaveis', () => ({ handleParametrosNaoComissionaveisGet: spy('handleParametrosNaoComissionaveisGet'), handleParametrosNaoComissionaveisPost: spy('handleParametrosNaoComissionaveisPost'), handleParametrosNaoComissionaveisDelete: spy('handleParametrosNaoComissionaveisDelete') }));
-vi.mock('./orcamentos-pdf', () => ({ handleParametrosOrcamentosPdfGet: spy('handleParametrosOrcamentosPdfGet'), handleParametrosOrcamentosPdfPost: spy('handleParametrosOrcamentosPdfPost') }));
-vi.mock('./regras-produto', () => ({ handleParametrosRegrasProdutoGet: spy('handleParametrosRegrasProdutoGet'), handleParametrosRegrasProdutoPost: spy('handleParametrosRegrasProdutoPost'), handleParametrosRegrasProdutoDelete: spy('handleParametrosRegrasProdutoDelete') }));
-vi.mock('./regras-produto-pacote', () => ({ handleParametrosRegrasProdutoPacoteGet: spy('handleParametrosRegrasProdutoPacoteGet'), handleParametrosRegrasProdutoPacotePost: spy('handleParametrosRegrasProdutoPacotePost'), handleParametrosRegrasProdutoPacoteDelete: spy('handleParametrosRegrasProdutoPacoteDelete') }));
-vi.mock('./sistema', () => ({ handleParametrosSistemaGet: spy('handleParametrosSistemaGet'), handleParametrosSistemaPost: spy('handleParametrosSistemaPost') }));
-vi.mock('./tipo-pacotes', () => ({ handleParametrosTipoPacotesGet: spy('handleParametrosTipoPacotesGet'), handleParametrosTipoPacotesPost: spy('handleParametrosTipoPacotesPost'), handleParametrosTipoPacotesDelete: spy('handleParametrosTipoPacotesDelete') }));
+vi.mock('./cambios', () => ({
+  handleParametrosCambiosGet: spy('handleParametrosCambiosGet'),
+  handleParametrosCambiosPost: spy('handleParametrosCambiosPost'),
+  handleParametrosCambiosDelete: spy('handleParametrosCambiosDelete')
+}));
+vi.mock('./commission-rules', () => ({
+  handleParametrosCommissionRulesGet: spy('handleParametrosCommissionRulesGet'),
+  handleParametrosCommissionRulesPost: spy('handleParametrosCommissionRulesPost'),
+  handleParametrosCommissionRulesPatch: spy('handleParametrosCommissionRulesPatch'),
+  handleParametrosCommissionRulesDelete: spy('handleParametrosCommissionRulesDelete')
+}));
+vi.mock('./empresa', () => ({
+  handleParametrosEmpresaGet: spy('handleParametrosEmpresaGet'),
+  handleParametrosEmpresaPatch: spy('handleParametrosEmpresaPatch')
+}));
+vi.mock('./equipe', () => ({
+  handleParametrosEquipeGet: spy('handleParametrosEquipeGet'),
+  handleParametrosEquipePost: spy('handleParametrosEquipePost')
+}));
+vi.mock('./escalas', () => ({
+  handleParametrosEscalasGet: spy('handleParametrosEscalasGet'),
+  handleParametrosEscalasPost: spy('handleParametrosEscalasPost')
+}));
+vi.mock('./metas', () => ({
+  handleParametrosMetasGet: spy('handleParametrosMetasGet'),
+  handleParametrosMetasPost: spy('handleParametrosMetasPost'),
+  handleParametrosMetasDelete: spy('handleParametrosMetasDelete')
+}));
+vi.mock('./nao-comissionaveis', () => ({
+  handleParametrosNaoComissionaveisGet: spy('handleParametrosNaoComissionaveisGet'),
+  handleParametrosNaoComissionaveisPost: spy('handleParametrosNaoComissionaveisPost'),
+  handleParametrosNaoComissionaveisDelete: spy('handleParametrosNaoComissionaveisDelete')
+}));
+vi.mock('./orcamentos-pdf', () => ({
+  handleParametrosOrcamentosPdfGet: spy('handleParametrosOrcamentosPdfGet'),
+  handleParametrosOrcamentosPdfPost: spy('handleParametrosOrcamentosPdfPost')
+}));
+vi.mock('./regras-produto', () => ({
+  handleParametrosRegrasProdutoGet: spy('handleParametrosRegrasProdutoGet'),
+  handleParametrosRegrasProdutoPost: spy('handleParametrosRegrasProdutoPost'),
+  handleParametrosRegrasProdutoDelete: spy('handleParametrosRegrasProdutoDelete')
+}));
+vi.mock('./regras-produto-pacote', () => ({
+  handleParametrosRegrasProdutoPacoteGet: spy('handleParametrosRegrasProdutoPacoteGet'),
+  handleParametrosRegrasProdutoPacotePost: spy('handleParametrosRegrasProdutoPacotePost'),
+  handleParametrosRegrasProdutoPacoteDelete: spy('handleParametrosRegrasProdutoPacoteDelete')
+}));
+vi.mock('./sistema', () => ({
+  handleParametrosSistemaGet: spy('handleParametrosSistemaGet'),
+  handleParametrosSistemaPost: spy('handleParametrosSistemaPost')
+}));
+vi.mock('./tipo-pacotes', () => ({
+  handleParametrosTipoPacotesGet: spy('handleParametrosTipoPacotesGet'),
+  handleParametrosTipoPacotesPost: spy('handleParametrosTipoPacotesPost'),
+  handleParametrosTipoPacotesDelete: spy('handleParametrosTipoPacotesDelete')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
@@ -51,20 +95,35 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['DELETE', '/api/v1/parametros/metas', 'handleParametrosMetasDelete', {}],
   ['GET', '/api/v1/parametros/nao-comissionaveis', 'handleParametrosNaoComissionaveisGet', {}],
   ['POST', '/api/v1/parametros/nao-comissionaveis', 'handleParametrosNaoComissionaveisPost', {}],
-  ['DELETE', '/api/v1/parametros/nao-comissionaveis', 'handleParametrosNaoComissionaveisDelete', {}],
+  [
+    'DELETE',
+    '/api/v1/parametros/nao-comissionaveis',
+    'handleParametrosNaoComissionaveisDelete',
+    {}
+  ],
   ['GET', '/api/v1/parametros/orcamentos-pdf', 'handleParametrosOrcamentosPdfGet', {}],
   ['POST', '/api/v1/parametros/orcamentos-pdf', 'handleParametrosOrcamentosPdfPost', {}],
   ['GET', '/api/v1/parametros/regras-produto', 'handleParametrosRegrasProdutoGet', {}],
   ['POST', '/api/v1/parametros/regras-produto', 'handleParametrosRegrasProdutoPost', {}],
   ['DELETE', '/api/v1/parametros/regras-produto', 'handleParametrosRegrasProdutoDelete', {}],
   ['GET', '/api/v1/parametros/regras-produto-pacote', 'handleParametrosRegrasProdutoPacoteGet', {}],
-  ['POST', '/api/v1/parametros/regras-produto-pacote', 'handleParametrosRegrasProdutoPacotePost', {}],
-  ['DELETE', '/api/v1/parametros/regras-produto-pacote', 'handleParametrosRegrasProdutoPacoteDelete', {}],
+  [
+    'POST',
+    '/api/v1/parametros/regras-produto-pacote',
+    'handleParametrosRegrasProdutoPacotePost',
+    {}
+  ],
+  [
+    'DELETE',
+    '/api/v1/parametros/regras-produto-pacote',
+    'handleParametrosRegrasProdutoPacoteDelete',
+    {}
+  ],
   ['GET', '/api/v1/parametros/sistema', 'handleParametrosSistemaGet', {}],
   ['POST', '/api/v1/parametros/sistema', 'handleParametrosSistemaPost', {}],
   ['GET', '/api/v1/parametros/tipo-pacotes', 'handleParametrosTipoPacotesGet', {}],
   ['POST', '/api/v1/parametros/tipo-pacotes', 'handleParametrosTipoPacotesPost', {}],
-  ['DELETE', '/api/v1/parametros/tipo-pacotes', 'handleParametrosTipoPacotesDelete', {}],
+  ['DELETE', '/api/v1/parametros/tipo-pacotes', 'handleParametrosTipoPacotesDelete', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
@@ -79,7 +138,7 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/parametros/regras-produto'],
   ['PUT', '/api/v1/parametros/regras-produto-pacote'],
   ['PUT', '/api/v1/parametros/sistema'],
-  ['PUT', '/api/v1/parametros/tipo-pacotes'],
+  ['PUT', '/api/v1/parametros/tipo-pacotes']
 ];
 
 function ev(method: string, path: string) {

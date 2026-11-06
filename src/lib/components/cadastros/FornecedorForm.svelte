@@ -6,7 +6,13 @@
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import Dialog from '$lib/components/ui/Dialog.svelte';
-  import { FieldCheckbox, FieldInput, FieldSelect, FieldTextarea, LoadingState } from '$lib/components/ui';
+  import {
+    FieldCheckbox,
+    FieldInput,
+    FieldSelect,
+    FieldTextarea,
+    LoadingState
+  } from '$lib/components/ui';
   import { ArrowLeft, Save, Trash2 } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { formatDate } from '$lib/utils/formatters';
@@ -103,7 +109,11 @@
 
   async function loadFornecedor(signal?: AbortSignal) {
     if (!fornecedorId) return;
-    const result = await apiGet<{ data: FornecedorDetalhe }>(`/api/v1/fornecedores/${fornecedorId}`, undefined, signal);
+    const result = await apiGet<{ data: FornecedorDetalhe }>(
+      `/api/v1/fornecedores/${fornecedorId}`,
+      undefined,
+      signal
+    );
     const data = result.data;
     form = {
       nome_completo: data.nome_completo || '',
@@ -121,7 +131,11 @@
       principais_servicos: data.principais_servicos || '',
       ativo: data.ativo !== false
     };
-    cidadeBusca = data.cidade ? (data.estado ? `${data.cidade} (${data.estado})` : data.cidade) : '';
+    cidadeBusca = data.cidade
+      ? data.estado
+        ? `${data.cidade} (${data.estado})`
+        : data.cidade
+      : '';
     produtosRelacionados = data.produtos || [];
     vouchersRelacionados = data.vouchers || [];
   }
@@ -152,7 +166,9 @@
   function selectCidade(cidade: CidadeBusca) {
     form.cidade = cidade.nome || '';
     form.estado = cidade.subdivisao_nome || '';
-    cidadeBusca = cidade.label || (cidade.subdivisao_nome ? `${cidade.nome} (${cidade.subdivisao_nome})` : cidade.nome);
+    cidadeBusca =
+      cidade.label ||
+      (cidade.subdivisao_nome ? `${cidade.nome} (${cidade.subdivisao_nome})` : cidade.nome);
     resultadosCidade = [];
     showCidadeOptions = false;
     erroCidadeBusca = '';
@@ -176,10 +192,14 @@
       erroCidadeBusca = '';
       try {
         const resultados =
-          (await apiGet<CidadeBusca[]>('/api/v1/vendas/cidades-busca', {
-            q: query,
-            limite: 10
-          }, request.signal)) || [];
+          (await apiGet<CidadeBusca[]>(
+            '/api/v1/vendas/cidades-busca',
+            {
+              q: query,
+              limite: 10
+            },
+            request.signal
+          )) || [];
         if (!cidadeGuard.isCurrent(request.seq)) return;
         resultadosCidade = resultados;
       } catch (err) {
@@ -203,19 +223,28 @@
     if (!form.estado.trim()) return toast.error('Estado é obrigatório.');
     if (!form.telefone.trim()) return toast.error('Telefone é obrigatório.');
     if (!form.whatsapp.trim()) return toast.error('WhatsApp é obrigatório.');
-    if (!form.telefone_emergencia.trim()) return toast.error('Telefone de emergência é obrigatório.');
+    if (!form.telefone_emergencia.trim())
+      return toast.error('Telefone de emergência é obrigatório.');
     if (!form.responsavel.trim()) return toast.error('Responsável é obrigatório.');
-    if (!form.principais_servicos.trim()) return toast.error('Principais serviços são obrigatórios.');
-    if (form.localizacao === 'brasil' && !form.cnpj.trim()) return toast.error('CNPJ é obrigatório para fornecedores do Brasil.');
-    if (form.localizacao === 'brasil' && !form.cep.trim()) return toast.error('CEP é obrigatório para fornecedores do Brasil.');
+    if (!form.principais_servicos.trim())
+      return toast.error('Principais serviços são obrigatórios.');
+    if (form.localizacao === 'brasil' && !form.cnpj.trim())
+      return toast.error('CNPJ é obrigatório para fornecedores do Brasil.');
+    if (form.localizacao === 'brasil' && !form.cep.trim())
+      return toast.error('CEP é obrigatório para fornecedores do Brasil.');
 
     saving = true;
     try {
-      await apiFetch(isCreateMode ? '/api/v1/fornecedores/create' : `/api/v1/fornecedores/${fornecedorId}`, {
-        method: isCreateMode ? 'POST' : 'PUT',
-        body: form
-      });
-      toast.success(isCreateMode ? 'Fornecedor cadastrado com sucesso.' : 'Fornecedor atualizado com sucesso.');
+      await apiFetch(
+        isCreateMode ? '/api/v1/fornecedores/create' : `/api/v1/fornecedores/${fornecedorId}`,
+        {
+          method: isCreateMode ? 'POST' : 'PUT',
+          body: form
+        }
+      );
+      toast.success(
+        isCreateMode ? 'Fornecedor cadastrado com sucesso.' : 'Fornecedor atualizado com sucesso.'
+      );
       goto('/cadastros/fornecedores');
     } catch (err: unknown) {
       toast.error(toUserMessage(err, 'Erro ao salvar fornecedor.'));
@@ -245,7 +274,7 @@
 </svelte:head>
 
 <PageHeader
-  title={title}
+  {title}
   subtitle="Centralize contato, faturamento, localização e serviços do parceiro em um único cadastro"
   color="financeiro"
   breadcrumbs={[
@@ -279,16 +308,42 @@
           on:click={() => (form.localizacao = 'exterior')}
         >
           <div class="font-medium text-slate-900">Exterior</div>
-          <div class="text-sm text-slate-500">Permite cadastro internacional sem exigir documento fiscal brasileiro.</div>
+          <div class="text-sm text-slate-500">
+            Permite cadastro internacional sem exigir documento fiscal brasileiro.
+          </div>
         </Button>
       </div>
 
       <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-        <FieldInput id="forn-nome-completo" label="Nome completo" bind:value={form.nome_completo} placeholder="Razão social" class_name="w-full" />
-        <FieldInput id="forn-fantasia" label="Nome fantasia" bind:value={form.nome_fantasia} placeholder="Nome comercial" class_name="w-full" />
+        <FieldInput
+          id="forn-nome-completo"
+          label="Nome completo"
+          bind:value={form.nome_completo}
+          placeholder="Razão social"
+          class_name="w-full"
+        />
+        <FieldInput
+          id="forn-fantasia"
+          label="Nome fantasia"
+          bind:value={form.nome_fantasia}
+          placeholder="Nome comercial"
+          class_name="w-full"
+        />
         {#if form.localizacao === 'brasil'}
-          <FieldInput id="forn-cnpj" label="CNPJ" bind:value={form.cnpj} placeholder="00.000.000/0000-00" class_name="w-full" />
-          <FieldInput id="forn-cep" label="CEP" bind:value={form.cep} placeholder="00000-000" class_name="w-full" />
+          <FieldInput
+            id="forn-cnpj"
+            label="CNPJ"
+            bind:value={form.cnpj}
+            placeholder="00.000.000/0000-00"
+            class_name="w-full"
+          />
+          <FieldInput
+            id="forn-cep"
+            label="CEP"
+            bind:value={form.cep}
+            placeholder="00000-000"
+            class_name="w-full"
+          />
         {/if}
         <div class="relative">
           <FieldInput
@@ -302,11 +357,13 @@
             on:blur={() => setTimeout(() => (showCidadeOptions = false), 150)}
           />
           {#if showCidadeOptions}
-            <div class="absolute z-10 mt-2 w-full rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+            <div
+              class="absolute z-10 mt-2 w-full rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
+            >
               {#if buscandoCidade}
                 <div class="px-3 py-2 text-sm text-slate-500">Buscando cidades...</div>
               {:else if erroCidadeBusca}
-                <div class="px-3 py-2 text-sm text-red-500">{erroCidadeBusca}</div>
+                <div role="alert" class="px-3 py-2 text-sm text-red-500">{erroCidadeBusca}</div>
               {:else if resultadosCidade.length === 0}
                 <div class="px-3 py-2 text-sm text-slate-500">Nenhuma cidade encontrada.</div>
               {:else}
@@ -328,11 +385,51 @@
             </div>
           {/if}
         </div>
-        <FieldInput id="forn-estado" label="Estado" bind:value={form.estado} placeholder="UF / região" readonly class_name="w-full" />
-        <FieldInput id="forn-telefone" label="Telefone" value={form.telefone} class_name="w-full" on:input={(e) => { const t = e.target as HTMLInputElement; form.telefone = formatPhone(t.value); }} />
-        <FieldInput id="forn-whatsapp" label="WhatsApp" value={form.whatsapp} class_name="w-full" on:input={(e) => { const t = e.target as HTMLInputElement; form.whatsapp = formatPhone(t.value); }} />
-        <FieldInput id="forn-emergencia" label="Telefone emergência" value={form.telefone_emergencia} class_name="w-full" on:input={(e) => { const t = e.target as HTMLInputElement; form.telefone_emergencia = formatPhone(t.value); }} />
-        <FieldInput id="forn-responsavel" label="Responsável" bind:value={form.responsavel} placeholder="Pessoa de contato" class_name="w-full" />
+        <FieldInput
+          id="forn-estado"
+          label="Estado"
+          bind:value={form.estado}
+          placeholder="UF / região"
+          readonly
+          class_name="w-full"
+        />
+        <FieldInput
+          id="forn-telefone"
+          label="Telefone"
+          value={form.telefone}
+          class_name="w-full"
+          on:input={(e) => {
+            const t = e.target as HTMLInputElement;
+            form.telefone = formatPhone(t.value);
+          }}
+        />
+        <FieldInput
+          id="forn-whatsapp"
+          label="WhatsApp"
+          value={form.whatsapp}
+          class_name="w-full"
+          on:input={(e) => {
+            const t = e.target as HTMLInputElement;
+            form.whatsapp = formatPhone(t.value);
+          }}
+        />
+        <FieldInput
+          id="forn-emergencia"
+          label="Telefone emergência"
+          value={form.telefone_emergencia}
+          class_name="w-full"
+          on:input={(e) => {
+            const t = e.target as HTMLInputElement;
+            form.telefone_emergencia = formatPhone(t.value);
+          }}
+        />
+        <FieldInput
+          id="forn-responsavel"
+          label="Responsável"
+          bind:value={form.responsavel}
+          placeholder="Pessoa de contato"
+          class_name="w-full"
+        />
         <FieldSelect
           id="forn-faturamento"
           label="Tipo de faturamento"
@@ -376,7 +473,11 @@
                 {#each produtosRelacionados as produto}
                   <div class="rounded-lg border border-slate-200 p-3">
                     <div class="font-medium text-slate-900">{produto.nome}</div>
-                    <div class="text-sm text-slate-500">{produto.destino || 'Sem destino'} · {produto.ativo === false ? 'Inativo' : 'Ativo'}</div>
+                    <div class="text-sm text-slate-500">
+                      {produto.destino || 'Sem destino'} · {produto.ativo === false
+                        ? 'Inativo'
+                        : 'Ativo'}
+                    </div>
                   </div>
                 {/each}
               </div>
@@ -391,7 +492,11 @@
                 {#each vouchersRelacionados as voucher}
                   <div class="rounded-lg border border-slate-200 p-3">
                     <div class="font-medium text-slate-900">{voucher.codigo || voucher.id}</div>
-                    <div class="text-sm text-slate-500">{voucher.status || 'Sem status'}{voucher.data_utilizacao ? ` · ${formatDate(voucher.data_utilizacao)}` : ''}</div>
+                    <div class="text-sm text-slate-500">
+                      {voucher.status || 'Sem status'}{voucher.data_utilizacao
+                        ? ` · ${formatDate(voucher.data_utilizacao)}`
+                        : ''}
+                    </div>
                   </div>
                 {/each}
               </div>
@@ -435,6 +540,7 @@
   onCancel={() => (showDeleteDialog = false)}
 >
   <p class="text-slate-600">
-    Tem certeza que deseja excluir este fornecedor? Se houver produtos vinculados, a exclusão será bloqueada.
+    Tem certeza que deseja excluir este fornecedor? Se houver produtos vinculados, a exclusão será
+    bloqueada.
   </p>
 </Dialog>

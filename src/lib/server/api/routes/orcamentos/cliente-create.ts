@@ -35,7 +35,10 @@ export async function handleOrcamentosClienteCreatePost(event: RequestEvent) {
   try {
     const originError = rejectCrossOriginRequest(event.request);
     if (originError) return originError;
-    const bodyResult = await readJsonBodyLimited(event.request, MAX_ORCAMENTO_CLIENTE_CREATE_BODY_BYTES);
+    const bodyResult = await readJsonBodyLimited(
+      event.request,
+      MAX_ORCAMENTO_CLIENTE_CREATE_BODY_BYTES
+    );
     if (!bodyResult.ok) return bodyResult.response;
 
     const user = await requireAuthenticatedUser(event);
@@ -51,16 +54,24 @@ export async function handleOrcamentosClienteCreatePost(event: RequestEvent) {
     const nome = titleCaseNome(String(body?.nome || '').trim());
     const telefone = String(body?.telefone || '').trim();
     if (!nome || !telefone) {
-      return new Response('Nome e telefone obrigatorios.', { status: 400, headers: NO_STORE_HEADERS });
+      return new Response('Nome e telefone obrigatorios.', {
+        status: 400,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const requestedCompanyId = String(body?.company_id || '').trim();
-    const companyId = scope.isAdmin ? requestedCompanyId || null : resolveScopedCompanyId(scope, requestedCompanyId || null);
+    const companyId = scope.isAdmin
+      ? requestedCompanyId || null
+      : resolveScopedCompanyId(scope, requestedCompanyId || null);
     if (!scope.isAdmin && !companyId) {
-      return new Response(requestedCompanyId ? 'Empresa fora do escopo.' : 'Empresa nao identificada.', {
-        status: requestedCompanyId ? 403 : 400,
-        headers: NO_STORE_HEADERS
-      });
+      return new Response(
+        requestedCompanyId ? 'Empresa fora do escopo.' : 'Empresa nao identificada.',
+        {
+          status: requestedCompanyId ? 403 : 400,
+          headers: NO_STORE_HEADERS
+        }
+      );
     }
 
     const payload: ClienteInsertPayload = {

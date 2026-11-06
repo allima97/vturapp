@@ -53,10 +53,7 @@ function applyMask(raw: string, type: MaskType): string {
           .replace(PHONE_DDD_RE, '($1) $2')
           .replace(PHONE_EIGHT_DIGIT_RE, '$1-$2');
       }
-      return n
-        .slice(0, 11)
-        .replace(PHONE_DDD_RE, '($1) $2')
-        .replace(PHONE_NINE_DIGIT_RE, '$1-$2');
+      return n.slice(0, 11).replace(PHONE_DDD_RE, '($1) $2').replace(PHONE_NINE_DIGIT_RE, '$1-$2');
 
     case 'cep':
       return n.slice(0, 8).replace(CEP_BLOCK_RE, '$1-$2');

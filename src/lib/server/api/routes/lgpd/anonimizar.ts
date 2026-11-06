@@ -24,7 +24,7 @@ import { readJsonBodyLimited } from '$lib/server/requestGuards';
 import { registrarLog } from '$lib/server/auditLog';
 
 const TIPOS_VALIDOS = ['cliente', 'acompanhante'] as const;
-type TipoEntidade = typeof TIPOS_VALIDOS[number];
+type TipoEntidade = (typeof TIPOS_VALIDOS)[number];
 
 // Placeholder para campo anonimizado — identificável, sem dado pessoal real
 const ANON = '[ANONIMIZADO-LGPD]';
@@ -56,7 +56,10 @@ export async function handleLgpdAnonimizarPost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      return json({ error: 'Acesso restrito a administradores.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Acesso restrito a administradores.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const agora = new Date().toISOString();
@@ -70,10 +73,16 @@ export async function handleLgpdAnonimizarPost(event: RequestEvent) {
         .single();
 
       if (!existing) {
-        return json({ error: 'Cliente não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Cliente não encontrado.' },
+          { status: 404, headers: NO_STORE_HEADERS }
+        );
       }
       if (existing.lgpd_anonimizado) {
-        return json({ ok: true, mensagem: 'Este cliente já foi anonimizado anteriormente.' }, { headers: NO_STORE_HEADERS });
+        return json(
+          { ok: true, mensagem: 'Este cliente já foi anonimizado anteriormente.' },
+          { headers: NO_STORE_HEADERS }
+        );
       }
 
       const { error: updateErr } = await client
@@ -116,7 +125,6 @@ export async function handleLgpdAnonimizarPost(event: RequestEvent) {
         })
         .eq('cliente_id', id)
         .eq('lgpd_anonimizado', false);
-
     } else {
       // tipo === 'acompanhante'
       const { data: existing } = await client
@@ -126,10 +134,16 @@ export async function handleLgpdAnonimizarPost(event: RequestEvent) {
         .single();
 
       if (!existing) {
-        return json({ error: 'Acompanhante não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Acompanhante não encontrado.' },
+          { status: 404, headers: NO_STORE_HEADERS }
+        );
       }
       if (existing.lgpd_anonimizado) {
-        return json({ ok: true, mensagem: 'Este acompanhante já foi anonimizado anteriormente.' }, { headers: NO_STORE_HEADERS });
+        return json(
+          { ok: true, mensagem: 'Este acompanhante já foi anonimizado anteriormente.' },
+          { headers: NO_STORE_HEADERS }
+        );
       }
 
       const { error: updateErr } = await client
@@ -172,12 +186,14 @@ export async function handleLgpdAnonimizarPost(event: RequestEvent) {
       detalhes: { tipo, entidade_id: id, protocolo_solicitacao, anonimizado_por: scope.email }
     });
 
-    return json({
-      ok: true,
-      mensagem: `Dados do ${tipo} anonimizados com sucesso conforme LGPD Art. 18.`,
-      anonimizado_em: agora
-    }, { headers: NO_STORE_HEADERS });
-
+    return json(
+      {
+        ok: true,
+        mensagem: `Dados do ${tipo} anonimizados com sucesso conforme LGPD Art. 18.`,
+        anonimizado_em: agora
+      },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao anonimizar dados.');
   }

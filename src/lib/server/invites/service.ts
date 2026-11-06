@@ -120,7 +120,9 @@ export async function criarConvite(
   const convitePendente = await db
     .select({ id: convites.id, expiresAt: convites.expiresAt })
     .from(convites)
-    .where(and(eq(convites.empresaId, empresaId), eq(convites.email, email), isNull(convites.aceitadoEm)))
+    .where(
+      and(eq(convites.empresaId, empresaId), eq(convites.email, email), isNull(convites.aceitadoEm))
+    )
     .get();
 
   if (convitePendente && !isExpired(convitePendente.expiresAt)) {
@@ -142,7 +144,7 @@ export async function criarConvite(
       token,
       expiresAt,
       convidadoPor: convidadoPorId,
-      criadoEm,
+      criadoEm
     })
     .returning({ id: convites.id });
 
@@ -164,9 +166,9 @@ export async function criarConvite(
       empresaNome: empresa.nome,
       papel,
       linkConvite,
-      expiresAt,
+      expiresAt
     }),
-    text: `Você foi convidado para ${empresa.nome} como ${papel}.\nAcesse: ${linkConvite}\nVálido até: ${expiresAt}`,
+    text: `Você foi convidado para ${empresa.nome} como ${papel}.\nAcesse: ${linkConvite}\nVálido até: ${expiresAt}`
   });
 
   return { token, conviteId };
@@ -181,10 +183,7 @@ export async function criarConvite(
  *
  * @throws {ConviteError} se o token for inválido, expirado ou já aceito
  */
-export async function getConvite(
-  d1: D1Database,
-  token: string
-): Promise<ConviteInfo> {
+export async function getConvite(d1: D1Database, token: string): Promise<ConviteInfo> {
   const db = getDb(d1);
 
   const row = await db
@@ -195,7 +194,7 @@ export async function getConvite(
       email: convites.email,
       papel: convites.papel,
       expiresAt: convites.expiresAt,
-      aceitadoEm: convites.aceitadoEm,
+      aceitadoEm: convites.aceitadoEm
     })
     .from(convites)
     .innerJoin(empresas, eq(empresas.id, convites.empresaId))
@@ -221,7 +220,7 @@ export async function getConvite(
     email: row.email,
     papel: row.papel as Papel,
     expiresAt: row.expiresAt,
-    aceitadoEm: row.aceitadoEm,
+    aceitadoEm: row.aceitadoEm
   };
 }
 
@@ -259,8 +258,8 @@ export async function aceitarConvite(
     body: {
       name: nome,
       email: convite.email,
-      password: senha,
-    },
+      password: senha
+    }
   });
 
   if (!signUpResult?.user?.id) {
@@ -271,7 +270,12 @@ export async function aceitarConvite(
   const agora = new Date().toISOString();
 
   // 3–5. Vincular tenant, perfil de acesso e aceite numa única transação D1.
-  const accessStatements = await buildTenantAccessProfileStatements(db, userId, convite.papel, agora);
+  const accessStatements = await buildTenantAccessProfileStatements(
+    db,
+    userId,
+    convite.papel,
+    agora
+  );
   const statements = [
     db.update(user).set({ empresaId: convite.empresaId }).where(eq(user.id, userId)),
     db.insert(membrosEmpresa).values({
@@ -280,12 +284,14 @@ export async function aceitarConvite(
       papel: convite.papel,
       ativo: true,
       criadoEm: agora,
-      atualizadoEm: agora,
+      atualizadoEm: agora
     }),
     ...accessStatements,
-    db.update(convites).set({ aceitadoEm: agora }).where(eq(convites.token, token)),
+    db.update(convites).set({ aceitadoEm: agora }).where(eq(convites.token, token))
   ];
-  await db.batch(statements as unknown as [typeof statements[number], ...typeof statements[number][]]);
+  await db.batch(
+    statements as unknown as [(typeof statements)[number], ...(typeof statements)[number][]]
+  );
 
   return { userId, empresaId: convite.empresaId };
 }
@@ -311,9 +317,12 @@ function templateConvite(params: {
 }): string {
   const { email, empresaNome, papel, linkConvite, expiresAt } = params;
   const expDate = new Date(expiresAt).toLocaleDateString('pt-BR', {
-    day: '2-digit', month: 'long', year: 'numeric',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric'
   });
-  const papelLabel = { admin: 'Administrador', operador: 'Operador', visualizador: 'Visualizador' }[papel] ?? papel;
+  const papelLabel =
+    { admin: 'Administrador', operador: 'Operador', visualizador: 'Visualizador' }[papel] ?? papel;
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">

@@ -139,14 +139,16 @@
       label: 'Valor Total',
       sortable: true,
       align: 'right' as const,
-      formatter: (value: number | null | undefined) => BRL_CURRENCY_FORMATTER.format(Number(value) || 0)
+      formatter: (value: number | null | undefined) =>
+        BRL_CURRENCY_FORMATTER.format(Number(value) || 0)
     },
     {
       key: 'valor_taxas',
       label: 'Taxas',
       sortable: true,
       align: 'right' as const,
-      formatter: (value: number | null | undefined) => BRL_CURRENCY_FORMATTER.format(Number(value) || 0)
+      formatter: (value: number | null | undefined) =>
+        BRL_CURRENCY_FORMATTER.format(Number(value) || 0)
     },
     {
       key: 'status',
@@ -299,7 +301,8 @@
     if (searchTimer) clearTimeout(searchTimer);
   });
 
-  $: showVendedorFilter = !$permissoes.ready || (!$permissoes.isVendedor && !$permissoes.usoIndividual);
+  $: showVendedorFilter =
+    !$permissoes.ready || (!$permissoes.isVendedor && !$permissoes.usoIndividual);
 
   $: columns = showVendedorFilter
     ? columnsBase
@@ -404,22 +407,44 @@
 />
 
 {#if errorMessage}
-  <div role="alert" class="mb-6 rounded-vtur-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+  <div
+    role="alert"
+    class="rounded-vtur-lg mb-6 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+  >
     {errorMessage}
   </div>
 {/if}
 
 <KPIGrid className="mb-6" columns={4} loading={loadingKpis}>
   {#if !loadingKpis}
-    <KPICard title="Valor total" value={formatCurrency(kpis.totalVendas)} color="vendas" icon={DollarSign} />
+    <KPICard
+      title="Valor total"
+      value={formatCurrency(kpis.totalVendas)}
+      color="vendas"
+      icon={DollarSign}
+    />
     <KPICard title="Total de vendas" value={kpis.countAtivas} color="vendas" icon={ShoppingCart} />
-    <KPICard title="Taxas" value={formatCurrency(kpis.totalTaxas)} color="clientes" icon={Calendar} />
-    <KPICard title="Líquido" value={formatCurrency(kpis.totalLiquido)} color="financeiro" icon={Calendar} />
+    <KPICard
+      title="Taxas"
+      value={formatCurrency(kpis.totalTaxas)}
+      color="clientes"
+      icon={Calendar}
+    />
+    <KPICard
+      title="Líquido"
+      value={formatCurrency(kpis.totalLiquido)}
+      color="financeiro"
+      icon={Calendar}
+    />
   {/if}
 </KPIGrid>
 
 <div class="mb-4 sm:hidden">
-  <Button variant="secondary" class_name="w-full justify-center" on:click={() => (showFilterSheet = true)}>
+  <Button
+    variant="secondary"
+    class_name="w-full justify-center"
+    on:click={() => (showFilterSheet = true)}
+  >
     <SlidersHorizontal size={16} class="mr-2" />
     Filtros
   </Button>
@@ -467,7 +492,11 @@
       />
     {/if}
 
-    <Button variant="primary" class_name="w-full justify-center" on:click={() => (showFilterSheet = false)}>
+    <Button
+      variant="primary"
+      class_name="w-full justify-center"
+      on:click={() => (showFilterSheet = false)}
+    >
       Aplicar filtros
     </Button>
   </div>

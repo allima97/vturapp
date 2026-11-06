@@ -13,7 +13,7 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
 vi.mock('./library', () => ({ handleCrmLibraryGet: spy('handleCrmLibraryGet') }));
@@ -24,12 +24,12 @@ import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 
 const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/crm/library', 'handleCrmLibraryGet', {}],
-  ['POST', '/api/v1/crm/signature', 'handleCrmSignaturePost', {}],
+  ['POST', '/api/v1/crm/signature', 'handleCrmSignaturePost', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/crm/library'],
-  ['PUT', '/api/v1/crm/signature'],
+  ['PUT', '/api/v1/crm/signature']
 ];
 
 function ev(method: string, path: string) {

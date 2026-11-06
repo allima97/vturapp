@@ -27,7 +27,12 @@ import {
   READ_MODEL_TAGS,
   scopeCacheTags
 } from '$lib/server/readModelCache';
-import { cleanStringSet, chunkArray, QUERY_IN_BATCH_SIZE, uniqueCleanStrings } from '$lib/utils/array';
+import {
+  cleanStringSet,
+  chunkArray,
+  QUERY_IN_BATCH_SIZE,
+  uniqueCleanStrings
+} from '$lib/utils/array';
 
 const PT_BR_COLLATOR = new Intl.Collator('pt-BR');
 
@@ -120,7 +125,14 @@ type CidadeHydrationRow = {
 };
 
 const MAX_SEARCH_CANDIDATES = 1000;
-const VALID_CAMPO_BUSCA = new Set<CampoBusca>(['todos', 'cliente', 'vendedor', 'destino', 'produto', 'recibo']);
+const VALID_CAMPO_BUSCA = new Set<CampoBusca>([
+  'todos',
+  'cliente',
+  'vendedor',
+  'destino',
+  'produto',
+  'recibo'
+]);
 const PUSHABLE_STATUS_FILTERS = new Set(['cancelada', 'concluida', 'confirmada', 'pendente']);
 
 function getResultCount(result: unknown) {
@@ -150,7 +162,11 @@ function deriveVendaStatus(row: VendaRow): VendaStatus {
 function deriveVendaTipo(row: VendaRow): VendaTipo {
   const firstReceipt = Array.isArray(row.recibos) ? row.recibos[0] : null;
   const reference = normalizeText(
-    [firstReceipt?.tipo_pacote, firstReceipt?.tipo_produtos?.nome, firstReceipt?.tipo_produtos?.tipo].join(' ')
+    [
+      firstReceipt?.tipo_pacote,
+      firstReceipt?.tipo_produtos?.nome,
+      firstReceipt?.tipo_produtos?.tipo
+    ].join(' ')
   );
 
   if (reference.includes('seguro') || reference.includes('servico')) return 'servico';
@@ -160,7 +176,8 @@ function deriveVendaTipo(row: VendaRow): VendaTipo {
     reference.includes('aereo') ||
     reference.includes('fretamento') ||
     reference.includes('transporte')
-  ) return 'passagem';
+  )
+    return 'passagem';
   return 'pacote';
 }
 
@@ -207,23 +224,26 @@ function formatVendaItem(row: VendaRow): VendaItem {
   const recibos = getReceipts(row);
   const totalSeguro = recibos.reduce((sum, recibo) => {
     const tipo = String(recibo?.tipo_produtos?.tipo || '').toLowerCase();
-    const nome = String(recibo?.tipo_produtos?.nome || recibo?.produto_resolvido?.nome || '').toLowerCase();
+    const nome = String(
+      recibo?.tipo_produtos?.nome || recibo?.produto_resolvido?.nome || ''
+    ).toLowerCase();
     const isSeguro = tipo.includes('seguro') || nome.includes('seguro');
     return sum + (isSeguro ? getReciboValorRanking(recibo) : 0);
   }, 0);
   const produtos = recibos
-    .map((recibo) => String(recibo?.produto_resolvido?.nome || recibo?.tipo_produtos?.nome || '').trim())
+    .map((recibo) =>
+      String(recibo?.produto_resolvido?.nome || recibo?.tipo_produtos?.nome || '').trim()
+    )
     .filter(Boolean);
   const destinoNome = String(row.destinos?.nome || '').trim();
   const cidadeDestino = String(row.destino_cidade?.nome || '').trim();
   const cidadesRecibos = Array.from(
     new Set(
-      recibos
-        .map((recibo) => String(recibo?.destino_cidade?.nome || '').trim())
-        .filter(Boolean)
+      recibos.map((recibo) => String(recibo?.destino_cidade?.nome || '').trim()).filter(Boolean)
     )
   );
-  const destinoDisplay = cidadesRecibos.join(', ') || cidadeDestino || destinoNome || 'Destino nao informado';
+  const destinoDisplay =
+    cidadesRecibos.join(', ') || cidadeDestino || destinoNome || 'Destino nao informado';
 
   return {
     id: row.id,
@@ -261,13 +281,25 @@ function matchesBusca(item: VendaItem, busca: string, campo: CampoBusca) {
   const matchRecibo = item.recibos.some((recibo) => normalizeText(recibo).includes(query));
 
   switch (campo) {
-    case 'cliente': return matchCliente;
-    case 'vendedor': return matchVendedor;
-    case 'destino': return matchDestino;
-    case 'produto': return matchProduto;
-    case 'recibo': return matchRecibo;
+    case 'cliente':
+      return matchCliente;
+    case 'vendedor':
+      return matchVendedor;
+    case 'destino':
+      return matchDestino;
+    case 'produto':
+      return matchProduto;
+    case 'recibo':
+      return matchRecibo;
     default:
-      return matchCliente || matchVendedor || matchDestino || matchProduto || matchRecibo || normalizeText(item.codigo).includes(query);
+      return (
+        matchCliente ||
+        matchVendedor ||
+        matchDestino ||
+        matchProduto ||
+        matchRecibo ||
+        normalizeText(item.codigo).includes(query)
+      );
   }
 }
 
@@ -286,7 +318,9 @@ function computeKpisFromRows(rows: VendaRow[]) {
       );
       totalSeguro += recibos.reduce((sum, recibo) => {
         const tipo = String(recibo?.tipo_produtos?.tipo || '').toLowerCase();
-        const nome = String(recibo?.tipo_produtos?.nome || recibo?.produto_resolvido?.nome || '').toLowerCase();
+        const nome = String(
+          recibo?.tipo_produtos?.nome || recibo?.produto_resolvido?.nome || ''
+        ).toLowerCase();
         const isSeguro = tipo.includes('seguro') || nome.includes('seguro');
         return sum + (isSeguro ? getReciboValorRanking(recibo) : 0);
       }, 0);
@@ -337,7 +371,7 @@ function applyVendaIdScope(
     vendedorIdsFilter?: string[];
     statusQuery?: string;
   }
-){
+) {
   if (params.inicio) query = query.gte('data_venda', params.inicio);
   if (params.fim) query = query.lte('data_venda', params.fim);
   const companyIdsFilter = params.companyIdsFilter || params.companyIds;
@@ -385,9 +419,13 @@ async function fetchScopedVendaIds(
 
   const runQuery = async (configure?: (query: VendaIdQuery) => VendaIdQuery) => {
     const companyBatches =
-      params.companyIds.length > QUERY_IN_BATCH_SIZE ? chunkArray(params.companyIds) : [params.companyIds];
+      params.companyIds.length > QUERY_IN_BATCH_SIZE
+        ? chunkArray(params.companyIds)
+        : [params.companyIds];
     const vendedorBatches =
-      params.vendedorIds.length > QUERY_IN_BATCH_SIZE ? chunkArray(params.vendedorIds) : [params.vendedorIds];
+      params.vendedorIds.length > QUERY_IN_BATCH_SIZE
+        ? chunkArray(params.vendedorIds)
+        : [params.vendedorIds];
 
     for (const companyBatch of companyBatches) {
       for (const vendedorBatch of vendedorBatches) {
@@ -455,104 +493,160 @@ async function resolveVendaSearchIds(
   }
 
   const companyBatches =
-    params.companyIds.length > QUERY_IN_BATCH_SIZE ? chunkArray(params.companyIds) : [params.companyIds];
+    params.companyIds.length > QUERY_IN_BATCH_SIZE
+      ? chunkArray(params.companyIds)
+      : [params.companyIds];
 
   // --- Disparar todos os lookups de candidatos em PARALELO ---
   const [reciboVendaIds, clienteIds, vendedorIds, destinoAndProdutoIds] = await Promise.all([
     // 1. Busca por recibo
-    (includeAll || params.campoBusca === 'recibo') ? (async () => {
-      const receiptOrParts = buildSearchParts(searchTerm, digits, [
-        'numero_recibo',
-        'numero_recibo_normalizado',
-        'numero_reserva'
-      ]);
-      if (receiptOrParts.length === 0) return [] as string[];
-      const { data, error } = await client
-        .from('vendas_recibos')
-        .select('venda_id')
-        .or(receiptOrParts.join(','))
-        .limit(MAX_SEARCH_CANDIDATES);
-      if (error) throw error;
-      return uniqueIds(((data || []) as VendaIdRow[]).map((row) => row?.venda_id));
-    })() : Promise.resolve([] as string[]),
+    includeAll || params.campoBusca === 'recibo'
+      ? (async () => {
+          const receiptOrParts = buildSearchParts(searchTerm, digits, [
+            'numero_recibo',
+            'numero_recibo_normalizado',
+            'numero_reserva'
+          ]);
+          if (receiptOrParts.length === 0) return [] as string[];
+          const { data, error } = await client
+            .from('vendas_recibos')
+            .select('venda_id')
+            .or(receiptOrParts.join(','))
+            .limit(MAX_SEARCH_CANDIDATES);
+          if (error) throw error;
+          return uniqueIds(((data || []) as VendaIdRow[]).map((row) => row?.venda_id));
+        })()
+      : Promise.resolve([] as string[]),
 
     // 2. Busca por cliente
-    (includeAll || params.campoBusca === 'cliente') ? (async () => {
-      const clienteOrParts = buildSearchParts(searchTerm, digits, [
-        'nome', 'email', 'cpf', 'telefone', 'whatsapp'
-      ]);
-      if (clienteOrParts.length === 0) return [] as string[];
-      const results = await Promise.all(
-        companyBatches.map(async (companyBatch) => {
-          let query = client.from('clientes').select('id').or(clienteOrParts.join(',')).limit(300);
-          if (companyBatch.length > 0) query = query.in('company_id', companyBatch);
-          const { data, error } = await query;
-          if (error) throw error;
-          return uniqueIds(((data || []) as IdRow[]).map((row) => row?.id), 300);
-        })
-      );
-      return results.flat();
-    })() : Promise.resolve([] as string[]),
+    includeAll || params.campoBusca === 'cliente'
+      ? (async () => {
+          const clienteOrParts = buildSearchParts(searchTerm, digits, [
+            'nome',
+            'email',
+            'cpf',
+            'telefone',
+            'whatsapp'
+          ]);
+          if (clienteOrParts.length === 0) return [] as string[];
+          const results = await Promise.all(
+            companyBatches.map(async (companyBatch) => {
+              let query = client
+                .from('clientes')
+                .select('id')
+                .or(clienteOrParts.join(','))
+                .limit(300);
+              if (companyBatch.length > 0) query = query.in('company_id', companyBatch);
+              const { data, error } = await query;
+              if (error) throw error;
+              return uniqueIds(
+                ((data || []) as IdRow[]).map((row) => row?.id),
+                300
+              );
+            })
+          );
+          return results.flat();
+        })()
+      : Promise.resolve([] as string[]),
 
     // 3. Busca por vendedor
-    (includeAll || params.campoBusca === 'vendedor') && searchTerm.length >= 2 ? (async () => {
-      const results = await Promise.all(
-        companyBatches.map(async (companyBatch) => {
-          let query = client
-            .from('users')
-            .select('id')
-            .or(`nome_completo.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
-            .limit(100);
-          if (companyBatch.length > 0) query = query.in('company_id', companyBatch);
-          const { data, error } = await query;
-          if (error) throw error;
-          return uniqueIds(((data || []) as IdRow[]).map((row) => row?.id), 100);
-        })
-      );
-      return results.flat();
-    })() : Promise.resolve([] as string[]),
+    (includeAll || params.campoBusca === 'vendedor') && searchTerm.length >= 2
+      ? (async () => {
+          const results = await Promise.all(
+            companyBatches.map(async (companyBatch) => {
+              let query = client
+                .from('users')
+                .select('id')
+                .or(`nome_completo.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`)
+                .limit(100);
+              if (companyBatch.length > 0) query = query.in('company_id', companyBatch);
+              const { data, error } = await query;
+              if (error) throw error;
+              return uniqueIds(
+                ((data || []) as IdRow[]).map((row) => row?.id),
+                100
+              );
+            })
+          );
+          return results.flat();
+        })()
+      : Promise.resolve([] as string[]),
 
     // 4. Busca por destino/produto — lookup em produtos, tipo_produtos e cidades em paralelo
-    (includeAll || params.campoBusca === 'destino' || params.campoBusca === 'produto') && searchTerm.length >= 2
+    (includeAll || params.campoBusca === 'destino' || params.campoBusca === 'produto') &&
+    searchTerm.length >= 2
       ? (async () => {
           const inclueProduto = params.campoBusca === 'produto' || includeAll;
           const [produtosResult, tiposResult, cidadesResult] = await Promise.all([
-            client.from('produtos').select('id, cidade_id').ilike('nome', `%${searchTerm}%`).limit(300),
+            client
+              .from('produtos')
+              .select('id, cidade_id')
+              .ilike('nome', `%${searchTerm}%`)
+              .limit(300),
             inclueProduto
-              ? client.from('tipo_produtos').select('id').or(`nome.ilike.%${searchTerm}%,tipo.ilike.%${searchTerm}%`).limit(300)
+              ? client
+                  .from('tipo_produtos')
+                  .select('id')
+                  .or(`nome.ilike.%${searchTerm}%,tipo.ilike.%${searchTerm}%`)
+                  .limit(300)
               : Promise.resolve({ data: [], error: null }),
-            client.from('cidades').select('id').ilike('nome', `%${searchTerm}%`).limit(300),
+            client.from('cidades').select('id').ilike('nome', `%${searchTerm}%`).limit(300)
           ]);
           if (produtosResult.error) throw produtosResult.error;
           if (tiposResult.error) throw tiposResult.error;
           if (cidadesResult.error) throw cidadesResult.error;
 
-          const produtosRows = (produtosResult.data || []) as Array<{ id?: string | null; cidade_id?: string | null }>;
+          const produtosRows = (produtosResult.data || []) as Array<{
+            id?: string | null;
+            cidade_id?: string | null;
+          }>;
           const tiposRows = (tiposResult.data || []) as IdRow[];
           const cidadesRows = (cidadesResult.data || []) as IdRow[];
-          const productIds = uniqueIds(produtosRows.map((row) => row?.id), 300);
-          const tipoProdutoIds = uniqueIds(tiposRows.map((row) => row?.id), 300);
-          const cityIds = uniqueIds([
-            ...produtosRows.map((row) => row?.cidade_id),
-            ...cidadesRows.map((row) => row?.id),
-          ], 300);
+          const productIds = uniqueIds(
+            produtosRows.map((row) => row?.id),
+            300
+          );
+          const tipoProdutoIds = uniqueIds(
+            tiposRows.map((row) => row?.id),
+            300
+          );
+          const cityIds = uniqueIds(
+            [...produtosRows.map((row) => row?.cidade_id), ...cidadesRows.map((row) => row?.id)],
+            300
+          );
 
           // Lookup de vendas/recibos por produto, tipo e cidade — tudo em paralelo
           const recibosByProductBatches = chunkArray(productIds).map((batch) =>
-            client.from('vendas_recibos').select('venda_id').in('produto_resolvido_id', batch).limit(MAX_SEARCH_CANDIDATES)
+            client
+              .from('vendas_recibos')
+              .select('venda_id')
+              .in('produto_resolvido_id', batch)
+              .limit(MAX_SEARCH_CANDIDATES)
           );
           const recibosByTipoBatches = chunkArray(tipoProdutoIds).map((batch) =>
-            client.from('vendas_recibos').select('venda_id').in('produto_id', batch).limit(MAX_SEARCH_CANDIDATES)
+            client
+              .from('vendas_recibos')
+              .select('venda_id')
+              .in('produto_id', batch)
+              .limit(MAX_SEARCH_CANDIDATES)
           );
           const cityBatchLookups = chunkArray(cityIds).flatMap((batch) => [
-            client.from('vendas').select('id').in('destino_cidade_id', batch).limit(MAX_SEARCH_CANDIDATES),
-            client.from('vendas_recibos').select('venda_id').in('destino_cidade_id', batch).limit(MAX_SEARCH_CANDIDATES),
+            client
+              .from('vendas')
+              .select('id')
+              .in('destino_cidade_id', batch)
+              .limit(MAX_SEARCH_CANDIDATES),
+            client
+              .from('vendas_recibos')
+              .select('venda_id')
+              .in('destino_cidade_id', batch)
+              .limit(MAX_SEARCH_CANDIDATES)
           ]);
 
           const allResults = await Promise.all([
             ...recibosByProductBatches,
             ...recibosByTipoBatches,
-            ...cityBatchLookups,
+            ...cityBatchLookups
           ]);
 
           const vendaIdSet = new Set<string>();
@@ -566,7 +660,7 @@ async function resolveVendaSearchIds(
           }
           return Array.from(vendaIdSet);
         })()
-      : Promise.resolve([] as string[]),
+      : Promise.resolve([] as string[])
   ]);
 
   const candidateVendaIds = uniqueIds([...reciboVendaIds, ...destinoAndProdutoIds]);
@@ -588,7 +682,10 @@ async function resolveVendaSearchIds(
   return { applied: true, vendaIds };
 }
 
-async function hydrateDestinosFromVendaIds(client: ReturnType<typeof getAdminClient>, rows: VendaRow[]) {
+async function hydrateDestinosFromVendaIds(
+  client: ReturnType<typeof getAdminClient>,
+  rows: VendaRow[]
+) {
   if (!Array.isArray(rows) || rows.length === 0) return;
 
   const rowsWithoutDestination = rows.filter((row) => {
@@ -610,7 +707,10 @@ async function hydrateDestinosFromVendaIds(client: ReturnType<typeof getAdminCli
         .limit(Math.max(500, batch.length));
 
       if (vendaDestinosError) {
-        logServerError('[vendas/list] could not load venda destino ids for hydration', vendaDestinosError);
+        logServerError(
+          '[vendas/list] could not load venda destino ids for hydration',
+          vendaDestinosError
+        );
         return;
       }
       vendaDestinos.push(...((data || []) as VendaDestinoHydrationRow[]));
@@ -736,8 +836,12 @@ async function fetchVendaRowsWithFallback(
           .select(selectClause, { count: 'exact' })
           .order('data_venda', { ascending: false })
           .range(
-            (Math.max(1, Number(params.page || 1)) - 1) * Math.max(1, Number(params.pageSize || 20)),
-            (Math.max(1, Number(params.page || 1)) - 1) * Math.max(1, Number(params.pageSize || 20)) + Math.max(1, Number(params.pageSize || 20)) - 1
+            (Math.max(1, Number(params.page || 1)) - 1) *
+              Math.max(1, Number(params.pageSize || 20)),
+            (Math.max(1, Number(params.page || 1)) - 1) *
+              Math.max(1, Number(params.pageSize || 20)) +
+              Math.max(1, Number(params.pageSize || 20)) -
+              1
           )
       : client
           .from('vendas')
@@ -754,7 +858,11 @@ async function fetchVendaRowsWithFallback(
     if (companyIdsFilter.length > 0) query = query.in('company_id', companyIdsFilter);
     if (vendedorIdsFilter.length > 0) query = query.in('vendedor_id', vendedorIdsFilter);
     if (params.clienteId) query = query.eq('cliente_id', params.clienteId);
-    else if (!params.scopeIsAdmin && params.vendedorIds.length === 0 && params.accessibleClientIds.length > 0) {
+    else if (
+      !params.scopeIsAdmin &&
+      params.vendedorIds.length === 0 &&
+      params.accessibleClientIds.length > 0
+    ) {
       query = query.in('cliente_id', overrides.accessibleClientIds || params.accessibleClientIds);
     }
 
@@ -781,23 +889,33 @@ async function fetchVendaRowsWithFallback(
   };
 
   const runBaseQuery = async (selectClause: string) => {
-    const shouldBatchVendaFilter =
-      !params.useRange && params.vendaIds.length > QUERY_IN_BATCH_SIZE;
+    const shouldBatchVendaFilter = !params.useRange && params.vendaIds.length > QUERY_IN_BATCH_SIZE;
     const shouldBatchClientFilter =
       !shouldBatchVendaFilter &&
       !params.scopeIsAdmin &&
       !params.clienteId &&
       params.vendedorIds.length === 0 &&
       params.accessibleClientIds.length > QUERY_IN_BATCH_SIZE;
-    const shouldBatchCompanyFilter = !params.useRange && params.companyIds.length > QUERY_IN_BATCH_SIZE;
-    const shouldBatchVendedorFilter = !params.useRange && params.vendedorIds.length > QUERY_IN_BATCH_SIZE;
+    const shouldBatchCompanyFilter =
+      !params.useRange && params.companyIds.length > QUERY_IN_BATCH_SIZE;
+    const shouldBatchVendedorFilter =
+      !params.useRange && params.vendedorIds.length > QUERY_IN_BATCH_SIZE;
 
-    if (shouldBatchVendaFilter || shouldBatchClientFilter || shouldBatchCompanyFilter || shouldBatchVendedorFilter) {
+    if (
+      shouldBatchVendaFilter ||
+      shouldBatchClientFilter ||
+      shouldBatchCompanyFilter ||
+      shouldBatchVendedorFilter
+    ) {
       const rows: VendaRow[] = [];
       const vendaBatches = shouldBatchVendaFilter ? chunkArray(params.vendaIds) : [undefined];
-      const clientBatches = shouldBatchClientFilter ? chunkArray(params.accessibleClientIds) : [undefined];
+      const clientBatches = shouldBatchClientFilter
+        ? chunkArray(params.accessibleClientIds)
+        : [undefined];
       const companyBatches = shouldBatchCompanyFilter ? chunkArray(params.companyIds) : [undefined];
-      const vendedorBatches = shouldBatchVendedorFilter ? chunkArray(params.vendedorIds) : [undefined];
+      const vendedorBatches = shouldBatchVendedorFilter
+        ? chunkArray(params.vendedorIds)
+        : [undefined];
 
       for (const vendaBatch of vendaBatches) {
         for (const clientBatch of clientBatches) {
@@ -812,7 +930,7 @@ async function fetchVendaRowsWithFallback(
               if (result.error) {
                 return { data: null, error: result.error } as typeof result;
               }
-              rows.push(...(((result.data || []) as unknown) as VendaRow[]));
+              rows.push(...((result.data || []) as unknown as VendaRow[]));
             }
           }
         }
@@ -858,12 +976,17 @@ async function fetchVendaRowsWithFallback(
   const enrichedResult = await runBaseQuery(enrichedSelect);
   if (!enrichedResult.error) {
     return {
-      rows: Array.isArray(enrichedResult.data) ? (enrichedResult.data as unknown as VendaRow[]) : [],
+      rows: Array.isArray(enrichedResult.data)
+        ? (enrichedResult.data as unknown as VendaRow[])
+        : [],
       count: getResultCount(enrichedResult)
     };
   }
 
-  logServerError('[vendas/list] enriched select failed, falling back to minimal select', enrichedResult.error);
+  logServerError(
+    '[vendas/list] enriched select failed, falling back to minimal select',
+    enrichedResult.error
+  );
 
   const fallbackSelect = `
     id,
@@ -894,12 +1017,17 @@ async function fetchVendaRowsWithFallback(
   const fallbackResult = await runBaseQuery(fallbackSelect);
   if (!fallbackResult.error) {
     return {
-      rows: Array.isArray(fallbackResult.data) ? (fallbackResult.data as unknown as VendaRow[]) : [],
+      rows: Array.isArray(fallbackResult.data)
+        ? (fallbackResult.data as unknown as VendaRow[])
+        : [],
       count: getResultCount(fallbackResult)
     };
   }
 
-  logServerError('[vendas/list] FK fallback failed, trying legacy fallback select', fallbackResult.error);
+  logServerError(
+    '[vendas/list] FK fallback failed, trying legacy fallback select',
+    fallbackResult.error
+  );
 
   const legacyFallbackSelect = `
     id,
@@ -927,12 +1055,17 @@ async function fetchVendaRowsWithFallback(
 
   const legacyFallbackResult = await runBaseQuery(legacyFallbackSelect);
   if (legacyFallbackResult.error) {
-    logServerError('[vendas/list] legacy fallback failed, returning empty list', legacyFallbackResult.error);
+    logServerError(
+      '[vendas/list] legacy fallback failed, returning empty list',
+      legacyFallbackResult.error
+    );
     return { rows: [], count: 0 };
   }
 
   return {
-    rows: Array.isArray(legacyFallbackResult.data) ? (legacyFallbackResult.data as unknown as VendaRow[]) : [],
+    rows: Array.isArray(legacyFallbackResult.data)
+      ? (legacyFallbackResult.data as unknown as VendaRow[])
+      : [],
     count: getResultCount(legacyFallbackResult)
   };
 }
@@ -959,15 +1092,23 @@ export async function handleVendasListGet(event: RequestEvent) {
     const includeKpis = includeKpisParam === '1' || kpisParam === '1';
     const includeVendedores = String(searchParams.get('include_vendedores') || '').trim() === '1';
     const searchQuery = String(searchParams.get('q') || '').trim();
-    const campoBuscaRaw = String(searchParams.get('campo') || 'todos').trim().toLowerCase() || 'todos';
-    const campoBusca = (VALID_CAMPO_BUSCA.has(campoBuscaRaw as CampoBusca)
-      ? (campoBuscaRaw as CampoBusca)
-      : 'todos') as CampoBusca;
-    const statusQuery = String(searchParams.get('status') || '').trim().toLowerCase();
-    const tipoQuery = String(searchParams.get('tipo') || '').trim().toLowerCase();
+    const campoBuscaRaw =
+      String(searchParams.get('campo') || 'todos')
+        .trim()
+        .toLowerCase() || 'todos';
+    const campoBusca = (
+      VALID_CAMPO_BUSCA.has(campoBuscaRaw as CampoBusca) ? (campoBuscaRaw as CampoBusca) : 'todos'
+    ) as CampoBusca;
+    const statusQuery = String(searchParams.get('status') || '')
+      .trim()
+      .toLowerCase();
+    const tipoQuery = String(searchParams.get('tipo') || '')
+      .trim()
+      .toLowerCase();
     const clienteId = String(searchParams.get('cliente_id') || '').trim();
     const requestedCompanyId = searchParams.get('company_id') || searchParams.get('empresa_id');
-    const requestedVendedorRaw = searchParams.get('vendedor_ids') || searchParams.get('vendedor_id');
+    const requestedVendedorRaw =
+      searchParams.get('vendedor_ids') || searchParams.get('vendedor_id');
     const tipoNome = String(scope.tipoNome || '').toUpperCase();
     const isMasterByType = tipoNome.includes('MASTER');
     const isFinanceiroByType = tipoNome.includes('FINANCEIRO');
@@ -980,7 +1121,9 @@ export async function handleVendasListGet(event: RequestEvent) {
         const requested = String(requestedCompanyId || '').trim();
         const masterCompanySet = cleanStringSet(masterCompanies);
         companyIds = requested
-          ? (masterCompanySet.has(requested) ? [requested] : [])
+          ? masterCompanySet.has(requested)
+            ? [requested]
+            : []
           : masterCompanies;
       }
     }
@@ -989,8 +1132,10 @@ export async function handleVendasListGet(event: RequestEvent) {
     const hasRequestedVendedorFilter = String(requestedVendedorRaw || '').trim().length > 0;
     const requestedVendedorResolvedEmpty = hasRequestedVendedorFilter && vendedorIds.length === 0;
     const effectiveVendedorIds =
-      (isMasterByType || isFinanceiroByType || isGestorByType)
-        ? (hasRequestedVendedorFilter ? vendedorIds : [])
+      isMasterByType || isFinanceiroByType || isGestorByType
+        ? hasRequestedVendedorFilter
+          ? vendedorIds
+          : []
         : vendedorIds;
 
     const accessibleClientIds =
@@ -999,7 +1144,10 @@ export async function handleVendasListGet(event: RequestEvent) {
       !isFinanceiroByType &&
       !isGestorByType &&
       effectiveVendedorIds.length === 0
-        ? await resolveAccessibleClientIds(client, { companyIds, vendedorIds: effectiveVendedorIds })
+        ? await resolveAccessibleClientIds(client, {
+            companyIds,
+            vendedorIds: effectiveVendedorIds
+          })
         : [];
 
     const canPushStatusToDb = !statusQuery || PUSHABLE_STATUS_FILTERS.has(statusQuery);
@@ -1028,9 +1176,10 @@ export async function handleVendasListGet(event: RequestEvent) {
 
     const vendedoresPromise = includeVendedores
       ? (async () => {
-          const usersData = companyIds.length > 0
-            ? await fetchRankingVendedoresByCompanyIds(client, companyIds)
-            : [];
+          const usersData =
+            companyIds.length > 0
+              ? await fetchRankingVendedoresByCompanyIds(client, companyIds)
+              : [];
 
           return (usersData || [])
             .map((row) => ({
@@ -1045,55 +1194,58 @@ export async function handleVendasListGet(event: RequestEvent) {
     const dataResult = requestedVendedorResolvedEmpty
       ? { rows: [] as VendaRow[], count: 0 }
       : searchPrefilter.applied && searchVendaIds.length === 0
-      ? { rows: [] as VendaRow[], count: 0 }
-      : await getCachedReadModel<{ rows: VendaRow[]; count: number | null }>({
-          key: buildReadModelCacheKey('vendas-list:rows', {
-            openId,
-            inicio,
-            fim,
-            companyIds,
-            vendedorIds: effectiveVendedorIds,
-            clienteId,
-            scopeId: !scope.isAdmin && !isMasterByType && !isFinanceiroByType && !isGestorByType ? user.id : null,
-            statusQuery,
-            tipoQuery,
-            searchQuery,
-            campoBusca,
-            searchPrefilterApplied: searchPrefilter.applied,
-            searchCandidateCount: searchVendaIds.length,
-            all,
-            includeKpis,
-            useRange: canUseDbPagination,
-            page: canUseDbPagination ? page : null,
-            pageSize: canUseDbPagination ? pageSize : null,
-            accessibleClientCount: accessibleClientIds.length
-          }),
-          tags: [
-            READ_MODEL_TAGS.sales,
-            READ_MODEL_TAGS.clients,
-            READ_MODEL_TAGS.catalog,
-            READ_MODEL_TAGS.users,
-            ...scopeCacheTags({ companyIds, vendedorIds: effectiveVendedorIds, userId: user.id })
-          ],
-          ttlMs: 120_000,
-          staleTtlMs: 600_000,
-          loader: () =>
-            fetchVendaRowsWithFallback(client, {
+        ? { rows: [] as VendaRow[], count: 0 }
+        : await getCachedReadModel<{ rows: VendaRow[]; count: number | null }>({
+            key: buildReadModelCacheKey('vendas-list:rows', {
               openId,
               inicio,
               fim,
               companyIds,
               vendedorIds: effectiveVendedorIds,
               clienteId,
-              scopeIsAdmin: scope.isAdmin,
-              accessibleClientIds,
-              vendaIds: searchVendaIds,
+              scopeId:
+                !scope.isAdmin && !isMasterByType && !isFinanceiroByType && !isGestorByType
+                  ? user.id
+                  : null,
               statusQuery,
+              tipoQuery,
+              searchQuery,
+              campoBusca,
+              searchPrefilterApplied: searchPrefilter.applied,
+              searchCandidateCount: searchVendaIds.length,
+              all,
+              includeKpis,
               useRange: canUseDbPagination,
-              page,
-              pageSize
-            })
-        });
+              page: canUseDbPagination ? page : null,
+              pageSize: canUseDbPagination ? pageSize : null,
+              accessibleClientCount: accessibleClientIds.length
+            }),
+            tags: [
+              READ_MODEL_TAGS.sales,
+              READ_MODEL_TAGS.clients,
+              READ_MODEL_TAGS.catalog,
+              READ_MODEL_TAGS.users,
+              ...scopeCacheTags({ companyIds, vendedorIds: effectiveVendedorIds, userId: user.id })
+            ],
+            ttlMs: 120_000,
+            staleTtlMs: 600_000,
+            loader: () =>
+              fetchVendaRowsWithFallback(client, {
+                openId,
+                inicio,
+                fim,
+                companyIds,
+                vendedorIds: effectiveVendedorIds,
+                clienteId,
+                scopeIsAdmin: scope.isAdmin,
+                accessibleClientIds,
+                vendaIds: searchVendaIds,
+                statusQuery,
+                useRange: canUseDbPagination,
+                page,
+                pageSize
+              })
+          });
     const data = dataResult.rows;
 
     await hydrateDestinosFromVendaIds(client, data as VendaRow[]);
@@ -1105,9 +1257,10 @@ export async function handleVendasListGet(event: RequestEvent) {
       .filter((item) => matchesBusca(item, searchQuery, campoBusca));
 
     const total = canUseDbPagination ? Number(dataResult.count ?? items.length) : items.length;
-    const payloadItems = all || openId || canUseDbPagination
-      ? items
-      : items.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize);
+    const payloadItems =
+      all || openId || canUseDbPagination
+        ? items
+        : items.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize);
 
     const vendedores = await vendedoresPromise;
 

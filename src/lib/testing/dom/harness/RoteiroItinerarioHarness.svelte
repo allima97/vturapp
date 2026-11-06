@@ -13,4 +13,12 @@
   const e = expose;
   e(() => ({ dias, diasImportError, diasImportMsg, showDiasBusca, showDiasImport }));
 </script>
-<AbaItinerario bind:dias bind:diasImportError bind:diasImportMsg bind:showDiasBusca bind:showDiasImport {sugestoes} />
+
+<AbaItinerario
+  bind:dias
+  bind:diasImportError
+  bind:diasImportMsg
+  bind:showDiasBusca
+  bind:showDiasImport
+  {sugestoes}
+/>

@@ -19,12 +19,7 @@ import {
   listSystemModuleCatalog,
   MODULOS_ADMIN_PERMISSOES
 } from '$lib/admin/modules';
-import {
-  getAdminClient,
-  logServerError,
-  resolveUserScope,
-  toErrorResponse
-} from '$lib/server/v1';
+import { getAdminClient, logServerError, resolveUserScope, toErrorResponse } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateUserReadModels } from '$lib/server/readModelCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
@@ -42,7 +37,8 @@ function firstRelation<T>(value: T | T[] | null | undefined): T | null {
 export async function handleAdminPermissoesGet(event: RequestEvent) {
   try {
     const { session, user } = await event.locals.safeGetSession();
-    if (!session || !user) return new Response('Sessao invalida.', { status: 401, headers: NO_STORE_HEADERS });
+    if (!session || !user)
+      return new Response('Sessao invalida.', { status: 401, headers: NO_STORE_HEADERS });
 
     const client = getAdminClient();
     const scope = await resolveUserScope(client, user.id);
@@ -111,7 +107,10 @@ export async function handleAdminPermissoesGet(event: RequestEvent) {
 
 // Auditoria: lista completa de módulos desligados depois de salvar (formato do histórico).
 async function listDisabledModules(client: ReturnType<typeof getAdminClient>) {
-  const { data } = await client.from('system_module_settings').select('module_key').eq('enabled', false);
+  const { data } = await client
+    .from('system_module_settings')
+    .select('module_key')
+    .eq('enabled', false);
   return ((data || []) as Array<{ module_key: string | null }>)
     .map((row) => String(row.module_key || ''))
     .filter(Boolean);
@@ -125,7 +124,8 @@ export async function handleAdminPermissoesPost(event: RequestEvent) {
     if (!bodyResult.ok) return bodyResult.response;
 
     const { session, user } = await event.locals.safeGetSession();
-    if (!session || !user) return new Response('Sessao invalida.', { status: 401, headers: NO_STORE_HEADERS });
+    if (!session || !user)
+      return new Response('Sessao invalida.', { status: 401, headers: NO_STORE_HEADERS });
 
     const client = getAdminClient();
     const scope = await resolveUserScope(client, user.id);
@@ -136,16 +136,18 @@ export async function handleAdminPermissoesPost(event: RequestEvent) {
       bodyResult.data && typeof bodyResult.data === 'object'
         ? (bodyResult.data as Record<string, unknown>)
         : {};
-    const action = String(body.action || 'user').trim().toLowerCase();
+    const action = String(body.action || 'user')
+      .trim()
+      .toLowerCase();
 
     if (action === 'global') {
       if (!scope.isAdmin) {
-        return new Response('Somente ADMIN pode alterar modulos globais.', { status: 403, headers: NO_STORE_HEADERS });
+        return new Response('Somente ADMIN pode alterar modulos globais.', {
+          status: 403,
+          headers: NO_STORE_HEADERS
+        });
       }
-      await saveSystemModuleSettings(
-        client,
-        Array.isArray(body.settings) ? body.settings : []
-      );
+      await saveSystemModuleSettings(client, Array.isArray(body.settings) ? body.settings : []);
       registrarLog(event, {
         userId: user.id,
         modulo: 'Admin',
@@ -158,7 +160,10 @@ export async function handleAdminPermissoesPost(event: RequestEvent) {
 
     const userId = String(body.user_id || '').trim();
     if (!userId) {
-      return new Response('Usuario alvo nao informado.', { status: 400, headers: NO_STORE_HEADERS });
+      return new Response('Usuario alvo nao informado.', {
+        status: 400,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const managedUsers = await listManagedUsers(client, scope);

@@ -24,7 +24,6 @@ import { carregarTermosNaoComissionaveis } from '$lib/server/naoComissionavelTer
 
 const MAX_VENDA_MERGE_BODY_BYTES = 64 * 1024;
 
-
 type PagamentoParcelaRow = {
   valor?: number | string | null;
   vencimento?: string | null;
@@ -61,8 +60,6 @@ type SaleMergeRow = {
   data_final?: string | null;
   company_id?: string | null;
 };
-
-
 
 function normalizeMoneyKey(value: number | string | null | undefined) {
   const parsed = Number(value || 0);
@@ -109,7 +106,11 @@ function dedupePagamentos(pagamentos: PagamentoMergeRow[], preferVendaId?: strin
       continue;
     }
 
-    if (preferVendaId && pagamento?.venda_id === preferVendaId && current?.venda_id !== preferVendaId) {
+    if (
+      preferVendaId &&
+      pagamento?.venda_id === preferVendaId &&
+      current?.venda_id !== preferVendaId
+    ) {
       if (current?.id) duplicateIds.push(current.id);
       map.set(key, pagamento);
       continue;
@@ -139,8 +140,6 @@ function calcularTotalPagamentos(pagamentos: PagamentoMergeRow[]) {
   return pagamentos.reduce((acc, pagamento) => acc + calcularValorPagamento(pagamento), 0);
 }
 
-
-
 function parseBodyIds(value: unknown) {
   const ids: string[] = [];
   if (Array.isArray(value)) {
@@ -169,7 +168,12 @@ export async function handleVendasMergePost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster) {
-      ensureModuloAccess(scope, ['vendas_consulta', 'vendas'], 3, 'Sem permissao para editar vendas.');
+      ensureModuloAccess(
+        scope,
+        ['vendas_consulta', 'vendas'],
+        3,
+        'Sem permissao para editar vendas.'
+      );
     }
 
     const rawBody = textResult.text;
@@ -213,19 +217,26 @@ export async function handleVendasMergePost(event: RequestEvent) {
     for (const batch of chunkArray(saleIds)) {
       const { data, error: salesError } = await client
         .from('vendas')
-        .select('id, vendedor_id, desconto_comercial_aplicado, desconto_comercial_valor, data_embarque, data_final, company_id')
+        .select(
+          'id, vendedor_id, desconto_comercial_aplicado, desconto_comercial_valor, data_embarque, data_final, company_id'
+        )
         .in('id', batch);
       if (salesError) throw salesError;
       salesData.push(...((data || []) as SaleMergeRow[]));
     }
 
-    const sales = salesData.filter((item) => isSaleInScope(item, { scope, companyIds, vendedorIds }));
+    const sales = salesData.filter((item) =>
+      isSaleInScope(item, { scope, companyIds, vendedorIds })
+    );
     const foundIds = new Set<string>();
     for (const item of sales) {
       foundIds.add(String(item?.id || ''));
     }
     if (saleIds.some((id) => !foundIds.has(id))) {
-      return new Response('Vendas invalidas para mescla.', { status: 404, headers: NO_STORE_HEADERS });
+      return new Response('Vendas invalidas para mescla.', {
+        status: 404,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const receiptsData: ReciboMergeRow[] = [];
@@ -238,7 +249,9 @@ export async function handleVendasMergePost(event: RequestEvent) {
           .in('venda_id', batch),
         client
           .from('vendas_pagamentos')
-          .select('id, venda_id, forma_pagamento_id, forma_nome, valor_total, valor_bruto, desconto_valor, parcelas, parcelas_qtd, parcelas_valor, paga_comissao, operacao, plano')
+          .select(
+            'id, venda_id, forma_pagamento_id, forma_nome, valor_total, valor_bruto, desconto_valor, parcelas, parcelas_qtd, parcelas_valor, paga_comissao, operacao, plano'
+          )
           .in('venda_id', batch)
       ]);
       if (receiptsResult.error) throw receiptsResult.error;
@@ -290,14 +303,23 @@ export async function handleVendasMergePost(event: RequestEvent) {
           throw updateTripsError;
         }
 
-        const { error: deleteMergedSalesError } = await client.from('vendas').delete().in('id', batch);
+        const { error: deleteMergedSalesError } = await client
+          .from('vendas')
+          .delete()
+          .in('id', batch);
         if (deleteMergedSalesError) throw deleteMergedSalesError;
       }
     }
 
     const receipts = Array.isArray(receiptsData) ? receiptsData : [];
-    const totalBrutoRecibos = receipts.reduce((acc: number, item) => acc + Number(item?.valor_total || 0), 0);
-    const totalTaxasRecibos = receipts.reduce((acc: number, item) => acc + Number(item?.valor_taxas || 0), 0);
+    const totalBrutoRecibos = receipts.reduce(
+      (acc: number, item) => acc + Number(item?.valor_total || 0),
+      0
+    );
+    const totalTaxasRecibos = receipts.reduce(
+      (acc: number, item) => acc + Number(item?.valor_taxas || 0),
+      0
+    );
     const totalPago = calcularTotalPagamentos(deduped);
     const totalPagoFinal = totalPago > 0 ? totalPago : totalBrutoRecibos;
     const termosNaoComissionaveis = await carregarTermosNaoComissionaveis(client);
@@ -319,12 +341,15 @@ export async function handleVendasMergePost(event: RequestEvent) {
       receipts
         .map((item) => String(item?.data_inicio || '').trim())
         .filter(Boolean)
-        .sort()[0] || principalSale?.data_embarque || null;
+        .sort()[0] ||
+      principalSale?.data_embarque ||
+      null;
     const datasFim = receipts
       .map((item) => String(item?.data_fim || '').trim())
       .filter(Boolean)
       .sort();
-    const dataFinal = datasFim.length > 0 ? datasFim[datasFim.length - 1] : principalSale?.data_final || null;
+    const dataFinal =
+      datasFim.length > 0 ? datasFim[datasFim.length - 1] : principalSale?.data_final || null;
 
     const updateSaleQuery = client
       .from('vendas')
@@ -352,15 +377,18 @@ export async function handleVendasMergePost(event: RequestEvent) {
       detalhes: {
         venda_principal_id: vendaId,
         vendas_mescladas: mergeIds,
-        pagamentos_duplicados_removidos: duplicateIds.length,
-      },
+        pagamentos_duplicados_removidos: duplicateIds.length
+      }
     });
-    return json({
-      ok: true,
-      removed_pagamentos: duplicateIds.length,
-      total_bruto: totalBrutoRecibos,
-      total_taxas: totalTaxasRecibos
-    }, { headers: NO_STORE_HEADERS });
+    return json(
+      {
+        ok: true,
+        removed_pagamentos: duplicateIds.length,
+        total_bruto: totalBrutoRecibos,
+        total_taxas: totalTaxasRecibos
+      },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao mesclar vendas.');
   }

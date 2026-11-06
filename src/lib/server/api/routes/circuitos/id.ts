@@ -32,20 +32,30 @@ export async function handleCircuitosIdGet(event: RequestEvent) {
     }
 
     const id = String(event.params.id || '').trim();
-    if (!isUuid(id)) return json({ success: false, error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json(
+        { success: false, error: 'ID inválido.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
 
     const { data, error } = await client
       .from('circuitos')
-      .select(`
+      .select(
+        `
         id, nome, codigo, operador, resumo, ativo, created_at,
         circuito_dias(id, dia_numero, titulo, descricao),
         circuito_datas(id, data_inicio, cidade_inicio_id, dias_extra_antes, dias_extra_depois)
-      `)
+      `
+      )
       .eq('id', id)
       .maybeSingle();
 
     if (error) throw error;
-    if (!data) return json({ success: false, error: 'Circuito não encontrado' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!data)
+      return json(
+        { success: false, error: 'Circuito não encontrado' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
 
     return json({ success: true, item: data }, { headers: DYNAMIC_READ_HEADERS });
   } catch (err: unknown) {
@@ -69,7 +79,11 @@ export async function handleCircuitosIdPatch(event: RequestEvent) {
     }
 
     const id = String(event.params.id || '').trim();
-    if (!isUuid(id)) return json({ success: false, error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json(
+        { success: false, error: 'ID inválido.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
 
     const body = readCircuitoUpdateBody(bodyResult.data);
 
@@ -108,12 +122,13 @@ export async function handleCircuitosIdDelete(event: RequestEvent) {
     }
 
     const id = String(event.params.id || '').trim();
-    if (!isUuid(id)) return json({ success: false, error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json(
+        { success: false, error: 'ID inválido.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
 
-    const { error } = await client
-      .from('circuitos')
-      .delete()
-      .eq('id', id);
+    const { error } = await client.from('circuitos').delete().eq('id', id);
 
     if (error) throw error;
 

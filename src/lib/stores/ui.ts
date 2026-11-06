@@ -13,24 +13,24 @@ function createSidebarStore() {
     isOpen: false,
     isMobile: false
   });
-  
+
   return {
     subscribe,
-    
+
     toggle: () => {
-      update(state => ({ ...state, isOpen: !state.isOpen }));
+      update((state) => ({ ...state, isOpen: !state.isOpen }));
     },
-    
+
     open: () => {
-      update(state => ({ ...state, isOpen: true }));
+      update((state) => ({ ...state, isOpen: true }));
     },
-    
+
     close: () => {
-      update(state => ({ ...state, isOpen: false }));
+      update((state) => ({ ...state, isOpen: false }));
     },
-    
+
     setMobile: (isMobile: boolean) => {
-      update(state => ({ ...state, isMobile, isOpen: isMobile ? false : state.isOpen }));
+      update((state) => ({ ...state, isMobile, isOpen: isMobile ? false : state.isOpen }));
     }
   };
 }
@@ -46,14 +46,14 @@ function createThemeStore() {
   const { subscribe, set, update } = writable<ThemeState>({
     moduleColor: 'default'
   });
-  
+
   return {
     subscribe,
-    
+
     setModuleColor: (color: ModuleColor) => {
-      update(state => ({ ...state, moduleColor: color }));
+      update((state) => ({ ...state, moduleColor: color }));
     },
-    
+
     reset: () => {
       set({ moduleColor: 'default' });
     }
@@ -72,24 +72,24 @@ export interface Toast {
 
 function createToastStore() {
   const { subscribe, update } = writable<Toast[]>([]);
-  
+
   function add(message: string, type: Toast['type'] = 'info', duration = 5000) {
     const id = Math.random().toString(36).substring(2, 9);
     const toast: Toast = { id, message, type, duration };
-    
-    update(toasts => [...toasts, toast]);
-    
+
+    update((toasts) => [...toasts, toast]);
+
     if (duration > 0) {
       setTimeout(() => remove(id), duration);
     }
-    
+
     return id;
   }
-  
+
   function remove(id: string) {
-    update(toasts => toasts.filter(t => t.id !== id));
+    update((toasts) => toasts.filter((t) => t.id !== id));
   }
-  
+
   return {
     subscribe,
     add,
@@ -106,7 +106,7 @@ export const toast = createToastStore();
 // ========== Page Loading Store ==========
 function createPageLoadingStore() {
   const { subscribe, set } = writable(false);
-  
+
   return {
     subscribe,
     start: () => set(true),
@@ -117,15 +117,12 @@ function createPageLoadingStore() {
 export const pageLoading = createPageLoadingStore();
 
 // ========== Mobile Detection ==========
-export const isMobile = derived(
-  sidebar,
-  $sidebar => $sidebar.isMobile
-);
+export const isMobile = derived(sidebar, ($sidebar) => $sidebar.isMobile);
 
 // ========== Window Size ==========
 function createWindowSizeStore() {
   const { subscribe, set } = writable({ width: 0, height: 0 });
-  
+
   if (browser) {
     const handleResize = () => {
       set({
@@ -134,13 +131,13 @@ function createWindowSizeStore() {
       });
       sidebar.setMobile(window.innerWidth < 1024);
     };
-    
+
     // Initial size
     handleResize();
-    
+
     window.addEventListener('resize', handleResize);
   }
-  
+
   return {
     subscribe
   };

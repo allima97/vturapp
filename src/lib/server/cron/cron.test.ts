@@ -12,12 +12,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  handleScheduled,
-  CRON_FIVE_MIN,
-  CRON_NIGHTLY,
-  type ScheduledEnv,
-} from './index';
+import { handleScheduled, CRON_FIVE_MIN, CRON_NIGHTLY, type ScheduledEnv } from './index';
 
 // ── Mocks ─────────────────────────────────────────────────────────────────────
 
@@ -29,7 +24,7 @@ function makeEvent(cron: string): ScheduledEvent {
     noRetry: () => undefined,
     type: 'scheduled',
     waitUntil: () => undefined,
-    passThroughOnException: () => undefined,
+    passThroughOnException: () => undefined
   } as unknown as ScheduledEvent;
 }
 
@@ -43,22 +38,22 @@ function makeEnv(): ScheduledEnv {
       all: vi.fn(),
       exec: vi.fn(),
       batch: vi.fn(),
-      dump: vi.fn(),
+      dump: vi.fn()
     } as unknown as D1Database,
     KV_BINDING: {
       get: vi.fn(),
       put: vi.fn(),
       delete: vi.fn(),
       list: vi.fn(),
-      getWithMetadata: vi.fn(),
-    } as unknown as KVNamespace,
+      getWithMetadata: vi.fn()
+    } as unknown as KVNamespace
   };
 }
 
 function makeCtx(): ExecutionContext {
   return {
     waitUntil: vi.fn(),
-    passThroughOnException: vi.fn(),
+    passThroughOnException: vi.fn()
   } as unknown as ExecutionContext;
 }
 

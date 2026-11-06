@@ -10,13 +10,13 @@ compatível**, não rollback cego.
 
 ### Critérios para reverter
 
-| Situação | Ação recomendada |
-|---|---|
-| Bug cosmético ou de UX sem perda de dados | Correção rápida (hotfix) |
-| Bug que impede login de todos os usuários | Reverter aplicação + comunicar |
-| Bug que causa dados incorretos sem perda | Correção + script de reparo de dados |
-| Perda de dados confirmada | Time Travel D1 (ver F6-03 runbook) |
-| Indisponibilidade total (503 em todas as rotas) | Reverter aplicação imediatamente |
+| Situação                                        | Ação recomendada                     |
+| ----------------------------------------------- | ------------------------------------ |
+| Bug cosmético ou de UX sem perda de dados       | Correção rápida (hotfix)             |
+| Bug que impede login de todos os usuários       | Reverter aplicação + comunicar       |
+| Bug que causa dados incorretos sem perda        | Correção + script de reparo de dados |
+| Perda de dados confirmada                       | Time Travel D1 (ver F6-03 runbook)   |
+| Indisponibilidade total (503 em todas as rotas) | Reverter aplicação imediatamente     |
 
 **Regra geral:** reverter a aplicação (código) é sempre reversível.
 Reverter o banco (dados) é destrutivo e deve ser o último recurso.
@@ -98,7 +98,7 @@ wrangler d1 execute vturapp-db \
 wrangler d1 execute vturapp-db \
   --command "UPDATE tabela SET campo_errado = valor_correto WHERE condicao_do_bug;" \
   --env production
-  
+
 # Confirmar
 wrangler d1 execute vturapp-db \
   --command "SELECT COUNT(*) FROM tabela WHERE condicao_do_bug;" \
@@ -133,13 +133,13 @@ Próximo update: <horário>
 
 ## 6. Contatos e Acesso de Emergência
 
-| Recurso | Como acessar |
-|---|---|
-| Cloudflare Dashboard | dash.cloudflare.com → Workers & Pages |
-| D1 Time Travel | dash.cloudflare.com → Workers → D1 → <banco> → Time Travel |
-| Logs em tempo real | `wrangler tail --env production` |
-| Rollback imediato | `wrangler rollback <id> --env production` |
+| Recurso              | Como acessar                                               |
+| -------------------- | ---------------------------------------------------------- |
+| Cloudflare Dashboard | dash.cloudflare.com → Workers & Pages                      |
+| D1 Time Travel       | dash.cloudflare.com → Workers → D1 → <banco> → Time Travel |
+| Logs em tempo real   | `wrangler tail --env production`                           |
+| Rollback imediato    | `wrangler rollback <id> --env production`                  |
 
 ---
 
-*Documento gerado em F7-03 como parte do ensaio de lançamento.*
+_Documento gerado em F7-03 como parte do ensaio de lançamento._

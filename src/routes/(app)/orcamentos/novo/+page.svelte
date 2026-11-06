@@ -48,9 +48,7 @@
     currency: 'BRL',
     valid_until: '',
     notes: '',
-    itens: [
-      makeItem(0)
-    ] as ItemOrcamento[]
+    itens: [makeItem(0)] as ItemOrcamento[]
   };
 
   let saving = false;
@@ -201,9 +199,7 @@
       errors.valid_until = 'Data de validade é obrigatória';
     }
 
-    const hasItensValidos = formData.itens.some(
-      (i) => i.title?.trim() && i.total_amount > 0
-    );
+    const hasItensValidos = formData.itens.some((i) => i.title?.trim() && i.total_amount > 0);
     if (!hasItensValidos) {
       errors.itens = 'Adicione pelo menos um item válido com descrição e valor';
     }
@@ -246,9 +242,7 @@
       await apiPost('/api/v1/orcamentos/create', payload);
 
       toast.success(
-        enviar
-          ? 'Orçamento criado e enviado ao cliente!'
-          : 'Orçamento salvo com sucesso!'
+        enviar ? 'Orçamento criado e enviado ao cliente!' : 'Orçamento salvo com sucesso!'
       );
       goto('/orcamentos');
     } catch (err: unknown) {
@@ -283,14 +277,10 @@
   title="Novo Orçamento"
   subtitle="Crie um novo orçamento para o cliente"
   color="orcamentos"
-  breadcrumbs={[
-    { label: 'Orçamentos', href: '/orcamentos' },
-    { label: 'Novo Orçamento' }
-  ]}
+  breadcrumbs={[{ label: 'Orçamentos', href: '/orcamentos' }, { label: 'Novo Orçamento' }]}
 />
 
 <form on:submit|preventDefault={() => handleSubmit(false)} class="space-y-6">
-
   <!-- ── Dados do Cliente ─────────────────────────────────────────────────── -->
   <Card header="Dados do Cliente" color="orcamentos">
     <div class="space-y-4">
@@ -315,18 +305,20 @@
       </div>
 
       <div>
-        <label for="orcamento-novo-cliente" class="block text-sm font-medium text-slate-700 mb-1">
-          Vincular cliente cadastrado <span class="text-slate-500 font-normal">(opcional)</span>
+        <label for="orcamento-novo-cliente" class="mb-1 block text-sm font-medium text-slate-700">
+          Vincular cliente cadastrado <span class="font-normal text-slate-500">(opcional)</span>
         </label>
 
         {#if formData.client_id}
           <!-- Cliente selecionado -->
-          <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
-            <div class="w-10 h-10 rounded-full bg-orcamentos-100 flex items-center justify-center shrink-0">
+          <div class="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <div
+              class="bg-orcamentos-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+            >
               <User size={20} class="text-orcamentos-600" />
             </div>
-            <div class="flex-1 min-w-0">
-              <p class="font-medium text-slate-900 truncate">{formData.cliente_nome}</p>
+            <div class="min-w-0 flex-1">
+              <p class="truncate font-medium text-slate-900">{formData.cliente_nome}</p>
               <p class="text-sm text-slate-500">Cliente cadastrado selecionado</p>
             </div>
             <Button variant="ghost" size="sm" type="button" on:click={limparCliente}>
@@ -351,7 +343,9 @@
 
             <!-- Dropdown posicionado relative ao input wrapper -->
             {#if showClienteSearch && searchClienteQuery.length >= 2}
-              <div class="absolute z-50 top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-slate-200 max-h-60 overflow-auto">
+              <div
+                class="absolute top-full right-0 left-0 z-50 mt-1 max-h-60 overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg"
+              >
                 {#if loadingClientes}
                   <div class="px-4 py-3 text-sm text-slate-500">Buscando...</div>
                 {:else if clientesFiltrados.length > 0}
@@ -365,14 +359,21 @@
                     >
                       <p class="font-medium text-slate-900">{cliente.nome}</p>
                       <p class="text-sm text-slate-500">
-                        {cliente.email || 'Sem email'}{cliente.telefone ? ` • ${cliente.telefone}` : ''}
+                        {cliente.email || 'Sem email'}{cliente.telefone
+                          ? ` • ${cliente.telefone}`
+                          : ''}
                       </p>
                     </Button>
                   {/each}
                 {:else}
                   <div class="px-4 py-3 text-sm text-slate-500">
-                    Nenhum cliente encontrado. O orçamento pode ser salvo com os dados manuais acima.
-                    <a href="/clientes/novo" class="text-orcamentos-600 hover:underline ml-1" target="_self">
+                    Nenhum cliente encontrado. O orçamento pode ser salvo com os dados manuais
+                    acima.
+                    <a
+                      href="/clientes/novo"
+                      class="text-orcamentos-600 ml-1 hover:underline"
+                      target="_self"
+                    >
                       Cadastrar novo cliente
                     </a>
                   </div>
@@ -380,15 +381,15 @@
               </div>
             {/if}
           </div>
-          {/if}
-        </div>
+        {/if}
       </div>
+    </div>
   </Card>
 
   <!-- ── Dados do Orçamento ───────────────────────────────────────────────── -->
   <Card header="Dados do Orçamento" color="orcamentos">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div class="flex gap-2 items-start">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div class="flex items-start gap-2">
         <FieldInput
           label="Válido até"
           required
@@ -397,7 +398,7 @@
           error={errors.valid_until}
           class_name="flex-1"
         />
-        <div class="flex gap-1 mt-[1.65rem] shrink-0">
+        <div class="mt-[1.65rem] flex shrink-0 gap-1">
           {#each [7, 15, 30] as dias}
             <Button
               type="button"
@@ -428,9 +429,8 @@
   <Card header="Itens do Orçamento" color="orcamentos">
     <div class="space-y-3">
       {#each formData.itens as item, index}
-        <div class="flex gap-3 items-start p-4 bg-slate-50 rounded-lg border border-slate-100">
-          <div class="flex-1 grid grid-cols-1 md:grid-cols-12 gap-3">
-
+        <div class="flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-50 p-4">
+          <div class="grid flex-1 grid-cols-1 gap-3 md:grid-cols-12">
             <div class="md:col-span-4">
               <FieldInput
                 id={`orcamento-novo-item-titulo-${index}`}
@@ -489,12 +489,13 @@
             </div>
 
             <div class="md:col-span-1">
-              <p class="block text-xs font-medium text-slate-500 mb-1">Total</p>
-              <div class="px-2 py-2 bg-white rounded-lg text-sm font-semibold text-slate-800 text-right border border-slate-200">
+              <p class="mb-1 block text-xs font-medium text-slate-500">Total</p>
+              <div
+                class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-right text-sm font-semibold text-slate-800"
+              >
                 {formatCurrency(item.total_amount)}
               </div>
             </div>
-
           </div>
 
           {#if formData.itens.length > 1}
@@ -514,7 +515,7 @@
       {/each}
 
       {#if errors.itens}
-        <p class="text-sm text-red-600">{errors.itens}</p>
+        <p role="alert" class="text-sm text-red-600">{errors.itens}</p>
       {/if}
 
       <Button type="button" variant="secondary" on:click={addItem}>
@@ -524,11 +525,11 @@
     </div>
 
     <!-- Total -->
-    <div class="mt-6 pt-4 border-t border-slate-200">
+    <div class="mt-6 border-t border-slate-200 pt-4">
       <div class="flex justify-end">
         <div class="text-right">
           <p class="text-sm text-slate-500">Valor Total do Orçamento</p>
-          <p class="text-3xl font-bold text-orcamentos-600">{formatCurrency(valorTotal)}</p>
+          <p class="text-orcamentos-600 text-3xl font-bold">{formatCurrency(valorTotal)}</p>
         </div>
       </div>
     </div>
@@ -577,5 +578,4 @@
       Salvar e Enviar
     </Button>
   </div>
-
 </form>

@@ -39,13 +39,9 @@ export function rejectLargePayload(
   return null;
 }
 
-export type LimitedJsonResult =
-  | { ok: true; data: unknown }
-  | { ok: false; response: Response };
+export type LimitedJsonResult = { ok: true; data: unknown } | { ok: false; response: Response };
 
-export type LimitedTextResult =
-  | { ok: true; text: string }
-  | { ok: false; response: Response };
+export type LimitedTextResult = { ok: true; text: string } | { ok: false; response: Response };
 
 export type LimitedFormDataResult =
   | { ok: true; formData: FormData }

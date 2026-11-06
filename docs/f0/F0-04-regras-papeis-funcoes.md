@@ -2,7 +2,7 @@
 
 **Estado:** REABERTA — estruturas D1 ampliadas; guards e escopos ainda não portados
 **Responsável / data:** 2026-10-31
-**Dependência:** F0-03  
+**Dependência:** F0-03
 
 > Mapeamento das regras de negócio, papéis de usuário e funções server-side existentes. Para cada função: decisão de **MANTER**, **REDESENHAR** ou **EXCLUIR**.
 
@@ -13,19 +13,19 @@
 Definidos em `src/lib/server/v1.ts`:
 
 ```ts
-type Papel = "ADMIN" | "MASTER" | "FINANCEIRO" | "GESTOR" | "VENDEDOR" | "OUTRO"
+type Papel = 'ADMIN' | 'MASTER' | 'FINANCEIRO' | 'GESTOR' | 'VENDEDOR' | 'OUTRO';
 ```
 
 ### Hierarquia e escopo
 
-| Papel | Acesso | Empresa(s) | Notas |
-|---|---|---|---|
-| `ADMIN` | Global irrestrito | Todas | Plataforma Anthropic; ignora isolamento de empresa |
-| `MASTER` | Multi-empresa | `companyIds` via `master_empresas` | Gerencia N empresas; acesso sem filtro de empresa se lista vazia + `companyId` |
-| `FINANCEIRO` | Multi-empresa | `companyIds` via `financeiro_empresas` | Acesso financeiro; semelhante ao MASTER nos filtros |
-| `GESTOR` | Empresa única | `companyId` + equipe própria | Acesso à equipe que gerencia via `gestor_equipe` |
-| `VENDEDOR` | Empresa única | `companyId` | Filtrado pelo próprio `vendedor_id` por padrão |
-| `OUTRO` | Configurável | `companyId` | Sem privilégios; acesso via `modulo_acesso` |
+| Papel        | Acesso            | Empresa(s)                             | Notas                                                                          |
+| ------------ | ----------------- | -------------------------------------- | ------------------------------------------------------------------------------ |
+| `ADMIN`      | Global irrestrito | Todas                                  | Plataforma Anthropic; ignora isolamento de empresa                             |
+| `MASTER`     | Multi-empresa     | `companyIds` via `master_empresas`     | Gerencia N empresas; acesso sem filtro de empresa se lista vazia + `companyId` |
+| `FINANCEIRO` | Multi-empresa     | `companyIds` via `financeiro_empresas` | Acesso financeiro; semelhante ao MASTER nos filtros                            |
+| `GESTOR`     | Empresa única     | `companyId` + equipe própria           | Acesso à equipe que gerencia via `gestor_equipe`                               |
+| `VENDEDOR`   | Empresa única     | `companyId`                            | Filtrado pelo próprio `vendedor_id` por padrão                                 |
+| `OUTRO`      | Configurável      | `companyId`                            | Sem privilégios; acesso via `modulo_acesso`                                    |
 
 **`usoIndividual`** — campo em `users`. Quando `true` e papel é OUTRO: promove para `VENDEDOR` em `resolvePapel()`. NÃO afeta ADMIN/MASTER/FINANCEIRO/GESTOR.
 
@@ -38,7 +38,7 @@ type Papel = "ADMIN" | "MASTER" | "FINANCEIRO" | "GESTOR" | "VENDEDOR" | "OUTRO"
 ### Níveis de permissão
 
 ```ts
-type PermissaoNivel = "none" | "view" | "create" | "edit" | "delete" | "admin"
+type PermissaoNivel = 'none' | 'view' | 'create' | 'edit' | 'delete' | 'admin';
 ```
 
 Ordenados por `permLevel()`: none=0, view=1, create=2, edit=3, delete=4, admin=5.
@@ -47,19 +47,19 @@ Ordenados por `permLevel()`: none=0, view=1, create=2, edit=3, delete=4, admin=5
 
 Permissão em módulo pai concede acesso ao filho:
 
-| Filho | Pais |
-|---|---|
-| Agenda | Operacao |
-| Todo / Tarefas | Operacao |
-| Mural de Recados | Operacao |
-| Minhas Preferências | Operacao |
-| Documentos Viagens | Operacao |
-| Vouchers | Operacao, Viagens |
-| Controle de SAC | Operacao |
-| Campanhas | Operacao |
-| CRM | Parametros |
-| ParametrosAvisos / Avisos | Parametros |
-| Formas de Pagamento | Financeiro |
+| Filho                     | Pais              |
+| ------------------------- | ----------------- |
+| Agenda                    | Operacao          |
+| Todo / Tarefas            | Operacao          |
+| Mural de Recados          | Operacao          |
+| Minhas Preferências       | Operacao          |
+| Documentos Viagens        | Operacao          |
+| Vouchers                  | Operacao, Viagens |
+| Controle de SAC           | Operacao          |
+| Campanhas                 | Operacao          |
+| CRM                       | Parametros        |
+| ParametrosAvisos / Avisos | Parametros        |
+| Formas de Pagamento       | Financeiro        |
 
 ### Seções de permissão (para UI de gerenciamento)
 
@@ -71,16 +71,16 @@ Permissão em módulo pai concede acesso ao filho:
 
 ## 3. Guards / middlewares de autenticação e autorização
 
-| Função | Arquivo | Decisão | Observação |
-|---|---|---|---|
-| `requireAuthenticatedUser(event)` | `v1.ts` | **REDESENHAR** | Trocar `supabase.auth.getUser()` por Better Auth session check |
-| `resolveUserScope(client, userId)` | `v1.ts` | **REDESENHAR** | Trocar Supabase client por Drizzle queries; lógica de resolução mantida |
-| `resolveUserScopeUncached(...)` | `v1.ts` | **REDESENHAR** | Mesma lógica; trocar queries |
-| `fetchPermissions(client, userId)` | `v1.ts` | **REDESENHAR** | Query em `modulo_acesso` → Drizzle |
-| `fetchMasterEmpresas(client, userId)` | `v1.ts` | **REDESENHAR** | Query em `master_empresas` → Drizzle |
-| `fetchFinanceiroEmpresas(client, userId)` | `v1.ts` | **REDESENHAR** | Query em `financeiro_empresas` → Drizzle |
-| `fetchGestorEquipeIdsComGestor(...)` | `v1.ts` | **REDESENHAR** | RPC + queries → Drizzle |
-| `fetchVendedorIdsByCompanyIds(...)` | `v1.ts` | **REDESENHAR** | Query → Drizzle |
+| Função                                    | Arquivo | Decisão        | Observação                                                              |
+| ----------------------------------------- | ------- | -------------- | ----------------------------------------------------------------------- |
+| `requireAuthenticatedUser(event)`         | `v1.ts` | **REDESENHAR** | Trocar `supabase.auth.getUser()` por Better Auth session check          |
+| `resolveUserScope(client, userId)`        | `v1.ts` | **REDESENHAR** | Trocar Supabase client por Drizzle queries; lógica de resolução mantida |
+| `resolveUserScopeUncached(...)`           | `v1.ts` | **REDESENHAR** | Mesma lógica; trocar queries                                            |
+| `fetchPermissions(client, userId)`        | `v1.ts` | **REDESENHAR** | Query em `modulo_acesso` → Drizzle                                      |
+| `fetchMasterEmpresas(client, userId)`     | `v1.ts` | **REDESENHAR** | Query em `master_empresas` → Drizzle                                    |
+| `fetchFinanceiroEmpresas(client, userId)` | `v1.ts` | **REDESENHAR** | Query em `financeiro_empresas` → Drizzle                                |
+| `fetchGestorEquipeIdsComGestor(...)`      | `v1.ts` | **REDESENHAR** | RPC + queries → Drizzle                                                 |
+| `fetchVendedorIdsByCompanyIds(...)`       | `v1.ts` | **REDESENHAR** | Query → Drizzle                                                         |
 
 **Nota:** O caching de scope (`resolveUserScope` usa KV ou similar) precisa ser mantido; D1 não tem latência zero. Avaliar se Better Auth session já carrega o papel para evitar round-trip extra.
 
@@ -88,68 +88,68 @@ Permissão em módulo pai concede acesso ao filho:
 
 ## 4. Funções de escopo de empresa e vendedor
 
-| Função | Arquivo | Decisão |
-|---|---|---|
-| `resolveScopedCompanyIds(scope, requestedId)` | `v1.ts` | **MANTER** (lógica pura) |
-| `resolveScopedCompanyId(scope, requestedId)` | `v1.ts` | **MANTER** (lógica pura) |
-| `resolveScopedVendedorIds(client, scope, ...)` | `v1.ts` | **REDESENHAR** (RPC → Drizzle) |
-| `resolveAccessibleClientIds(client, scope, ...)` | `v1.ts` | **REDESENHAR** (RPC `accessible_client_ids` → Drizzle) |
-| `getAccessibleCompanyIds(scope)` | `admin.ts` | **MANTER** (lógica pura) |
-| `shouldApplySellerScope(scope)` | `salesScope.ts` | **MANTER** (lógica pura) |
-| `isSaleInScope(sale, params)` | `salesScope.ts` | **MANTER** (lógica pura) |
-| `fetchSaleForScope(params)` | `salesScope.ts` | **REDESENHAR** (Supabase → Drizzle) |
+| Função                                           | Arquivo         | Decisão                                                |
+| ------------------------------------------------ | --------------- | ------------------------------------------------------ |
+| `resolveScopedCompanyIds(scope, requestedId)`    | `v1.ts`         | **MANTER** (lógica pura)                               |
+| `resolveScopedCompanyId(scope, requestedId)`     | `v1.ts`         | **MANTER** (lógica pura)                               |
+| `resolveScopedVendedorIds(client, scope, ...)`   | `v1.ts`         | **REDESENHAR** (RPC → Drizzle)                         |
+| `resolveAccessibleClientIds(client, scope, ...)` | `v1.ts`         | **REDESENHAR** (RPC `accessible_client_ids` → Drizzle) |
+| `getAccessibleCompanyIds(scope)`                 | `admin.ts`      | **MANTER** (lógica pura)                               |
+| `shouldApplySellerScope(scope)`                  | `salesScope.ts` | **MANTER** (lógica pura)                               |
+| `isSaleInScope(sale, params)`                    | `salesScope.ts` | **MANTER** (lógica pura)                               |
+| `fetchSaleForScope(params)`                      | `salesScope.ts` | **REDESENHAR** (Supabase → Drizzle)                    |
 
 ---
 
 ## 5. Funções de gerenciamento de usuários e empresas
 
-| Função | Arquivo | Decisão |
-|---|---|---|
-| `listManagedUsers(client, scope)` | `admin.ts` | **REDESENHAR** |
-| `loadManagedUser(client, scope, userId)` | `admin.ts` | **REDESENHAR** |
-| `loadManagedUserTypes(client, scope)` | `admin.ts` | **REDESENHAR** |
-| `loadManagedCompanies(client, scope)` | `admin.ts` | **REDESENHAR** |
-| `loadFinanceiroCompanyIds(...)` | `admin.ts` | **REDESENHAR** |
-| `syncFinanceiroCompanyLinks(...)` | `admin.ts` | **REDESENHAR** |
-| `canManageUsers(scope)` | `admin.ts` | **MANTER** (lógica pura) |
-| `canManagePermissions(scope)` | `admin.ts` | **MANTER** (lógica pura) |
-| `canManageCompanies(scope)` | `admin.ts` | **MANTER** (lógica pura) |
-| `ensureCanManageUsers(scope)` | `admin.ts` | **MANTER** (lógica pura) |
-| `ensureCanManagePermissions(scope)` | `admin.ts` | **MANTER** (lógica pura) |
-| `ensureCanManageCompanies(scope)` | `admin.ts` | **MANTER** (lógica pura) |
-| `isUserInScope(scope, row)` | `admin.ts` | **MANTER** (lógica pura) |
-| `ensureTargetUserScope(scope, row)` | `admin.ts` | **MANTER** (lógica pura) |
-| `ensureAssignableCompany(scope, companyId)` | `admin.ts` | **MANTER** (lógica pura) |
-| `ensureAssignableUserType(scope, typeName)` | `admin.ts` | **MANTER** (lógica pura) |
-| `ensureAssignablePermissionSet(...)` | `admin.ts` | **MANTER** (lógica pura) |
-| `saveUserPermissions(...)` | `admin.ts` | **REDESENHAR** |
-| `saveDefaultPermissions(...)` | `admin.ts` | **REDESENHAR** |
-| `syncUserTypeDefaultPermissions(...)` | `admin.ts` | **REDESENHAR** |
-| `buildPermissionMatrix(...)` | `admin.ts` | **MANTER** (lógica pura) |
-| `loadUserPermissions(...)` | `admin.ts` | **REDESENHAR** |
-| `loadUserTypeDefaultPermissions(...)` | `admin.ts` | **REDESENHAR** |
-| `findAuthUserIdByEmail(...)` | `admin.ts` | **REDESENHAR** (Supabase Auth → Better Auth) |
-| `createOrReuseAuthUser(...)` | `admin.ts` | **REDESENHAR** (Supabase Auth → Better Auth) |
-| `loadSystemModuleSettings(...)` | `admin.ts` | **REDESENHAR** |
-| `saveSystemModuleSettings(...)` | `admin.ts` | **REDESENHAR** |
-| `isSystemAdminRole/isMasterRole/etc` | `admin.ts` | **MANTER** (lógica pura) |
+| Função                                      | Arquivo    | Decisão                                      |
+| ------------------------------------------- | ---------- | -------------------------------------------- |
+| `listManagedUsers(client, scope)`           | `admin.ts` | **REDESENHAR**                               |
+| `loadManagedUser(client, scope, userId)`    | `admin.ts` | **REDESENHAR**                               |
+| `loadManagedUserTypes(client, scope)`       | `admin.ts` | **REDESENHAR**                               |
+| `loadManagedCompanies(client, scope)`       | `admin.ts` | **REDESENHAR**                               |
+| `loadFinanceiroCompanyIds(...)`             | `admin.ts` | **REDESENHAR**                               |
+| `syncFinanceiroCompanyLinks(...)`           | `admin.ts` | **REDESENHAR**                               |
+| `canManageUsers(scope)`                     | `admin.ts` | **MANTER** (lógica pura)                     |
+| `canManagePermissions(scope)`               | `admin.ts` | **MANTER** (lógica pura)                     |
+| `canManageCompanies(scope)`                 | `admin.ts` | **MANTER** (lógica pura)                     |
+| `ensureCanManageUsers(scope)`               | `admin.ts` | **MANTER** (lógica pura)                     |
+| `ensureCanManagePermissions(scope)`         | `admin.ts` | **MANTER** (lógica pura)                     |
+| `ensureCanManageCompanies(scope)`           | `admin.ts` | **MANTER** (lógica pura)                     |
+| `isUserInScope(scope, row)`                 | `admin.ts` | **MANTER** (lógica pura)                     |
+| `ensureTargetUserScope(scope, row)`         | `admin.ts` | **MANTER** (lógica pura)                     |
+| `ensureAssignableCompany(scope, companyId)` | `admin.ts` | **MANTER** (lógica pura)                     |
+| `ensureAssignableUserType(scope, typeName)` | `admin.ts` | **MANTER** (lógica pura)                     |
+| `ensureAssignablePermissionSet(...)`        | `admin.ts` | **MANTER** (lógica pura)                     |
+| `saveUserPermissions(...)`                  | `admin.ts` | **REDESENHAR**                               |
+| `saveDefaultPermissions(...)`               | `admin.ts` | **REDESENHAR**                               |
+| `syncUserTypeDefaultPermissions(...)`       | `admin.ts` | **REDESENHAR**                               |
+| `buildPermissionMatrix(...)`                | `admin.ts` | **MANTER** (lógica pura)                     |
+| `loadUserPermissions(...)`                  | `admin.ts` | **REDESENHAR**                               |
+| `loadUserTypeDefaultPermissions(...)`       | `admin.ts` | **REDESENHAR**                               |
+| `findAuthUserIdByEmail(...)`                | `admin.ts` | **REDESENHAR** (Supabase Auth → Better Auth) |
+| `createOrReuseAuthUser(...)`                | `admin.ts` | **REDESENHAR** (Supabase Auth → Better Auth) |
+| `loadSystemModuleSettings(...)`             | `admin.ts` | **REDESENHAR**                               |
+| `saveSystemModuleSettings(...)`             | `admin.ts` | **REDESENHAR**                               |
+| `isSystemAdminRole/isMasterRole/etc`        | `admin.ts` | **MANTER** (lógica pura)                     |
 
 ---
 
 ## 6. Funções de vendas e recibos
 
-| Função | Arquivo | Decisão |
-|---|---|---|
-| `buildVendaPayload(...)` | `vendasSave.ts` | **REDESENHAR** (tipos monetários → centavos) |
-| `calcularStatusPeriodo(...)` | `vendasSave.ts` | **MANTER** (lógica pura) |
-| `ensureAssignableActiveSeller(...)` | `vendasSave.ts` | **REDESENHAR** |
-| `ensureReciboReservaUnicos(...)` | `vendasSave.ts` | **REDESENHAR** |
-| `resolveVendaDestinoProduto(...)` | `vendasSave.ts` | **REDESENHAR** |
-| `markRankingReadModelDirty(...)` | `vendasSave.ts` | **REDESENHAR** (RPC → D1 upsert) |
-| `syncVendaChildren(...)` | `vendasSave.ts` | **REDESENHAR** (RPC → operações Drizzle) |
-| `closeQuoteIfNeeded(...)` | `vendasSave.ts` | **REDESENHAR** |
-| `normalizeReceiptDisplay/Key(...)` | `vendasSave.ts` | **MANTER** (strings) |
-| `toNumber/toNullableNumber/etc` | `vendasSave.ts` | **MANTER** (utilitários) |
+| Função                              | Arquivo         | Decisão                                      |
+| ----------------------------------- | --------------- | -------------------------------------------- |
+| `buildVendaPayload(...)`            | `vendasSave.ts` | **REDESENHAR** (tipos monetários → centavos) |
+| `calcularStatusPeriodo(...)`        | `vendasSave.ts` | **MANTER** (lógica pura)                     |
+| `ensureAssignableActiveSeller(...)` | `vendasSave.ts` | **REDESENHAR**                               |
+| `ensureReciboReservaUnicos(...)`    | `vendasSave.ts` | **REDESENHAR**                               |
+| `resolveVendaDestinoProduto(...)`   | `vendasSave.ts` | **REDESENHAR**                               |
+| `markRankingReadModelDirty(...)`    | `vendasSave.ts` | **REDESENHAR** (RPC → D1 upsert)             |
+| `syncVendaChildren(...)`            | `vendasSave.ts` | **REDESENHAR** (RPC → operações Drizzle)     |
+| `closeQuoteIfNeeded(...)`           | `vendasSave.ts` | **REDESENHAR**                               |
+| `normalizeReceiptDisplay/Key(...)`  | `vendasSave.ts` | **MANTER** (strings)                         |
+| `toNumber/toNullableNumber/etc`     | `vendasSave.ts` | **MANTER** (utilitários)                     |
 
 ---
 
@@ -157,58 +157,58 @@ Permissão em módulo pai concede acesso ao filho:
 
 ### `src/lib/server/comissoes.ts`
 
-| Função | Decisão |
-|---|---|
-| `fetchCommissionContext(...)` | **REDESENHAR** |
-| `calcularComissaoRows(...)` | **REDESENHAR** (valores monetários: numeric → centavos) |
-| `resolveReceiptCommissions(...)` | **REDESENHAR** |
-| `resolveVendaCommissions(...)` | **REDESENHAR** |
-| `resolveGroupedVendaCommissions(...)` | **REDESENHAR** |
-| `resolveGroupedReceiptCommissions(...)` | **REDESENHAR** |
-| `resolveVendaCommission(...)` | **REDESENHAR** |
+| Função                                  | Decisão                                                 |
+| --------------------------------------- | ------------------------------------------------------- |
+| `fetchCommissionContext(...)`           | **REDESENHAR**                                          |
+| `calcularComissaoRows(...)`             | **REDESENHAR** (valores monetários: numeric → centavos) |
+| `resolveReceiptCommissions(...)`        | **REDESENHAR**                                          |
+| `resolveVendaCommissions(...)`          | **REDESENHAR**                                          |
+| `resolveGroupedVendaCommissions(...)`   | **REDESENHAR**                                          |
+| `resolveGroupedReceiptCommissions(...)` | **REDESENHAR**                                          |
+| `resolveVendaCommission(...)`           | **REDESENHAR**                                          |
 
 ### `src/lib/utils/comissao.ts`
 
 Contém lógica pura de cálculo de regras de comissão (escalonamento, conciliação, etc):
 
-| Função | Decisão | Notas |
-|---|---|---|
-| `calcularPctEscalonavel(...)` | **MANTER** | Lógica pura |
-| `calcularPctPorRegra(...)` | **MANTER** | Lógica pura |
-| `calcularValorComissao(...)` | **REDESENHAR** | Adaptar para centavos |
-| `calcularValorComissionavel(...)` | **REDESENHAR** | Adaptar para centavos |
-| `determinarPercentualComissao(...)` | **MANTER** | Lógica pura |
-| `buildConciliacaoRule(...)` | **EXCLUIR** | Parte do X02 (conciliação) |
-| `buildLegacyConciliacaoRule(...)` | **EXCLUIR** | Parte do X02 |
-| `sanitizeConciliacaoBandRules(...)` | **EXCLUIR** | Parte do X02 |
-| `resolveConciliacaoBandRule(...)` | **EXCLUIR** | Parte do X02 |
-| `resolveConciliacaoCommissionSelection(...)` | **EXCLUIR** | Parte do X02 |
-| `hasConciliacaoBandRules(...)` | **EXCLUIR** | Parte do X02 |
-| `calcularPctConciliacao(...)` | **EXCLUIR** | Parte do X02 |
-| `calcularResumoComissoes(...)` | **MANTER** | Lógica pura |
-| `agruparComissoesPorVendedor(...)` | **MANTER** | Lógica pura |
-| `formatarMoeda(valor)` | **REDESENHAR** | Centavos → formatação |
-| `isRegraValida(...)` | **MANTER** | Lógica pura |
+| Função                                       | Decisão        | Notas                      |
+| -------------------------------------------- | -------------- | -------------------------- |
+| `calcularPctEscalonavel(...)`                | **MANTER**     | Lógica pura                |
+| `calcularPctPorRegra(...)`                   | **MANTER**     | Lógica pura                |
+| `calcularValorComissao(...)`                 | **REDESENHAR** | Adaptar para centavos      |
+| `calcularValorComissionavel(...)`            | **REDESENHAR** | Adaptar para centavos      |
+| `determinarPercentualComissao(...)`          | **MANTER**     | Lógica pura                |
+| `buildConciliacaoRule(...)`                  | **EXCLUIR**    | Parte do X02 (conciliação) |
+| `buildLegacyConciliacaoRule(...)`            | **EXCLUIR**    | Parte do X02               |
+| `sanitizeConciliacaoBandRules(...)`          | **EXCLUIR**    | Parte do X02               |
+| `resolveConciliacaoBandRule(...)`            | **EXCLUIR**    | Parte do X02               |
+| `resolveConciliacaoCommissionSelection(...)` | **EXCLUIR**    | Parte do X02               |
+| `hasConciliacaoBandRules(...)`               | **EXCLUIR**    | Parte do X02               |
+| `calcularPctConciliacao(...)`                | **EXCLUIR**    | Parte do X02               |
+| `calcularResumoComissoes(...)`               | **MANTER**     | Lógica pura                |
+| `agruparComissoesPorVendedor(...)`           | **MANTER**     | Lógica pura                |
+| `formatarMoeda(valor)`                       | **REDESENHAR** | Centavos → formatação      |
+| `isRegraValida(...)`                         | **MANTER**     | Lógica pura                |
 
 ### `src/lib/server/comissoes-registro.ts`
 
-| Função | Decisão |
-|---|---|
-| `fetchPersistedComissoes(...)` | **REDESENHAR** |
-| `persistPaidComissoes(...)` | **REDESENHAR** |
-| `persistPaidReceiptComissoes(...)` | **REDESENHAR** |
-| `applyPersistedComissao(...)` | **MANTER** (lógica pura) |
-| `buildPersistedComissaoKey(...)` | **MANTER** (string util) |
+| Função                             | Decisão                  |
+| ---------------------------------- | ------------------------ |
+| `fetchPersistedComissoes(...)`     | **REDESENHAR**           |
+| `persistPaidComissoes(...)`        | **REDESENHAR**           |
+| `persistPaidReceiptComissoes(...)` | **REDESENHAR**           |
+| `applyPersistedComissao(...)`      | **MANTER** (lógica pura) |
+| `buildPersistedComissaoKey(...)`   | **MANTER** (string util) |
 
 ---
 
 ## 8. Rate limit persistente
 
-| Função / tabela | Arquivo | Decisão |
-|---|---|---|
-| `security_rate_limits` (tabela) | Migration | **MANTER** → D1 |
-| `check_security_rate_limit` (RPC) | Supabase | **REDESENHAR** → lógica em aplicação com Drizzle |
-| `src/lib/server/persistentRateLimit.ts` | Server | **REDESENHAR** (Supabase RPC → Drizzle + lógica de limpeza) |
+| Função / tabela                         | Arquivo   | Decisão                                                     |
+| --------------------------------------- | --------- | ----------------------------------------------------------- |
+| `security_rate_limits` (tabela)         | Migration | **MANTER** → D1                                             |
+| `check_security_rate_limit` (RPC)       | Supabase  | **REDESENHAR** → lógica em aplicação com Drizzle            |
+| `src/lib/server/persistentRateLimit.ts` | Server    | **REDESENHAR** (Supabase RPC → Drizzle + lógica de limpeza) |
 
 ---
 
@@ -228,14 +228,14 @@ Tudo abaixo é **EXCLUÍDO** na reescrita. Não criar equivalentes D1.
 
 ## 10. Convites e autenticação
 
-| Função | Arquivo | Decisão |
-|---|---|---|
-| Fluxo de convite (`/api/v1/convites/send`, `accept`) | Routes | **REDESENHAR** (Better Auth + D1) |
-| `createOrReuseAuthUser(...)` | `admin.ts` | **REDESENHAR** (Supabase Auth → Better Auth) |
-| `findAuthUserIdByEmail(...)` | `admin.ts` | **REDESENHAR** (Supabase Auth → Better Auth) |
-| Passkeys (`/auth/passkeys/*`) | Routes | **REDESENHAR** (Supabase Passkeys → Better Auth passkey plugin) |
-| MFA/TOTP | Telas Svelte | **REDESENHAR** (Better Auth TOTP/2FA plugin) |
-| Turnstile verify | Route | **MANTER** (verificação de token Cloudflare — lógica independente) |
+| Função                                               | Arquivo      | Decisão                                                            |
+| ---------------------------------------------------- | ------------ | ------------------------------------------------------------------ |
+| Fluxo de convite (`/api/v1/convites/send`, `accept`) | Routes       | **REDESENHAR** (Better Auth + D1)                                  |
+| `createOrReuseAuthUser(...)`                         | `admin.ts`   | **REDESENHAR** (Supabase Auth → Better Auth)                       |
+| `findAuthUserIdByEmail(...)`                         | `admin.ts`   | **REDESENHAR** (Supabase Auth → Better Auth)                       |
+| Passkeys (`/auth/passkeys/*`)                        | Routes       | **REDESENHAR** (Supabase Passkeys → Better Auth passkey plugin)    |
+| MFA/TOTP                                             | Telas Svelte | **REDESENHAR** (Better Auth TOTP/2FA plugin)                       |
+| Turnstile verify                                     | Route        | **MANTER** (verificação de token Cloudflare — lógica independente) |
 
 ---
 

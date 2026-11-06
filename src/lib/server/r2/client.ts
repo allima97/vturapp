@@ -11,7 +11,7 @@
 /** Constrói a chave R2 com isolamento por empresa */
 export function r2Key(empresaId: number, context: string, filename: string): string {
   // Sanitiza filename para evitar traversal
-  const safe = filename.replace(/[^a-zA-Z0-9._\-]/g, '_').slice(0, 255);
+  const safe = filename.replace(/[^a-zA-Z0-9._-]/g, '_').slice(0, 255);
   return `empresa/${empresaId}/${context}/${safe}`;
 }
 
@@ -25,9 +25,7 @@ export function assertKeyBelongsToEmpresa(key: string, empresaId: number): void 
 
 /** Prefixo de listagem isolado por empresa */
 export function r2Prefix(empresaId: number, context?: string): string {
-  return context
-    ? `empresa/${empresaId}/${context}/`
-    : `empresa/${empresaId}/`;
+  return context ? `empresa/${empresaId}/${context}/` : `empresa/${empresaId}/`;
 }
 
 /** Tipos de resultado de operações R2 */
@@ -70,14 +68,14 @@ export async function r2Upload(
       empresaId: String(empresaId),
       context,
       originalName: filename,
-      uploadedAt: new Date().toISOString(),
-    },
+      uploadedAt: new Date().toISOString()
+    }
   });
   return {
     key,
     etag: object.etag,
     size: object.size,
-    contentType,
+    contentType
   };
 }
 
@@ -97,11 +95,7 @@ export async function r2Download(
 /**
  * Deleção de arquivo R2 com validação de isolamento.
  */
-export async function r2Delete(
-  r2: R2Bucket,
-  key: string,
-  empresaId: number
-): Promise<void> {
+export async function r2Delete(r2: R2Bucket, key: string, empresaId: number): Promise<void> {
   assertKeyBelongsToEmpresa(key, empresaId);
   await r2.delete(key);
 }
@@ -120,17 +114,17 @@ export async function r2List(
   const result = await r2.list({
     prefix,
     cursor: options?.cursor,
-    limit: options?.limit ?? 100,
+    limit: options?.limit ?? 100
   });
   return {
     items: result.objects.map((obj) => ({
       key: obj.key,
       size: obj.size,
       uploaded: obj.uploaded,
-      etag: obj.etag,
+      etag: obj.etag
     })),
     truncated: result.truncated,
-    cursor: result.truncated ? result.cursor : undefined,
+    cursor: result.truncated ? result.cursor : undefined
   };
 }
 

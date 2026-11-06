@@ -40,7 +40,7 @@ import {
   listarParcelas,
   type VendaDetalhe,
   type VendaListItem,
-  type ParcelaItem,
+  type ParcelaItem
 } from '$lib/server/vendas/service';
 import type { Produto, FormaPagamento } from '$lib/server/db/schema';
 import { gerarComprovanteHtml } from '$lib/server/vendas/pdf';
@@ -60,7 +60,7 @@ async function contexto(c: Context<ApiEnv>) {
   const baseURL =
     PUBLIC_ENVIRONMENT === 'production'
       ? 'https://vturapp.com.br'
-      : PUBLIC_APP_URL ?? 'http://localhost:5173';
+      : (PUBLIC_APP_URL ?? 'http://localhost:5173');
   const ctx = await resolveAuthContext(c.req.raw.headers, DB, BETTER_AUTH_SECRET, baseURL);
   if (!ctx) {
     return { res: c.json({ error: 'Não autenticado.' }, 401) };
@@ -71,12 +71,17 @@ async function contexto(c: Context<ApiEnv>) {
 function respostaErro(c: Context<ApiEnv>, err: unknown) {
   if (err instanceof VendaError) {
     const status =
-      err.code === 'NAO_ENCONTRADA' ? 404
-      : err.code === 'IDEMPOTENCIA' ? 409
-      : err.code === 'CONFLITO_VERSAO' ? 409
-      : err.code === 'CANCELADA' ? 409
-      : err.code === 'VALIDACAO' ? 400
-      : 500;
+      err.code === 'NAO_ENCONTRADA'
+        ? 404
+        : err.code === 'IDEMPOTENCIA'
+          ? 409
+          : err.code === 'CONFLITO_VERSAO'
+            ? 409
+            : err.code === 'CANCELADA'
+              ? 409
+              : err.code === 'VALIDACAO'
+                ? 400
+                : 500;
     return c.json({ error: err.message, code: err.code, errors: err.errors }, status);
   }
   throw err;
@@ -108,7 +113,7 @@ vendasV2Routes.get('/resumo', async (c) => {
     dataVendaAte,
     vendedorId,
     clienteId: clienteId ?? undefined,
-    incluirCanceladas,
+    incluirCanceladas
   });
 
   return c.json({ data: resumo });
@@ -126,7 +131,8 @@ vendasV2Routes.get('/parcelas', async (c) => {
   const cursorParam = c.req.query('cursor');
   const cursor = cursorParam ? parseId(cursorParam) : undefined;
   const limiteParam = c.req.query('limite');
-  const limite = limiteParam && Number.isInteger(Number(limiteParam)) ? Number(limiteParam) : undefined;
+  const limite =
+    limiteParam && Number.isInteger(Number(limiteParam)) ? Number(limiteParam) : undefined;
   const vencimentoDe = c.req.query('vencimento_de') || undefined;
   const vencimentoAte = c.req.query('vencimento_ate') || undefined;
   const vendedorId = c.req.query('vendedor_id') || undefined;
@@ -141,13 +147,13 @@ vendasV2Routes.get('/parcelas', async (c) => {
     vencimentoAte,
     vendedorId,
     clienteId: clienteId ?? undefined,
-    somenteAtivas,
+    somenteAtivas
   });
 
   return c.json({
     itens: parcelas.map(parcelaParaJson),
     tem_mais: temMais,
-    proximo_cursor: temMais && parcelas.length > 0 ? parcelas[parcelas.length - 1].id : null,
+    proximo_cursor: temMais && parcelas.length > 0 ? parcelas[parcelas.length - 1].id : null
   });
 });
 
@@ -168,7 +174,7 @@ vendasV2Routes.get('/produtos', async (c) => {
   const itens = await listarProdutos(r.db, {
     busca,
     tipo,
-    limite: limite && Number.isInteger(limite) ? limite : undefined,
+    limite: limite && Number.isInteger(limite) ? limite : undefined
   });
   return c.json({ itens: itens.map(produtoParaJson) });
 });
@@ -209,12 +215,12 @@ vendasV2Routes.get('/', async (c) => {
     vendedorId,
     canceladas: canceladas === '1' ? true : canceladas === '0' ? false : undefined,
     cursor: cursor ?? undefined,
-    limite: limite && Number.isInteger(limite) ? limite : undefined,
+    limite: limite && Number.isInteger(limite) ? limite : undefined
   });
 
   return c.json({
     itens: resultado.itens.map(listItemParaJson),
-    proximo_cursor: resultado.proximo_cursor,
+    proximo_cursor: resultado.proximo_cursor
   });
 });
 
@@ -292,7 +298,14 @@ vendasV2Routes.patch('/:id', async (c) => {
   }
 
   try {
-    const venda = await editarVenda(r.db, r.ctx.empresaId, id, validacao.versao, validacao.dados, c.env.DB);
+    const venda = await editarVenda(
+      r.db,
+      r.ctx.empresaId,
+      id,
+      validacao.versao,
+      validacao.dados,
+      c.env.DB
+    );
     return c.json({ data: detalheParaJson(venda) });
   } catch (err) {
     return respostaErro(c, err);
@@ -316,8 +329,8 @@ vendasV2Routes.get('/:id/pdf', async (c) => {
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
         'Cache-Control': 'private, no-store',
-        'Content-Disposition': `inline; filename="comprovante-venda-${id}.html"`,
-      },
+        'Content-Disposition': `inline; filename="comprovante-venda-${id}.html"`
+      }
     });
   } catch (err) {
     return respostaErro(c, err);
@@ -373,7 +386,7 @@ function listItemParaJson(r: VendaListItem) {
     status: r.status,
     valor_total_centavos: r.valor_total_centavos,
     valor_pago_centavos: r.valor_pago_centavos,
-    criado_em: r.criado_em,
+    criado_em: r.criado_em
   };
 }
 
@@ -419,7 +432,7 @@ function detalheParaJson(v: VendaDetalhe) {
       valor_taxas_centavos: it.valorTaxasCentavos,
       valor_total_centavos: it.valorTotalCentavos,
       paga_comissao: it.pagaComissao,
-      notas: it.notas,
+      notas: it.notas
     })),
     pagamentos: v.pagamentos.map((pag) => ({
       id: pag.id,
@@ -437,9 +450,9 @@ function detalheParaJson(v: VendaDetalhe) {
         id: par.id,
         numero: par.numero,
         valor_centavos: par.valorCentavos,
-        vencimento: par.vencimento,
-      })),
-    })),
+        vencimento: par.vencimento
+      }))
+    }))
   };
 }
 
@@ -456,7 +469,7 @@ function produtoParaJson(p: Produto) {
     permite_desconto: p.permiteDesconto,
     desconto_padrao_pct: p.descontoPadraoPct,
     fornecedor: p.fornecedor,
-    ativo: p.ativo,
+    ativo: p.ativo
   };
 }
 
@@ -465,7 +478,7 @@ function formaParaJson(f: FormaPagamento) {
     id: f.id,
     nome: f.nome,
     tipo: f.tipo,
-    ativo: f.ativo,
+    ativo: f.ativo
   };
 }
 
@@ -481,7 +494,7 @@ function parcelaParaJson(p: ParcelaItem) {
     forma_nome: p.formaNome,
     cliente_id: p.clienteId,
     cancelada: p.cancelada,
-    data_venda: p.dataVenda,
+    data_venda: p.dataVenda
   };
 }
 
@@ -497,16 +510,16 @@ vendasV2Routes.post('/:id/estornar', async (c) => {
   const id = parseId(c.req.param('id'));
   if (!id) return c.json({ error: 'ID inválido.' }, 400);
 
-  let body: { forma_nome?: unknown; valor_centavos?: unknown; motivo?: unknown; versao?: unknown } = {};
+  let body: { forma_nome?: unknown; valor_centavos?: unknown; motivo?: unknown; versao?: unknown } =
+    {};
   try {
     body = await c.req.json();
   } catch {
     return c.json({ error: 'JSON inválido.' }, 400);
   }
 
-  const formaNome = typeof body.forma_nome === 'string' && body.forma_nome.trim()
-    ? body.forma_nome.trim()
-    : null;
+  const formaNome =
+    typeof body.forma_nome === 'string' && body.forma_nome.trim() ? body.forma_nome.trim() : null;
   const valorCentavos = Number(body.valor_centavos);
   const versao = Number(body.versao);
 
@@ -522,7 +535,7 @@ vendasV2Routes.post('/:id/estornar', async (c) => {
     formaNome,
     valorCentavos,
     motivo: typeof body.motivo === 'string' ? body.motivo.trim() || undefined : undefined,
-    versaoAtual: versao,
+    versaoAtual: versao
   };
 
   try {

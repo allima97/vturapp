@@ -104,7 +104,10 @@ export function addMonthsISODate(value: string | Date | null | undefined, months
   return `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}-${pad2(date.getUTCDate())}`;
 }
 
-export function diffDaysISODate(start: string | Date | null | undefined, end: string | Date | null | undefined) {
+export function diffDaysISODate(
+  start: string | Date | null | undefined,
+  end: string | Date | null | undefined
+) {
   const startParts = parseISODateParts(start);
   const endParts = parseISODateParts(end);
   if (!startParts || !endParts) return null;
@@ -114,7 +117,10 @@ export function diffDaysISODate(start: string | Date | null | undefined, end: st
   return Math.round((endMs - startMs) / 86_400_000);
 }
 
-export function compareISODate(a: string | Date | null | undefined, b: string | Date | null | undefined) {
+export function compareISODate(
+  a: string | Date | null | undefined,
+  b: string | Date | null | undefined
+) {
   const aIso = extractISODate(a);
   const bIso = extractISODate(b);
   if (!aIso || !bIso) return 0;

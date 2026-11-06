@@ -33,7 +33,10 @@ export async function handleDocumentosViagensUpdatePost(event: RequestEvent) {
   try {
     const originError = rejectCrossOriginRequest(event.request);
     if (originError) return originError;
-    const bodyResult = await readJsonBodyLimited(event.request, MAX_DOCUMENTO_VIAGEM_UPDATE_BODY_BYTES);
+    const bodyResult = await readJsonBodyLimited(
+      event.request,
+      MAX_DOCUMENTO_VIAGEM_UPDATE_BODY_BYTES
+    );
     if (!bodyResult.ok) return bodyResult.response;
 
     const client = getAdminClient();
@@ -41,14 +44,24 @@ export async function handleDocumentosViagensUpdatePost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['operacao_documentos_viagens', 'documentos_viagens', 'operacao'], 3, 'Sem permissao para editar documentos.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_documentos_viagens', 'documentos_viagens', 'operacao'],
+        3,
+        'Sem permissao para editar documentos.'
+      );
     }
 
     const body = readDocumentoViagemUpdateBody(bodyResult.data);
     const id = String(body?.id || '').trim();
     const displayName = String(body?.display_name || '').trim();
-    if (!isUuid(id)) return json({ error: 'id invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
-    if (!displayName) return json({ error: 'display_name obrigatorio.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'id invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!displayName)
+      return json(
+        { error: 'display_name obrigatorio.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
 
     const { data: currentDoc, error: currentDocError } = await client
       .from('documentos_viagens')
@@ -56,24 +69,43 @@ export async function handleDocumentosViagensUpdatePost(event: RequestEvent) {
       .eq('id', id)
       .maybeSingle();
     if (currentDocError) throw currentDocError;
-    if (!currentDoc) return json({ error: 'Documento nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!currentDoc)
+      return json(
+        { error: 'Documento nao encontrado.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
 
     if (!scope.isAdmin) {
       const allowedCompanyIds = cleanStringSet([scope.companyId, ...(scope.companyIds || [])]);
-      const targetCompanyId = String((currentDoc as { company_id?: string | null })?.company_id || '').trim();
+      const targetCompanyId = String(
+        (currentDoc as { company_id?: string | null })?.company_id || ''
+      ).trim();
       if (!targetCompanyId || !allowedCompanyIds.has(targetCompanyId)) {
-        return json({ error: 'Documento fora do escopo da empresa.' }, { status: 403, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Documento fora do escopo da empresa.' },
+          { status: 403, headers: NO_STORE_HEADERS }
+        );
       }
     }
 
     const { data, error } = await client
       .from('documentos_viagens')
-      .update({ display_name: displayName, updated_at: new Date().toISOString(), updated_by: user.id })
+      .update({
+        display_name: displayName,
+        updated_at: new Date().toISOString(),
+        updated_by: user.id
+      })
       .eq('id', id)
-      .select('id, file_name, display_name, storage_bucket, storage_path, mime_type, size_bytes, created_at, updated_at')
+      .select(
+        'id, file_name, display_name, storage_bucket, storage_path, mime_type, size_bytes, created_at, updated_at'
+      )
       .maybeSingle();
     if (error) throw error;
-    if (!data) return json({ error: 'Documento nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!data)
+      return json(
+        { error: 'Documento nao encontrado.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
 
     return json({ ok: true, doc: data }, { headers: NO_STORE_HEADERS });
   } catch (err) {

@@ -238,20 +238,18 @@ export async function resolveFollowUpFilters(
   if (tipoNome.includes('ADMIN')) {
     vendedorIds = requestedVendedorIds;
   } else if (tipoNome.includes('GESTOR')) {
-    const gestorCompanyIds = companyIds.length > 0
-      ? companyIds
-      : scope.companyId
-        ? [scope.companyId]
-        : [];
+    const gestorCompanyIds =
+      companyIds.length > 0 ? companyIds : scope.companyId ? [scope.companyId] : [];
     const equipeIds = uniqueCleanStrings(
       (await fetchRankingVendedoresByCompanyIds(client, gestorCompanyIds)).map(
         (row: RankingVendedorRow) => row?.id
       )
     );
     const equipeSet = cleanStringSet(equipeIds);
-    vendedorIds = requestedVendedorIds.length > 0
-      ? requestedVendedorIds.filter((id) => equipeSet.has(id))
-      : equipeIds;
+    vendedorIds =
+      requestedVendedorIds.length > 0
+        ? requestedVendedorIds.filter((id) => equipeSet.has(id))
+        : equipeIds;
   } else if (tipoNome.includes('MASTER')) {
     vendedorIds = requestedVendedorIds;
   } else {

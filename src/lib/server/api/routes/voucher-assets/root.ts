@@ -43,7 +43,12 @@ type VoucherAssetRow = Record<string, unknown> & {
 function canAccessVoucherAssets(scope: UserScope, level: number) {
   if (scope.isAdmin) return true;
   if (scope.isMaster || scope.isGestor) return true;
-  ensureModuloAccess(scope, ['parametros', 'vouchers', 'operacao'], level, 'Sem acesso a Voucher Assets.');
+  ensureModuloAccess(
+    scope,
+    ['parametros', 'vouchers', 'operacao'],
+    level,
+    'Sem acesso a Voucher Assets.'
+  );
   return true;
 }
 
@@ -157,7 +162,9 @@ export async function handleVoucherAssetsGet(event: RequestEvent) {
     const buildQuery = (companyIdsFilter = companyIds) => {
       let query = client
         .from('voucher_assets')
-        .select('id, company_id, provider, asset_kind, label, storage_bucket, storage_path, mime_type, size_bytes, ativo, ordem, created_at, updated_at')
+        .select(
+          'id, company_id, provider, asset_kind, label, storage_bucket, storage_path, mime_type, size_bytes, ativo, ordem, created_at, updated_at'
+        )
         .order('asset_kind')
         .order('ordem');
 
@@ -180,7 +187,10 @@ export async function handleVoucherAssetsGet(event: RequestEvent) {
 
       return {
         data: dedupeById(rows).sort((left, right) => {
-          const assetKind = PT_BR_COLLATOR.compare(String(left?.asset_kind || ''), String(right?.asset_kind || ''));
+          const assetKind = PT_BR_COLLATOR.compare(
+            String(left?.asset_kind || ''),
+            String(right?.asset_kind || '')
+          );
           if (assetKind !== 0) return assetKind;
           return Number(left?.ordem || 0) - Number(right?.ordem || 0);
         }),
@@ -192,8 +202,10 @@ export async function handleVoucherAssetsGet(event: RequestEvent) {
     if (error) throw error;
 
     // Gera URLs assinadas para preview
-    const assets = ((data || []) as unknown as VoucherAssetRow[]).filter((asset) =>
-      VALID_PROVIDERS.has(String(asset.provider || "")) && VALID_ASSET_KINDS.has(String(asset.asset_kind || ""))
+    const assets = ((data || []) as unknown as VoucherAssetRow[]).filter(
+      (asset) =>
+        VALID_PROVIDERS.has(String(asset.provider || '')) &&
+        VALID_ASSET_KINDS.has(String(asset.asset_kind || ''))
     );
     const withUrls = await Promise.all(assets.map((asset) => withPreviewUrl(client, asset)));
 
@@ -226,7 +238,10 @@ export async function handleVoucherAssetsPost(event: RequestEvent) {
     const label = normalizeOptionalText(formData.get('label'));
     const ordem = normalizeOrder(formData.get('ordem'));
     const ativo = normalizeBoolean(formData.get('ativo'), true);
-    const companyId = await resolveTargetCompanyId(scope, normalizeText(formData.get('company_id')));
+    const companyId = await resolveTargetCompanyId(
+      scope,
+      normalizeText(formData.get('company_id'))
+    );
     const validatedFile = await validateFile(formData.get('file') as File | null, true);
     if (!validatedFile) {
       throw new Error('Arquivo é obrigatório.');
@@ -262,15 +277,23 @@ export async function handleVoucherAssetsPost(event: RequestEvent) {
         ativo,
         ordem
       })
-      .select('id, company_id, provider, asset_kind, label, storage_bucket, storage_path, mime_type, size_bytes, ativo, ordem, created_at, updated_at')
+      .select(
+        'id, company_id, provider, asset_kind, label, storage_bucket, storage_path, mime_type, size_bytes, ativo, ordem, created_at, updated_at'
+      )
       .single();
 
     if (error) {
-      await client.storage.from(VOUCHER_ASSET_BUCKET).remove([storagePath]).catch(() => undefined);
+      await client.storage
+        .from(VOUCHER_ASSET_BUCKET)
+        .remove([storagePath])
+        .catch(() => undefined);
       throw error;
     }
 
-    return json({ success: true, item: await withPreviewUrl(client, data) }, { headers: NO_STORE_HEADERS });
+    return json(
+      { success: true, item: await withPreviewUrl(client, data) },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err: unknown) {
     return toErrorResponse(err, 'Erro ao criar voucher asset.');
   }
@@ -301,10 +324,15 @@ export async function handleVoucherAssetsPatch(event: RequestEvent) {
 
     const assetQuery = client
       .from('voucher_assets')
-      .select('id, company_id, provider, asset_kind, label, storage_bucket, storage_path, mime_type, size_bytes, ativo, ordem, created_at, updated_at')
+      .select(
+        'id, company_id, provider, asset_kind, label, storage_bucket, storage_path, mime_type, size_bytes, ativo, ordem, created_at, updated_at'
+      )
       .eq('id', id);
 
-    const scopedCompanyIds = resolveScopedCompanyIds(scope, normalizeText(formData.get('company_id')));
+    const scopedCompanyIds = resolveScopedCompanyIds(
+      scope,
+      normalizeText(formData.get('company_id'))
+    );
 
     const { data: existingRaw, error: existingError } = await assetQuery.maybeSingle();
     if (existingError) throw existingError;
@@ -312,7 +340,8 @@ export async function handleVoucherAssetsPatch(event: RequestEvent) {
     const allowedCompanySet = cleanStringSet(scopedCompanyIds);
     const isAllowed =
       Boolean(existingRaw) &&
-      ((scope.isAdmin && (allowedCompanySet.size === 0 || allowedCompanySet.has(existingCompanyId))) ||
+      ((scope.isAdmin &&
+        (allowedCompanySet.size === 0 || allowedCompanySet.has(existingCompanyId))) ||
         (!scope.isAdmin && allowedCompanySet.has(existingCompanyId)));
     if (!existingRaw || !isAllowed) {
       return mutationError('Voucher asset não encontrado.', 404);
@@ -320,10 +349,18 @@ export async function handleVoucherAssetsPatch(event: RequestEvent) {
     const existing = existingRaw;
 
     const provider = validateProvider(normalizeText(formData.get('provider')) || existing.provider);
-    const assetKind = validateAssetKind(normalizeText(formData.get('asset_kind')) || existing.asset_kind);
-    const label = formData.has('label') ? normalizeOptionalText(formData.get('label')) : existing.label;
-    const ordem = formData.has('ordem') ? normalizeOrder(formData.get('ordem')) : existing.ordem || 0;
-    const ativo = formData.has('ativo') ? normalizeBoolean(formData.get('ativo'), Boolean(existing.ativo)) : Boolean(existing.ativo);
+    const assetKind = validateAssetKind(
+      normalizeText(formData.get('asset_kind')) || existing.asset_kind
+    );
+    const label = formData.has('label')
+      ? normalizeOptionalText(formData.get('label'))
+      : existing.label;
+    const ordem = formData.has('ordem')
+      ? normalizeOrder(formData.get('ordem'))
+      : existing.ordem || 0;
+    const ativo = formData.has('ativo')
+      ? normalizeBoolean(formData.get('ativo'), Boolean(existing.ativo))
+      : Boolean(existing.ativo);
     const validatedFile = await validateFile(formData.get('file') as File | null, false);
 
     let nextStoragePath = existing.storage_path;
@@ -365,18 +402,26 @@ export async function handleVoucherAssetsPatch(event: RequestEvent) {
         updated_at: new Date().toISOString()
       })
       .eq('id', existing.id)
-      .select('id, company_id, provider, asset_kind, label, storage_bucket, storage_path, mime_type, size_bytes, ativo, ordem, created_at, updated_at')
+      .select(
+        'id, company_id, provider, asset_kind, label, storage_bucket, storage_path, mime_type, size_bytes, ativo, ordem, created_at, updated_at'
+      )
       .single();
 
     if (updateError) {
       if (validatedFile) {
-        await client.storage.from(VOUCHER_ASSET_BUCKET).remove([nextStoragePath]).catch(() => undefined);
+        await client.storage
+          .from(VOUCHER_ASSET_BUCKET)
+          .remove([nextStoragePath])
+          .catch(() => undefined);
       }
       throw updateError;
     }
 
     if (validatedFile && existing.storage_path && existing.storage_path !== nextStoragePath) {
-      await client.storage.from(existing.storage_bucket).remove([existing.storage_path]).catch(() => undefined);
+      await client.storage
+        .from(existing.storage_bucket)
+        .remove([existing.storage_path])
+        .catch(() => undefined);
     }
 
     return json(
@@ -418,18 +463,25 @@ export async function handleVoucherAssetsDelete(event: RequestEvent) {
     const allowedCompanySet = cleanStringSet(scopedCompanyIds);
     const isAllowed =
       Boolean(existingRaw) &&
-      ((scope.isAdmin && (allowedCompanySet.size === 0 || allowedCompanySet.has(existingCompanyId))) ||
+      ((scope.isAdmin &&
+        (allowedCompanySet.size === 0 || allowedCompanySet.has(existingCompanyId))) ||
         (!scope.isAdmin && allowedCompanySet.has(existingCompanyId)));
     if (!existingRaw || !isAllowed) {
       return mutationError('Voucher asset não encontrado.', 404);
     }
     const existing = existingRaw;
 
-    const { error: deleteError } = await client.from('voucher_assets').delete().eq('id', existing.id);
+    const { error: deleteError } = await client
+      .from('voucher_assets')
+      .delete()
+      .eq('id', existing.id);
     if (deleteError) throw deleteError;
 
     if (existing.storage_bucket && existing.storage_path) {
-      await client.storage.from(existing.storage_bucket).remove([existing.storage_path]).catch(() => undefined);
+      await client.storage
+        .from(existing.storage_bucket)
+        .remove([existing.storage_path])
+        .catch(() => undefined);
     }
 
     return json({ success: true, id: existing.id }, { headers: NO_STORE_HEADERS });

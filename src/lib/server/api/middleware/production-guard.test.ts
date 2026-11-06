@@ -28,9 +28,7 @@ import type { ApiEnv } from '../types';
 function makeApp() {
   const app = new Hono<ApiEnv>();
   app.use('*', productionGuard);
-  app.get('/api/v2/f2-proof/tenant-isolation', (c) =>
-    c.json({ ok: true, route: 'proof' })
-  );
+  app.get('/api/v2/f2-proof/tenant-isolation', (c) => c.json({ ok: true, route: 'proof' }));
   app.get('/api/v2/health', (c) => c.json({ ok: true, route: 'health' }));
   return app;
 }
@@ -44,7 +42,7 @@ function fakeEnv(environment: string | undefined): Record<string, unknown> {
     KV_BINDING: {},
     BETTER_AUTH_SECRET: 'test-secret',
     RESEND_API_KEY: 'test-key',
-    event: {},
+    event: {}
   };
 }
 
@@ -98,7 +96,11 @@ describe('B. isProduction', () => {
 describe('C. productionGuard middleware', () => {
   it('libera endpoint de prova em desenvolvimento', async () => {
     const app = makeApp();
-    const res = await app.request('/api/v2/f2-proof/tenant-isolation', {}, fakeEnv('development') as any);
+    const res = await app.request(
+      '/api/v2/f2-proof/tenant-isolation',
+      {},
+      fakeEnv('development') as any
+    );
     expect(res.status).toBe(200);
     const body: any = await res.json();
     expect(body.route).toBe('proof');
@@ -106,7 +108,11 @@ describe('C. productionGuard middleware', () => {
 
   it('bloqueia endpoint de prova em produção com 404', async () => {
     const app = makeApp();
-    const res = await app.request('/api/v2/f2-proof/tenant-isolation', {}, fakeEnv('production') as any);
+    const res = await app.request(
+      '/api/v2/f2-proof/tenant-isolation',
+      {},
+      fakeEnv('production') as any
+    );
     expect(res.status).toBe(404);
     const body: any = await res.json();
     expect(body.code).toBe('NOT_FOUND');
@@ -122,7 +128,11 @@ describe('C. productionGuard middleware', () => {
 
   it('libera endpoint de prova quando env é undefined', async () => {
     const app = makeApp();
-    const res = await app.request('/api/v2/f2-proof/tenant-isolation', {}, fakeEnv(undefined) as any);
+    const res = await app.request(
+      '/api/v2/f2-proof/tenant-isolation',
+      {},
+      fakeEnv(undefined) as any
+    );
     expect(res.status).toBe(200);
   });
 });
@@ -172,8 +182,8 @@ describe('E. sanitize', () => {
     const input = {
       user: {
         id: 'abc',
-        auth: { token: 'tok123', role: 'admin' },
-      },
+        auth: { token: 'tok123', role: 'admin' }
+      }
     };
     const result = sanitize(input) as Record<string, Record<string, Record<string, unknown>>>;
     expect(result['user']['auth']['token']).toBe('[REDACTED]');
@@ -183,7 +193,7 @@ describe('E. sanitize', () => {
   it('preserva arrays sanitizando cada item', () => {
     const input = [
       { id: 1, secret: 'a' },
-      { id: 2, secret: 'b' },
+      { id: 2, secret: 'b' }
     ];
     const result = sanitize(input) as Array<Record<string, unknown>>;
     expect(result[0]['id']).toBe(1);

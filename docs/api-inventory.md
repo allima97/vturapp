@@ -2,7 +2,7 @@
 
 Gerado por `node scripts/api-inventory.mjs` — **não editar à mão**. JSON completo em `docs/api-inventory.json`.
 
-- Endpoints: **270** (126 gravam no banco)
+- Endpoints: **268** (127 gravam no banco)
 - Domínios: 53
 - Migrados para Hono: **248** (marcados com <sub>hono</sub>)
 
@@ -81,7 +81,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/arquivos/baixar` | GET | ✔ |  |  |  |  | — | — | — |
 | `/arquivos/publico/[bucket]/[...path]` | GET |  |  |  |  |  | — | — | — |
 
-### auth (15)
+### auth (13)
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
@@ -93,8 +93,6 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/auth/mfa/nivel` | GET |  |  |  |  |  | — | — | — |
 | `/auth/mfa/verificar` | POST |  |  |  |  |  | — | — | — |
 | `/auth/passkeys` | DELETE GET | ✔ |  |  | ✔ | ✔ | — | — | — |
-| `/auth/passkeys/login/options` | POST |  |  |  | ✔ | ✔ | — | — | — |
-| `/auth/passkeys/login/verify` | POST |  |  |  | ✔ | ✔ | — | — | — |
 | `/auth/passkeys/register/options` | POST | ✔ |  |  |  |  | — | — | — |
 | `/auth/passkeys/register/verify` | POST | ✔ |  |  | ✔ | ✔ | — | — | — |
 | `/auth/senha` | POST |  |  |  |  |  | — | — | — |
@@ -362,7 +360,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/v1/parametros/escalas` <sub>hono</sub> | GET POST | ✔ | ✔ | Admin Gestor Master Vendedor | ✔ | ✔ | escala_dia(D/R/U/UP), escala_horario_usuario(C/R), escala_mes(R), feriados(R), users(R) | gestor_equipe_base_id | invalidateReadModelCache |
 | `/v1/parametros/metas` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin Gestor Master | ✔ | ✔ | metas_vendedor(R/U), metas_vendedor_produto(D/R), tipo_produtos(R), users(R) | — | invalidateReadModelCache |
 | `/v1/parametros/nao-comissionaveis` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin | ✔ | ✔ | parametros_pagamentos_nao_comissionaveis(D/R/U) | — | invalidateSalesReadModels |
-| `/v1/parametros/orcamentos-pdf` <sub>hono</sub> | GET POST | ✔ | ✔ | Admin | ✔ | ✔ | quote_print_settings(R) | — | invalidateQuoteReadModels |
+| `/v1/parametros/orcamentos-pdf` <sub>hono</sub> | GET POST | ✔ | ✔ | Admin | ✔ | ✔ | quote_print_settings(R), users(R) | — | invalidateQuoteReadModels |
 | `/v1/parametros/regras-produto-pacote` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin | ✔ | ✔ | product_commission_rule_pacote(D/R/U) | — | invalidateCatalogReadModels |
 | `/v1/parametros/regras-produto` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin | ✔ | ✔ | product_commission_rule(D/R/U) | — | invalidateCatalogReadModels |
 | `/v1/parametros/sistema` <sub>hono</sub> | GET POST | ✔ | ✔ | Admin | ✔ | ✔ | parametros_comissao(R/UP), users(R) | — | invalidateSalesReadModels |
@@ -552,7 +550,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/v1/vouchers` <sub>hono</sub> | GET POST | ✔ | ✔ | Admin | ✔ | ✔ | viagens(R), voucher_dias(C), voucher_hoteis(C), vouchers(R) | — | — |
 | `/v1/vouchers/[id]` <sub>hono</sub> | DELETE GET PATCH | ✔ | ✔ | Admin | ✔ | ✔ | voucher_dias(D/C), voucher_hoteis(C), vouchers(D/R) | — | — |
 | `/v1/vouchers/create` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | vouchers(C) | — | — |
-| `/v1/vouchers/delete` <sub>hono</sub> | DELETE | ✔ | ✔ | Admin | ✔ |  | vouchers(R) | — | — |
+| `/v1/vouchers/delete` <sub>hono</sub> | DELETE | ✔ | ✔ | Admin | ✔ |  | vouchers(D/R) | — | — |
 
 ### welcome-email (1)
 

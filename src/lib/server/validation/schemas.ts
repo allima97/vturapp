@@ -137,8 +137,8 @@ export function parseConviteInput(body: unknown): ParseResult<ConviteInput> {
     ok: true,
     data: {
       email: (emailRaw as string).trim().toLowerCase(),
-      papel: papelRaw as PapelValido,
-    },
+      papel: papelRaw as PapelValido
+    }
   };
 }
 
@@ -241,7 +241,7 @@ export function parseRegistroEmpresaInput(body: unknown): ParseResult<RegistroEm
 
   const result: RegistroEmpresaInput = {
     nome: (nomeRaw as string).trim(),
-    slug: (slugRaw as string).trim().toLowerCase(),
+    slug: (slugRaw as string).trim().toLowerCase()
   };
 
   if (cnpjRaw) {
@@ -270,6 +270,6 @@ export function validationErrorResponse(errors: string[]): {
   return {
     error: 'Dados de entrada inválidos.',
     code: 'VALIDATION_ERROR',
-    details: errors,
+    details: errors
   };
 }

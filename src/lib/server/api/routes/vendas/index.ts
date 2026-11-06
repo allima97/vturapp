@@ -45,7 +45,9 @@ export const vendasRoutes = new Hono<ApiEnv>()
   .patch('/recibo-edit', (c) => handleVendasReciboEditPatch(c.env.event))
   .get('/recibo-notas', (c) => handleVendasReciboNotasGet(c.env.event))
   .post('/recibo-principal', (c) => handleVendasReciboPrincipalPost(c.env.event))
-  .get('/:id/ranking-recibos', (c) => handleVendasIdRankingRecibosGet(withRouteParams(c.env.event, c.req.param())))
+  .get('/:id/ranking-recibos', (c) =>
+    handleVendasIdRankingRecibosGet(withRouteParams(c.env.event, c.req.param()))
+  )
   .get('/:id', (c) => handleVendasIdGet(withRouteParams(c.env.event, c.req.param())))
   .patch('/:id', (c) => handleVendasIdPatch(withRouteParams(c.env.event, c.req.param())))
   .delete('/:id', (c) => handleVendasIdDelete(withRouteParams(c.env.event, c.req.param())));

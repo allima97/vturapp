@@ -24,7 +24,16 @@
     items?: Pais[] | null;
   };
 
-  const CONTINENTES = ['África', 'América do Norte', 'América do Sul', 'América Central', 'Ásia', 'Europa', 'Oceania', 'Antártida'];
+  const CONTINENTES = [
+    'África',
+    'América do Norte',
+    'América do Sul',
+    'América Central',
+    'Ásia',
+    'Europa',
+    'Oceania',
+    'Antártida'
+  ];
 
   let paises: Pais[] = [];
   let loading = true;
@@ -38,8 +47,19 @@
 
   const columns = [
     { key: 'nome', label: 'País', sortable: true },
-    { key: 'codigo_iso', label: 'ISO', sortable: true, width: '80px', formatter: (v: string | null) => v || '-' },
-    { key: 'continente', label: 'Continente', sortable: true, formatter: (v: string | null) => v || '-' }
+    {
+      key: 'codigo_iso',
+      label: 'ISO',
+      sortable: true,
+      width: '80px',
+      formatter: (v: string | null) => v || '-'
+    },
+    {
+      key: 'continente',
+      label: 'Continente',
+      sortable: true,
+      formatter: (v: string | null) => v || '-'
+    }
   ];
 
   async function load() {
@@ -70,7 +90,10 @@
   }
 
   async function save() {
-    if (!form.nome.trim()) { toast.error('Nome obrigatório.'); return; }
+    if (!form.nome.trim()) {
+      toast.error('Nome obrigatório.');
+      return;
+    }
     saving = true;
     try {
       await apiPost('/api/v1/paises', {
@@ -113,18 +136,22 @@
 <PageHeader
   title="Países"
   subtitle="Cadastro de países utilizados nos destinos e clientes."
-  breadcrumbs={[
-    { label: 'Cadastros', href: '/cadastros' },
-    { label: 'Países' }
-  ]}
+  breadcrumbs={[{ label: 'Cadastros', href: '/cadastros' }, { label: 'Países' }]}
   actions={[
     { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw },
     { label: 'Novo País', onClick: openNew, variant: 'primary', icon: Plus }
   ]}
 />
 
-<DataTable {columns} data={paises} {loading} title="Países cadastrados" searchable={true} emptyMessage="Nenhum país encontrado"
-  onRowClick={(row) => openEdit(row)}>
+<DataTable
+  {columns}
+  data={paises}
+  {loading}
+  title="Países cadastrados"
+  searchable={true}
+  emptyMessage="Nenhum país encontrado"
+  onRowClick={(row) => openEdit(row)}
+>
   <svelte:fragment slot="row-actions" let:row>
     <Button
       variant="ghost"
@@ -143,7 +170,18 @@
   </svelte:fragment>
 </DataTable>
 
-<Dialog bind:open={modalOpen} title={editingId ? 'Editar País' : 'Novo País'} size="sm" showCancel={true} cancelText="Cancelar" showConfirm={true} confirmText={editingId ? 'Salvar' : 'Criar'} loading={saving} onConfirm={save} onCancel={() => (modalOpen = false)}>
+<Dialog
+  bind:open={modalOpen}
+  title={editingId ? 'Editar País' : 'Novo País'}
+  size="sm"
+  showCancel={true}
+  cancelText="Cancelar"
+  showConfirm={true}
+  confirmText={editingId ? 'Salvar' : 'Criar'}
+  loading={saving}
+  onConfirm={save}
+  onCancel={() => (modalOpen = false)}
+>
   <div class="space-y-4">
     <FieldInput
       id="pais-nome"
@@ -152,7 +190,7 @@
       placeholder="Nome do país"
       class_name="w-full"
     />
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <FieldInput
         id="pais-iso"
         label="Código ISO"
@@ -165,7 +203,10 @@
         id="pais-continente"
         label="Continente"
         bind:value={form.continente}
-        options={[{ value: '', label: 'Selecione uma opção' }, ...CONTINENTES.map((c) => ({ value: c, label: c }))]}
+        options={[
+          { value: '', label: 'Selecione uma opção' },
+          ...CONTINENTES.map((c) => ({ value: c, label: c }))
+        ]}
         placeholder={null}
         class_name="w-full"
       />

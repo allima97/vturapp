@@ -269,7 +269,11 @@
   }
 
   async function loadBase(signal?: AbortSignal) {
-    const data = await apiGet<CadastroBasePayload>('/api/v1/vendas/cadastro-base', undefined, signal);
+    const data = await apiGet<CadastroBasePayload>(
+      '/api/v1/vendas/cadastro-base',
+      undefined,
+      signal
+    );
     currentUser = data.user ?? null;
     vendedoresEquipe = data.vendedoresEquipe || [];
     clientes = data.clientes || [];
@@ -319,7 +323,10 @@
     const sale = data;
     const destinoProduto = produtoResolvidoToOption(sale?.destino);
     if (destinoProduto) mergeProdutos([destinoProduto]);
-    const statusNormalizado = String(sale?.status || 'pendente') === 'aberto' ? 'pendente' : String(sale?.status || 'pendente');
+    const statusNormalizado =
+      String(sale?.status || 'pendente') === 'aberto'
+        ? 'pendente'
+        : String(sale?.status || 'pendente');
 
     venda = {
       vendedor_id: String(sale?.vendedor_id || currentUser?.id || ''),
@@ -369,9 +376,7 @@
           produtos.find((p) => String(p.id) === produtoResolvidoId) ||
           produtoResolvidoToOption(item?.produto_resolvido);
         const cidadeReciboId = String(
-          item?.destino_cidade_id ||
-            produtoRelacionado?.cidade_id ||
-            ''
+          item?.destino_cidade_id || produtoRelacionado?.cidade_id || ''
         );
         const tipoProdutoId = String(
           item?.tipo_produto_id ||
@@ -383,8 +388,7 @@
         return {
           principal: index === 0,
           usar_cidade_padrao:
-            !cidadeReciboId ||
-            String(cidadeReciboId) === String(sale?.destino_cidade_id || ''),
+            !cidadeReciboId || String(cidadeReciboId) === String(sale?.destino_cidade_id || ''),
           destino_cidade_id: cidadeReciboId,
           tipo_produto_id: tipoProdutoId,
           produto_id: produtoResolvidoId,
@@ -409,7 +413,10 @@
         if (r.produto_id && !produtos.some((p) => String(p.id) === r.produto_id)) {
           produtosFaltantes.add(r.produto_id);
         }
-        if (r.destino_cidade_id && !cidades.some((c) => String(c.id) === String(r.destino_cidade_id))) {
+        if (
+          r.destino_cidade_id &&
+          !cidades.some((c) => String(c.id) === String(r.destino_cidade_id))
+        ) {
           cidadesFaltantes.add(r.destino_cidade_id);
         }
       }
@@ -445,7 +452,10 @@
     if (saleVendedor && !vendedoresEquipe.some((v) => String(v.id) === String(saleVendedor.id))) {
       vendedoresEquipe = [
         ...vendedoresEquipe,
-        { id: String(saleVendedor.id), nome_completo: saleVendedor.nome_completo || saleVendedor.nome }
+        {
+          id: String(saleVendedor.id),
+          nome_completo: saleVendedor.nome_completo || saleVendedor.nome
+        }
       ];
     }
 
@@ -492,7 +502,10 @@
       // Disparar as duas chamadas HTTP em paralelo: loadBase carrega o catálogo
       // e fetchVendaData busca os dados da venda. A rede não espera — só o
       // processamento da venda aguarda o catálogo estar pronto.
-      const [, vendaRaw] = await Promise.all([loadBase(controller.signal), fetchVendaData(controller.signal)]);
+      const [, vendaRaw] = await Promise.all([
+        loadBase(controller.signal),
+        fetchVendaData(controller.signal)
+      ]);
       if (seq !== loadSeq || destroyed) return;
       await processVendaData(vendaRaw, controller.signal);
     } catch (err) {
@@ -544,14 +557,17 @@
       const id = String(item?.id || '').trim();
       if (!id) continue;
       const todasAsCidades =
-        item.todas_as_cidades === true ||
-        (!item.cidade_id && item.todas_as_cidades !== false);
+        item.todas_as_cidades === true || (!item.cidade_id && item.todas_as_cidades !== false);
       byId.set(id, { ...(byId.get(id) || {}), ...item, todas_as_cidades: todasAsCidades });
     }
-    produtos = Array.from(byId.values()).sort((a, b) => PT_BR_BASE_COLLATOR.compare(String(a.nome || ''), String(b.nome || '')));
+    produtos = Array.from(byId.values()).sort((a, b) =>
+      PT_BR_BASE_COLLATOR.compare(String(a.nome || ''), String(b.nome || ''))
+    );
   }
 
-  function produtoResolvidoToOption(produto: ProdutoResolvidoOptionSource | null | undefined): Option | null {
+  function produtoResolvidoToOption(
+    produto: ProdutoResolvidoOptionSource | null | undefined
+  ): Option | null {
     const id = String(produto?.id || '').trim();
     if (!id) return null;
     return {
@@ -607,18 +623,26 @@
     }
     if (!isValeViagemTipo(recibo.tipo_produto_id)) {
       const produtoAtual = getProdutoById(recibo.produto_id);
-      if (recibo.produto_id && (!produtoAtual || !produtoMatchesTipo(produtoAtual, recibo.tipo_produto_id))) {
+      if (
+        recibo.produto_id &&
+        (!produtoAtual || !produtoMatchesTipo(produtoAtual, recibo.tipo_produto_id))
+      ) {
         recibo.produto_id = '';
         recibo.produto_resolvido_id = '';
         recibos = recibos;
       }
       return;
     }
-    const produtosDisponiveis = getProdutosByTipoCidade(recibo.tipo_produto_id, getReciboCidadeId(recibo));
+    const produtosDisponiveis = getProdutosByTipoCidade(
+      recibo.tipo_produto_id,
+      getReciboCidadeId(recibo)
+    );
     const valeViagem = produtosDisponiveis.find((item) => isValeViagemProduto(item)) || null;
     if (!valeViagem?.id) return;
     recibo.produto_id = String(valeViagem.id);
-    recibo.produto_resolvido_id = produtos.some((item) => String(item.id) === String(valeViagem.id)) ? String(valeViagem.id) : '';
+    recibo.produto_resolvido_id = produtos.some((item) => String(item.id) === String(valeViagem.id))
+      ? String(valeViagem.id)
+      : '';
     recibos = recibos;
   }
 
@@ -626,12 +650,17 @@
     const selectedId = getProdutoRealId(recibo);
     const filtered = getProdutosByTipoCidade(recibo.tipo_produto_id, getReciboCidadeId(recibo));
     if (isValeViagemTipo(recibo.tipo_produto_id)) {
-      const valeViagem = filtered.find((item) => isValeViagemProduto(item)) || getValeViagemProdutoVirtual(recibo.tipo_produto_id);
+      const valeViagem =
+        filtered.find((item) => isValeViagemProduto(item)) ||
+        getValeViagemProdutoVirtual(recibo.tipo_produto_id);
       if (!valeViagem) return filtered;
-      const withoutDuplicates = filtered.filter((item) => String(item.id) !== String(valeViagem.id) && !isValeViagemProduto(item));
+      const withoutDuplicates = filtered.filter(
+        (item) => String(item.id) !== String(valeViagem.id) && !isValeViagemProduto(item)
+      );
       return [valeViagem, ...withoutDuplicates];
     }
-    if (!selectedId || filtered.some((produto) => String(produto.id) === selectedId)) return filtered;
+    if (!selectedId || filtered.some((produto) => String(produto.id) === selectedId))
+      return filtered;
     const selected = getProdutoById(selectedId);
     return selected ? [selected, ...filtered] : filtered;
   }
@@ -656,7 +685,10 @@
     if (event) {
       recibo.produto_id = getSelectValue(event);
     }
-    if (isValeViagemTipo(recibo.tipo_produto_id) && String(recibo.produto_id) === String(recibo.tipo_produto_id)) {
+    if (
+      isValeViagemTipo(recibo.tipo_produto_id) &&
+      String(recibo.produto_id) === String(recibo.tipo_produto_id)
+    ) {
       recibo.produto_resolvido_id = '';
       recibos = recibos;
       return;
@@ -721,7 +753,6 @@
     clientes = mergeClientesById(clientes, items);
   }
 
-
   function mergeCidades(items: Option[]) {
     if (!items.length) return;
     cidades = mergeCidadesById(cidades, items);
@@ -741,7 +772,11 @@
     }
     ensuringCidadeId = id;
     try {
-      const payload = await apiGet<CidadeLookupPayload>('/api/v1/vendas/cidades-busca', { id }, signal);
+      const payload = await apiGet<CidadeLookupPayload>(
+        '/api/v1/vendas/cidades-busca',
+        { id },
+        signal
+      );
       if (destroyed || seq !== lookupSeq) return;
       if (payload?.id) mergeCidades([payload]);
     } catch (err) {
@@ -766,7 +801,11 @@
     }
     ensuringProdutoId = id;
     try {
-      const payload = await apiGet<ProdutoLookupPayload>(`/api/v1/produtos/${encodeURIComponent(id)}`, undefined, signal);
+      const payload = await apiGet<ProdutoLookupPayload>(
+        `/api/v1/produtos/${encodeURIComponent(id)}`,
+        undefined,
+        signal
+      );
       if (destroyed || seq !== lookupSeq) return;
       if (payload?.id) {
         const todasAsCidades =
@@ -871,11 +910,17 @@
     saving = true;
 
     try {
-      const primeiroReciboComProduto = recibos.find((item) => getProdutoRealId(item)) || recibos[0] || null;
-      const destinoId = primeiroReciboComProduto ? getProdutoRealId(primeiroReciboComProduto) || venda.destino_id : venda.destino_id;
+      const primeiroReciboComProduto =
+        recibos.find((item) => getProdutoRealId(item)) || recibos[0] || null;
+      const destinoId = primeiroReciboComProduto
+        ? getProdutoRealId(primeiroReciboComProduto) || venda.destino_id
+        : venda.destino_id;
 
       const totalRecibos = recibos.reduce((acc, item) => acc + parseMoney(item.valor_total), 0);
-      const totalTaxasRecibos = recibos.reduce((acc, item) => acc + parseMoney(item.valor_taxas), 0);
+      const totalTaxasRecibos = recibos.reduce(
+        (acc, item) => acc + parseMoney(item.valor_taxas),
+        0
+      );
       const totalPago = pagamentos.reduce((acc, item) => acc + parseMoney(item.valor_total), 0);
       const totalNaoComissionado = pagamentos.reduce((acc, item) => {
         return item.paga_comissao === false ? acc + parseMoney(item.valor_total) : acc;
@@ -884,7 +929,8 @@
       const vendaPayload = {
         ...venda,
         destino_id: destinoId,
-        valor_total: venda.valor_total || String(Math.max(0, totalPago - totalNaoComissionado).toFixed(2)),
+        valor_total:
+          venda.valor_total || String(Math.max(0, totalPago - totalNaoComissionado).toFixed(2)),
         valor_total_bruto: venda.valor_total_bruto || String(totalRecibos.toFixed(2)),
         valor_total_pago: venda.valor_total_pago || String(totalPago.toFixed(2)),
         valor_taxas: venda.valor_taxas || String(totalTaxasRecibos.toFixed(2)),
@@ -895,7 +941,9 @@
       const payload = {
         venda: vendaPayload,
         recibos: recibos.map((item) => {
-          const produtoVirtualValeViagem = isValeViagemTipo(item.tipo_produto_id) && String(item.produto_id) === String(item.tipo_produto_id);
+          const produtoVirtualValeViagem =
+            isValeViagemTipo(item.tipo_produto_id) &&
+            String(item.produto_id) === String(item.tipo_produto_id);
           const produtoRealId = produtoVirtualValeViagem ? '' : getProdutoRealId(item);
           const produto = getProdutoById(produtoRealId);
           const tipoProdutoId = item.tipo_produto_id || String(produto?.tipo_produto || '');
@@ -918,10 +966,7 @@
             parcelas_valor:
               item.parcelas_valor ||
               (parcelasQtd > 0 ? (parseMoney(item.valor_total) / parcelasQtd).toFixed(2) : ''),
-            parcelas:
-              Array.isArray(item.parcelas) && item.parcelas.length > 0
-                ? item.parcelas
-                : []
+            parcelas: Array.isArray(item.parcelas) && item.parcelas.length > 0 ? item.parcelas : []
           };
         })
       };
@@ -977,10 +1022,7 @@
 <PageHeader
   title="Editar Venda"
   subtitle={`Registro ${vendaId.slice(0, 8).toUpperCase()} com fluxo completo de venda, recibos e pagamentos.`}
-  breadcrumbs={[
-    { label: 'Vendas', href: '/vendas' },
-    { label: 'Editar venda' }
-  ]}
+  breadcrumbs={[{ label: 'Vendas', href: '/vendas' }, { label: 'Editar venda' }]}
 />
 
 {#if loading}
@@ -1054,12 +1096,21 @@
       </div>
       <div class="flex items-center gap-3">
         {#if currentStep > 0}
-          <Button type="button" variant="secondary" on:click={() => goStep(currentStep - 1)}>Etapa anterior</Button>
+          <Button type="button" variant="secondary" on:click={() => goStep(currentStep - 1)}
+            >Etapa anterior</Button
+          >
         {/if}
         {#if currentStep < 2}
-          <Button type="button" variant="primary" color="vendas" on:click={() => goStep(currentStep + 1)}>Próxima etapa</Button>
+          <Button
+            type="button"
+            variant="primary"
+            color="vendas"
+            on:click={() => goStep(currentStep + 1)}>Próxima etapa</Button
+          >
         {:else}
-          <Button type="submit" variant="primary" color="vendas" loading={saving}>Salvar alterações</Button>
+          <Button type="submit" variant="primary" color="vendas" loading={saving}
+            >Salvar alterações</Button
+          >
         {/if}
       </div>
     </div>

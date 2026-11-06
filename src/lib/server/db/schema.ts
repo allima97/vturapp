@@ -17,7 +17,16 @@
  */
 
 import { sql } from 'drizzle-orm';
-import { check, index, integer, primaryKey, real, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import {
+  check,
+  index,
+  integer,
+  primaryKey,
+  real,
+  sqliteTable,
+  text,
+  uniqueIndex
+} from 'drizzle-orm/sqlite-core';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // DOMÍNIO: IDENTITY — empresas
@@ -34,12 +43,16 @@ export const empresas = sqliteTable(
     limiteUsuarios: integer('limite_usuarios', { mode: 'number' }).notNull().default(5),
     timezone: text('timezone', { length: 64 }).notNull().default('America/Sao_Paulo'),
     ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
-    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
-    atualizadoEm: text('atualizado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    atualizadoEm: text('atualizado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString())
   },
   (t) => ({
     idxCnpj: uniqueIndex('idx_empresas_cnpj').on(t.cnpj),
-    idxSlug: uniqueIndex('idx_empresas_slug').on(t.slug),
+    idxSlug: uniqueIndex('idx_empresas_slug').on(t.slug)
   })
 );
 
@@ -65,14 +78,14 @@ export const user = sqliteTable(
      * Adicionado em F2-01 (NULL nos usuários criados em F1-04).
      */
     empresaId: integer('empresa_id', { mode: 'number' }).references(() => empresas.id, {
-      onDelete: 'set null',
+      onDelete: 'set null'
     }),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull()
   },
   (t) => ({
     idxEmail: uniqueIndex('idx_user_email').on(t.email),
-    idxEmpresa: index('idx_user_empresa_id').on(t.empresaId),
+    idxEmpresa: index('idx_user_empresa_id').on(t.empresaId)
   })
 );
 
@@ -107,13 +120,17 @@ export const membrosEmpresa = sqliteTable(
     /** Valores: 'admin' | 'operador' | 'visualizador'. CHECK na migration SQL. */
     papel: text('papel', { length: 20 }).notNull().default('visualizador'),
     ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
-    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
-    atualizadoEm: text('atualizado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    atualizadoEm: text('atualizado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString())
   },
   (t) => ({
     idxUserUnique: uniqueIndex('idx_membros_user_id').on(t.userId),
     idxEmpresa: index('idx_membros_empresa_id').on(t.empresaId),
-    idxEmpresaPapel: index('idx_membros_empresa_papel').on(t.empresaId, t.papel),
+    idxEmpresaPapel: index('idx_membros_empresa_papel').on(t.empresaId, t.papel)
   })
 );
 
@@ -146,14 +163,16 @@ export const convites = sqliteTable(
     expiresAt: text('expires_at').notNull(),
     aceitadoEm: text('aceito_em'),
     convidadoPor: text('convidado_por', { length: 36 }).references(() => user.id, {
-      onDelete: 'set null',
+      onDelete: 'set null'
     }),
-    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString())
   },
   (t) => ({
     idxToken: uniqueIndex('idx_convites_token').on(t.token),
     idxEmpresa: index('idx_convites_empresa_id').on(t.empresaId),
-    idxEmail: index('idx_convites_email').on(t.email),
+    idxEmail: index('idx_convites_email').on(t.email)
   })
 );
 
@@ -168,18 +187,22 @@ export type NovoConvite = typeof convites.$inferInsert;
 
 export const session = sqliteTable('session', {
   id: text('id').primaryKey(),
-  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
   token: text('token').notNull().unique(),
   expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
   ipAddress: text('ip_address'),
   userAgent: text('user_agent'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull()
 });
 
 export const account = sqliteTable('account', {
   id: text('id').primaryKey(),
-  userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
   accountId: text('account_id').notNull(),
   providerId: text('provider_id').notNull(),
   accessToken: text('access_token'),
@@ -190,7 +213,7 @@ export const account = sqliteTable('account', {
   idToken: text('id_token'),
   password: text('password'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull()
 });
 
 export const verification = sqliteTable('verification', {
@@ -199,7 +222,7 @@ export const verification = sqliteTable('verification', {
   value: text('value').notNull(),
   expiresAt: integer('expires_at', { mode: 'timestamp_ms' }).notNull(),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull()
 });
 
 export const twoFactor = sqliteTable(
@@ -208,16 +231,18 @@ export const twoFactor = sqliteTable(
     id: text('id').primaryKey(),
     secret: text('secret').notNull(),
     backupCodes: text('backup_codes').notNull(),
-    userId: text('user_id').notNull().references(() => user.id, { onDelete: 'cascade' }),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
     verified: integer('verified', { mode: 'boolean' }).notNull().default(true),
     failedVerificationCount: integer('failed_verification_count', { mode: 'number' })
       .notNull()
       .default(0),
-    lockedUntil: integer('locked_until', { mode: 'timestamp_ms' }),
+    lockedUntil: integer('locked_until', { mode: 'timestamp_ms' })
   },
   (t) => ({
     idxSecret: index('two_factor_secret_idx').on(t.secret),
-    idxUser: index('two_factor_user_id_idx').on(t.userId),
+    idxUser: index('two_factor_user_id_idx').on(t.userId)
   })
 );
 
@@ -279,15 +304,19 @@ export const clientes = sqliteTable(
     /** Concorrência otimista: incrementado a cada UPDATE. */
     versao: integer('versao', { mode: 'number' }).notNull().default(1),
     criadoPor: text('criado_por', { length: 36 }).references(() => user.id, {
-      onDelete: 'set null',
+      onDelete: 'set null'
     }),
-    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
-    atualizadoEm: text('atualizado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    atualizadoEm: text('atualizado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString())
   },
   (t) => ({
     idxEmpresaDocumento: uniqueIndex('idx_clientes_empresa_documento').on(t.empresaId, t.documento),
     idxEmpresaNome: index('idx_clientes_empresa_nome').on(t.empresaId, t.nome),
-    idxEmpresaAtivo: index('idx_clientes_empresa_ativo').on(t.empresaId, t.ativo),
+    idxEmpresaAtivo: index('idx_clientes_empresa_ativo').on(t.empresaId, t.ativo)
   })
 );
 
@@ -318,13 +347,15 @@ export const clienteAnexos = sqliteTable(
     contentType: text('content_type', { length: 100 }).notNull(),
     tamanhoBytes: integer('tamanho_bytes', { mode: 'number' }).notNull(),
     enviadoPor: text('enviado_por', { length: 36 }).references(() => user.id, {
-      onDelete: 'set null',
+      onDelete: 'set null'
     }),
-    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString())
   },
   (t) => ({
     idxChave: uniqueIndex('idx_cliente_anexos_chave').on(t.chaveR2),
-    idxCliente: index('idx_cliente_anexos_cliente').on(t.empresaId, t.clienteId),
+    idxCliente: index('idx_cliente_anexos_cliente').on(t.empresaId, t.clienteId)
   })
 );
 
@@ -377,13 +408,17 @@ export const produtos = sqliteTable(
     fornecedor: text('fornecedor', { length: 200 }),
     notas: text('notas'),
     ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
-    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
-    atualizadoEm: text('atualizado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    atualizadoEm: text('atualizado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString())
   },
   (t) => ({
     idxNome: index('idx_produtos_nome').on(t.nome),
     idxTipo: index('idx_produtos_tipo').on(t.tipo),
-    idxAtivo: index('idx_produtos_ativo').on(t.ativo),
+    idxAtivo: index('idx_produtos_ativo').on(t.ativo)
   })
 );
 
@@ -405,11 +440,13 @@ export const formasPagamento = sqliteTable(
     /** Tipo funcional para agrupamento em relatórios. */
     tipo: text('tipo', { length: 30 }).notNull().default('outro'),
     ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
-    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString())
   },
   (t) => ({
     idxEmpresaAtivo: index('idx_formas_pgto_empresa_ativo').on(t.empresaId, t.ativo),
-    idxEmpresaNome: uniqueIndex('idx_formas_pgto_empresa_nome').on(t.empresaId, t.nome),
+    idxEmpresaNome: uniqueIndex('idx_formas_pgto_empresa_nome').on(t.empresaId, t.nome)
   })
 );
 
@@ -443,15 +480,15 @@ export const vendas = sqliteTable(
     numeroVenda: text('numero_venda', { length: 30 }),
     /** Membro da empresa que registrou a venda. */
     vendedorId: text('vendedor_id', { length: 36 }).references(() => user.id, {
-      onDelete: 'set null',
+      onDelete: 'set null'
     }),
     /** Cliente principal da venda. */
     clienteId: integer('cliente_id', { mode: 'number' }).references(() => clientes.id, {
-      onDelete: 'set null',
+      onDelete: 'set null'
     }),
     /** Produto principal (destino) — FK opcional; itens detalham os produtos. */
     produtoId: integer('produto_id', { mode: 'number' }).references(() => produtos.id, {
-      onDelete: 'set null',
+      onDelete: 'set null'
     }),
     /** Data do evento de venda (ADR-005: TEXT YYYY-MM-DD). */
     dataVenda: text('data_venda', { length: 10 }).notNull(),
@@ -484,10 +521,14 @@ export const vendas = sqliteTable(
     /** Controle de edição concorrente (UPDATE ... WHERE versao = ?). */
     versao: integer('versao', { mode: 'number' }).notNull().default(1),
     criadoPor: text('criado_por', { length: 36 }).references(() => user.id, {
-      onDelete: 'set null',
+      onDelete: 'set null'
     }),
-    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
-    atualizadoEm: text('atualizado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    atualizadoEm: text('atualizado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString())
   },
   (t) => ({
     idxEmpresaData: index('idx_vendas_empresa_data').on(t.empresaId, t.dataVenda),
@@ -495,11 +536,19 @@ export const vendas = sqliteTable(
     idxEmpresaVendedor: index('idx_vendas_empresa_vendedor').on(t.empresaId, t.vendedorId),
     idxEmpresaCancelada: index('idx_vendas_empresa_cancelada').on(t.empresaId, t.cancelada),
     /** F4-04: cobre resumoVendas com filtro cancelada + data_venda (dashboard). */
-    idxEmpresaCanceladaData: index('idx_vendas_empresa_cancelada_data').on(t.empresaId, t.cancelada, t.dataVenda),
+    idxEmpresaCanceladaData: index('idx_vendas_empresa_cancelada_data').on(
+      t.empresaId,
+      t.cancelada,
+      t.dataVenda
+    ),
     /** F4-04: cobre listarVendas com keyset cursor (empresa_id + cancelada + id DESC). */
-    idxEmpresaCanceladaId: index('idx_vendas_empresa_cancelada_id').on(t.empresaId, t.cancelada, t.id),
+    idxEmpresaCanceladaId: index('idx_vendas_empresa_cancelada_id').on(
+      t.empresaId,
+      t.cancelada,
+      t.id
+    ),
     idxChaveIdempotencia: uniqueIndex('idx_vendas_chave_idempotencia').on(t.chaveIdempotencia),
-    idxNumeroVenda: uniqueIndex('idx_vendas_numero_venda').on(t.empresaId, t.numeroVenda),
+    idxNumeroVenda: uniqueIndex('idx_vendas_numero_venda').on(t.empresaId, t.numeroVenda)
   })
 );
 
@@ -524,7 +573,7 @@ export const vendaItens = sqliteTable(
       .notNull()
       .references(() => vendas.id, { onDelete: 'cascade' }),
     produtoId: integer('produto_id', { mode: 'number' }).references(() => produtos.id, {
-      onDelete: 'set null',
+      onDelete: 'set null'
     }),
     /** Número do recibo / voucher do fornecedor (normalizado). */
     numeroRecibo: text('numero_recibo', { length: 100 }),
@@ -553,11 +602,13 @@ export const vendaItens = sqliteTable(
     valorTotalCentavos: integer('valor_total_centavos').notNull().default(0),
     pagaComissao: integer('paga_comissao', { mode: 'boolean' }).notNull().default(true),
     notas: text('notas'),
-    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString())
   },
   (t) => ({
     idxVenda: index('idx_venda_itens_venda').on(t.empresaId, t.vendaId),
-    idxProduto: index('idx_venda_itens_produto').on(t.produtoId),
+    idxProduto: index('idx_venda_itens_produto').on(t.produtoId)
   })
 );
 
@@ -582,7 +633,7 @@ export const vendaPagamentos = sqliteTable(
       .notNull()
       .references(() => vendas.id, { onDelete: 'cascade' }),
     formaId: integer('forma_id', { mode: 'number' }).references(() => formasPagamento.id, {
-      onDelete: 'set null',
+      onDelete: 'set null'
     }),
     /** Nome copiado para histórico (imutável após gravação). */
     formaNome: text('forma_nome', { length: 100 }).notNull(),
@@ -596,10 +647,12 @@ export const vendaPagamentos = sqliteTable(
     /** Valor de cada parcela (centavos). */
     parcelasValorCentavos: integer('parcelas_valor_centavos').notNull().default(0),
     pagaComissao: integer('paga_comissao', { mode: 'boolean' }).notNull().default(true),
-    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString())
   },
   (t) => ({
-    idxVenda: index('idx_venda_pagamentos_venda').on(t.empresaId, t.vendaId),
+    idxVenda: index('idx_venda_pagamentos_venda').on(t.empresaId, t.vendaId)
   })
 );
 
@@ -624,12 +677,14 @@ export const vendaParcelas = sqliteTable(
     valorCentavos: integer('valor_centavos').notNull().default(0),
     /** Data de vencimento (YYYY-MM-DD). */
     vencimento: text('vencimento', { length: 10 }),
-    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString())
   },
   (t) => ({
     idxPagamento: index('idx_venda_parcelas_pagamento').on(t.empresaId, t.pagamentoId),
     /** F4-04: cobre listarParcelas com filtro por vencimento. */
-    idxVencimento: index('idx_venda_parcelas_vencimento').on(t.empresaId, t.vencimento),
+    idxVencimento: index('idx_venda_parcelas_vencimento').on(t.empresaId, t.vencimento)
   })
 );
 
@@ -668,13 +723,17 @@ export const destinos = sqliteTable(
     lng: real('lng'),
     notas: text('notas'),
     ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
-    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
-    atualizadoEm: text('atualizado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    atualizadoEm: text('atualizado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString())
   },
   (t) => ({
     idxNome: index('idx_destinos_nome').on(t.nome),
     idxPais: index('idx_destinos_pais').on(t.paisCod),
-    idxAtivo: index('idx_destinos_ativo').on(t.ativo),
+    idxAtivo: index('idx_destinos_ativo').on(t.ativo)
   })
 );
 
@@ -708,14 +767,18 @@ export const agendaItens = sqliteTable(
     done: integer('done', { mode: 'boolean' }).notNull().default(false),
     // Metadados
     criadoPor: text('criado_por', { length: 36 }),
-    criadoEm: text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
-    atualizadoEm: text('atualizado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    atualizadoEm: text('atualizado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString())
   },
   (t) => ({
     idxEmpresaUser: index('idx_agenda_empresa_user').on(t.empresaId, t.userId),
     idxEmpresaTipo: index('idx_agenda_empresa_tipo').on(t.empresaId, t.tipo),
     idxStartDate: index('idx_agenda_start_date').on(t.startDate),
-    idxStatus: index('idx_agenda_status').on(t.status),
+    idxStatus: index('idx_agenda_status').on(t.status)
   })
 );
 
@@ -727,55 +790,63 @@ export type NovoAgendaItem = typeof agendaItens.$inferInsert;
 export const muralRecados = sqliteTable(
   'mural_recados',
   {
-    id:             integer('id').primaryKey({ autoIncrement: true }),
-    empresaId:      integer('empresa_id').notNull(),
-    remetenteId:    text('remetente_id', { length: 36 }).notNull(),
-    destinatarioId: text('destinatario_id', { length: 36 }),  // null = toda empresa
-    assunto:        text('assunto', { length: 200 }).notNull().default(''),
-    conteudo:       text('conteudo').notNull(),
-    criadoEm:       text('criado_em').notNull(),
-    atualizadoEm:   text('atualizado_em').notNull(),
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    empresaId: integer('empresa_id').notNull(),
+    remetenteId: text('remetente_id', { length: 36 }).notNull(),
+    destinatarioId: text('destinatario_id', { length: 36 }), // null = toda empresa
+    assunto: text('assunto', { length: 200 }).notNull().default(''),
+    conteudo: text('conteudo').notNull(),
+    criadoEm: text('criado_em').notNull(),
+    atualizadoEm: text('atualizado_em').notNull()
   },
   (t) => ({
-    idxEmpresaData:  index('idx_mural_empresa_data').on(t.empresaId, t.criadoEm),
+    idxEmpresaData: index('idx_mural_empresa_data').on(t.empresaId, t.criadoEm),
     idxDestinatario: index('idx_mural_destinatario').on(t.destinatarioId, t.criadoEm),
-    idxRemetente:    index('idx_mural_remetente').on(t.remetenteId, t.criadoEm),
+    idxRemetente: index('idx_mural_remetente').on(t.remetenteId, t.criadoEm)
   })
 );
 
-export type MuralRecado    = typeof muralRecados.$inferSelect;
+export type MuralRecado = typeof muralRecados.$inferSelect;
 export type NovoMuralRecado = typeof muralRecados.$inferInsert;
-
 
 // ─── M12: Trilha de auditoria v2 ─────────────────────────────────────────────
 
 export const AUDIT_MODULOS = [
-  'Vendas', 'Clientes', 'Cadastros', 'Parametros',
-  'Escalas', 'Admin', 'perfil', 'LGPD', 'Equipe',
+  'Vendas',
+  'Clientes',
+  'Cadastros',
+  'Parametros',
+  'Escalas',
+  'Admin',
+  'perfil',
+  'LGPD',
+  'Equipe'
 ] as const;
 export type AuditModuloV2 = (typeof AUDIT_MODULOS)[number];
 
 export const auditLogs = sqliteTable(
   'audit_logs',
   {
-    id:         integer('id').primaryKey({ autoIncrement: true }),
-    empresaId:  integer('empresa_id').notNull(),
-    userId:     text('user_id', { length: 36 }),
-    modulo:     text('modulo', { length: 30 }).notNull(),
-    acao:       text('acao', { length: 60 }).notNull(),
-    detalhes:   text('detalhes'), // JSON serializado
-    ip:         text('ip', { length: 45 }),
-    userAgent:  text('user_agent', { length: 300 }),
-    criadoEm:   text('criado_em').notNull().$defaultFn(() => new Date().toISOString()),
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    empresaId: integer('empresa_id').notNull(),
+    userId: text('user_id', { length: 36 }),
+    modulo: text('modulo', { length: 30 }).notNull(),
+    acao: text('acao', { length: 60 }).notNull(),
+    detalhes: text('detalhes'), // JSON serializado
+    ip: text('ip', { length: 45 }),
+    userAgent: text('user_agent', { length: 300 }),
+    criadoEm: text('criado_em')
+      .notNull()
+      .$defaultFn(() => new Date().toISOString())
   },
   (t) => ({
     idxEmpresaData: index('idx_audit_empresa_data').on(t.empresaId, t.criadoEm),
-    idxUser:        index('idx_audit_user').on(t.userId, t.criadoEm),
-    idxModulo:      index('idx_audit_modulo').on(t.empresaId, t.modulo, t.criadoEm),
+    idxUser: index('idx_audit_user').on(t.userId, t.criadoEm),
+    idxModulo: index('idx_audit_modulo').on(t.empresaId, t.modulo, t.criadoEm)
   })
 );
 
-export type AuditLog    = typeof auditLogs.$inferSelect;
+export type AuditLog = typeof auditLogs.$inferSelect;
 export type NovoAuditLog = typeof auditLogs.$inferInsert;
 
 // ─── M01/F2: modelo de identidade e escopos compatível com o legado ──────────
@@ -791,9 +862,9 @@ export const userTypes = sqliteTable(
     id: text('id').primaryKey(),
     name: text('name').notNull(),
     description: text('description'),
-    createdAt: text('created_at').notNull(),
+    createdAt: text('created_at').notNull()
   },
-  (t) => ({ idxName: uniqueIndex('idx_user_types_name').on(t.name) }),
+  (t) => ({ idxName: uniqueIndex('idx_user_types_name').on(t.name) })
 );
 
 export const userProfiles = sqliteTable(
@@ -803,28 +874,18 @@ export const userProfiles = sqliteTable(
       .primaryKey()
       .references(() => user.id, { onDelete: 'cascade' }),
     userTypeId: text('user_type_id').references(() => userTypes.id, {
-      onDelete: 'set null',
+      onDelete: 'set null'
     }),
-    usoIndividual: integer('uso_individual', { mode: 'boolean' })
-      .notNull()
-      .default(true),
+    usoIndividual: integer('uso_individual', { mode: 'boolean' }).notNull().default(true),
     ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
-    participaRanking: integer('participa_ranking', { mode: 'boolean' })
-      .notNull()
-      .default(false),
-    updatedAt: text('updated_at').notNull(),
+    participaRanking: integer('participa_ranking', { mode: 'boolean' }).notNull().default(false),
+    updatedAt: text('updated_at').notNull()
   },
   (t) => ({
-    checkUsoIndividual: check(
-      'ck_user_profiles_uso_individual',
-      sql`${t.usoIndividual} IN (0, 1)`,
-    ),
+    checkUsoIndividual: check('ck_user_profiles_uso_individual', sql`${t.usoIndividual} IN (0, 1)`),
     checkAtivo: check('ck_user_profiles_ativo', sql`${t.ativo} IN (0, 1)`),
-    checkRanking: check(
-      'ck_user_profiles_participa_ranking',
-      sql`${t.participaRanking} IN (0, 1)`,
-    ),
-  }),
+    checkRanking: check('ck_user_profiles_participa_ranking', sql`${t.participaRanking} IN (0, 1)`)
+  })
 );
 
 export const userTypeDefaultPerms = sqliteTable(
@@ -838,26 +899,20 @@ export const userTypeDefaultPerms = sqliteTable(
     permissao: text('permissao').notNull().default('none'),
     ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
     createdAt: text('created_at').notNull(),
-    updatedAt: text('updated_at').notNull(),
+    updatedAt: text('updated_at').notNull()
   },
   (t) => ({
     idxTypeModule: uniqueIndex('idx_user_type_default_perms_type_module').on(
       t.userTypeId,
-      t.modulo,
+      t.modulo
     ),
-    idxTypeActive: index('idx_user_type_default_perms_type').on(
-      t.userTypeId,
-      t.ativo,
-    ),
+    idxTypeActive: index('idx_user_type_default_perms_type').on(t.userTypeId, t.ativo),
     checkPermission: check(
       'ck_user_type_default_perms_permission',
-      sql`${t.permissao} IN ('none', 'view', 'create', 'edit', 'delete', 'admin')`,
+      sql`${t.permissao} IN ('none', 'view', 'create', 'edit', 'delete', 'admin')`
     ),
-    checkModule: check(
-      'ck_user_type_default_perms_module',
-      sql`length(trim(${t.modulo})) > 0`,
-    ),
-  }),
+    checkModule: check('ck_user_type_default_perms_module', sql`length(trim(${t.modulo})) > 0`)
+  })
 );
 
 export const moduloAcesso = sqliteTable(
@@ -871,26 +926,17 @@ export const moduloAcesso = sqliteTable(
     permissao: text('permissao').notNull().default('none'),
     ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
     createdAt: text('created_at').notNull(),
-    updatedAt: text('updated_at').notNull(),
+    updatedAt: text('updated_at').notNull()
   },
   (t) => ({
-    idxUserModule: uniqueIndex('idx_modulo_acesso_user_module').on(
-      t.usuarioId,
-      t.modulo,
-    ),
-    idxUserActive: index('idx_modulo_acesso_user_active').on(
-      t.usuarioId,
-      t.ativo,
-    ),
+    idxUserModule: uniqueIndex('idx_modulo_acesso_user_module').on(t.usuarioId, t.modulo),
+    idxUserActive: index('idx_modulo_acesso_user_active').on(t.usuarioId, t.ativo),
     checkPermission: check(
       'ck_modulo_acesso_permission',
-      sql`${t.permissao} IN ('none', 'view', 'create', 'edit', 'delete', 'admin')`,
+      sql`${t.permissao} IN ('none', 'view', 'create', 'edit', 'delete', 'admin')`
     ),
-    checkModule: check(
-      'ck_modulo_acesso_module',
-      sql`length(trim(${t.modulo})) > 0`,
-    ),
-  }),
+    checkModule: check('ck_modulo_acesso_module', sql`length(trim(${t.modulo})) > 0`)
+  })
 );
 
 export const masterEmpresas = sqliteTable(
@@ -907,23 +953,17 @@ export const masterEmpresas = sqliteTable(
     createdAt: text('created_at').notNull(),
     approvedAt: text('approved_at'),
     approvedBy: text('approved_by').references(() => user.id, {
-      onDelete: 'set null',
-    }),
+      onDelete: 'set null'
+    })
   },
   (t) => ({
-    idxMasterCompany: uniqueIndex('idx_master_empresas_pair').on(
-      t.masterId,
-      t.companyId,
-    ),
-    idxCompanyStatus: index('idx_master_empresas_company_status').on(
-      t.companyId,
-      t.status,
-    ),
+    idxMasterCompany: uniqueIndex('idx_master_empresas_pair').on(t.masterId, t.companyId),
+    idxCompanyStatus: index('idx_master_empresas_company_status').on(t.companyId, t.status),
     checkStatus: check(
       'ck_master_empresas_status',
-      sql`${t.status} IN ('pending', 'approved', 'rejected')`,
-    ),
-  }),
+      sql`${t.status} IN ('pending', 'approved', 'rejected')`
+    )
+  })
 );
 
 export const financeiroEmpresas = sqliteTable(
@@ -940,23 +980,20 @@ export const financeiroEmpresas = sqliteTable(
     createdAt: text('created_at').notNull(),
     approvedAt: text('approved_at'),
     createdBy: text('created_by').references(() => user.id, {
-      onDelete: 'set null',
-    }),
+      onDelete: 'set null'
+    })
   },
   (t) => ({
     idxFinanceiroCompany: uniqueIndex('idx_financeiro_empresas_pair').on(
       t.financeiroId,
-      t.companyId,
+      t.companyId
     ),
-    idxCompanyStatus: index('idx_financeiro_empresas_company_status').on(
-      t.companyId,
-      t.status,
-    ),
+    idxCompanyStatus: index('idx_financeiro_empresas_company_status').on(t.companyId, t.status),
     checkStatus: check(
       'ck_financeiro_empresas_status',
-      sql`${t.status} IN ('pending', 'approved', 'rejected')`,
-    ),
-  }),
+      sql`${t.status} IN ('pending', 'approved', 'rejected')`
+    )
+  })
 );
 
 export const gestorVendedor = sqliteTable(
@@ -972,33 +1009,23 @@ export const gestorVendedor = sqliteTable(
     companyId: integer('company_id')
       .notNull()
       .references(() => empresas.id, { onDelete: 'cascade' }),
-    podeModificar: integer('pode_modificar', { mode: 'boolean' })
-      .notNull()
-      .default(false),
+    podeModificar: integer('pode_modificar', { mode: 'boolean' }).notNull().default(false),
     createdAt: text('created_at').notNull(),
-    ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true),
+    ativo: integer('ativo', { mode: 'boolean' }).notNull().default(true)
   },
   (t) => ({
     idxGestorVendedorCompany: uniqueIndex('idx_gestor_vendedor_pair').on(
       t.gestorId,
       t.vendedorId,
-      t.companyId,
+      t.companyId
     ),
-    idxGestorTeam: index('idx_gestor_vendedor_team').on(
-      t.gestorId,
-      t.companyId,
-      t.ativo,
-    ),
-    idxVendedorTeam: index('idx_gestor_vendedor_member').on(
-      t.vendedorId,
-      t.companyId,
-      t.ativo,
-    ),
+    idxGestorTeam: index('idx_gestor_vendedor_team').on(t.gestorId, t.companyId, t.ativo),
+    idxVendedorTeam: index('idx_gestor_vendedor_member').on(t.vendedorId, t.companyId, t.ativo),
     checkDifferentUsers: check(
       'ck_gestor_vendedor_distinct_users',
-      sql`${t.gestorId} <> ${t.vendedorId}`,
-    ),
-  }),
+      sql`${t.gestorId} <> ${t.vendedorId}`
+    )
+  })
 );
 
 export const gestorEquipeCompartilhada = sqliteTable(
@@ -1012,15 +1039,15 @@ export const gestorEquipeCompartilhada = sqliteTable(
       .references(() => user.id, { onDelete: 'cascade' }),
     createdAt: text('created_at').notNull(),
     createdBy: text('created_by').references(() => user.id, {
-      onDelete: 'set null',
-    }),
+      onDelete: 'set null'
+    })
   },
   (t) => ({
     checkDifferentManagers: check(
       'ck_gestor_equipe_compartilhada_distinct',
-      sql`${t.gestorId} <> ${t.gestorBaseId}`,
-    ),
-  }),
+      sql`${t.gestorId} <> ${t.gestorBaseId}`
+    )
+  })
 );
 
 export const systemModuleSettings = sqliteTable(
@@ -1031,15 +1058,12 @@ export const systemModuleSettings = sqliteTable(
     reason: text('reason'),
     updatedAt: text('updated_at').notNull(),
     updatedBy: text('updated_by').references(() => user.id, {
-      onDelete: 'set null',
-    }),
+      onDelete: 'set null'
+    })
   },
   (t) => ({
-    checkEnabled: check(
-      'ck_system_module_settings_enabled',
-      sql`${t.enabled} IN (0, 1)`,
-    ),
-  }),
+    checkEnabled: check('ck_system_module_settings_enabled', sql`${t.enabled} IN (0, 1)`)
+  })
 );
 
 export * from './legadoSchema';
@@ -1051,11 +1075,11 @@ export const securityRateLimits = sqliteTable(
     keyHash: text('key_hash').notNull(),
     windowStartMs: integer('window_start_ms').notNull(),
     expiresAtMs: integer('expires_at_ms').notNull(),
-    hits: integer('hits').notNull().default(0),
+    hits: integer('hits').notNull().default(0)
   },
   (t) => ({
     pk: primaryKey({ columns: [t.scope, t.keyHash], name: 'pk_security_rate_limits' }),
     idxExpiresAt: index('idx_security_rate_limits_expires_at').on(t.expiresAtMs),
-    checkHits: check('ck_security_rate_limits_hits', sql`${t.hits} >= 0`),
-  }),
+    checkHits: check('ck_security_rate_limits_hits', sql`${t.hits} >= 0`)
+  })
 );

@@ -15,7 +15,7 @@ import { getDb } from '$lib/server/db/client';
 import {
   listarAuditLogs,
   exportarDadosTitular,
-  anonimizarTitularAuditLogs,
+  anonimizarTitularAuditLogs
 } from '$lib/server/m12-auditoria/service';
 
 export const auditoriaV2Routes = new Hono<ApiEnv>();
@@ -28,7 +28,7 @@ async function contexto(c: Context<ApiEnv>) {
   const baseURL =
     PUBLIC_ENVIRONMENT === 'production'
       ? 'https://vturapp.com.br'
-      : PUBLIC_APP_URL ?? 'http://localhost:5173';
+      : (PUBLIC_APP_URL ?? 'http://localhost:5173');
   const ctx = await resolveAuthContext(c.req.raw.headers, DB, BETTER_AUTH_SECRET, baseURL);
   if (!ctx) {
     return { res: c.json({ error: 'Não autenticado.' }, 401) };
@@ -48,12 +48,12 @@ auditoriaV2Routes.get('/logs', async (c) => {
 
   const q = c.req.query();
   const logs = await listarAuditLogs(db, ctx.empresaId, {
-    modulo:  q.modulo,
-    userId:  q.userId,
-    de:      q.de,
-    ate:     q.ate,
-    cursor:  q.cursor ? Number(q.cursor) : undefined,
-    limite:  q.limite ? Number(q.limite) : 50,
+    modulo: q.modulo,
+    userId: q.userId,
+    de: q.de,
+    ate: q.ate,
+    cursor: q.cursor ? Number(q.cursor) : undefined,
+    limite: q.limite ? Number(q.limite) : 50
   });
 
   return c.json(logs);
@@ -85,7 +85,11 @@ auditoriaV2Routes.post('/lgpd/:userId/anonimizar', async (c) => {
 
   // Confirmar intenção
   let body: Record<string, unknown> = {};
-  try { body = await c.req.json(); } catch { /* body vazio */ }
+  try {
+    body = await c.req.json();
+  } catch {
+    /* body vazio */
+  }
   if (body.confirmar !== true) {
     return c.json({ error: 'Envie { "confirmar": true } para confirmar a operação.' }, 422);
   }

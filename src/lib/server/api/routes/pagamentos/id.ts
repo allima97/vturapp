@@ -15,13 +15,24 @@ import {
   toErrorResponse
 } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
-import { invalidateReadModelCache, READ_MODEL_TAGS, scopeCacheTags } from '$lib/server/readModelCache';
+import {
+  invalidateReadModelCache,
+  READ_MODEL_TAGS,
+  scopeCacheTags
+} from '$lib/server/readModelCache';
 
 const MAX_PAGAMENTO_UPDATE_BODY_BYTES = 64 * 1024;
 const PAGAMENTO_ALLOWED_UPDATE_FIELDS = [
-  'forma_nome', 'forma_pagamento_id', 'valor_total', 'valor_bruto',
-  'desconto_valor', 'paga_comissao', 'observacoes',
-  'parcelas_qtd', 'parcelas_valor', 'vencimento_primeira'
+  'forma_nome',
+  'forma_pagamento_id',
+  'valor_total',
+  'valor_bruto',
+  'desconto_valor',
+  'paga_comissao',
+  'observacoes',
+  'parcelas_qtd',
+  'parcelas_valor',
+  'vencimento_primeira'
 ];
 type PagamentoAllowedUpdateField = (typeof PAGAMENTO_ALLOWED_UPDATE_FIELDS)[number];
 type PagamentoUpdateBody = Partial<Record<PagamentoAllowedUpdateField, unknown>>;
@@ -59,7 +70,8 @@ async function resolvePagamentoComScope(
   if (error) throw error;
   if (!data) return null;
   const pagamento = data as PagamentoScopeRow;
-  const companyId = String(pagamento.venda?.company_id || pagamento.company_id || '').trim() || null;
+  const companyId =
+    String(pagamento.venda?.company_id || pagamento.company_id || '').trim() || null;
   return { pagamento, companyId };
 }
 
@@ -80,13 +92,24 @@ export async function handlePagamentosIdGet(event: RequestEvent) {
     }
 
     const id = String(event.params.id || '').trim();
-    if (!isUuid(id)) return json({ success: false, error: 'ID invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json(
+        { success: false, error: 'ID invalido.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
 
     const result = await resolvePagamentoComScope(client, id);
-    if (!result) return json({ success: false, error: 'Pagamento nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!result)
+      return json(
+        { success: false, error: 'Pagamento nao encontrado.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
 
     if (!canAccessPagamentoCompany(scope, result.companyId)) {
-      return json({ success: false, error: 'Acesso negado.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'Acesso negado.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     return json({ success: true, item: result.pagamento }, { headers: DYNAMIC_READ_HEADERS });
@@ -109,13 +132,24 @@ export async function handlePagamentosIdPatch(event: RequestEvent) {
     ensureModuloAccess(scope, ['financeiro'], 3, 'Sem permissão para editar pagamento.');
 
     const id = String(event.params.id || '').trim();
-    if (!isUuid(id)) return json({ success: false, error: 'ID invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json(
+        { success: false, error: 'ID invalido.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
 
     const result = await resolvePagamentoComScope(client, id);
-    if (!result) return json({ success: false, error: 'Pagamento nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!result)
+      return json(
+        { success: false, error: 'Pagamento nao encontrado.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
 
     if (!canAccessPagamentoCompany(scope, result.companyId)) {
-      return json({ success: false, error: 'Acesso negado.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'Acesso negado.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const body =
@@ -131,7 +165,9 @@ export async function handlePagamentosIdPatch(event: RequestEvent) {
       .from('vendas_pagamentos')
       .update(updateData)
       .eq('id', id)
-      .select('id, company_id, venda_id, forma_pagamento_id, forma_nome, operacao, plano, valor_bruto, desconto_valor, valor_total, parcelas_qtd, parcelas_valor, vencimento_primeira, paga_comissao, observacoes, created_at, updated_at')
+      .select(
+        'id, company_id, venda_id, forma_pagamento_id, forma_nome, operacao, plano, valor_bruto, desconto_valor, valor_total, parcelas_qtd, parcelas_valor, vencimento_primeira, paga_comissao, observacoes, created_at, updated_at'
+      )
       .single();
 
     if (error) throw error;
@@ -154,19 +190,27 @@ export async function handlePagamentosIdDelete(event: RequestEvent) {
     ensureModuloAccess(scope, ['financeiro'], 4, 'Sem permissão para excluir pagamento.');
 
     const id = String(event.params.id || '').trim();
-    if (!isUuid(id)) return json({ success: false, error: 'ID invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json(
+        { success: false, error: 'ID invalido.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
 
     const result = await resolvePagamentoComScope(client, id);
-    if (!result) return json({ success: false, error: 'Pagamento nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!result)
+      return json(
+        { success: false, error: 'Pagamento nao encontrado.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
 
     if (!canAccessPagamentoCompany(scope, result.companyId)) {
-      return json({ success: false, error: 'Acesso negado.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'Acesso negado.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
-    const { error } = await client
-      .from('vendas_pagamentos')
-      .delete()
-      .eq('id', id);
+    const { error } = await client.from('vendas_pagamentos').delete().eq('id', id);
 
     if (error) throw error;
     invalidatePagamentoReadModels(result.companyId, user.id);

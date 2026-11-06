@@ -1,18 +1,18 @@
 <script lang="ts">
-  import { onMount } from "svelte";
-  import { page } from "$app/stores";
-  import { goto } from "$app/navigation";
-  import { toast } from "$lib/stores/ui";
-  import PageHeader from "$lib/components/ui/PageHeader.svelte";
-  import Card from "$lib/components/ui/Card.svelte";
-  import Button from "$lib/components/ui/Button.svelte";
-  import LoadingState from "$lib/components/ui/LoadingState.svelte";
-  import Badge from "$lib/components/ui/Badge.svelte";
-  import Dialog from "$lib/components/ui/Dialog.svelte";
-  import FieldInput from "$lib/components/ui/form/FieldInput.svelte";
-  import FieldTextarea from "$lib/components/ui/form/FieldTextarea.svelte";
-  import FieldCheckbox from "$lib/components/ui/form/FieldCheckbox.svelte";
-  import KPICard from "$lib/components/kpis/KPICard.svelte";
+  import { onMount } from 'svelte';
+  import { page } from '$app/stores';
+  import { goto } from '$app/navigation';
+  import { toast } from '$lib/stores/ui';
+  import PageHeader from '$lib/components/ui/PageHeader.svelte';
+  import Card from '$lib/components/ui/Card.svelte';
+  import Button from '$lib/components/ui/Button.svelte';
+  import LoadingState from '$lib/components/ui/LoadingState.svelte';
+  import Badge from '$lib/components/ui/Badge.svelte';
+  import Dialog from '$lib/components/ui/Dialog.svelte';
+  import FieldInput from '$lib/components/ui/form/FieldInput.svelte';
+  import FieldTextarea from '$lib/components/ui/form/FieldTextarea.svelte';
+  import FieldCheckbox from '$lib/components/ui/form/FieldCheckbox.svelte';
+  import KPICard from '$lib/components/kpis/KPICard.svelte';
   import {
     Plane,
     Calendar,
@@ -36,21 +36,21 @@
     Briefcase,
     History,
     TrendingUp,
-    MapPinned,
+    MapPinned
   } from '$lib/icons';
-  import { diffDaysISODate } from "$lib/date";
+  import { diffDaysISODate } from '$lib/date';
   import {
     formatDate as formatDateValue,
-    formatDateTime as formatDateTimeValue,
-  } from "$lib/utils/formatters";
+    formatDateTime as formatDateTimeValue
+  } from '$lib/utils/formatters';
   import {
     formatViagemStatus,
     normalizeViagemStatus,
-    type StatusViagem,
-  } from "$lib/viagens/status";
-  import { toUserMessage } from "$lib/utils/errors";
-  import { ApiError, apiDelete, apiGet, apiPatch, isCanceledApiError } from "$lib/services/api";
-  import { createLoadGuard } from "$lib/utils/loadGuard";
+    type StatusViagem
+  } from '$lib/viagens/status';
+  import { toUserMessage } from '$lib/utils/errors';
+  import { ApiError, apiDelete, apiGet, apiPatch, isCanceledApiError } from '$lib/services/api';
+  import { createLoadGuard } from '$lib/utils/loadGuard';
 
   interface Cliente {
     id: string;
@@ -113,22 +113,22 @@
   }
 
   type BadgeColor =
-    | "gray"
-    | "dark"
-    | "blue"
-    | "green"
-    | "yellow"
-    | "red"
-    | "purple"
-    | "pink"
-    | "indigo"
-    | "teal"
-    | "operacao"
-    | "clientes"
-    | "vendas"
-    | "financeiro"
-    | "orcamentos"
-    | "comissoes";
+    | 'gray'
+    | 'dark'
+    | 'blue'
+    | 'green'
+    | 'yellow'
+    | 'red'
+    | 'purple'
+    | 'pink'
+    | 'indigo'
+    | 'teal'
+    | 'operacao'
+    | 'clientes'
+    | 'vendas'
+    | 'financeiro'
+    | 'orcamentos'
+    | 'comissoes';
 
   interface Viagem {
     id: string;
@@ -171,12 +171,12 @@
     follow_up_text: string;
     follow_up_fechado: boolean;
   } = {
-    data_inicio: "",
-    data_fim: "",
-    status: "pendente",
-    observacoes: "",
-    follow_up_text: "",
-    follow_up_fechado: false,
+    data_inicio: '',
+    data_fim: '',
+    status: 'pendente',
+    observacoes: '',
+    follow_up_text: '',
+    follow_up_fechado: false
   };
 
   const statusOptions: Array<{
@@ -185,32 +185,32 @@
     color: BadgeColor;
     icon: typeof Calendar;
   }> = [
-    { value: "pendente", label: "Pendente", color: "gray", icon: Calendar },
+    { value: 'pendente', label: 'Pendente', color: 'gray', icon: Calendar },
     {
-      value: "confirmada",
-      label: "Confirmada",
-      color: "blue",
-      icon: CheckCircle,
+      value: 'confirmada',
+      label: 'Confirmada',
+      color: 'blue',
+      icon: CheckCircle
     },
-    { value: "em_viagem", label: "Em viagem", color: "yellow", icon: Plane },
+    { value: 'em_viagem', label: 'Em viagem', color: 'yellow', icon: Plane },
     {
-      value: "concluida",
-      label: "Concluída",
-      color: "green",
-      icon: CheckCircle,
+      value: 'concluida',
+      label: 'Concluída',
+      color: 'green',
+      icon: CheckCircle
     },
-    { value: "cancelada", label: "Cancelada", color: "red", icon: AlertCircle },
+    { value: 'cancelada', label: 'Cancelada', color: 'red', icon: AlertCircle }
   ];
 
   const providerVoucherLabels: Record<string, string> = {
-    special_tours: "Special Tours",
-    europamundo: "Europamundo",
-    sato_tours: "Sato Tours",
+    special_tours: 'Special Tours',
+    europamundo: 'Europamundo',
+    sato_tours: 'Sato Tours'
   };
 
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
+  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
   });
 
   onMount(() => {
@@ -221,31 +221,33 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const data = await apiGet<{ viagem?: Viagem }>(`/api/v1/viagens/${viagemId}`, undefined, request.signal);
+      const data = await apiGet<{ viagem?: Viagem }>(
+        `/api/v1/viagens/${viagemId}`,
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
-      if (!data.viagem) throw new Error("Viagem não encontrada");
+      if (!data.viagem) throw new Error('Viagem não encontrada');
       const viagemData: Viagem = data.viagem;
       viagem = viagemData;
 
       // Preenche formulário de edição
       editForm = {
-        data_inicio: viagemData.data_inicio
-          ? viagemData.data_inicio.split("T")[0]
-          : "",
-        data_fim: viagemData.data_fim ? viagemData.data_fim.split("T")[0] : "",
+        data_inicio: viagemData.data_inicio ? viagemData.data_inicio.split('T')[0] : '',
+        data_fim: viagemData.data_fim ? viagemData.data_fim.split('T')[0] : '',
         status: normalizeViagemStatus(viagemData.status),
-        observacoes: viagemData.observacoes || "",
-        follow_up_text: viagemData.follow_up_text || "",
-        follow_up_fechado: viagemData.follow_up_fechado || false,
+        observacoes: viagemData.observacoes || '',
+        follow_up_text: viagemData.follow_up_text || '',
+        follow_up_fechado: viagemData.follow_up_fechado || false
       };
     } catch (err) {
       if (isCanceledApiError(err)) return;
       if (err instanceof ApiError && err.status === 404) {
-        toast.error("Viagem não encontrada");
-        goto("/operacao/viagens");
+        toast.error('Viagem não encontrada');
+        goto('/operacao/viagens');
         return;
       }
-      toast.error(toUserMessage(err, "Erro ao carregar viagem"));
+      toast.error(toUserMessage(err, 'Erro ao carregar viagem'));
     } finally {
       if (loadGuard.isCurrent(request.seq)) loading = false;
     }
@@ -255,12 +257,12 @@
     saving = true;
     try {
       await apiPatch(`/api/v1/viagens/${viagemId}`, editForm);
-      toast.success("Viagem atualizada com sucesso");
+      toast.success('Viagem atualizada com sucesso');
       showEditModal = false;
       showStatusModal = false;
       await loadViagem();
     } catch (err) {
-      toast.error(toUserMessage(err, "Erro ao atualizar viagem"));
+      toast.error(toUserMessage(err, 'Erro ao atualizar viagem'));
     } finally {
       saving = false;
     }
@@ -269,33 +271,33 @@
   async function deleteViagem() {
     try {
       await apiDelete(`/api/v1/viagens/${viagemId}`);
-      toast.success("Viagem excluída com sucesso");
-      goto("/operacao/viagens");
+      toast.success('Viagem excluída com sucesso');
+      goto('/operacao/viagens');
     } catch (err) {
-      toast.error(toUserMessage(err, "Erro ao excluir viagem"));
+      toast.error(toUserMessage(err, 'Erro ao excluir viagem'));
     }
   }
 
   function getStatusColor(status: string): BadgeColor {
     const colors: Record<string, BadgeColor> = {
-      planejada: "gray",
-      pendente: "gray",
-      confirmada: "blue",
-      em_viagem: "yellow",
-      concluida: "green",
-      cancelada: "red",
+      planejada: 'gray',
+      pendente: 'gray',
+      confirmada: 'blue',
+      em_viagem: 'yellow',
+      concluida: 'green',
+      cancelada: 'red'
     };
-    return colors[status] || "gray";
+    return colors[status] || 'gray';
   }
 
   function getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
-      planejada: "Pendente",
-      pendente: "Pendente",
-      confirmada: "Confirmada",
-      em_viagem: "Em viagem",
-      concluida: "Concluída",
-      cancelada: "Cancelada",
+      planejada: 'Pendente',
+      pendente: 'Pendente',
+      confirmada: 'Confirmada',
+      em_viagem: 'Em viagem',
+      concluida: 'Concluída',
+      cancelada: 'Cancelada'
     };
     return labels[status] || formatViagemStatus(status);
   }
@@ -309,7 +311,7 @@
   }
 
   function formatCurrency(value: number | null): string {
-    if (value === null || value === undefined) return "-";
+    if (value === null || value === undefined) return '-';
     return BRL_CURRENCY_FORMATTER.format(value);
   }
 
@@ -342,47 +344,39 @@
     if (!viagem) return [];
     return [
       {
-        id: "1",
-        tipo: "criacao",
-        descricao: "Viagem criada",
+        id: '1',
+        tipo: 'criacao',
+        descricao: 'Viagem criada',
         data: viagem.created_at,
-        usuario: "Sistema",
+        usuario: 'Sistema'
       },
       {
-        id: "2",
-        tipo: "status",
+        id: '2',
+        tipo: 'status',
         descricao: `Status alterado para: ${getStatusLabel(viagem.status)}`,
         data: viagem.updated_at,
-        usuario: "Operador",
-      },
+        usuario: 'Operador'
+      }
     ];
   }
 
-  $: diasViagem = viagem
-    ? getDiasViagem(viagem.data_inicio, viagem.data_fim)
-    : 0;
-  $: dataSaida = viagem?.venda?.recibos
-    ? getDataSaida(viagem.venda.recibos)
-    : viagem?.data_inicio;
-  $: dataRetorno = viagem?.venda?.recibos
-    ? getDataRetorno(viagem.venda.recibos)
-    : viagem?.data_fim;
+  $: diasViagem = viagem ? getDiasViagem(viagem.data_inicio, viagem.data_fim) : 0;
+  $: dataSaida = viagem?.venda?.recibos ? getDataSaida(viagem.venda.recibos) : viagem?.data_inicio;
+  $: dataRetorno = viagem?.venda?.recibos ? getDataRetorno(viagem.venda.recibos) : viagem?.data_fim;
   $: historico = viagem ? gerarHistoricoMock() : [];
 </script>
 
 <svelte:head>
   <title
-    >{viagem
-      ? `Viagem - ${viagem.cliente?.nome || "Cliente"}`
-      : "Detalhes da Viagem"} | VTUR</title
+    >{viagem ? `Viagem - ${viagem.cliente?.nome || 'Cliente'}` : 'Detalhes da Viagem'} | VTUR</title
   >
 </svelte:head>
 
 {#if loading}
   <LoadingState />
 {:else if !viagem}
-  <div class="text-center py-12">
-    <p class="text-slate-500 mb-4">Viagem não encontrada ou sem permissão de acesso.</p>
+  <div class="py-12 text-center">
+    <p class="mb-4 text-slate-500">Viagem não encontrada ou sem permissão de acesso.</p>
     <Button variant="secondary" on:click={() => goto('/operacao/viagens')}>
       <ArrowLeft size={16} class="mr-2" />
       Voltar para Viagens
@@ -391,55 +385,49 @@
 {:else if viagem}
   <!-- Header -->
   <PageHeader
-    title={`Dossiê da Viagem ${viagem.venda_id ? `• ${viagem.venda_id.slice(0, 8).toUpperCase()}` : ""}`}
-    subtitle={viagem?.cliente ? `Cliente: ${viagem.cliente.nome}` : ""}
+    title={`Dossiê da Viagem ${viagem.venda_id ? `• ${viagem.venda_id.slice(0, 8).toUpperCase()}` : ''}`}
+    subtitle={viagem?.cliente ? `Cliente: ${viagem.cliente.nome}` : ''}
     color="clientes"
-    breadcrumbs={[
-      { label: "Viagens", href: "/operacao/viagens" },
-      { label: "Detalhe" },
-    ]}
+    breadcrumbs={[{ label: 'Viagens', href: '/operacao/viagens' }, { label: 'Detalhe' }]}
     actions={[
       {
-        label: "Voltar",
-        href: "/operacao/viagens",
-        variant: "primary",
-        icon: ArrowLeft,
+        label: 'Voltar',
+        href: '/operacao/viagens',
+        variant: 'primary',
+        icon: ArrowLeft
       },
       {
-        label: "Editar",
+        label: 'Editar',
         onClick: () => (showEditModal = true),
-        variant: "primary",
-        icon: Edit2,
+        variant: 'primary',
+        icon: Edit2
       },
       {
-        label: "Mudar Status",
+        label: 'Mudar Status',
         onClick: () => (showStatusModal = true),
-        variant: "secondary",
-        icon: CheckCircle,
+        variant: 'secondary',
+        icon: CheckCircle
       },
       {
-        label: "Excluir",
+        label: 'Excluir',
         onClick: () => (showDeleteDialog = true),
-        variant: "danger",
-        icon: Trash2,
-      },
+        variant: 'danger',
+        icon: Trash2
+      }
     ]}
   />
 
   <!-- Status Banner -->
   {@const bannerClasses = {
-    planejada: "bg-slate-50 border-slate-200",
-    pendente: "bg-slate-50 border-slate-200",
-    confirmada: "bg-blue-50 border-blue-200",
-    em_viagem: "bg-amber-50 border-amber-200",
-    concluida: "bg-green-50 border-green-200",
-    cancelada: "bg-red-50 border-red-200",
+    planejada: 'bg-slate-50 border-slate-200',
+    pendente: 'bg-slate-50 border-slate-200',
+    confirmada: 'bg-blue-50 border-blue-200',
+    em_viagem: 'bg-amber-50 border-amber-200',
+    concluida: 'bg-green-50 border-green-200',
+    cancelada: 'bg-red-50 border-red-200'
   }}
-  <div
-    class="mb-6 p-4 rounded-xl border {bannerClasses[viagem.status] ??
-      bannerClasses.pendente}"
-  >
-    <div class="flex items-center justify-between flex-wrap gap-4">
+  <div class="mb-6 rounded-xl border p-4 {bannerClasses[viagem.status] ?? bannerClasses.pendente}">
+    <div class="flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <Badge color={getStatusColor(viagem.status)} size="md">
           {getStatusLabel(viagem.status)}
@@ -450,11 +438,7 @@
       </div>
       <div class="flex gap-2">
         {#if viagem.venda_id}
-          <Button
-            variant="outline"
-            size="sm"
-            on:click={() => goto(`/vendas/${viagem?.venda_id}`)}
-          >
+          <Button variant="outline" size="sm" on:click={() => goto(`/vendas/${viagem?.venda_id}`)}>
             <CreditCard size={16} class="mr-2" />
             Ver Venda
           </Button>
@@ -465,12 +449,7 @@
 
   <!-- KPIs -->
   <div class="vtur-kpi-grid mb-6">
-    <KPICard
-      title="Data de Saída"
-      value={formatDate(dataSaida)}
-      color="operacao"
-      icon={Calendar}
-    />
+    <KPICard title="Data de Saída" value={formatDate(dataSaida)} color="operacao" icon={Calendar} />
     <KPICard
       title="Data de Retorno"
       value={formatDate(dataRetorno)}
@@ -482,31 +461,29 @@
       value={`${diasViagem} dias`}
       color="vendas"
       icon={Clock}
-      subtitle={diasViagem > 1 ? "dias de viagem" : "dia de viagem"}
+      subtitle={diasViagem > 1 ? 'dias de viagem' : 'dia de viagem'}
     />
     <KPICard
       title="Viajantes"
       value={viagem.passageiros?.length || 1}
       color="clientes"
       icon={Users}
-      subtitle={viagem.passageiros?.length === 1 ? "passageiro" : "passageiros"}
+      subtitle={viagem.passageiros?.length === 1 ? 'passageiro' : 'passageiros'}
     />
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
     <!-- Coluna Principal -->
-    <div class="lg:col-span-2 space-y-6">
+    <div class="space-y-6 lg:col-span-2">
       <!-- Dados do Cliente -->
       <Card title="Dados do Cliente" icon={User} color="clientes">
-        <div class="flex items-center gap-4 mb-4">
-          <div
-            class="w-14 h-14 rounded-full bg-clientes-100 flex items-center justify-center"
-          >
+        <div class="mb-4 flex items-center gap-4">
+          <div class="bg-clientes-100 flex h-14 w-14 items-center justify-center rounded-full">
             <User size={28} class="text-clientes-600" />
           </div>
           <div>
             <h3 class="text-lg font-semibold text-slate-900">
-              {viagem.cliente?.nome || "Cliente não informado"}
+              {viagem.cliente?.nome || 'Cliente não informado'}
             </h3>
             <Button
               variant="secondary"
@@ -522,13 +499,13 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {#if viagem.cliente?.email}
-            <div class="flex items-center gap-2 p-3 bg-slate-50 rounded-lg">
+            <div class="flex items-center gap-2 rounded-lg bg-slate-50 p-3">
               <Mail size={18} class="text-slate-400" />
               <a
                 href="mailto:{viagem.cliente.email}"
-                class="text-slate-700 hover:text-clientes-600"
+                class="hover:text-clientes-600 text-slate-700"
               >
                 {viagem.cliente.email}
               </a>
@@ -536,11 +513,11 @@
           {/if}
 
           {#if viagem.cliente?.telefone}
-            <div class="flex items-center gap-2 p-3 bg-slate-50 rounded-lg">
+            <div class="flex items-center gap-2 rounded-lg bg-slate-50 p-3">
               <Phone size={18} class="text-slate-400" />
               <a
                 href="tel:{viagem.cliente.telefone}"
-                class="text-slate-700 hover:text-clientes-600"
+                class="hover:text-clientes-600 text-slate-700"
               >
                 {viagem.cliente.telefone}
               </a>
@@ -548,16 +525,13 @@
           {/if}
 
           {#if viagem.cliente?.whatsapp}
-            <div class="flex items-center gap-2 p-3 bg-slate-50 rounded-lg">
+            <div class="flex items-center gap-2 rounded-lg bg-slate-50 p-3">
               <MessageCircle size={18} class="text-slate-400" />
               <a
-                href="https://wa.me/{viagem.cliente.whatsapp.replace(
-                  /\D/g,
-                  '',
-                )}"
+                href="https://wa.me/{viagem.cliente.whatsapp.replace(/\D/g, '')}"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="text-slate-700 hover:text-clientes-600"
+                class="hover:text-clientes-600 text-slate-700"
               >
                 {viagem.cliente.whatsapp}
               </a>
@@ -568,31 +542,31 @@
 
       <!-- Informações da Viagem -->
       <Card title="Informações da Viagem" icon={MapPinned} color="clientes">
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="p-4 bg-slate-50 rounded-lg text-center">
-            <MapPin size={24} class="mx-auto mb-2 text-clientes-500" />
+        <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+          <div class="rounded-lg bg-slate-50 p-4 text-center">
+            <MapPin size={24} class="text-clientes-500 mx-auto mb-2" />
             <p class="text-sm text-slate-500">Origem</p>
             <p class="font-medium text-slate-900">
-              {viagem.origem || "Não informada"}
+              {viagem.origem || 'Não informada'}
             </p>
           </div>
 
-          <div class="p-4 bg-slate-50 rounded-lg text-center">
-            <MapPin size={24} class="mx-auto mb-2 text-clientes-500" />
+          <div class="rounded-lg bg-slate-50 p-4 text-center">
+            <MapPin size={24} class="text-clientes-500 mx-auto mb-2" />
             <p class="text-sm text-slate-500">Destino</p>
             <p class="font-medium text-slate-900">
-              {viagem.destino || "Não informado"}
+              {viagem.destino || 'Não informado'}
             </p>
           </div>
 
-          <div class="p-4 bg-slate-50 rounded-lg text-center">
-            <Calendar size={24} class="mx-auto mb-2 text-clientes-500" />
+          <div class="rounded-lg bg-slate-50 p-4 text-center">
+            <Calendar size={24} class="text-clientes-500 mx-auto mb-2" />
             <p class="text-sm text-slate-500">Saída</p>
             <p class="font-medium text-slate-900">{formatDate(dataSaida)}</p>
           </div>
 
-          <div class="p-4 bg-slate-50 rounded-lg text-center">
-            <Calendar size={24} class="mx-auto mb-2 text-clientes-500" />
+          <div class="rounded-lg bg-slate-50 p-4 text-center">
+            <Calendar size={24} class="text-clientes-500 mx-auto mb-2" />
             <p class="text-sm text-slate-500">Retorno</p>
             <p class="font-medium text-slate-900">{formatDate(dataRetorno)}</p>
           </div>
@@ -608,25 +582,23 @@
         >
           <div class="space-y-4">
             {#each viagem.venda.recibos as recibo}
-              <div class="bg-slate-50 rounded-lg p-4 border border-slate-200">
+              <div class="rounded-lg border border-slate-200 bg-slate-50 p-4">
                 <div class="flex flex-wrap items-start justify-between gap-4">
                   <div class="min-w-0 flex-1 sm:min-w-[300px]">
-                    <div class="flex items-center gap-2 mb-2">
+                    <div class="mb-2 flex items-center gap-2">
                       <Briefcase size={18} class="text-clientes-600" />
                       <span class="font-semibold text-slate-900"
-                        >{recibo.produto_nome || "Produto"}</span
+                        >{recibo.produto_nome || 'Produto'}</span
                       >
                       {#if recibo.tipo_pacote}
-                        <Badge color="gray" size="sm"
-                          >{recibo.tipo_pacote}</Badge
-                        >
+                        <Badge color="gray" size="sm">{recibo.tipo_pacote}</Badge>
                       {/if}
                     </div>
 
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                    <div class="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
                       <div>
                         <p class="text-slate-500">Recibo</p>
-                        <p class="font-medium">{recibo.numero_recibo || "-"}</p>
+                        <p class="font-medium">{recibo.numero_recibo || '-'}</p>
                       </div>
 
                       {#if recibo.numero_reserva}
@@ -665,7 +637,7 @@
             {/each}
 
             <!-- Total -->
-            <div class="flex justify-end pt-4 border-t border-slate-200">
+            <div class="flex justify-end border-t border-slate-200 pt-4">
               <div class="text-right">
                 <p class="text-sm text-slate-500">Valor Total da Viagem</p>
                 <p class="text-3xl font-bold text-indigo-600">
@@ -678,20 +650,14 @@
       {/if}
 
       <!-- Vouchers -->
-      <Card
-        title={`Vouchers (${viagem.vouchers?.length || 0})`}
-        icon={Ticket}
-        color="clientes"
-      >
+      <Card title={`Vouchers (${viagem.vouchers?.length || 0})`} icon={Ticket} color="clientes">
         {#if viagem.vouchers && viagem.vouchers.length > 0}
           <div class="space-y-3">
             {#each viagem.vouchers as voucher}
-              <div
-                class="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
-              >
+              <div class="flex items-center justify-between rounded-lg bg-slate-50 p-3">
                 <div class="flex items-center gap-3">
                   <div
-                    class="w-10 h-10 rounded-lg bg-clientes-100 flex items-center justify-center"
+                    class="bg-clientes-100 flex h-10 w-10 items-center justify-center rounded-lg"
                   >
                     <Ticket size={20} class="text-clientes-600" />
                   </div>
@@ -700,8 +666,7 @@
                       {voucher.nome}
                     </p>
                     <p class="text-sm text-slate-500">
-                      {providerVoucherLabels[voucher.provider] ||
-                        voucher.provider}
+                      {providerVoucherLabels[voucher.provider] || voucher.provider}
                       {#if voucher.codigo_fornecedor}
                         • {voucher.codigo_fornecedor}
                       {/if}
@@ -715,26 +680,25 @@
                   </div>
                 </div>
                 <div class="flex items-center gap-3">
-                  <Badge color={voucher.ativo ? "green" : "gray"}>
-                    {voucher.ativo ? "Ativo" : "Inativo"}
+                  <Badge color={voucher.ativo ? 'green' : 'gray'}>
+                    {voucher.ativo ? 'Ativo' : 'Inativo'}
                   </Badge>
                 </div>
               </div>
             {/each}
           </div>
         {:else}
-          <div class="text-center py-6 text-slate-500">
+          <div class="py-6 text-center text-slate-500">
             <Ticket size={32} class="mx-auto mb-2 opacity-40" />
             <p>Nenhum voucher vinculado</p>
           </div>
         {/if}
 
-        <div class="mt-4 pt-4 border-t border-slate-100">
+        <div class="mt-4 border-t border-slate-100 pt-4">
           <Button
             variant="secondary"
             size="sm"
-            on:click={() =>
-              goto(`/operacao/vouchers/novo?viagem_id=${viagem?.id ?? ""}`)}
+            on:click={() => goto(`/operacao/vouchers/novo?viagem_id=${viagem?.id ?? ''}`)}
           >
             <Plus size={16} class="mr-2" />
             Adicionar Voucher
@@ -749,11 +713,11 @@
         color="clientes"
       >
         {#if viagem.passageiros && viagem.passageiros.length > 0}
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
             {#each viagem.passageiros as passageiro}
-              <div class="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
+              <div class="flex items-center gap-3 rounded-lg bg-slate-50 p-3">
                 <div
-                  class="w-10 h-10 rounded-full bg-clientes-100 flex items-center justify-center"
+                  class="bg-clientes-100 flex h-10 w-10 items-center justify-center rounded-full"
                 >
                   <User size={20} class="text-clientes-600" />
                 </div>
@@ -761,7 +725,7 @@
                   <p class="font-medium text-slate-900">{passageiro.nome}</p>
                   {#if passageiro.documento}
                     <p class="text-sm text-slate-500">
-                      {passageiro.tipo_documento?.toUpperCase() || "Documento"}: {passageiro.documento}
+                      {passageiro.tipo_documento?.toUpperCase() || 'Documento'}: {passageiro.documento}
                     </p>
                   {/if}
                 </div>
@@ -769,7 +733,7 @@
             {/each}
           </div>
         {:else}
-          <div class="text-center py-6 text-slate-500">
+          <div class="py-6 text-center text-slate-500">
             <Users size={32} class="mx-auto mb-2 opacity-40" />
             <p>Nenhum passageiro cadastrado</p>
           </div>
@@ -779,14 +743,14 @@
       <!-- Observações -->
       {#if viagem.observacoes}
         <Card title="Observações" icon={AlertCircle} color="clientes">
-          <p class="text-slate-700 whitespace-pre-wrap">{viagem.observacoes}</p>
+          <p class="whitespace-pre-wrap text-slate-700">{viagem.observacoes}</p>
         </Card>
       {/if}
 
       <!-- Follow Up -->
       {#if viagem.follow_up_text}
         <Card title="Follow Up" icon={AlertCircle} color="clientes">
-          <p class="text-slate-700 whitespace-pre-wrap">
+          <p class="whitespace-pre-wrap text-slate-700">
             {viagem.follow_up_text}
           </p>
           <div class="mt-3">
@@ -806,28 +770,23 @@
       {#if viagem.venda}
         <Card title="Resumo Financeiro" icon={TrendingUp} color="clientes">
           <div class="space-y-4">
-            <div class="flex justify-between items-center">
+            <div class="flex items-center justify-between">
               <span class="text-slate-600">Valor Total</span>
               <span class="text-xl font-bold text-indigo-600">
                 {formatCurrency(viagem.venda.valor_total)}
               </span>
             </div>
-            <div class="flex justify-between items-center">
+            <div class="flex items-center justify-between">
               <span class="text-slate-600">Pago</span>
               <span class="font-medium text-green-600">
                 {formatCurrency(viagem.venda.valor_total_pago)}
               </span>
             </div>
             {#if viagem.venda.valor_total > (viagem.venda.valor_total_pago || 0)}
-              <div
-                class="flex justify-between items-center pt-2 border-t border-slate-200"
-              >
+              <div class="flex items-center justify-between border-t border-slate-200 pt-2">
                 <span class="text-slate-600">Saldo Devedor</span>
                 <span class="font-medium text-amber-600">
-                  {formatCurrency(
-                    viagem.venda.valor_total -
-                      (viagem.venda.valor_total_pago || 0),
-                  )}
+                  {formatCurrency(viagem.venda.valor_total - (viagem.venda.valor_total_pago || 0))}
                 </span>
               </div>
             {/if}
@@ -837,11 +796,11 @@
 
       <!-- Histórico -->
       <Card title="Histórico" icon={History} color="clientes">
-        <div class="space-y-3 max-h-80 overflow-y-auto">
+        <div class="max-h-80 space-y-3 overflow-y-auto">
           {#each historico as item}
-            <div class="flex gap-3 p-3 bg-slate-50 rounded-lg">
+            <div class="flex gap-3 rounded-lg bg-slate-50 p-3">
               <div
-                class="w-8 h-8 rounded-full bg-clientes-100 flex items-center justify-center shrink-0"
+                class="bg-clientes-100 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
               >
                 <History size={14} class="text-clientes-600" />
               </div>
@@ -849,7 +808,7 @@
                 <p class="text-sm font-medium text-slate-900">
                   {item.descricao}
                 </p>
-                <p class="text-xs text-slate-500 mt-1">
+                <p class="mt-1 text-xs text-slate-500">
                   {formatDateTime(item.data)} • {item.usuario}
                 </p>
               </div>
@@ -876,13 +835,9 @@
     onConfirm={deleteViagem}
     onCancel={() => (showDeleteDialog = false)}
   >
-    <div
-      class="flex items-start gap-3 text-amber-600 bg-amber-50 p-3 rounded-lg"
-    >
+    <div class="flex items-start gap-3 rounded-lg bg-amber-50 p-3 text-amber-600">
       <AlertCircle size={20} class="mt-0.5" />
-      <p class="text-sm">
-        Todos os vouchers e dados relacionados à viagem também serão removidos.
-      </p>
+      <p class="text-sm">Todos os vouchers e dados relacionados à viagem também serão removidos.</p>
     </div>
   </Dialog>
 
@@ -950,7 +905,7 @@
     <div class="grid grid-cols-1 gap-3">
       {#each statusOptions as option}
         <Button
-          variant={editForm.status === option.value ? "primary" : "outline"}
+          variant={editForm.status === option.value ? 'primary' : 'outline'}
           color="clientes"
           class_name="flex w-full items-center justify-start gap-3 text-left"
           on:click={() => (editForm.status = option.value)}

@@ -79,13 +79,18 @@ export async function handleVendasMergeCandidatesGet(event: RequestEvent) {
       return new Response('Venda nao encontrada.', { status: 404, headers: NO_STORE_HEADERS });
     }
     const currentVendedorId = String(currentSale.vendedor_id || '').trim();
-    if (scope.isMaster && requestedVendedorIds.length > 0 && !requestedVendedorIds.includes(currentVendedorId)) {
+    if (
+      scope.isMaster &&
+      requestedVendedorIds.length > 0 &&
+      !requestedVendedorIds.includes(currentVendedorId)
+    ) {
       return json({ items: [] }, { headers: DYNAMIC_READ_HEADERS });
     }
 
     let query = client
       .from('vendas')
-      .select(`
+      .select(
+        `
         id,
         vendedor_id,
         cliente_id,
@@ -101,7 +106,8 @@ export async function handleVendasMergeCandidatesGet(event: RequestEvent) {
         destinos:produtos!destino_id (nome, cidade_id),
         destino_cidade:cidades!destino_cidade_id (id, nome),
         vendedor:users!vendedor_id (nome_completo)
-      `)
+      `
+      )
       .eq('cliente_id', String(currentSale.cliente_id || ''))
       .eq('vendedor_id', currentVendedorId)
       .neq('id', currentSale.id)
@@ -119,9 +125,7 @@ export async function handleVendasMergeCandidatesGet(event: RequestEvent) {
       return companyScopeSet.has(String(row?.company_id || '').trim());
     });
 
-    const saleIds = scopedSalesData
-      .map((row) => String(row?.id || '').trim())
-      .filter(Boolean);
+    const saleIds = scopedSalesData.map((row) => String(row?.id || '').trim()).filter(Boolean);
 
     const receiptsBySale = new Map<string, string[]>();
     if (saleIds.length > 0) {

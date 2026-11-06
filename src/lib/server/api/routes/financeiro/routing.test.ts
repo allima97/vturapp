@@ -13,28 +13,79 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./comissoes-regras-id', () => ({ handleFinanceiroComissoesRegrasIdGet: spy('handleFinanceiroComissoesRegrasIdGet'), handleFinanceiroComissoesRegrasIdPut: spy('handleFinanceiroComissoesRegrasIdPut'), handleFinanceiroComissoesRegrasIdDelete: spy('handleFinanceiroComissoesRegrasIdDelete') }));
-vi.mock('./ajustes-vendas', () => ({ handleFinanceiroAjustesVendasGet: spy('handleFinanceiroAjustesVendasGet'), handleFinanceiroAjustesVendasPost: spy('handleFinanceiroAjustesVendasPost') }));
-vi.mock('./ajustes-vendas-list', () => ({ handleFinanceiroAjustesVendasListGet: spy('handleFinanceiroAjustesVendasListGet') }));
-vi.mock('./ajustes-vendas-save', () => ({ handleFinanceiroAjustesVendasSavePost: spy('handleFinanceiroAjustesVendasSavePost') }));
-vi.mock('./caixa', () => ({ handleFinanceiroCaixaGet: spy('handleFinanceiroCaixaGet'), handleFinanceiroCaixaPost: spy('handleFinanceiroCaixaPost') }));
-vi.mock('./comissoes', () => ({ handleFinanceiroComissoesGet: spy('handleFinanceiroComissoesGet') }));
-vi.mock('./comissoes-calcular', () => ({ handleFinanceiroComissoesCalcularPost: spy('handleFinanceiroComissoesCalcularPost'), handleFinanceiroComissoesCalcularGet: spy('handleFinanceiroComissoesCalcularGet') }));
-vi.mock('./comissoes-pagamento', () => ({ handleFinanceiroComissoesPagamentoPost: spy('handleFinanceiroComissoesPagamentoPost'), handleFinanceiroComissoesPagamentoPut: spy('handleFinanceiroComissoesPagamentoPut'), handleFinanceiroComissoesPagamentoDelete: spy('handleFinanceiroComissoesPagamentoDelete') }));
-vi.mock('./comissoes-regras', () => ({ handleFinanceiroComissoesRegrasGet: spy('handleFinanceiroComissoesRegrasGet'), handleFinanceiroComissoesRegrasPost: spy('handleFinanceiroComissoesRegrasPost'), handleFinanceiroComissoesRegrasPut: spy('handleFinanceiroComissoesRegrasPut'), handleFinanceiroComissoesRegrasDelete: spy('handleFinanceiroComissoesRegrasDelete') }));
-vi.mock('./comissoes-vendedores', () => ({ handleFinanceiroComissoesVendedoresGet: spy('handleFinanceiroComissoesVendedoresGet'), handleFinanceiroComissoesVendedoresPost: spy('handleFinanceiroComissoesVendedoresPost') }));
-vi.mock('./formas-pagamento', () => ({ handleFinanceiroFormasPagamentoGet: spy('handleFinanceiroFormasPagamentoGet'), handleFinanceiroFormasPagamentoPost: spy('handleFinanceiroFormasPagamentoPost'), handleFinanceiroFormasPagamentoPatch: spy('handleFinanceiroFormasPagamentoPatch'), handleFinanceiroFormasPagamentoDelete: spy('handleFinanceiroFormasPagamentoDelete') }));
+vi.mock('./comissoes-regras-id', () => ({
+  handleFinanceiroComissoesRegrasIdGet: spy('handleFinanceiroComissoesRegrasIdGet'),
+  handleFinanceiroComissoesRegrasIdPut: spy('handleFinanceiroComissoesRegrasIdPut'),
+  handleFinanceiroComissoesRegrasIdDelete: spy('handleFinanceiroComissoesRegrasIdDelete')
+}));
+vi.mock('./ajustes-vendas', () => ({
+  handleFinanceiroAjustesVendasGet: spy('handleFinanceiroAjustesVendasGet'),
+  handleFinanceiroAjustesVendasPost: spy('handleFinanceiroAjustesVendasPost')
+}));
+vi.mock('./ajustes-vendas-list', () => ({
+  handleFinanceiroAjustesVendasListGet: spy('handleFinanceiroAjustesVendasListGet')
+}));
+vi.mock('./ajustes-vendas-save', () => ({
+  handleFinanceiroAjustesVendasSavePost: spy('handleFinanceiroAjustesVendasSavePost')
+}));
+vi.mock('./caixa', () => ({
+  handleFinanceiroCaixaGet: spy('handleFinanceiroCaixaGet'),
+  handleFinanceiroCaixaPost: spy('handleFinanceiroCaixaPost')
+}));
+vi.mock('./comissoes', () => ({
+  handleFinanceiroComissoesGet: spy('handleFinanceiroComissoesGet')
+}));
+vi.mock('./comissoes-calcular', () => ({
+  handleFinanceiroComissoesCalcularPost: spy('handleFinanceiroComissoesCalcularPost'),
+  handleFinanceiroComissoesCalcularGet: spy('handleFinanceiroComissoesCalcularGet')
+}));
+vi.mock('./comissoes-pagamento', () => ({
+  handleFinanceiroComissoesPagamentoPost: spy('handleFinanceiroComissoesPagamentoPost'),
+  handleFinanceiroComissoesPagamentoPut: spy('handleFinanceiroComissoesPagamentoPut'),
+  handleFinanceiroComissoesPagamentoDelete: spy('handleFinanceiroComissoesPagamentoDelete')
+}));
+vi.mock('./comissoes-regras', () => ({
+  handleFinanceiroComissoesRegrasGet: spy('handleFinanceiroComissoesRegrasGet'),
+  handleFinanceiroComissoesRegrasPost: spy('handleFinanceiroComissoesRegrasPost'),
+  handleFinanceiroComissoesRegrasPut: spy('handleFinanceiroComissoesRegrasPut'),
+  handleFinanceiroComissoesRegrasDelete: spy('handleFinanceiroComissoesRegrasDelete')
+}));
+vi.mock('./comissoes-vendedores', () => ({
+  handleFinanceiroComissoesVendedoresGet: spy('handleFinanceiroComissoesVendedoresGet'),
+  handleFinanceiroComissoesVendedoresPost: spy('handleFinanceiroComissoesVendedoresPost')
+}));
+vi.mock('./formas-pagamento', () => ({
+  handleFinanceiroFormasPagamentoGet: spy('handleFinanceiroFormasPagamentoGet'),
+  handleFinanceiroFormasPagamentoPost: spy('handleFinanceiroFormasPagamentoPost'),
+  handleFinanceiroFormasPagamentoPatch: spy('handleFinanceiroFormasPagamentoPatch'),
+  handleFinanceiroFormasPagamentoDelete: spy('handleFinanceiroFormasPagamentoDelete')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 
 const CASES: Array<[string, string, string, Record<string, string>]> = [
-  ['GET', '/api/v1/financeiro/comissoes/regras/id-123', 'handleFinanceiroComissoesRegrasIdGet', {"id": "id-123"}],
-  ['PUT', '/api/v1/financeiro/comissoes/regras/id-123', 'handleFinanceiroComissoesRegrasIdPut', {"id": "id-123"}],
-  ['DELETE', '/api/v1/financeiro/comissoes/regras/id-123', 'handleFinanceiroComissoesRegrasIdDelete', {"id": "id-123"}],
+  [
+    'GET',
+    '/api/v1/financeiro/comissoes/regras/id-123',
+    'handleFinanceiroComissoesRegrasIdGet',
+    { id: 'id-123' }
+  ],
+  [
+    'PUT',
+    '/api/v1/financeiro/comissoes/regras/id-123',
+    'handleFinanceiroComissoesRegrasIdPut',
+    { id: 'id-123' }
+  ],
+  [
+    'DELETE',
+    '/api/v1/financeiro/comissoes/regras/id-123',
+    'handleFinanceiroComissoesRegrasIdDelete',
+    { id: 'id-123' }
+  ],
   ['GET', '/api/v1/financeiro/ajustes-vendas', 'handleFinanceiroAjustesVendasGet', {}],
   ['POST', '/api/v1/financeiro/ajustes-vendas', 'handleFinanceiroAjustesVendasPost', {}],
   ['GET', '/api/v1/financeiro/ajustes-vendas/list', 'handleFinanceiroAjustesVendasListGet', {}],
@@ -46,17 +97,27 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/financeiro/comissoes/calcular', 'handleFinanceiroComissoesCalcularGet', {}],
   ['POST', '/api/v1/financeiro/comissoes/pagamento', 'handleFinanceiroComissoesPagamentoPost', {}],
   ['PUT', '/api/v1/financeiro/comissoes/pagamento', 'handleFinanceiroComissoesPagamentoPut', {}],
-  ['DELETE', '/api/v1/financeiro/comissoes/pagamento', 'handleFinanceiroComissoesPagamentoDelete', {}],
+  [
+    'DELETE',
+    '/api/v1/financeiro/comissoes/pagamento',
+    'handleFinanceiroComissoesPagamentoDelete',
+    {}
+  ],
   ['GET', '/api/v1/financeiro/comissoes/regras', 'handleFinanceiroComissoesRegrasGet', {}],
   ['POST', '/api/v1/financeiro/comissoes/regras', 'handleFinanceiroComissoesRegrasPost', {}],
   ['PUT', '/api/v1/financeiro/comissoes/regras', 'handleFinanceiroComissoesRegrasPut', {}],
   ['DELETE', '/api/v1/financeiro/comissoes/regras', 'handleFinanceiroComissoesRegrasDelete', {}],
   ['GET', '/api/v1/financeiro/comissoes/vendedores', 'handleFinanceiroComissoesVendedoresGet', {}],
-  ['POST', '/api/v1/financeiro/comissoes/vendedores', 'handleFinanceiroComissoesVendedoresPost', {}],
+  [
+    'POST',
+    '/api/v1/financeiro/comissoes/vendedores',
+    'handleFinanceiroComissoesVendedoresPost',
+    {}
+  ],
   ['GET', '/api/v1/financeiro/formas-pagamento', 'handleFinanceiroFormasPagamentoGet', {}],
   ['POST', '/api/v1/financeiro/formas-pagamento', 'handleFinanceiroFormasPagamentoPost', {}],
   ['PATCH', '/api/v1/financeiro/formas-pagamento', 'handleFinanceiroFormasPagamentoPatch', {}],
-  ['DELETE', '/api/v1/financeiro/formas-pagamento', 'handleFinanceiroFormasPagamentoDelete', {}],
+  ['DELETE', '/api/v1/financeiro/formas-pagamento', 'handleFinanceiroFormasPagamentoDelete', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
@@ -69,7 +130,7 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PATCH', '/api/v1/financeiro/comissoes/pagamento'],
   ['PATCH', '/api/v1/financeiro/comissoes/regras'],
   ['PUT', '/api/v1/financeiro/comissoes/vendedores'],
-  ['PUT', '/api/v1/financeiro/formas-pagamento'],
+  ['PUT', '/api/v1/financeiro/formas-pagamento']
 ];
 
 function ev(method: string, path: string) {

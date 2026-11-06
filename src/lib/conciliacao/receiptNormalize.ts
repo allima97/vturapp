@@ -20,13 +20,13 @@
  * claramente um recibo de 14 dígitos numéricos.
  */
 export function normalizeReceiptDisplay(value?: string | null): string {
-  const raw = String(value ?? "").trim();
-  if (!raw) return "";
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
 
   const hasLetters = /[A-Za-z]/.test(raw);
   if (hasLetters) return raw; // campo livre alfanumérico: não altera
 
-  const digits = raw.replace(/\D+/g, "");
+  const digits = raw.replace(/\D+/g, '');
   if (digits.length === 14) {
     return `${digits.slice(0, 4)}-${digits.slice(4)}`;
   }
@@ -39,8 +39,8 @@ export function normalizeReceiptDisplay(value?: string | null): string {
  * Remove separadores, mantém apenas [A-Z0-9] em maiúsculas.
  */
 export function normalizeReceiptKey(value?: string | null): string {
-  return String(value ?? "")
+  return String(value ?? '')
     .trim()
     .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "");
+    .replace(/[^A-Z0-9]/g, '');
 }

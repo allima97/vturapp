@@ -43,7 +43,7 @@ function toResponseItem(row: CidadeRow) {
     subdivisao_nome: estado,
     pais_nome: row.pais_nome ?? null,
     grau_importancia: row.grau_importancia ?? null,
-    label,
+    label
   };
 }
 
@@ -79,7 +79,7 @@ async function findOrCreateCidade(
         estado_nome: result.estado ?? null,
         pais_nome: result.pais ?? null,
         latitude: result.lat,
-        longitude: result.lng,
+        longitude: result.lng
         // subdivisao_id omitido → null (agora nullable após migração)
       })
       .select('id, nome, estado_nome, pais_nome, latitude, longitude, grau_importancia')
@@ -125,7 +125,9 @@ export async function handleVendasCidadesBuscaGet(event: RequestEvent) {
     }
 
     const cidadeId = String(event.url.searchParams.get('id') || '').trim();
-    const query = String(event.url.searchParams.get('q') || event.url.searchParams.get('search') || '').trim();
+    const query = String(
+      event.url.searchParams.get('q') || event.url.searchParams.get('search') || ''
+    ).trim();
     const limite = parseLimit(event.url.searchParams.get('limite'));
 
     // Busca por ID (para pré-carregar cidade já selecionada)
@@ -141,7 +143,9 @@ export async function handleVendasCidadesBuscaGet(event: RequestEvent) {
         .maybeSingle();
 
       if (error) throw error;
-      return json(data ? toResponseItem(data as CidadeRow) : null, { headers: DYNAMIC_READ_HEADERS });
+      return json(data ? toResponseItem(data as CidadeRow) : null, {
+        headers: DYNAMIC_READ_HEADERS
+      });
     }
 
     if (query.length < 2) {
@@ -155,9 +159,9 @@ export async function handleVendasCidadesBuscaGet(event: RequestEvent) {
     }
 
     // Find-or-create no DB para preservar UUIDs (FK de vendas)
-    const rows = (
-      await Promise.all(geoResults.map((r) => findOrCreateCidade(client, r)))
-    ).filter((r): r is CidadeRow => r !== null);
+    const rows = (await Promise.all(geoResults.map((r) => findOrCreateCidade(client, r)))).filter(
+      (r): r is CidadeRow => r !== null
+    );
 
     return json(rows.map(toResponseItem), { headers: DYNAMIC_READ_HEADERS });
   } catch (err) {

@@ -124,11 +124,15 @@ async function fetchCommissionRulesForScope(params: {
   if (includeAllCompanies) {
     await runQuery(client.from('commission_rule').select(COMMISSION_RULE_SELECT));
   } else {
-    await runQuery(client.from('commission_rule').select(COMMISSION_RULE_SELECT).is('company_id', null));
+    await runQuery(
+      client.from('commission_rule').select(COMMISSION_RULE_SELECT).is('company_id', null)
+    );
 
     for (const companyBatch of chunkArray(companyIds, COMMISSION_RULE_COMPANY_BATCH_SIZE)) {
       if (companyBatch.length === 0) continue;
-      await runQuery(client.from('commission_rule').select(COMMISSION_RULE_SELECT).in('company_id', companyBatch));
+      await runQuery(
+        client.from('commission_rule').select(COMMISSION_RULE_SELECT).in('company_id', companyBatch)
+      );
     }
   }
 
@@ -149,7 +153,12 @@ export async function handleFinanceiroComissoesRegrasGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['RegrasComissao', 'Comissionamento', 'parametros'], 1, 'Sem acesso às regras de comissão.');
+      ensureModuloAccess(
+        scope,
+        ['RegrasComissao', 'Comissionamento', 'parametros'],
+        1,
+        'Sem acesso às regras de comissão.'
+      );
     }
 
     const { searchParams } = event.url;
@@ -196,23 +205,41 @@ export async function handleFinanceiroComissoesRegrasPost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['RegrasComissao', 'Comissionamento', 'parametros'], 2, 'Sem permissão para criar regras.');
+      ensureModuloAccess(
+        scope,
+        ['RegrasComissao', 'Comissionamento', 'parametros'],
+        2,
+        'Sem permissão para criar regras.'
+      );
     }
 
     const body =
       bodyResult.data && typeof bodyResult.data === 'object'
         ? (bodyResult.data as CommissionRulePayload)
         : {};
-    const { nome, descricao, tipo = 'GERAL', meta_nao_atingida = 0, meta_atingida = 0, super_meta = 0, ativo = true, tiers = [] } = body;
+    const {
+      nome,
+      descricao,
+      tipo = 'GERAL',
+      meta_nao_atingida = 0,
+      meta_atingida = 0,
+      super_meta = 0,
+      ativo = true,
+      tiers = []
+    } = body;
     const companyId = scope.isAdmin
       ? isUuid(body?.empresa_id || body?.company_id)
         ? String(body.empresa_id || body.company_id)
         : null
       : resolveScopedCompanyId(scope, body?.empresa_id || body?.company_id);
 
-    if (!nome?.trim()) return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!nome?.trim())
+      return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
     if (!scope.isAdmin && !companyId) {
-      return json({ error: 'Selecione uma empresa válida para criar a regra.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Selecione uma empresa válida para criar a regra.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { data: regraData, error: regraError } = await client
@@ -227,7 +254,9 @@ export async function handleFinanceiroComissoesRegrasPost(event: RequestEvent) {
         ativo,
         company_id: companyId
       })
-      .select('id, nome, descricao, tipo, meta_nao_atingida, meta_atingida, super_meta, ativo, company_id, created_at, updated_at')
+      .select(
+        'id, nome, descricao, tipo, meta_nao_atingida, meta_atingida, super_meta, ativo, company_id, created_at, updated_at'
+      )
       .single();
 
     if (regraError) throw regraError;
@@ -267,7 +296,12 @@ export async function handleFinanceiroComissoesRegrasPut(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['RegrasComissao', 'Comissionamento', 'parametros'], 3, 'Sem permissão.');
+      ensureModuloAccess(
+        scope,
+        ['RegrasComissao', 'Comissionamento', 'parametros'],
+        3,
+        'Sem permissão.'
+      );
     }
 
     const body =
@@ -275,13 +309,18 @@ export async function handleFinanceiroComissoesRegrasPut(event: RequestEvent) {
         ? (bodyResult.data as CommissionRulePayload)
         : {};
     const id = event.url.searchParams.get('id') || body.id;
-    if (!id || !isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!id || !isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const rule = await loadRuleCompany(client, id);
-    if (!rule) return json({ error: 'Regra não encontrada.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!rule)
+      return json({ error: 'Regra não encontrada.' }, { status: 404, headers: NO_STORE_HEADERS });
     const scopedCompanySet = cleanStringSet(scope.companyIds);
     if (!canAccessCompany(scope, rule.company_id, scopedCompanySet)) {
-      return json({ error: 'Sem acesso a esta regra.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Sem acesso a esta regra.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const payload: Record<string, unknown> = {};
@@ -316,17 +355,27 @@ export async function handleFinanceiroComissoesRegrasDelete(event: RequestEvent)
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['RegrasComissao', 'Comissionamento', 'parametros'], 4, 'Sem permissão.');
+      ensureModuloAccess(
+        scope,
+        ['RegrasComissao', 'Comissionamento', 'parametros'],
+        4,
+        'Sem permissão.'
+      );
     }
 
     const id = event.url.searchParams.get('id');
-    if (!id || !isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!id || !isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const rule = await loadRuleCompany(client, id);
-    if (!rule) return json({ error: 'Regra não encontrada.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!rule)
+      return json({ error: 'Regra não encontrada.' }, { status: 404, headers: NO_STORE_HEADERS });
     const scopedCompanySet = cleanStringSet(scope.companyIds);
     if (!canAccessCompany(scope, rule.company_id, scopedCompanySet)) {
-      return json({ error: 'Sem acesso a esta regra.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Sem acesso a esta regra.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     await client.from('commission_tier').delete().eq('rule_id', id);

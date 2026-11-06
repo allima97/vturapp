@@ -228,8 +228,7 @@ function getFatorComissionavelRecibo(r: ReportReceiptRow): number {
   if (!r) return 0;
   const bruto = getBrutoRecibo(r);
   if (bruto <= 0) return 0;
-  const brutoComissionavel =
-    r.valor_comissionavel != null ? toNum(r.valor_comissionavel) : bruto;
+  const brutoComissionavel = r.valor_comissionavel != null ? toNum(r.valor_comissionavel) : bruto;
   if (!Number.isFinite(brutoComissionavel)) return 1;
   return Math.max(0, Math.min(1, brutoComissionavel / bruto));
 }
@@ -248,8 +247,8 @@ function getMetaRecibo(r: ReportReceiptRow, params: ParametrosComissao): number 
           return params.foco_valor === 'liquido'
             ? liquido
             : params.usar_taxas_na_meta
-            ? getBrutoRecibo(r)
-            : liquido;
+              ? getBrutoRecibo(r)
+              : liquido;
         })();
   return metaBase * getFatorComissionavelRecibo(r);
 }
@@ -440,19 +439,26 @@ async function fetchParametros(
     conciliacao_regra_ativa: Boolean(data.conciliacao_regra_ativa),
     conciliacao_tipo: data.conciliacao_tipo === 'ESCALONAVEL' ? 'ESCALONAVEL' : 'GERAL',
     conciliacao_meta_nao_atingida:
-      data.conciliacao_meta_nao_atingida != null ? Number(data.conciliacao_meta_nao_atingida) : null,
+      data.conciliacao_meta_nao_atingida != null
+        ? Number(data.conciliacao_meta_nao_atingida)
+        : null,
     conciliacao_meta_atingida:
       data.conciliacao_meta_atingida != null ? Number(data.conciliacao_meta_atingida) : null,
     conciliacao_super_meta:
       data.conciliacao_super_meta != null ? Number(data.conciliacao_super_meta) : null,
-    conciliacao_tiers: Array.isArray(data.conciliacao_tiers) ? (data.conciliacao_tiers as Tier[]) : [],
+    conciliacao_tiers: Array.isArray(data.conciliacao_tiers)
+      ? (data.conciliacao_tiers as Tier[])
+      : [],
     conciliacao_faixas_loja: Array.isArray(data.conciliacao_faixas_loja)
       ? (data.conciliacao_faixas_loja as ParametrosComissao['conciliacao_faixas_loja'])
       : []
   };
 }
 
-async function fetchRegras(client: DataClient, companyIds: string[]): Promise<Record<string, Regra>> {
+async function fetchRegras(
+  client: DataClient,
+  companyIds: string[]
+): Promise<Record<string, Regra>> {
   const scopedCompanyIds = uniqueIds(companyIds);
   const selectWithCompany =
     'id, company_id, tipo, meta_nao_atingida, meta_atingida, super_meta, commission_tier (faixa, de_pct, ate_pct, inc_pct_meta, inc_pct_comissao)';
@@ -527,9 +533,7 @@ async function fetchRegras(client: DataClient, companyIds: string[]): Promise<Re
 }
 
 // vtur-app busca product_commission_rule SEM FILTRO por produto_id (busca tudo)
-async function fetchRegraProdutoMap(
-  client: DataClient
-): Promise<Record<string, RegraProduto>> {
+async function fetchRegraProdutoMap(client: DataClient): Promise<Record<string, RegraProduto>> {
   const { data, error } = await client
     .from('product_commission_rule')
     .select('produto_id, rule_id, fix_meta_nao_atingida, fix_meta_atingida, fix_super_meta')
@@ -544,7 +548,8 @@ async function fetchRegraProdutoMap(
     map[produtoId] = {
       produto_id: produtoId,
       rule_id: String(row.rule_id || '').trim() || null,
-      fix_meta_nao_atingida: row.fix_meta_nao_atingida != null ? Number(row.fix_meta_nao_atingida) : null,
+      fix_meta_nao_atingida:
+        row.fix_meta_nao_atingida != null ? Number(row.fix_meta_nao_atingida) : null,
       fix_meta_atingida: row.fix_meta_atingida != null ? Number(row.fix_meta_atingida) : null,
       fix_super_meta: row.fix_super_meta != null ? Number(row.fix_super_meta) : null
     };
@@ -558,7 +563,9 @@ async function fetchRegraProdutoPacoteMap(
 ): Promise<Record<string, Record<string, RegraProduto>>> {
   const { data, error } = await client
     .from('product_commission_rule_pacote')
-    .select('produto_id, tipo_pacote, rule_id, fix_meta_nao_atingida, fix_meta_atingida, fix_super_meta')
+    .select(
+      'produto_id, tipo_pacote, rule_id, fix_meta_nao_atingida, fix_meta_atingida, fix_super_meta'
+    )
     .limit(5000);
 
   if (error && !isMissingSchemaError(error)) throw error;
@@ -572,7 +579,8 @@ async function fetchRegraProdutoPacoteMap(
     map[produtoId][key] = {
       produto_id: produtoId,
       rule_id: String(row.rule_id || '').trim() || null,
-      fix_meta_nao_atingida: row.fix_meta_nao_atingida != null ? Number(row.fix_meta_nao_atingida) : null,
+      fix_meta_nao_atingida:
+        row.fix_meta_nao_atingida != null ? Number(row.fix_meta_nao_atingida) : null,
       fix_meta_atingida: row.fix_meta_atingida != null ? Number(row.fix_meta_atingida) : null,
       fix_super_meta: row.fix_super_meta != null ? Number(row.fix_super_meta) : null
     };
@@ -595,7 +603,8 @@ async function fetchRegraTipoPacoteMap(client: DataClient): Promise<Record<strin
     if (!key) continue;
     map[key] = {
       rule_id: String(row.rule_id || '').trim() || null,
-      fix_meta_nao_atingida: row.fix_meta_nao_atingida != null ? Number(row.fix_meta_nao_atingida) : null,
+      fix_meta_nao_atingida:
+        row.fix_meta_nao_atingida != null ? Number(row.fix_meta_nao_atingida) : null,
       fix_meta_atingida: row.fix_meta_atingida != null ? Number(row.fix_meta_atingida) : null,
       fix_super_meta: row.fix_super_meta != null ? Number(row.fix_super_meta) : null
     };
@@ -604,9 +613,7 @@ async function fetchRegraTipoPacoteMap(client: DataClient): Promise<Record<strin
 }
 
 // vtur-app busca tipo_produtos SEM FILTRO (busca todos os tipos de produto)
-async function fetchTipoProdutoMap(
-  client: DataClient
-): Promise<Record<string, TipoProdutoRow>> {
+async function fetchTipoProdutoMap(client: DataClient): Promise<Record<string, TipoProdutoRow>> {
   const tryFetch = async (cols: string) => {
     return client.from('tipo_produtos').select(cols).order('nome', { ascending: true }).limit(2000);
   };
@@ -793,7 +800,9 @@ export function calcularComissaoRows(
     const naoComissionado = toNum(row.valor_nao_comissionado || 0);
     const baseComissionavel = Math.max(0, totalBrutoVendaBase - naoComissionado);
     const fatorComissionavel =
-      totalBrutoVendaBase > 0 ? Math.max(0, Math.min(1, baseComissionavel / totalBrutoVendaBase)) : 1;
+      totalBrutoVendaBase > 0
+        ? Math.max(0, Math.min(1, baseComissionavel / totalBrutoVendaBase))
+        : 1;
 
     for (const receipt of recibos) {
       if (!receipt) continue;
@@ -835,7 +844,7 @@ export function calcularComissaoRows(
         prodId,
         tipoPacoteKey || 'default',
         isConciliacao ? 'conciliacao' : 'base',
-        isConciliacao ? (faixaComissao || 'sem-faixa') : 'sem-faixa',
+        isConciliacao ? faixaComissao || 'sem-faixa' : 'sem-faixa',
         isConciliacao && percentualComissaoLoja != null
           ? String(percentualComissaoLoja)
           : 'sem-pct-loja'
@@ -878,7 +887,12 @@ export function calcularComissaoRows(
     const baseMetaProduto = baseMetaPorProduto[bucket.prodId] || 0;
 
     // Seleciona regra — igual ao vtur-app
-    const regraPacoteSelecionada = getRegraPacote(context, bucket.prodId, bucket.tipoPacoteKey, produto);
+    const regraPacoteSelecionada = getRegraPacote(
+      context,
+      bucket.prodId,
+      bucket.tipoPacoteKey,
+      produto
+    );
     const regraPacote = regraPacoteSelecionada?.regra;
     const regraProdBase = getRegraProduto(context, bucket.prodId, produto);
     let regraProd: RegraProduto | undefined = regraPacote || regraProdBase;
@@ -904,9 +918,7 @@ export function calcularComissaoRows(
     if (produto.regra_comissionamento === 'diferenciado') {
       if (!regraProd) continue;
       const metaProdValor =
-        context.metaProdutoMap[bucket.prodId] ||
-        context.metaProdutoMap[produto.id] ||
-        0;
+        context.metaProdutoMap[bucket.prodId] || context.metaProdutoMap[produto.id] || 0;
       const temMetaProd = metaProdValor > 0;
       const pctMetaProd = temMetaProd ? (baseMetaProduto / metaProdValor) * 100 : 0;
       const pctReferencia = temMetaProd ? pctMetaProd : pctMetaGeral;
@@ -998,8 +1010,12 @@ export function resolveReceiptCommissions(
   rows: ReportVendaRow[],
   context: CommissionContext
 ): Map<string, ResolvedReceiptCommission> {
-  const { pctByReceiptId, pctComissaoGeralByReceiptId, pctSeguroByReceiptId, regraNomeByReceiptId } =
-    calcularComissaoRows(rows, context);
+  const {
+    pctByReceiptId,
+    pctComissaoGeralByReceiptId,
+    pctSeguroByReceiptId,
+    regraNomeByReceiptId
+  } = calcularComissaoRows(rows, context);
   const resolved = new Map<string, ResolvedReceiptCommission>();
 
   for (const row of rows) {
@@ -1011,7 +1027,9 @@ export function resolveReceiptCommissions(
     const naoComissionado = toNum(row.valor_nao_comissionado || 0);
     const valorComissionavel = Math.max(0, roundMoney(totalBrutoVendaBase - naoComissionado));
     const fatorComissionavel =
-      totalBrutoVendaBase > 0 ? Math.max(0, Math.min(1, valorComissionavel / totalBrutoVendaBase)) : 1;
+      totalBrutoVendaBase > 0
+        ? Math.max(0, Math.min(1, valorComissionavel / totalBrutoVendaBase))
+        : 1;
 
     for (const receipt of recibos) {
       if (!receipt) continue;
@@ -1085,7 +1103,8 @@ export function resolveVendaCommissions(
       if (!receiptCommission) continue;
 
       valorComissao += receiptCommission.valorComissao;
-      percentualPonderadoNumerador += receiptCommission.percentual * receiptCommission.valorComissionavel;
+      percentualPonderadoNumerador +=
+        receiptCommission.percentual * receiptCommission.valorComissionavel;
       percentualPonderadoDenominador += receiptCommission.valorComissionavel;
       regraNomes.add(receiptCommission.regraNome);
     }
@@ -1228,7 +1247,9 @@ export function resolveVendaCommission(
   const naoComissionado = toNum(row.valor_nao_comissionado || 0);
   const valorComissionavel = Math.max(0, roundMoney(totalBrutoVendaBase - naoComissionado));
   const fatorComissionavel =
-    totalBrutoVendaBase > 0 ? Math.max(0, Math.min(1, valorComissionavel / totalBrutoVendaBase)) : 1;
+    totalBrutoVendaBase > 0
+      ? Math.max(0, Math.min(1, valorComissionavel / totalBrutoVendaBase))
+      : 1;
 
   const valorVenda =
     recibos.length > 0
@@ -1283,7 +1304,7 @@ export function resolveVendaCommission(
       prodId,
       tipoPacoteKey || 'default',
       isConciliacao ? 'conciliacao' : 'base',
-      isConciliacao ? (faixaComissao || 'sem-faixa') : 'sem-faixa',
+      isConciliacao ? faixaComissao || 'sem-faixa' : 'sem-faixa',
       isConciliacao && percentualComissaoLoja != null
         ? String(percentualComissaoLoja)
         : 'sem-pct-loja'
@@ -1320,7 +1341,12 @@ export function resolveVendaCommission(
     if (!produto) continue;
 
     const baseMetaProduto = baseMetaPorProduto[bucket.prodId] || 0;
-    const regraPacoteSelecionada = getRegraPacote(context, bucket.prodId, bucket.tipoPacoteKey, produto);
+    const regraPacoteSelecionada = getRegraPacote(
+      context,
+      bucket.prodId,
+      bucket.tipoPacoteKey,
+      produto
+    );
     const regraPacote = regraPacoteSelecionada?.regra;
     const regraProdBase = getRegraProduto(context, bucket.prodId, produto);
     let regraProd: RegraProduto | undefined = regraPacote || regraProdBase;

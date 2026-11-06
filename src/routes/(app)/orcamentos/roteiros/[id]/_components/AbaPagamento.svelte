@@ -3,15 +3,46 @@
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import { formatBRL } from './formatadores';
-  import { type RotPagamento, addItem, moveDown, moveUp, newPagamento, removeItem, updateItem } from './tipos';
+  import {
+    type RotPagamento,
+    addItem,
+    moveDown,
+    moveUp,
+    newPagamento,
+    removeItem,
+    updateItem
+  } from './tipos';
   import { ChevronDown, ChevronUp, Plus, Trash2 } from '$lib/icons';
 
-  let { PAGAMENTO_SERVICO_OPTIONS, mostrarInformacoesPdf = $bindable(), mostrarPagamentoPdf = $bindable(), mostrarRodapePdf = $bindable(), pagamentos = $bindable(), sugestoes, totalPagamento }: { PAGAMENTO_SERVICO_OPTIONS: string[]; mostrarInformacoesPdf: boolean; mostrarPagamentoPdf: boolean; mostrarRodapePdf: boolean; pagamentos: RotPagamento[]; sugestoes: Record<string, string[]>; totalPagamento: number } = $props();
+  let {
+    PAGAMENTO_SERVICO_OPTIONS,
+    mostrarInformacoesPdf = $bindable(),
+    mostrarPagamentoPdf = $bindable(),
+    mostrarRodapePdf = $bindable(),
+    pagamentos = $bindable(),
+    sugestoes,
+    totalPagamento
+  }: {
+    PAGAMENTO_SERVICO_OPTIONS: string[];
+    mostrarInformacoesPdf: boolean;
+    mostrarPagamentoPdf: boolean;
+    mostrarRodapePdf: boolean;
+    pagamentos: RotPagamento[];
+    sugestoes: Record<string, string[]>;
+    totalPagamento: number;
+  } = $props();
 </script>
 
 <Card title="Pagamento" color="clientes">
   <div class="mb-3 flex flex-wrap gap-2">
-    <Button type="button" variant="secondary" size="sm" on:click={() => { pagamentos = addItem(pagamentos, newPagamento); }}>
+    <Button
+      type="button"
+      variant="secondary"
+      size="sm"
+      on:click={() => {
+        pagamentos = addItem(pagamentos, newPagamento);
+      }}
+    >
       <Plus size={13} class="mr-1" />
       Adicionar linha
     </Button>
@@ -34,7 +65,9 @@
                 disabled={index === 0}
                 ariaLabel="Mover linha de pagamento para cima"
                 title="Mover linha de pagamento para cima"
-                on:click={() => { pagamentos = moveUp(pagamentos, index); }}
+                on:click={() => {
+                  pagamentos = moveUp(pagamentos, index);
+                }}
               >
                 <ChevronUp size={13} />
               </Button>
@@ -46,7 +79,9 @@
                 disabled={index === pagamentos.length - 1}
                 ariaLabel="Mover linha de pagamento para baixo"
                 title="Mover linha de pagamento para baixo"
-                on:click={() => { pagamentos = moveDown(pagamentos, index); }}
+                on:click={() => {
+                  pagamentos = moveDown(pagamentos, index);
+                }}
               >
                 <ChevronDown size={13} />
               </Button>
@@ -57,7 +92,9 @@
                 class_name="text-slate-400 hover:text-red-600"
                 ariaLabel="Remover linha de pagamento"
                 title="Remover linha de pagamento"
-                on:click={() => { pagamentos = removeItem(pagamentos, index); }}
+                on:click={() => {
+                  pagamentos = removeItem(pagamentos, index);
+                }}
               >
                 <Trash2 size={13} />
               </Button>
@@ -89,7 +126,7 @@
                 listId="sugestoes-forma-pagamento"
               />
               <datalist id="sugestoes-forma-pagamento">
-                {#each (sugestoes['forma_pagamento'] || []) as s}<option value={s}></option>{/each}
+                {#each sugestoes['forma_pagamento'] || [] as s}<option value={s}></option>{/each}
               </datalist>
             </div>
             <div>
@@ -98,7 +135,11 @@
                 type="number"
                 value={pag.valor_total_com_taxas ?? ''}
                 class_name="w-full"
-                on:input={(e) => { pagamentos = updateItem(pagamentos, index, { valor_total_com_taxas: Number((e.target as HTMLInputElement).value) || null }); }}
+                on:input={(e) => {
+                  pagamentos = updateItem(pagamentos, index, {
+                    valor_total_com_taxas: Number((e.target as HTMLInputElement).value) || null
+                  });
+                }}
               />
             </div>
             <div>
@@ -107,7 +148,11 @@
                 type="number"
                 value={pag.taxas ?? ''}
                 class_name="w-full"
-                on:input={(e) => { pagamentos = updateItem(pagamentos, index, { taxas: Number((e.target as HTMLInputElement).value) || null }); }}
+                on:input={(e) => {
+                  pagamentos = updateItem(pagamentos, index, {
+                    taxas: Number((e.target as HTMLInputElement).value) || null
+                  });
+                }}
               />
             </div>
           </div>
@@ -115,7 +160,9 @@
       {/each}
     </div>
 
-    <div class="mt-4 rounded-lg bg-slate-100 px-4 py-2 text-right text-sm font-medium text-slate-700">
+    <div
+      class="mt-4 rounded-lg bg-slate-100 px-4 py-2 text-right text-sm font-medium text-slate-700"
+    >
       Total: <span class="text-clientes-700 font-bold">R$ {formatBRL(totalPagamento)}</span>
     </div>
   {/if}

@@ -47,7 +47,9 @@
   let vendedores: BaseOption[] = [];
   let avisoOpen = false;
   let selectedCompra: Compra | null = null;
-  let ModalAvisoClienteComponent: typeof import('$lib/components/modais/ModalAvisoCliente.svelte').default | null = null;
+  let ModalAvisoClienteComponent:
+    | typeof import('$lib/components/modais/ModalAvisoCliente.svelte').default
+    | null = null;
   let modalAvisoLoadPromise: Promise<boolean> | null = null;
   let comprasRequestSeq = 0;
   let comprasAbortController: AbortController | null = null;
@@ -62,8 +64,18 @@
 
   const columns = [
     { key: 'cliente_nome', label: 'Cliente', sortable: true },
-    { key: 'data_compra', label: 'Compra', sortable: true, formatter: (value: string | null) => formatDate(value) },
-    { key: 'data_saida', label: 'Saída', sortable: true, formatter: (value: string | null) => formatDate(value) },
+    {
+      key: 'data_compra',
+      label: 'Compra',
+      sortable: true,
+      formatter: (value: string | null) => formatDate(value)
+    },
+    {
+      key: 'data_saida',
+      label: 'Saída',
+      sortable: true,
+      formatter: (value: string | null) => formatDate(value)
+    },
     { key: 'destino', label: 'Destino', sortable: true },
     { key: 'vendedor_nome', label: 'Vendedor', sortable: true },
     {
@@ -81,9 +93,12 @@
 
   async function loadBase() {
     try {
-      const data = await apiGet<{ empresas?: BaseOption[]; vendedores?: BaseOption[] }>('/api/v1/dashboard/base', {
-        empresa_id: empresaId || undefined
-      });
+      const data = await apiGet<{ empresas?: BaseOption[]; vendedores?: BaseOption[] }>(
+        '/api/v1/dashboard/base',
+        {
+          empresa_id: empresaId || undefined
+        }
+      );
       empresas = data.empresas || [];
       vendedores = data.vendedores || [];
       if (vendedorId && !vendedores.some((item) => item.id === vendedorId)) vendedorId = '';
@@ -100,13 +115,18 @@
     comprasAbortController = controller;
     loading = true;
     try {
-      const payload = await apiGet<{ ultimasCompras?: Compra[]; total?: number }>('/api/v1/dashboard/ultimas-compras', {
-        inicio,
-        fim,
-        company_id: empresaId || undefined,
-        vendedor_ids: vendedorId || undefined,
-        limit: 100
-      }, controller.signal, 90_000);
+      const payload = await apiGet<{ ultimasCompras?: Compra[]; total?: number }>(
+        '/api/v1/dashboard/ultimas-compras',
+        {
+          inicio,
+          fim,
+          company_id: empresaId || undefined,
+          vendedor_ids: vendedorId || undefined,
+          limit: 100
+        },
+        controller.signal,
+        90_000
+      );
       if (requestSeq !== comprasRequestSeq) return;
       compras = payload.ultimasCompras || [];
       total = Number(payload.total || compras.length || 0);
@@ -187,21 +207,48 @@
       id="ultimas-compras-periodo"
       label="Período"
       bind:value={periodoModo}
-      options={[{ value: 'mes', label: 'Mês completo' }, { value: 'periodo', label: 'Data específica' }]}
+      options={[
+        { value: 'mes', label: 'Mês completo' },
+        { value: 'periodo', label: 'Data específica' }
+      ]}
       class_name="w-full"
     />
     {#if periodoModo === 'mes'}
-      <FieldInput id="ultimas-compras-mes" label="Mês" type="month" bind:value={mes} class_name="w-full" on:change={loadCompras} />
+      <FieldInput
+        id="ultimas-compras-mes"
+        label="Mês"
+        type="month"
+        bind:value={mes}
+        class_name="w-full"
+        on:change={loadCompras}
+      />
     {:else}
-      <FieldInput id="ultimas-compras-inicio" label="Data início" type="date" bind:value={inicio} class_name="w-full" on:change={loadCompras} />
-      <FieldInput id="ultimas-compras-fim" label="Data fim" type="date" bind:value={fim} class_name="w-full" on:change={loadCompras} />
+      <FieldInput
+        id="ultimas-compras-inicio"
+        label="Data início"
+        type="date"
+        bind:value={inicio}
+        class_name="w-full"
+        on:change={loadCompras}
+      />
+      <FieldInput
+        id="ultimas-compras-fim"
+        label="Data fim"
+        type="date"
+        bind:value={fim}
+        class_name="w-full"
+        on:change={loadCompras}
+      />
     {/if}
     {#if empresas.length > 1}
       <FieldSelect
         id="ultimas-compras-empresa"
         label="Empresa"
         bind:value={empresaId}
-        options={[{ value: '', label: 'Todas' }, ...empresas.map((item) => ({ value: item.id, label: item.nome }))]}
+        options={[
+          { value: '', label: 'Todas' },
+          ...empresas.map((item) => ({ value: item.id, label: item.nome }))
+        ]}
         class_name="w-full"
         on:change={handleEmpresaChange}
       />
@@ -211,7 +258,10 @@
         id="ultimas-compras-vendedor"
         label="Vendedor"
         bind:value={vendedorId}
-        options={[{ value: '', label: 'Todos' }, ...vendedores.map((item) => ({ value: item.id, label: item.nome }))]}
+        options={[
+          { value: '', label: 'Todos' },
+          ...vendedores.map((item) => ({ value: item.id, label: item.nome }))
+        ]}
         class_name="w-full"
         on:change={loadCompras}
       />

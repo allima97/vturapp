@@ -21,7 +21,7 @@ const ALLOWED_MIME_TYPES = new Set([
   'image/webp',
   'image/gif',
   'application/pdf',
-  'text/plain',
+  'text/plain'
 ]);
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024; // 10 MB para prova
@@ -70,13 +70,18 @@ export const r2ProofRoutes = new Hono<ApiEnv>()
     const contentType = file.type || 'application/octet-stream';
     if (!ALLOWED_MIME_TYPES.has(contentType)) {
       return c.json(
-        { error: `Tipo não permitido: ${contentType}. Permitidos: ${[...ALLOWED_MIME_TYPES].join(', ')}` },
+        {
+          error: `Tipo não permitido: ${contentType}. Permitidos: ${[...ALLOWED_MIME_TYPES].join(', ')}`
+        },
         415
       );
     }
 
     if (file.size > MAX_FILE_BYTES) {
-      return c.json({ error: `Arquivo muito grande: ${file.size} bytes (máx ${MAX_FILE_BYTES})` }, 413);
+      return c.json(
+        { error: `Arquivo muito grande: ${file.size} bytes (máx ${MAX_FILE_BYTES})` },
+        413
+      );
     }
 
     const buffer = await file.arrayBuffer();
@@ -90,7 +95,7 @@ export const r2ProofRoutes = new Hono<ApiEnv>()
         size: result.size,
         contentType: result.contentType,
         // Codifica a chave para usar nas outras rotas
-        encodedKey: encodeURIComponent(result.key),
+        encodedKey: encodeURIComponent(result.key)
       },
       201
     );
@@ -128,9 +133,9 @@ export const r2ProofRoutes = new Hono<ApiEnv>()
     const headers = new Headers({
       'Content-Type': contentType,
       'Content-Length': String(object.size),
-      'ETag': object.etag,
+      ETag: object.etag,
       'Cache-Control': 'private, no-store',
-      'Content-Disposition': `inline; filename="${key.split('/').pop()}"`,
+      'Content-Disposition': `inline; filename="${key.split('/').pop()}"`
     });
 
     return new Response(object.body, { headers });
@@ -179,10 +184,10 @@ export const r2ProofRoutes = new Hono<ApiEnv>()
         size: item.size,
         uploaded: item.uploaded.toISOString(),
         etag: item.etag,
-        encodedKey: encodeURIComponent(item.key),
+        encodedKey: encodeURIComponent(item.key)
       })),
       truncated: result.truncated,
-      cursor: result.cursor,
+      cursor: result.cursor
     });
   })
 
@@ -213,6 +218,6 @@ export const r2ProofRoutes = new Hono<ApiEnv>()
       etag: object.etag,
       uploaded: object.uploaded.toISOString(),
       contentType: object.httpMetadata?.contentType,
-      customMetadata: object.customMetadata,
+      customMetadata: object.customMetadata
     });
   });

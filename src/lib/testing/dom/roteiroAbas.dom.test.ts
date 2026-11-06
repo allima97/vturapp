@@ -67,7 +67,11 @@ describe('roteiro: aba Itinerário', () => {
     const t = montar(ItinerarioHarness);
     t.botao('Importar dia a dia').click();
     flushSync();
-    expect(t.get()).toMatchObject({ showDiasImport: true, diasImportError: null, diasImportMsg: null } as AnyRecord);
+    expect(t.get()).toMatchObject({
+      showDiasImport: true,
+      diasImportError: null,
+      diasImportMsg: null
+    } as AnyRecord);
 
     t.botao('Buscar dias no banco').click();
     flushSync();
@@ -91,7 +95,6 @@ describe('roteiro: aba Itinerário', () => {
   });
 });
 
-
 describe('roteiro: aba Opcionais', () => {
   it('edita cidades e passeios sem datas e mantém o vínculo com a página', () => {
     const t = montar(OpcionaisHarness);
@@ -109,7 +112,10 @@ describe('roteiro: aba Opcionais', () => {
     descricao.value = 'Passeio e jantar';
     descricao.dispatchEvent(new Event('input', { bubbles: true }));
     flushSync();
-    expect(t.get()[0]).toEqual({ cidade: 'Barcelona', passeios: [{ nome: 'Bairro Gótico', descricao: 'Passeio e jantar' }] });
+    expect(t.get()[0]).toEqual({
+      cidade: 'Barcelona',
+      passeios: [{ nome: 'Bairro Gótico', descricao: 'Passeio e jantar' }]
+    });
     expect(t.target.querySelector('input[type="date"]')).toBeNull();
     t.botao('Adicionar cidade').click();
     flushSync();

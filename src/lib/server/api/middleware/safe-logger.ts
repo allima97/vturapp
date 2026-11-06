@@ -49,7 +49,7 @@ export const SENSITIVE_KEYS: readonly string[] = [
   'credit_card',
   'creditcard',
   'card_number',
-  'cardnumber',
+  'cardnumber'
 ];
 
 const SENSITIVE_SET = new Set(SENSITIVE_KEYS.map((k) => k.toLowerCase()));
@@ -101,15 +101,9 @@ export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
  * Em Cloudflare Workers, `console.log` vai para o Workers Logs.
  * Dados sensíveis são removidos antes do log.
  */
-export function safeLog(
-  level: LogLevel,
-  message: string,
-  data?: Record<string, unknown>
-): void {
+export function safeLog(level: LogLevel, message: string, data?: Record<string, unknown>): void {
   const sanitized = data ? sanitize(data) : undefined;
-  const entry = sanitized
-    ? { level, message, ...sanitized }
-    : { level, message };
+  const entry = sanitized ? { level, message, ...sanitized } : { level, message };
 
   switch (level) {
     case 'debug':
@@ -141,6 +135,6 @@ export function sanitizeError(
     name: err.name,
     message: err.message,
     // Stack trace apenas em não-produção
-    ...(isProd ? {} : { stack: err.stack }),
+    ...(isProd ? {} : { stack: err.stack })
   };
 }

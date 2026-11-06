@@ -10,11 +10,29 @@
     LoadingState,
     PageHeader
   } from '$lib/components/ui';
-  import { 
-    Plus, ArrowLeft, Loader2, Save, CheckCircle, ChevronRight, 
-    ChevronLeft, MapPin, Calendar, Hotel, Info, FileText,
-    Users, Trash2, MoveUp, MoveDown, ChevronDown, ChevronUp,
-    Plane, Phone, Smartphone, AlertCircle
+  import {
+    Plus,
+    ArrowLeft,
+    Loader2,
+    Save,
+    CheckCircle,
+    ChevronRight,
+    ChevronLeft,
+    MapPin,
+    Calendar,
+    Hotel,
+    Info,
+    FileText,
+    Users,
+    Trash2,
+    MoveUp,
+    MoveDown,
+    ChevronDown,
+    ChevronUp,
+    Plane,
+    Phone,
+    Smartphone,
+    AlertCircle
   } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { fade, slide } from 'svelte/transition';
@@ -24,27 +42,27 @@
   import { formatDateBR } from './_components/formatters';
   import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
   import type { WizardForm } from './_components/types';
-  import { 
-    createEmptyVoucherImport, 
+  import {
+    createEmptyVoucherImport,
     extractVoucherImportFromFile,
     parseVoucherImportText,
-    parseSpecialToursCircuitPasteText, 
-    parseSpecialToursHotelPaste 
+    parseSpecialToursCircuitPasteText,
+    parseSpecialToursHotelPaste
   } from '$lib/vouchers/import';
-  import { 
-    normalizeVoucherExtraData, 
-    createBlankPassengerDetail, 
-    buildPassengerSummary, 
-    createBlankAppInfo 
+  import {
+    normalizeVoucherExtraData,
+    createBlankPassengerDetail,
+    buildPassengerSummary,
+    createBlankAppInfo
   } from '$lib/vouchers/extraData';
   import { addDaysISODate, diffDaysISODate } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
   import { apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
-  import type { 
-    VoucherProvider, 
-    VoucherDia, 
-    VoucherHotel, 
+  import type {
+    VoucherProvider,
+    VoucherDia,
+    VoucherHotel,
     VoucherExtraData,
     VoucherImportResult
   } from '$lib/vouchers/types';
@@ -70,16 +88,21 @@
   let importingFile = false;
   let importedFileName = '';
   let importAccordion: string[] = [];
-  
+
   // Accordion states
   let activeDayIndexes: number[] = [];
   let activeHotelIndexes: number[] = [];
-  
+
   // Validação
   let validationErrors: Record<string, string> = {};
 
   const steps = [
-    { id: 0, label: 'Dados da Viagem', icon: MapPin, description: 'Informações básicas do voucher' },
+    {
+      id: 0,
+      label: 'Dados da Viagem',
+      icon: MapPin,
+      description: 'Informações básicas do voucher'
+    },
     { id: 1, label: 'Dia a Dia', icon: Calendar, description: 'Itinerário do circuito' },
     { id: 2, label: 'Hotéis', icon: Hotel, description: 'Acomodações confirmadas' },
     { id: 3, label: 'Extras', icon: Info, description: 'Traslados e informações adicionais' }
@@ -221,14 +244,19 @@
   // ============ ETAPA 2: DIAS ============
   function addDay() {
     const nextNum = form.dias.length + 1;
-    form.dias = [...form.dias, {
-      dia_numero: nextNum,
-      titulo: '',
-      descricao: '',
-      data_referencia: form.data_inicio ? addDaysToDate(form.data_inicio, form.dias.length) : null,
-      cidade: null,
-      ordem: form.dias.length
-    }];
+    form.dias = [
+      ...form.dias,
+      {
+        dia_numero: nextNum,
+        titulo: '',
+        descricao: '',
+        data_referencia: form.data_inicio
+          ? addDaysToDate(form.data_inicio, form.dias.length)
+          : null,
+        cidade: null,
+        ordem: form.dias.length
+      }
+    ];
     activeDayIndexes = [...activeDayIndexes, form.dias.length - 1];
   }
 
@@ -257,8 +285,8 @@
     imported: VoucherImportResult,
     options: { replaceDays?: boolean; replaceHotels?: boolean } = {}
   ) {
-    const nextDays = options.replaceDays ? (imported.dias || []) : form.dias;
-    const nextHotels = options.replaceHotels ? (imported.hoteis || []) : form.hoteis;
+    const nextDays = options.replaceDays ? imported.dias || [] : form.dias;
+    const nextHotels = options.replaceHotels ? imported.hoteis || [] : form.hoteis;
 
     form = {
       ...form,
@@ -273,8 +301,15 @@
       resumo: imported.resumo || form.resumo,
       data_inicio: imported.data_inicio || form.data_inicio,
       data_fim: imported.data_fim || form.data_fim,
-      extra_data: normalizeVoucherExtraData(imported.extra_data || form.extra_data, imported.provider || form.provider),
-      dias: nextDays.map((dia, index) => ({ ...dia, ordem: index, dia_numero: Number(dia.dia_numero || index + 1) })),
+      extra_data: normalizeVoucherExtraData(
+        imported.extra_data || form.extra_data,
+        imported.provider || form.provider
+      ),
+      dias: nextDays.map((dia, index) => ({
+        ...dia,
+        ordem: index,
+        dia_numero: Number(dia.dia_numero || index + 1)
+      })),
       hoteis: nextHotels.map((hotel, index) => ({ ...hotel, ordem: index }))
     };
 
@@ -306,7 +341,9 @@
     try {
       importingCircuit = true;
       const supportsCircuitPaste =
-        form.provider === 'special_tours' || form.provider === 'sato_tours' || form.provider === 'europamundo';
+        form.provider === 'special_tours' ||
+        form.provider === 'sato_tours' ||
+        form.provider === 'europamundo';
       const parsedCircuit = supportsCircuitPaste
         ? parseSpecialToursCircuitPasteText(circuitPasteText, form.provider)
         : null;
@@ -367,19 +404,22 @@
 
   // ============ ETAPA 3: HOTÉIS ============
   function addHotel() {
-    form.hoteis = [...form.hoteis, {
-      cidade: '',
-      hotel: '',
-      endereco: '',
-      data_inicio: '',
-      data_fim: '',
-      noites: null,
-      telefone: '',
-      contato: '',
-      status: '',
-      observacao: '',
-      ordem: form.hoteis.length
-    }];
+    form.hoteis = [
+      ...form.hoteis,
+      {
+        cidade: '',
+        hotel: '',
+        endereco: '',
+        data_inicio: '',
+        data_fim: '',
+        noites: null,
+        telefone: '',
+        contato: '',
+        status: '',
+        observacao: '',
+        ordem: form.hoteis.length
+      }
+    ];
     activeHotelIndexes = [...activeHotelIndexes, form.hoteis.length - 1];
   }
 
@@ -404,7 +444,10 @@
 
   function updateHotelDates(index: number, field: 'data_inicio' | 'data_fim', value: string) {
     form.hoteis[index][field] = value;
-    form.hoteis[index].noites = diffNights(form.hoteis[index].data_inicio, form.hoteis[index].data_fim);
+    form.hoteis[index].noites = diffNights(
+      form.hoteis[index].data_inicio,
+      form.hoteis[index].data_fim
+    );
     form.hoteis = [...form.hoteis];
   }
 
@@ -431,7 +474,7 @@
   // ============ NAVEGAÇÃO E VALIDAÇÃO ============
   function validateStep(step: number): boolean {
     validationErrors = {};
-    
+
     if (step === 0) {
       if (!form.nome.trim()) {
         validationErrors.nome = 'Nome do voucher é obrigatório';
@@ -440,7 +483,7 @@
         validationErrors.data_inicio = 'Data de início é obrigatória';
       }
     }
-    
+
     return Object.keys(validationErrors).length === 0;
   }
 
@@ -479,7 +522,7 @@
 
   function toggleDayAccordion(index: number) {
     if (activeDayIndexes.includes(index)) {
-      activeDayIndexes = activeDayIndexes.filter(i => i !== index);
+      activeDayIndexes = activeDayIndexes.filter((i) => i !== index);
     } else {
       activeDayIndexes = [...activeDayIndexes, index];
     }
@@ -487,7 +530,7 @@
 
   function toggleHotelAccordion(index: number) {
     if (activeHotelIndexes.includes(index)) {
-      activeHotelIndexes = activeHotelIndexes.filter(i => i !== index);
+      activeHotelIndexes = activeHotelIndexes.filter((i) => i !== index);
     } else {
       activeHotelIndexes = [...activeHotelIndexes, index];
     }
@@ -499,7 +542,7 @@
       toast.error('Selecione uma empresa');
       return;
     }
-    
+
     if (!form.nome.trim()) {
       validationErrors.nome = 'Nome do voucher é obrigatório';
       currentStep = 0;
@@ -508,7 +551,7 @@
     }
 
     saving = true;
-    
+
     try {
       const payload = {
         company_id: companyId,
@@ -532,7 +575,7 @@
       };
 
       await apiPost('/api/v1/vouchers', payload);
-      
+
       toast.success(finalizar ? 'Voucher finalizado com sucesso!' : 'Rascunho salvo com sucesso!');
       goto('/operacao/vouchers');
     } catch (err: unknown) {
@@ -547,14 +590,11 @@
   <title>Novo Voucher | VTUR</title>
 </svelte:head>
 
-<PageHeader 
+<PageHeader
   title="Novo Voucher"
   subtitle="Crie um voucher completo em 4 etapas"
   color="clientes"
-  breadcrumbs={[
-    { label: 'Vouchers', href: '/operacao/vouchers' },
-    { label: 'Novo' }
-  ]}
+  breadcrumbs={[{ label: 'Vouchers', href: '/operacao/vouchers' }, { label: 'Novo' }]}
   actions={[
     {
       label: 'Voltar',
@@ -568,19 +608,20 @@
 {#if loading}
   <LoadingState />
 {:else}
-  <div class="max-w-6xl mx-auto pb-20">
+  <div class="mx-auto max-w-6xl pb-20">
     <SelecaoFornecedor {providers} provider={form.provider} {setVoucherProvider} />
 
     <WizardEtapas {steps} {goToStep} {getStepStatus} />
 
     <!-- Conteúdo do Wizard -->
-    <div class="bg-white rounded-xl shadow-xs border border-slate-200 p-6 md:p-8">
-      
+    <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-xs md:p-8">
       <!-- ETAPA 1: DADOS DA VIAGEM -->
       {#if currentStep === 0}
         <div in:fade={{ duration: 200 }}>
-          <div class="flex items-center gap-3 mb-6">
-            <div class="w-12 h-12 rounded-xl bg-clientes-100 text-clientes-600 flex items-center justify-center">
+          <div class="mb-6 flex items-center gap-3">
+            <div
+              class="bg-clientes-100 text-clientes-600 flex h-12 w-12 items-center justify-center rounded-xl"
+            >
               <MapPin size={24} />
             </div>
             <div>
@@ -608,7 +649,7 @@
             />
 
             <!-- Informações Principais -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FieldInput
                 id="voucher-nome"
                 label="Nome do Voucher"
@@ -645,12 +686,18 @@
                 label="Localizador Agência"
                 value={form.extra_data.localizador_agencia || ''}
                 placeholder="Localizador"
-                on:input={(e) => form.extra_data = { ...form.extra_data, localizador_agencia: (e.currentTarget as HTMLInputElement).value }}
+                on:input={(e) =>
+                  (form.extra_data = {
+                    ...form.extra_data,
+                    localizador_agencia: (e.currentTarget as HTMLInputElement).value
+                  })}
               />
             </div>
 
             <!-- Datas -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 bg-blue-50 rounded-xl border border-blue-100">
+            <div
+              class="grid grid-cols-1 gap-4 rounded-xl border border-blue-100 bg-blue-50 p-5 md:grid-cols-2"
+            >
               <FieldInput
                 id="voucher-data-inicio"
                 label="Data Início"
@@ -671,7 +718,7 @@
             </div>
 
             <!-- Acomodação e Operador -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
               <FieldSelect
                 id="voucher-tipo-acomodacao"
                 label="Tipo de Acomodação"
@@ -689,9 +736,9 @@
             </div>
 
             <!-- Passageiros -->
-            <div class="p-5 bg-slate-50 rounded-xl border border-slate-200">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="font-semibold text-slate-900 flex items-center gap-2">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
+              <div class="mb-4 flex items-center justify-between">
+                <h3 class="flex items-center gap-2 font-semibold text-slate-900">
                   <Users size={18} class="text-clientes-500" />
                   Passageiros
                 </h3>
@@ -700,12 +747,12 @@
                   Adicionar
                 </Button>
               </div>
-              
+
               {#if form.extra_data.passageiros_detalhes?.length}
                 <div class="space-y-3">
                   {#each form.extra_data.passageiros_detalhes as passenger, i}
-                    <div class="p-4 bg-white rounded-lg border border-slate-200 shadow-xs">
-                      <div class="flex items-center justify-between mb-3">
+                    <div class="rounded-lg border border-slate-200 bg-white p-4 shadow-xs">
+                      <div class="mb-3 flex items-center justify-between">
                         <span class="text-sm font-medium text-slate-700">Passageiro {i + 1}</span>
                         <Button
                           variant="ghost"
@@ -716,35 +763,51 @@
                           <Trash2 size={16} />
                         </Button>
                       </div>
-                      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                      <div class="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
                         <FieldInput
                           id={`voucher-passageiro-nome-${i}`}
                           label="Nome Completo"
                           value={passenger.nome}
                           placeholder="Nome do passageiro"
                           class_name="md:col-span-2"
-                          on:input={(e) => updatePassenger(i, 'nome', (e.currentTarget as HTMLInputElement).value)}
+                          on:input={(e) =>
+                            updatePassenger(i, 'nome', (e.currentTarget as HTMLInputElement).value)}
                         />
                         <FieldInput
                           id={`voucher-passageiro-passaporte-${i}`}
                           label="Passaporte"
                           value={passenger.passaporte || ''}
                           placeholder="Número"
-                          on:input={(e) => updatePassenger(i, 'passaporte', (e.currentTarget as HTMLInputElement).value)}
+                          on:input={(e) =>
+                            updatePassenger(
+                              i,
+                              'passaporte',
+                              (e.currentTarget as HTMLInputElement).value
+                            )}
                         />
                         <FieldInput
                           id={`voucher-passageiro-data-${i}`}
                           label="Data Nasc."
                           type="date"
                           value={passenger.data_nascimento || ''}
-                          on:input={(e) => updatePassenger(i, 'data_nascimento', (e.currentTarget as HTMLInputElement).value)}
+                          on:input={(e) =>
+                            updatePassenger(
+                              i,
+                              'data_nascimento',
+                              (e.currentTarget as HTMLInputElement).value
+                            )}
                         />
                         <FieldInput
                           id={`voucher-passageiro-nacionalidade-${i}`}
                           label="Nacionalidade"
                           value={passenger.nacionalidade || ''}
                           placeholder="Ex: Brasileira"
-                          on:input={(e) => updatePassenger(i, 'nacionalidade', (e.currentTarget as HTMLInputElement).value)}
+                          on:input={(e) =>
+                            updatePassenger(
+                              i,
+                              'nacionalidade',
+                              (e.currentTarget as HTMLInputElement).value
+                            )}
                         />
                         <FieldSelect
                           id={`voucher-passageiro-tipo-${i}`}
@@ -752,14 +815,21 @@
                           value={passenger.tipo || ''}
                           options={passengerTypeOptions}
                           placeholder="Selecione uma opção"
-                          on:change={(e) => updatePassenger(i, 'tipo', (e.currentTarget as HTMLSelectElement).value)}
+                          on:change={(e) =>
+                            updatePassenger(
+                              i,
+                              'tipo',
+                              (e.currentTarget as HTMLSelectElement).value
+                            )}
                         />
                       </div>
                     </div>
                   {/each}
                 </div>
               {:else}
-                <div class="text-center py-8 text-slate-400 border-2 border-dashed border-slate-300 rounded-lg">
+                <div
+                  class="rounded-lg border-2 border-dashed border-slate-300 py-8 text-center text-slate-400"
+                >
                   <Users size={32} class="mx-auto mb-2 opacity-50" />
                   <p class="text-sm">Nenhum passageiro adicionado</p>
                   <Button variant="ghost" size="sm" class_name="mt-2" on:click={addPassenger}>
@@ -781,11 +851,13 @@
           </div>
         </div>
 
-      <!-- ETAPA 2: DIA A DIA -->
+        <!-- ETAPA 2: DIA A DIA -->
       {:else if currentStep === 1}
         <div in:fade={{ duration: 200 }}>
-          <div class="flex items-center gap-3 mb-6">
-            <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+          <div class="mb-6 flex items-center gap-3">
+            <div
+              class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600"
+            >
               <Calendar size={24} />
             </div>
             <div>
@@ -795,10 +867,9 @@
           </div>
 
           <div class="space-y-6">
-
             <!-- Lista de Dias -->
             <div>
-              <div class="flex items-center justify-between mb-4">
+              <div class="mb-4 flex items-center justify-between">
                 <h3 class="font-semibold text-slate-900">Dias do Circuito ({form.dias.length})</h3>
                 <Button variant="primary" size="sm" on:click={addDay}>
                   <Plus size={14} class="mr-1" />
@@ -807,15 +878,19 @@
               </div>
 
               {#if form.dias.length === 0}
-                <div class="text-center py-12 text-slate-400 border-2 border-dashed border-slate-300 rounded-xl">
+                <div
+                  class="rounded-xl border-2 border-dashed border-slate-300 py-12 text-center text-slate-400"
+                >
                   <Calendar size={48} class="mx-auto mb-3 opacity-50" />
                   <p class="font-medium">Nenhum dia adicionado</p>
-                  <p class="text-sm mt-1">Importe ou adicione os dias do circuito</p>
+                  <p class="mt-1 text-sm">Importe ou adicione os dias do circuito</p>
                 </div>
               {:else}
                 <div class="space-y-3">
                   {#each form.dias as dia, i}
-                    <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
+                    <div
+                      class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs"
+                    >
                       <div class="flex items-stretch justify-between bg-slate-50 transition-colors">
                         <Button
                           type="button"
@@ -824,19 +899,25 @@
                           class_name="flex flex-1 justify-start! gap-4 rounded-none! border-0! bg-transparent! px-4! py-4! text-left! shadow-none! hover:bg-slate-100!"
                           on:click={() => toggleDayAccordion(i)}
                         >
-                          <div class="w-10 h-10 rounded-full bg-clientes-500 text-white flex items-center justify-center font-bold">
+                          <div
+                            class="bg-clientes-500 flex h-10 w-10 items-center justify-center rounded-full font-bold text-white"
+                          >
                             {dia.dia_numero}
                           </div>
                           <div>
-                            <p class="font-medium text-slate-900">{dia.titulo || `Dia ${dia.dia_numero}`}</p>
+                            <p class="font-medium text-slate-900">
+                              {dia.titulo || `Dia ${dia.dia_numero}`}
+                            </p>
                             {#if dia.data_referencia}
-                              <p class="text-sm text-slate-500">{formatDateBR(dia.data_referencia)} • {dia.cidade || 'Sem cidade'}</p>
+                              <p class="text-sm text-slate-500">
+                                {formatDateBR(dia.data_referencia)} • {dia.cidade || 'Sem cidade'}
+                              </p>
                             {/if}
                           </div>
-                          <svelte:component 
-                            this={activeDayIndexes.includes(i) ? ChevronUp : ChevronDown} 
-                            size={20} 
-                            class="text-slate-400 ml-auto"
+                          <svelte:component
+                            this={activeDayIndexes.includes(i) ? ChevronUp : ChevronDown}
+                            size={20}
+                            class="ml-auto text-slate-400"
                           />
                         </Button>
                         <div class="flex items-center gap-2 px-4">
@@ -874,10 +955,10 @@
                           </Button>
                         </div>
                       </div>
-                      
+
                       {#if activeDayIndexes.includes(i)}
-                        <div class="p-4 space-y-4 border-t border-slate-100" transition:slide>
-                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-4 border-t border-slate-100 p-4" transition:slide>
+                          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <FieldInput
                               id={`voucher-dia-titulo-${i}`}
                               label="Título do Dia"
@@ -910,11 +991,13 @@
           </div>
         </div>
 
-      <!-- ETAPA 3: HOTÉIS -->
+        <!-- ETAPA 3: HOTÉIS -->
       {:else if currentStep === 2}
         <div in:fade={{ duration: 200 }}>
-          <div class="flex items-center gap-3 mb-6">
-            <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+          <div class="mb-6 flex items-center gap-3">
+            <div
+              class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-600"
+            >
               <Hotel size={24} />
             </div>
             <div>
@@ -924,10 +1007,9 @@
           </div>
 
           <div class="space-y-6">
-
             <!-- Lista de Hotéis -->
             <div>
-              <div class="flex items-center justify-between mb-4">
+              <div class="mb-4 flex items-center justify-between">
                 <h3 class="font-semibold text-slate-900">Hotéis ({form.hoteis.length})</h3>
                 <Button variant="primary" size="sm" on:click={addHotel}>
                   <Plus size={14} class="mr-1" />
@@ -936,15 +1018,19 @@
               </div>
 
               {#if form.hoteis.length === 0}
-                <div class="text-center py-12 text-slate-400 border-2 border-dashed border-slate-300 rounded-xl">
+                <div
+                  class="rounded-xl border-2 border-dashed border-slate-300 py-12 text-center text-slate-400"
+                >
                   <Hotel size={48} class="mx-auto mb-3 opacity-50" />
                   <p class="font-medium">Nenhum hotel adicionado</p>
-                  <p class="text-sm mt-1">Importe ou adicione os hotéis</p>
+                  <p class="mt-1 text-sm">Importe ou adicione os hotéis</p>
                 </div>
               {:else}
                 <div class="space-y-3">
                   {#each form.hoteis as hotel, i}
-                    <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
+                    <div
+                      class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs"
+                    >
                       <div class="flex items-stretch justify-between bg-slate-50 transition-colors">
                         <Button
                           type="button"
@@ -953,17 +1039,23 @@
                           class_name="flex flex-1 justify-start! gap-4 rounded-none! border-0! bg-transparent! px-4! py-4! text-left! shadow-none! hover:bg-slate-100!"
                           on:click={() => toggleHotelAccordion(i)}
                         >
-                          <div class="w-10 h-10 rounded-full bg-amber-500 text-white flex items-center justify-center">
+                          <div
+                            class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500 text-white"
+                          >
                             <Hotel size={20} />
                           </div>
                           <div>
-                            <p class="font-medium text-slate-900">{hotel.hotel || `Hotel ${i + 1}`}</p>
-                            <p class="text-sm text-slate-500">{hotel.cidade || 'Sem cidade'} • {hotel.noites || 0} noites</p>
+                            <p class="font-medium text-slate-900">
+                              {hotel.hotel || `Hotel ${i + 1}`}
+                            </p>
+                            <p class="text-sm text-slate-500">
+                              {hotel.cidade || 'Sem cidade'} • {hotel.noites || 0} noites
+                            </p>
                           </div>
-                          <svelte:component 
-                            this={activeHotelIndexes.includes(i) ? ChevronUp : ChevronDown} 
-                            size={20} 
-                            class="text-slate-400 ml-auto"
+                          <svelte:component
+                            this={activeHotelIndexes.includes(i) ? ChevronUp : ChevronDown}
+                            size={20}
+                            class="ml-auto text-slate-400"
                           />
                         </Button>
                         <div class="flex items-center gap-2 px-4">
@@ -1001,10 +1093,10 @@
                           </Button>
                         </div>
                       </div>
-                      
+
                       {#if activeHotelIndexes.includes(i)}
-                        <div class="p-4 space-y-4 border-t border-slate-100" transition:slide>
-                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="space-y-4 border-t border-slate-100 p-4" transition:slide>
+                          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <CidadeDestinoAutocomplete
                               id={`voucher-hotel-cidade-${i}`}
                               label="Cidade"
@@ -1021,23 +1113,29 @@
                               placeholder="Nome do hotel"
                             />
                           </div>
-                          
+
                           <FieldInput
                             id={`voucher-hotel-endereco-${i}`}
                             label="Endereço"
                             type="text"
                             value={hotel.endereco || ''}
-                            on:input={(e) => hotel.endereco = (e.currentTarget as HTMLInputElement).value}
+                            on:input={(e) =>
+                              (hotel.endereco = (e.currentTarget as HTMLInputElement).value)}
                             placeholder="Endereço completo"
                           />
-                          
-                          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                          <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                             <FieldInput
                               id={`voucher-hotel-checkin-${i}`}
                               label="Check-in"
                               type="date"
                               value={hotel.data_inicio || ''}
-                              on:input={(e) => updateHotelDates(i, 'data_inicio', (e.currentTarget as HTMLInputElement).value)}
+                              on:input={(e) =>
+                                updateHotelDates(
+                                  i,
+                                  'data_inicio',
+                                  (e.currentTarget as HTMLInputElement).value
+                                )}
                             />
                             <FieldInput
                               id={`voucher-hotel-checkout-${i}`}
@@ -1045,7 +1143,12 @@
                               type="date"
                               value={hotel.data_fim || ''}
                               min={hotel.data_inicio || null}
-                              on:input={(e) => updateHotelDates(i, 'data_fim', (e.currentTarget as HTMLInputElement).value)}
+                              on:input={(e) =>
+                                updateHotelDates(
+                                  i,
+                                  'data_fim',
+                                  (e.currentTarget as HTMLInputElement).value
+                                )}
                             />
                             <FieldInput
                               id={`voucher-hotel-noites-${i}`}
@@ -1055,14 +1158,15 @@
                               readonly={true}
                             />
                           </div>
-                          
-                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <FieldInput
                               id={`voucher-hotel-telefone-${i}`}
                               label="Telefone"
                               type="text"
                               value={hotel.telefone || ''}
-                              on:input={(e) => hotel.telefone = (e.currentTarget as HTMLInputElement).value}
+                              on:input={(e) =>
+                                (hotel.telefone = (e.currentTarget as HTMLInputElement).value)}
                               placeholder="Telefone do hotel"
                             />
                             <FieldInput
@@ -1070,26 +1174,32 @@
                               label="Contato"
                               type="text"
                               value={hotel.contato || ''}
-                              on:input={(e) => hotel.contato = (e.currentTarget as HTMLInputElement).value}
+                              on:input={(e) =>
+                                (hotel.contato = (e.currentTarget as HTMLInputElement).value)}
                               placeholder="Nome do contato"
                             />
                           </div>
-                          
-                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                          <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <FieldSelect
                               id={`voucher-hotel-status-${i}`}
                               label="Status"
                               value={hotel.status || ''}
-                              on:change={(e) => hotel.status = (e.currentTarget as HTMLSelectElement).value}
-                              options={[{ value: '', label: 'Selecione uma opção' }, ...hotelStatusOptions]}
+                              on:change={(e) =>
+                                (hotel.status = (e.currentTarget as HTMLSelectElement).value)}
+                              options={[
+                                { value: '', label: 'Selecione uma opção' },
+                                ...hotelStatusOptions
+                              ]}
                             />
                           </div>
-                          
+
                           <FieldTextarea
                             id={`voucher-hotel-observacao-${i}`}
                             label="Observação"
                             value={hotel.observacao || ''}
-                            on:input={(e) => hotel.observacao = (e.currentTarget as HTMLTextAreaElement).value}
+                            on:input={(e) =>
+                              (hotel.observacao = (e.currentTarget as HTMLTextAreaElement).value)}
                             rows={2}
                             placeholder="Observações sobre o hotel..."
                           />
@@ -1103,11 +1213,13 @@
           </div>
         </div>
 
-      <!-- ETAPA 4: EXTRA DATA -->
+        <!-- ETAPA 4: EXTRA DATA -->
       {:else if currentStep === 3}
         <div in:fade={{ duration: 200 }}>
-          <div class="flex items-center gap-3 mb-6">
-            <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center">
+          <div class="mb-6 flex items-center gap-3">
+            <div
+              class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-purple-600"
+            >
               <Info size={24} />
             </div>
             <div>
@@ -1118,16 +1230,16 @@
 
           <div class="space-y-6">
             <!-- Traslados -->
-            <div class="p-5 bg-slate-50 rounded-xl border border-slate-200">
-              <h3 class="font-semibold text-slate-900 mb-4 flex items-center gap-2">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-5">
+              <h3 class="mb-4 flex items-center gap-2 font-semibold text-slate-900">
                 <Plane size={20} class="text-clientes-500" />
                 Traslados
               </h3>
-              
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+              <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 <!-- Chegada -->
-                <div class="p-4 bg-green-50 rounded-lg border border-green-200">
-                  <h4 class="font-medium text-green-900 mb-3 flex items-center gap-2">
+                <div class="rounded-lg border border-green-200 bg-green-50 p-4">
+                  <h4 class="mb-3 flex items-center gap-2 font-medium text-green-900">
                     <Plane size={16} class="rotate-45" />
                     Traslado Chegada
                   </h4>
@@ -1136,13 +1248,14 @@
                       id="voucher-traslado-chegada-detalhes"
                       label="Detalhes"
                       value={form.extra_data.traslado_chegada?.detalhes || ''}
-                      on:input={(e) => form.extra_data = { 
-                        ...form.extra_data, 
-                        traslado_chegada: { 
-                          ...(form.extra_data.traslado_chegada || {}), 
-                          detalhes: (e.currentTarget as HTMLTextAreaElement).value 
-                        } 
-                      }}
+                      on:input={(e) =>
+                        (form.extra_data = {
+                          ...form.extra_data,
+                          traslado_chegada: {
+                            ...(form.extra_data.traslado_chegada || {}),
+                            detalhes: (e.currentTarget as HTMLTextAreaElement).value
+                          }
+                        })}
                       rows={3}
                       placeholder="Detalhes do traslado de chegada..."
                     />
@@ -1150,13 +1263,14 @@
                       id="voucher-traslado-chegada-notas"
                       label="Notas"
                       value={form.extra_data.traslado_chegada?.notas || ''}
-                      on:input={(e) => form.extra_data = { 
-                        ...form.extra_data, 
-                        traslado_chegada: { 
-                          ...(form.extra_data.traslado_chegada || {}), 
-                          notas: (e.currentTarget as HTMLTextAreaElement).value 
-                        } 
-                      }}
+                      on:input={(e) =>
+                        (form.extra_data = {
+                          ...form.extra_data,
+                          traslado_chegada: {
+                            ...(form.extra_data.traslado_chegada || {}),
+                            notas: (e.currentTarget as HTMLTextAreaElement).value
+                          }
+                        })}
                       rows={2}
                       placeholder="Notas importantes..."
                     />
@@ -1165,21 +1279,22 @@
                       label="Telefone Transferista"
                       type="text"
                       value={form.extra_data.traslado_chegada?.telefone_transferista || ''}
-                      on:input={(e) => form.extra_data = { 
-                        ...form.extra_data, 
-                        traslado_chegada: { 
-                          ...(form.extra_data.traslado_chegada || {}), 
-                          telefone_transferista: (e.currentTarget as HTMLInputElement).value 
-                        } 
-                      }}
+                      on:input={(e) =>
+                        (form.extra_data = {
+                          ...form.extra_data,
+                          traslado_chegada: {
+                            ...(form.extra_data.traslado_chegada || {}),
+                            telefone_transferista: (e.currentTarget as HTMLInputElement).value
+                          }
+                        })}
                       placeholder="+34 999 999 999"
                     />
                   </div>
                 </div>
 
                 <!-- Saída -->
-                <div class="p-4 bg-orange-50 rounded-lg border border-orange-200">
-                  <h4 class="font-medium text-orange-900 mb-3 flex items-center gap-2">
+                <div class="rounded-lg border border-orange-200 bg-orange-50 p-4">
+                  <h4 class="mb-3 flex items-center gap-2 font-medium text-orange-900">
                     <Plane size={16} class="-rotate-45" />
                     Traslado Saída
                   </h4>
@@ -1188,13 +1303,14 @@
                       id="voucher-traslado-saida-detalhes"
                       label="Detalhes"
                       value={form.extra_data.traslado_saida?.detalhes || ''}
-                      on:input={(e) => form.extra_data = { 
-                        ...form.extra_data, 
-                        traslado_saida: { 
-                          ...(form.extra_data.traslado_saida || {}), 
-                          detalhes: (e.currentTarget as HTMLTextAreaElement).value 
-                        } 
-                      }}
+                      on:input={(e) =>
+                        (form.extra_data = {
+                          ...form.extra_data,
+                          traslado_saida: {
+                            ...(form.extra_data.traslado_saida || {}),
+                            detalhes: (e.currentTarget as HTMLTextAreaElement).value
+                          }
+                        })}
                       rows={3}
                       placeholder="Detalhes do traslado de saída..."
                     />
@@ -1202,13 +1318,14 @@
                       id="voucher-traslado-saida-notas"
                       label="Notas"
                       value={form.extra_data.traslado_saida?.notas || ''}
-                      on:input={(e) => form.extra_data = { 
-                        ...form.extra_data, 
-                        traslado_saida: { 
-                          ...(form.extra_data.traslado_saida || {}), 
-                          notas: (e.currentTarget as HTMLTextAreaElement).value 
-                        } 
-                      }}
+                      on:input={(e) =>
+                        (form.extra_data = {
+                          ...form.extra_data,
+                          traslado_saida: {
+                            ...(form.extra_data.traslado_saida || {}),
+                            notas: (e.currentTarget as HTMLTextAreaElement).value
+                          }
+                        })}
                       rows={2}
                       placeholder="Notas importantes..."
                     />
@@ -1217,13 +1334,14 @@
                       label="Telefone Transferista"
                       type="text"
                       value={form.extra_data.traslado_saida?.telefone_transferista || ''}
-                      on:input={(e) => form.extra_data = { 
-                        ...form.extra_data, 
-                        traslado_saida: { 
-                          ...(form.extra_data.traslado_saida || {}), 
-                          telefone_transferista: (e.currentTarget as HTMLInputElement).value 
-                        } 
-                      }}
+                      on:input={(e) =>
+                        (form.extra_data = {
+                          ...form.extra_data,
+                          traslado_saida: {
+                            ...(form.extra_data.traslado_saida || {}),
+                            telefone_transferista: (e.currentTarget as HTMLInputElement).value
+                          }
+                        })}
                       placeholder="+34 999 999 999"
                     />
                   </div>
@@ -1232,23 +1350,27 @@
             </div>
 
             <!-- Informações Importantes -->
-            <div class="p-5 bg-amber-50 rounded-xl border border-amber-200">
-              <h3 class="font-semibold text-amber-900 mb-3 flex items-center gap-2">
+            <div class="rounded-xl border border-amber-200 bg-amber-50 p-5">
+              <h3 class="mb-3 flex items-center gap-2 font-semibold text-amber-900">
                 <AlertCircle size={20} />
                 Informações Importantes
               </h3>
               <FieldTextarea
                 value={form.extra_data.informacoes_importantes || ''}
-                on:input={(e) => form.extra_data = { ...form.extra_data, informacoes_importantes: (e.currentTarget as HTMLTextAreaElement).value }}
+                on:input={(e) =>
+                  (form.extra_data = {
+                    ...form.extra_data,
+                    informacoes_importantes: (e.currentTarget as HTMLTextAreaElement).value
+                  })}
                 rows={5}
                 placeholder="Liste aqui as informações importantes para o passageiro..."
               />
             </div>
 
             <!-- Apps -->
-            <div class="p-5 bg-blue-50 rounded-xl border border-blue-200">
-              <div class="flex items-center justify-between mb-4">
-                <h3 class="font-semibold text-blue-900 flex items-center gap-2">
+            <div class="rounded-xl border border-blue-200 bg-blue-50 p-5">
+              <div class="mb-4 flex items-center justify-between">
+                <h3 class="flex items-center gap-2 font-semibold text-blue-900">
                   <Smartphone size={20} />
                   Apps Recomendados
                 </h3>
@@ -1257,29 +1379,25 @@
                   Adicionar App
                 </Button>
               </div>
-              
+
               {#if form.extra_data.apps_recomendados?.length}
                 <div class="space-y-3">
                   {#each form.extra_data.apps_recomendados as app, i}
-                    <div class="p-4 bg-white rounded-lg border border-blue-200 shadow-xs">
-                      <div class="flex items-center justify-between mb-3">
+                    <div class="rounded-lg border border-blue-200 bg-white p-4 shadow-xs">
+                      <div class="mb-3 flex items-center justify-between">
                         <span class="text-sm font-medium text-slate-700">App {i + 1}</span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          color="red"
-                          on:click={() => removeApp(i)}
-                        >
+                        <Button variant="ghost" size="sm" color="red" on:click={() => removeApp(i)}>
                           <Trash2 size={16} />
                         </Button>
                       </div>
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
                         <FieldInput
                           id={`voucher-app-nome-${i}`}
                           label="Nome"
                           type="text"
                           value={app.nome}
-                          on:input={(e) => updateApp(i, 'nome', (e.currentTarget as HTMLInputElement).value)}
+                          on:input={(e) =>
+                            updateApp(i, 'nome', (e.currentTarget as HTMLInputElement).value)}
                           placeholder="Ex: Google Tradutor"
                         />
                         <FieldInput
@@ -1287,7 +1405,8 @@
                           label="Descrição"
                           type="text"
                           value={app.descricao || ''}
-                          on:input={(e) => updateApp(i, 'descricao', (e.currentTarget as HTMLInputElement).value)}
+                          on:input={(e) =>
+                            updateApp(i, 'descricao', (e.currentTarget as HTMLInputElement).value)}
                           placeholder="Para que serve"
                         />
                       </div>
@@ -1295,7 +1414,9 @@
                   {/each}
                 </div>
               {:else}
-                <div class="text-center py-6 text-blue-400 border-2 border-dashed border-blue-300 rounded-lg">
+                <div
+                  class="rounded-lg border-2 border-dashed border-blue-300 py-6 text-center text-blue-400"
+                >
                   <Smartphone size={32} class="mx-auto mb-2 opacity-50" />
                   <p class="text-sm">Nenhum app adicionado</p>
                 </div>
@@ -1303,25 +1424,26 @@
             </div>
 
             <!-- Emergência -->
-            <div class="p-5 bg-red-50 rounded-xl border border-red-200">
-              <h3 class="font-semibold text-red-900 mb-4 flex items-center gap-2">
+            <div class="rounded-xl border border-red-200 bg-red-50 p-5">
+              <h3 class="mb-4 flex items-center gap-2 font-semibold text-red-900">
                 <Phone size={20} />
                 Contatos de Emergência
               </h3>
-              
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <FieldInput
                   id="voucher-emergencia-escritorio"
                   label="Escritório"
                   type="text"
                   value={form.extra_data.emergencia?.escritorio || ''}
-                  on:input={(e) => form.extra_data = { 
-                    ...form.extra_data, 
-                    emergencia: { 
-                      ...(form.extra_data.emergencia || {}), 
-                      escritorio: (e.currentTarget as HTMLInputElement).value 
-                    } 
-                  }}
+                  on:input={(e) =>
+                    (form.extra_data = {
+                      ...form.extra_data,
+                      emergencia: {
+                        ...(form.extra_data.emergencia || {}),
+                        escritorio: (e.currentTarget as HTMLInputElement).value
+                      }
+                    })}
                   placeholder="+55 11 9999-9999"
                 />
                 <FieldInput
@@ -1329,13 +1451,14 @@
                   label="Emergência 24h"
                   type="text"
                   value={form.extra_data.emergencia?.emergencia_24h || ''}
-                  on:input={(e) => form.extra_data = { 
-                    ...form.extra_data, 
-                    emergencia: { 
-                      ...(form.extra_data.emergencia || {}), 
-                      emergencia_24h: (e.currentTarget as HTMLInputElement).value 
-                    } 
-                  }}
+                  on:input={(e) =>
+                    (form.extra_data = {
+                      ...form.extra_data,
+                      emergencia: {
+                        ...(form.extra_data.emergencia || {}),
+                        emergencia_24h: (e.currentTarget as HTMLInputElement).value
+                      }
+                    })}
                   placeholder="+34 652 99 00 47"
                 />
                 <FieldInput
@@ -1343,36 +1466,41 @@
                   label="WhatsApp"
                   type="text"
                   value={form.extra_data.emergencia?.whatsapp || ''}
-                  on:input={(e) => form.extra_data = { 
-                    ...form.extra_data, 
-                    emergencia: { 
-                      ...(form.extra_data.emergencia || {}), 
-                      whatsapp: (e.currentTarget as HTMLInputElement).value 
-                    } 
-                  }}
+                  on:input={(e) =>
+                    (form.extra_data = {
+                      ...form.extra_data,
+                      emergencia: {
+                        ...(form.extra_data.emergencia || {}),
+                        whatsapp: (e.currentTarget as HTMLInputElement).value
+                      }
+                    })}
                   placeholder="+55 11 99999-9999"
                 />
               </div>
             </div>
 
             <!-- Preview Final -->
-            <div class="p-5 bg-clientes-50 rounded-xl border border-clientes-200">
-              <h3 class="font-semibold text-clientes-900 mb-4">Resumo do Voucher</h3>
-              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                <div class="p-3 bg-white rounded-lg">
-                  <p class="text-2xl font-bold text-clientes-600">{form.dias.length}</p>
+            <div class="bg-clientes-50 border-clientes-200 rounded-xl border p-5">
+              <h3 class="text-clientes-900 mb-4 font-semibold">Resumo do Voucher</h3>
+              <div class="grid grid-cols-2 gap-4 text-center md:grid-cols-4">
+                <div class="rounded-lg bg-white p-3">
+                  <p class="text-clientes-600 text-2xl font-bold">{form.dias.length}</p>
                   <p class="text-sm text-slate-600">Dias</p>
                 </div>
-                <div class="p-3 bg-white rounded-lg">
-                  <p class="text-2xl font-bold text-clientes-600">{form.hoteis.length}</p>
+                <div class="rounded-lg bg-white p-3">
+                  <p class="text-clientes-600 text-2xl font-bold">{form.hoteis.length}</p>
                   <p class="text-sm text-slate-600">Hotéis</p>
                 </div>
-                <div class="p-3 bg-white rounded-lg">
-                  <p class="text-2xl font-bold text-clientes-600">{form.extra_data.passageiros_detalhes?.length || 0}</p>
+                <div class="rounded-lg bg-white p-3">
+                  <p class="text-clientes-600 text-2xl font-bold">
+                    {form.extra_data.passageiros_detalhes?.length || 0}
+                  </p>
                   <p class="text-sm text-slate-600">Passageiros</p>
                 </div>
-                <div class="p-3 bg-white rounded-lg">
-                  <p class="text-2xl font-bold text-clientes-600">{form.extra_data.apps_recomendados?.length || 0}</p>
+                <div class="rounded-lg bg-white p-3">
+                  <p class="text-clientes-600 text-2xl font-bold">
+                    {form.extra_data.apps_recomendados?.length || 0}
+                  </p>
                   <p class="text-sm text-slate-600">Apps</p>
                 </div>
               </div>
@@ -1382,7 +1510,7 @@
       {/if}
 
       <!-- Navegação -->
-      <div class="flex justify-between items-center mt-8 pt-6 border-t border-slate-200">
+      <div class="mt-8 flex items-center justify-between border-t border-slate-200 pt-6">
         <div>
           {#if currentStep > 0}
             <Button variant="secondary" on:click={prevStep}>
@@ -1398,7 +1526,7 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <span class="text-sm text-slate-500 hidden sm:inline">
+          <span class="hidden text-sm text-slate-500 sm:inline">
             Etapa {currentStep + 1} de {steps.length}
           </span>
         </div>
@@ -1410,11 +1538,7 @@
               <ChevronRight size={18} class="ml-1" />
             </Button>
           {:else}
-            <Button 
-              variant="secondary" 
-              on:click={() => saveVoucher(false)}
-              disabled={saving}
-            >
+            <Button variant="secondary" on:click={() => saveVoucher(false)} disabled={saving}>
               {#if saving}
                 <Loader2 size={18} class="mr-2 animate-spin" />
               {:else}
@@ -1422,12 +1546,8 @@
               {/if}
               Salvar Rascunho
             </Button>
-            
-            <Button 
-              variant="primary" 
-              on:click={() => saveVoucher(true)}
-              disabled={saving}
-            >
+
+            <Button variant="primary" on:click={() => saveVoucher(true)} disabled={saving}>
               {#if saving}
                 <Loader2 size={18} class="mr-2 animate-spin" />
               {:else}

@@ -40,7 +40,7 @@ async function buildApp() {
     RESEND_API_KEY: 'test',
     TURNSTILE_SECRET_KEY: 'test',
     VITE_PUBLIC_TURNSTILE_SITE_KEY: 'test',
-    CF_PAGES_URL: 'http://localhost:5173',
+    CF_PAGES_URL: 'http://localhost:5173'
   } as unknown as Record<string, unknown>;
   void fakeEnv;
   return createApiAppV2();
@@ -98,14 +98,19 @@ describe('Suíte Q — F6-02: auditoria de segurança', () => {
   it('Q7. rateLimitMiddleware: retorna 429 após exceder limite', () => {
     const src = readSrc('src/lib/server/api/middleware/rate-limit.ts');
     expect(src).toContain('429');
-    expect(src).toContain('Too Many Requests');
+    // Contrato real: mensagem em pt-BR e código de erro estável
+    expect(src).toContain('Muitas requisições');
+    expect(src).toContain('RATE_LIMIT_EXCEEDED');
   });
 
   // Q8 ──────────────────────────────────────────────────────────────────────
   it('Q8. rateLimitMiddleware: exclui /health de rate limiting', () => {
     const src = readSrc('src/lib/server/api/middleware/rate-limit.ts');
-    expect(src).toContain('health');
+    // O middleware aceita exclusões configuráveis…
     expect(src).toContain('excludePaths');
+    // …e o app v2 exclui o health check do rate limit
+    const app = readSrc('src/lib/server/api/app-v2.ts');
+    expect(app).toMatch(/excludePaths:\s*\[[^\]]*\/api\/v2\/health/);
   });
 
   // Q9 ──────────────────────────────────────────────────────────────────────
@@ -138,12 +143,11 @@ describe('Suíte Q — F6-02: auditoria de segurança', () => {
   it('Q12. HSTS: só ativado quando PUBLIC_ENVIRONMENT === production', () => {
     const src = readSrc('src/lib/server/api/middleware/security.ts');
     expect(src).toContain('strict-transport-security');
-    // Deve ter condicional de ambiente antes de setar HSTS
+    // A verificação de ambiente precisa existir e vir antes do header HSTS
     const hstsIdx = src.indexOf('strict-transport-security');
-    const prodIdx = src.indexOf('production');
-    expect(prodIdx).toBeGreaterThan(0);
-    // prodIdx deve aparecer antes ou próximo ao hstsIdx (condicional)
-    expect(Math.abs(prodIdx - hstsIdx)).toBeLessThan(400);
+    const prodIdx = src.indexOf("PUBLIC_ENVIRONMENT === 'production'");
+    expect(prodIdx).toBeGreaterThan(-1);
+    expect(prodIdx).toBeLessThan(hstsIdx);
   });
 
   // Q13 ─────────────────────────────────────────────────────────────────────
@@ -168,7 +172,7 @@ describe('Suíte Q — F6-02: auditoria de segurança', () => {
   it('Q14. isolamento de tenant: rotas v2 sempre filtram por empresaId do token', () => {
     const rotasParaVerificar = [
       'src/lib/server/api/routes/vendas-v2/index.ts',
-      'src/lib/server/api/routes/clientes-v2/index.ts',
+      'src/lib/server/api/routes/clientes-v2/index.ts'
     ];
     for (const rota of rotasParaVerificar) {
       const src = readSrc(rota);
@@ -183,12 +187,12 @@ describe('Suíte Q — F6-02: auditoria de segurança', () => {
       'src/lib/server/api/routes/vendas-v2/index.ts',
       'src/lib/server/api/routes/clientes-v2/index.ts',
       'src/lib/server/api/routes/invites-v2/index.ts',
-      'src/lib/server/api/app-v2.ts',
+      'src/lib/server/api/app-v2.ts'
     ];
     const padroesSuspeitos = [
       /sk_live_[a-zA-Z0-9]{20,}/,
-      /AKIA[0-9A-Z]{16}/,      // AWS key
-      /password\s*=\s*['"][^'"]{8,}/i,
+      /AKIA[0-9A-Z]{16}/, // AWS key
+      /password\s*=\s*['"][^'"]{8,}/i
     ];
     for (const rota of rotas) {
       const src = readSrc(rota);

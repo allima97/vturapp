@@ -51,7 +51,10 @@ export async function handleDocumentosViagensCreatePost(event: RequestEvent) {
   try {
     const originError = rejectCrossOriginRequest(event.request);
     if (originError) return originError;
-    const bodyResult = await readJsonBodyLimited(event.request, MAX_DOCUMENTO_VIAGEM_CREATE_BODY_BYTES);
+    const bodyResult = await readJsonBodyLimited(
+      event.request,
+      MAX_DOCUMENTO_VIAGEM_CREATE_BODY_BYTES
+    );
     if (!bodyResult.ok) return bodyResult.response;
 
     const client = getAdminClient();
@@ -59,12 +62,18 @@ export async function handleDocumentosViagensCreatePost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['operacao_documentos_viagens', 'documentos_viagens', 'operacao'], 2, 'Sem permissao para enviar documentos.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_documentos_viagens', 'documentos_viagens', 'operacao'],
+        2,
+        'Sem permissao para enviar documentos.'
+      );
     }
 
     const body = readDocumentoViagemCreateBody(bodyResult.data);
     const rawFileName = String(body?.file_name || '').trim();
-    if (!rawFileName) return json({ error: 'file_name obrigatorio.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!rawFileName)
+      return json({ error: 'file_name obrigatorio.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const fileName = sanitizeFileName(rawFileName);
     const displayName = String(body?.display_name || '').trim() || fileName;
@@ -86,7 +95,9 @@ export async function handleDocumentosViagensCreatePost(event: RequestEvent) {
         mime_type: mimeType,
         size_bytes: sizeBytes
       })
-      .select('id, company_id, uploaded_by, file_name, display_name, storage_bucket, storage_path, mime_type, size_bytes, created_at')
+      .select(
+        'id, company_id, uploaded_by, file_name, display_name, storage_bucket, storage_path, mime_type, size_bytes, created_at'
+      )
       .single();
     if (error) throw error;
 

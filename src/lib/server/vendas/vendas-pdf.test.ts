@@ -18,12 +18,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import {
-  gerarComprovanteHtml,
-  formatarBRL,
-  formatarData,
-  formatarCambio,
-} from './pdf';
+import { gerarComprovanteHtml, formatarBRL, formatarData, formatarCambio } from './pdf';
 import type { VendaDetalhe } from './service';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -78,8 +73,8 @@ function vendaBase(overrides: Partial<VendaDetalhe> = {}): VendaDetalhe {
         valorTotalCentavos: 605000,
         pagaComissao: true,
         notas: null,
-        criadoEm: '2024-11-01T10:00:00Z',
-      },
+        criadoEm: '2024-11-01T10:00:00Z'
+      }
     ],
     pagamentos: [
       {
@@ -98,13 +93,34 @@ function vendaBase(overrides: Partial<VendaDetalhe> = {}): VendaDetalhe {
         pagaComissao: true,
         criadoEm: '2024-11-01T10:00:00Z',
         parcelas: [
-          { id: 1, vendaPagamentoId: 1, empresaId: 1, numero: 1, valorCentavos: 201667, vencimento: '2024-12-01' },
-          { id: 2, vendaPagamentoId: 1, empresaId: 1, numero: 2, valorCentavos: 201667, vencimento: '2025-01-01' },
-          { id: 3, vendaPagamentoId: 1, empresaId: 1, numero: 3, valorCentavos: 201666, vencimento: '2025-02-01' },
-        ],
-      },
+          {
+            id: 1,
+            vendaPagamentoId: 1,
+            empresaId: 1,
+            numero: 1,
+            valorCentavos: 201667,
+            vencimento: '2024-12-01'
+          },
+          {
+            id: 2,
+            vendaPagamentoId: 1,
+            empresaId: 1,
+            numero: 2,
+            valorCentavos: 201667,
+            vencimento: '2025-01-01'
+          },
+          {
+            id: 3,
+            vendaPagamentoId: 1,
+            empresaId: 1,
+            numero: 3,
+            valorCentavos: 201666,
+            vencimento: '2025-02-01'
+          }
+        ]
+      }
     ],
-    ...overrides,
+    ...overrides
   } as VendaDetalhe;
 }
 
@@ -113,7 +129,6 @@ function vendaBase(overrides: Partial<VendaDetalhe> = {}): VendaDetalhe {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('K. PDF — comprovante de venda (unit)', () => {
-
   // ── formatadores ──────────────────────────────────────────────────────────
 
   it('K1. formatarBRL converte centavos para R$', () => {
@@ -131,8 +146,8 @@ describe('K. PDF — comprovante de venda (unit)', () => {
   });
 
   it('K3. formatarCambio divide por 10000 e formata com 4 casas', () => {
-    expect(formatarCambio(10000)).toBe('1,0000');  // câmbio 1:1
-    expect(formatarCambio(53210)).toBe('5,3210');  // USD/BRL ~5,32
+    expect(formatarCambio(10000)).toBe('1,0000'); // câmbio 1:1
+    expect(formatarCambio(53210)).toBe('5,3210'); // USD/BRL ~5,32
     expect(formatarCambio(null)).toBe('—');
   });
 
@@ -176,10 +191,12 @@ describe('K. PDF — comprovante de venda (unit)', () => {
   });
 
   it('K11. escaping: caracteres HTML em campos de texto não geram tags abertas', () => {
-    const html = gerarComprovanteHtml(vendaBase({
-      destino: '<script>alert(1)</script>',
-      numeroVenda: 'VD & TEST',
-    } as Parameters<typeof vendaBase>[0]));
+    const html = gerarComprovanteHtml(
+      vendaBase({
+        destino: '<script>alert(1)</script>',
+        numeroVenda: 'VD & TEST'
+      } as Parameters<typeof vendaBase>[0])
+    );
     expect(html).not.toContain('<script>alert');
     expect(html).toContain('&lt;script&gt;');
     expect(html).toContain('VD &amp; TEST');
@@ -210,10 +227,12 @@ describe('K. PDF — comprovante de venda (unit)', () => {
   });
 
   it('K15. valor a receber nunca negativo (pago > total)', () => {
-    const html = gerarComprovanteHtml(vendaBase({
-      valorTotalCentavos: 100,
-      valorPagoCentavos: 9999,
-    }));
+    const html = gerarComprovanteHtml(
+      vendaBase({
+        valorTotalCentavos: 100,
+        valorPagoCentavos: 9999
+      })
+    );
     // Math.max(0, 100 - 9999) = 0 → R$ 0,00
     // O HTML deve conter "0,00" para o campo "A Receber"
     expect(html).toContain('A Receber');

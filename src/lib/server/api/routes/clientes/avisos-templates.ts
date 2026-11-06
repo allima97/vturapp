@@ -13,7 +13,9 @@ import { ensureClienteModuloAccess } from '$lib/server/clientes';
 import { DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
 
 function inferTipo(nome: string) {
-  const value = String(nome || '').trim().toLowerCase();
+  const value = String(nome || '')
+    .trim()
+    .toLowerCase();
   if (value.includes('anivers')) return 'aniversario';
   if (value.includes('promo')) return 'promocao';
   if (value.includes('confirm')) return 'confirmacao';
@@ -36,8 +38,11 @@ type MessageTemplateRow = {
 };
 
 function normalizeScope(value?: string | null): ScopeValue {
-  const scope = String(value || '').trim().toLowerCase();
-  if (scope === 'system' || scope === 'master' || scope === 'gestor' || scope === 'user') return scope;
+  const scope = String(value || '')
+    .trim()
+    .toLowerCase();
+  if (scope === 'system' || scope === 'master' || scope === 'gestor' || scope === 'user')
+    return scope;
   return 'system';
 }
 
@@ -112,11 +117,14 @@ export async function handleClientesAvisosTemplatesGet(event: RequestEvent) {
           companyIds,
           rowUserId: item.user_id || null,
           rowCompanyId: item.company_id || null,
-          rowScope: item.scope || null,
+          rowScope: item.scope || null
         })
       );
 
-    const dedup = new Map<string, { id: string; nome: string; tipo: string; assunto: string; conteudo: string }>();
+    const dedup = new Map<
+      string,
+      { id: string; nome: string; tipo: string; assunto: string; conteudo: string }
+    >();
 
     for (const item of visibleTemplates) {
       const nome = String(item.nome || '').trim();
@@ -128,11 +136,15 @@ export async function handleClientesAvisosTemplatesGet(event: RequestEvent) {
         nome,
         tipo: inferTipo(nome),
         assunto: String(item.assunto || item.titulo || ''),
-        conteudo: String(item.corpo || ''),
+        conteudo: String(item.corpo || '')
       });
     }
 
-    const officialTemplates = buildOfficialTemplateRows(user.id, String(scope.companyId || '').trim() || null, {});
+    const officialTemplates = buildOfficialTemplateRows(
+      user.id,
+      String(scope.companyId || '').trim() || null,
+      {}
+    );
     for (const item of officialTemplates) {
       if (!item.ativo) continue;
       const nome = String(item.nome || '').trim();
@@ -144,15 +156,18 @@ export async function handleClientesAvisosTemplatesGet(event: RequestEvent) {
         nome,
         tipo: inferTipo(nome),
         assunto: String(item.assunto || item.titulo || ''),
-        conteudo: String(item.corpo || ''),
+        conteudo: String(item.corpo || '')
       });
     }
 
     const items = Array.from(dedup.values()).sort((a, b) => a.nome.localeCompare(b.nome));
 
-    return json({
-      items
-    }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      {
+        items
+      },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar templates de aviso.');
   }

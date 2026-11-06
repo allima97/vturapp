@@ -16,31 +16,40 @@
       variant="outline"
       size="sm"
       disabled={!hasPrevious || loading}
-      on:click={() => onPrevious?.()}
-    >Anterior</Button>
+      on:click={() => onPrevious?.()}>Anterior</Button
+    >
     <Button
       variant="outline"
       size="sm"
       disabled={!hasNext || loading}
-      loading={loading}
-      on:click={() => onNext?.()}
-    >Próxima</Button>
+      {loading}
+      on:click={() => onNext?.()}>Próxima</Button
+    >
   </div>
 </nav>
 
 <style>
   .cursor-pagination {
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:.75rem;
-    margin-top:1rem;
-    color:var(--vtur-text-secondary);
-    font-size:.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    color: var(--vtur-text-secondary);
+    font-size: 0.9rem;
   }
-  .cursor-pagination > div { display:flex; gap:.5rem; }
-  @media (max-width:32rem) {
-    .cursor-pagination { align-items:stretch; flex-direction:column; }
-    .cursor-pagination > div { display:grid; grid-template-columns:1fr 1fr; }
+  .cursor-pagination > div {
+    display: flex;
+    gap: 0.5rem;
+  }
+  @media (max-width: 32rem) {
+    .cursor-pagination {
+      align-items: stretch;
+      flex-direction: column;
+    }
+    .cursor-pagination > div {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
   }
 </style>

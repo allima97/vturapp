@@ -78,11 +78,15 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
 
     const clientId = String(body.client_id || '').trim() || null;
     const clientName = String(body.client_name || body.cliente_nome || '').trim();
-    const clientWhatsapp = String(body.client_whatsapp || body.cliente_telefone || '').trim() || null;
+    const clientWhatsapp =
+      String(body.client_whatsapp || body.cliente_telefone || '').trim() || null;
     const clientEmail = String(body.client_email || '').trim() || null;
 
     if (!clientId && !clientName) {
-      return json({ error: 'Informe o nome do cliente.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Informe o nome do cliente.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
     if (clientId && !isUuid(clientId)) {
       return json({ error: 'Cliente invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
@@ -97,18 +101,27 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
       if (clienteError) throw clienteError;
       const clienteRow = cliente as ClienteScopeRow | null;
       if (!clienteRow?.id) {
-        return json({ error: 'Cliente nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Cliente nao encontrado.' },
+          { status: 404, headers: NO_STORE_HEADERS }
+        );
       }
       if (!scope.isAdmin) {
         const clienteCompanyId = String(clienteRow.company_id || '').trim();
         if (clienteCompanyId && !scope.companyIds.includes(clienteCompanyId)) {
-          return json({ error: 'Cliente fora do seu escopo.' }, { status: 403, headers: NO_STORE_HEADERS });
+          return json(
+            { error: 'Cliente fora do seu escopo.' },
+            { status: 403, headers: NO_STORE_HEADERS }
+          );
         }
       }
     }
 
     if (!body.itens || !Array.isArray(body.itens) || body.itens.length === 0) {
-      return json({ error: 'Adicione pelo menos um item.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Adicione pelo menos um item.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
     const itens = body.itens as OrcamentoCreateItem[];
 
@@ -134,12 +147,17 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
         data_final: body.data_final || null,
         last_interaction_notes: body.notes || body.observacoes || null
       })
-      .select('id, client_id, client_name, client_whatsapp, client_email, status, status_negociacao, total, currency, created_by, data_embarque, data_final, created_at')
+      .select(
+        'id, client_id, client_name, client_whatsapp, client_email, status, status_negociacao, total, currency, created_by, data_embarque, data_final, created_at'
+      )
       .single();
 
     if (quoteError) {
       logServerError('[orcamentos/create] erro ao criar quote', quoteError);
-      return json({ error: 'Erro ao criar orcamento.' }, { status: 500, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Erro ao criar orcamento.' },
+        { status: 500, headers: NO_STORE_HEADERS }
+      );
     }
 
     const itensParaInserir = itens.map((item, index: number) => ({
@@ -154,15 +172,16 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
       unit_price: item.unit_price || item.valor_unitario || 0
     }));
 
-    const { error: itemsError } = await client
-      .from('quote_item')
-      .insert(itensParaInserir);
+    const { error: itemsError } = await client.from('quote_item').insert(itensParaInserir);
 
     if (itemsError) {
       // Desfaz o orcamento para nao deixar registro sem itens
       await client.from('quote').delete().eq('id', quote.id);
       logServerError('[orcamentos/create] erro ao criar itens do quote', itemsError);
-      return json({ error: 'Erro ao salvar itens do orcamento.' }, { status: 500, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Erro ao salvar itens do orcamento.' },
+        { status: 500, headers: NO_STORE_HEADERS }
+      );
     }
 
     invalidateQuoteReadModels({

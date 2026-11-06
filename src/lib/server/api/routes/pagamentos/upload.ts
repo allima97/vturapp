@@ -14,7 +14,11 @@ import {
 } from '$lib/server/v1';
 import { validateUploadedFile } from '$lib/server/uploadValidation';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
-import { invalidateReadModelCache, READ_MODEL_TAGS, scopeCacheTags } from '$lib/server/readModelCache';
+import {
+  invalidateReadModelCache,
+  READ_MODEL_TAGS,
+  scopeCacheTags
+} from '$lib/server/readModelCache';
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
 const MAX_REQUEST_SIZE_BYTES = MAX_FILE_SIZE_BYTES + 512 * 1024;
@@ -57,11 +61,17 @@ export async function handlePagamentosUploadPost(event: RequestEvent) {
     const pagamentoId = formData.get('pagamento_id') as string;
 
     if (!file || !pagamentoId) {
-      return json({ success: false, error: 'Arquivo e ID do pagamento são obrigatórios.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'Arquivo e ID do pagamento são obrigatórios.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     if (!isUuid(String(pagamentoId || '').trim())) {
-      return json({ success: false, error: 'ID do pagamento inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'ID do pagamento inválido.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { data: pagamentoAtual, error: pagamentoAtualError } = await client
@@ -71,14 +81,26 @@ export async function handlePagamentosUploadPost(event: RequestEvent) {
       .maybeSingle();
     if (pagamentoAtualError) throw pagamentoAtualError;
     if (!pagamentoAtual) {
-      return json({ success: false, error: 'Pagamento não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'Pagamento não encontrado.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
     }
 
-    const targetCompanyId = String((pagamentoAtual as { company_id?: string | null })?.company_id || '').trim();
+    const targetCompanyId = String(
+      (pagamentoAtual as { company_id?: string | null })?.company_id || ''
+    ).trim();
     if (!scope.isAdmin) {
       const allowedCompanyIds = resolveScopedCompanyIds(scope, null);
-      if (!targetCompanyId || allowedCompanyIds.length === 0 || !allowedCompanyIds.includes(targetCompanyId)) {
-        return json({ success: false, error: 'Pagamento fora do escopo da empresa.' }, { status: 403, headers: NO_STORE_HEADERS });
+      if (
+        !targetCompanyId ||
+        allowedCompanyIds.length === 0 ||
+        !allowedCompanyIds.includes(targetCompanyId)
+      ) {
+        return json(
+          { success: false, error: 'Pagamento fora do escopo da empresa.' },
+          { status: 403, headers: NO_STORE_HEADERS }
+        );
       }
     }
 
@@ -118,7 +140,10 @@ export async function handlePagamentosUploadPost(event: RequestEvent) {
       .single();
 
     if (updateError) {
-      await client.storage.from('viagens-documentos').remove([fileName]).catch(() => undefined);
+      await client.storage
+        .from('viagens-documentos')
+        .remove([fileName])
+        .catch(() => undefined);
       throw updateError;
     }
 

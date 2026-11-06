@@ -1,4 +1,4 @@
-import { toFiniteNumber as toNumber } from "$lib/utils/values";
+import { toFiniteNumber as toNumber } from '$lib/utils/values';
 
 function roundMoney(value: number) {
   return Math.round(value * 100) / 100;

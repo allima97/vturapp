@@ -2,7 +2,14 @@
 // (só o nome/assinatura do handler e caminhos de import relativos mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
-import { ensureModuloAccess, getAdminClient, requireAuthenticatedUser, resolveScopedCompanyIds, resolveUserScope, toErrorResponse } from '$lib/server/v1';
+import {
+  ensureModuloAccess,
+  getAdminClient,
+  requireAuthenticatedUser,
+  resolveScopedCompanyIds,
+  resolveUserScope,
+  toErrorResponse
+} from '$lib/server/v1';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import { chunkArray, uniqueCleanStrings } from '$lib/utils/array';
@@ -47,8 +54,7 @@ function readExistingRequestBody(value: unknown): ExistingRequestBody {
     parsed.companyId = body.companyId;
   }
   if (Array.isArray(body.documentos)) {
-    parsed.documentos = body.documentos
-      .filter((item): item is string => typeof item === 'string');
+    parsed.documentos = body.documentos.filter((item): item is string => typeof item === 'string');
   }
 
   return parsed;
@@ -58,7 +64,10 @@ export async function handleConciliacaoExistingPost(event: RequestEvent) {
   try {
     const originError = rejectCrossOriginRequest(event.request);
     if (originError) return originError;
-    const bodyResult = await readJsonBodyLimited(event.request, MAX_CONCILIACAO_EXISTING_BODY_BYTES);
+    const bodyResult = await readJsonBodyLimited(
+      event.request,
+      MAX_CONCILIACAO_EXISTING_BODY_BYTES
+    );
     if (!bodyResult.ok) return bodyResult.response;
 
     const client = getAdminClient();
@@ -66,13 +75,19 @@ export async function handleConciliacaoExistingPost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster && !scope.isFinanceiro && !scope.isGestor) {
-      ensureModuloAccess(scope, ['operacao_conciliacao', 'conciliacao'], 1, 'Sem acesso à Conciliação.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_conciliacao', 'conciliacao'],
+        1,
+        'Sem acesso à Conciliação.'
+      );
     }
 
     const body = readExistingRequestBody(bodyResult.data);
     const companyIds = resolveScopedCompanyIds(scope, body?.companyId || null);
     const companyId = companyIds[0] || null;
-    if (!companyId) return json({ error: 'Company invalida.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!companyId)
+      return json({ error: 'Company invalida.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const documentos: string[] = [];
     if (Array.isArray(body?.documentos)) {
@@ -140,7 +155,11 @@ export async function handleConciliacaoExistingPost(event: RequestEvent) {
     }
 
     return json(
-      { records, truncated: Array.isArray(body?.documentos) && body.documentos.length > MAX_EXISTING_DOCUMENTOS },
+      {
+        records,
+        truncated:
+          Array.isArray(body?.documentos) && body.documentos.length > MAX_EXISTING_DOCUMENTOS
+      },
       { headers: NO_STORE_HEADERS }
     );
   } catch (err) {

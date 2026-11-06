@@ -33,18 +33,18 @@
    * diferentes por módulo — todos usam o mesmo fundo neutro levemente colorido.
    */
   const iconStyle: Record<string, { bg: string; fg: string }> = {
-    blue:       { bg: 'bg-indigo-50',  fg: 'text-indigo-500' },
-    violet:     { bg: 'bg-indigo-50',  fg: 'text-indigo-500' },
-    clientes:   { bg: 'bg-indigo-50',  fg: 'text-indigo-500' },
-    orcamentos: { bg: 'bg-indigo-50',  fg: 'text-indigo-500' },
-    green:      { bg: 'bg-emerald-50', fg: 'text-emerald-500' },
-    vendas:     { bg: 'bg-emerald-50', fg: 'text-emerald-500' },
-    orange:     { bg: 'bg-amber-50',   fg: 'text-amber-500' },
-    financeiro: { bg: 'bg-amber-50',   fg: 'text-amber-500' },
-    comissoes:  { bg: 'bg-amber-50',   fg: 'text-amber-500' },
-    teal:       { bg: 'bg-teal-50',    fg: 'text-teal-500' },
-    operacao:   { bg: 'bg-teal-50',    fg: 'text-teal-500' },
-    slate:      { bg: 'bg-slate-100',  fg: 'text-slate-500' },
+    blue: { bg: 'bg-indigo-50', fg: 'text-indigo-500' },
+    violet: { bg: 'bg-indigo-50', fg: 'text-indigo-500' },
+    clientes: { bg: 'bg-indigo-50', fg: 'text-indigo-500' },
+    orcamentos: { bg: 'bg-indigo-50', fg: 'text-indigo-500' },
+    green: { bg: 'bg-emerald-50', fg: 'text-emerald-500' },
+    vendas: { bg: 'bg-emerald-50', fg: 'text-emerald-500' },
+    orange: { bg: 'bg-amber-50', fg: 'text-amber-500' },
+    financeiro: { bg: 'bg-amber-50', fg: 'text-amber-500' },
+    comissoes: { bg: 'bg-amber-50', fg: 'text-amber-500' },
+    teal: { bg: 'bg-teal-50', fg: 'text-teal-500' },
+    operacao: { bg: 'bg-teal-50', fg: 'text-teal-500' },
+    slate: { bg: 'bg-slate-100', fg: 'text-slate-500' }
   };
 
   $: style = iconStyle[color] ?? iconStyle.blue;
@@ -72,10 +72,14 @@
 
     <!-- Texto -->
     <div class="min-w-0 flex-1">
-      <p class="mb-1 text-[0.68rem] font-semibold uppercase tracking-widest text-slate-500 sm:text-[0.72rem]">
+      <p
+        class="mb-1 text-[0.68rem] font-semibold tracking-widest text-slate-500 uppercase sm:text-[0.72rem]"
+      >
         {title}
       </p>
-      <p class="truncate text-lg font-bold leading-none tracking-tight text-slate-900 sm:text-[1.6rem]">
+      <p
+        class="truncate text-lg leading-none font-bold tracking-tight text-slate-900 sm:text-[1.6rem]"
+      >
         {value}
       </p>
       {#if subtitle}

@@ -21,9 +21,15 @@
         <li class="grid grid-cols-[minmax(0,9rem)_1fr_auto] items-center gap-2 text-xs">
           <span class="truncate text-right text-slate-700" title={item.nome}>{item.nome}</span>
           <span class="h-3.5 rounded-sm bg-slate-100" aria-hidden="true">
-            <span class="block h-3.5 rounded-sm {cor}" style={`width:${Math.max(0, (Math.abs(item.pct) / maior) * 100).toFixed(1)}%`}></span>
+            <span
+              class="block h-3.5 rounded-sm {cor}"
+              style={`width:${Math.max(0, (Math.abs(item.pct) / maior) * 100).toFixed(1)}%`}
+            ></span>
           </span>
-          <span class="min-w-[3rem] whitespace-nowrap text-right font-medium tabular-nums text-slate-700">{item.extra ?? percentual(item.pct)}</span>
+          <span
+            class="min-w-[3rem] text-right font-medium whitespace-nowrap text-slate-700 tabular-nums"
+            >{item.extra ?? percentual(item.pct)}</span
+          >
         </li>
       {/each}
     </ol>

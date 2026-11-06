@@ -29,7 +29,7 @@ import {
   gravarAudit,
   listarAuditLogs,
   exportarDadosTitular,
-  anonimizarTitularAuditLogs,
+  anonimizarTitularAuditLogs
 } from '$lib/server/m12-auditoria/service';
 
 const MIGRATIONS = (env as unknown as Record<string, unknown>).TEST_MIGRATIONS as Parameters<
@@ -48,38 +48,51 @@ async function setupFixtures() {
   // Empresas
   await db.insert(empresas).values([
     { id: EMPRESA_U, nome: 'Empresa U', slug: 'empresa-u', ativo: true },
-    { id: EMPRESA_V, nome: 'Empresa V', slug: 'empresa-v', ativo: true },
+    { id: EMPRESA_V, nome: 'Empresa V', slug: 'empresa-v', ativo: true }
   ]);
 
   // Usuários
   await db.insert(user).values([
-    { id: USER_U1, name: 'Admin U', email: 'admin-u@test.com', emailVerified: true, createdAt: new Date(), updatedAt: new Date() },
-    { id: USER_U2, name: 'Operador U', email: 'op-u@test.com', emailVerified: true, createdAt: new Date(), updatedAt: new Date() },
+    {
+      id: USER_U1,
+      name: 'Admin U',
+      email: 'admin-u@test.com',
+      emailVerified: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    },
+    {
+      id: USER_U2,
+      name: 'Operador U',
+      email: 'op-u@test.com',
+      emailVerified: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
   ]);
 
   // Membros
   await db.insert(membrosEmpresa).values([
     { empresaId: EMPRESA_U, userId: USER_U1, papel: 'admin', ativo: true },
-    { empresaId: EMPRESA_U, userId: USER_U2, papel: 'operador', ativo: true },
+    { empresaId: EMPRESA_U, userId: USER_U2, papel: 'operador', ativo: true }
   ]);
 
   return db;
 }
 
 describe('M12 — auditoria (Suíte U)', () => {
-
   // U1: gravarAudit — persiste registro com campos corretos
   it('U1: gravarAudit persiste log na tabela audit_logs', async () => {
     const db = await setupFixtures();
 
     await gravarAudit(db, {
       empresaId: EMPRESA_U,
-      userId:    USER_U1,
-      modulo:    'Vendas',
-      acao:      'venda_criada',
-      detalhes:  { vendaId: 99, valor: 1500 },
-      ip:        '10.0.0.1',
-      userAgent: 'vitest',
+      userId: USER_U1,
+      modulo: 'Vendas',
+      acao: 'venda_criada',
+      detalhes: { vendaId: 99, valor: 1500 },
+      ip: '10.0.0.1',
+      userAgent: 'vitest'
     });
 
     const logs = await db.select().from(auditLogs);
@@ -98,10 +111,10 @@ describe('M12 — auditoria (Suíte U)', () => {
 
     await gravarAudit(db, {
       empresaId: EMPRESA_U,
-      userId:    USER_U1,
-      modulo:    'Clientes',
-      acao:      'cliente_criado',
-      detalhes:  { nome: 'João', cpf: '123.456.789-00', senha: 's3cr3t' },
+      userId: USER_U1,
+      modulo: 'Clientes',
+      acao: 'cliente_criado',
+      detalhes: { nome: 'João', cpf: '123.456.789-00', senha: 's3cr3t' }
     });
 
     const [log] = await db.select().from(auditLogs);
@@ -116,7 +129,7 @@ describe('M12 — auditoria (Suíte U)', () => {
     // Sem migrations — DB vazio; deve ser silencioso
     const db = getDb(env.DB);
     await expect(
-      gravarAudit(db, { empresaId: 999, modulo: 'Vendas', acao: 'venda_criada' }),
+      gravarAudit(db, { empresaId: 999, modulo: 'Vendas', acao: 'venda_criada' })
     ).resolves.toBeUndefined();
   });
 
@@ -124,8 +137,19 @@ describe('M12 — auditoria (Suíte U)', () => {
   it('U4: listarAuditLogs retorna logs com nome e email do usuário', async () => {
     const db = await setupFixtures();
 
-    await gravarAudit(db, { empresaId: EMPRESA_U, userId: USER_U1, modulo: 'Vendas', acao: 'venda_criada', detalhes: { id: 1 } });
-    await gravarAudit(db, { empresaId: EMPRESA_U, userId: USER_U2, modulo: 'Clientes', acao: 'cliente_editado' });
+    await gravarAudit(db, {
+      empresaId: EMPRESA_U,
+      userId: USER_U1,
+      modulo: 'Vendas',
+      acao: 'venda_criada',
+      detalhes: { id: 1 }
+    });
+    await gravarAudit(db, {
+      empresaId: EMPRESA_U,
+      userId: USER_U2,
+      modulo: 'Clientes',
+      acao: 'cliente_editado'
+    });
 
     const { logs } = await listarAuditLogs(db, EMPRESA_U);
     expect(logs).toHaveLength(2);
@@ -138,8 +162,18 @@ describe('M12 — auditoria (Suíte U)', () => {
   it('U5: listarAuditLogs não retorna logs de outra empresa', async () => {
     const db = await setupFixtures();
 
-    await gravarAudit(db, { empresaId: EMPRESA_U, userId: USER_U1, modulo: 'Vendas', acao: 'venda_criada' });
-    await gravarAudit(db, { empresaId: EMPRESA_V, userId: USER_U1, modulo: 'Vendas', acao: 'venda_criada' });
+    await gravarAudit(db, {
+      empresaId: EMPRESA_U,
+      userId: USER_U1,
+      modulo: 'Vendas',
+      acao: 'venda_criada'
+    });
+    await gravarAudit(db, {
+      empresaId: EMPRESA_V,
+      userId: USER_U1,
+      modulo: 'Vendas',
+      acao: 'venda_criada'
+    });
 
     const { logs } = await listarAuditLogs(db, EMPRESA_U);
     expect(logs).toHaveLength(1);
@@ -162,8 +196,18 @@ describe('M12 — auditoria (Suíte U)', () => {
   it('U7: listarAuditLogs filtra por userId', async () => {
     const db = await setupFixtures();
 
-    await gravarAudit(db, { empresaId: EMPRESA_U, userId: USER_U1, modulo: 'Vendas', acao: 'venda_criada' });
-    await gravarAudit(db, { empresaId: EMPRESA_U, userId: USER_U2, modulo: 'Vendas', acao: 'venda_criada' });
+    await gravarAudit(db, {
+      empresaId: EMPRESA_U,
+      userId: USER_U1,
+      modulo: 'Vendas',
+      acao: 'venda_criada'
+    });
+    await gravarAudit(db, {
+      empresaId: EMPRESA_U,
+      userId: USER_U2,
+      modulo: 'Vendas',
+      acao: 'venda_criada'
+    });
 
     const { logs } = await listarAuditLogs(db, EMPRESA_U, { userId: USER_U1 });
     expect(logs).toHaveLength(1);
@@ -192,8 +236,18 @@ describe('M12 — auditoria (Suíte U)', () => {
   it('U9: exportarDadosTitular retorna sumário do titular', async () => {
     const db = await setupFixtures();
 
-    await gravarAudit(db, { empresaId: EMPRESA_U, userId: USER_U1, modulo: 'Vendas', acao: 'venda_criada' });
-    await gravarAudit(db, { empresaId: EMPRESA_U, userId: USER_U1, modulo: 'Clientes', acao: 'cliente_editado' });
+    await gravarAudit(db, {
+      empresaId: EMPRESA_U,
+      userId: USER_U1,
+      modulo: 'Vendas',
+      acao: 'venda_criada'
+    });
+    await gravarAudit(db, {
+      empresaId: EMPRESA_U,
+      userId: USER_U1,
+      modulo: 'Clientes',
+      acao: 'cliente_editado'
+    });
 
     const dados = await exportarDadosTitular(db, EMPRESA_U, USER_U1);
     expect(dados.usuario?.email).toBe('admin-u@test.com');
@@ -215,8 +269,18 @@ describe('M12 — auditoria (Suíte U)', () => {
   it('U11: anonimizarTitularAuditLogs substitui user_id por null', async () => {
     const db = await setupFixtures();
 
-    await gravarAudit(db, { empresaId: EMPRESA_U, userId: USER_U1, modulo: 'Vendas', acao: 'venda_criada' });
-    await gravarAudit(db, { empresaId: EMPRESA_U, userId: USER_U1, modulo: 'Clientes', acao: 'cliente_criado' });
+    await gravarAudit(db, {
+      empresaId: EMPRESA_U,
+      userId: USER_U1,
+      modulo: 'Vendas',
+      acao: 'venda_criada'
+    });
+    await gravarAudit(db, {
+      empresaId: EMPRESA_U,
+      userId: USER_U1,
+      modulo: 'Clientes',
+      acao: 'cliente_criado'
+    });
 
     const result = await anonimizarTitularAuditLogs(db, EMPRESA_U, USER_U1);
     expect(result.anonimizados).toBe(2);
@@ -229,8 +293,18 @@ describe('M12 — auditoria (Suíte U)', () => {
   it('U12: anonimizarTitularAuditLogs respeita isolamento de tenant', async () => {
     const db = await setupFixtures();
 
-    await gravarAudit(db, { empresaId: EMPRESA_U, userId: USER_U1, modulo: 'Vendas', acao: 'venda_criada' });
-    await gravarAudit(db, { empresaId: EMPRESA_V, userId: USER_U1, modulo: 'Vendas', acao: 'venda_criada' });
+    await gravarAudit(db, {
+      empresaId: EMPRESA_U,
+      userId: USER_U1,
+      modulo: 'Vendas',
+      acao: 'venda_criada'
+    });
+    await gravarAudit(db, {
+      empresaId: EMPRESA_V,
+      userId: USER_U1,
+      modulo: 'Vendas',
+      acao: 'venda_criada'
+    });
 
     await anonimizarTitularAuditLogs(db, EMPRESA_U, USER_U1);
 
@@ -245,5 +319,4 @@ describe('M12 — auditoria (Suíte U)', () => {
     expect(logsV.some((l) => l.userId === USER_U1)).toBe(true);
     void logV;
   });
-
 });

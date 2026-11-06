@@ -41,7 +41,7 @@ import {
   obterMembro,
   alterarPapelMembro,
   revogarMembroM01,
-  EmpresaError,
+  EmpresaError
 } from '$lib/server/equipe-m01/service';
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
@@ -130,7 +130,7 @@ describe('Suíte W — M01: Empresas e Membros', () => {
 
     const atualizada = await editarEmpresa(db, EMPRESA_W, {
       nome: 'Empresa W Renomeada',
-      timezone: 'America/Manaus',
+      timezone: 'America/Manaus'
     });
     expect(atualizada.nome).toBe('Empresa W Renomeada');
     expect(atualizada.timezone).toBe('America/Manaus');
@@ -282,7 +282,7 @@ describe('Suíte W — M01: Empresas e Membros', () => {
       userEmail: 'oper.w@teste.com',
       empresaId: EMPRESA_W,
       papel: 'operador',
-      legacyScope: scope ?? undefined,
+      legacyScope: scope ?? undefined
     };
     expect(canForContext(ctx, 'vendas', 'ler')).toBe(true);
     expect(canForContext(ctx, 'vendas', 'criar')).toBe(true);
@@ -306,7 +306,7 @@ describe('Suíte W — M01: Empresas e Membros', () => {
       userEmail: 'oper.w@teste.com',
       empresaId: EMPRESA_W,
       papel: 'visualizador',
-      legacyScope: scope ?? undefined,
+      legacyScope: scope ?? undefined
     };
 
     expect(canForContext(ctx, 'vendas', 'ler')).toBe(true);
@@ -326,7 +326,7 @@ describe('Suíte W — M01: Empresas e Membros', () => {
       papel: 'operador',
       token,
       expiresAt: new Date(Date.now() + 60_000).toISOString(),
-      criadoEm: agora,
+      criadoEm: agora
     });
 
     const fakeAuth = {
@@ -339,18 +339,18 @@ describe('Suíte W — M01: Empresas e Membros', () => {
             emailVerified: false,
             twoFactorEnabled: false,
             createdAt: new Date(),
-            updatedAt: new Date(),
+            updatedAt: new Date()
           });
           return { user: { id: 'user-invite-w16' } };
-        },
-      },
+        }
+      }
     } as unknown as AuthInstance;
 
     const result = await aceitarConvite(
       env.DB,
       fakeAuth,
       { token, nome: 'Novo Operador', senha: 'senha-de-teste-123' },
-      'https://vturapp.test',
+      'https://vturapp.test'
     );
 
     const membership = await db

@@ -3,7 +3,13 @@
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
-  import { BottomSheet, FieldInput, FieldSelect, FieldTextarea, LoadingState } from '$lib/components/ui';
+  import {
+    BottomSheet,
+    FieldInput,
+    FieldSelect,
+    FieldTextarea,
+    LoadingState
+  } from '$lib/components/ui';
   import Dialog from '$lib/components/ui/Dialog.svelte';
   import Badge from '$lib/components/ui/Badge.svelte';
   import EmptyState from '$lib/components/ui/EmptyState.svelte';
@@ -163,8 +169,14 @@
   }
 
   async function saveConsultoria() {
-    if (!form.cliente_nome.trim()) { toast.error('Nome do cliente é obrigatório.'); return; }
-    if (!form.data_hora) { toast.error('Data e hora são obrigatórias.'); return; }
+    if (!form.cliente_nome.trim()) {
+      toast.error('Nome do cliente é obrigatório.');
+      return;
+    }
+    if (!form.data_hora) {
+      toast.error('Data e hora são obrigatórias.');
+      return;
+    }
 
     saving = true;
     try {
@@ -233,9 +245,7 @@
   title="Consultoria Online"
   subtitle="Gerencie agendamentos de consultoria"
   color="operacao"
-  actions={[
-    { label: 'Nova Consultoria', onClick: openCreate, variant: 'primary', icon: Plus }
-  ]}
+  actions={[{ label: 'Nova Consultoria', onClick: openCreate, variant: 'primary', icon: Plus }]}
 />
 
 <div class="space-y-4">
@@ -245,7 +255,7 @@
       <SlidersHorizontal size={16} class="mr-2" />
       Filtros
       {#if statusFilter !== ''}
-        <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-operacao-500"></span>
+        <span class="bg-operacao-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
       {/if}
     </Button>
   </div>
@@ -259,7 +269,9 @@
           variant={statusFilter === opt.value ? 'primary' : 'outline'}
           size="sm"
           class_name="rounded-full"
-          on:click={() => { statusFilter = opt.value; }}
+          on:click={() => {
+            statusFilter = opt.value;
+          }}
         >
           {opt.label}
         </Button>
@@ -275,12 +287,7 @@
         >
           <RefreshCw size={15} class={loading ? 'animate-spin' : ''} />
         </Button>
-        <Button
-          variant="ghost"
-          size="xs"
-          title="Exportar iCal"
-          on:click={exportIcal}
-        >
+        <Button variant="ghost" size="xs" title="Exportar iCal" on:click={exportIcal}>
           <Download size={15} />
         </Button>
       </div>
@@ -296,7 +303,9 @@
             variant={statusFilter === opt.value ? 'primary' : 'outline'}
             size="sm"
             class_name="rounded-full justify-start"
-            on:click={() => { statusFilter = opt.value; }}
+            on:click={() => {
+              statusFilter = opt.value;
+            }}
           >
             {opt.label}
           </Button>
@@ -342,7 +351,9 @@
                   <span>{formatCurrency(c.taxa_consultoria)}</span>
                 {/if}
                 {#if c.lembrete}
-                  <span class="rounded-sm bg-slate-100 px-2 py-0.5 text-xs">Lembrete: {c.lembrete}</span>
+                  <span class="rounded-sm bg-slate-100 px-2 py-0.5 text-xs"
+                    >Lembrete: {c.lembrete}</span
+                  >
                 {/if}
               </div>
               {#if c.notas}
@@ -350,9 +361,7 @@
               {/if}
             </div>
             <div class="flex shrink-0 items-center gap-2">
-              <Button size="sm" variant="primary" on:click={() => openEdit(c)}>
-                Editar
-              </Button>
+              <Button size="sm" variant="primary" on:click={() => openEdit(c)}>Editar</Button>
               <Button
                 size="sm"
                 variant="secondary"
@@ -377,10 +386,7 @@
   color="operacao"
   onCancel={closeModal}
 >
-  <form
-    on:submit|preventDefault={saveConsultoria}
-    class="space-y-4"
-  >
+  <form on:submit|preventDefault={saveConsultoria} class="space-y-4">
     <FieldInput
       id="cliente_nome"
       label="Nome do Cliente"
@@ -397,7 +403,7 @@
       required
     />
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <FieldSelect
         id="lembrete"
         label="Lembrete"
@@ -414,7 +420,7 @@
       />
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <CidadeDestinoAutocomplete
         id="destino"
         label="Destino"

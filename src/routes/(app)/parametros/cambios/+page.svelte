@@ -33,7 +33,20 @@
   let editingId: string | null = null;
   const loadGuard = createLoadGuard();
 
-  const MOEDAS = ['USD', 'EUR', 'ARS', 'GBP', 'CAD', 'AUD', 'CHF', 'JPY', 'MXN', 'CLP', 'UYU', 'PYG'];
+  const MOEDAS = [
+    'USD',
+    'EUR',
+    'ARS',
+    'GBP',
+    'CAD',
+    'AUD',
+    'CHF',
+    'JPY',
+    'MXN',
+    'CLP',
+    'UYU',
+    'PYG'
+  ];
   const CAMBIO_VALUE_FORMATTER = new Intl.NumberFormat('pt-BR', {
     minimumFractionDigits: 4,
     maximumFractionDigits: 6
@@ -41,8 +54,16 @@
 
   let form = { moeda: 'USD', data: todayISODateLocal(), valor: '' };
 
-  $: canEdit = !$permissoes.ready || $permissoes.isSystemAdmin || permissoes.can('cambios', 'edit') || permissoes.can('parametros', 'edit');
-  $: canDelete = !$permissoes.ready || $permissoes.isSystemAdmin || permissoes.can('cambios', 'delete') || permissoes.can('parametros', 'delete');
+  $: canEdit =
+    !$permissoes.ready ||
+    $permissoes.isSystemAdmin ||
+    permissoes.can('cambios', 'edit') ||
+    permissoes.can('parametros', 'edit');
+  $: canDelete =
+    !$permissoes.ready ||
+    $permissoes.isSystemAdmin ||
+    permissoes.can('cambios', 'delete') ||
+    permissoes.can('parametros', 'delete');
 
   const columns = [
     { key: 'moeda', label: 'Moeda', sortable: true, width: '100px' },
@@ -59,9 +80,7 @@
       sortable: true,
       align: 'right' as const,
       formatter: (value: number | null) =>
-        value != null
-          ? CAMBIO_VALUE_FORMATTER.format(value)
-          : '-'
+        value != null ? CAMBIO_VALUE_FORMATTER.format(value) : '-'
     },
     {
       key: 'owner_user',
@@ -75,7 +94,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const payload = await apiGet<{ items?: Cambio[] }>('/api/v1/parametros/cambios', undefined, request.signal);
+      const payload = await apiGet<{ items?: Cambio[] }>(
+        '/api/v1/parametros/cambios',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       cambios = payload.items || [];
     } catch (err) {
@@ -103,9 +126,18 @@
   }
 
   async function save() {
-    if (!form.moeda.trim()) { toast.error('Informe a moeda.'); return; }
-    if (!form.data) { toast.error('Informe a data.'); return; }
-    if (!form.valor) { toast.error('Informe o valor.'); return; }
+    if (!form.moeda.trim()) {
+      toast.error('Informe a moeda.');
+      return;
+    }
+    if (!form.data) {
+      toast.error('Informe a data.');
+      return;
+    }
+    if (!form.valor) {
+      toast.error('Informe o valor.');
+      return;
+    }
 
     saving = true;
     try {
@@ -150,13 +182,12 @@
   title="Câmbios"
   subtitle="Registre as cotações de moedas estrangeiras para uso nos orçamentos e relatórios."
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Parâmetros', href: '/parametros' },
-    { label: 'Câmbios' }
-  ]}
+  breadcrumbs={[{ label: 'Parâmetros', href: '/parametros' }, { label: 'Câmbios' }]}
   actions={[
     { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw },
-    ...(canEdit ? [{ label: 'Novo Câmbio', onClick: openNew, variant: 'primary' as const, icon: Plus }] : [])
+    ...(canEdit
+      ? [{ label: 'Novo Câmbio', onClick: openNew, variant: 'primary' as const, icon: Plus }]
+      : [])
   ]}
 />
 
@@ -225,8 +256,25 @@
       />
     </div>
 
-    <FieldInput id="cambio-data" label="Data" required type="date" bind:value={form.data} class_name="w-full" />
-    <FieldInput id="cambio-valor" label="Valor em R$" required type="number" step="0.000001" min="0" bind:value={form.valor} placeholder="Ex: 5.123456" class_name="w-full" />
+    <FieldInput
+      id="cambio-data"
+      label="Data"
+      required
+      type="date"
+      bind:value={form.data}
+      class_name="w-full"
+    />
+    <FieldInput
+      id="cambio-valor"
+      label="Valor em R$"
+      required
+      type="number"
+      step="0.000001"
+      min="0"
+      bind:value={form.valor}
+      placeholder="Ex: 5.123456"
+      class_name="w-full"
+    />
     <p class="text-xs text-slate-500">Valor de 1 unidade da moeda em reais.</p>
   </div>
 </Dialog>

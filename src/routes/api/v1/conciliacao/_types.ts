@@ -17,7 +17,7 @@ export type ConciliacaoFaixaComissao = string | 'SEM_COMISSAO';
 export type ConciliacaoLinhaInput = {
   documento: string;
   numero_reserva?: string | null;
-  movimento_data?: string | null;         // ISO yyyy-mm-dd
+  movimento_data?: string | null; // ISO yyyy-mm-dd
   status?: ConciliacaoStatus | null;
   descricao?: string | null;
   descricao_chave?: string | null;
@@ -33,8 +33,8 @@ export type ConciliacaoLinhaInput = {
   valor_saldo?: number | null;
 
   // Valores calculados
-  valor_venda_real?: number | null;       // lancamentos − descontos − abatimentos
-  valor_comissao_loja?: number | null;    // cascata: saldo → calculada_loja → visao_master
+  valor_venda_real?: number | null; // lancamentos − descontos − abatimentos
+  valor_comissao_loja?: number | null; // cascata: saldo → calculada_loja → visao_master
   percentual_comissao_loja?: number | null;
   faixa_comissao?: ConciliacaoFaixaComissao | null;
   is_seguro_viagem?: boolean | null;
@@ -74,17 +74,17 @@ export type ConciliacaoItem = {
   valor_saldo: number | null;
 
   // Valores calculados
-  valor_venda_real: number | null;        // lancamentos − descontos − abatimentos (SEM taxas)
+  valor_venda_real: number | null; // lancamentos − descontos − abatimentos (SEM taxas)
   valor_comissao_loja: number | null;
   percentual_comissao_loja: number | null;
 
   // Faixa de comissão
-  faixa_comissao: string | null;          // MENOR_10 | MAIOR_OU_IGUAL_10 | SEGURO_32_35 | SEM_COMISSAO
+  faixa_comissao: string | null; // MENOR_10 | MAIOR_OU_IGUAL_10 | SEGURO_32_35 | SEM_COMISSAO
 
   // Flags calculadas
   is_seguro_viagem: boolean;
   is_baixa_rac?: boolean | null;
-  is_nao_comissionavel?: boolean | null;  // derivado de parametros_pagamentos_nao_comissionaveis
+  is_nao_comissionavel?: boolean | null; // derivado de parametros_pagamentos_nao_comissionaveis
 
   // Linking com vendas
   venda_id: string | null;
@@ -131,7 +131,7 @@ export type ConciliacaoChange = {
   old_value: number | null;
   new_value: number | null;
   actor: 'cron' | 'user';
-  changed_by: string | null;   // user_id quando actor = 'user'
+  changed_by: string | null; // user_id quando actor = 'user'
   changed_at: string;
   reverted_at: string | null;
   reverted_by: string | null;

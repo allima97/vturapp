@@ -140,7 +140,12 @@
   }
 
   function displayCandidateDoc(candidate: ReciboCandidate) {
-    return candidate.numero_recibo || candidate.numero_reserva || candidate.numero_recibo_normalizado || candidate.id;
+    return (
+      candidate.numero_recibo ||
+      candidate.numero_reserva ||
+      candidate.numero_recibo_normalizado ||
+      candidate.id
+    );
   }
 
   async function fetchDocs(options: { suppressSuccessMessage?: boolean } = {}) {
@@ -254,10 +259,7 @@
             loading = false;
             return;
           }
-          if (
-            originalValorVendaReal == null ||
-            Math.abs(parsed - originalValorVendaReal) > 0.009
-          ) {
+          if (originalValorVendaReal == null || Math.abs(parsed - originalValorVendaReal) > 0.009) {
             body.valor_venda_real = parsed;
             changed = true;
           }
@@ -318,10 +320,7 @@
   title="Correção de recibos"
   subtitle="Ferramenta administrativa para diagnosticar e corrigir registros de conciliação."
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Admin' },
-    { label: 'Correção de recibos' }
-  ]}
+  breadcrumbs={[{ label: 'Admin' }, { label: 'Correção de recibos' }]}
 />
 
 <div class="space-y-4">
@@ -333,7 +332,7 @@
         placeholder="Ex.: 5630-0000084181, 084181 ou 84181"
         helper="Use recibos completos ou apenas os números. A busca normaliza a formatação dos recibos."
       />
-      <Button variant="primary" color="financeiro" loading={loading} on:click={() => fetchDocs()}>
+      <Button variant="primary" color="financeiro" {loading} on:click={() => fetchDocs()}>
         <Search size={16} class="mr-2" />
         Buscar
       </Button>
@@ -345,10 +344,14 @@
   {/if}
 
   {#if message}
-    <AlertMessage variant="success" message={message} />
+    <AlertMessage variant="success" {message} />
   {/if}
 
-  <SimpleTable title="Registros encontrados" empty={rows.length === 0 && !loading} emptyMessage="Nenhuma linha encontrada. Verifique os documentos informados.">
+  <SimpleTable
+    title="Registros encontrados"
+    empty={rows.length === 0 && !loading}
+    emptyMessage="Nenhuma linha encontrada. Verifique os documentos informados."
+  >
     <thead>
       <tr>
         <th>Documento</th>
@@ -368,7 +371,11 @@
         <tr class={fixId === row.id ? 'bg-amber-50' : ''}>
           <td class="font-mono font-semibold">{row.documento}</td>
           <td>{row.movimento_data?.slice(0, 10)}</td>
-          <td class="text-right font-mono {Number(row.valor_lancamentos) < 1000 ? 'font-semibold text-red-600' : ''}">
+          <td
+            class="text-right font-mono {Number(row.valor_lancamentos) < 1000
+              ? 'font-semibold text-red-600'
+              : ''}"
+          >
             {formatMoney(row.valor_lancamentos)}
           </td>
           <td class="text-right font-mono">{formatMoney(row.valor_venda_real)}</td>
@@ -380,16 +387,17 @@
           <td class="font-mono text-xs text-slate-400">{row.company_id?.slice(0, 8)}...</td>
           <td class="font-mono text-xs text-slate-400">{row.id?.slice(0, 8)}...</td>
           <td class="text-right">
-            <Button variant="ghost" size="xs" on:click={() => selectRow(row)}>
-              Selecionar
-            </Button>
+            <Button variant="ghost" size="xs" on:click={() => selectRow(row)}>Selecionar</Button>
           </td>
         </tr>
       {/each}
     </tbody>
   </SimpleTable>
 
-  <Card title="Aplicar correcao" subtitle="Use somente para ajustes auditados. A alteracao chama o endpoint administrativo existente.">
+  <Card
+    title="Aplicar correcao"
+    subtitle="Use somente para ajustes auditados. A alteracao chama o endpoint administrativo existente."
+  >
     <div class="space-y-4">
       <FieldInput
         label="ID do registro selecionado"
@@ -503,7 +511,7 @@
         <Button
           variant="primary"
           color="financeiro"
-          loading={loading}
+          {loading}
           disabled={loading || !fixId}
           on:click={applyFix}
         >

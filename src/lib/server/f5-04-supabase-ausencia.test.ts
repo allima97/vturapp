@@ -39,7 +39,7 @@ const ROTAS_MONTADAS_V2 = [
   'src/lib/server/api/routes/invites-v2/index.ts',
   'src/lib/server/api/routes/clientes-v2/index.ts',
   'src/lib/server/api/routes/vendas-v2/index.ts',
-  'src/lib/server/api/routes/tenant-proof/index.ts',
+  'src/lib/server/api/routes/tenant-proof/index.ts'
 ];
 
 // Rotas legadas com Dados — NÃO devem aparecer em app-v2
@@ -48,7 +48,7 @@ const ROTAS_LEGADAS_DADOS = [
   'viagens',
   'pagamentos',
   'voucher-assets',
-  'consultorias',
+  'consultorias'
 ];
 
 describe('Suíte N — F5-04: auditoria Dados na stack v2', () => {
@@ -134,9 +134,7 @@ describe('Suíte N — F5-04: auditoria Dados na stack v2', () => {
   it('N10. app-v2.ts não monta rotas legadas com Dados', () => {
     const src = readSrc(APP_V2);
     for (const rota of ROTAS_LEGADAS_DADOS) {
-      expect(src, `app-v2 não deve montar rota ${rota}`).not.toMatch(
-        new RegExp(`routes/${rota}`)
-      );
+      expect(src, `app-v2 não deve montar rota ${rota}`).not.toMatch(new RegExp(`routes/${rota}`));
     }
   });
 });

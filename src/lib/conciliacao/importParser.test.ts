@@ -135,7 +135,21 @@ describe('parseConciliacaoImportFile', () => {
         'OPFAX',
         'SALDO'
       ],
-      ['5630-0000084046', 'BAIXA DE RECIBO', 22356, 2700, 0, 0, 1867.32, 0, 1867.32, 0, 0, 0, 1867.32]
+      [
+        '5630-0000084046',
+        'BAIXA DE RECIBO',
+        22356,
+        2700,
+        0,
+        0,
+        1867.32,
+        0,
+        1867.32,
+        0,
+        0,
+        0,
+        1867.32
+      ]
     ];
     const buffer = createXlsxBuffer(rows);
     const file = new File([buffer], 'extrato_movimento.xlsx', {

@@ -88,7 +88,9 @@ export async function handleRelatoriosBaseGet(event: RequestEvent) {
     if (isAdminByType) {
       companyIdsForUsers = requestedCompanyId ? [requestedCompanyId] : [];
     } else if (isGestorByType) {
-      companyIdsForUsers = scope.companyId ? [scope.companyId] : resolveScopedCompanyIds(scope, requestedCompanyId);
+      companyIdsForUsers = scope.companyId
+        ? [scope.companyId]
+        : resolveScopedCompanyIds(scope, requestedCompanyId);
       scopedTeamIds = await fetchVendedorIdsByCompanyIds(client, companyIdsForUsers);
     } else if (isMasterByType) {
       companyIdsForUsers = resolveScopedCompanyIds(scope, requestedCompanyId);
@@ -124,10 +126,14 @@ export async function handleRelatoriosBaseGet(event: RequestEvent) {
 
     const fetchUsers = async () => {
       const rows: UserFilterRow[] = [];
-      const runQuery = async (filters?: { ids?: string[] | null; companyIds?: string[] | null }) => {
+      const runQuery = async (filters?: {
+        ids?: string[] | null;
+        companyIds?: string[] | null;
+      }) => {
         let query = client
           .from('users')
-          .select(`
+          .select(
+            `
             id,
             nome_completo,
             email,
@@ -136,7 +142,8 @@ export async function handleRelatoriosBaseGet(event: RequestEvent) {
             uso_individual,
             user_types (name),
             companies (nome_fantasia, nome_empresa)
-          `)
+          `
+          )
           .eq('active', true)
           .limit(1000);
 
@@ -155,7 +162,9 @@ export async function handleRelatoriosBaseGet(event: RequestEvent) {
         await Promise.all(chunkArray(scopedTeamIds).map((idBatch) => runQuery({ ids: idBatch })));
       } else if (!scope.isAdmin && companyIdsForUsers.length > 0) {
         await Promise.all(
-          chunkArray(companyIdsForUsers).map((companyBatch) => runQuery({ companyIds: companyBatch }))
+          chunkArray(companyIdsForUsers).map((companyBatch) =>
+            runQuery({ companyIds: companyBatch })
+          )
         );
       } else {
         await runQuery();

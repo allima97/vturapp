@@ -12,12 +12,12 @@ cada 5 minutos via cron job. Precisamos decidir se portamos essa estratégia.
 
 ## Estimativa de escala (de F0-06)
 
-| Tabela          | Linhas estimadas (1 ano) |
-|-----------------|--------------------------|
-| `vendas`        | ≤ 5 000                  |
-| `venda_itens`   | ≤ 25 000                 |
-| `venda_parcelas`| ≤ 15 000                 |
-| `venda_pagamentos` | ≤ 15 000              |
+| Tabela             | Linhas estimadas (1 ano) |
+| ------------------ | ------------------------ |
+| `vendas`           | ≤ 5 000                  |
+| `venda_itens`      | ≤ 25 000                 |
+| `venda_parcelas`   | ≤ 15 000                 |
+| `venda_pagamentos` | ≤ 15 000                 |
 
 Uma agência típica processa 10–50 vendas/dia. O D1 Free tier suporta
 5 M leituras de linha/dia; uma query de resumo lendo 5 000 linhas
@@ -50,6 +50,7 @@ sempre precisa (invariante verificada em cada chamada).
 Portaria diretamente o cron do Supabase (rebuild a cada 5 min).
 
 **Contras**:
+
 - Acrescenta complexidade (tabela extra, lógica de versão, checkpoint,
   recomposição e limite de atraso visível).
 - Dados podem estar até 5 min desatualizados.

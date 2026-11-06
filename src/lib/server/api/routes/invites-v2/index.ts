@@ -12,7 +12,12 @@
 
 import { Hono } from 'hono';
 import type { ApiEnv } from '../../types';
-import { criarConvite, getConvite, aceitarConvite, ConviteError } from '$lib/server/invites/service';
+import {
+  criarConvite,
+  getConvite,
+  aceitarConvite,
+  ConviteError
+} from '$lib/server/invites/service';
 import { resolveAuthContext, requireAdmin } from '$lib/server/auth/context';
 import { PAPEIS, type Papel } from '$lib/server/db/schema';
 
@@ -32,7 +37,7 @@ invitesV2Routes.post('/', async (c) => {
   const baseURL =
     PUBLIC_ENVIRONMENT === 'production'
       ? 'https://vturapp.com.br'
-      : PUBLIC_APP_URL ?? 'http://localhost:5173';
+      : (PUBLIC_APP_URL ?? 'http://localhost:5173');
 
   // Verificar autenticação e papel admin
   const ctx = await resolveAuthContext(c.req.raw.headers, DB, BETTER_AUTH_SECRET, baseURL);
@@ -95,14 +100,12 @@ invitesV2Routes.get('/:token', async (c) => {
       empresaNome: convite.empresaNome,
       email: convite.email,
       papel: convite.papel,
-      expiresAt: convite.expiresAt,
+      expiresAt: convite.expiresAt
     });
   } catch (err) {
     if (err instanceof ConviteError) {
       const status =
-        err.code === 'TOKEN_INVALIDO' ? 404
-        : err.code === 'CONVITE_ACEITO' ? 409
-        : 422; // CONVITE_EXPIRADO
+        err.code === 'TOKEN_INVALIDO' ? 404 : err.code === 'CONVITE_ACEITO' ? 409 : 422; // CONVITE_EXPIRADO
       return c.json({ error: err.message, code: err.code }, status);
     }
     throw err;
@@ -124,7 +127,7 @@ invitesV2Routes.post('/:token/accept', async (c) => {
   const baseURL =
     PUBLIC_ENVIRONMENT === 'production'
       ? 'https://vturapp.com.br'
-      : PUBLIC_APP_URL ?? 'http://localhost:5173';
+      : (PUBLIC_APP_URL ?? 'http://localhost:5173');
 
   // Validar body
   let body: { nome?: unknown; senha?: unknown };
@@ -152,10 +155,13 @@ invitesV2Routes.post('/:token/accept', async (c) => {
   } catch (err) {
     if (err instanceof ConviteError) {
       const status =
-        err.code === 'TOKEN_INVALIDO' ? 404
-        : err.code === 'CONVITE_ACEITO' ? 409
-        : err.code === 'ERRO_CRIAR_USUARIO' ? 422
-        : 422;
+        err.code === 'TOKEN_INVALIDO'
+          ? 404
+          : err.code === 'CONVITE_ACEITO'
+            ? 409
+            : err.code === 'ERRO_CRIAR_USUARIO'
+              ? 422
+              : 422;
       return c.json({ error: err.message, code: err.code }, status);
     }
     throw err;

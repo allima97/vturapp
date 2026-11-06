@@ -9,13 +9,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 2500
   },
   optimizeDeps: {
-    exclude: [
-      'xlsx',
-      'jspdf',
-      'jspdf-autotable',
-      'dexie',
-      'dexie-cloud-addon'
-    ]
+    exclude: ['xlsx', 'jspdf', 'jspdf-autotable', 'dexie', 'dexie-cloud-addon']
   },
   resolve: {
     alias: {

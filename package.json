@@ -33,6 +33,7 @@
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/eslint": "^9.6.0",
+    "@types/node": "^26.6.6",
     "drizzle-kit": "^0.31.11",
     "eslint": "^9.7.0",
     "eslint-config-prettier": "^9.1.0",

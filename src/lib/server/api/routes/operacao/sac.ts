@@ -36,7 +36,12 @@ export async function handleOperacaoSacGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['operacao_controle_sac', 'controle_sac', 'operacao'], 1, 'Sem acesso ao Controle SAC.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_controle_sac', 'controle_sac', 'operacao'],
+        1,
+        'Sem acesso ao Controle SAC.'
+      );
     }
 
     const { searchParams } = event.url;
@@ -47,7 +52,9 @@ export async function handleOperacaoSacGet(event: RequestEvent) {
 
     let query = client
       .from('sac_controle')
-      .select('id, company_id, recibo, tour, data_solicitacao, motivo, contratante_pax, ok_quando, status, responsavel, prazo, created_at, updated_at')
+      .select(
+        'id, company_id, recibo, tour, data_solicitacao, motivo, contratante_pax, ok_quando, status, responsavel, prazo, created_at, updated_at'
+      )
       .order('created_at', { ascending: false })
       .limit(500);
 
@@ -64,7 +71,9 @@ export async function handleOperacaoSacGet(event: RequestEvent) {
       const qLower = q.toLowerCase();
       items = items.filter((item: SacRow) =>
         [item.recibo, item.tour, item.motivo, item.contratante_pax, item.responsavel]
-          .join(' ').toLowerCase().includes(qLower)
+          .join(' ')
+          .toLowerCase()
+          .includes(qLower)
       );
     }
 
@@ -86,14 +95,28 @@ export async function handleOperacaoSacPost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['operacao_controle_sac', 'controle_sac', 'operacao'], 2, 'Sem permissão para salvar SAC.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_controle_sac', 'controle_sac', 'operacao'],
+        2,
+        'Sem permissão para salvar SAC.'
+      );
     }
 
     const body =
-      bodyResult.data && typeof bodyResult.data === 'object'
-        ? (bodyResult.data as JsonBody)
-        : {};
-    const { id, recibo, tour, data_solicitacao, motivo, contratante_pax, ok_quando, status, responsavel, prazo } = body;
+      bodyResult.data && typeof bodyResult.data === 'object' ? (bodyResult.data as JsonBody) : {};
+    const {
+      id,
+      recibo,
+      tour,
+      data_solicitacao,
+      motivo,
+      contratante_pax,
+      ok_quando,
+      status,
+      responsavel,
+      prazo
+    } = body;
 
     const payload = {
       company_id: scope.companyId,
@@ -117,19 +140,35 @@ export async function handleOperacaoSacPost(event: RequestEvent) {
         .eq('id', idValue)
         .maybeSingle();
       if (existingError) throw existingError;
-      if (!existing) return json({ error: 'Registro SAC não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+      if (!existing)
+        return json(
+          { error: 'Registro SAC não encontrado.' },
+          { status: 404, headers: NO_STORE_HEADERS }
+        );
       const existingCompanyId = String((existing as ExistingSacRow)?.company_id || '').trim();
       const allowedCompanyIds = resolveScopedCompanyIds(scope, existingCompanyId || null);
       const allowedCompanySet = cleanStringSet(allowedCompanyIds);
       if (!scope.isAdmin && !allowedCompanySet.has(existingCompanyId)) {
-        return json({ error: 'Registro SAC fora do escopo da empresa.' }, { status: 403, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Registro SAC fora do escopo da empresa.' },
+          { status: 403, headers: NO_STORE_HEADERS }
+        );
       }
 
-      const { data, error: updateError } = await client.from('sac_controle').update(payload).eq('id', idValue).select('id').single();
+      const { data, error: updateError } = await client
+        .from('sac_controle')
+        .update(payload)
+        .eq('id', idValue)
+        .select('id')
+        .single();
       if (updateError) throw updateError;
       result = data;
     } else {
-      const { data, error: insertError } = await client.from('sac_controle').insert({ ...payload, created_by: scope.userId }).select('id').single();
+      const { data, error: insertError } = await client
+        .from('sac_controle')
+        .insert({ ...payload, created_by: scope.userId })
+        .select('id')
+        .single();
       if (insertError) throw insertError;
       result = data;
     }
@@ -150,11 +189,17 @@ export async function handleOperacaoSacDelete(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['operacao_controle_sac', 'controle_sac', 'operacao'], 4, 'Sem permissão para excluir SAC.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_controle_sac', 'controle_sac', 'operacao'],
+        4,
+        'Sem permissão para excluir SAC.'
+      );
     }
 
     const id = String(event.url.searchParams.get('id') || '').trim();
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const { data: existing, error: existingError } = await client
       .from('sac_controle')
@@ -162,12 +207,19 @@ export async function handleOperacaoSacDelete(event: RequestEvent) {
       .eq('id', id)
       .maybeSingle();
     if (existingError) throw existingError;
-    if (!existing) return json({ error: 'Registro SAC não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!existing)
+      return json(
+        { error: 'Registro SAC não encontrado.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
     const existingCompanyId = String((existing as ExistingSacRow)?.company_id || '').trim();
     const allowedCompanyIds = resolveScopedCompanyIds(scope, existingCompanyId || null);
     const allowedCompanySet = cleanStringSet(allowedCompanyIds);
     if (!scope.isAdmin && !allowedCompanySet.has(existingCompanyId)) {
-      return json({ error: 'Registro SAC fora do escopo da empresa.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Registro SAC fora do escopo da empresa.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { error: deleteError } = await client.from('sac_controle').delete().eq('id', id);

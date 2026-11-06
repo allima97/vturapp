@@ -28,7 +28,10 @@ export async function handleVendasReciboComplementarLinkPost(event: RequestEvent
   try {
     const originError = rejectCrossOriginRequest(event.request);
     if (originError) return originError;
-    const textResult = await readTextBodyLimited(event.request, MAX_RECIBO_COMPLEMENTAR_LINK_BODY_BYTES);
+    const textResult = await readTextBodyLimited(
+      event.request,
+      MAX_RECIBO_COMPLEMENTAR_LINK_BODY_BYTES
+    );
     if (!textResult.ok) return textResult.response;
 
     const client = getAdminClient();
@@ -36,23 +39,26 @@ export async function handleVendasReciboComplementarLinkPost(event: RequestEvent
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster) {
-      ensureModuloAccess(scope, ['vendas_consulta', 'vendas'], 3, 'Sem permissao para editar vendas.');
+      ensureModuloAccess(
+        scope,
+        ['vendas_consulta', 'vendas'],
+        3,
+        'Sem permissao para editar vendas.'
+      );
     }
 
     const rawBody = textResult.text;
-    const body = safeJsonParse(rawBody) as
-      | {
-          primary_venda_id?: string;
-          links?: Array<{ venda_id?: string; recibo_id?: string }>;
-          venda_id?: string;
-          recibo_id?: string;
-          venda_cruzada_id?: string;
-          recibo_cruzado_id?: string;
-          cruzado_ja_vinculado?: boolean;
-          company_id?: string;
-          empresa_id?: string;
-        }
-      | null;
+    const body = safeJsonParse(rawBody) as {
+      primary_venda_id?: string;
+      links?: Array<{ venda_id?: string; recibo_id?: string }>;
+      venda_id?: string;
+      recibo_id?: string;
+      venda_cruzada_id?: string;
+      recibo_cruzado_id?: string;
+      cruzado_ja_vinculado?: boolean;
+      company_id?: string;
+      empresa_id?: string;
+    } | null;
 
     const companyIds = resolveScopedCompanyIds(
       scope,
@@ -86,7 +92,10 @@ export async function handleVendasReciboComplementarLinkPost(event: RequestEvent
     if (Array.isArray(body?.links)) {
       const primaryVendaId = String(body?.primary_venda_id || '').trim();
       if (!isUuid(primaryVendaId)) {
-        return new Response('primary_venda_id invalido.', { status: 400, headers: NO_STORE_HEADERS });
+        return new Response('primary_venda_id invalido.', {
+          status: 400,
+          headers: NO_STORE_HEADERS
+        });
       }
 
       const links: Array<{ venda_id: string; recibo_id: string }> = [];
@@ -102,12 +111,18 @@ export async function handleVendasReciboComplementarLinkPost(event: RequestEvent
         return new Response('Sem links validos.', { status: 400, headers: NO_STORE_HEADERS });
       }
 
-      const scopedSales = await fetchScopedSales([primaryVendaId, ...links.map((link) => link.venda_id)]);
+      const scopedSales = await fetchScopedSales([
+        primaryVendaId,
+        ...links.map((link) => link.venda_id)
+      ]);
       if (!scopedSales.has(primaryVendaId)) {
         return new Response('Venda nao encontrada.', { status: 404, headers: NO_STORE_HEADERS });
       }
       if (links.some((link) => !scopedSales.has(link.venda_id))) {
-        return new Response('Venda complementar fora do escopo.', { status: 403, headers: NO_STORE_HEADERS });
+        return new Response('Venda complementar fora do escopo.', {
+          status: 403,
+          headers: NO_STORE_HEADERS
+        });
       }
 
       const { error: batchError } = await client
@@ -121,7 +136,7 @@ export async function handleVendasReciboComplementarLinkPost(event: RequestEvent
           userId: user.id,
           modulo: 'Vendas',
           acao: 'recibo_complementar_vinculado',
-          detalhes: { venda_id: link.venda_id, recibo_id: link.recibo_id },
+          detalhes: { venda_id: link.venda_id, recibo_id: link.recibo_id }
         });
       }
       return json({ ok: true, total: links.length }, { headers: NO_STORE_HEADERS });
@@ -134,13 +149,19 @@ export async function handleVendasReciboComplementarLinkPost(event: RequestEvent
     const cruzadoJaVinculado = Boolean(body?.cruzado_ja_vinculado);
 
     if (!isUuid(vendaId) || !isUuid(reciboId)) {
-      return new Response('venda_id ou recibo_id invalido.', { status: 400, headers: NO_STORE_HEADERS });
+      return new Response('venda_id ou recibo_id invalido.', {
+        status: 400,
+        headers: NO_STORE_HEADERS
+      });
     }
     if (vendaCruzadaId && !isUuid(vendaCruzadaId)) {
       return new Response('venda_cruzada_id invalido.', { status: 400, headers: NO_STORE_HEADERS });
     }
     if (reciboCruzadoId && !isUuid(reciboCruzadoId)) {
-      return new Response('recibo_cruzado_id invalido.', { status: 400, headers: NO_STORE_HEADERS });
+      return new Response('recibo_cruzado_id invalido.', {
+        status: 400,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const saleIdsToValidate = [vendaId, vendaCruzadaId].filter(Boolean);
@@ -150,7 +171,10 @@ export async function handleVendasReciboComplementarLinkPost(event: RequestEvent
     }
 
     if (vendaCruzadaId && !scopedSales.has(vendaCruzadaId)) {
-      return new Response('Venda cruzada nao encontrada.', { status: 404, headers: NO_STORE_HEADERS });
+      return new Response('Venda cruzada nao encontrada.', {
+        status: 404,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const primaryLink = { venda_id: vendaId, recibo_id: reciboId };
@@ -175,14 +199,14 @@ export async function handleVendasReciboComplementarLinkPost(event: RequestEvent
       userId: user.id,
       modulo: 'Vendas',
       acao: 'recibo_complementar_vinculado',
-      detalhes: { venda_id: vendaId, recibo_id: reciboId },
+      detalhes: { venda_id: vendaId, recibo_id: reciboId }
     });
     if (!cruzadoJaVinculado && vendaCruzadaId && reciboCruzadoId) {
       registrarLog(event, {
         userId: user.id,
         modulo: 'Vendas',
         acao: 'recibo_complementar_vinculado',
-        detalhes: { venda_id: vendaCruzadaId, recibo_id: reciboCruzadoId },
+        detalhes: { venda_id: vendaCruzadaId, recibo_id: reciboCruzadoId }
       });
     }
     return json({ ok: true }, { headers: NO_STORE_HEADERS });

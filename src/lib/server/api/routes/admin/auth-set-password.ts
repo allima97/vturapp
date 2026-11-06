@@ -2,11 +2,7 @@
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
-import {
-  ensureCanManageUsers,
-  findAuthUserIdByEmail,
-  loadManagedUser
-} from '$lib/server/admin';
+import { ensureCanManageUsers, findAuthUserIdByEmail, loadManagedUser } from '$lib/server/admin';
 import {
   getAdminClient,
   requireAuthenticatedUser,
@@ -35,10 +31,15 @@ export async function handleAdminAuthSetPasswordPost(event: RequestEvent) {
         : {};
 
     ensureCanManageUsers(scope);
-    const rateLimit = await checkPersistentRateLimit('admin-set-password', user.id, {
-      max: 20,
-      windowMs: 60_000
-    }, event.platform?.env?.DB);
+    const rateLimit = await checkPersistentRateLimit(
+      'admin-set-password',
+      user.id,
+      {
+        max: 20,
+        windowMs: 60_000
+      },
+      event.platform?.env?.DB
+    );
     if (!rateLimit.allowed) {
       return json(
         { error: 'Muitas alterações de senha. Aguarde e tente novamente.' },
@@ -50,7 +51,9 @@ export async function handleAdminAuthSetPasswordPost(event: RequestEvent) {
     }
 
     let userId = String(body.user_id || '').trim();
-    const email = String(body.email || '').trim().toLowerCase();
+    const email = String(body.email || '')
+      .trim()
+      .toLowerCase();
     const password = String(body.password || '');
     const confirmEmail = body.confirm_email !== false;
 
@@ -66,7 +69,10 @@ export async function handleAdminAuthSetPasswordPost(event: RequestEvent) {
     }
 
     if (!userId) {
-      return json({ error: 'Usuario alvo nao informado.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Usuario alvo nao informado.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     await loadManagedUser(client, scope, userId);

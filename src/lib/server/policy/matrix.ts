@@ -23,16 +23,17 @@ import type { Papel } from '$lib/server/db/schema';
  * Cada recurso agrupa operações relacionadas.
  */
 export const RECURSOS = [
-  'empresa',        // configurações da empresa/tenant
-  'usuarios',       // lista e gerenciamento de membros
-  'convites',       // criação e visualização de convites
-  'vendas',         // pacotes e orçamentos de viagem
-  'clientes',       // cadastro de clientes
-  'financeiro',     // pagamentos, conciliação, comissões
-  'relatorios',     // relatórios e exportações
-  'configuracoes',  // parâmetros do sistema
-  'auditoria',      // logs de auditoria
-  'agenda', 'mural',         // eventos e tarefas da equipe
+  'empresa', // configurações da empresa/tenant
+  'usuarios', // lista e gerenciamento de membros
+  'convites', // criação e visualização de convites
+  'vendas', // pacotes e orçamentos de viagem
+  'clientes', // cadastro de clientes
+  'financeiro', // pagamentos, conciliação, comissões
+  'relatorios', // relatórios e exportações
+  'configuracoes', // parâmetros do sistema
+  'auditoria', // logs de auditoria
+  'agenda',
+  'mural' // eventos e tarefas da equipe
 ] as const;
 
 export type Recurso = (typeof RECURSOS)[number];
@@ -107,7 +108,7 @@ const CAPACIDADES_ADMIN: `${Recurso}:${Acao}`[] = [
   ...todos('auditoria'),
   // Agenda: admin pode tudo
   ...todos('agenda'),
-  ...todos('mural'),
+  ...todos('mural')
 ];
 
 const CAPACIDADES_OPERADOR: `${Recurso}:${Acao}`[] = [
@@ -140,7 +141,7 @@ const CAPACIDADES_OPERADOR: `${Recurso}:${Acao}`[] = [
   // Agenda: operador gerencia os próprios eventos e tarefas
   ...todos('agenda'),
   // Mural: operador pode enviar e ler recados
-  ...todos('mural'),
+  ...todos('mural')
 ];
 
 const CAPACIDADES_VISUALIZADOR: `${Recurso}:${Acao}`[] = [
@@ -164,7 +165,7 @@ const CAPACIDADES_VISUALIZADOR: `${Recurso}:${Acao}`[] = [
   // Auditoria: visualizador NÃO acessa
   // Agenda: visualizador lê
   ...cap('agenda', 'ler'),
-    ...cap('mural', 'ler'),
+  ...cap('mural', 'ler')
 ];
 
 /**
@@ -174,7 +175,7 @@ const CAPACIDADES_VISUALIZADOR: `${Recurso}:${Acao}`[] = [
 export const MATRIZ_RBAC: MatrizRBAC = {
   admin: new Set(CAPACIDADES_ADMIN),
   operador: new Set(CAPACIDADES_OPERADOR),
-  visualizador: new Set(CAPACIDADES_VISUALIZADOR),
+  visualizador: new Set(CAPACIDADES_VISUALIZADOR)
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -184,5 +185,5 @@ export const MATRIZ_RBAC: MatrizRBAC = {
 export const TODAS_CAPACIDADES = {
   admin: [...MATRIZ_RBAC.admin].sort(),
   operador: [...MATRIZ_RBAC.operador].sort(),
-  visualizador: [...MATRIZ_RBAC.visualizador].sort(),
+  visualizador: [...MATRIZ_RBAC.visualizador].sort()
 } as const;

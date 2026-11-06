@@ -43,7 +43,9 @@
 
   <label
     for={fieldId}
-    class="vtur-upload-dropzone flex cursor-pointer items-center gap-3 px-4 py-2.5 {error ? 'border-red-300 ring-1 ring-red-200' : ''} {disabled ? 'cursor-not-allowed opacity-60' : ''}"
+    class="vtur-upload-dropzone flex cursor-pointer items-center gap-3 px-4 py-2.5 {error
+      ? 'border-red-300 ring-1 ring-red-200'
+      : ''} {disabled ? 'cursor-not-allowed opacity-60' : ''}"
   >
     {#if icon}
       <div class="vtur-upload-dropzone__icon shrink-0">

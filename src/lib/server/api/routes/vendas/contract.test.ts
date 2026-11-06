@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => ({
   sale: null as Record<string, unknown> | null,
   updateResult: { data: null as unknown, error: null as unknown },
   updateCalls: [] as unknown[],
-  invalidateCalls: 0,
+  invalidateCalls: 0
 }));
 
 vi.mock('$lib/server/v1', async (importOriginal) => {
@@ -31,16 +31,16 @@ vi.mock('$lib/server/v1', async (importOriginal) => {
           const chain = {
             eq: () => chain,
             select: () => chain,
-            single: async () => mocks.updateResult,
+            single: async () => mocks.updateResult
           };
           return chain;
-        },
-      }),
+        }
+      })
     }),
     resolveUserScope: async () => mocks.scope,
     resolveScopedVendedorIds: async () => [],
     fetchVendedorIdsByCompanyIds: async () => [],
-    resolveAccessibleClientIds: async () => [],
+    resolveAccessibleClientIds: async () => []
   };
 });
 
@@ -49,15 +49,15 @@ vi.mock('$lib/server/vendas-kpis', () => ({
     mocks.kpisCalls.push(params);
     if (mocks.kpisError) throw mocks.kpisError;
     return { agg: mocks.kpisResult };
-  },
+  }
 }));
 
 vi.mock('$lib/server/readModelRebuild', () => ({
-  getPlatformExecutionContext: () => null,
+  getPlatformExecutionContext: () => null
 }));
 
 vi.mock('$lib/server/salesScope', () => ({
-  fetchSaleForScope: async () => mocks.sale,
+  fetchSaleForScope: async () => mocks.sale
 }));
 
 vi.mock('$lib/server/readModelCache', async (importOriginal) => {
@@ -66,7 +66,7 @@ vi.mock('$lib/server/readModelCache', async (importOriginal) => {
     ...actual,
     invalidateSalesReadModels: () => {
       mocks.invalidateCalls += 1;
-    },
+    }
   };
 });
 
@@ -92,7 +92,7 @@ const adminScope = {
   isMaster: false,
   isFinanceiro: false,
   isGestor: false,
-  isVendedor: false,
+  isVendedor: false
 };
 
 const vendedorSemAcesso = {
@@ -102,13 +102,10 @@ const vendedorSemAcesso = {
   papel: 'VENDEDOR',
   isAdmin: false,
   isVendedor: true,
-  permissoes: {},
+  permissoes: {}
 };
 
-function makeEvent(
-  path: string,
-  init: RequestInit & { authenticated?: boolean } = {},
-) {
+function makeEvent(path: string, init: RequestInit & { authenticated?: boolean } = {}) {
   const { authenticated = true, ...requestInit } = init;
   const request = new Request(`${ORIGIN}${path}`, requestInit);
   return {
@@ -120,9 +117,9 @@ function makeEvent(
       safeGetSession: async () =>
         authenticated
           ? { session: { access_token: 't' }, user: { id: 'u-1' } }
-          : { session: null, user: null },
+          : { session: null, user: null }
     },
-    getClientAddress: () => '127.0.0.1',
+    getClientAddress: () => '127.0.0.1'
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as any;
 }
@@ -152,7 +149,10 @@ beforeEach(() => {
   mocks.kpisError = null;
   mocks.kpisCalls = [];
   mocks.sale = { id: SALE_ID, company_id: ADMIN_COMPANY, vendedor_id: 'v1' };
-  mocks.updateResult = { data: { id: SALE_ID, status: 'confirmada', updated_at: '2026-09-24T00:00:00Z' }, error: null };
+  mocks.updateResult = {
+    data: { id: SALE_ID, status: 'confirmada', updated_at: '2026-09-24T00:00:00Z' },
+    error: null
+  };
   mocks.updateCalls = [];
   mocks.invalidateCalls = 0;
 });
@@ -220,7 +220,7 @@ describe('GET /api/v1/vendas/kpis', () => {
 
   it('admin → 200 com kpis e parâmetros repassados ao cálculo', async () => {
     const res = await kpisGET(
-      makeEvent(`/api/v1/vendas/kpis?inicio=2026-09-01&fim=2026-09-30&empresa_id=${ADMIN_COMPANY}`),
+      makeEvent(`/api/v1/vendas/kpis?inicio=2026-09-01&fim=2026-09-30&empresa_id=${ADMIN_COMPANY}`)
     );
     expect(await contract(res)).toMatchInlineSnapshot(`
       {
@@ -286,8 +286,8 @@ describe('PATCH /api/v1/vendas/status', () => {
       makeEvent(`/api/v1/vendas/status${query}`, {
         method: 'PATCH',
         headers: { 'content-type': 'application/json', ...headers },
-        body: JSON.stringify(body),
-      }),
+        body: JSON.stringify(body)
+      })
     );
 
   it('origem de outro site → 403', async () => {
@@ -349,7 +349,8 @@ describe('PATCH /api/v1/vendas/status', () => {
 
   it('venda fora do escopo → 404', async () => {
     mocks.sale = null;
-    expect(await contract(await patch(`?id=${SALE_ID}`, { status: 'confirmada' }))).toMatchInlineSnapshot(`
+    expect(await contract(await patch(`?id=${SALE_ID}`, { status: 'confirmada' })))
+      .toMatchInlineSnapshot(`
       {
         "body": {
           "error": "Venda nao encontrada.",

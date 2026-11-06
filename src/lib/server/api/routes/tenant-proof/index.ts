@@ -56,16 +56,16 @@ tenantProofRoutes.get('/tenant-isolation', async (c) => {
       authContext: {
         userId: ctx.userId,
         empresaId: ctx.empresaId,
-        papel: ctx.papel,
+        papel: ctx.papel
       },
-      membros: membros.map(m => ({
+      membros: membros.map((m) => ({
         id: m.id,
         empresaId: m.empresaId,
         papel: m.papel,
-        ativo: m.ativo,
+        ativo: m.ativo
       })),
       invariant: `Todos os registros têm empresaId === ${ctx.empresaId}`,
-      allSameTenant: membros.every(m => m.empresaId === ctx.empresaId),
+      allSameTenant: membros.every((m) => m.empresaId === ctx.empresaId)
     });
   } catch (err) {
     if (err instanceof TenantError && err.code === 'MISSING_EMPRESA_ID') {
@@ -116,16 +116,21 @@ tenantProofRoutes.post('/tenant-isolation/cross-tenant', async (c) => {
     const resultado = await getMembro(env.DB, membroId, ctx.empresaId);
 
     if (!resultado.ok) {
-      const status = resultado.code === 'CROSS_TENANT' ? 403 : resultado.code === 'NAO_ENCONTRADO' ? 404 : 500;
-      return c.json({
-        proof: 'F2-04-CROSS-TENANT-BLOCKED',
-        ok: false,
-        code: resultado.code,
-        error: resultado.error,
-        description: resultado.code === 'CROSS_TENANT'
-          ? `ISOLAMENTO FUNCIONANDO: acesso ao membro ${membroId} de outro tenant foi BLOQUEADO.`
-          : `Membro ${membroId} não encontrado.`,
-      }, status);
+      const status =
+        resultado.code === 'CROSS_TENANT' ? 403 : resultado.code === 'NAO_ENCONTRADO' ? 404 : 500;
+      return c.json(
+        {
+          proof: 'F2-04-CROSS-TENANT-BLOCKED',
+          ok: false,
+          code: resultado.code,
+          error: resultado.error,
+          description:
+            resultado.code === 'CROSS_TENANT'
+              ? `ISOLAMENTO FUNCIONANDO: acesso ao membro ${membroId} de outro tenant foi BLOQUEADO.`
+              : `Membro ${membroId} não encontrado.`
+        },
+        status
+      );
     }
 
     // Membro do mesmo tenant — retorna normalmente (não é cross-tenant)
@@ -133,7 +138,7 @@ tenantProofRoutes.post('/tenant-isolation/cross-tenant', async (c) => {
       proof: 'F2-04-SAME-TENANT-ALLOWED',
       ok: true,
       description: `Membro ${membroId} pertence ao seu tenant (${ctx.empresaId}). Acesso permitido.`,
-      membro: resultado.membro,
+      membro: resultado.membro
     });
   } catch (err) {
     if (err instanceof TenantError) {

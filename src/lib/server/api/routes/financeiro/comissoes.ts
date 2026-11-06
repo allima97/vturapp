@@ -24,7 +24,12 @@ import {
   buildPersistedReciboComissaoKey,
   fetchPersistedComissoes
 } from '$lib/server/comissoes-registro';
-import { monthRangeFromKey, monthRangeFromYearMonth, parseISODateParts, todayISODateLocal } from '$lib/date';
+import {
+  monthRangeFromKey,
+  monthRangeFromYearMonth,
+  parseISODateParts,
+  todayISODateLocal
+} from '$lib/date';
 import { DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
 import {
   buildReadModelCacheKey,
@@ -110,7 +115,9 @@ function getReciboCodigo(recibo: CommissionReceiptRow) {
 }
 
 function getReciboProduto(recibo: CommissionReceiptRow) {
-  return String(recibo?.tipo_produtos?.nome || recibo?.produto_resolvido?.nome || 'Produto sem nome');
+  return String(
+    recibo?.tipo_produtos?.nome || recibo?.produto_resolvido?.nome || 'Produto sem nome'
+  );
 }
 
 function normalizeRowsToReceiptPeriod(rows: CommissionReportRow[]) {
@@ -122,7 +129,9 @@ function normalizeRowsToReceiptPeriod(rows: CommissionReportRow[]) {
 }
 
 function resolvePeriodoComissoes(searchParams: URLSearchParams) {
-  const dataInicio = String(searchParams.get('data_inicio') || searchParams.get('inicio') || '').trim();
+  const dataInicio = String(
+    searchParams.get('data_inicio') || searchParams.get('inicio') || ''
+  ).trim();
   const dataFim = String(searchParams.get('data_fim') || searchParams.get('fim') || '').trim();
   if (dataInicio || dataFim) {
     return {
@@ -181,15 +190,9 @@ export async function handleFinanceiroComissoesGet(event: RequestEvent) {
     const hasRequestedVendedorFilter = String(requestedVendedorRaw || '').trim().length > 0;
     const periodo = resolvePeriodoComissoes(searchParams);
     const companyIds = resolveScopedCompanyIds(scope, searchParams.get('empresa_id'));
-    const vendedorIds = await resolveScopedVendedorIds(
-      client,
-      scope,
-      requestedVendedorRaw
-    );
+    const vendedorIds = await resolveScopedVendedorIds(client, scope, requestedVendedorRaw);
     const effectiveVendedorIds =
-      hasRequestedVendedorFilter && vendedorIds.length === 0
-        ? [NO_MATCH_COMPANY_ID]
-        : vendedorIds;
+      hasRequestedVendedorFilter && vendedorIds.length === 0 ? [NO_MATCH_COMPANY_ID] : vendedorIds;
 
     const payload = await getCachedReadModel({
       key: buildReadModelCacheKey('financeiro:comissoes:list', {
@@ -235,76 +238,87 @@ export async function handleFinanceiroComissoesGet(event: RequestEvent) {
           })
         ]);
         const persistedByKey = new Map(
-          persistedSnapshot.rows.map((row) => [
-            buildPersistedReciboComissaoKey(row.recibo_id, row.vendedor_id, row.venda_id),
-            row
-          ] as const)
+          persistedSnapshot.rows.map(
+            (row) =>
+              [
+                buildPersistedReciboComissaoKey(row.recibo_id, row.vendedor_id, row.venda_id),
+                row
+              ] as const
+          )
         );
 
-        let items = rowsForComissao.flatMap((row): Array<CommissionItem | null> => {
-          const recibos = (Array.isArray(row?.recibos) ? row.recibos : []).filter(isActiveReceipt);
-
-          return recibos.map((recibo) => {
-            const reciboId = String(recibo?.id || '').trim();
-            const commission = reciboId ? resolvedByReceiptId.get(reciboId) : undefined;
-            if (!reciboId || !commission) return null;
-
-            const persisted = persistedByKey.get(buildPersistedReciboComissaoKey(reciboId, row.vendedor_id, row.id));
-            const persistedApplied = applyPersistedComissao(
-              {
-                valor_venda: getReciboValor(recibo),
-                valor_comissionavel: commission.valorComissionavel,
-                percentual_aplicado: commission.percentual,
-                valor_comissao: commission.valorComissao,
-                valor_pago: 0,
-                status: 'pendente'
-              },
-              persisted
+        let items = rowsForComissao
+          .flatMap((row): Array<CommissionItem | null> => {
+            const recibos = (Array.isArray(row?.recibos) ? row.recibos : []).filter(
+              isActiveReceipt
             );
-            const valorComissaoSeguro = scaleCommissionPart(
-              commission.valorComissaoSeguro,
-              commission.valorComissao,
-              persistedApplied.valor_comissao
-            );
-            const valorComissaoGeral = roundMoney(Math.max(0, persistedApplied.valor_comissao - valorComissaoSeguro));
 
-            const numeroRecibo = getReciboCodigo(recibo);
+            return recibos.map((recibo) => {
+              const reciboId = String(recibo?.id || '').trim();
+              const commission = reciboId ? resolvedByReceiptId.get(reciboId) : undefined;
+              if (!reciboId || !commission) return null;
 
-            return {
-              id: reciboId,
-              venda_id: row.id,
-              recibo_id: reciboId,
-              numero_venda: row.numero_venda,
-              numero_recibo: numeroRecibo || `REC-${reciboId.slice(0, 8).toUpperCase()}`,
-              numero_reserva: recibo?.numero_reserva || null,
-              produto: getReciboProduto(recibo),
-              cliente: getVendaClienteNome(row),
-              cliente_id: row.cliente_id,
-              vendedor: getVendaVendedorNome(row),
-              vendedor_short: (getVendaVendedorNome(row) || '').slice(0, 20),
-              vendedor_label: (getVendaVendedorNome(row) || ''),
-              vendedor_id: row.vendedor_id,
-              valor_venda: persistedApplied.valor_venda,
-              valor_comissionavel: persistedApplied.valor_comissionavel,
-              percentual_aplicado: persistedApplied.percentual_aplicado,
-              percentual_comissao_geral: commission.percentualComissaoGeral,
-              percentual_seguro: commission.percentualSeguro,
-              regra_nome: commission.regraNome,
-              tipo_pacote: recibo?.tipo_pacote || null,
-              valor_comissao: persistedApplied.valor_comissao,
-              valor_comissao_geral: valorComissaoGeral,
-              valor_comissao_seguro: valorComissaoSeguro,
-              valor_pago: persistedApplied.valor_pago,
-              valor_taxas: Number(recibo?.valor_taxas || 0),
-              data_venda: recibo?.data_venda || row.data_venda,
-              data_embarque: row.data_embarque,
-              status: persistedApplied.status,
-              status_label: persistedApplied.status,
-              data_pagamento: persisted?.data_pagamento || null,
-              observacoes_pagamento: persisted?.observacoes_pagamento || null
-            };
-          });
-        }).filter(isCommissionItem);
+              const persisted = persistedByKey.get(
+                buildPersistedReciboComissaoKey(reciboId, row.vendedor_id, row.id)
+              );
+              const persistedApplied = applyPersistedComissao(
+                {
+                  valor_venda: getReciboValor(recibo),
+                  valor_comissionavel: commission.valorComissionavel,
+                  percentual_aplicado: commission.percentual,
+                  valor_comissao: commission.valorComissao,
+                  valor_pago: 0,
+                  status: 'pendente'
+                },
+                persisted
+              );
+              const valorComissaoSeguro = scaleCommissionPart(
+                commission.valorComissaoSeguro,
+                commission.valorComissao,
+                persistedApplied.valor_comissao
+              );
+              const valorComissaoGeral = roundMoney(
+                Math.max(0, persistedApplied.valor_comissao - valorComissaoSeguro)
+              );
+
+              const numeroRecibo = getReciboCodigo(recibo);
+
+              return {
+                id: reciboId,
+                venda_id: row.id,
+                recibo_id: reciboId,
+                numero_venda: row.numero_venda,
+                numero_recibo: numeroRecibo || `REC-${reciboId.slice(0, 8).toUpperCase()}`,
+                numero_reserva: recibo?.numero_reserva || null,
+                produto: getReciboProduto(recibo),
+                cliente: getVendaClienteNome(row),
+                cliente_id: row.cliente_id,
+                vendedor: getVendaVendedorNome(row),
+                vendedor_short: (getVendaVendedorNome(row) || '').slice(0, 20),
+                vendedor_label: getVendaVendedorNome(row) || '',
+                vendedor_id: row.vendedor_id,
+                valor_venda: persistedApplied.valor_venda,
+                valor_comissionavel: persistedApplied.valor_comissionavel,
+                percentual_aplicado: persistedApplied.percentual_aplicado,
+                percentual_comissao_geral: commission.percentualComissaoGeral,
+                percentual_seguro: commission.percentualSeguro,
+                regra_nome: commission.regraNome,
+                tipo_pacote: recibo?.tipo_pacote || null,
+                valor_comissao: persistedApplied.valor_comissao,
+                valor_comissao_geral: valorComissaoGeral,
+                valor_comissao_seguro: valorComissaoSeguro,
+                valor_pago: persistedApplied.valor_pago,
+                valor_taxas: Number(recibo?.valor_taxas || 0),
+                data_venda: recibo?.data_venda || row.data_venda,
+                data_embarque: row.data_embarque,
+                status: persistedApplied.status,
+                status_label: persistedApplied.status,
+                data_pagamento: persisted?.data_pagamento || null,
+                observacoes_pagamento: persisted?.observacoes_pagamento || null
+              };
+            });
+          })
+          .filter(isCommissionItem);
 
         if (!podeVerEquipe) {
           items = items.filter((item) => String(item.vendedor_id || '').trim() === scope.userId);

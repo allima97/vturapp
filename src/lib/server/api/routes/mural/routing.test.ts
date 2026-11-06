@@ -13,13 +13,17 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
 vi.mock('./bootstrap', () => ({ handleMuralBootstrapGet: spy('handleMuralBootstrapGet') }));
 vi.mock('./company', () => ({ handleMuralCompanyGet: spy('handleMuralCompanyGet') }));
 vi.mock('./read', () => ({ handleMuralReadPost: spy('handleMuralReadPost') }));
-vi.mock('./recados', () => ({ handleMuralRecadosGet: spy('handleMuralRecadosGet'), handleMuralRecadosPost: spy('handleMuralRecadosPost'), handleMuralRecadosDelete: spy('handleMuralRecadosDelete') }));
+vi.mock('./recados', () => ({
+  handleMuralRecadosGet: spy('handleMuralRecadosGet'),
+  handleMuralRecadosPost: spy('handleMuralRecadosPost'),
+  handleMuralRecadosDelete: spy('handleMuralRecadosDelete')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
@@ -30,14 +34,14 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['POST', '/api/v1/mural/read', 'handleMuralReadPost', {}],
   ['GET', '/api/v1/mural/recados', 'handleMuralRecadosGet', {}],
   ['POST', '/api/v1/mural/recados', 'handleMuralRecadosPost', {}],
-  ['DELETE', '/api/v1/mural/recados', 'handleMuralRecadosDelete', {}],
+  ['DELETE', '/api/v1/mural/recados', 'handleMuralRecadosDelete', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/mural/bootstrap'],
   ['PUT', '/api/v1/mural/company'],
   ['PUT', '/api/v1/mural/read'],
-  ['PUT', '/api/v1/mural/recados'],
+  ['PUT', '/api/v1/mural/recados']
 ];
 
 function ev(method: string, path: string) {

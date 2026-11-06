@@ -67,7 +67,35 @@
     uso_individual: null as boolean | null
   };
 
-  const ESTADOS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+  const ESTADOS = [
+    'AC',
+    'AL',
+    'AP',
+    'AM',
+    'BA',
+    'CE',
+    'DF',
+    'ES',
+    'GO',
+    'MA',
+    'MT',
+    'MS',
+    'MG',
+    'PA',
+    'PB',
+    'PR',
+    'PE',
+    'PI',
+    'RJ',
+    'RN',
+    'RS',
+    'RO',
+    'RR',
+    'SC',
+    'SP',
+    'SE',
+    'TO'
+  ];
 
   async function load() {
     const request = loadGuard.next();
@@ -75,7 +103,11 @@
     try {
       const [perfilData, sigData] = await Promise.all([
         apiGet<Perfil>('/api/v1/user/profile', undefined, request.signal),
-        apiGet<{ signature?: string | null }>('/api/v1/profile/signature', undefined, request.signal).catch((err) => {
+        apiGet<{ signature?: string | null }>(
+          '/api/v1/profile/signature',
+          undefined,
+          request.signal
+        ).catch((err) => {
           if (isCanceledApiError(err)) throw err;
           return null;
         })
@@ -130,7 +162,11 @@
     const request = cepGuard.next();
     cepStatus = 'Buscando CEP...';
     try {
-      const data = await apiGet<CepResponse>('/api/v1/enderecos/cep', { cep: digits }, request.signal);
+      const data = await apiGet<CepResponse>(
+        '/api/v1/enderecos/cep',
+        { cep: digits },
+        request.signal
+      );
       if (!cepGuard.isCurrent(request.seq)) return;
       form = {
         ...form,
@@ -147,7 +183,10 @@
   }
 
   async function save() {
-    if (!form.nome_completo.trim()) { toast.error('Nome completo obrigatório.'); return; }
+    if (!form.nome_completo.trim()) {
+      toast.error('Nome completo obrigatório.');
+      return;
+    }
 
     saving = true;
     try {
@@ -160,7 +199,6 @@
       saving = false;
     }
   }
-
 
   onMount(load);
 </script>
@@ -186,7 +224,9 @@
             <Building2 size={22} class="text-slate-500" />
           </div>
           <div>
-            <p class="font-semibold text-slate-900">{perfil.company.nome_fantasia || perfil.company.nome_empresa || 'Empresa'}</p>
+            <p class="font-semibold text-slate-900">
+              {perfil.company.nome_fantasia || perfil.company.nome_empresa || 'Empresa'}
+            </p>
             {#if perfil.company.cnpj}
               <p class="text-sm text-slate-500">CNPJ: {perfil.company.cnpj}</p>
             {/if}
@@ -197,10 +237,39 @@
 
     <Card title="Dados pessoais" color="clientes">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <FieldInput id="perfil-nome" label="Nome completo" required bind:value={form.nome_completo} placeholder="Seu nome completo" icon={User} class_name="lg:col-span-2 w-full" />
-        <FieldInput id="perfil-cpf" label="CPF" bind:value={form.cpf} placeholder="000.000.000-00" maxlength={14} mask="cpf" class_name="w-full" />
-        <FieldInput id="perfil-rg" label="RG" bind:value={form.rg} placeholder="Documento de identidade" mask="rg" class_name="w-full" />
-        <FieldInput id="perfil-nascimento" label="Data de nascimento" type="date" bind:value={form.data_nascimento} class_name="w-full" />
+        <FieldInput
+          id="perfil-nome"
+          label="Nome completo"
+          required
+          bind:value={form.nome_completo}
+          placeholder="Seu nome completo"
+          icon={User}
+          class_name="lg:col-span-2 w-full"
+        />
+        <FieldInput
+          id="perfil-cpf"
+          label="CPF"
+          bind:value={form.cpf}
+          placeholder="000.000.000-00"
+          maxlength={14}
+          mask="cpf"
+          class_name="w-full"
+        />
+        <FieldInput
+          id="perfil-rg"
+          label="RG"
+          bind:value={form.rg}
+          placeholder="Documento de identidade"
+          mask="rg"
+          class_name="w-full"
+        />
+        <FieldInput
+          id="perfil-nascimento"
+          label="Data de nascimento"
+          type="date"
+          bind:value={form.data_nascimento}
+          class_name="w-full"
+        />
         <FieldInput
           id="perfil-email"
           label="E-mail"
@@ -216,26 +285,75 @@
 
     <Card title="Contato" color="clientes">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <FieldInput id="perfil-telefone" label="Telefone" bind:value={form.telefone} placeholder="(00) 0000-0000" mask="phone" icon={Phone} class_name="w-full" />
-        <FieldInput id="perfil-whatsapp" label="WhatsApp" bind:value={form.whatsapp} placeholder="(00) 00000-0000" mask="phone" icon={Phone} class_name="w-full" />
+        <FieldInput
+          id="perfil-telefone"
+          label="Telefone"
+          bind:value={form.telefone}
+          placeholder="(00) 0000-0000"
+          mask="phone"
+          icon={Phone}
+          class_name="w-full"
+        />
+        <FieldInput
+          id="perfil-whatsapp"
+          label="WhatsApp"
+          bind:value={form.whatsapp}
+          placeholder="(00) 00000-0000"
+          mask="phone"
+          icon={Phone}
+          class_name="w-full"
+        />
       </div>
     </Card>
 
     <Card title="Endereço" color="clientes">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <FieldInput id="perfil-cep" label="CEP" bind:value={form.cep} placeholder="00000-000" maxlength={9} mask="cep" icon={MapPin} on:blur={buscarCep} class_name="w-full" />
+        <FieldInput
+          id="perfil-cep"
+          label="CEP"
+          bind:value={form.cep}
+          placeholder="00000-000"
+          maxlength={9}
+          mask="cep"
+          icon={MapPin}
+          on:blur={buscarCep}
+          class_name="w-full"
+        />
         {#if cepStatus}
           <p class="text-xs text-slate-500">{cepStatus}</p>
         {/if}
-        <FieldInput id="perfil-endereco" label="Endereço" bind:value={form.endereco} placeholder="Rua, avenida..." class_name="lg:col-span-2 w-full" />
-        <FieldInput id="perfil-numero" label="Número" bind:value={form.numero} placeholder="123" class_name="w-full" />
-        <FieldInput id="perfil-complemento" label="Complemento" bind:value={form.complemento} placeholder="Apto, sala..." class_name="w-full" />
-        <FieldInput id="perfil-cidade" label="Cidade" bind:value={form.cidade} class_name="w-full" />
+        <FieldInput
+          id="perfil-endereco"
+          label="Endereço"
+          bind:value={form.endereco}
+          placeholder="Rua, avenida..."
+          class_name="lg:col-span-2 w-full"
+        />
+        <FieldInput
+          id="perfil-numero"
+          label="Número"
+          bind:value={form.numero}
+          placeholder="123"
+          class_name="w-full"
+        />
+        <FieldInput
+          id="perfil-complemento"
+          label="Complemento"
+          bind:value={form.complemento}
+          placeholder="Apto, sala..."
+          class_name="w-full"
+        />
+        <FieldInput
+          id="perfil-cidade"
+          label="Cidade"
+          bind:value={form.cidade}
+          class_name="w-full"
+        />
         <FieldSelect
           id="perfil-estado"
           label="Estado"
           bind:value={form.estado}
-          options={ESTADOS.map(uf => ({ value: uf, label: uf }))}
+          options={ESTADOS.map((uf) => ({ value: uf, label: uf }))}
           placeholder="Selecione uma opção"
           class_name="w-full"
         />
@@ -253,7 +371,10 @@
   <!-- Assinatura separada pois é salva em tabela diferente -->
   <div class="mt-6">
     <Card title="Assinatura" color="clientes">
-      <p class="mb-3 text-sm text-slate-500">Usada nas mensagens de acompanhamento de clientes (WhatsApp, e-mail). Preencha com seu nome ou como prefere se apresentar.</p>
+      <p class="mb-3 text-sm text-slate-500">
+        Usada nas mensagens de acompanhamento de clientes (WhatsApp, e-mail). Preencha com seu nome
+        ou como prefere se apresentar.
+      </p>
       <div class="flex items-end gap-3">
         <FieldInput
           id="perfil-assinatura"

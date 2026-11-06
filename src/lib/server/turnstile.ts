@@ -16,8 +16,12 @@ export function isTurnstileServerConfigured() {
 }
 
 function isProductionRuntime() {
-  return [publicEnv.PUBLIC_ENVIRONMENT, privateEnv.VTUR_ENV, privateEnv.NODE_ENV]
-    .some((value) => String(value || '').trim().toLowerCase() === 'production');
+  return [publicEnv.PUBLIC_ENVIRONMENT, privateEnv.VTUR_ENV, privateEnv.NODE_ENV].some(
+    (value) =>
+      String(value || '')
+        .trim()
+        .toLowerCase() === 'production'
+  );
 }
 
 export async function verifyTurnstileToken(

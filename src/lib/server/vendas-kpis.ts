@@ -2,40 +2,40 @@ import type { DataClient } from '$lib/server/data';
 import {
   fetchEffectiveConciliacaoReceipts,
   fetchSuppressedConciliacaoReceipts,
-  filterRecibosCanceladosMesmoMes,
-} from "$lib/conciliacao/source";
-import { mergeEffectiveRecibos } from "$lib/conciliacao/mergeEffectiveRecibos";
+  filterRecibosCanceladosMesmoMes
+} from '$lib/conciliacao/source';
+import { mergeEffectiveRecibos } from '$lib/conciliacao/mergeEffectiveRecibos';
 import {
   fetchSalesReportRows,
   getReceiptCidadeNome,
   getVendaDestino,
   type DestinationCityNameMap,
   type ReportReceiptRow,
-  type ReportVendaRow,
-} from "$lib/server/relatorios";
-import { calcularRankingComissionavel } from "$lib/server/rankingComissionavel";
+  type ReportVendaRow
+} from '$lib/server/relatorios';
+import { calcularRankingComissionavel } from '$lib/server/rankingComissionavel';
 import {
   buildReadModelCacheKey,
   getCachedReadModel,
   READ_MODEL_TAGS,
-  scopeCacheTags,
-} from "$lib/server/readModelCache";
+  scopeCacheTags
+} from '$lib/server/readModelCache';
 import {
   fetchDashboardSummaryReadModelRpc,
   fetchReciboContribuicoesReadModel,
   scheduleReciboContribuicoesReadModelEnsure,
-  type ReciboContribuicoesReadModelOptions,
-} from "$lib/server/reciboContribuicoesReadModel";
-import { getAdminClient, logServerError } from "$lib/server/v1";
+  type ReciboContribuicoesReadModelOptions
+} from '$lib/server/reciboContribuicoesReadModel';
+import { getAdminClient, logServerError } from '$lib/server/v1';
 import {
   fetchRateioByReciboIds,
   fetchSplitSaleIdsForDestinationVendedores,
   isUuid,
-  type RateioRow,
-} from "$lib/vendas/rateio";
-import { normalizeReceiptNumber } from "$lib/conciliacao/receiptNumber";
-import { cleanStringSet, chunkArray, uniqueCleanStrings } from "$lib/utils/array";
-import { toCleanString as toStr, toFiniteNumber as toNum } from "$lib/utils/values";
+  type RateioRow
+} from '$lib/vendas/rateio';
+import { normalizeReceiptNumber } from '$lib/conciliacao/receiptNumber';
+import { cleanStringSet, chunkArray, uniqueCleanStrings } from '$lib/utils/array';
+import { toCleanString as toStr, toFiniteNumber as toNum } from '$lib/utils/values';
 import { isFormaNaoComissionavel } from '$lib/naoComissionavel';
 import { carregarTermosNaoComissionaveis as carregarTermosNaoComissionaveisBase } from '$lib/server/naoComissionavelTermos';
 
@@ -95,7 +95,6 @@ type CompanyIdOnlyRow = {
   company_id?: string | null;
 };
 
-
 type VendaRowWithReceiptAliases = ReportVendaRow & {
   recibos?: ReportReceiptRow[] | null;
   vendas_recibos?: ReportReceiptRow[] | null;
@@ -143,13 +142,13 @@ function collectDestinationCityIds(rows: VendaAggregateRow[]) {
 
 async function fetchDestinationCityNames(
   client: DataClient,
-  rows: VendaAggregateRow[],
+  rows: VendaAggregateRow[]
 ): Promise<DestinationCityNameMap> {
   const ids = uniqueCleanStrings(collectDestinationCityIds(rows)).sort();
   if (ids.length === 0) return new Map();
 
   return getCachedReadModel<Map<string, string>>({
-    key: buildReadModelCacheKey("vendas-kpis:cidades-destino", { ids }),
+    key: buildReadModelCacheKey('vendas-kpis:cidades-destino', { ids }),
     tags: [READ_MODEL_TAGS.catalog],
     ttlMs: 300_000,
     staleTtlMs: 1_800_000,
@@ -157,13 +156,10 @@ async function fetchDestinationCityNames(
       const map = new Map<string, string>();
       const batches = await Promise.all(
         chunkArray(ids, 200).map(async (batch) => {
-          const { data, error } = await client
-            .from("cidades")
-            .select("id, nome")
-            .in("id", batch);
+          const { data, error } = await client.from('cidades').select('id, nome').in('id', batch);
           if (error) throw error;
           return data || [];
-        }),
+        })
       );
 
       for (const row of batches.flat() as Array<{ id?: string | null; nome?: string | null }>) {
@@ -173,7 +169,7 @@ async function fetchDestinationCityNames(
       }
 
       return map;
-    },
+    }
   });
 }
 
@@ -222,11 +218,9 @@ export type VendasKpiReciboContribution = {
   origem?: string | null;
 };
 
-
 function toDateKey(value?: string | null) {
-  return String(value || "").slice(0, 10);
+  return String(value || '').slice(0, 10);
 }
-
 
 function normalizeCompanyScopeIds(companyIds?: string[] | null) {
   return uniqueCleanStrings(companyIds || []);
@@ -254,7 +248,6 @@ function buildVendaIdsFromRows(rows: VendaAggregateRow[]) {
   return Array.from(ids);
 }
 
-
 function calcularValorPagamento(pagamento: PagamentoNaoComissionavelInput) {
   const total = Number(pagamento.valor_total || 0);
   if (total > 0) return total;
@@ -271,7 +264,7 @@ function addToMap(map: Map<string, number>, key: string, value: number) {
 
 function calcularNaoComissionavelResumo(
   pagamentos: PagamentoNaoComissionavelInput[],
-  termos?: string[] | null,
+  termos?: string[] | null
 ): PagamentosNaoComissionaveisResumo {
   const porVenda = new Map<string, number>();
   const porVendaSemRecibo = new Map<string, number>();
@@ -285,15 +278,13 @@ function calcularNaoComissionavelResumo(
       pagamento.forma_nome,
       pagamento.forma?.nome,
       pagamento.operacao,
-      pagamento.plano,
+      pagamento.plano
     ]
       .filter(Boolean)
-      .join(" ");
-    const pagaComissaoResolvido =
-      pagamento.paga_comissao ?? pagamento.forma?.paga_comissao ?? null;
+      .join(' ');
+    const pagaComissaoResolvido = pagamento.paga_comissao ?? pagamento.forma?.paga_comissao ?? null;
     const naoComissiona =
-      pagaComissaoResolvido === false ||
-      isFormaNaoComissionavel(formaNomeResolvida, termos);
+      pagaComissaoResolvido === false || isFormaNaoComissionavel(formaNomeResolvida, termos);
     if (!naoComissiona) continue;
 
     const valorBase = calcularValorPagamento(pagamento);
@@ -313,25 +304,23 @@ function calcularNaoComissionavelResumo(
 }
 
 function buildReciboBusinessKey(recibo?: ReportReceiptRow | null) {
-  if (!recibo) return "";
+  if (!recibo) return '';
   if (isConsolidadoraReceipt(recibo?.numero_recibo)) {
     const reciboId = toStr(recibo?.id);
     if (reciboId) return `consolidadora:${reciboId}`;
   }
   const numeroBase = isConsolidadoraReceipt(recibo?.numero_recibo)
-    ? String(recibo?.numero_reserva || recibo?.numero_recibo || "")
-    : String(recibo?.numero_recibo || "");
+    ? String(recibo?.numero_reserva || recibo?.numero_recibo || '')
+    : String(recibo?.numero_recibo || '');
   const numero = normalizeReceiptNumber(numeroBase);
-  const produtoId = toStr(
-    recibo?.tipo_produtos?.id || recibo?.produto_id,
-  ).toLowerCase();
+  const produtoId = toStr(recibo?.tipo_produtos?.id || recibo?.produto_id).toLowerCase();
   const data = toDateKey(recibo?.data_venda);
-  if (!numero || !data) return "";
-  return `${numero}::${produtoId || "sem-produto"}::${data}`;
+  if (!numero || !data) return '';
+  return `${numero}::${produtoId || 'sem-produto'}::${data}`;
 }
 
 function isConsolidadoraReceipt(value?: string | null) {
-  return normalizeReceiptNumber(value).includes("rextur");
+  return normalizeReceiptNumber(value).includes('rextur');
 }
 
 function isSeguroPercentual(value?: unknown) {
@@ -340,9 +329,9 @@ function isSeguroPercentual(value?: unknown) {
 }
 
 function isSeguroFaixa(value?: unknown) {
-  return String(value || "")
+  return String(value || '')
     .toUpperCase()
-    .includes("SEGURO");
+    .includes('SEGURO');
 }
 
 function isSeguroPorComissao(recibo?: ReportReceiptRow | null) {
@@ -353,18 +342,16 @@ function isSeguroPorComissao(recibo?: ReportReceiptRow | null) {
 }
 
 function getReciboProdutoIdentity(recibo?: ReportReceiptRow | null) {
-  const tipo = String(recibo?.tipo_produtos?.tipo || "").toLowerCase();
+  const tipo = String(recibo?.tipo_produtos?.tipo || '').toLowerCase();
   const nome = String(
-    recibo?.tipo_produtos?.nome || recibo?.produto_resolvido?.nome || "",
+    recibo?.tipo_produtos?.nome || recibo?.produto_resolvido?.nome || ''
   ).toLowerCase();
   const produtoId = toStr(
-    recibo?.tipo_produtos?.id ||
-      recibo?.produto_id ||
-      recibo?.produto_resolvido?.id,
+    recibo?.tipo_produtos?.id || recibo?.produto_id || recibo?.produto_resolvido?.id
   );
   return {
     hasProduto: Boolean(produtoId || tipo || nome),
-    isSeguro: tipo.includes("seguro") || nome.includes("seguro"),
+    isSeguro: tipo.includes('seguro') || nome.includes('seguro')
   };
 }
 
@@ -374,10 +361,7 @@ function isSeguroProduto(recibo?: ReportReceiptRow | null) {
   if (produto.hasProduto) return false;
 
   const reciboFlags = recibo as SeguroReceiptFlags | null | undefined;
-  if (
-    reciboFlags?._conciliacao_is_seguro === true ||
-    reciboFlags?.is_seguro_viagem === true
-  )
+  if (reciboFlags?._conciliacao_is_seguro === true || reciboFlags?.is_seguro_viagem === true)
     return true;
   if (isSeguroFaixa(recibo?.faixa_comissao)) return true;
   if (isSeguroPercentual(recibo?.percentual_comissao_loja)) return true;
@@ -386,10 +370,7 @@ function isSeguroProduto(recibo?: ReportReceiptRow | null) {
 }
 
 function hasConciliacaoOverride(recibo?: ReportReceiptRow | null) {
-  return (
-    recibo?.valor_bruto_override != null ||
-    recibo?.valor_liquido_override != null
-  );
+  return recibo?.valor_bruto_override != null || recibo?.valor_liquido_override != null;
 }
 
 function getReciboBruto(recibo?: ReportReceiptRow | null) {
@@ -407,70 +388,62 @@ function getReciboTaxas(recibo?: ReportReceiptRow | null) {
 
 function isStatusCancelado(status?: string | null, cancelada?: boolean | null) {
   if (cancelada) return true;
-  const normalized = String(status || "")
+  const normalized = String(status || '')
     .trim()
     .toLowerCase();
-  return normalized === "cancelado" || normalized === "cancelada";
+  return normalized === 'cancelado' || normalized === 'cancelada';
 }
 
-function normalizeReceiptRows(
-  recibos?: ReportReceiptRow[] | null,
-): NonNullReceiptRow[] {
-  return (Array.isArray(recibos) ? recibos : []).filter(
-    (recibo): recibo is NonNullReceiptRow => Boolean(recibo),
+function normalizeReceiptRows(recibos?: ReportReceiptRow[] | null): NonNullReceiptRow[] {
+  return (Array.isArray(recibos) ? recibos : []).filter((recibo): recibo is NonNullReceiptRow =>
+    Boolean(recibo)
   );
 }
 
-async function fetchBaixaRacVendedorIds(
-  client: DataClient,
-  companyIds: string[],
-) {
+async function fetchBaixaRacVendedorIds(client: DataClient, companyIds: string[]) {
   if (companyIds.length === 0) return [] as string[];
 
   const batchRows = await Promise.all(
     chunkArray(companyIds).map(async (companyBatch) => {
       let query = client
-        .from("users")
-        .select("id")
-        .eq("active", true)
-        .ilike("nome_completo", "Baixa RAC");
+        .from('users')
+        .select('id')
+        .eq('active', true)
+        .ilike('nome_completo', 'Baixa RAC');
 
       query =
         companyBatch.length === 1
-          ? query.eq("company_id", companyBatch[0])
-          : query.in("company_id", companyBatch);
+          ? query.eq('company_id', companyBatch[0])
+          : query.in('company_id', companyBatch);
 
       const { data, error } = await query;
       if (error) throw error;
       return (data || []) as IdOnlyRow[];
-    }),
+    })
   );
 
   return uniqueCleanStrings(batchRows.flat().map((row) => row?.id));
 }
 
-async function fetchConciliacaoCompanyIds(
-  client: DataClient,
-  companyIds: string[],
-) {
+async function fetchConciliacaoCompanyIds(client: DataClient, companyIds: string[]) {
   if (companyIds.length === 0) return [] as string[];
 
   const batchRows = await Promise.all(
     chunkArray(companyIds).map(async (companyBatch) => {
       let query = client
-        .from("parametros_comissao")
-        .select("company_id")
-        .eq("conciliacao_sobrepoe_vendas", true);
+        .from('parametros_comissao')
+        .select('company_id')
+        .eq('conciliacao_sobrepoe_vendas', true);
 
       query =
         companyBatch.length === 1
-          ? query.eq("company_id", companyBatch[0])
-          : query.in("company_id", companyBatch);
+          ? query.eq('company_id', companyBatch[0])
+          : query.in('company_id', companyBatch);
 
       const { data, error } = await query;
       if (error) throw error;
       return (data || []) as CompanyIdOnlyRow[];
-    }),
+    })
   );
 
   const companyIdSet = new Set<string>();
@@ -482,56 +455,51 @@ async function fetchConciliacaoCompanyIds(
   return Array.from(companyIdSet);
 }
 
-async function carregarTermosNaoComissionaveis(
-  client: DataClient,
-): Promise<string[]> {
+async function carregarTermosNaoComissionaveis(client: DataClient): Promise<string[]> {
   return getCachedReadModel({
-    key: buildReadModelCacheKey("vendas-kpis:termos-nao-comissionaveis", {}),
+    key: buildReadModelCacheKey('vendas-kpis:termos-nao-comissionaveis', {}),
     tags: [READ_MODEL_TAGS.sales, READ_MODEL_TAGS.finance],
     ttlMs: 300_000,
     staleTtlMs: 1_800_000,
     loader: () =>
       carregarTermosNaoComissionaveisBase(client, {
         onError: (error) =>
-          logServerError("[vendas-kpis] falha ao carregar termos nao comissionaveis", error),
-      }),
+          logServerError('[vendas-kpis] falha ao carregar termos nao comissionaveis', error)
+      })
   });
 }
 
 async function fetchNaoComissionadoPorVenda(
   client: DataClient,
   vendaIds: string[],
-  termosNaoComissionaveis: string[],
+  termosNaoComissionaveis: string[]
 ) {
   if (vendaIds.length === 0) {
     return {
       porVenda: new Map<string, number>(),
       porVendaSemRecibo: new Map<string, number>(),
-      porRecibo: new Map<string, number>(),
+      porRecibo: new Map<string, number>()
     };
   }
 
   const batchRows = await Promise.all(
     chunkArray(vendaIds, 200).map(async (chunk) => {
       const { data, error } = await client
-        .from("vendas_pagamentos")
+        .from('vendas_pagamentos')
         .select(
-          "venda_id, venda_recibo_id, forma_nome, operacao, plano, valor_total, valor_bruto, desconto_valor, paga_comissao, forma:formas_pagamento(nome, paga_comissao)",
+          'venda_id, venda_recibo_id, forma_nome, operacao, plano, valor_total, valor_bruto, desconto_valor, paga_comissao, forma:formas_pagamento(nome, paga_comissao)'
         )
-        .in("venda_id", chunk);
+        .in('venda_id', chunk);
 
       if (error) throw error;
       return (data || []) as PagamentoNaoComissionavelInput[];
-    }),
+    })
   );
 
   return calcularNaoComissionavelResumo(batchRows.flat(), termosNaoComissionaveis);
 }
 
-function mergeRowsById(
-  baseRows: VendaAggregateRow[],
-  extraRows: VendaAggregateRow[],
-) {
+function mergeRowsById(baseRows: VendaAggregateRow[], extraRows: VendaAggregateRow[]) {
   const map = new Map<string, VendaAggregateRow>();
   for (const row of [...baseRows, ...extraRows]) {
     const id = toStr(row?.id);
@@ -548,18 +516,16 @@ function toRateioShape(rows: ReportVendaRow[]): VendaAggregateRow[] {
       ? (((row as VendaRowWithReceiptAliases).recibos || []) as ReportReceiptRow[])
       : Array.isArray((row as VendaRowWithReceiptAliases)?.vendas_recibos)
         ? (((row as VendaRowWithReceiptAliases).vendas_recibos || []) as ReportReceiptRow[])
-        : [],
+        : []
   }));
 }
 
 function getConciliacaoIds(item: ConciliacaoIdSource) {
   const ids = Array.isArray(item?.conciliacao_ids)
-    ? item.conciliacao_ids
-        .map((value) => String(value || "").trim())
-        .filter(Boolean)
+    ? item.conciliacao_ids.map((value) => String(value || '').trim()).filter(Boolean)
     : [];
   if (ids.length > 0) return ids;
-  const id = String(item?.id || "").trim();
+  const id = String(item?.id || '').trim();
   return id ? [id] : [];
 }
 
@@ -572,12 +538,10 @@ async function fetchResolvedRowsUncached(
     vendedorIds: string[];
     accessibleClientIds?: string[];
     deferVendedorScopeFilter?: boolean;
-  },
+  }
 ) {
   const normalizedCompanyIds = normalizeCompanyScopeIds(params.companyIds);
-  const initialVendedorIds = params.deferVendedorScopeFilter
-    ? []
-    : params.vendedorIds;
+  const initialVendedorIds = params.deferVendedorScopeFilter ? [] : params.vendedorIds;
 
   // --- Fase 1: buscar dados independentes em paralelo ---
   // baixaRac e conciliacaoCompanyIds são independentes entre si e das vendas.
@@ -590,15 +554,13 @@ async function fetchResolvedRowsUncached(
       includeCancelled: false,
       dataInicio: params.dataInicio,
       dataFim: params.dataFim,
-      filterByReceiptDate: false,
-    }),
+      filterByReceiptDate: false
+    })
   ]);
 
   const baixaRacSet = new Set(baixaRacIds);
 
-  let rows = toRateioShape(rawRows).filter(
-    (row) => !baixaRacSet.has(toStr(row?.vendedor_id)),
-  );
+  let rows = toRateioShape(rawRows).filter((row) => !baixaRacSet.has(toStr(row?.vendedor_id)));
 
   if ((params.accessibleClientIds || []).length > 0) {
     const clientScope = new Set<string>();
@@ -617,9 +579,12 @@ async function fetchResolvedRowsUncached(
       ? fetchSplitSaleIdsForDestinationVendedores(client, {
           companyId: normalizedCompanyIds[0] || null,
           companyIds: normalizedCompanyIds,
-          vendedorIds: params.vendedorIds,
+          vendedorIds: params.vendedorIds
         }).catch((error) => {
-          logServerError("[vendas-kpis] split sales indisponivel, seguindo sem rateio destino", error);
+          logServerError(
+            '[vendas-kpis] split sales indisponivel, seguindo sem rateio destino',
+            error
+          );
           return [] as string[];
         })
       : Promise.resolve([] as string[]),
@@ -631,12 +596,12 @@ async function fetchResolvedRowsUncached(
           inicio: params.dataInicio,
           fim: params.dataFim,
           vendedorIds: params.vendedorIds,
-          excludeVendedorIds: baixaRacIds,
+          excludeVendedorIds: baixaRacIds
         }).catch((error) => {
-          logServerError("[vendas-kpis] conciliacao indisponivel, seguindo sem overrides", error);
+          logServerError('[vendas-kpis] conciliacao indisponivel, seguindo sem overrides', error);
           return [] as EffectiveConciliacaoReceipt[];
         })
-      : Promise.resolve([] as EffectiveConciliacaoReceipt[]),
+      : Promise.resolve([] as EffectiveConciliacaoReceipt[])
   ]);
 
   // Carregar split rows se necessário (depende de splitSaleIds)
@@ -648,8 +613,8 @@ async function fetchResolvedRowsUncached(
         includeCancelled: false,
         dataInicio: params.dataInicio,
         dataFim: params.dataFim,
-        filterByReceiptDate: false,
-      }),
+        filterByReceiptDate: false
+      })
     ).filter((row) => !baixaRacSet.has(toStr(row?.vendedor_id)));
     rows = mergeRowsById(rows, splitRows);
   }
@@ -666,16 +631,16 @@ async function fetchResolvedRowsUncached(
             for (const companyBatch of chunkArray(normalizedCompanyIds)) {
               batches.push(
                 client
-                  .from("vendas_recibos_rateio")
-                  .select("conciliacao_recibo_id")
-                  .eq("ativo", true)
-                  .gt("percentual_destino", 0)
-                  .in("vendedor_destino_id", vendedorBatch)
-                  .not("conciliacao_recibo_id", "is", null)
-                  .in("company_id", companyBatch)
+                  .from('vendas_recibos_rateio')
+                  .select('conciliacao_recibo_id')
+                  .eq('ativo', true)
+                  .gt('percentual_destino', 0)
+                  .in('vendedor_destino_id', vendedorBatch)
+                  .not('conciliacao_recibo_id', 'is', null)
+                  .in('company_id', companyBatch)
                   .then(({ data, error: splitConcErr }: { data: any; error: any }) => {
                     if (splitConcErr) {
-                      logServerError("[vendas-kpis] split conciliation indisponivel", splitConcErr);
+                      logServerError('[vendas-kpis] split conciliation indisponivel', splitConcErr);
                     } else {
                       collectedRows.push(...((data || []) as SplitConciliacaoRow[]));
                     }
@@ -693,17 +658,25 @@ async function fetchResolvedRowsUncached(
           companyId: normalizedCompanyIds[0] || null,
           companyIds: normalizedCompanyIds,
           inicio: params.dataInicio,
-          fim: params.dataFim,
+          fim: params.dataFim
         }).catch((error) => {
-          logServerError("[vendas-kpis] conciliacao suprimida indisponivel", error);
-          return [] as Array<{ documento: string; numero_reserva?: string | null; linked_recibo_id: string | null }>;
+          logServerError('[vendas-kpis] conciliacao suprimida indisponivel', error);
+          return [] as Array<{
+            documento: string;
+            numero_reserva?: string | null;
+            linked_recibo_id: string | null;
+          }>;
         })
-      : Promise.resolve([] as Array<{ documento: string; numero_reserva?: string | null; linked_recibo_id: string | null }>),
+      : Promise.resolve(
+          [] as Array<{
+            documento: string;
+            numero_reserva?: string | null;
+            linked_recibo_id: string | null;
+          }>
+        )
   ]);
 
-  const splitConcIdSet = cleanStringSet(
-    splitConcRows.map((row) => row?.conciliacao_recibo_id),
-  );
+  const splitConcIdSet = cleanStringSet(splitConcRows.map((row) => row?.conciliacao_recibo_id));
 
   if (splitConcIdSet.size > 0) {
     let concAll: EffectiveConciliacaoReceipt[] = [];
@@ -715,15 +688,15 @@ async function fetchResolvedRowsUncached(
         inicio: params.dataInicio,
         fim: params.dataFim,
         vendedorIds: null,
-        excludeVendedorIds: baixaRacIds,
+        excludeVendedorIds: baixaRacIds
       });
     } catch (error) {
-      logServerError("[vendas-kpis] conciliation all indisponivel", error);
+      logServerError('[vendas-kpis] conciliation all indisponivel', error);
       concAll = [];
     }
 
     const seenConcIds = new Set(
-      (concReceipts || []).flatMap((item: ConciliacaoIdSource) => getConciliacaoIds(item)),
+      (concReceipts || []).flatMap((item: ConciliacaoIdSource) => getConciliacaoIds(item))
     );
     for (const item of concAll) {
       const candidateIds = getConciliacaoIds(item);
@@ -735,31 +708,23 @@ async function fetchResolvedRowsUncached(
     }
   }
 
-  const overriddenReceiptIds = cleanStringSet(
-    concReceipts.map((item) => item.linked_recibo_id),
-  );
+  const overriddenReceiptIds = cleanStringSet(concReceipts.map((item) => item.linked_recibo_id));
   const suppressedReceiptIds = cleanStringSet(
-    suppressedConcReceipts.map((item) => item.linked_recibo_id),
+    suppressedConcReceipts.map((item) => item.linked_recibo_id)
   );
   const suppressedReceiptNumbers = new Set(
     suppressedConcReceipts
       .filter(
-        (item) =>
-          !(
-            toStr(item.documento).toUpperCase() === "REXTUR" &&
-            toStr(item.numero_reserva)
-          ),
+        (item) => !(toStr(item.documento).toUpperCase() === 'REXTUR' && toStr(item.numero_reserva))
       )
       .map((item) => normalizeReceiptNumber(item.documento))
-      .filter(Boolean),
+      .filter(Boolean)
   );
   const overrideCompanySet = new Set(conciliacaoCompanyIds);
 
   const baseRows = rows.map((row) => {
     const recibos = normalizeReceiptRows(row?.vendas_recibos);
-    const shouldOverrideCompany = overrideCompanySet.has(
-      toStr(row?.company_id),
-    );
+    const shouldOverrideCompany = overrideCompanySet.has(toStr(row?.company_id));
     const withoutSuppressed = recibos.filter((recibo) => {
       const reciboId = toStr(recibo?.id);
       const reciboNumero = normalizeReceiptNumber(recibo?.numero_recibo);
@@ -769,14 +734,12 @@ async function fetchResolvedRowsUncached(
       );
     });
     const withoutOverridden = shouldOverrideCompany
-      ? withoutSuppressed.filter(
-          (recibo) => !overriddenReceiptIds.has(toStr(recibo?.id)),
-        )
+      ? withoutSuppressed.filter((recibo) => !overriddenReceiptIds.has(toStr(recibo?.id)))
       : withoutSuppressed;
 
     return {
       ...row,
-      vendas_recibos: filterRecibosCanceladosMesmoMes(withoutOverridden),
+      vendas_recibos: filterRecibosCanceladosMesmoMes(withoutOverridden)
     };
   });
 
@@ -802,65 +765,58 @@ async function fetchResolvedRowsUncached(
         ? {
             id: item.produto.id,
             nome: item.produto.nome,
-            tipo:
-              item.produto.tipo || (item.is_seguro_viagem ? "Seguro" : null),
+            tipo: item.produto.tipo || (item.is_seguro_viagem ? 'Seguro' : null)
           }
         : null,
       produto_resolvido: item.produto
         ? {
             id: item.produto.id,
             nome: item.produto.nome,
-            tipo:
-              item.produto.tipo || (item.is_seguro_viagem ? "Seguro" : null),
+            tipo: item.produto.tipo || (item.is_seguro_viagem ? 'Seguro' : null)
           }
         : null,
-      _conciliacao_is_seguro: item.is_seguro_viagem,
+      _conciliacao_is_seguro: item.is_seguro_viagem
     } as NonNullReceiptRow;
   }
 
   const mergedRows =
     concReceipts.length > 0
-      ? mergeEffectiveRecibos<VendaAggregateRow, NonNullReceiptRow>(
-          baseRows,
-          concReceipts,
-          {
-            getVendaId: (venda) => toStr(venda?.id),
-            getRecibos: (venda) => normalizeReceiptRows(venda?.vendas_recibos),
-            getReciboId: (recibo) => toStr(recibo?.id),
-            getReciboNumero: (recibo) => toStr(recibo?.numero_recibo),
-            getReciboDataVenda: (recibo) => toDateKey(recibo?.data_venda),
-            getReciboCanceledAt: (recibo) =>
-              recibo?.cancelado_por_conciliacao_em ?? null,
-            withRecibos: (venda, recibos) => ({
-              ...venda,
-              vendas_recibos: recibos,
-            }),
-            buildSyntheticRecibo: (item) => buildConcRecibo(item),
-            buildSyntheticVenda: (item) =>
-              ({
-                id: item.id,
-                numero_venda: null,
-                cliente_id: null,
-                company_id: item.company_id,
-                data_embarque: null,
-                data_retorno: null,
-                source_venda_id: item.linked_venda_id || null,
-                linked_venda_id: item.linked_venda_id || null,
-                linked_recibo_id: item.linked_recibo_id || null,
-                vendedor_id: item.vendedor_id,
-                destino_id: null,
-                status: "confirmado",
-                data_venda: item.data_venda,
-                valor_total: item.valor_meta_override ?? item.valor_bruto,
-                valor_total_bruto: item.valor_bruto,
-                valor_total_pago: item.valor_bruto,
-                valor_nao_comissionado: 0,
-                valor_taxas: item.valor_taxas,
-                destinos: null,
-                vendas_recibos: [buildConcRecibo(item)],
-              }) as unknown as VendaAggregateRow,
-          },
-        ).vendas
+      ? mergeEffectiveRecibos<VendaAggregateRow, NonNullReceiptRow>(baseRows, concReceipts, {
+          getVendaId: (venda) => toStr(venda?.id),
+          getRecibos: (venda) => normalizeReceiptRows(venda?.vendas_recibos),
+          getReciboId: (recibo) => toStr(recibo?.id),
+          getReciboNumero: (recibo) => toStr(recibo?.numero_recibo),
+          getReciboDataVenda: (recibo) => toDateKey(recibo?.data_venda),
+          getReciboCanceledAt: (recibo) => recibo?.cancelado_por_conciliacao_em ?? null,
+          withRecibos: (venda, recibos) => ({
+            ...venda,
+            vendas_recibos: recibos
+          }),
+          buildSyntheticRecibo: (item) => buildConcRecibo(item),
+          buildSyntheticVenda: (item) =>
+            ({
+              id: item.id,
+              numero_venda: null,
+              cliente_id: null,
+              company_id: item.company_id,
+              data_embarque: null,
+              data_retorno: null,
+              source_venda_id: item.linked_venda_id || null,
+              linked_venda_id: item.linked_venda_id || null,
+              linked_recibo_id: item.linked_recibo_id || null,
+              vendedor_id: item.vendedor_id,
+              destino_id: null,
+              status: 'confirmado',
+              data_venda: item.data_venda,
+              valor_total: item.valor_meta_override ?? item.valor_bruto,
+              valor_total_bruto: item.valor_bruto,
+              valor_total_pago: item.valor_bruto,
+              valor_nao_comissionado: 0,
+              valor_taxas: item.valor_taxas,
+              destinos: null,
+              vendas_recibos: [buildConcRecibo(item)]
+            }) as unknown as VendaAggregateRow
+        }).vendas
       : baseRows;
 
   const reciboIds = mergedRows
@@ -868,12 +824,10 @@ async function fetchResolvedRowsUncached(
     .map((recibo) => toStr(recibo?.id))
     .filter(isUuid);
 
-  const rateioMap = await fetchRateioByReciboIds(client, reciboIds).catch(
-    (error) => {
-      logServerError("[vendas-kpis] rateio indisponivel, seguindo sem rateio", error);
-      return new Map<string, RateioRow>();
-    },
-  );
+  const rateioMap = await fetchRateioByReciboIds(client, reciboIds).catch((error) => {
+    logServerError('[vendas-kpis] rateio indisponivel, seguindo sem rateio', error);
+    return new Map<string, RateioRow>();
+  });
 
   return { rows: mergedRows, rateioMap };
 }
@@ -887,20 +841,20 @@ async function fetchResolvedRows(
     vendedorIds: string[];
     accessibleClientIds?: string[];
     deferVendedorScopeFilter?: boolean;
-  },
+  }
 ) {
   const companyIds = normalizeIdScope(params.companyIds);
   const vendedorIds = normalizeIdScope(params.vendedorIds);
   const accessibleClientIds = normalizeIdScope(params.accessibleClientIds);
   const deferVendedorScopeFilter = Boolean(params.deferVendedorScopeFilter);
 
-  const key = buildReadModelCacheKey("vendas-resolved-rows", {
+  const key = buildReadModelCacheKey('vendas-resolved-rows', {
     dataInicio: params.dataInicio,
     dataFim: params.dataFim,
     companyIds,
     vendedorIds,
     accessibleClientIds,
-    deferVendedorScopeFilter,
+    deferVendedorScopeFilter
   });
 
   return getCachedReadModel({
@@ -912,7 +866,7 @@ async function fetchResolvedRows(
       READ_MODEL_TAGS.conciliacao,
       READ_MODEL_TAGS.vendasKpis,
       READ_MODEL_TAGS.ranking,
-      ...scopeCacheTags({ companyIds, vendedorIds }),
+      ...scopeCacheTags({ companyIds, vendedorIds })
     ],
     loader: () =>
       fetchResolvedRowsUncached(client, {
@@ -920,8 +874,8 @@ async function fetchResolvedRows(
         companyIds,
         vendedorIds,
         accessibleClientIds,
-        deferVendedorScopeFilter,
-      }),
+        deferVendedorScopeFilter
+      })
   });
 }
 
@@ -933,7 +887,7 @@ export async function fetchAndComputeVendasKpis(
     companyIds: string[];
     vendedorIds: string[];
     accessibleClientIds?: string[];
-  },
+  }
 ): Promise<VendasKpiAgg> {
   const { agg } = await fetchVendasKpiReciboContributions(client, params);
   return agg;
@@ -947,18 +901,18 @@ async function fetchAndComputeVendasKpisLegacy(
     companyIds: string[];
     vendedorIds: string[];
     accessibleClientIds?: string[];
-  },
+  }
 ): Promise<VendasKpiAgg> {
   const [{ rows, rateioMap }, termosNaoComissionaveis] = await Promise.all([
     fetchResolvedRows(client, params),
-    carregarTermosNaoComissionaveis(client),
+    carregarTermosNaoComissionaveis(client)
   ]);
 
   const vendaIds = buildVendaIdsFromRows(rows);
   const naoComissionadoPorVenda = await fetchNaoComissionadoPorVenda(
     client,
     vendaIds,
-    termosNaoComissionaveis,
+    termosNaoComissionaveis
   );
 
   const scopeVendedorIds = buildScopeIdSet(params.vendedorIds);
@@ -981,13 +935,12 @@ async function fetchAndComputeVendasKpisLegacy(
       toDateKey(row?.data_venda),
       toStr(row?.vendedor_id),
       toStr(rowExtra.destino_id),
-      toStr(rowExtra.valor_total || rowExtra.valor_total_bruto),
-    ].join("|");
-    const vendaKey =
-      toStr(rowExtra.source_venda_id || row?.id) || `synt:${syntheticKey}`;
+      toStr(rowExtra.valor_total || rowExtra.valor_total_bruto)
+    ].join('|');
+    const vendaKey = toStr(rowExtra.source_venda_id || row?.id) || `synt:${syntheticKey}`;
     const current = groupedByVenda.get(vendaKey) || {
       vendaRows: [],
-      recibos: [],
+      recibos: []
     };
     current.vendaRows.push(row);
     if (Array.isArray(row?.vendas_recibos) && row.vendas_recibos.length > 0) {
@@ -998,17 +951,10 @@ async function fetchAndComputeVendasKpisLegacy(
 
   for (const [vendaKey, group] of groupedByVenda) {
     const vendaPrincipal =
-      group.vendaRows.find((row) => toStr(row?.id) === vendaKey) ||
-      group.vendaRows[0];
+      group.vendaRows.find((row) => toStr(row?.id) === vendaKey) || group.vendaRows[0];
     const vendaPrincipalExtra = vendaPrincipal as VendaAggregateRowExtra;
 
-    if (
-      isStatusCancelado(
-        vendaPrincipalExtra.status,
-        vendaPrincipal?.cancelada,
-      )
-    )
-      continue;
+    if (isStatusCancelado(vendaPrincipalExtra.status, vendaPrincipal?.cancelada)) continue;
 
     const vendaDate = toDateKey(vendaPrincipal?.data_venda);
     const recibosAll = filterRecibosCanceladosMesmoMes(group.recibos || []);
@@ -1027,42 +973,27 @@ async function fetchAndComputeVendasKpisLegacy(
       if (!recibosByKey.has(key)) recibosByKey.set(key, recibo);
     }
     const recibosUnique = Array.from(recibosByKey.values());
-    const somaBrutoRecibos = recibosUnique.reduce(
-      (acc, recibo) => acc + getReciboBruto(recibo),
-      0,
-    );
-    const somaTaxasRecibos = recibosUnique.reduce(
-      (acc, recibo) => acc + getReciboTaxas(recibo),
-      0,
-    );
+    const somaBrutoRecibos = recibosUnique.reduce((acc, recibo) => acc + getReciboBruto(recibo), 0);
+    const somaTaxasRecibos = recibosUnique.reduce((acc, recibo) => acc + getReciboTaxas(recibo), 0);
 
-    const linkedNaoComissionado = toNum(
-      naoComissionadoPorVenda.porVenda.get(vendaKey) || 0,
-    );
+    const linkedNaoComissionado = toNum(naoComissionadoPorVenda.porVenda.get(vendaKey) || 0);
     const naoComissionadoSemRecibo = toNum(
-      naoComissionadoPorVenda.porVendaSemRecibo.get(vendaKey) || 0,
+      naoComissionadoPorVenda.porVendaSemRecibo.get(vendaKey) || 0
     );
-    const usarModoPorRecibo =
-      linkedNaoComissionado > 0 && naoComissionadoSemRecibo <= 0;
+    const usarModoPorRecibo = linkedNaoComissionado > 0 && naoComissionadoSemRecibo <= 0;
     const naoComissionadoTotalPagamentos = Math.max(
       0,
-      toNum(naoComissionadoPorVenda.porVenda.get(vendaKey) || 0),
+      toNum(naoComissionadoPorVenda.porVenda.get(vendaKey) || 0)
     );
     const rankingGrupo = calcularRankingComissionavel({
       valorBruto: somaBrutoRecibos,
       valorTaxas: somaTaxasRecibos,
-      valorNaoComissionado: usarModoPorRecibo
-        ? 0
-        : naoComissionadoTotalPagamentos,
+      valorNaoComissionado: usarModoPorRecibo ? 0 : naoComissionadoTotalPagamentos
     });
 
     const recibosPeriodo = recibosUnique.filter((recibo) => {
       const reciboDate = toDateKey(recibo?.data_venda) || vendaDate;
-      return (
-        Boolean(reciboDate) &&
-        reciboDate >= params.dataInicio &&
-        reciboDate <= params.dataFim
-      );
+      return Boolean(reciboDate) && reciboDate >= params.dataInicio && reciboDate <= params.dataFim;
     });
 
     if (recibosPeriodo.length === 0) {
@@ -1083,11 +1014,9 @@ async function fetchAndComputeVendasKpisLegacy(
       const rankingRecibo = calcularRankingComissionavel({
         valorBruto: getReciboBruto(recibo),
         valorTaxas: getReciboTaxas(recibo),
-        valorNaoComissionado: usarModoPorRecibo ? naoComissionadoRecibo : 0,
+        valorNaoComissionado: usarModoPorRecibo ? naoComissionadoRecibo : 0
       });
-      const fatorRecibo = usarModoPorRecibo
-        ? rankingRecibo.fatorValor
-        : rankingGrupo.fatorValor;
+      const fatorRecibo = usarModoPorRecibo ? rankingRecibo.fatorValor : rankingGrupo.fatorValor;
       const bruto = usarModoPorRecibo
         ? rankingRecibo.valorRanking
         : getReciboBruto(recibo) * fatorRecibo;
@@ -1110,25 +1039,17 @@ async function fetchAndComputeVendasKpisLegacy(
           ? [
               {
                 vendedorId: toStr(rateio.vendedor_origem_id),
-                fator: Math.max(
-                  0,
-                  Math.min(1, toNum(rateio.percentual_origem) / 100),
-                ),
+                fator: Math.max(0, Math.min(1, toNum(rateio.percentual_origem) / 100))
               },
               {
                 vendedorId: toStr(rateio.vendedor_destino_id),
-                fator: Math.max(
-                  0,
-                  Math.min(1, toNum(rateio.percentual_destino) / 100),
-                ),
-              },
+                fator: Math.max(0, Math.min(1, toNum(rateio.percentual_destino) / 100))
+              }
             ]
           : [{ vendedorId, fator: 1 }];
 
       const allocations = hasScopeVendedores
-        ? baseAllocations.filter((item) =>
-            scopeVendedorIds.has(item.vendedorId),
-          )
+        ? baseAllocations.filter((item) => scopeVendedorIds.has(item.vendedorId))
         : baseAllocations;
       if (allocations.length === 0) continue;
 
@@ -1159,7 +1080,7 @@ async function fetchAndComputeVendasKpisLegacy(
     totalLiquido: totalVendas - totalTaxas,
     totalSeguro,
     countVendas: qtdVendas,
-    countAtivas,
+    countAtivas
   };
 }
 
@@ -1171,31 +1092,26 @@ export async function fetchVendasKpiReciboContributionsRaw(
     companyIds: string[];
     vendedorIds: string[];
     accessibleClientIds?: string[];
-  },
+  }
 ): Promise<{
   agg: VendasKpiAgg;
   contributions: VendasKpiReciboContribution[];
 }> {
   const shouldDeferVendedorScopeFilter =
-    params.vendedorIds.length > 0 &&
-    normalizeCompanyScopeIds(params.companyIds).length === 1;
+    params.vendedorIds.length > 0 && normalizeCompanyScopeIds(params.companyIds).length === 1;
 
   const [{ rows, rateioMap }, termosNaoComissionaveis] = await Promise.all([
     fetchResolvedRows(client, {
       ...params,
-      deferVendedorScopeFilter: shouldDeferVendedorScopeFilter,
+      deferVendedorScopeFilter: shouldDeferVendedorScopeFilter
     }),
-    carregarTermosNaoComissionaveis(client),
+    carregarTermosNaoComissionaveis(client)
   ]);
 
   const vendaIds = buildVendaIdsFromRows(rows);
   const [naoComissionadoPorVenda, destinationCityNames] = await Promise.all([
-    fetchNaoComissionadoPorVenda(
-      client,
-      vendaIds,
-      termosNaoComissionaveis,
-    ),
-    fetchDestinationCityNames(client, rows),
+    fetchNaoComissionadoPorVenda(client, vendaIds, termosNaoComissionaveis),
+    fetchDestinationCityNames(client, rows)
   ]);
 
   const scopeVendedorIds = buildScopeIdSet(params.vendedorIds);
@@ -1219,13 +1135,12 @@ export async function fetchVendasKpiReciboContributionsRaw(
       toDateKey(row?.data_venda),
       toStr(row?.vendedor_id),
       toStr(rowExtra.destino_id),
-      toStr(rowExtra.valor_total || rowExtra.valor_total_bruto),
-    ].join("|");
-    const vendaKey =
-      toStr(rowExtra.source_venda_id || row?.id) || `synt:${syntheticKey}`;
+      toStr(rowExtra.valor_total || rowExtra.valor_total_bruto)
+    ].join('|');
+    const vendaKey = toStr(rowExtra.source_venda_id || row?.id) || `synt:${syntheticKey}`;
     const current = groupedByVenda.get(vendaKey) || {
       vendaRows: [],
-      recibos: [],
+      recibos: []
     };
     current.vendaRows.push(row);
     if (Array.isArray(row?.vendas_recibos) && row.vendas_recibos.length > 0) {
@@ -1236,8 +1151,7 @@ export async function fetchVendasKpiReciboContributionsRaw(
 
   for (const [vendaKey, group] of groupedByVenda) {
     const vendaPrincipal =
-      group.vendaRows.find((row) => toStr(row?.id) === vendaKey) ||
-      group.vendaRows[0];
+      group.vendaRows.find((row) => toStr(row?.id) === vendaKey) || group.vendaRows[0];
     const vendaPrincipalExtra = vendaPrincipal as VendaAggregateRowExtra;
     // Linhas sinteticas (originadas de conciliacao sem venda vinculada) sempre
     // carregam a propriedade `linked_venda_id` (mesmo que null) - ver
@@ -1248,7 +1162,7 @@ export async function fetchVendasKpiReciboContributionsRaw(
     // ao persistir o read model.
     const isSyntheticVenda = Object.prototype.hasOwnProperty.call(
       vendaPrincipalExtra,
-      "linked_venda_id",
+      'linked_venda_id'
     );
     const realVendaId = isSyntheticVenda
       ? isUuid(vendaPrincipalExtra.linked_venda_id)
@@ -1258,13 +1172,7 @@ export async function fetchVendasKpiReciboContributionsRaw(
         ? vendaKey
         : null;
 
-    if (
-      isStatusCancelado(
-        vendaPrincipalExtra.status,
-        vendaPrincipal?.cancelada,
-      )
-    )
-      continue;
+    if (isStatusCancelado(vendaPrincipalExtra.status, vendaPrincipal?.cancelada)) continue;
 
     const vendaDate = toDateKey(vendaPrincipal?.data_venda);
     const recibosAll = filterRecibosCanceladosMesmoMes(group.recibos || []);
@@ -1283,42 +1191,27 @@ export async function fetchVendasKpiReciboContributionsRaw(
       if (!recibosByKey.has(key)) recibosByKey.set(key, recibo);
     }
     const recibosUnique = Array.from(recibosByKey.values());
-    const somaBrutoRecibos = recibosUnique.reduce(
-      (acc, recibo) => acc + getReciboBruto(recibo),
-      0,
-    );
-    const somaTaxasRecibos = recibosUnique.reduce(
-      (acc, recibo) => acc + getReciboTaxas(recibo),
-      0,
-    );
+    const somaBrutoRecibos = recibosUnique.reduce((acc, recibo) => acc + getReciboBruto(recibo), 0);
+    const somaTaxasRecibos = recibosUnique.reduce((acc, recibo) => acc + getReciboTaxas(recibo), 0);
 
-    const linkedNaoComissionado = toNum(
-      naoComissionadoPorVenda.porVenda.get(vendaKey) || 0,
-    );
+    const linkedNaoComissionado = toNum(naoComissionadoPorVenda.porVenda.get(vendaKey) || 0);
     const naoComissionadoSemRecibo = toNum(
-      naoComissionadoPorVenda.porVendaSemRecibo.get(vendaKey) || 0,
+      naoComissionadoPorVenda.porVendaSemRecibo.get(vendaKey) || 0
     );
-    const usarModoPorRecibo =
-      linkedNaoComissionado > 0 && naoComissionadoSemRecibo <= 0;
+    const usarModoPorRecibo = linkedNaoComissionado > 0 && naoComissionadoSemRecibo <= 0;
     const naoComissionadoTotalPagamentos = Math.max(
       0,
-      toNum(naoComissionadoPorVenda.porVenda.get(vendaKey) || 0),
+      toNum(naoComissionadoPorVenda.porVenda.get(vendaKey) || 0)
     );
     const rankingGrupo = calcularRankingComissionavel({
       valorBruto: somaBrutoRecibos,
       valorTaxas: somaTaxasRecibos,
-      valorNaoComissionado: usarModoPorRecibo
-        ? 0
-        : naoComissionadoTotalPagamentos,
+      valorNaoComissionado: usarModoPorRecibo ? 0 : naoComissionadoTotalPagamentos
     });
 
     const recibosPeriodo = recibosUnique.filter((recibo) => {
       const reciboDate = toDateKey(recibo?.data_venda) || vendaDate;
-      return (
-        Boolean(reciboDate) &&
-        reciboDate >= params.dataInicio &&
-        reciboDate <= params.dataFim
-      );
+      return Boolean(reciboDate) && reciboDate >= params.dataInicio && reciboDate <= params.dataFim;
     });
 
     if (recibosPeriodo.length === 0) {
@@ -1341,14 +1234,10 @@ export async function fetchVendasKpiReciboContributionsRaw(
       const rankingRecibo = calcularRankingComissionavel({
         valorBruto: sourceBruto,
         valorTaxas: sourceTaxas,
-        valorNaoComissionado: usarModoPorRecibo ? naoComissionadoRecibo : 0,
+        valorNaoComissionado: usarModoPorRecibo ? naoComissionadoRecibo : 0
       });
-      const fatorRecibo = usarModoPorRecibo
-        ? rankingRecibo.fatorValor
-        : rankingGrupo.fatorValor;
-      const bruto = usarModoPorRecibo
-        ? rankingRecibo.valorRanking
-        : sourceBruto * fatorRecibo;
+      const fatorRecibo = usarModoPorRecibo ? rankingRecibo.fatorValor : rankingGrupo.fatorValor;
+      const bruto = usarModoPorRecibo ? rankingRecibo.valorRanking : sourceBruto * fatorRecibo;
       const taxasEfetivas = usarModoPorRecibo
         ? rankingRecibo.valorTaxasRanking
         : sourceTaxas * rankingGrupo.fatorTaxas;
@@ -1368,25 +1257,17 @@ export async function fetchVendasKpiReciboContributionsRaw(
           ? [
               {
                 vendedorId: toStr(rateio.vendedor_origem_id),
-                fator: Math.max(
-                  0,
-                  Math.min(1, toNum(rateio.percentual_origem) / 100),
-                ),
+                fator: Math.max(0, Math.min(1, toNum(rateio.percentual_origem) / 100))
               },
               {
                 vendedorId: toStr(rateio.vendedor_destino_id),
-                fator: Math.max(
-                  0,
-                  Math.min(1, toNum(rateio.percentual_destino) / 100),
-                ),
-              },
+                fator: Math.max(0, Math.min(1, toNum(rateio.percentual_destino) / 100))
+              }
             ]
           : [{ vendedorId, fator: 1 }];
 
       const allocations = hasScopeVendedores
-        ? baseAllocations.filter((item) =>
-            scopeVendedorIds.has(item.vendedorId),
-          )
+        ? baseAllocations.filter((item) => scopeVendedorIds.has(item.vendedorId))
         : baseAllocations;
       if (allocations.length === 0) continue;
 
@@ -1410,14 +1291,10 @@ export async function fetchVendasKpiReciboContributionsRaw(
         }
 
         const produtoId = toStr(
-          recibo?.tipo_produtos?.id ||
-            recibo?.produto_id ||
-            recibo?.produto_resolvido?.id,
+          recibo?.tipo_produtos?.id || recibo?.produto_id || recibo?.produto_resolvido?.id
         );
         const produtoNome = toStr(
-          recibo?.tipo_produtos?.nome ||
-            recibo?.produto_resolvido?.nome ||
-            "Produto",
+          recibo?.tipo_produtos?.nome || recibo?.produto_resolvido?.nome || 'Produto'
         );
         const destinoNome =
           getReceiptCidadeNome(recibo, vendaPrincipalExtra, destinationCityNames) ||
@@ -1433,7 +1310,7 @@ export async function fetchVendasKpiReciboContributionsRaw(
           reciboDate: toDateKey(recibo?.data_venda) || vendaDate,
           // `mes` nao existe neste escopo: quando a venda nao tinha data_venda
           // isso lancava ReferenceError e derrubava o rebuild do mes inteiro.
-          vendaDate: vendaDate || toDateKey(recibo?.data_venda) || "",
+          vendaDate: vendaDate || toDateKey(recibo?.data_venda) || '',
           vendedorId: allocation.vendedorId,
           produtoId,
           produtoNome,
@@ -1444,7 +1321,7 @@ export async function fetchVendasKpiReciboContributionsRaw(
           factor: Number((fatorRecibo * allocation.fator).toFixed(6)),
           sourceBruto: Number(sourceBruto.toFixed(2)),
           sourceTaxas: Number(sourceTaxas.toFixed(2)),
-          origem: hasConciliacaoOverride(recibo) ? "conciliacao" : "venda",
+          origem: hasConciliacaoOverride(recibo) ? 'conciliacao' : 'venda'
         });
       }
     }
@@ -1457,9 +1334,9 @@ export async function fetchVendasKpiReciboContributionsRaw(
       totalLiquido: totalVendas - totalTaxas,
       totalSeguro,
       countVendas: qtdVendas,
-      countAtivas,
+      countAtivas
     },
-    contributions,
+    contributions
   };
 }
 
@@ -1472,7 +1349,7 @@ export async function fetchVendasKpiReciboContributions(
     vendedorIds: string[];
     accessibleClientIds?: string[];
   },
-  readModelOptions?: ReciboContribuicoesReadModelOptions,
+  readModelOptions?: ReciboContribuicoesReadModelOptions
 ): Promise<{
   agg: VendasKpiAgg;
   contributions: VendasKpiReciboContribution[];
@@ -1480,11 +1357,9 @@ export async function fetchVendasKpiReciboContributions(
   return fetchReciboContribuicoesReadModel(
     client,
     params,
-    (loaderParams) =>
-      fetchVendasKpiReciboContributionsRaw(client, loaderParams),
-    (loaderParams) =>
-      fetchVendasKpiReciboContributionsRaw(getAdminClient(), loaderParams),
-    readModelOptions,
+    (loaderParams) => fetchVendasKpiReciboContributionsRaw(client, loaderParams),
+    (loaderParams) => fetchVendasKpiReciboContributionsRaw(getAdminClient(), loaderParams),
+    readModelOptions
   );
 }
 
@@ -1496,10 +1371,7 @@ function buildDashboardSummaryFromContributions(payload: {
   const destinoMap = new Map<string, number>();
   const destinoCountMap = new Map<string, number>();
   const destinoReceiptCount = new Set<string>();
-  const produtoMap = new Map<
-    string,
-    { id: string; name: string; value: number }
-  >();
+  const produtoMap = new Map<string, { id: string; name: string; value: number }>();
 
   for (const contribution of payload.contributions) {
     const bruto = toNum(contribution.bruto);
@@ -1510,30 +1382,29 @@ function buildDashboardSummaryFromContributions(payload: {
       timelineMap.set(reciboDate, (timelineMap.get(reciboDate) || 0) + bruto);
     }
 
-    const destinoNome =
-      toStr(contribution.destinoNome) || "Destino nao informado";
+    const destinoNome = toStr(contribution.destinoNome) || 'Destino nao informado';
     destinoMap.set(destinoNome, (destinoMap.get(destinoNome) || 0) + bruto);
 
     const destinoKey = [
       destinoNome,
       contribution.vendaKey,
-      contribution.reciboId || contribution.reciboNumero,
-    ].join("|");
+      contribution.reciboId || contribution.reciboNumero
+    ].join('|');
     if (!destinoReceiptCount.has(destinoKey)) {
       destinoReceiptCount.add(destinoKey);
       destinoCountMap.set(destinoNome, (destinoCountMap.get(destinoNome) || 0) + 1);
     }
 
-    const productId = toStr(contribution.produtoId) || "sem-produto";
-    const productName = toStr(contribution.produtoNome) || "Produto";
+    const productId = toStr(contribution.produtoId) || 'sem-produto';
+    const productName = toStr(contribution.produtoNome) || 'Produto';
     const curProd = produtoMap.get(productId) || {
       id: productId,
       name: productName,
-      value: 0,
+      value: 0
     };
     produtoMap.set(productId, {
       ...curProd,
-      value: curProd.value + bruto,
+      value: curProd.value + bruto
     });
   }
 
@@ -1541,19 +1412,19 @@ function buildDashboardSummaryFromContributions(payload: {
     agg: payload.agg,
     timeline: Array.from(timelineMap.entries()).map(([date, value]) => ({
       date,
-      value,
+      value
     })),
     topDestinos: Array.from(destinoMap.entries())
       .map(([name, value]) => ({
         name,
         value,
-        count: destinoCountMap.get(name) || 0,
+        count: destinoCountMap.get(name) || 0
       }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 5),
     porProduto: Array.from(produtoMap.values())
       .sort((a, b) => b.value - a.value)
-      .slice(0, 6),
+      .slice(0, 6)
   };
 }
 
@@ -1586,10 +1457,10 @@ export async function fetchVendasKpiDashboardSummary(
     vendedorIds: string[];
     accessibleClientIds?: string[];
   },
-  readModelOptions?: ReciboContribuicoesReadModelOptions,
+  readModelOptions?: ReciboContribuicoesReadModelOptions
 ): Promise<VendasKpiDashboardSummary> {
   const useAggregatedReadModel =
-    readModelOptions?.mode === "stale-while-revalidate" &&
+    readModelOptions?.mode === 'stale-while-revalidate' &&
     normalizeCompanyScopeIds(params.companyIds).length > 0;
 
   if (useAggregatedReadModel) {
@@ -1599,9 +1470,8 @@ export async function fetchVendasKpiDashboardSummary(
         scheduleReciboContribuicoesReadModelEnsure(
           client,
           params,
-          (loaderParams) =>
-            fetchVendasKpiReciboContributionsRaw(getAdminClient(), loaderParams),
-          readModelOptions?.executionContext,
+          (loaderParams) => fetchVendasKpiReciboContributionsRaw(getAdminClient(), loaderParams),
+          readModelOptions?.executionContext
         );
         return aggregated;
       }
@@ -1610,19 +1480,18 @@ export async function fetchVendasKpiDashboardSummary(
         scheduleReciboContribuicoesReadModelEnsure(
           client,
           params,
-          (loaderParams) =>
-            fetchVendasKpiReciboContributionsRaw(getAdminClient(), loaderParams),
-          readModelOptions?.executionContext,
+          (loaderParams) => fetchVendasKpiReciboContributionsRaw(getAdminClient(), loaderParams),
+          readModelOptions?.executionContext
         );
         if (readModelOptions?.fallbackToRawWhenEmpty) {
           try {
             return buildDashboardSummaryFromContributions(
-              await fetchVendasKpiReciboContributionsRaw(client, params),
+              await fetchVendasKpiReciboContributionsRaw(client, params)
             );
           } catch (error) {
             logServerError(
-              "[vendas-kpis] fallback bruto do dashboard falhou; mantendo read model vazio.",
-              error,
+              '[vendas-kpis] fallback bruto do dashboard falhou; mantendo read model vazio.',
+              error
             );
           }
         }
@@ -1633,15 +1502,15 @@ export async function fetchVendasKpiDashboardSummary(
       // bloqueamos uma vez para popular/ler a tabela antes de responder zero real.
       return buildDashboardSummaryFromContributions(
         await fetchVendasKpiReciboContributions(client, params, {
-          mode: "blocking",
-          executionContext: readModelOptions?.executionContext,
-        }),
+          mode: 'blocking',
+          executionContext: readModelOptions?.executionContext
+        })
       );
     }
   }
 
   return buildDashboardSummaryFromContributions(
-    await fetchVendasKpiReciboContributions(client, params, readModelOptions),
+    await fetchVendasKpiReciboContributions(client, params, readModelOptions)
   );
 }
 
@@ -1653,18 +1522,18 @@ export async function fetchAndComputeVendasTimeline(
     companyIds: string[];
     vendedorIds: string[];
     accessibleClientIds?: string[];
-  },
+  }
 ): Promise<VendasTimelinePoint[]> {
   const [{ rows, rateioMap }, termosNaoComissionaveis] = await Promise.all([
     fetchResolvedRows(client, params),
-    carregarTermosNaoComissionaveis(client),
+    carregarTermosNaoComissionaveis(client)
   ]);
 
   const vendaIds = buildVendaIdsFromRows(rows);
   const naoComissionadoPorVenda = await fetchNaoComissionadoPorVenda(
     client,
     vendaIds,
-    termosNaoComissionaveis,
+    termosNaoComissionaveis
   );
 
   const scopeVendedorIds = buildScopeIdSet(params.vendedorIds);
@@ -1682,13 +1551,12 @@ export async function fetchAndComputeVendasTimeline(
       toDateKey(row?.data_venda),
       toStr(row?.vendedor_id),
       toStr(rowExtra.destino_id),
-      toStr(rowExtra.valor_total || rowExtra.valor_total_bruto),
-    ].join("|");
-    const vendaKey =
-      toStr(rowExtra.source_venda_id || row?.id) || `synt:${syntheticKey}`;
+      toStr(rowExtra.valor_total || rowExtra.valor_total_bruto)
+    ].join('|');
+    const vendaKey = toStr(rowExtra.source_venda_id || row?.id) || `synt:${syntheticKey}`;
     const current = groupedByVenda.get(vendaKey) || {
       vendaRows: [],
-      recibos: [],
+      recibos: []
     };
     current.vendaRows.push(row);
     if (Array.isArray(row?.vendas_recibos) && row.vendas_recibos.length > 0) {
@@ -1699,17 +1567,10 @@ export async function fetchAndComputeVendasTimeline(
 
   for (const [vendaKey, group] of groupedByVenda) {
     const vendaPrincipal =
-      group.vendaRows.find((row) => toStr(row?.id) === vendaKey) ||
-      group.vendaRows[0];
+      group.vendaRows.find((row) => toStr(row?.id) === vendaKey) || group.vendaRows[0];
     const vendaPrincipalExtra = vendaPrincipal as VendaAggregateRowExtra;
 
-    if (
-      isStatusCancelado(
-        vendaPrincipalExtra.status,
-        vendaPrincipal?.cancelada,
-      )
-    )
-      continue;
+    if (isStatusCancelado(vendaPrincipalExtra.status, vendaPrincipal?.cancelada)) continue;
 
     const vendaDate = toDateKey(vendaPrincipal?.data_venda);
     const recibosAll = filterRecibosCanceladosMesmoMes(group.recibos || []);
@@ -1728,42 +1589,27 @@ export async function fetchAndComputeVendasTimeline(
       if (!recibosByKey.has(key)) recibosByKey.set(key, recibo);
     }
     const recibosUnique = Array.from(recibosByKey.values());
-    const somaBrutoRecibos = recibosUnique.reduce(
-      (acc, recibo) => acc + getReciboBruto(recibo),
-      0,
-    );
-    const somaTaxasRecibos = recibosUnique.reduce(
-      (acc, recibo) => acc + getReciboTaxas(recibo),
-      0,
-    );
+    const somaBrutoRecibos = recibosUnique.reduce((acc, recibo) => acc + getReciboBruto(recibo), 0);
+    const somaTaxasRecibos = recibosUnique.reduce((acc, recibo) => acc + getReciboTaxas(recibo), 0);
 
-    const linkedNaoComissionado = toNum(
-      naoComissionadoPorVenda.porVenda.get(vendaKey) || 0,
-    );
+    const linkedNaoComissionado = toNum(naoComissionadoPorVenda.porVenda.get(vendaKey) || 0);
     const naoComissionadoSemRecibo = toNum(
-      naoComissionadoPorVenda.porVendaSemRecibo.get(vendaKey) || 0,
+      naoComissionadoPorVenda.porVendaSemRecibo.get(vendaKey) || 0
     );
-    const usarModoPorRecibo =
-      linkedNaoComissionado > 0 && naoComissionadoSemRecibo <= 0;
+    const usarModoPorRecibo = linkedNaoComissionado > 0 && naoComissionadoSemRecibo <= 0;
     const naoComissionadoTotalPagamentos = Math.max(
       0,
-      toNum(naoComissionadoPorVenda.porVenda.get(vendaKey) || 0),
+      toNum(naoComissionadoPorVenda.porVenda.get(vendaKey) || 0)
     );
     const rankingGrupo = calcularRankingComissionavel({
       valorBruto: somaBrutoRecibos,
       valorTaxas: somaTaxasRecibos,
-      valorNaoComissionado: usarModoPorRecibo
-        ? 0
-        : naoComissionadoTotalPagamentos,
+      valorNaoComissionado: usarModoPorRecibo ? 0 : naoComissionadoTotalPagamentos
     });
 
     const recibosPeriodo = recibosUnique.filter((recibo) => {
       const reciboDate = toDateKey(recibo?.data_venda) || vendaDate;
-      return (
-        Boolean(reciboDate) &&
-        reciboDate >= params.dataInicio &&
-        reciboDate <= params.dataFim
-      );
+      return Boolean(reciboDate) && reciboDate >= params.dataInicio && reciboDate <= params.dataFim;
     });
 
     for (const recibo of recibosPeriodo) {
@@ -1778,11 +1624,9 @@ export async function fetchAndComputeVendasTimeline(
       const rankingRecibo = calcularRankingComissionavel({
         valorBruto: getReciboBruto(recibo),
         valorTaxas: getReciboTaxas(recibo),
-        valorNaoComissionado: usarModoPorRecibo ? naoComissionadoRecibo : 0,
+        valorNaoComissionado: usarModoPorRecibo ? naoComissionadoRecibo : 0
       });
-      const fatorRecibo = usarModoPorRecibo
-        ? rankingRecibo.fatorValor
-        : rankingGrupo.fatorValor;
+      const fatorRecibo = usarModoPorRecibo ? rankingRecibo.fatorValor : rankingGrupo.fatorValor;
       const bruto = usarModoPorRecibo
         ? rankingRecibo.valorRanking
         : getReciboBruto(recibo) * fatorRecibo;
@@ -1802,25 +1646,17 @@ export async function fetchAndComputeVendasTimeline(
           ? [
               {
                 vendedorId: toStr(rateio.vendedor_origem_id),
-                fator: Math.max(
-                  0,
-                  Math.min(1, toNum(rateio.percentual_origem) / 100),
-                ),
+                fator: Math.max(0, Math.min(1, toNum(rateio.percentual_origem) / 100))
               },
               {
                 vendedorId: toStr(rateio.vendedor_destino_id),
-                fator: Math.max(
-                  0,
-                  Math.min(1, toNum(rateio.percentual_destino) / 100),
-                ),
-              },
+                fator: Math.max(0, Math.min(1, toNum(rateio.percentual_destino) / 100))
+              }
             ]
           : [{ vendedorId, fator: 1 }];
 
       const allocations = hasScopeVendedores
-        ? baseAllocations.filter((item) =>
-            scopeVendedorIds.has(item.vendedorId),
-          )
+        ? baseAllocations.filter((item) => scopeVendedorIds.has(item.vendedorId))
         : baseAllocations;
 
       const reciboDate = toDateKey(recibo?.data_venda) || vendaDate;
@@ -1829,10 +1665,7 @@ export async function fetchAndComputeVendasTimeline(
       for (const allocation of allocations) {
         const brutoAlloc = bruto * allocation.fator;
         if (brutoAlloc <= 0) continue;
-        timelineMap.set(
-          reciboDate,
-          (timelineMap.get(reciboDate) || 0) + brutoAlloc,
-        );
+        timelineMap.set(reciboDate, (timelineMap.get(reciboDate) || 0) + brutoAlloc);
       }
     }
   }

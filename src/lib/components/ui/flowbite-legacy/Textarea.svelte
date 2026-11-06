@@ -1,22 +1,42 @@
-<script>// @ts-nocheck (cópia do Flowbite-Svelte 0.48.6, ver README.md)
-import { twMerge } from "tailwind-merge";
-import { getContext } from "svelte";
-import Wrapper from "./Wrapper.svelte";
-export let value = void 0;
-export let wrappedClass = "block w-full text-sm border-0 px-0 bg-inherit dark:bg-inherit focus:outline-hidden focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50";
-export let unWrappedClass = "p-2.5 text-sm focus:ring-primary-500 border-gray-300 focus:border-primary-500 dark:focus:ring-primary-500 dark:focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50";
-export let innerWrappedClass = "py-2 px-4 bg-white dark:bg-gray-800";
-export let headerClass = "";
-export let footerClass = "";
-const background = getContext("background");
-let wrapped;
-$: wrapped = $$slots.header || $$slots.footer;
-let wrapperClass;
-$: wrapperClass = twMerge("w-full rounded-lg bg-gray-50", background ? "dark:bg-gray-600" : "dark:bg-gray-700", "text-gray-900 dark:placeholder-gray-400 dark:text-white", "border border-gray-200", background ? "dark:border-gray-500" : "dark:border-gray-600", $$props.class);
-$: textareaClass = wrapped ? wrappedClass : twMerge(wrapperClass, unWrappedClass);
-const headerCls = (header) => twMerge(header ? "border-b" : "border-t", "py-2 px-3 border-gray-200", background ? "dark:border-gray-500" : "dark:border-gray-600", header ? headerClass : footerClass);
-let innerWrapperClass;
-$: innerWrapperClass = twMerge(innerWrappedClass, $$slots.footer ? "" : "rounded-b-lg", $$slots.header ? "" : "rounded-t-lg");
+<script>
+  // @ts-nocheck (cópia do Flowbite-Svelte 0.48.6, ver README.md)
+  import { twMerge } from 'tailwind-merge';
+  import { getContext } from 'svelte';
+  import Wrapper from './Wrapper.svelte';
+  export let value = void 0;
+  export let wrappedClass =
+    'block w-full text-sm border-0 px-0 bg-inherit dark:bg-inherit focus:outline-hidden focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50';
+  export let unWrappedClass =
+    'p-2.5 text-sm focus:ring-primary-500 border-gray-300 focus:border-primary-500 dark:focus:ring-primary-500 dark:focus:border-primary-500 disabled:cursor-not-allowed disabled:opacity-50';
+  export let innerWrappedClass = 'py-2 px-4 bg-white dark:bg-gray-800';
+  export let headerClass = '';
+  export let footerClass = '';
+  const background = getContext('background');
+  let wrapped;
+  $: wrapped = $$slots.header || $$slots.footer;
+  let wrapperClass;
+  $: wrapperClass = twMerge(
+    'w-full rounded-lg bg-gray-50',
+    background ? 'dark:bg-gray-600' : 'dark:bg-gray-700',
+    'text-gray-900 dark:placeholder-gray-400 dark:text-white',
+    'border border-gray-200',
+    background ? 'dark:border-gray-500' : 'dark:border-gray-600',
+    $$props.class
+  );
+  $: textareaClass = wrapped ? wrappedClass : twMerge(wrapperClass, unWrappedClass);
+  const headerCls = (header) =>
+    twMerge(
+      header ? 'border-b' : 'border-t',
+      'py-2 px-3 border-gray-200',
+      background ? 'dark:border-gray-500' : 'dark:border-gray-600',
+      header ? headerClass : footerClass
+    );
+  let innerWrapperClass;
+  $: innerWrapperClass = twMerge(
+    innerWrappedClass,
+    $$slots.footer ? '' : 'rounded-b-lg',
+    $$slots.header ? '' : 'rounded-t-lg'
+  );
 </script>
 
 <Wrapper show={wrapped} class={wrapperClass}>
@@ -26,7 +46,25 @@ $: innerWrapperClass = twMerge(innerWrappedClass, $$slots.footer ? "" : "rounded
     </div>
   {/if}
   <Wrapper show={wrapped} class={innerWrapperClass}>
-    <textarea bind:value on:blur on:change on:click on:contextmenu on:focus on:input on:keydown on:keypress on:keyup on:mouseenter on:mouseleave on:mouseover on:paste on:select {...$$restProps} class={textareaClass}></textarea>
+    <textarea
+      bind:value
+      on:blur
+      on:change
+      on:click
+      on:contextmenu
+      on:focus
+      on:input
+      on:keydown
+      on:keypress
+      on:keyup
+      on:mouseenter
+      on:mouseleave
+      on:mouseover
+      on:paste
+      on:select
+      {...$$restProps}
+      class={textareaClass}
+    ></textarea>
   </Wrapper>
   {#if $$slots.footer}
     <div class={headerCls(false)}>

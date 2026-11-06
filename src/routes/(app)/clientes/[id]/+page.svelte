@@ -107,7 +107,9 @@
   let loading = true;
   let errorMessage: string | null = null;
   let showAvisoModal = false;
-  let ModalAvisoClienteComponent: typeof import('$lib/components/modais/ModalAvisoCliente.svelte').default | null = null;
+  let ModalAvisoClienteComponent:
+    | typeof import('$lib/components/modais/ModalAvisoCliente.svelte').default
+    | null = null;
   let modalAvisoLoadPromise: Promise<boolean> | null = null;
   let loadController: AbortController | null = null;
   let loadSeq = 0;
@@ -189,7 +191,11 @@
     try {
       const [clientePayload, historicoPayload] = await Promise.all([
         apiGet<ClienteDetalhe>(`/api/v1/clientes/${clienteId}`, undefined, controller.signal),
-        apiGet<HistoricoClienteResponse>('/api/v1/clientes/historico', { cliente_id: clienteId }, controller.signal)
+        apiGet<HistoricoClienteResponse>(
+          '/api/v1/clientes/historico',
+          { cliente_id: clienteId },
+          controller.signal
+        )
       ]);
 
       if (seq !== loadSeq) return;
@@ -248,16 +254,16 @@
 {#if loading}
   <LoadingState />
 {:else if errorMessage}
-  <div class="text-center py-12">
-    <p class="mb-4 text-red-600">{errorMessage}</p>
+  <div class="py-12 text-center">
+    <p role="alert" class="mb-4 text-red-600">{errorMessage}</p>
     <Button variant="secondary" on:click={() => goto('/clientes')}>
       <ArrowLeft size={16} class="mr-2" />
       Voltar para clientes
     </Button>
   </div>
 {:else if !cliente}
-  <div class="text-center py-12">
-    <p class="text-slate-500 mb-4">Cliente não encontrado ou sem permissão de acesso.</p>
+  <div class="py-12 text-center">
+    <p class="mb-4 text-slate-500">Cliente não encontrado ou sem permissão de acesso.</p>
     <Button variant="secondary" on:click={() => goto('/clientes')}>
       <ArrowLeft size={16} class="mr-2" />
       Voltar para Clientes
@@ -267,10 +273,7 @@
   <PageHeader
     title={cliente.nome}
     subtitle="Visao consolidada de cadastro, historico comercial, orcamentos e relacionamento do cliente."
-    breadcrumbs={[
-      { label: 'Clientes', href: '/clientes' },
-      { label: cliente.nome }
-    ]}
+    breadcrumbs={[{ label: 'Clientes', href: '/clientes' }, { label: cliente.nome }]}
     actions={[
       {
         label: 'Editar',
@@ -295,32 +298,46 @@
 
   <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
     <div>
-      <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Painel executivo</p>
-      <p class="text-sm text-slate-500">Resumo do relacionamento com foco em histórico, negociação, reativação e valor da carteira.</p>
+      <p class="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
+        Painel executivo
+      </p>
+      <p class="text-sm text-slate-500">
+        Resumo do relacionamento com foco em histórico, negociação, reativação e valor da carteira.
+      </p>
     </div>
   </div>
 
   <div class="vtur-kpi-grid vtur-kpi-grid-5 mb-6">
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-500">
+      <div
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-500"
+      >
         <Wallet size={18} />
       </div>
       <div class="min-w-0 flex-1">
         <p class="text-xs font-medium text-slate-500 sm:text-sm">Total em vendas</p>
-        <p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">{formatCurrency(totalGasto)}</p>
+        <p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">
+          {formatCurrency(totalGasto)}
+        </p>
       </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+      <div
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500"
+      >
         <Calendar size={18} />
       </div>
       <div class="min-w-0 flex-1">
         <p class="text-xs font-medium text-slate-500 sm:text-sm">Última compra</p>
-        <p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">{formatDate(cliente.ultima_compra)}</p>
+        <p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">
+          {formatDate(cliente.ultima_compra)}
+        </p>
       </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-500">
+      <div
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-500"
+      >
         <ShoppingCart size={18} />
       </div>
       <div class="min-w-0 flex-1">
@@ -329,16 +346,22 @@
       </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500">
+      <div
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500"
+      >
         <Ticket size={18} />
       </div>
       <div class="min-w-0 flex-1">
         <p class="text-xs font-medium text-slate-500 sm:text-sm">Ticket médio</p>
-        <p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">{formatCurrency(ticketMedio)}</p>
+        <p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">
+          {formatCurrency(ticketMedio)}
+        </p>
       </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-500">
+      <div
+        class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-500"
+      >
         <FileText size={18} />
       </div>
       <div class="min-w-0 flex-1">
@@ -348,8 +371,13 @@
     </div>
   </div>
 
-  <div class="mb-6 rounded-vtur-xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600 shadow-vtur-lg">
-    Este cliente reúne <strong>{historicoVendas.length}</strong> venda(s), <strong>{historicoOrcamentos.length}</strong> orçamento(s) e <strong>{cliente.acompanhantes_count}</strong> acompanhante(s), permitindo leitura rápida de recorrência, negociação e potencial de reativação.
+  <div
+    class="rounded-vtur-xl shadow-vtur-lg mb-6 border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600"
+  >
+    Este cliente reúne <strong>{historicoVendas.length}</strong> venda(s),
+    <strong>{historicoOrcamentos.length}</strong>
+    orçamento(s) e <strong>{cliente.acompanhantes_count}</strong> acompanhante(s), permitindo leitura
+    rápida de recorrência, negociação e potencial de reativação.
   </div>
 
   <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -357,7 +385,7 @@
       <Card title="Resumo do cliente" color="clientes">
         <div class="space-y-4">
           <div class="flex items-center gap-3">
-            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-clientes-100">
+            <div class="bg-clientes-100 flex h-10 w-10 items-center justify-center rounded-full">
               <User size={18} class="text-clientes-600" />
             </div>
             <div>
@@ -368,17 +396,28 @@
           {#if linkWhatsApp || telefoneDigitos || cliente.email}
             <div class="flex flex-wrap gap-2" aria-label="Falar com o cliente" role="group">
               {#if linkWhatsApp}
-                <a href={linkWhatsApp} target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800 transition-colors hover:bg-emerald-100 focus-visible:outline-2 focus-visible:outline-emerald-600">
+                <a
+                  href={linkWhatsApp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800 transition-colors hover:bg-emerald-100 focus-visible:outline-2 focus-visible:outline-emerald-600"
+                >
                   <MessageCircle size={15} aria-hidden="true" /> WhatsApp
                 </a>
               {/if}
               {#if telefoneDigitos}
-                <a href={`tel:${telefoneDigitos}`} class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-blue-500">
+                <a
+                  href={`tel:${telefoneDigitos}`}
+                  class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-blue-500"
+                >
                   <Phone size={15} aria-hidden="true" /> Ligar
                 </a>
               {/if}
               {#if cliente.email}
-                <a href={`mailto:${cliente.email}`} class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-blue-500">
+                <a
+                  href={`mailto:${cliente.email}`}
+                  class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-blue-500"
+                >
                   <Mail size={15} aria-hidden="true" /> E-mail
                 </a>
               {/if}
@@ -387,23 +426,25 @@
 
           <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div class="rounded-vtur-lg border border-slate-200 bg-slate-50 px-4 py-3">
-              <p class="text-xs uppercase tracking-wide text-slate-500">Status</p>
-              <span class={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusBadge(cliente.status)}`}>
+              <p class="text-xs tracking-wide text-slate-500 uppercase">Status</p>
+              <span
+                class={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusBadge(cliente.status)}`}
+              >
                 {getStatusLabel(cliente.status)}
               </span>
             </div>
             <div class="rounded-vtur-lg border border-slate-200 bg-slate-50 px-4 py-3">
-              <p class="text-xs uppercase tracking-wide text-slate-500">Classificacao</p>
+              <p class="text-xs tracking-wide text-slate-500 uppercase">Classificacao</p>
               <p class="mt-2 font-medium text-slate-900">{cliente.classificacao || '-'}</p>
             </div>
             <div class="rounded-vtur-lg border border-slate-200 bg-slate-50 px-4 py-3">
-              <p class="text-xs uppercase tracking-wide text-slate-500">Tipo</p>
+              <p class="text-xs tracking-wide text-slate-500 uppercase">Tipo</p>
               <p class="mt-2 font-medium text-slate-900">
                 {getTipoPessoaLabel(cliente.tipo_pessoa)} · {cliente.tipo_cliente || 'passageiro'}
               </p>
             </div>
             <div class="rounded-vtur-lg border border-slate-200 bg-slate-50 px-4 py-3">
-              <p class="text-xs uppercase tracking-wide text-slate-500">Ultima compra</p>
+              <p class="text-xs tracking-wide text-slate-500 uppercase">Ultima compra</p>
               <p class="mt-2 font-medium text-slate-900">{formatDate(cliente.ultima_compra)}</p>
             </div>
           </div>
@@ -447,9 +488,13 @@
       <Card title="Endereco e tags" color="clientes">
         <div class="space-y-3">
           <div class="flex items-start gap-3">
-            <MapPin size={18} class="mt-0.5 text-clientes-600" />
+            <MapPin size={18} class="text-clientes-600 mt-0.5" />
             <div class="text-sm text-slate-700">
-              <p>{cliente.endereco || 'Endereco nao informado'}{cliente.numero ? `, ${cliente.numero}` : ''}</p>
+              <p>
+                {cliente.endereco || 'Endereco nao informado'}{cliente.numero
+                  ? `, ${cliente.numero}`
+                  : ''}
+              </p>
               {#if cliente.complemento}
                 <p>{cliente.complemento}</p>
               {/if}
@@ -468,7 +513,10 @@
             {#if cliente.tags && cliente.tags.length > 0}
               <div class="flex flex-wrap gap-2">
                 {#each cliente.tags as tag}
-                  <span class="rounded-full bg-clientes-100 px-3 py-1 text-xs font-medium text-clientes-700">{tag}</span>
+                  <span
+                    class="bg-clientes-100 text-clientes-700 rounded-full px-3 py-1 text-xs font-medium"
+                    >{tag}</span
+                  >
                 {/each}
               </div>
             {:else}
@@ -479,7 +527,9 @@
       </Card>
 
       <Card title="Notas e contexto" color="clientes">
-        <p class="text-sm leading-6 text-slate-700">{cliente.notas || cliente.observacoes || 'Sem observacoes registradas.'}</p>
+        <p class="text-sm leading-6 text-slate-700">
+          {cliente.notas || cliente.observacoes || 'Sem observacoes registradas.'}
+        </p>
       </Card>
     </div>
 
@@ -487,7 +537,7 @@
       <Card title="Historico de vendas" color="clientes">
         {#if historicoVendas.length > 0}
           <div class="overflow-x-visible md:overflow-x-auto">
-            <table class="w-full text-sm table-mobile-cards">
+            <table class="table-mobile-cards w-full text-sm">
               <thead class="bg-slate-50">
                 <tr>
                   <th class="px-4 py-3 text-left font-semibold text-slate-600">Lancamento</th>
@@ -500,17 +550,28 @@
               </thead>
               <tbody class="divide-y divide-slate-200">
                 {#each historicoVendas as venda}
-                  <tr class="cursor-pointer transition-colors hover:bg-slate-50" on:click={() => goto(`/vendas/${venda.id}`)}>
+                  <tr
+                    class="cursor-pointer transition-colors hover:bg-slate-50"
+                    on:click={() => goto(`/vendas/${venda.id}`)}
+                  >
                     <td class="px-4 py-3 text-slate-700">{formatDate(venda.data_lancamento)}</td>
                     <td class="px-4 py-3">
                       <div class="font-medium text-slate-900">{venda.destino_nome || '-'}</div>
-                      <div class="text-xs text-slate-500">{venda.destino_cidade_nome || 'Sem cidade'}</div>
+                      <div class="text-xs text-slate-500">
+                        {venda.destino_cidade_nome || 'Sem cidade'}
+                      </div>
                     </td>
                     <td class="px-4 py-3 text-slate-700">{formatDate(venda.data_embarque)}</td>
-                    <td class="px-4 py-3 text-right font-medium text-slate-900">{formatCurrency(venda.valor_total)}</td>
-                    <td class="px-4 py-3 text-right text-slate-700">{formatCurrency(venda.valor_taxas)}</td>
+                    <td class="px-4 py-3 text-right font-medium text-slate-900"
+                      >{formatCurrency(venda.valor_total)}</td
+                    >
+                    <td class="px-4 py-3 text-right text-slate-700"
+                      >{formatCurrency(venda.valor_taxas)}</td
+                    >
                     <td class="px-4 py-3">
-                      <span class={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${venda.origem_vinculo === 'passageiro' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}>
+                      <span
+                        class={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${venda.origem_vinculo === 'passageiro' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}
+                      >
                         {venda.origem_vinculo === 'passageiro' ? 'Passageiro' : 'Titular'}
                       </span>
                     </td>
@@ -520,7 +581,9 @@
             </table>
           </div>
         {:else}
-          <div class="rounded-vtur-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">
+          <div
+            class="rounded-vtur-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500"
+          >
             Nenhuma venda vinculada a este cliente.
           </div>
         {/if}
@@ -529,7 +592,7 @@
       <Card title="Historico de orcamentos" color="clientes">
         {#if historicoOrcamentos.length > 0}
           <div class="overflow-x-visible md:overflow-x-auto">
-            <table class="w-full text-sm table-mobile-cards">
+            <table class="table-mobile-cards w-full text-sm">
               <thead class="bg-slate-50">
                 <tr>
                   <th class="px-4 py-3 text-left font-semibold text-slate-600">Data</th>
@@ -540,33 +603,42 @@
               </thead>
               <tbody class="divide-y divide-slate-200">
                 {#each historicoOrcamentos as orcamento}
-                  <tr class="cursor-pointer transition-colors hover:bg-slate-50" on:click={() => goto(`/orcamentos/${orcamento.id}`)}>
+                  <tr
+                    class="cursor-pointer transition-colors hover:bg-slate-50"
+                    on:click={() => goto(`/orcamentos/${orcamento.id}`)}
+                  >
                     <td class="px-4 py-3 text-slate-700">{formatDate(orcamento.data_orcamento)}</td>
                     <td class="px-4 py-3">
-                      <span class={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusBadge(orcamento.status)}`}>
+                      <span
+                        class={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusBadge(orcamento.status)}`}
+                      >
                         {getStatusLabel(orcamento.status)}
                       </span>
                     </td>
                     <td class="px-4 py-3 text-slate-900">{orcamento.produto_nome || '-'}</td>
-                    <td class="px-4 py-3 text-right text-slate-900">{formatCurrency(orcamento.valor)}</td>
+                    <td class="px-4 py-3 text-right text-slate-900"
+                      >{formatCurrency(orcamento.valor)}</td
+                    >
                   </tr>
                 {/each}
               </tbody>
             </table>
           </div>
         {:else}
-          <div class="rounded-vtur-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">
+          <div
+            class="rounded-vtur-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500"
+          >
             Nenhum orcamento vinculado a este cliente.
           </div>
         {/if}
       </Card>
 
-      <ClienteViagensCard clienteId={String(clienteId || "")} />
+      <ClienteViagensCard clienteId={String(clienteId || '')} />
 
-      <ClienteContatosCard clienteId={String(clienteId || "")} versao={versaoContatos} />
+      <ClienteContatosCard clienteId={String(clienteId || '')} versao={versaoContatos} />
 
       <AcompanhantesManager
-        clienteId={clienteId}
+        {clienteId}
         editable={false}
         title="Acompanhantes"
         subtitle="Consulta dos acompanhantes associados ao cliente."
@@ -578,7 +650,7 @@
     <svelte:component
       this={ModalAvisoClienteComponent}
       bind:open={showAvisoModal}
-      clienteId={clienteId}
+      {clienteId}
       clienteNome={cliente.nome}
       clienteTelefone={cliente.whatsapp || cliente.telefone || ''}
       clienteEmail={cliente.email || ''}

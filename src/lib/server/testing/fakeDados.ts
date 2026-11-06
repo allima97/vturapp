@@ -63,10 +63,12 @@ export function createFakeDados(
       stats.inFlight -= 1;
 
       if (op === 'insert') {
-        const inserted = (Array.isArray(updateValues) ? updateValues : [updateValues || {}]).map((row, index) => ({
-          id: `novo-${table}-${index + 1}`,
-          ...row
-        }));
+        const inserted = (Array.isArray(updateValues) ? updateValues : [updateValues || {}]).map(
+          (row, index) => ({
+            id: `novo-${table}-${index + 1}`,
+            ...row
+          })
+        );
         if (mode === 'many') return { data: inserted, error: null };
         return { data: inserted[0] ?? null, error: null };
       }
@@ -81,7 +83,10 @@ export function createFakeDados(
       if (rows.length === 0 && mode === 'maybeSingle') return { data: null, error: null };
       return {
         data: null,
-        error: { code: 'PGRST116', message: 'JSON object requested, multiple (or no) rows returned' }
+        error: {
+          code: 'PGRST116',
+          message: 'JSON object requested, multiple (or no) rows returned'
+        }
       };
     };
 
@@ -145,6 +150,9 @@ export function createFakeDados(
 /** Lista de consultas em ordem estável, para comparar antes/depois sem depender da ordem. */
 export function sortedQueryLog(log: FakeQueryLog[]) {
   return log
-    .map((entry) => `${entry.op} ${entry.table} [${entry.filters.join(' & ')}]${entry.values ? ' ' + JSON.stringify(entry.values) : ''}`)
+    .map(
+      (entry) =>
+        `${entry.op} ${entry.table} [${entry.filters.join(' & ')}]${entry.values ? ' ' + JSON.stringify(entry.values) : ''}`
+    )
     .sort();
 }

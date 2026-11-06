@@ -47,42 +47,69 @@ function coletarSveltes(dir: string): string[] {
   return resultado;
 }
 
-const todosOsSveltes = [
-  ...coletarSveltes(SRC_ROUTES),
-  ...coletarSveltes(SRC_LIB_COMPONENTS),
-];
+const todosOsSveltes = [...coletarSveltes(SRC_ROUTES), ...coletarSveltes(SRC_LIB_COMPONENTS)];
 
 // Sveltes que são páginas ou layouts (não componentes genéricos)
-const paginasELayouts = todosOsSveltes.filter(
-  (f) => f.includes('+page') || f.includes('+layout')
-);
+const paginasELayouts = todosOsSveltes.filter((f) => f.includes('+page') || f.includes('+layout'));
 
 describe('Suíte S — F6-05: acessibilidade e experiência', () => {
-
   // S1 ───────────────────────────────────────────────────────────────────────
   it('S1. Inputs têm label associado ou aria-label em todos os componentes Svelte', () => {
+    // Extrai tags completas respeitando interpolações {…} (onde "=>" e ">"
+    // aparecem sem fechar a tag) e atributos entre aspas.
+    function extrairTags(src: string, tag: string): string[] {
+      const tags: string[] = [];
+      let i = src.indexOf('<' + tag);
+      while (i !== -1) {
+        let j = i + 1;
+        let profundidade = 0;
+        let aspas: string | null = null;
+        while (j < src.length) {
+          const ch = src[j];
+          if (aspas) {
+            if (ch === aspas) aspas = null;
+          } else if (ch === '"' || ch === "'") {
+            aspas = ch;
+          } else if (ch === '{') {
+            profundidade++;
+          } else if (ch === '}') {
+            profundidade--;
+          } else if (ch === '>' && profundidade === 0) {
+            break;
+          }
+          j++;
+        }
+        tags.push(src.slice(i, j + 1));
+        i = src.indexOf('<' + tag, j);
+      }
+      return tags;
+    }
+
     const violacoes: string[] = [];
     for (const arquivo of todosOsSveltes) {
-      const src = readFileSync(arquivo, 'utf-8');
-      // Encontrar inputs sem for/id ou aria-label
-      const inputsSemLabel = src.match(/<input(?![^>]*aria-label)[^>]*>/g) || [];
-      for (const input of inputsSemLabel) {
-        // Verificar se tem id e se o arquivo tem label com for correspondente
-        const temId = /id=["'][^"']+["']/.test(input);
-        const temAriaLabel = /aria-label=/.test(input);
-        const temType = /type=["'](?:hidden|submit|button|reset|checkbox|radio)["']/.test(input);
-        if (!temId && !temAriaLabel && !temType) {
+      // Biblioteca legada copiada (Flowbite 0.48) e harnesses de teste ficam fora
+      if (arquivo.includes('flowbite-legacy') || arquivo.includes(join('lib', 'testing'))) {
+        continue;
+      }
+      // Comentários HTML não são marcação
+      const src = readFileSync(arquivo, 'utf-8').replace(/<!--[\s\S]*?-->/g, '');
+      for (const input of extrairTags(src, 'input')) {
+        if (/aria-label=/.test(input)) continue;
+        // id estático, id dinâmico (id={…}) ou shorthand ({id})
+        const temId = /id=["'][^"']+["']|id=\{[^}]+\}|\{id\}/.test(input);
+        const temType = /type=["'](?:hidden|submit|button|reset|checkbox|radio|file)["']/.test(
+          input
+        );
+        // input envelopado por <label> fica associado sem precisar de id
+        const antes = src.slice(0, src.indexOf(input));
+        const dentroDeLabel = antes.lastIndexOf('<label') > antes.lastIndexOf('</label>');
+        if (!temId && !temType && !dentroDeLabel) {
           const relativo = arquivo.replace(ROOT + '/', '');
           violacoes.push(`${relativo}: ${input.slice(0, 80)}`);
         }
       }
     }
-    if (violacoes.length > 0) {
-      console.warn('[S1] Inputs sem label/aria-label (verificar manualmente):');
-      violacoes.forEach((v) => console.warn(`  ${v}`));
-    }
-    // Tolerância: máximo 3 ocorrências suspeitas (podem ser IDs dinâmicos)
-    expect(violacoes.length).toBeLessThanOrEqual(3);
+    expect(violacoes, violacoes.join('\n')).toHaveLength(0);
   });
 
   // S2 ───────────────────────────────────────────────────────────────────────
@@ -113,7 +140,7 @@ describe('Suíte S — F6-05: acessibilidade e experiência', () => {
     const violacoes: string[] = [];
     for (const arquivo of todosOsSveltes) {
       const src = readFileSync(arquivo, 'utf-8');
-      const imgsSemAlt = (src.match(/<img(?![^>]*alt=)[^>]*>/g) || []);
+      const imgsSemAlt = src.match(/<img(?![^>]*alt=)[^>]*>/g) || [];
       if (imgsSemAlt.length > 0) {
         violacoes.push(arquivo.replace(ROOT + '/', ''));
       }
@@ -167,22 +194,27 @@ describe('Suíte S — F6-05: acessibilidade e experiência', () => {
 
   // S7 ───────────────────────────────────────────────────────────────────────
   it('S7. Mensagens de erro usam role="alert" ou aria-live para screen readers', () => {
-    const comErro = todosOsSveltes.filter((f) => {
-      const src = readFileSync(f, 'utf-8');
-      return /error|erro|mensagem/i.test(src) && /<p|<div|<span/.test(src);
-    });
+    // Os canais centralizados de aviso anunciam por conta própria
+    const toast = readSrc('src/lib/components/ui/ToastContainer.svelte');
+    expect(toast).toContain("item.type === 'error'");
+    expect(toast).toContain('role=');
+    const alert = readSrc('src/lib/components/ui/flowbite-legacy/Alert.svelte');
+    expect(alert).toContain('role="alert"');
 
-    const semAria = comErro.filter((f) => {
-      const src = readFileSync(f, 'utf-8');
-      return !/(role=["']alert["']|aria-live=)/i.test(src);
-    });
-
-    if (semAria.length > 0) {
-      console.warn('[S7] Componentes com mensagens de erro sem aria-live/role=alert:');
-      semAria.forEach((f) => console.warn(`  ${f.replace(ROOT + '/', '')}`));
+    // Faixas de erro inline: elemento avermelhado que renderiza diretamente
+    // uma variável de erro precisa anunciar (role="alert" ou aria-live)
+    const padrao =
+      /<(?:p|div|span)(?:(?!>).)*class=["'][^"']*(?:text|bg)-red-\d(?:(?!>).)*>[^<]{0,200}\{(?:erro|error|mensagem)[^}]*\}/g;
+    const semAria: string[] = [];
+    for (const arquivo of todosOsSveltes) {
+      const src = readFileSync(arquivo, 'utf-8');
+      for (const trecho of src.match(padrao) || []) {
+        if (!/role="alert"|aria-live/.test(trecho)) {
+          semAria.push(`${arquivo.replace(ROOT + '/', '')}: ${trecho.slice(0, 80)}`);
+        }
+      }
     }
-    // Tolerância: máximo 5 (alguns erros podem ser apenas visuais)
-    expect(semAria.length).toBeLessThanOrEqual(5);
+    expect(semAria, semAria.join('\n')).toHaveLength(0);
   });
 
   // S8 ───────────────────────────────────────────────────────────────────────

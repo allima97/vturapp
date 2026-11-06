@@ -216,7 +216,8 @@ export async function handleTipoProdutosDelete(event: RequestEvent) {
     }
 
     const id = String(event.url.searchParams.get('id') || '').trim();
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const { error: deleteError } = await client.from('tipo_produtos').delete().eq('id', id);
     if (deleteError) throw deleteError;

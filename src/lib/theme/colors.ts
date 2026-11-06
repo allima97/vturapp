@@ -3,7 +3,14 @@
  * Mantém a identidade visual do sistema original
  */
 
-export type ModuleColor = 'clientes' | 'orcamentos' | 'operacao' | 'financeiro' | 'vendas' | 'comissoes' | 'default';
+export type ModuleColor =
+  | 'clientes'
+  | 'orcamentos'
+  | 'operacao'
+  | 'financeiro'
+  | 'vendas'
+  | 'comissoes'
+  | 'default';
 
 export interface ColorScheme {
   primary: string;

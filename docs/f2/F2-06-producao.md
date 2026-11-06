@@ -9,26 +9,26 @@
 
 Garantir que a API v2 seja segura antes de receber tráfego real em produção:
 
-| Proteção | Implementação |
-|---|---|
-| Bloquear endpoints de diagnóstico/prova em produção | `productionGuard` middleware |
-| Nunca vazar segredos em logs ou respostas | `safe-logger` com `sanitize()` |
-| Stack trace omitido em produção | `sanitizeError()` condicional |
+| Proteção                                            | Implementação                  |
+| --------------------------------------------------- | ------------------------------ |
+| Bloquear endpoints de diagnóstico/prova em produção | `productionGuard` middleware   |
+| Nunca vazar segredos em logs ou respostas           | `safe-logger` com `sanitize()` |
+| Stack trace omitido em produção                     | `sanitizeError()` condicional  |
 
 ---
 
 ## Arquivos criados
 
-| Arquivo | Responsabilidade |
-|---|---|
-| `src/lib/server/api/middleware/production-guard.ts` | Middleware que bloqueia paths de debug em produção |
-| `src/lib/server/api/middleware/safe-logger.ts` | `sanitize()`, `safeLog()`, `sanitizeError()` |
-| `src/lib/server/api/middleware/production-guard.test.ts` | 23 testes cobrindo guard + logger |
+| Arquivo                                                  | Responsabilidade                                   |
+| -------------------------------------------------------- | -------------------------------------------------- |
+| `src/lib/server/api/middleware/production-guard.ts`      | Middleware que bloqueia paths de debug em produção |
+| `src/lib/server/api/middleware/safe-logger.ts`           | `sanitize()`, `safeLog()`, `sanitizeError()`       |
+| `src/lib/server/api/middleware/production-guard.test.ts` | 23 testes cobrindo guard + logger                  |
 
 ## Arquivo modificado
 
-| Arquivo | Mudança |
-|---|---|
+| Arquivo                        | Mudança                 |
+| ------------------------------ | ----------------------- |
 | `src/lib/server/api/app-v2.ts` | Wired `productionGuard` |
 
 ---
@@ -38,6 +38,7 @@ Garantir que a API v2 seja segura antes de receber tráfego real em produção:
 Bloqueia acesso a paths de diagnóstico/prova quando `PUBLIC_ENVIRONMENT === 'production'`.
 
 **Paths bloqueados (prefixos):**
+
 ```
 /api/v2/f2-proof/*
 /api/v2/debug/*
@@ -72,8 +73,8 @@ import { sanitize } from '$lib/server/api/middleware/safe-logger';
 
 const safe = sanitize({
   userId: '123',
-  password: 'super-secret',   // → '[REDACTED]'
-  auth: { token: 'tok123' },  // → { token: '[REDACTED]' }
+  password: 'super-secret', // → '[REDACTED]'
+  auth: { token: 'tok123' } // → { token: '[REDACTED]' }
 });
 ```
 
@@ -104,12 +105,14 @@ const entry = sanitizeError(err, PUBLIC_ENVIRONMENT === 'production');
 **Princípio:** segredos entram no sistema via Cloudflare Workers Secrets (`wrangler secret put`), nunca via `.env` commitado ou corpo de resposta HTTP.
 
 **Checklist F2-06:**
+
 - [x] `BETTER_AUTH_SECRET` — injetado via `wrangler secret put BETTER_AUTH_SECRET`
 - [x] `RESEND_API_KEY` — injetado via `wrangler secret put RESEND_API_KEY`
 - [x] `DB` / `KV_BINDING` — bindings do wrangler.toml (sem segredo em texto)
 - [x] `PUBLIC_ENVIRONMENT` e `PUBLIC_APP_URL` — valores públicos, sem segredo
 
 **Nenhum segredo aparece em:**
+
 - Respostas de erro (handleApiError não serializa o objeto original)
 - Logs via `safeLog` (campos redacted automaticamente)
 - Headers de resposta (nenhum header vaza binding ou secret)
@@ -137,14 +140,14 @@ npx vitest run src/lib/server/api/middleware/production-guard.test.ts
 
 ## Invariantes F2-06
 
-| ID | Invariante | Testado |
-|---|---|---|
-| F2-06-A | `/api/v2/f2-proof/*` retorna 404 em produção | ✅ C |
-| F2-06-B | `/api/v2/f2-proof/*` retorna 200 em desenvolvimento | ✅ C |
-| F2-06-C | Rotas normais não são afetadas pelo guard em produção | ✅ C |
-| F2-06-D | `sanitize()` redact campos sensíveis sem modificar original | ✅ E |
-| F2-06-E | `isSensitiveKey` é case-insensitive | ✅ D |
-| F2-06-F | `sanitizeError` omite stack trace em produção | ✅ F |
+| ID      | Invariante                                                     | Testado             |
+| ------- | -------------------------------------------------------------- | ------------------- |
+| F2-06-A | `/api/v2/f2-proof/*` retorna 404 em produção                   | ✅ C                |
+| F2-06-B | `/api/v2/f2-proof/*` retorna 200 em desenvolvimento            | ✅ C                |
+| F2-06-C | Rotas normais não são afetadas pelo guard em produção          | ✅ C                |
+| F2-06-D | `sanitize()` redact campos sensíveis sem modificar original    | ✅ E                |
+| F2-06-E | `isSensitiveKey` é case-insensitive                            | ✅ D                |
+| F2-06-F | `sanitizeError` omite stack trace em produção                  | ✅ F                |
 | F2-06-G | `BETTER_AUTH_SECRET` e `RESEND_API_KEY` nunca em resposta HTTP | ✅ (handleApiError) |
 
 ---

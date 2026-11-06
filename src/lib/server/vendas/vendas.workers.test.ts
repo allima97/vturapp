@@ -38,7 +38,7 @@ import {
   editarVenda,
   resumoVendas,
   listarParcelas,
-  derivarStatus,
+  derivarStatus
 } from './service';
 import type { VendaNormalizada, VendaEdicaoNormalizada } from './validation';
 
@@ -89,8 +89,8 @@ function vendaMinima(overrides: Partial<VendaNormalizada> = {}): VendaNormalizad
         valor_taxas_centavos: 5000,
         valor_total_centavos: 605000,
         paga_comissao: true,
-        notas: null,
-      },
+        notas: null
+      }
     ],
     pagamentos: [
       {
@@ -107,11 +107,11 @@ function vendaMinima(overrides: Partial<VendaNormalizada> = {}): VendaNormalizad
         parcelas: [
           { numero: 1, valor_centavos: 201667, vencimento: '2024-12-01' },
           { numero: 2, valor_centavos: 201667, vencimento: '2025-01-01' },
-          { numero: 3, valor_centavos: 201666, vencimento: '2025-02-01' },
-        ],
-      },
+          { numero: 3, valor_centavos: 201666, vencimento: '2025-02-01' }
+        ]
+      }
     ],
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -125,8 +125,14 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   for (const t of [
-    'venda_parcelas', 'venda_pagamentos', 'venda_itens', 'vendas',
-    'membros_empresa', 'session', 'user', 'empresas',
+    'venda_parcelas',
+    'venda_pagamentos',
+    'venda_itens',
+    'vendas',
+    'membros_empresa',
+    'session',
+    'user',
+    'empresas'
   ]) {
     await env.DB.exec(`DELETE FROM ${t}`);
   }
@@ -135,22 +141,28 @@ beforeEach(async () => {
   const ts = Date.now();
 
   await env.DB.batch([
-    env.DB.prepare('INSERT INTO empresas (id, nome, criado_em, atualizado_em) VALUES (?, ?, ?, ?)')
-      .bind(EMPRESA_A, 'Agência Alfa', agora, agora),
-    env.DB.prepare('INSERT INTO empresas (id, nome, criado_em, atualizado_em) VALUES (?, ?, ?, ?)')
-      .bind(EMPRESA_B, 'Agência Beta', agora, agora),
+    env.DB.prepare(
+      'INSERT INTO empresas (id, nome, criado_em, atualizado_em) VALUES (?, ?, ?, ?)'
+    ).bind(EMPRESA_A, 'Agência Alfa', agora, agora),
+    env.DB.prepare(
+      'INSERT INTO empresas (id, nome, criado_em, atualizado_em) VALUES (?, ?, ?, ?)'
+    ).bind(EMPRESA_B, 'Agência Beta', agora, agora)
   ]);
   await env.DB.batch([
-    env.DB.prepare('INSERT INTO user (id, name, email, email_verified, empresa_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
-      .bind(USUARIO_A, 'Admin Alfa', 'admin@alfa.com', 1, EMPRESA_A, ts, ts),
-    env.DB.prepare('INSERT INTO user (id, name, email, email_verified, empresa_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
-      .bind(USUARIO_B, 'Admin Beta', 'admin@beta.com', 1, EMPRESA_B, ts, ts),
+    env.DB.prepare(
+      'INSERT INTO user (id, name, email, email_verified, empresa_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).bind(USUARIO_A, 'Admin Alfa', 'admin@alfa.com', 1, EMPRESA_A, ts, ts),
+    env.DB.prepare(
+      'INSERT INTO user (id, name, email, email_verified, empresa_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).bind(USUARIO_B, 'Admin Beta', 'admin@beta.com', 1, EMPRESA_B, ts, ts)
   ]);
   await env.DB.batch([
-    env.DB.prepare('INSERT INTO membros_empresa (empresa_id, user_id, papel, ativo, criado_em, atualizado_em) VALUES (?, ?, ?, ?, ?, ?)')
-      .bind(EMPRESA_A, USUARIO_A, 'admin', 1, agora, agora),
-    env.DB.prepare('INSERT INTO membros_empresa (empresa_id, user_id, papel, ativo, criado_em, atualizado_em) VALUES (?, ?, ?, ?, ?, ?)')
-      .bind(EMPRESA_B, USUARIO_B, 'admin', 1, agora, agora),
+    env.DB.prepare(
+      'INSERT INTO membros_empresa (empresa_id, user_id, papel, ativo, criado_em, atualizado_em) VALUES (?, ?, ?, ?, ?, ?)'
+    ).bind(EMPRESA_A, USUARIO_A, 'admin', 1, agora, agora),
+    env.DB.prepare(
+      'INSERT INTO membros_empresa (empresa_id, user_id, papel, ativo, criado_em, atualizado_em) VALUES (?, ?, ?, ?, ?, ?)'
+    ).bind(EMPRESA_B, USUARIO_B, 'admin', 1, agora, agora)
   ]);
 });
 
@@ -197,9 +209,15 @@ describe('A. Criação transacional', () => {
   it('gera número de venda sequencial por empresa', async () => {
     const v1 = await criarVenda(db(), EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
     const v2 = await criarVenda(db(), EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
-    const vB = await criarVenda(db(), EMPRESA_B, USUARIO_B, vendaMinima({
-      vendedor_id: USUARIO_B,
-    }), env.DB);
+    const vB = await criarVenda(
+      db(),
+      EMPRESA_B,
+      USUARIO_B,
+      vendaMinima({
+        vendedor_id: USUARIO_B
+      }),
+      env.DB
+    );
 
     expect(v1.numeroVenda).not.toBe(v2.numeroVenda);
     // empresa B tem sequencial próprio
@@ -214,8 +232,20 @@ describe('A. Criação transacional', () => {
 describe('B. Idempotência', () => {
   it('retorna a venda existente quando chave_idempotencia é reutilizada', async () => {
     const chave = '550e8400-e29b-41d4-a716-446655440000';
-    const v1 = await criarVenda(db(), EMPRESA_A, USUARIO_A, vendaMinima({ chave_idempotencia: chave }), env.DB);
-    const v2 = await criarVenda(db(), EMPRESA_A, USUARIO_A, vendaMinima({ chave_idempotencia: chave }), env.DB);
+    const v1 = await criarVenda(
+      db(),
+      EMPRESA_A,
+      USUARIO_A,
+      vendaMinima({ chave_idempotencia: chave }),
+      env.DB
+    );
+    const v2 = await criarVenda(
+      db(),
+      EMPRESA_A,
+      USUARIO_A,
+      vendaMinima({ chave_idempotencia: chave }),
+      env.DB
+    );
 
     expect(v1.id).toBe(v2.id);
     expect(v1.numeroVenda).toBe(v2.numeroVenda);
@@ -226,15 +256,33 @@ describe('B. Idempotência', () => {
     // Cada empresa usa sua própria chave; reutilização global é prevenida pelo design.
     const chaveA = '550e8400-e29b-41d4-a716-446655440011';
     const chaveB = '550e8400-e29b-41d4-a716-446655440012';
-    const vA = await criarVenda(db(), EMPRESA_A, USUARIO_A, vendaMinima({ chave_idempotencia: chaveA }), env.DB);
-    const vB = await criarVenda(db(), EMPRESA_B, USUARIO_B, vendaMinima({
-      vendedor_id: USUARIO_B,
-      chave_idempotencia: chaveB,
-    }), env.DB);
+    const vA = await criarVenda(
+      db(),
+      EMPRESA_A,
+      USUARIO_A,
+      vendaMinima({ chave_idempotencia: chaveA }),
+      env.DB
+    );
+    const vB = await criarVenda(
+      db(),
+      EMPRESA_B,
+      USUARIO_B,
+      vendaMinima({
+        vendedor_id: USUARIO_B,
+        chave_idempotencia: chaveB
+      }),
+      env.DB
+    );
 
     expect(vA.id).not.toBe(vB.id);
     // Idempotência funciona por empresa: mesma chave A → retorna vA
-    const vA2 = await criarVenda(db(), EMPRESA_A, USUARIO_A, vendaMinima({ chave_idempotencia: chaveA }), env.DB);
+    const vA2 = await criarVenda(
+      db(),
+      EMPRESA_A,
+      USUARIO_A,
+      vendaMinima({ chave_idempotencia: chaveA }),
+      env.DB
+    );
     expect(vA2.id).toBe(vA.id);
   });
 });
@@ -255,7 +303,7 @@ describe('C. Listagem com cursor pagination', () => {
 
     const pag2 = await listarVendas(db(), EMPRESA_A, {
       limite: 3,
-      cursor: pag1.proximo_cursor!,
+      cursor: pag1.proximo_cursor!
     });
     expect(pag2.itens).toHaveLength(2);
     expect(pag2.proximo_cursor).toBeNull();
@@ -379,20 +427,30 @@ describe('G. Status derivado (derivarStatus)', () => {
   const amanha = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
 
   it('cancelada → "cancelada"', () => {
-    expect(derivarStatus({ cancelada: true, dataEmbarque: amanha, dataFinal: null })).toBe('cancelada');
+    expect(derivarStatus({ cancelada: true, dataEmbarque: amanha, dataFinal: null })).toBe(
+      'cancelada'
+    );
   });
 
   it('data_final no passado → "concluida"', () => {
-    expect(derivarStatus({ cancelada: false, dataEmbarque: null, dataFinal: ontem })).toBe('concluida');
+    expect(derivarStatus({ cancelada: false, dataEmbarque: null, dataFinal: ontem })).toBe(
+      'concluida'
+    );
   });
 
   it('data_embarque hoje ou futuro → "confirmada"', () => {
-    expect(derivarStatus({ cancelada: false, dataEmbarque: hoje, dataFinal: null })).toBe('confirmada');
-    expect(derivarStatus({ cancelada: false, dataEmbarque: amanha, dataFinal: null })).toBe('confirmada');
+    expect(derivarStatus({ cancelada: false, dataEmbarque: hoje, dataFinal: null })).toBe(
+      'confirmada'
+    );
+    expect(derivarStatus({ cancelada: false, dataEmbarque: amanha, dataFinal: null })).toBe(
+      'confirmada'
+    );
   });
 
   it('sem datas especiais → "pendente"', () => {
-    expect(derivarStatus({ cancelada: false, dataEmbarque: null, dataFinal: null })).toBe('pendente');
+    expect(derivarStatus({ cancelada: false, dataEmbarque: null, dataFinal: null })).toBe(
+      'pendente'
+    );
   });
 });
 
@@ -428,8 +486,8 @@ describe('H. Edição de venda (editarVenda)', () => {
         valor_taxas_centavos: 8000,
         valor_total_centavos: 128000,
         paga_comissao: true,
-        notas: null,
-      },
+        notas: null
+      }
     ];
     const novosPagamentos: VendaEdicaoNormalizada['pagamentos'] = [
       {
@@ -443,14 +501,21 @@ describe('H. Edição de venda (editarVenda)', () => {
         parcelas_qtd: 1,
         parcelas_valor_centavos: 128000,
         paga_comissao: true,
-        parcelas: [{ numero: 1, valor_centavos: 128000, vencimento: null }],
-      },
+        parcelas: [{ numero: 1, valor_centavos: 128000, vencimento: null }]
+      }
     ];
 
-    const editada = await editarVenda(db, EMPRESA_A, original.id, 1, {
-      itens: novosItens,
-      pagamentos: novosPagamentos,
-    }, env.DB);
+    const editada = await editarVenda(
+      db,
+      EMPRESA_A,
+      original.id,
+      1,
+      {
+        itens: novosItens,
+        pagamentos: novosPagamentos
+      },
+      env.DB
+    );
 
     expect(editada.versao).toBe(2);
     expect(editada.itens).toHaveLength(1);
@@ -467,10 +532,17 @@ describe('H. Edição de venda (editarVenda)', () => {
     const db = getDb(env.DB);
     const original = await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
 
-    const editada = await editarVenda(db, EMPRESA_A, original.id, 1, {
-      notas: 'Notas atualizadas via PATCH',
-      data_embarque: '2024-12-20',
-    }, env.DB);
+    const editada = await editarVenda(
+      db,
+      EMPRESA_A,
+      original.id,
+      1,
+      {
+        notas: 'Notas atualizadas via PATCH',
+        data_embarque: '2024-12-20'
+      },
+      env.DB
+    );
 
     expect(editada.versao).toBe(2);
     expect(editada.notas).toBe('Notas atualizadas via PATCH');
@@ -500,13 +572,20 @@ describe('H. Edição de venda (editarVenda)', () => {
         parcelas_qtd: 1,
         parcelas_valor_centavos: 605000,
         paga_comissao: false,
-        parcelas: [{ numero: 1, valor_centavos: 605000, vencimento: '2024-12-01' }],
-      },
+        parcelas: [{ numero: 1, valor_centavos: 605000, vencimento: '2024-12-01' }]
+      }
     ];
 
-    const editada = await editarVenda(db, EMPRESA_A, original.id, 1, {
-      pagamentos: novosPagamentos,
-    }, env.DB);
+    const editada = await editarVenda(
+      db,
+      EMPRESA_A,
+      original.id,
+      1,
+      {
+        pagamentos: novosPagamentos
+      },
+      env.DB
+    );
 
     expect(editada.versao).toBe(2);
     // Itens inalterados
@@ -608,9 +687,7 @@ describe('I. resumoVendas — dashboard e reconciliação', () => {
     // Invariante central: soma dos pagamentos = valor_pago da venda
     expect(resumo.pagamentosReconciliam).toBe(true);
     // a_receber calculado corretamente
-    expect(resumo.valorAReceberCentavos).toBe(
-      resumo.valorTotalCentavos - resumo.valorPagoCentavos
-    );
+    expect(resumo.valorAReceberCentavos).toBe(resumo.valorTotalCentavos - resumo.valorPagoCentavos);
   });
 
   // ── I3. Múltiplas vendas — totais somados corretamente ──
@@ -665,19 +742,37 @@ describe('I. resumoVendas — dashboard e reconciliação', () => {
   // ── I7. Filtro por período data_venda ──
   it('I7. filtro data_venda_de/ate retorna apenas vendas no intervalo', async () => {
     const db = getDb(env.DB);
-    await criarVenda(db, EMPRESA_A, USUARIO_A, { ...vendaMinima(), data_venda: '2024-01-15' }, env.DB);
-    await criarVenda(db, EMPRESA_A, USUARIO_A, { ...vendaMinima(), data_venda: '2024-06-20' }, env.DB);
-    await criarVenda(db, EMPRESA_A, USUARIO_A, { ...vendaMinima(), data_venda: '2024-12-01' }, env.DB);
+    await criarVenda(
+      db,
+      EMPRESA_A,
+      USUARIO_A,
+      { ...vendaMinima(), data_venda: '2024-01-15' },
+      env.DB
+    );
+    await criarVenda(
+      db,
+      EMPRESA_A,
+      USUARIO_A,
+      { ...vendaMinima(), data_venda: '2024-06-20' },
+      env.DB
+    );
+    await criarVenda(
+      db,
+      EMPRESA_A,
+      USUARIO_A,
+      { ...vendaMinima(), data_venda: '2024-12-01' },
+      env.DB
+    );
 
     const resumoQ1 = await resumoVendas(db, EMPRESA_A, {
       dataVendaDe: '2024-01-01',
-      dataVendaAte: '2024-03-31',
+      dataVendaAte: '2024-03-31'
     });
     expect(resumoQ1.totalVendas).toBe(1);
 
     const resumoAno = await resumoVendas(db, EMPRESA_A, {
       dataVendaDe: '2024-01-01',
-      dataVendaAte: '2024-12-31',
+      dataVendaAte: '2024-12-31'
     });
     expect(resumoAno.totalVendas).toBe(3);
     expect(resumoAno.itensReconciliam).toBe(true);
@@ -708,8 +803,8 @@ describe('I. resumoVendas — dashboard e reconciliação', () => {
         valor_taxas_centavos: 3000,
         valor_total_centavos: 103000,
         paga_comissao: true,
-        parcelas: [],
-      },
+        parcelas: []
+      }
     ];
 
     await editarVenda(db, EMPRESA_A, original.id, 1, { itens: novosItens }, env.DB);
@@ -745,17 +840,23 @@ describe('J. listarParcelas — agenda de recebíveis', () => {
           paga_comissao: true,
           parcelas: [
             { numero: 1, valor_centavos: 302500, vencimento: dataVencimento1 },
-            { numero: 2, valor_centavos: 302500, vencimento: dataVencimento2 },
-          ],
-        },
-      ],
+            { numero: 2, valor_centavos: 302500, vencimento: dataVencimento2 }
+          ]
+        }
+      ]
     };
   }
 
   // ── J1. Lista parcelas criadas ──
   it('J1. retorna parcelas de venda criada', async () => {
     const db = getDb(env.DB);
-    await criarVenda(db, EMPRESA_A, USUARIO_A, vendaComParcelas('2024-03-01', '2024-04-01'), env.DB);
+    await criarVenda(
+      db,
+      EMPRESA_A,
+      USUARIO_A,
+      vendaComParcelas('2024-03-01', '2024-04-01'),
+      env.DB
+    );
 
     const { parcelas, temMais } = await listarParcelas(db, EMPRESA_A);
     expect(parcelas).toHaveLength(2);
@@ -769,11 +870,23 @@ describe('J. listarParcelas — agenda de recebíveis', () => {
   // ── J2. Isolamento de tenant ──
   it('J2. empresa A não vê parcelas da empresa B', async () => {
     const db = getDb(env.DB);
-    await criarVenda(db, EMPRESA_A, USUARIO_A, vendaComParcelas('2024-03-01', '2024-04-01'), env.DB);
-    await criarVenda(db, EMPRESA_B, USUARIO_B, {
-      ...vendaComParcelas('2024-03-01', '2024-04-01'),
-      vendedor_id: USUARIO_B,
-    }, env.DB);
+    await criarVenda(
+      db,
+      EMPRESA_A,
+      USUARIO_A,
+      vendaComParcelas('2024-03-01', '2024-04-01'),
+      env.DB
+    );
+    await criarVenda(
+      db,
+      EMPRESA_B,
+      USUARIO_B,
+      {
+        ...vendaComParcelas('2024-03-01', '2024-04-01'),
+        vendedor_id: USUARIO_B
+      },
+      env.DB
+    );
 
     const { parcelas: parcelasA } = await listarParcelas(db, EMPRESA_A);
     const { parcelas: parcelasB } = await listarParcelas(db, EMPRESA_B);
@@ -785,11 +898,21 @@ describe('J. listarParcelas — agenda de recebíveis', () => {
   // ── J3. somenteAtivas exclui parcelas de vendas canceladas ──
   it('J3. parcelas de venda cancelada excluídas quando somenteAtivas=true', async () => {
     const db = getDb(env.DB);
-    const v = await criarVenda(db, EMPRESA_A, USUARIO_A, vendaComParcelas('2024-03-01', '2024-04-01'), env.DB);
+    const v = await criarVenda(
+      db,
+      EMPRESA_A,
+      USUARIO_A,
+      vendaComParcelas('2024-03-01', '2024-04-01'),
+      env.DB
+    );
     await cancelarVenda(db, EMPRESA_A, v.id, v.versao);
 
-    const { parcelas: comCanceladas } = await listarParcelas(db, EMPRESA_A, { somenteAtivas: false });
-    const { parcelas: semCanceladas } = await listarParcelas(db, EMPRESA_A, { somenteAtivas: true });
+    const { parcelas: comCanceladas } = await listarParcelas(db, EMPRESA_A, {
+      somenteAtivas: false
+    });
+    const { parcelas: semCanceladas } = await listarParcelas(db, EMPRESA_A, {
+      somenteAtivas: true
+    });
 
     expect(comCanceladas).toHaveLength(2);
     expect(semCanceladas).toHaveLength(0);
@@ -798,18 +921,24 @@ describe('J. listarParcelas — agenda de recebíveis', () => {
   // ── J4. Filtro por vencimento ──
   it('J4. filtro vencimento_de/ate retorna apenas parcelas no período', async () => {
     const db = getDb(env.DB);
-    await criarVenda(db, EMPRESA_A, USUARIO_A, vendaComParcelas('2024-03-01', '2024-09-01'), env.DB);
+    await criarVenda(
+      db,
+      EMPRESA_A,
+      USUARIO_A,
+      vendaComParcelas('2024-03-01', '2024-09-01'),
+      env.DB
+    );
 
     const { parcelas: t1 } = await listarParcelas(db, EMPRESA_A, {
       vencimentoDe: '2024-01-01',
-      vencimentoAte: '2024-06-30',
+      vencimentoAte: '2024-06-30'
     });
     expect(t1).toHaveLength(1);
     expect(t1[0].vencimento).toBe('2024-03-01');
 
     const { parcelas: todas } = await listarParcelas(db, EMPRESA_A, {
       vencimentoDe: '2024-01-01',
-      vencimentoAte: '2024-12-31',
+      vencimentoAte: '2024-12-31'
     });
     expect(todas).toHaveLength(2);
   });
@@ -818,15 +947,30 @@ describe('J. listarParcelas — agenda de recebíveis', () => {
   it('J5. cursor retorna próxima página', async () => {
     const db = getDb(env.DB);
     // Criar 4 parcelas (2 vendas × 2 parcelas)
-    await criarVenda(db, EMPRESA_A, USUARIO_A, vendaComParcelas('2024-03-01', '2024-04-01'), env.DB);
-    await criarVenda(db, EMPRESA_A, USUARIO_A, vendaComParcelas('2024-05-01', '2024-06-01'), env.DB);
+    await criarVenda(
+      db,
+      EMPRESA_A,
+      USUARIO_A,
+      vendaComParcelas('2024-03-01', '2024-04-01'),
+      env.DB
+    );
+    await criarVenda(
+      db,
+      EMPRESA_A,
+      USUARIO_A,
+      vendaComParcelas('2024-05-01', '2024-06-01'),
+      env.DB
+    );
 
     const { parcelas: pag1, temMais: tm1 } = await listarParcelas(db, EMPRESA_A, { limite: 2 });
     expect(pag1).toHaveLength(2);
     expect(tm1).toBe(true);
 
     const cursor = pag1[pag1.length - 1].id;
-    const { parcelas: pag2, temMais: tm2 } = await listarParcelas(db, EMPRESA_A, { limite: 2, cursor });
+    const { parcelas: pag2, temMais: tm2 } = await listarParcelas(db, EMPRESA_A, {
+      limite: 2,
+      cursor
+    });
     expect(pag2).toHaveLength(2);
     expect(tm2).toBe(false);
 

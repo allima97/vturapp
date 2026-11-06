@@ -21,7 +21,7 @@ import {
   parseConviteInput,
   parseAceitarConviteInput,
   parseRegistroEmpresaInput,
-  validationErrorResponse,
+  validationErrorResponse
 } from './schemas';
 
 import { isOriginAllowed } from '../api/middleware/security';
@@ -236,7 +236,7 @@ describe('D. parseRegistroEmpresaInput', () => {
     const r = parseRegistroEmpresaInput({
       nome: 'Alfa Viagens',
       slug: 'alfa-viagens',
-      cnpj: '11222333000181',
+      cnpj: '11222333000181'
     });
     expect(r.ok).toBe(true);
     if (!r.ok) throw new Error('esperado ok=true');
@@ -267,7 +267,7 @@ describe('D. parseRegistroEmpresaInput', () => {
     const r = parseRegistroEmpresaInput({
       nome: 'Alfa',
       slug: 'alfa',
-      cnpj: '1122333AAABB11',
+      cnpj: '1122333AAABB11'
     });
     expect(r.ok).toBe(false);
     if (r.ok) throw new Error('esperado ok=false');

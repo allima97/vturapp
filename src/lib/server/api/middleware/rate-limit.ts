@@ -121,15 +121,13 @@ export function clearStore(): void {
  *
  * Retorna 429 com header Retry-After quando o limite é excedido.
  */
-export function rateLimitMiddleware(
-  options: RateLimitOptions = {}
-): MiddlewareHandler<ApiEnv> {
+export function rateLimitMiddleware(options: RateLimitOptions = {}): MiddlewareHandler<ApiEnv> {
   const {
     windowMs = 60_000,
     maxRequests = 60,
     message = 'Muitas requisições. Tente novamente em breve.',
     pathPrefix = '/',
-    excludePaths = [],
+    excludePaths = []
   } = options;
 
   // Prune a cada ~100 requisições (probabilístico para evitar overhead)
@@ -158,16 +156,12 @@ export function rateLimitMiddleware(
 
     if (!result.allowed) {
       const retryAfterSec = Math.ceil(result.retryAfterMs / 1000);
-      return c.json(
-        { error: message, code: 'RATE_LIMIT_EXCEEDED' },
-        429,
-        {
-          'Retry-After': String(retryAfterSec),
-          'X-RateLimit-Limit': String(maxRequests),
-          'X-RateLimit-Remaining': '0',
-          'X-RateLimit-Reset': String(Math.ceil((Date.now() + result.retryAfterMs) / 1000)),
-        }
-      );
+      return c.json({ error: message, code: 'RATE_LIMIT_EXCEEDED' }, 429, {
+        'Retry-After': String(retryAfterSec),
+        'X-RateLimit-Limit': String(maxRequests),
+        'X-RateLimit-Remaining': '0',
+        'X-RateLimit-Reset': String(Math.ceil((Date.now() + result.retryAfterMs) / 1000))
+      });
     }
 
     await next();

@@ -13,11 +13,16 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./alerta-comissao', () => ({ handleCronAlertaComissaoPost: spy('handleCronAlertaComissaoPost'), handleCronAlertaComissaoGet: spy('handleCronAlertaComissaoGet') }));
-vi.mock('./lembretes-consultoria', () => ({ handleCronLembretesConsultoriaPost: spy('handleCronLembretesConsultoriaPost') }));
+vi.mock('./alerta-comissao', () => ({
+  handleCronAlertaComissaoPost: spy('handleCronAlertaComissaoPost'),
+  handleCronAlertaComissaoGet: spy('handleCronAlertaComissaoGet')
+}));
+vi.mock('./lembretes-consultoria', () => ({
+  handleCronLembretesConsultoriaPost: spy('handleCronLembretesConsultoriaPost')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
@@ -25,12 +30,12 @@ import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['POST', '/api/v1/cron/alerta-comissao', 'handleCronAlertaComissaoPost', {}],
   ['GET', '/api/v1/cron/alerta-comissao', 'handleCronAlertaComissaoGet', {}],
-  ['POST', '/api/v1/cron/lembretes-consultoria', 'handleCronLembretesConsultoriaPost', {}],
+  ['POST', '/api/v1/cron/lembretes-consultoria', 'handleCronLembretesConsultoriaPost', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/cron/alerta-comissao'],
-  ['PUT', '/api/v1/cron/lembretes-consultoria'],
+  ['PUT', '/api/v1/cron/lembretes-consultoria']
 ];
 
 function ev(method: string, path: string) {

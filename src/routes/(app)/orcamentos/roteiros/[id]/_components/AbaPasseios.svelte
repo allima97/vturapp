@@ -2,16 +2,47 @@
   import { FieldDatalistInput, FieldInput, FieldSelect, FieldTextarea } from '$lib/components/ui';
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
-  import { type RotPasseio, addItem, moveDown, moveUp, newPasseio, removeItem, updateItem } from './tipos';
+  import {
+    type RotPasseio,
+    addItem,
+    moveDown,
+    moveUp,
+    newPasseio,
+    removeItem,
+    updateItem
+  } from './tipos';
   import { ChevronDown, ChevronUp, Plus, Trash2 } from '$lib/icons';
   import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
 
-  let { PASSEIO_TIPO_OPTIONS, handleImportPasseioText, passeioImportError, passeioImportMsg, passeioImportText = $bindable(), passeios = $bindable(), sugestoes }: { PASSEIO_TIPO_OPTIONS: string[]; handleImportPasseioText: () => void; passeioImportError: string | null; passeioImportMsg: string | null; passeioImportText: string; passeios: RotPasseio[]; sugestoes: Record<string, string[]> } = $props();
+  let {
+    PASSEIO_TIPO_OPTIONS,
+    handleImportPasseioText,
+    passeioImportError,
+    passeioImportMsg,
+    passeioImportText = $bindable(),
+    passeios = $bindable(),
+    sugestoes
+  }: {
+    PASSEIO_TIPO_OPTIONS: string[];
+    handleImportPasseioText: () => void;
+    passeioImportError: string | null;
+    passeioImportMsg: string | null;
+    passeioImportText: string;
+    passeios: RotPasseio[];
+    sugestoes: Record<string, string[]>;
+  } = $props();
 </script>
 
 <Card title="Passeios e Serviços" color="clientes">
   <div class="mb-3 flex flex-wrap gap-2">
-    <Button type="button" variant="secondary" size="sm" on:click={() => { passeios = addItem(passeios, newPasseio); }}>
+    <Button
+      type="button"
+      variant="secondary"
+      size="sm"
+      on:click={() => {
+        passeios = addItem(passeios, newPasseio);
+      }}
+    >
       <Plus size={13} class="mr-1" />
       Adicionar passeio
     </Button>
@@ -34,7 +65,9 @@
                 disabled={index === 0}
                 ariaLabel="Mover passeio para cima"
                 title="Mover passeio para cima"
-                on:click={() => { passeios = moveUp(passeios, index); }}
+                on:click={() => {
+                  passeios = moveUp(passeios, index);
+                }}
               >
                 <ChevronUp size={13} />
               </Button>
@@ -46,7 +79,9 @@
                 disabled={index === passeios.length - 1}
                 ariaLabel="Mover passeio para baixo"
                 title="Mover passeio para baixo"
-                on:click={() => { passeios = moveDown(passeios, index); }}
+                on:click={() => {
+                  passeios = moveDown(passeios, index);
+                }}
               >
                 <ChevronDown size={13} />
               </Button>
@@ -57,7 +92,9 @@
                 class_name="text-slate-400 hover:text-red-600"
                 ariaLabel="Remover passeio"
                 title="Remover passeio"
-                on:click={() => { passeios = removeItem(passeios, index); }}
+                on:click={() => {
+                  passeios = removeItem(passeios, index);
+                }}
               >
                 <Trash2 size={13} />
               </Button>
@@ -131,7 +168,11 @@
                 type="number"
                 value={passeio.qtd_adultos ?? ''}
                 class_name="w-full"
-                on:input={(e) => { passeios = updateItem(passeios, index, { qtd_adultos: Number((e.target as HTMLInputElement).value) || null }); }}
+                on:input={(e) => {
+                  passeios = updateItem(passeios, index, {
+                    qtd_adultos: Number((e.target as HTMLInputElement).value) || null
+                  });
+                }}
               />
             </div>
             <div>
@@ -140,7 +181,11 @@
                 type="number"
                 value={passeio.qtd_criancas ?? ''}
                 class_name="w-full"
-                on:input={(e) => { passeios = updateItem(passeios, index, { qtd_criancas: Number((e.target as HTMLInputElement).value) || null }); }}
+                on:input={(e) => {
+                  passeios = updateItem(passeios, index, {
+                    qtd_criancas: Number((e.target as HTMLInputElement).value) || null
+                  });
+                }}
               />
             </div>
             <div>
@@ -149,7 +194,11 @@
                 type="number"
                 value={passeio.valor_original ?? ''}
                 class_name="w-full"
-                on:input={(e) => { passeios = updateItem(passeios, index, { valor_original: Number((e.target as HTMLInputElement).value) || null }); }}
+                on:input={(e) => {
+                  passeios = updateItem(passeios, index, {
+                    valor_original: Number((e.target as HTMLInputElement).value) || null
+                  });
+                }}
               />
             </div>
             <div>
@@ -158,7 +207,11 @@
                 type="number"
                 value={passeio.valor_final ?? ''}
                 class_name="w-full"
-                on:input={(e) => { passeios = updateItem(passeios, index, { valor_final: Number((e.target as HTMLInputElement).value) || null }); }}
+                on:input={(e) => {
+                  passeios = updateItem(passeios, index, {
+                    valor_final: Number((e.target as HTMLInputElement).value) || null
+                  });
+                }}
               />
             </div>
           </div>
@@ -166,7 +219,14 @@
       {/each}
     </div>
     <div class="mt-3 flex flex-wrap gap-2">
-      <Button type="button" variant="secondary" size="sm" on:click={() => { passeios = addItem(passeios, newPasseio); }}>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        on:click={() => {
+          passeios = addItem(passeios, newPasseio);
+        }}
+      >
         <Plus size={13} class="mr-1" />
         Adicionar passeio
       </Button>
@@ -175,10 +235,17 @@
 
   <div class="mt-6 rounded-xl border border-dashed border-slate-300 p-4">
     <p class="mb-2 text-sm font-medium text-slate-600">Importar passeios por texto</p>
-    <FieldTextarea bind:value={passeioImportText} rows={4} class_name="w-full" monospace={true}
-      placeholder="Cole o texto com dados dos passeios (um por linha ou texto livre)…" />
+    <FieldTextarea
+      bind:value={passeioImportText}
+      rows={4}
+      class_name="w-full"
+      monospace={true}
+      placeholder="Cole o texto com dados dos passeios (um por linha ou texto livre)…"
+    />
     <div class="mt-2 flex items-center gap-3">
-      <Button type="button" variant="secondary" size="sm" on:click={handleImportPasseioText}>Importar</Button>
+      <Button type="button" variant="secondary" size="sm" on:click={handleImportPasseioText}
+        >Importar</Button
+      >
       {#if passeioImportMsg}<span class="text-xs text-green-600">{passeioImportMsg}</span>{/if}
       {#if passeioImportError}<span class="text-xs text-red-600">{passeioImportError}</span>{/if}
     </div>

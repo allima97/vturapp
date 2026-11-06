@@ -90,7 +90,7 @@ export const MAPA_MODULOS: Record<string, string> = {
   Comissionamento: 'comissionamento',
 
   'Ranking de vendas': 'relatorios_ranking_vendas',
-  Perfil: 'perfil',
+  Perfil: 'perfil'
 };
 
 // ---------------------------------------------------------------------------
@@ -101,7 +101,7 @@ export const MODULO_ALIASES: Record<string, string> = Object.entries(MAPA_MODULO
     acc[label.toLowerCase()] = modulo;
     return acc;
   },
-  {} as Record<string, string>,
+  {} as Record<string, string>
 );
 
 // ---------------------------------------------------------------------------
@@ -224,7 +224,7 @@ export const ROTAS_MODULOS: Record<string, string> = {
   '/perfil/personalizar': 'Perfil',
   '/perfil/escala': 'Perfil',
   '/consultoria-online': 'Consultoria Online',
-  '/documentacao': 'Admin',
+  '/documentacao': 'Admin'
 };
 
 // ---------------------------------------------------------------------------
@@ -246,7 +246,7 @@ export const MODULO_HERANCA: Record<string, string[]> = {
   CRM: ['Parametros'],
   ParametrosAvisos: ['Parametros'],
   Avisos: ['Parametros'],
-  'Formas de Pagamento': ['Financeiro'],
+  'Formas de Pagamento': ['Financeiro']
 };
 
 // ---------------------------------------------------------------------------
@@ -257,7 +257,7 @@ const MODULO_REVERSE: Record<string, string> = Object.entries(MAPA_MODULOS).redu
     acc[String(key)] = label;
     return acc;
   },
-  {} as Record<string, string>,
+  {} as Record<string, string>
 );
 
 // ---------------------------------------------------------------------------
@@ -338,8 +338,8 @@ export const SECOES_PERMISSOES: ModuloSecaoPermissoes[] = [
       'Clientes',
       'Circuitos',
       'Comissionamento',
-      'Operacao',
-    ],
+      'Operacao'
+    ]
   },
   {
     id: 'basica',
@@ -355,8 +355,8 @@ export const SECOES_PERMISSOES: ModuloSecaoPermissoes[] = [
       'Perfil',
       'Minhas Preferências',
       'Documentos Viagens',
-      'Vouchers',
-    ],
+      'Vouchers'
+    ]
   },
   {
     id: 'relatorios',
@@ -366,8 +366,8 @@ export const SECOES_PERMISSOES: ModuloSecaoPermissoes[] = [
       'RelatorioVendas',
       'RelatorioDestinos',
       'RelatorioProdutos',
-      'RelatorioClientes',
-    ],
+      'RelatorioClientes'
+    ]
   },
   {
     id: 'financeiro',
@@ -378,24 +378,18 @@ export const SECOES_PERMISSOES: ModuloSecaoPermissoes[] = [
       'Comissionamento',
       'Vendas',
       'Formas de Pagamento',
-      'RegrasComissao',
-    ],
+      'RegrasComissao'
+    ]
   },
   {
     id: 'gestor',
     titulo: 'Gestor',
-    modulos: [
-      'Ranking de vendas',
-      'Controle de SAC',
-      'Metas',
-      'Equipe',
-      'Escalas',
-    ],
+    modulos: ['Ranking de vendas', 'Controle de SAC', 'Metas', 'Equipe', 'Escalas']
   },
   {
     id: 'master',
     titulo: 'Master',
-    modulos: ['MasterEmpresas', 'MasterUsuarios', 'MasterPermissoes'],
+    modulos: ['MasterEmpresas', 'MasterUsuarios', 'MasterPermissoes']
   },
   {
     id: 'cadastro',
@@ -408,8 +402,8 @@ export const SECOES_PERMISSOES: ModuloSecaoPermissoes[] = [
       'Destinos',
       'Produtos',
       'ProdutosLote',
-      'Fornecedores',
-    ],
+      'Fornecedores'
+    ]
   },
   {
     id: 'parametros',
@@ -423,8 +417,8 @@ export const SECOES_PERMISSOES: ModuloSecaoPermissoes[] = [
       'CRM',
       'Cambios',
       'Orcamentos (PDF)',
-      'Formas de Pagamento',
-    ],
+      'Formas de Pagamento'
+    ]
   },
   {
     id: 'admin',
@@ -438,9 +432,9 @@ export const SECOES_PERMISSOES: ModuloSecaoPermissoes[] = [
       'AdminFinanceiro',
       'AdminPlanos',
       'AdminUserTypes',
-      'AdminSystemModules',
-    ],
-  },
+      'AdminSystemModules'
+    ]
+  }
 ];
 
 // ---------------------------------------------------------------------------
@@ -461,7 +455,7 @@ function resolveSecaoApplyModulos(
   secao: ModuloSecaoPermissoes,
   defsById: Record<string, ModuloSecaoPermissoes>,
   baseMap: Map<string, string>,
-  visited: Set<string>,
+  visited: Set<string>
 ): string[] {
   if (!secao?.id) return [];
   if (visited.has(secao.id)) return [];
@@ -499,7 +493,7 @@ export function agruparModulosPorSecao(modulosBase: string[]): ModuloSecaoPermis
       acc[secao.id] = secao;
       return acc;
     },
-    {} as Record<string, ModuloSecaoPermissoes>,
+    {} as Record<string, ModuloSecaoPermissoes>
   );
 
   const usedKeys = new Set<string>();
@@ -524,20 +518,18 @@ export function agruparModulosPorSecao(modulosBase: string[]): ModuloSecaoPermis
       titulo: secao.titulo,
       modulos,
       applyModulos,
-      includes: secao.includes || [],
+      includes: secao.includes || []
     });
   }
 
-  const outros = (modulosBase || []).filter(
-    (modulo) => !usedKeys.has(normalizeSecaoKey(modulo)),
-  );
+  const outros = (modulosBase || []).filter((modulo) => !usedKeys.has(normalizeSecaoKey(modulo)));
   if (outros.length) {
     grupos.push({
       id: 'outros',
       titulo: 'Outros',
       modulos: outros,
       applyModulos: outros,
-      includes: [],
+      includes: []
     });
   }
 

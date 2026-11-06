@@ -90,11 +90,7 @@
         color="gray"
       />
     </div>
-    <Button 
-      variant="secondary"
-      disabled={loading}
-      on:click={loadDebugData}
-    >
+    <Button variant="secondary" disabled={loading} on:click={loadDebugData}>
       <RefreshCw size={18} class={loading ? 'animate-spin' : ''} />
       Atualizar
     </Button>
@@ -103,11 +99,11 @@
   {#if loading}
     <LoadingState />
   {:else if error}
-    <div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+    <div role="alert" class="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
       {error}
     </div>
   {:else if debugData}
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+    <div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
       <!-- Usuário -->
       <Card title="Usuário" icon={CheckCircle}>
         <div class="space-y-2 text-sm">
@@ -141,7 +137,7 @@
       <!-- Scope -->
       <Card title="Scope (Permissões Calculadas)" icon={CheckCircle}>
         <div class="space-y-2 text-sm">
-          <div class="flex justify-between items-center">
+          <div class="flex items-center justify-between">
             <span class="text-slate-500">Papel:</span>
             <span class="font-medium">{debugData.scope?.papel}</span>
           </div>
@@ -152,7 +148,9 @@
               {:else}
                 <XCircle size={16} class="text-slate-300" />
               {/if}
-              <span class={debugData.scope?.isAdmin ? 'text-green-700' : 'text-slate-400'}>Admin</span>
+              <span class={debugData.scope?.isAdmin ? 'text-green-700' : 'text-slate-400'}
+                >Admin</span
+              >
             </div>
             <div class="flex items-center gap-2">
               {#if debugData.scope?.isMaster}
@@ -160,7 +158,9 @@
               {:else}
                 <XCircle size={16} class="text-slate-300" />
               {/if}
-              <span class={debugData.scope?.isMaster ? 'text-green-700' : 'text-slate-400'}>Master</span>
+              <span class={debugData.scope?.isMaster ? 'text-green-700' : 'text-slate-400'}
+                >Master</span
+              >
             </div>
             <div class="flex items-center gap-2">
               {#if debugData.scope?.isGestor}
@@ -168,7 +168,9 @@
               {:else}
                 <XCircle size={16} class="text-slate-300" />
               {/if}
-              <span class={debugData.scope?.isGestor ? 'text-green-700' : 'text-slate-400'}>Gestor</span>
+              <span class={debugData.scope?.isGestor ? 'text-green-700' : 'text-slate-400'}
+                >Gestor</span
+              >
             </div>
             <div class="flex items-center gap-2">
               {#if debugData.scope?.isVendedor}
@@ -176,12 +178,14 @@
               {:else}
                 <XCircle size={16} class="text-slate-300" />
               {/if}
-              <span class={debugData.scope?.isVendedor ? 'text-green-700' : 'text-slate-400'}>Vendedor</span>
+              <span class={debugData.scope?.isVendedor ? 'text-green-700' : 'text-slate-400'}
+                >Vendedor</span
+              >
             </div>
           </div>
-          <div class="pt-2 border-t border-slate-100">
+          <div class="border-t border-slate-100 pt-2">
             <span class="text-slate-500">Company IDs:</span>
-            <div class="mt-1 font-mono text-xs bg-slate-50 p-2 rounded-sm">
+            <div class="mt-1 rounded-sm bg-slate-50 p-2 font-mono text-xs">
               {JSON.stringify(debugData.scope?.companyIds)}
             </div>
           </div>
@@ -193,12 +197,12 @@
         {#if debugData.permissoes_detalhadas && debugData.permissoes_detalhadas.length > 0}
           <div class="space-y-2">
             {#each debugData.permissoes_detalhadas as perm}
-              <div class="flex items-center justify-between p-2 bg-slate-50 rounded-sm">
+              <div class="flex items-center justify-between rounded-sm bg-slate-50 p-2">
                 <span class="font-medium">{perm.modulo}</span>
                 <div class="flex items-center gap-2">
                   <span class="text-sm text-slate-500">Nível {perm.nivel}</span>
                   {#if perm.company_id}
-                    <span class="text-xs font-mono bg-slate-200 px-2 py-0.5 rounded-sm">
+                    <span class="rounded-sm bg-slate-200 px-2 py-0.5 font-mono text-xs">
                       {perm.company_id.slice(0, 8)}...
                     </span>
                   {/if}
@@ -207,23 +211,23 @@
             {/each}
           </div>
         {:else}
-          <p class="text-slate-500 text-sm">Nenhuma permissão encontrada no banco</p>
+          <p class="text-sm text-slate-500">Nenhuma permissão encontrada no banco</p>
         {/if}
       </Card>
 
       <!-- Empresas -->
       <Card title="Empresas Disponíveis" icon={CheckCircle}>
         {#if debugData.empresas_disponiveis && debugData.empresas_disponiveis.length > 0}
-          <div class="space-y-2 max-h-60 overflow-y-auto">
+          <div class="max-h-60 space-y-2 overflow-y-auto">
             {#each debugData.empresas_disponiveis as empresa}
-              <div class="flex items-center justify-between p-2 bg-slate-50 rounded-sm text-sm">
+              <div class="flex items-center justify-between rounded-sm bg-slate-50 p-2 text-sm">
                 <span>{empresa.nome_fantasia}</span>
                 <span class="font-mono text-xs text-slate-400">{empresa.id.slice(0, 8)}...</span>
               </div>
             {/each}
           </div>
         {:else}
-          <p class="text-slate-500 text-sm">Nenhuma empresa encontrada</p>
+          <p class="text-sm text-slate-500">Nenhuma empresa encontrada</p>
         {/if}
       </Card>
 
@@ -232,30 +236,36 @@
         {#if debugData.sample_clientes && debugData.sample_clientes.length > 0}
           <div class="space-y-2">
             {#each debugData.sample_clientes as cliente}
-              <div class="flex items-center justify-between p-3 bg-slate-50 rounded-sm">
+              <div class="flex items-center justify-between rounded-sm bg-slate-50 p-3">
                 <div>
                   <p class="font-medium">{cliente.nome}</p>
-                  <p class="text-xs text-slate-500 font-mono">ID: {cliente.id}</p>
+                  <p class="font-mono text-xs text-slate-500">ID: {cliente.id}</p>
                 </div>
                 <div class="text-right text-sm">
                   <p class="text-slate-500">
-                    Company: <span class="font-mono">{cliente.company_id ? cliente.company_id.slice(0, 8) + '...' : 'N/A'}</span>
+                    Company: <span class="font-mono"
+                      >{cliente.company_id ? cliente.company_id.slice(0, 8) + '...' : 'N/A'}</span
+                    >
                   </p>
                   <p class="text-slate-500">
-                    Created by: <span class="font-mono">{cliente.created_by ? cliente.created_by.slice(0, 8) + '...' : 'N/A'}</span>
+                    Created by: <span class="font-mono"
+                      >{cliente.created_by ? cliente.created_by.slice(0, 8) + '...' : 'N/A'}</span
+                    >
                   </p>
                 </div>
               </div>
             {/each}
           </div>
         {:else}
-          <p class="text-slate-500 text-sm">Nenhum cliente encontrado</p>
+          <p class="text-sm text-slate-500">Nenhum cliente encontrado</p>
         {/if}
       </Card>
 
       <!-- JSON Completo -->
       <Card title="JSON Completo" icon={Bug} class="lg:col-span-2">
-        <pre class="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-x-auto text-xs">{formatJSON(debugData)}</pre>
+        <pre class="overflow-x-auto rounded-lg bg-slate-900 p-4 text-xs text-slate-100">{formatJSON(
+            debugData
+          )}</pre>
       </Card>
     </div>
   {/if}

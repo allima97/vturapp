@@ -24,11 +24,11 @@ createAuth(d1, secret, baseURL?, resendApiKey?)
 
 `src/lib/server/invites/service.ts`:
 
-| Função | O que faz |
-|--------|-----------|
-| `criarConvite()` | Gera token UUID, salva em `convites`, envia e-mail via Resend |
-| `getConvite()` | Valida token (expirado? aceito?), retorna info da empresa |
-| `aceitarConvite()` | Cria conta Better Auth → vincula empresa → cria membro |
+| Função             | O que faz                                                     |
+| ------------------ | ------------------------------------------------------------- |
+| `criarConvite()`   | Gera token UUID, salva em `convites`, envia e-mail via Resend |
+| `getConvite()`     | Valida token (expirado? aceito?), retorna info da empresa     |
+| `aceitarConvite()` | Cria conta Better Auth → vincula empresa → cria membro        |
 
 **Tipo de erro:** `ConviteError` com `code: ConviteErrorCode` para respostas precisas.
 
@@ -49,12 +49,12 @@ Nova app Hono paralela em `src/lib/server/api/app-v2.ts`.
 
 #### Rotas
 
-| Método | Path | Auth | Descrição |
-|--------|------|------|-----------|
-| GET | `/api/v2/health` | — | Health check |
-| POST | `/api/v2/invites` | admin | Criar convite |
-| GET | `/api/v2/invites/:token` | — | Consultar convite |
-| POST | `/api/v2/invites/:token/accept` | — | Aceitar convite |
+| Método | Path                            | Auth  | Descrição         |
+| ------ | ------------------------------- | ----- | ----------------- |
+| GET    | `/api/v2/health`                | —     | Health check      |
+| POST   | `/api/v2/invites`               | admin | Criar convite     |
+| GET    | `/api/v2/invites/:token`        | —     | Consultar convite |
+| POST   | `/api/v2/invites/:token/accept` | —     | Aceitar convite   |
 
 #### Catch-all SvelteKit
 
@@ -63,12 +63,14 @@ Nova app Hono paralela em `src/lib/server/api/app-v2.ts`.
 ### 5. Tipos atualizados
 
 `src/app.d.ts` — `App.Locals` agora inclui:
+
 - `betterAuthUser?: {...} | null`
 - `betterAuthSession?: {...} | null`
 - `empresaId?: number | null`
 - `papel?: Papel | null`
 
 `src/lib/server/api/types.ts` — `ApiEnv.Bindings` agora inclui:
+
 - `BETTER_AUTH_SECRET: string`
 - `RESEND_API_KEY: string`
 - `PUBLIC_APP_URL?: string`

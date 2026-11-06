@@ -16,7 +16,11 @@
   import { apiDelete, apiFetch, apiGet, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
   import { ImagePlus, Pencil, RefreshCw, Save, Shield, Trash2, X } from '$lib/icons';
-  import type { VoucherAssetRecord, VoucherAssetKind, VoucherAssetProvider } from '$lib/vouchers/types';
+  import type {
+    VoucherAssetRecord,
+    VoucherAssetKind,
+    VoucherAssetProvider
+  } from '$lib/vouchers/types';
   import { escapeHtml } from '$lib/utils/html';
   import { toUserMessage } from '$lib/utils/errors';
 
@@ -97,13 +101,15 @@
       key: 'provider',
       label: 'Fornecedor',
       sortable: true,
-      formatter: (value: VoucherAssetProvider) => providerOptions.find((item) => item.value === value)?.label || value
+      formatter: (value: VoucherAssetProvider) =>
+        providerOptions.find((item) => item.value === value)?.label || value
     },
     {
       key: 'asset_kind',
       label: 'Tipo',
       sortable: true,
-      formatter: (value: VoucherAssetKind) => assetKindOptions.find((item) => item.value === value)?.label || value
+      formatter: (value: VoucherAssetKind) =>
+        assetKindOptions.find((item) => item.value === value)?.label || value
     },
     {
       key: 'label',
@@ -221,10 +227,13 @@
         body.set('file', fileList[0]);
       }
 
-      const payload = await apiFetch<{ success?: boolean; error?: string }>('/api/v1/voucher-assets', {
-        method: form.id ? 'PATCH' : 'POST',
-        body
-      });
+      const payload = await apiFetch<{ success?: boolean; error?: string }>(
+        '/api/v1/voucher-assets',
+        {
+          method: form.id ? 'PATCH' : 'POST',
+          body
+        }
+      );
       if (payload?.success === false) {
         throw new Error(payload?.error || 'Erro ao salvar asset.');
       }
@@ -243,10 +252,13 @@
     if (!deleteTarget || !companyId) return;
 
     try {
-      const payload = await apiDelete<{ success?: boolean; error?: string }>('/api/v1/voucher-assets', {
-        id: deleteTarget.id,
-        company_id: companyId
-      });
+      const payload = await apiDelete<{ success?: boolean; error?: string }>(
+        '/api/v1/voucher-assets',
+        {
+          id: deleteTarget.id,
+          company_id: companyId
+        }
+      );
       if (payload?.success === false) {
         throw new Error(payload?.error || 'Erro ao excluir asset.');
       }
@@ -271,13 +283,8 @@
   title="Parâmetros Vouchers"
   subtitle="Gerencie os assets usados no preview e na impressão dos vouchers por fornecedor e tipo."
   color="operacao"
-  breadcrumbs={[
-    { label: 'Parâmetros', href: '/parametros' },
-    { label: 'Vouchers' }
-  ]}
-  actions={[
-    { label: 'Atualizar', onClick: loadAssets, variant: 'secondary', icon: RefreshCw }
-  ]}
+  breadcrumbs={[{ label: 'Parâmetros', href: '/parametros' }, { label: 'Vouchers' }]}
+  actions={[{ label: 'Atualizar', onClick: loadAssets, variant: 'secondary', icon: RefreshCw }]}
 />
 
 {#if accessDenied}
@@ -295,7 +302,8 @@
 {:else if !companyId}
   <Card color="operacao">
     <p class="text-sm text-slate-600">
-      Não foi possível resolver a empresa ativa do seu contexto. Abra esta tela com uma empresa vinculada ao usuário.
+      Não foi possível resolver a empresa ativa do seu contexto. Abra esta tela com uma empresa
+      vinculada ao usuário.
     </p>
   </Card>
 {:else}
@@ -308,7 +316,10 @@
           value={form.provider}
           options={providerOptions}
           disabled={!canEdit || saving}
-          on:change={(event) => (form.provider = ((event.currentTarget as HTMLSelectElement).value as VoucherAssetProvider) || 'generic')}
+          on:change={(event) =>
+            (form.provider =
+              ((event.currentTarget as HTMLSelectElement).value as VoucherAssetProvider) ||
+              'generic')}
         />
 
         <FieldSelect
@@ -317,7 +328,9 @@
           value={form.asset_kind}
           options={assetKindOptions}
           disabled={!canEdit || saving}
-          on:change={(event) => (form.asset_kind = ((event.currentTarget as HTMLSelectElement).value as VoucherAssetKind) || 'image')}
+          on:change={(event) =>
+            (form.asset_kind =
+              ((event.currentTarget as HTMLSelectElement).value as VoucherAssetKind) || 'image')}
         />
 
         <FieldInput
@@ -355,13 +368,17 @@
           bind:files={fileList}
           accept="image/png,image/jpeg,image/webp"
           disabled={!canEdit || saving}
-          helper={form.id ? 'Opcional. Se enviar um novo arquivo, o asset atual será substituído.' : 'Envie JPG, PNG ou WebP com até 8MB.'}
+          helper={form.id
+            ? 'Opcional. Se enviar um novo arquivo, o asset atual será substituído.'
+            : 'Envie JPG, PNG ou WebP com até 8MB.'}
           class_name="w-full"
         />
 
         {#if selectedAsset?.preview_url}
           <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-            <p class="mb-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Preview atual</p>
+            <p class="mb-3 text-xs font-semibold tracking-wide text-slate-500 uppercase">
+              Preview atual
+            </p>
             <div class="flex items-center justify-center rounded-xl bg-white p-4">
               <img
                 src={selectedAsset.preview_url}
@@ -373,7 +390,12 @@
         {/if}
 
         <div class="flex flex-wrap gap-3 pt-2">
-          <Button variant="primary" color="operacao" disabled={!canEdit || saving} on:click={saveAsset}>
+          <Button
+            variant="primary"
+            color="operacao"
+            disabled={!canEdit || saving}
+            on:click={saveAsset}
+          >
             <Save size={18} class="mr-2" />
             {form.id ? 'Salvar alterações' : 'Enviar asset'}
           </Button>
@@ -439,6 +461,7 @@
   onCancel={() => (deleteTarget = null)}
 >
   <p class="text-sm text-slate-600">
-    Tem certeza que deseja excluir este asset? A imagem será removida da tabela e do bucket de storage.
+    Tem certeza que deseja excluir este asset? A imagem será removida da tabela e do bucket de
+    storage.
   </p>
 </Dialog>

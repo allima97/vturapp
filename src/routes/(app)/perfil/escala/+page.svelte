@@ -39,7 +39,12 @@
   };
 
   const TIPO_CODIGO: Record<string, string> = {
-    TRABALHO: 'T', PLANTAO: 'P', FOLGA: 'F', FERIAS: 'X', LICENCA: 'L', FERIADO: 'H'
+    TRABALHO: 'T',
+    PLANTAO: 'P',
+    FOLGA: 'F',
+    FERIAS: 'X',
+    LICENCA: 'L',
+    FERIADO: 'H'
   };
 
   const TIPO_COLOR: Record<string, string> = {
@@ -52,8 +57,12 @@
   };
 
   const TIPO_LABEL: Record<string, string> = {
-    TRABALHO: 'Trabalho', PLANTAO: 'Plantão', FOLGA: 'Folga',
-    FERIAS: 'Férias', LICENCA: 'Licença', FERIADO: 'Feriado'
+    TRABALHO: 'Trabalho',
+    PLANTAO: 'Plantão',
+    FOLGA: 'Folga',
+    FERIAS: 'Férias',
+    LICENCA: 'Licença',
+    FERIADO: 'Feriado'
   };
 
   let loading = true;
@@ -125,18 +134,24 @@
   $: diasResumo = dias.reduce(
     (acc, dia) => {
       if (dia.tipo === 'TRABALHO' || dia.tipo === 'PLANTAO') acc.diasTrabalhados += 1;
-      if (dia.tipo === 'FOLGA' || dia.tipo === 'FERIAS' || dia.tipo === 'LICENCA') acc.diasFolga += 1;
+      if (dia.tipo === 'FOLGA' || dia.tipo === 'FERIAS' || dia.tipo === 'LICENCA')
+        acc.diasFolga += 1;
       return acc;
     },
     { diasTrabalhados: 0, diasFolga: 0 }
   );
   $: ({ diasTrabalhados, diasFolga } = diasResumo);
-  $: feriadosDoPeriodo = feriados.reduce((total, feriado) => total + (feriado.data.startsWith(periodoAtual) ? 1 : 0), 0);
+  $: feriadosDoPeriodo = feriados.reduce(
+    (total, feriado) => total + (feriado.data.startsWith(periodoAtual) ? 1 : 0),
+    0
+  );
   $: usuarioId = $auth.user?.id || '';
   $: canViewEquipe = usuarios.some((usuario) => usuario.id !== usuarioId);
   $: tabItems = [
     { key: 'minha_escala', label: 'Minha Escala' },
-    ...(canViewEquipe ? [{ key: 'escala_equipe', label: 'Escala da Equipe', badge: usuarios.length }] : [])
+    ...(canViewEquipe
+      ? [{ key: 'escala_equipe', label: 'Escala da Equipe', badge: usuarios.length }]
+      : [])
   ];
   $: if (!canViewEquipe && activeTab !== 'minha_escala') {
     activeTab = 'minha_escala';
@@ -150,13 +165,8 @@
 <PageHeader
   title="Minha Escala"
   subtitle="Visualize sua escala de trabalho mensal e, quando disponível, a escala da equipe."
-  breadcrumbs={[
-    { label: 'Perfil', href: '/perfil' },
-    { label: 'Minha Escala' }
-  ]}
-  actions={[
-    { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }
-  ]}
+  breadcrumbs={[{ label: 'Perfil', href: '/perfil' }, { label: 'Minha Escala' }]}
+  actions={[{ label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }]}
 />
 
 <Tabs className="mb-6" bind:activeKey={activeTab} items={tabItems} />
@@ -179,31 +189,43 @@
 {#if activeTab === 'minha_escala'}
   <div class="vtur-kpi-grid mb-6">
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500"><Calendar size={20} /></div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
+        <Calendar size={20} />
+      </div>
       <div>
         <p class="text-sm font-medium text-slate-500">Dias trabalhados</p>
         <p class="text-2xl font-bold text-slate-900">{diasTrabalhados}</p>
       </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500"><Calendar size={20} /></div>
+      <div
+        class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500"
+      >
+        <Calendar size={20} />
+      </div>
       <div>
         <p class="text-sm font-medium text-slate-500">Folgas / Ferias</p>
         <p class="text-2xl font-bold text-slate-900">{diasFolga}</p>
       </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500"><Calendar size={20} /></div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500">
+        <Calendar size={20} />
+      </div>
       <div>
         <p class="text-sm font-medium text-slate-500">Feriados no mes</p>
         <p class="text-2xl font-bold text-slate-900">{feriadosDoPeriodo}</p>
       </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400"><Calendar size={20} /></div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-50 text-slate-400">
+        <Calendar size={20} />
+      </div>
       <div>
         <p class="text-sm font-medium text-slate-500">Sem registro</p>
-        <p class="text-2xl font-bold text-slate-900">{diasDoMes.length - diasTrabalhados - diasFolga}</p>
+        <p class="text-2xl font-bold text-slate-900">
+          {diasDoMes.length - diasTrabalhados - diasFolga}
+        </p>
       </div>
     </div>
   </div>
@@ -214,13 +236,18 @@
 {:else if activeTab === 'escala_equipe' && canViewEquipe}
   <Card padding="none">
     <div class="overflow-x-visible md:overflow-x-auto">
-      <table class="min-w-full text-xs table-mobile-cards">
-        <thead class="bg-slate-50 border-b border-slate-200">
+      <table class="table-mobile-cards min-w-full text-xs">
+        <thead class="border-b border-slate-200 bg-slate-50">
           <tr>
-            <th class="sticky left-0 z-10 min-w-[160px] bg-slate-50 px-4 py-3 text-left font-semibold text-slate-700">Colaborador</th>
+            <th
+              class="sticky left-0 z-10 min-w-[160px] bg-slate-50 px-4 py-3 text-left font-semibold text-slate-700"
+              >Colaborador</th
+            >
             {#each diasDoMes as { date, dow, day }}
               <th
-                class="min-w-[36px] px-1 py-3 text-center font-medium {dow === 0 || dow === 6 ? 'text-red-500' : 'text-slate-600'} {isFeriado(date) ? 'bg-red-50' : ''}"
+                class="min-w-[36px] px-1 py-3 text-center font-medium {dow === 0 || dow === 6
+                  ? 'text-red-500'
+                  : 'text-slate-600'} {isFeriado(date) ? 'bg-red-50' : ''}"
                 title={isFeriado(date)?.nome || ''}
               >
                 <div>{day}</div>
@@ -232,21 +259,35 @@
         <tbody class="divide-y divide-slate-100">
           {#each usuarios as usuario}
             <tr class="hover:bg-slate-50/50">
-              <td class="sticky left-0 z-10 border-r border-slate-100 bg-white px-4 py-2 font-medium text-slate-900">
+              <td
+                class="sticky left-0 z-10 border-r border-slate-100 bg-white px-4 py-2 font-medium text-slate-900"
+              >
                 {usuario.nome_completo || usuario.email || 'Usuário'}
               </td>
               {#each diasDoMes as { date, dow }}
                 {@const registro = getDiaEquipe(usuario.id, date)}
                 {@const feriado = isFeriado(date)}
-                <td class="px-0.5 py-1 text-center {dow === 0 || dow === 6 ? 'bg-slate-50/50' : ''}">
+                <td
+                  class="px-0.5 py-1 text-center {dow === 0 || dow === 6 ? 'bg-slate-50/50' : ''}"
+                >
                   {#if registro?.tipo}
-                    <span class="inline-flex h-6 w-6 items-center justify-center rounded-sm text-[10px] font-bold {TIPO_COLOR[registro.tipo] || 'bg-slate-100 text-slate-600'}">
+                    <span
+                      class="inline-flex h-6 w-6 items-center justify-center rounded-sm text-[10px] font-bold {TIPO_COLOR[
+                        registro.tipo
+                      ] || 'bg-slate-100 text-slate-600'}"
+                    >
                       {TIPO_CODIGO[registro.tipo] || '?'}
                     </span>
                   {:else if feriado}
-                    <span class="inline-flex h-6 w-6 items-center justify-center rounded-sm text-[10px] font-bold bg-red-100 text-red-600">H</span>
+                    <span
+                      class="inline-flex h-6 w-6 items-center justify-center rounded-sm bg-red-100 text-[10px] font-bold text-red-600"
+                      >H</span
+                    >
                   {:else}
-                    <span class="inline-flex h-6 w-6 items-center justify-center rounded-sm text-[10px] text-slate-300">·</span>
+                    <span
+                      class="inline-flex h-6 w-6 items-center justify-center rounded-sm text-[10px] text-slate-300"
+                      >·</span
+                    >
                   {/if}
                 </td>
               {/each}
@@ -259,7 +300,11 @@
     <div class="flex flex-wrap gap-3 border-t border-slate-100 px-4 py-3 text-xs text-slate-600">
       {#each Object.entries(TIPO_LABEL) as [key, label]}
         <span class="inline-flex items-center gap-1">
-          <span class="inline-flex h-5 w-5 items-center justify-center rounded-sm text-[10px] font-bold {TIPO_COLOR[key] || 'bg-slate-100'}">
+          <span
+            class="inline-flex h-5 w-5 items-center justify-center rounded-sm text-[10px] font-bold {TIPO_COLOR[
+              key
+            ] || 'bg-slate-100'}"
+          >
             {TIPO_CODIGO[key] || '?'}
           </span>
           {label}
@@ -270,8 +315,8 @@
 {:else}
   <Card padding="none">
     <div class="overflow-x-visible md:overflow-x-auto">
-      <table class="min-w-full text-sm table-mobile-cards">
-        <thead class="bg-slate-50 border-b border-slate-200">
+      <table class="table-mobile-cards min-w-full text-sm">
+        <thead class="border-b border-slate-200 bg-slate-50">
           <tr>
             <th class="px-4 py-3 text-left font-semibold text-slate-600">Data</th>
             <th class="px-4 py-3 text-left font-semibold text-slate-600">Dia</th>
@@ -284,11 +329,15 @@
           {#each diasDoMes as { date, dow, day }}
             {@const registro = getDia(date)}
             {@const feriado = isFeriado(date)}
-            <tr class="{dow === 0 || dow === 6 ? 'bg-slate-50/50' : ''} {feriado ? 'bg-red-50/30' : ''}">
+            <tr
+              class="{dow === 0 || dow === 6 ? 'bg-slate-50/50' : ''} {feriado
+                ? 'bg-red-50/30'
+                : ''}"
+            >
               <td class="px-4 py-2 text-slate-700">
                 {formatDate(date)}
               </td>
-              <td class="px-4 py-2 text-slate-500 text-xs">
+              <td class="px-4 py-2 text-xs text-slate-500">
                 {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][dow]}
                 {#if feriado}
                   <span class="ml-1 text-red-500">({feriado.nome})</span>
@@ -296,33 +345,44 @@
               </td>
               <td class="px-4 py-2">
                 {#if registro?.tipo}
-                  <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {TIPO_COLOR[registro.tipo] || 'bg-slate-100 text-slate-600'}">
+                  <span
+                    class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {TIPO_COLOR[
+                      registro.tipo
+                    ] || 'bg-slate-100 text-slate-600'}"
+                  >
                     {TIPO_LABEL[registro.tipo] || registro.tipo}
                   </span>
                 {:else if feriado}
-                  <span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold bg-red-100 text-red-600">Feriado</span>
+                  <span
+                    class="inline-flex rounded-full bg-red-100 px-2.5 py-1 text-xs font-semibold text-red-600"
+                    >Feriado</span
+                  >
                 {:else}
-                  <span class="text-slate-300 text-xs">—</span>
+                  <span class="text-xs text-slate-300">—</span>
                 {/if}
               </td>
-              <td class="px-4 py-2 text-slate-600 text-xs">
+              <td class="px-4 py-2 text-xs text-slate-600">
                 {#if registro?.hora_inicio && registro?.hora_fim}
                   {registro.hora_inicio.slice(0, 5)} – {registro.hora_fim.slice(0, 5)}
                 {:else}
                   —
                 {/if}
               </td>
-              <td class="px-4 py-2 text-slate-500 text-xs">{registro?.observacao || '—'}</td>
+              <td class="px-4 py-2 text-xs text-slate-500">{registro?.observacao || '—'}</td>
             </tr>
           {/each}
         </tbody>
       </table>
     </div>
 
-    <div class="flex flex-wrap gap-3 px-4 py-3 border-t border-slate-100 text-xs text-slate-600">
+    <div class="flex flex-wrap gap-3 border-t border-slate-100 px-4 py-3 text-xs text-slate-600">
       {#each Object.entries(TIPO_LABEL) as [key, label]}
         <span class="inline-flex items-center gap-1">
-          <span class="inline-flex h-5 w-5 items-center justify-center rounded-sm text-[10px] font-bold {TIPO_COLOR[key] || 'bg-slate-100'}">
+          <span
+            class="inline-flex h-5 w-5 items-center justify-center rounded-sm text-[10px] font-bold {TIPO_COLOR[
+              key
+            ] || 'bg-slate-100'}"
+          >
             {TIPO_CODIGO[key] || '?'}
           </span>
           {label}

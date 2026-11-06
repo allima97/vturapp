@@ -14,7 +14,7 @@ import {
   clientes,
   produtos,
   user,
-  membrosEmpresa,
+  membrosEmpresa
 } from '$lib/server/db/schema';
 import type { DrizzleDb } from '$lib/server/db/client';
 
@@ -23,8 +23,8 @@ import type { DrizzleDb } from '$lib/server/db/client';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export interface FiltrosPeriodo {
-  dataInicio?: string;  // YYYY-MM-DD
-  dataFim?: string;     // YYYY-MM-DD
+  dataInicio?: string; // YYYY-MM-DD
+  dataFim?: string; // YYYY-MM-DD
 }
 
 /** KPIs do período (vendas, receita, ticket médio, inadimplência). */
@@ -32,11 +32,11 @@ export interface KpiVendas {
   totalVendas: number;
   totalCanceladas: number;
   receitaBrutaCentavos: number;
-  receitaLiquidaCentavos: number;  // bruto - canceladas
+  receitaLiquidaCentavos: number; // bruto - canceladas
   valorPagoCentavos: number;
-  valorEmAbertoCentavos: number;   // líquido - pago
+  valorEmAbertoCentavos: number; // líquido - pago
   ticketMedioCentavos: number;
-  pctAdimplencia: number;          // 0–100
+  pctAdimplencia: number; // 0–100
 }
 
 /** Item do ranking de vendedores. */
@@ -66,7 +66,7 @@ export interface RankingCliente {
 
 /** Evolução mensal de receita (série temporal). */
 export interface EvolucaoMensal {
-  mes: string;           // YYYY-MM
+  mes: string; // YYYY-MM
   totalVendas: number;
   receitaCentavos: number;
 }
@@ -78,7 +78,7 @@ export interface EvolucaoMensal {
 function condicoesPeriodo(empresaId: number, filtros: FiltrosPeriodo) {
   const conds = [eq(vendas.empresaId, empresaId), eq(vendas.cancelada, false)];
   if (filtros.dataInicio) conds.push(gte(vendas.dataVenda, filtros.dataInicio));
-  if (filtros.dataFim)    conds.push(lte(vendas.dataVenda, filtros.dataFim));
+  if (filtros.dataFim) conds.push(lte(vendas.dataVenda, filtros.dataFim));
   return conds;
 }
 
@@ -94,34 +94,34 @@ export async function kpiVendas(
   // Total (incluindo canceladas) para o mesmo período
   const condsBase = [eq(vendas.empresaId, empresaId)];
   if (filtros.dataInicio) condsBase.push(gte(vendas.dataVenda, filtros.dataInicio));
-  if (filtros.dataFim)    condsBase.push(lte(vendas.dataVenda, filtros.dataFim));
+  if (filtros.dataFim) condsBase.push(lte(vendas.dataVenda, filtros.dataFim));
 
   const [totais] = await db
     .select({
-      total:       sql<number>`count(*)`,
-      canceladas:  sql<number>`sum(case when ${vendas.cancelada} = 1 then 1 else 0 end)`,
-      bruto:       sql<number>`coalesce(sum(case when ${vendas.cancelada} = 0 then ${vendas.valorTotalCentavos} else 0 end), 0)`,
-      pago:        sql<number>`coalesce(sum(case when ${vendas.cancelada} = 0 then ${vendas.valorPagoCentavos} else 0 end), 0)`,
+      total: sql<number>`count(*)`,
+      canceladas: sql<number>`sum(case when ${vendas.cancelada} = 1 then 1 else 0 end)`,
+      bruto: sql<number>`coalesce(sum(case when ${vendas.cancelada} = 0 then ${vendas.valorTotalCentavos} else 0 end), 0)`,
+      pago: sql<number>`coalesce(sum(case when ${vendas.cancelada} = 0 then ${vendas.valorPagoCentavos} else 0 end), 0)`
     })
     .from(vendas)
     .where(and(...condsBase));
 
-  const totalVendas    = totais.total ?? 0;
+  const totalVendas = totais.total ?? 0;
   const totalCanceladas = totais.canceladas ?? 0;
-  const bruto          = totais.bruto ?? 0;
-  const pago           = totais.pago ?? 0;
-  const emAberto       = Math.max(0, bruto - pago);
-  const ativas         = totalVendas - totalCanceladas;
+  const bruto = totais.bruto ?? 0;
+  const pago = totais.pago ?? 0;
+  const emAberto = Math.max(0, bruto - pago);
+  const ativas = totalVendas - totalCanceladas;
 
   return {
     totalVendas,
     totalCanceladas,
-    receitaBrutaCentavos:    bruto,
-    receitaLiquidaCentavos:  bruto,
-    valorPagoCentavos:       pago,
-    valorEmAbertoCentavos:   emAberto,
-    ticketMedioCentavos:     ativas > 0 ? Math.round(bruto / ativas) : 0,
-    pctAdimplencia:          bruto > 0 ? Math.round((pago / bruto) * 100) : 100,
+    receitaBrutaCentavos: bruto,
+    receitaLiquidaCentavos: bruto,
+    valorPagoCentavos: pago,
+    valorEmAbertoCentavos: emAberto,
+    ticketMedioCentavos: ativas > 0 ? Math.round(bruto / ativas) : 0,
+    pctAdimplencia: bruto > 0 ? Math.round((pago / bruto) * 100) : 100
   };
 }
 
@@ -140,9 +140,9 @@ export async function rankingVendedores(
   const rows = await db
     .select({
       vendedorId: vendas.vendedorId,
-      nome:       user.name,
-      total:      sql<number>`count(*)`,
-      receita:    sql<number>`coalesce(sum(${vendas.valorTotalCentavos}), 0)`,
+      nome: user.name,
+      total: sql<number>`count(*)`,
+      receita: sql<number>`coalesce(sum(${vendas.valorTotalCentavos}), 0)`
     })
     .from(vendas)
     .leftJoin(user, eq(vendas.vendedorId, user.id))
@@ -153,9 +153,9 @@ export async function rankingVendedores(
 
   return rows.map((r) => ({
     vendedorId: r.vendedorId ?? '(sem vendedor)',
-    nome:       r.nome       ?? '(sem nome)',
+    nome: r.nome ?? '(sem nome)',
     totalVendas: r.total,
-    receitaCentavos: r.receita,
+    receitaCentavos: r.receita
   }));
 }
 
@@ -172,15 +172,15 @@ export async function rankingProdutos(
   // Join via vendaItens → vendas (para filtro de período e cancelamento)
   const condsVenda = [eq(vendas.empresaId, empresaId), eq(vendas.cancelada, false)];
   if (filtros.dataInicio) condsVenda.push(gte(vendas.dataVenda, filtros.dataInicio));
-  if (filtros.dataFim)    condsVenda.push(lte(vendas.dataVenda, filtros.dataFim));
+  if (filtros.dataFim) condsVenda.push(lte(vendas.dataVenda, filtros.dataFim));
 
   const rows = await db
     .select({
-      produtoId:  vendaItens.produtoId,
-      descricao:  vendaItens.descricao,
-      tipo:       vendaItens.tipo,
-      total:      sql<number>`count(distinct ${vendaItens.vendaId})`,
-      receita:    sql<number>`coalesce(sum(${vendaItens.valorTotalCentavos}), 0)`,
+      produtoId: vendaItens.produtoId,
+      descricao: vendaItens.descricao,
+      tipo: vendaItens.tipo,
+      total: sql<number>`count(distinct ${vendaItens.vendaId})`,
+      receita: sql<number>`coalesce(sum(${vendaItens.valorTotalCentavos}), 0)`
     })
     .from(vendaItens)
     .innerJoin(vendas, eq(vendaItens.vendaId, vendas.id))
@@ -190,11 +190,11 @@ export async function rankingProdutos(
     .limit(limite);
 
   return rows.map((r) => ({
-    produtoId:      r.produtoId ?? null,
-    descricao:      r.descricao,
-    tipo:           r.tipo,
-    totalVendas:    r.total,
-    receitaCentavos: r.receita,
+    produtoId: r.produtoId ?? null,
+    descricao: r.descricao,
+    tipo: r.tipo,
+    totalVendas: r.total,
+    receitaCentavos: r.receita
   }));
 }
 
@@ -213,9 +213,9 @@ export async function rankingClientes(
   const rows = await db
     .select({
       clienteId: vendas.clienteId,
-      nome:      clientes.nome,
-      total:     sql<number>`count(*)`,
-      receita:   sql<number>`coalesce(sum(${vendas.valorTotalCentavos}), 0)`,
+      nome: clientes.nome,
+      total: sql<number>`count(*)`,
+      receita: sql<number>`coalesce(sum(${vendas.valorTotalCentavos}), 0)`
     })
     .from(vendas)
     .leftJoin(clientes, eq(vendas.clienteId, clientes.id))
@@ -225,10 +225,10 @@ export async function rankingClientes(
     .limit(limite);
 
   return rows.map((r) => ({
-    clienteId:      r.clienteId ?? null,
-    nome:           r.nome ?? '(sem cliente)',
-    totalVendas:    r.total,
-    receitaCentavos: r.receita,
+    clienteId: r.clienteId ?? null,
+    nome: r.nome ?? '(sem cliente)',
+    totalVendas: r.total,
+    receitaCentavos: r.receita
   }));
 }
 
@@ -245,9 +245,9 @@ export async function evolucaoMensal(
 
   const rows = await db
     .select({
-      mes:     sql<string>`substr(${vendas.dataVenda}, 1, 7)`,
-      total:   sql<number>`count(*)`,
-      receita: sql<number>`coalesce(sum(${vendas.valorTotalCentavos}), 0)`,
+      mes: sql<string>`substr(${vendas.dataVenda}, 1, 7)`,
+      total: sql<number>`count(*)`,
+      receita: sql<number>`coalesce(sum(${vendas.valorTotalCentavos}), 0)`
     })
     .from(vendas)
     .where(and(...conds))
@@ -255,8 +255,8 @@ export async function evolucaoMensal(
     .orderBy(asc(sql`substr(${vendas.dataVenda}, 1, 7)`));
 
   return rows.map((r) => ({
-    mes:             r.mes,
-    totalVendas:     r.total,
-    receitaCentavos: r.receita,
+    mes: r.mes,
+    totalVendas: r.total,
+    receitaCentavos: r.receita
   }));
 }

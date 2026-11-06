@@ -1,4 +1,7 @@
-import { formatDate as formatDateValue, formatDateTime as formatDateTimeValue } from '$lib/utils/formatters';
+import {
+  formatDate as formatDateValue,
+  formatDateTime as formatDateTimeValue
+} from '$lib/utils/formatters';
 import type { ImportPreviewRow, VinculoAuditIssue } from './types';
 
 const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
@@ -11,7 +14,10 @@ const PT_BR_DECIMAL_FORMATTER = new Intl.NumberFormat('pt-BR', {
   maximumFractionDigits: 2
 });
 
-export function resolveMetaDifLabel(percentualComissaoLoja: number | null | undefined, fallback?: string | null): string {
+export function resolveMetaDifLabel(
+  percentualComissaoLoja: number | null | undefined,
+  fallback?: string | null
+): string {
   const pct = Number(percentualComissaoLoja || 0);
   if (pct >= 31) return 'Seguro Viagem';
   return fallback || 'Não';
@@ -25,7 +31,10 @@ export function statusImportLabel(status?: string | null) {
   return value || 'OUTRO';
 }
 
-export function formatDocumentoConciliacao(row: { documento?: string | null; numero_reserva?: string | null }) {
+export function formatDocumentoConciliacao(row: {
+  documento?: string | null;
+  numero_reserva?: string | null;
+}) {
   const documento = String(row.documento || '').trim();
   const reserva = String(row.numero_reserva || '').trim();
   return reserva ? `${documento} / ${reserva}` : documento || '-';
@@ -42,7 +51,10 @@ export function formatMoney(value: number | null | undefined) {
   return PT_BR_DECIMAL_FORMATTER.format(num);
 }
 
-export function getDiffRatio(diff: number | null | undefined, sistemaValue: number | null | undefined) {
+export function getDiffRatio(
+  diff: number | null | undefined,
+  sistemaValue: number | null | undefined
+) {
   const diffAbs = Math.abs(Number(diff || 0));
   if (diffAbs <= 0.01) return 0;
 
@@ -52,7 +64,10 @@ export function getDiffRatio(diff: number | null | undefined, sistemaValue: numb
   return diffAbs / base;
 }
 
-export function isCriticalDiff(diff: number | null | undefined, sistemaValue: number | null | undefined) {
+export function isCriticalDiff(
+  diff: number | null | undefined,
+  sistemaValue: number | null | undefined
+) {
   return getDiffRatio(diff, sistemaValue) >= 0.1;
 }
 
@@ -69,8 +84,14 @@ export function getImportDiffSeverity(row: ImportPreviewRow): 'none' | 'warning'
   return 'warning';
 }
 
-export function getDiffModalSeverity(diff: { diff_total: number; diff_taxas: number; valor_sistema: number; taxas_sistema: number }) {
-  return isCriticalDiff(diff.diff_total, diff.valor_sistema) || isCriticalDiff(diff.diff_taxas, diff.taxas_sistema)
+export function getDiffModalSeverity(diff: {
+  diff_total: number;
+  diff_taxas: number;
+  valor_sistema: number;
+  taxas_sistema: number;
+}) {
+  return isCriticalDiff(diff.diff_total, diff.valor_sistema) ||
+    isCriticalDiff(diff.diff_taxas, diff.taxas_sistema)
     ? 'critical'
     : 'warning';
 }

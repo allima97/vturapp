@@ -15,7 +15,7 @@ import { defineConfig } from 'drizzle-kit';
 export default defineConfig({
   out: './drizzle-generated',
   schema: './src/lib/server/db/schema.ts',
-  dialect: 'sqlite',
+  dialect: 'sqlite'
 
   // Para drizzle-studio com D1 remoto (opcional):
   // driver: 'd1-http',

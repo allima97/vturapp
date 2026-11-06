@@ -89,9 +89,13 @@
     const seq = ++loadSeq;
     loading = true;
     try {
-      const payload = await apiGet<AniversariantesResponse>('/api/v1/dashboard/aniversariantes', {
-        dias: diasAfrente
-      }, controller.signal);
+      const payload = await apiGet<AniversariantesResponse>(
+        '/api/v1/dashboard/aniversariantes',
+        {
+          dias: diasAfrente
+        },
+        controller.signal
+      );
       if (seq !== loadSeq) return;
       aniversariantes = payload.items || [];
     } catch (err) {
@@ -142,15 +146,18 @@
   subtitle="Clientes com aniversário nos próximos dias — oportunidade de relacionamento."
   color="clientes"
   breadcrumbs={[{ label: 'Aniversariantes' }]}
-  actions={[
-    { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }
-  ]}
+  actions={[{ label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }]}
 />
 
 <div class="vtur-kpi-grid vtur-kpi-grid-3 mb-6">
   <KPICard title="Aniversário hoje" value={hoje} color="clientes" icon={Gift} />
   <KPICard title="Próximos 7 dias" value={proximos7} color="clientes" icon={CalendarDays} />
-  <KPICard title={`Próximos ${diasAfrente} dias`} value={aniversariantes.length} color="clientes" icon={CalendarDays} />
+  <KPICard
+    title={`Próximos ${diasAfrente} dias`}
+    value={aniversariantes.length}
+    color="clientes"
+    icon={CalendarDays}
+  />
 </div>
 
 <!-- Mobile: botão de filtros -->
@@ -159,7 +166,7 @@
     <SlidersHorizontal size={16} class="mr-2" />
     Filtros
     {#if diasAfrenteFiltro !== '30'}
-      <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-clientes-500"></span>
+      <span class="bg-clientes-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
     {/if}
   </Button>
 </div>

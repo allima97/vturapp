@@ -13,10 +13,12 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./aniversario-svg', () => ({ handleCardsAniversarioSvgGet: spy('handleCardsAniversarioSvgGet') }));
+vi.mock('./aniversario-svg', () => ({
+  handleCardsAniversarioSvgGet: spy('handleCardsAniversarioSvgGet')
+}));
 vi.mock('./render', () => ({ handleCardsRenderGet: spy('handleCardsRenderGet') }));
 vi.mock('./render-png', () => ({ handleCardsRenderPngGet: spy('handleCardsRenderPngGet') }));
 vi.mock('./render-svg', () => ({ handleCardsRenderSvgGet: spy('handleCardsRenderSvgGet') }));
@@ -28,14 +30,14 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/cards/aniversario.svg', 'handleCardsAniversarioSvgGet', {}],
   ['GET', '/api/v1/cards/render', 'handleCardsRenderGet', {}],
   ['GET', '/api/v1/cards/render.png', 'handleCardsRenderPngGet', {}],
-  ['GET', '/api/v1/cards/render.svg', 'handleCardsRenderSvgGet', {}],
+  ['GET', '/api/v1/cards/render.svg', 'handleCardsRenderSvgGet', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/cards/aniversario.svg'],
   ['PUT', '/api/v1/cards/render'],
   ['PUT', '/api/v1/cards/render.png'],
-  ['PUT', '/api/v1/cards/render.svg'],
+  ['PUT', '/api/v1/cards/render.svg']
 ];
 
 function ev(method: string, path: string) {

@@ -19,15 +19,15 @@ describe('rate limit persistente em D1', () => {
 
     expect(await checkPersistentRateLimit(scope, key, options, env.DB)).toEqual({
       allowed: true,
-      retryAfterSeconds: 0,
+      retryAfterSeconds: 0
     });
     expect(await checkPersistentRateLimit(scope, key, options, env.DB)).toEqual({
       allowed: true,
-      retryAfterSeconds: 0,
+      retryAfterSeconds: 0
     });
 
     const stored = await env.DB.prepare(
-      'SELECT hits, key_hash FROM security_rate_limits WHERE scope = ?1',
+      'SELECT hits, key_hash FROM security_rate_limits WHERE scope = ?1'
     )
       .bind(scope)
       .first<{ hits: number; key_hash: string }>();
@@ -42,16 +42,18 @@ describe('rate limit persistente em D1', () => {
     const scope = `rate-limit-deny-${crypto.randomUUID()}`;
     const options = { max: 2, windowMs: 60_000 };
 
-    expect((await checkPersistentRateLimit(scope, 'same-client', options, env.DB)).allowed).toBe(true);
-    expect((await checkPersistentRateLimit(scope, 'same-client', options, env.DB)).allowed).toBe(true);
+    expect((await checkPersistentRateLimit(scope, 'same-client', options, env.DB)).allowed).toBe(
+      true
+    );
+    expect((await checkPersistentRateLimit(scope, 'same-client', options, env.DB)).allowed).toBe(
+      true
+    );
     const denied = await checkPersistentRateLimit(scope, 'same-client', options, env.DB);
 
     expect(denied.allowed).toBe(false);
     expect(denied.retryAfterSeconds).toBeGreaterThan(0);
     expect(denied.retryAfterSeconds).toBeLessThanOrEqual(60);
-    const stored = await env.DB.prepare(
-      'SELECT hits FROM security_rate_limits WHERE scope = ?1',
-    )
+    const stored = await env.DB.prepare('SELECT hits FROM security_rate_limits WHERE scope = ?1')
       .bind(scope)
       .first<{ hits: number }>();
     expect(stored?.hits).toBe(3);
@@ -62,21 +64,25 @@ describe('rate limit persistente em D1', () => {
     const key = 'expired-client';
     const now = Date.now();
     const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(key));
-    const keyHash = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
-    await env.DB.prepare(`
+    const keyHash = Array.from(new Uint8Array(digest), (byte) =>
+      byte.toString(16).padStart(2, '0')
+    ).join('');
+    await env.DB.prepare(
+      `
       INSERT INTO security_rate_limits (scope, key_hash, window_start_ms, expires_at_ms, hits)
       VALUES (?1, ?2, ?3, ?4, 9)
-    `)
+    `
+    )
       .bind(scope, keyHash, now - 120_000, now - 60_000)
       .run();
 
-    expect(await checkPersistentRateLimit(scope, key, { max: 2, windowMs: 60_000 }, env.DB)).toEqual({
+    expect(
+      await checkPersistentRateLimit(scope, key, { max: 2, windowMs: 60_000 }, env.DB)
+    ).toEqual({
       allowed: true,
-      retryAfterSeconds: 0,
+      retryAfterSeconds: 0
     });
-    const stored = await env.DB.prepare(
-      'SELECT hits FROM security_rate_limits WHERE scope = ?1',
-    )
+    const stored = await env.DB.prepare('SELECT hits FROM security_rate_limits WHERE scope = ?1')
       .bind(scope)
       .first<{ hits: number }>();
     expect(stored?.hits).toBe(1);

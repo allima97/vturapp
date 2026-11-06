@@ -20,7 +20,7 @@
 
   const abas = [
     { key: 'calculadora', label: 'Calculadora', icon: Calculator },
-    { key: 'concorrencia', label: 'Concorrência', icon: TrendingDown },
+    { key: 'concorrencia', label: 'Concorrência', icon: TrendingDown }
   ];
 
   onMount(() => {
@@ -89,7 +89,7 @@
     class:max-w-2xl={abaAtiva === 'calculadora'}
     class:max-w-5xl={abaAtiva === 'concorrencia'}
   >
-    <div class="vtur-modal-header border-b border-slate-100 bg-vendas-50">
+    <div class="vtur-modal-header bg-vendas-50 border-b border-slate-100">
       <div class="vtur-modal-header__lead">
         <div class="vtur-modal-header__icon bg-vendas-100">
           <Calculator size={24} class="text-vendas-600" />
@@ -120,16 +120,24 @@
 
     <div
       class="vtur-modal-body-dense"
-      style={abaAtiva === 'calculadora' ? 'padding: 0.875rem 1rem; max-height: none; overflow: visible;' : undefined}
+      style={abaAtiva === 'calculadora'
+        ? 'padding: 0.875rem 1rem; max-height: none; overflow: visible;'
+        : undefined}
     >
       {#if !isInstalled && showInstallHint}
-        <div class="mb-3 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+        <div
+          class="mb-3 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800"
+        >
           <Smartphone size={16} class="mt-0.5 shrink-0" />
           <div class="flex-1">
             <p class="font-medium">Instale no seu celular ou computador</p>
             <p class="mt-0.5 text-xs text-amber-700">
-              <span class="hidden sm:inline">Clique em Instalar no cabeçalho ou use o menu do navegador.</span>
-              <span class="sm:hidden">Toque em ⋮ (Chrome) ou Compartilhar e depois Adicionar à Tela de Início (Safari).</span>
+              <span class="hidden sm:inline"
+                >Clique em Instalar no cabeçalho ou use o menu do navegador.</span
+              >
+              <span class="sm:hidden"
+                >Toque em ⋮ (Chrome) ou Compartilhar e depois Adicionar à Tela de Início (Safari).</span
+              >
             </p>
           </div>
           <Button
@@ -138,7 +146,7 @@
             size="xs"
             class_name="p-0 text-amber-500 hover:text-amber-700"
             ariaLabel="Fechar dica de instalação"
-            on:click={() => showInstallHint = false}
+            on:click={() => (showInstallHint = false)}
           >
             <X size={14} />
           </Button>

@@ -1,7 +1,7 @@
 # ADR-004 — Estratégia de tempo real (mural de recados)
 
 **Estado:** SUPERSEDIDO (por ADR-008)  
-**Data:** 2026-10-26  
+**Data:** 2026-10-26
 
 ## Contexto
 

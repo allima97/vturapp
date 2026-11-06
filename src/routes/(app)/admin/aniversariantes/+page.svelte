@@ -22,7 +22,20 @@
     aniversario_hoje: boolean;
   };
 
-  const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const MESES = [
+    'Janeiro',
+    'Fevereiro',
+    'Março',
+    'Abril',
+    'Maio',
+    'Junho',
+    'Julho',
+    'Agosto',
+    'Setembro',
+    'Outubro',
+    'Novembro',
+    'Dezembro'
+  ];
 
   let colaboradores: Colaborador[] = [];
   let loading = true;
@@ -57,7 +70,10 @@
 
   onMount(load);
 
-  $: hoje = colaboradores.reduce((total, colaborador) => total + (colaborador.aniversario_hoje ? 1 : 0), 0);
+  $: hoje = colaboradores.reduce(
+    (total, colaborador) => total + (colaborador.aniversario_hoje ? 1 : 0),
+    0
+  );
 </script>
 
 <svelte:head>
@@ -67,13 +83,8 @@
 <PageHeader
   title="Aniversariantes da Equipe"
   subtitle="Colaboradores com aniversário no mês selecionado."
-  breadcrumbs={[
-    { label: 'Admin', href: '/admin' },
-    { label: 'Aniversariantes' }
-  ]}
-  actions={[
-    { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }
-  ]}
+  breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Aniversariantes' }]}
+  actions={[{ label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }]}
 />
 
 <!-- Mobile: botão de filtros -->
@@ -99,7 +110,9 @@
       on:change={load}
     />
     {#if hoje > 0}
-      <span class="inline-flex items-center gap-1 rounded-full bg-pink-100 px-3 py-1 text-xs font-semibold text-pink-700">
+      <span
+        class="inline-flex items-center gap-1 rounded-full bg-pink-100 px-3 py-1 text-xs font-semibold text-pink-700"
+      >
         <Gift size={12} />
         {hoje} aniversariante(s) hoje!
       </span>
@@ -119,7 +132,9 @@
       on:change={load}
     />
   </div>
-  <Button variant="primary" class_name="w-full mt-2" on:click={() => (showFilterSheet = false)}>Aplicar filtros</Button>
+  <Button variant="primary" class_name="w-full mt-2" on:click={() => (showFilterSheet = false)}
+    >Aplicar filtros</Button
+  >
 </BottomSheet>
 
 {#if loading}
@@ -134,16 +149,20 @@
 {:else}
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
     {#each colaboradores as colab}
-      <Card class="{colab.aniversario_hoje ? 'border-2 border-pink-300 bg-pink-50/30' : ''}">
+      <Card class={colab.aniversario_hoje ? 'border-2 border-pink-300 bg-pink-50/30' : ''}>
         <div class="flex items-center gap-4">
-          <div class="flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-600 font-semibold text-lg shrink-0">
+          <div
+            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-slate-100 text-lg font-semibold text-slate-600"
+          >
             {(colab.nome_completo || 'U').slice(0, 2).toUpperCase()}
           </div>
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2">
-              <p class="font-semibold text-slate-900 truncate">{colab.nome_completo || 'Colaborador'}</p>
+              <p class="truncate font-semibold text-slate-900">
+                {colab.nome_completo || 'Colaborador'}
+              </p>
               {#if colab.aniversario_hoje}
-                <Gift size={14} class="text-pink-500 shrink-0" />
+                <Gift size={14} class="shrink-0 text-pink-500" />
               {/if}
             </div>
             <p class="text-xs text-slate-500">{colab.role || 'Colaborador'}</p>
@@ -151,7 +170,7 @@
               <p class="text-xs text-slate-400">{colab.company_nome}</p>
             {/if}
             {#if colab.data_nascimento}
-              <p class="text-xs text-slate-600 mt-1">
+              <p class="mt-1 text-xs text-slate-600">
                 {formatBirthDate(colab.data_nascimento)}
               </p>
             {/if}

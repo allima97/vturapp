@@ -79,10 +79,16 @@ export { __patchedWorker as default };
 `;
 
 // Remover o export default original para nao ter dois exports conflitantes
-const patched = original
-  .replace(/^export\s*\{[^}]*worker_default\s+as\s+default[^}]*\};?\s*$/m, '// export default substituido pelo patch-worker-scheduled (ver abaixo)')
-  .replace(/^export default worker_default;?\s*$/m, '// export default substituido pelo patch-worker-scheduled (ver abaixo)')
-  + scheduledHandler;
+const patched =
+  original
+    .replace(
+      /^export\s*\{[^}]*worker_default\s+as\s+default[^}]*\};?\s*$/m,
+      '// export default substituido pelo patch-worker-scheduled (ver abaixo)'
+    )
+    .replace(
+      /^export default worker_default;?\s*$/m,
+      '// export default substituido pelo patch-worker-scheduled (ver abaixo)'
+    ) + scheduledHandler;
 
 writeFileSync(WORKER_PATH, patched, 'utf-8');
 console.log('[patch-worker] Handler scheduled injetado com sucesso em', WORKER_PATH);

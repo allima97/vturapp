@@ -27,7 +27,7 @@
     'text-sm',
     error ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'focus:ring-blue-200'
   );
-  $: selectPlaceholder = placeholder === null ? '' : placeholder ?? undefined;
+  $: selectPlaceholder = placeholder === null ? '' : (placeholder ?? undefined);
   $: normalizedOptions = options.map((option) => {
     const rawLabel = String(option?.label ?? '');
     const formattedLabel = YEAR_MONTH_OPTION_RE.test(rawLabel)
@@ -43,7 +43,10 @@
 
 <div class={class_name}>
   {#if label}
-    <Label for={fieldId} class="{srLabel ? 'sr-only' : 'mb-1.5 block text-sm font-medium text-slate-700'}">
+    <Label
+      for={fieldId}
+      class={srLabel ? 'sr-only' : 'mb-1.5 block text-sm font-medium text-slate-700'}
+    >
       {label}{#if required}<span class="ml-0.5 text-red-500" aria-hidden="true">*</span>{/if}
     </Label>
   {/if}
@@ -57,7 +60,7 @@
     placeholder={selectPlaceholder}
     aria-invalid={error ? 'true' : undefined}
     aria-describedby={describedById}
-    aria-label={label ? undefined : ariaLabel ?? undefined}
+    aria-label={label ? undefined : (ariaLabel ?? undefined)}
     class={selectClasses}
     on:change
     on:blur

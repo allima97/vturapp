@@ -3,33 +3,33 @@
  * Uso: node scripts/gerar-legado-fks.mjs /caminho/public.sql
  * Nao grava e-mails nem UUIDs do dump.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from 'node:fs';
 
 const dumpPath = process.argv[2];
 if (!dumpPath) {
-  console.error("Informe o SQL do schema public.");
+  console.error('Informe o SQL do schema public.');
   process.exit(1);
 }
-const dump = readFileSync(dumpPath, "utf8");
-const catalog = readFileSync("drizzle/0013_legado_catalogo.sql", "utf8");
-const indexes = readFileSync("drizzle/0014_legado_indices.sql", "utf8")
-  .split("\n")
-  .filter((line) => line.startsWith("CREATE INDEX"));
+const dump = readFileSync(dumpPath, 'utf8');
+const catalog = readFileSync('drizzle/0013_legado_catalogo.sql', 'utf8');
+const indexes = readFileSync('drizzle/0014_legado_indices.sql', 'utf8')
+  .split('\n')
+  .filter((line) => line.startsWith('CREATE INDEX'));
 
 function parseCatalog() {
   const tables = new Map();
   const re = /CREATE TABLE IF NOT EXISTS "(legado_[^"]+)" \(([\s\S]*?)\n\);/g;
   for (const match of catalog.matchAll(re)) {
-    const name = match[1].slice("legado_".length);
+    const name = match[1].slice('legado_'.length);
     const lines = match[2]
-      .split("\n")
+      .split('\n')
       .map((line) => line.trim())
       .filter(Boolean);
     const columns = [];
     const constraints = [];
     for (const line of lines) {
-      const cleaned = line.replace(/,$/, "");
-      if (cleaned.startsWith('"') || cleaned.startsWith("`")) columns.push(cleaned);
+      const cleaned = line.replace(/,$/, '');
+      if (cleaned.startsWith('"') || cleaned.startsWith('`')) columns.push(cleaned);
       else constraints.push(cleaned);
     }
     const columnNames = columns.map((line) => line.match(/^"([^"]+)"/)[1]);
@@ -64,15 +64,15 @@ function translateCheck(expression) {
     const column = text.match(/"([a-z0-9_]+)"/i)?.[1];
     const values = [...list[1].matchAll(/'([^']*)'/g)].map((item) => item[1]);
     if (!column || values.length === 0) return null;
-    return `"${column}" IN (${values.map((value) => `'${value.replaceAll("'", "''")}'`).join(", ")})`;
+    return `"${column}" IN (${values.map((value) => `'${value.replaceAll("'", "''")}'`).join(', ')})`;
   }
   if (/[~()]/.test(text) && !/>=|<=/.test(text)) return null;
   const compare = text
-    .replace(/::[a-z0-9_ ]+/gi, "")
-    .replace(/\((\d+)\)::numeric/gi, "$1")
+    .replace(/::[a-z0-9_ ]+/gi, '')
+    .replace(/\((\d+)\)::numeric/gi, '$1')
     .replace(/"([a-z0-9_]+)"/gi, '"$1"');
   if (!/^[\s"()0-9a-z_.<>=!ANDORISNULL-]+$/i.test(compare)) return null;
-  return compare.replace(/\s+/g, " ").trim();
+  return compare.replace(/\s+/g, ' ').trim();
 }
 
 function parseFks() {
@@ -80,20 +80,20 @@ function parseFks() {
   const re =
     /ALTER TABLE ONLY "public"\."([^"]+)"\s+ADD CONSTRAINT "([^"]+)" FOREIGN KEY \(([^)]+)\) REFERENCES "public"\."([^"]+)"\(([^)]+)\)([^;]*);/g;
   for (const match of dump.matchAll(re)) {
-    const columns = match[3].split(",").map((item) => item.trim().replace(/"/g, ""));
-    const refs = match[5].split(",").map((item) => item.trim().replace(/"/g, ""));
+    const columns = match[3].split(',').map((item) => item.trim().replace(/"/g, ''));
+    const refs = match[5].split(',').map((item) => item.trim().replace(/"/g, ''));
     const tail = match[6].toUpperCase();
-    let onDelete = "NO ACTION";
-    if (tail.includes("ON DELETE CASCADE")) onDelete = "CASCADE";
-    else if (tail.includes("ON DELETE SET NULL")) onDelete = "SET NULL";
-    else if (tail.includes("ON DELETE RESTRICT")) onDelete = "RESTRICT";
+    let onDelete = 'NO ACTION';
+    if (tail.includes('ON DELETE CASCADE')) onDelete = 'CASCADE';
+    else if (tail.includes('ON DELETE SET NULL')) onDelete = 'SET NULL';
+    else if (tail.includes('ON DELETE RESTRICT')) onDelete = 'RESTRICT';
     fks.push({
       table: match[1],
       name: match[2],
       columns,
       ref: match[4],
       refs,
-      onDelete,
+      onDelete
     });
   }
   return fks;
@@ -112,7 +112,7 @@ function parentKeys(table) {
   for (const constraint of table.constraints) {
     const match = constraint.match(/(?:PRIMARY KEY|UNIQUE) \(([^)]+)\)/i);
     if (!match) continue;
-    keys.push(match[1].split(",").map((item) => item.trim().replace(/"/g, "")));
+    keys.push(match[1].split(',').map((item) => item.trim().replace(/"/g, '')));
   }
   return keys;
 }
@@ -125,7 +125,8 @@ const fks = parseFks().filter((fk) => {
   if (fk.refs.some((column) => !ref.columnNames.includes(column))) return false;
   const keys = parentKeys(ref);
   return keys.some(
-    (key) => key.length === fk.refs.length && key.every((column, index) => column === fk.refs[index]),
+    (key) =>
+      key.length === fk.refs.length && key.every((column, index) => column === fk.refs[index])
   );
 });
 
@@ -184,19 +185,17 @@ while (pending.size) {
 }
 
 const lines = [
-  "-- Recria o catalogo legado com FKs e CHECKs equivalentes ao Postgres.",
-  "-- Copia as linhas existentes, recria as tabelas e restaura.",
-  "-- FKs em ciclo ou auto-referencia ficam DEFERRABLE.",
-  "PRAGMA foreign_keys = OFF;",
-  "",
+  '-- Recria o catalogo legado com FKs e CHECKs equivalentes ao Postgres.',
+  '-- Copia as linhas existentes, recria as tabelas e restaura.',
+  '-- FKs em ciclo ou auto-referencia ficam DEFERRABLE.',
+  'PRAGMA foreign_keys = OFF;',
+  ''
 ];
 for (const name of tables.keys()) {
-  lines.push(
-    `CREATE TABLE IF NOT EXISTS "legado_bak_${name}" AS SELECT * FROM "legado_${name}";`,
-  );
+  lines.push(`CREATE TABLE IF NOT EXISTS "legado_bak_${name}" AS SELECT * FROM "legado_${name}";`);
   lines.push(`DROP TABLE "legado_${name}";`);
 }
-lines.push("");
+lines.push('');
 
 for (const name of order) {
   const table = tables.get(name);
@@ -205,26 +204,35 @@ for (const name of order) {
     return names.every((column) => table.columnNames.includes(column));
   });
   for (const fk of fks.filter((item) => item.table === name)) {
-    const defer = deferred.has(fk.name) ? " DEFERRABLE INITIALLY DEFERRED" : "";
+    const defer = deferred.has(fk.name) ? ' DEFERRABLE INITIALLY DEFERRED' : '';
     extras.push(
-      `CONSTRAINT "${fk.name}" FOREIGN KEY (${fk.columns.map((column) => `"${column}"`).join(", ")}) REFERENCES "legado_${fk.ref}" (${fk.refs.map((column) => `"${column}"`).join(", ")}) ON DELETE ${fk.onDelete}${defer}`,
+      `CONSTRAINT "${fk.name}" FOREIGN KEY (${fk.columns.map((column) => `"${column}"`).join(', ')}) REFERENCES "legado_${fk.ref}" (${fk.refs.map((column) => `"${column}"`).join(', ')}) ON DELETE ${fk.onDelete}${defer}`
     );
   }
-  const body = [...table.columns.map((column) => `  ${column}`), ...table.constraints.map((item) => `  ${item}`), ...extras.map((item) => `  ${item}`)];
+  const body = [
+    ...table.columns.map((column) => `  ${column}`),
+    ...table.constraints.map((item) => `  ${item}`),
+    ...extras.map((item) => `  ${item}`)
+  ];
   // commas between parts
   const sqlBody = body
-    .map((line, index) => (index < body.length - 1 && !line.endsWith(",") ? `${line},` : line))
-    .join("\n");
+    .map((line, index) => (index < body.length - 1 && !line.endsWith(',') ? `${line},` : line))
+    .join('\n');
   lines.push(`CREATE TABLE "legado_${name}" (\n${sqlBody}\n);`);
-  const cols = table.columnNames.map((column) => `"${column}"`).join(", ");
-  lines.push(
-    `INSERT INTO "legado_${name}" (${cols}) SELECT ${cols} FROM "legado_bak_${name}";`,
-  );
+  const cols = table.columnNames.map((column) => `"${column}"`).join(', ');
+  lines.push(`INSERT INTO "legado_${name}" (${cols}) SELECT ${cols} FROM "legado_bak_${name}";`);
   lines.push(`DROP TABLE "legado_bak_${name}";`);
-  lines.push("");
+  lines.push('');
 }
-lines.push("PRAGMA foreign_keys = ON;");
+lines.push('PRAGMA foreign_keys = ON;');
 lines.push(...indexes);
-lines.push("");
-writeFileSync("drizzle/0015_legado_fks.sql", `${lines.join("\n")}\n`);
-console.log(JSON.stringify({ tables: tables.size, fks: fks.length, deferred: deferred.size, checks: [...checks.values()].reduce((sum, item) => sum + item.length, 0) }));
+lines.push('');
+writeFileSync('drizzle/0015_legado_fks.sql', `${lines.join('\n')}\n`);
+console.log(
+  JSON.stringify({
+    tables: tables.size,
+    fks: fks.length,
+    deferred: deferred.size,
+    checks: [...checks.values()].reduce((sum, item) => sum + item.length, 0)
+  })
+);

@@ -19,7 +19,9 @@ export async function handleLgpdMeusDadosGet(event: RequestEvent) {
     // Dados do perfil do usuário (email vem do objeto auth já autenticado)
     const { data: perfil } = await client
       .from('users')
-      .select('id, nome_completo, telefone, cidade, estado, created_at, updated_at, uso_individual, active')
+      .select(
+        'id, nome_completo, telefone, cidade, estado, created_at, updated_at, uso_individual, active'
+      )
       .eq('id', user.id)
       .maybeSingle();
 
@@ -32,35 +34,39 @@ export async function handleLgpdMeusDadosGet(event: RequestEvent) {
       .limit(100);
 
     // Dados de MFA registrados
-    const { data: mfaFactors } = await (client.auth.admin as any).listFactors(user.id).catch(() => ({ data: null }));
+    const { data: mfaFactors } = await (client.auth.admin as any)
+      .listFactors(user.id)
+      .catch(() => ({ data: null }));
 
-    return json({
-      titular: {
-        id: user.id,
-        email: user.email,
-        perfil: perfil ?? null,
+    return json(
+      {
+        titular: {
+          id: user.id,
+          email: user.email,
+          perfil: perfil ?? null
+        },
+        tratamento: {
+          finalidade: 'Gestão de usuários da plataforma de agência de viagens',
+          base_legal: 'Contrato (LGPD Art. 7, V)',
+          dados_tratados: ['nome', 'email', 'telefone', 'cidade', 'estado', 'logs_de_acesso'],
+          responsavel: 'Operadora da plataforma vturapp',
+          contato_dpo: 'privacidade@vturapp.com.br',
+          politica_privacidade: '/privacidade'
+        },
+        historico_acessos: (logs ?? []).map((l: any) => ({
+          modulo: l.modulo,
+          acao: l.acao,
+          data: l.created_at,
+          ip: l.ip
+        })),
+        autenticacao: {
+          mfa_ativo: Array.isArray(mfaFactors?.totp) && mfaFactors.totp.length > 0,
+          fatores_count: mfaFactors?.totp?.length ?? 0
+        },
+        exportado_em: new Date().toISOString()
       },
-      tratamento: {
-        finalidade: 'Gestão de usuários da plataforma de agência de viagens',
-        base_legal: 'Contrato (LGPD Art. 7, V)',
-        dados_tratados: ['nome', 'email', 'telefone', 'cidade', 'estado', 'logs_de_acesso'],
-        responsavel: 'Operadora da plataforma vturapp',
-        contato_dpo: 'privacidade@vturapp.com.br',
-        politica_privacidade: '/privacidade',
-      },
-      historico_acessos: (logs ?? []).map((l: any) => ({
-        modulo: l.modulo,
-        acao: l.acao,
-        data: l.created_at,
-        ip: l.ip
-      })),
-      autenticacao: {
-        mfa_ativo: Array.isArray(mfaFactors?.totp) && mfaFactors.totp.length > 0,
-        fatores_count: mfaFactors?.totp?.length ?? 0
-      },
-      exportado_em: new Date().toISOString()
-    }, { headers: NO_STORE_HEADERS });
-
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     logServerError('[lgpd/meus-dados] erro', err);
     return json({ error: 'Erro ao carregar dados.' }, { status: 500, headers: NO_STORE_HEADERS });

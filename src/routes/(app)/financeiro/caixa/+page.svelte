@@ -5,15 +5,32 @@
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import Dialog from '$lib/components/ui/Dialog.svelte';
-  import { BottomSheet, FieldInput, FieldSelect, FieldTextarea, LoadingState } from '$lib/components/ui';
+  import {
+    BottomSheet,
+    FieldInput,
+    FieldSelect,
+    FieldTextarea,
+    LoadingState
+  } from '$lib/components/ui';
   import KPICard from '$lib/components/kpis/KPICard.svelte';
   import KPIGrid from '$lib/components/kpis/KPIGrid.svelte';
   import ChartJS from '$lib/components/charts/ChartJS.svelte';
   import {
-    TrendingUp, TrendingDown, DollarSign, Calendar,
-    Plus, Download, ArrowUpRight, ArrowDownRight,
-    Wallet, CreditCard, Banknote, FileText,
-    AlertCircle, CheckCircle, SlidersHorizontal
+    TrendingUp,
+    TrendingDown,
+    DollarSign,
+    Calendar,
+    Plus,
+    Download,
+    ArrowUpRight,
+    ArrowDownRight,
+    Wallet,
+    CreditCard,
+    Banknote,
+    FileText,
+    AlertCircle,
+    CheckCircle,
+    SlidersHorizontal
   } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { todayISODateLocal } from '$lib/date';
@@ -175,12 +192,17 @@
         resumo?: Resumo;
         movimentacoes?: Movimentacao[];
         porFormaPagamento?: FormaPagamentoResumo[];
-      }>('/api/v1/financeiro/caixa', {
-        periodo,
-        data_inicio: dataInicio || undefined,
-        data_fim: dataFim || undefined,
-        empresa_id: empresaId || undefined
-      }, controller.signal, 60_000);
+      }>(
+        '/api/v1/financeiro/caixa',
+        {
+          periodo,
+          data_inicio: dataInicio || undefined,
+          data_fim: dataFim || undefined,
+          empresa_id: empresaId || undefined
+        },
+        controller.signal,
+        60_000
+      );
       if (requestSeq !== dadosRequestSeq) return;
       if (data.resumo) resumo = data.resumo;
       movimentacoes = data.movimentacoes || [];
@@ -241,7 +263,8 @@
     return formatDateValue(dateStr);
   }
 
-  $: backlogFinanceiroValor = Number(resumo.totalPendente || 0) + Number(resumo.totalDivergente || 0);
+  $: backlogFinanceiroValor =
+    Number(resumo.totalPendente || 0) + Number(resumo.totalDivergente || 0);
   $: temBacklogFinanceiro = backlogFinanceiroValor > 0;
   $: movimentacoesResumo = movimentacoes.reduce(
     (acc, m) => {
@@ -264,16 +287,18 @@
   ];
 
   function getChartData() {
-    const labels = porFormaPagamento.map(fp => fp.nome);
-    const data = porFormaPagamento.map(fp => fp.valor);
+    const labels = porFormaPagamento.map((fp) => fp.nome);
+    const data = porFormaPagamento.map((fp) => fp.valor);
 
     return {
       labels,
-      datasets: [{
-        data,
-        backgroundColor: data.map((_, index) => chartColors[index % chartColors.length]),
-        borderWidth: 0
-      }]
+      datasets: [
+        {
+          data,
+          backgroundColor: data.map((_, index) => chartColors[index % chartColors.length]),
+          borderWidth: 0
+        }
+      ]
     };
   }
 
@@ -325,7 +350,7 @@
 
   function handleExportar() {
     try {
-      const dados = movimentacoes.map(m => ({
+      const dados = movimentacoes.map((m) => ({
         Data: m.data,
         Tipo: m.tipo === 'entrada' ? 'Entrada' : 'Saída',
         Categoria: m.categoria,
@@ -338,7 +363,7 @@
       const headers = Object.keys(dados[0] || {});
       const csv = [
         headers.join(';'),
-        ...dados.map(row => headers.map(h => row[h as keyof typeof row]).join(';'))
+        ...dados.map((row) => headers.map((h) => row[h as keyof typeof row]).join(';'))
       ].join('\n');
 
       const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -372,14 +397,11 @@
   title="Dashboard de Caixa"
   subtitle="Acompanhe o fluxo de caixa e movimentações financeiras"
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Financeiro', href: '/financeiro' },
-    { label: 'Caixa' }
-  ]}
+  breadcrumbs={[{ label: 'Financeiro', href: '/financeiro' }, { label: 'Caixa' }]}
   actions={[
     {
       label: 'Nova Movimentação',
-      onClick: () => showMovimentacaoDialog = true,
+      onClick: () => (showMovimentacaoDialog = true),
       variant: 'primary',
       icon: Plus
     }
@@ -391,20 +413,27 @@
 {:else}
   <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
     <div>
-      <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Painel executivo</p>
-      <p class="text-sm text-slate-500">Resumo do caixa com foco em saldo, backlog financeiro, entradas e saídas do período.</p>
+      <p class="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
+        Painel executivo
+      </p>
+      <p class="text-sm text-slate-500">
+        Resumo do caixa com foco em saldo, backlog financeiro, entradas e saídas do período.
+      </p>
     </div>
   </div>
 
   <KPIGrid className="mb-6" columns={4}>
-
     <Button
       type="button"
       variant="unstyled"
       class_name="vtur-kpi-card flex! w-full! hover:shadow-lg transition-all duration-200"
       on:click={() => goto('/financeiro/caixa')}
     >
-      <div class={`flex h-10 w-10 items-center justify-center rounded-xl ${resumo.saldo >= 0 ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'}`}><DollarSign size={20} /></div>
+      <div
+        class={`flex h-10 w-10 items-center justify-center rounded-xl ${resumo.saldo >= 0 ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'}`}
+      >
+        <DollarSign size={20} />
+      </div>
       <div>
         <p class="text-sm font-medium text-slate-500">Situação de caixa</p>
         <p class="text-2xl font-bold text-slate-900">{formatCurrency(resumo.saldo)}</p>
@@ -417,7 +446,11 @@
       class_name="vtur-kpi-card flex! w-full! hover:shadow-lg transition-all duration-200"
       on:click={() => goto('/financeiro/caixa')}
     >
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500"><ArrowUpRight size={20} /></div>
+      <div
+        class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500"
+      >
+        <ArrowUpRight size={20} />
+      </div>
       <div>
         <p class="text-sm font-medium text-slate-500">Total recebido</p>
         <p class="text-2xl font-bold text-slate-900">{formatCurrency(resumo.totalEntradas)}</p>
@@ -430,7 +463,11 @@
       class_name="vtur-kpi-card flex! w-full! hover:shadow-lg transition-all duration-200"
       on:click={() => goto('/financeiro/caixa')}
     >
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500"><ArrowDownRight size={20} /></div>
+      <div
+        class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500"
+      >
+        <ArrowDownRight size={20} />
+      </div>
       <div>
         <p class="text-sm font-medium text-slate-500">Total de saídas</p>
         <p class="text-2xl font-bold text-slate-900">{formatCurrency(resumo.totalSaidas)}</p>
@@ -444,14 +481,14 @@
       <SlidersHorizontal size={16} class="mr-2" />
       Filtros
       {#if periodo || empresaId || dataInicio || dataFim}
-        <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-financeiro-500"></span>
+        <span class="bg-financeiro-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
       {/if}
     </Button>
   </div>
 
   <Card color="financeiro" class="mb-6 hidden sm:block">
-    <div class="flex flex-col sm:flex-row gap-4 items-end">
-      <div class="flex-1 flex flex-wrap gap-4">
+    <div class="flex flex-col items-end gap-4 sm:flex-row">
+      <div class="flex flex-1 flex-wrap gap-4">
         <FieldSelect
           id="caixa-periodo"
           label="Periodo"
@@ -500,74 +537,115 @@
     </div>
   </Card>
 
-<BottomSheet bind:open={showFilterSheet} title="Filtrar caixa">
-  <div class="space-y-4">
-    <FieldSelect
-      id="caixa-periodo-mobile"
-      label="Periodo"
-      bind:value={periodo}
-      options={periodoOptions}
-      placeholder={null}
-      class_name="w-full"
-      on:change={carregarDados}
-    />
-    {#if temVariasEmpresas}
+  <BottomSheet bind:open={showFilterSheet} title="Filtrar caixa">
+    <div class="space-y-4">
       <FieldSelect
-        id="caixa-empresa-mobile"
-        label="Empresa"
-        bind:value={empresaId}
-        options={empresaOptions}
+        id="caixa-periodo-mobile"
+        label="Periodo"
+        bind:value={periodo}
+        options={periodoOptions}
         placeholder={null}
         class_name="w-full"
-        on:change={() => {
-          carregarDados();
-          carregarFormasPagamento();
-        }}
+        on:change={carregarDados}
       />
-    {/if}
-    <FieldInput
-      id="caixa-data-inicio-mobile"
-      label="Data Inicio"
-      type="date"
-      bind:value={dataInicio}
-      class_name="w-full"
-      on:change={carregarDados}
-    />
-    <FieldInput
-      id="caixa-data-fim-mobile"
-      label="Data Fim"
-      type="date"
-      bind:value={dataFim}
-      min={dataInicio || null}
-      class_name="w-full"
-      on:change={carregarDados}
-    />
-  </div>
-  <Button variant="primary" class_name="w-full mt-2" on:click={() => (showFilterSheet = false)}>Aplicar filtros</Button>
-</BottomSheet>
+      {#if temVariasEmpresas}
+        <FieldSelect
+          id="caixa-empresa-mobile"
+          label="Empresa"
+          bind:value={empresaId}
+          options={empresaOptions}
+          placeholder={null}
+          class_name="w-full"
+          on:change={() => {
+            carregarDados();
+            carregarFormasPagamento();
+          }}
+        />
+      {/if}
+      <FieldInput
+        id="caixa-data-inicio-mobile"
+        label="Data Inicio"
+        type="date"
+        bind:value={dataInicio}
+        class_name="w-full"
+        on:change={carregarDados}
+      />
+      <FieldInput
+        id="caixa-data-fim-mobile"
+        label="Data Fim"
+        type="date"
+        bind:value={dataFim}
+        min={dataInicio || null}
+        class_name="w-full"
+        on:change={carregarDados}
+      />
+    </div>
+    <Button variant="primary" class_name="w-full mt-2" on:click={() => (showFilterSheet = false)}
+      >Aplicar filtros</Button
+    >
+  </BottomSheet>
 
   <KPIGrid className="mb-6" columns={6}>
-    <KPICard title="Total Recebido" value={formatCurrency(resumo.totalEntradas)} color="financeiro" icon={ArrowUpRight} />
-    <KPICard title="Total Saídas" value={formatCurrency(resumo.totalSaidas)} color="financeiro" icon={ArrowDownRight} />
-    <KPICard title="Pendente" value={formatCurrency(resumo.totalPendente)} color="financeiro" icon={Wallet} />
-    <KPICard title="Divergente" value={formatCurrency(resumo.totalDivergente)} color="financeiro" icon={TrendingDown} />
-    <KPICard title="Backlog" value={formatCurrency(backlogFinanceiroValor)} color="financeiro" icon={Banknote} />
-    <KPICard title="Saldo" value={formatCurrency(resumo.saldo)} color="financeiro" icon={DollarSign} />
+    <KPICard
+      title="Total Recebido"
+      value={formatCurrency(resumo.totalEntradas)}
+      color="financeiro"
+      icon={ArrowUpRight}
+    />
+    <KPICard
+      title="Total Saídas"
+      value={formatCurrency(resumo.totalSaidas)}
+      color="financeiro"
+      icon={ArrowDownRight}
+    />
+    <KPICard
+      title="Pendente"
+      value={formatCurrency(resumo.totalPendente)}
+      color="financeiro"
+      icon={Wallet}
+    />
+    <KPICard
+      title="Divergente"
+      value={formatCurrency(resumo.totalDivergente)}
+      color="financeiro"
+      icon={TrendingDown}
+    />
+    <KPICard
+      title="Backlog"
+      value={formatCurrency(backlogFinanceiroValor)}
+      color="financeiro"
+      icon={Banknote}
+    />
+    <KPICard
+      title="Saldo"
+      value={formatCurrency(resumo.saldo)}
+      color="financeiro"
+      icon={DollarSign}
+    />
   </KPIGrid>
 
-  <div class="mb-6 rounded-vtur-xl border {temBacklogFinanceiro ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-green-200 bg-green-50 text-green-700'} px-5 py-4 text-sm shadow-vtur-lg">
+  <div
+    class="rounded-vtur-xl mb-6 border {temBacklogFinanceiro
+      ? 'border-amber-200 bg-amber-50 text-amber-800'
+      : 'border-green-200 bg-green-50 text-green-700'} shadow-vtur-lg px-5 py-4 text-sm"
+  >
     {#if temBacklogFinanceiro}
-      O caixa aponta <strong>{formatCurrency(backlogFinanceiroValor)}</strong> em backlog financeiro, somando pendências e divergências que ainda exigem fechamento.
+      O caixa aponta <strong>{formatCurrency(backlogFinanceiroValor)}</strong> em backlog financeiro,
+      somando pendências e divergências que ainda exigem fechamento.
     {:else}
       O caixa está sem backlog financeiro relevante no período selecionado.
     {/if}
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+  <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
     <div class="vtur-card p-5 text-left">
-      <p class="text-sm text-slate-500 mb-1">Movimento no período</p>
-      <p class="text-lg font-semibold text-slate-900">{entradasRecentes} entradas · {saidasRecentes} saídas</p>
-      <p class="mt-2 text-sm text-slate-600">Leitura rápida do volume operacional no período filtrado.</p>
+      <p class="mb-1 text-sm text-slate-500">Movimento no período</p>
+      <p class="text-lg font-semibold text-slate-900">
+        {entradasRecentes} entradas · {saidasRecentes} saídas
+      </p>
+      <p class="mt-2 text-sm text-slate-600">
+        Leitura rápida do volume operacional no período filtrado.
+      </p>
     </div>
     <Button
       type="button"
@@ -575,14 +653,21 @@
       class_name="vtur-card block! w-full! p-5! text-left! hover:shadow-lg transition-all duration-200"
       on:click={() => goto('/financeiro')}
     >
-      <p class="text-sm text-slate-500 mb-1">Resumo executivo</p>
+      <p class="mb-1 text-sm text-slate-500">Resumo executivo</p>
       <p class="text-lg font-semibold text-slate-900">Voltar ao Financeiro</p>
-      <p class="mt-2 text-sm text-slate-600">Retorne ao painel executivo para navegar entre backlog, caixa e comissões.</p>
+      <p class="mt-2 text-sm text-slate-600">
+        Retorne ao painel executivo para navegar entre backlog, caixa e comissões.
+      </p>
     </Button>
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <Card header="Por Forma de Pagamento" icon={CreditCard} color="financeiro" class="lg:col-span-1">
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <Card
+      header="Por Forma de Pagamento"
+      icon={CreditCard}
+      color="financeiro"
+      class="lg:col-span-1"
+    >
       {#if porFormaPagamento.length > 0}
         <div class="mx-auto h-56 max-w-[280px]">
           <ChartJS type="doughnut" data={getChartData()} options={getChartOptions()} />
@@ -605,7 +690,7 @@
           {/each}
         </div>
       {:else}
-        <div class="h-64 flex items-center justify-center text-slate-500">
+        <div class="flex h-64 items-center justify-center text-slate-500">
           <div class="text-center">
             <CreditCard size={48} class="mx-auto mb-2 opacity-30" />
             <p>Nenhum dado disponível</p>
@@ -622,14 +707,24 @@
         </div>
       {:else}
         <div class="overflow-x-visible md:overflow-x-auto">
-          <table class="w-full text-sm table-mobile-cards">
+          <table class="table-mobile-cards w-full text-sm">
             <thead class="bg-slate-50">
               <tr>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Data</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Descrição</th>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase">Forma</th>
-                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase">Valor</th>
-                <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase">Status</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase"
+                  >Data</th
+                >
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase"
+                  >Descrição</th
+                >
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase"
+                  >Forma</th
+                >
+                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase"
+                  >Valor</th
+                >
+                <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase"
+                  >Status</th
+                >
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-200">
@@ -649,8 +744,16 @@
                     </span>
                   </td>
                   <td class="px-4 py-3 text-center">
-                    <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full {getStatusBadge(mov.status)}">
-                      {mov.status === 'conciliado' || mov.status === 'confirmado' ? 'Confirmado' : mov.status === 'pendente' ? 'Pendente' : mov.status}
+                    <span
+                      class="inline-flex rounded-full px-2 py-1 text-xs font-medium {getStatusBadge(
+                        mov.status
+                      )}"
+                    >
+                      {mov.status === 'conciliado' || mov.status === 'confirmado'
+                        ? 'Confirmado'
+                        : mov.status === 'pendente'
+                          ? 'Pendente'
+                          : mov.status}
                     </span>
                   </td>
                 </tr>
@@ -660,7 +763,9 @@
         </div>
         {#if movimentacoes.length > 10}
           <div class="mt-4 text-center">
-            <p class="text-sm text-slate-500">Mostrando 10 de {movimentacoes.length} movimentações</p>
+            <p class="text-sm text-slate-500">
+              Mostrando 10 de {movimentacoes.length} movimentações
+            </p>
           </div>
         {/if}
       {/if}
@@ -692,7 +797,7 @@
         class_name="w-full"
       />
     {/if}
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <FieldSelect
         id="caixa-mov-tipo"
         label="Tipo"
@@ -721,7 +826,7 @@
       class_name="w-full"
     />
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <FieldInput
         id="caixa-mov-valor"
         label="Valor"

@@ -35,7 +35,12 @@ export async function handleVendasCancelPost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster) {
-      ensureModuloAccess(scope, ['vendas_consulta', 'vendas'], 4, 'Sem permissao para cancelar vendas.');
+      ensureModuloAccess(
+        scope,
+        ['vendas_consulta', 'vendas'],
+        4,
+        'Sem permissao para cancelar vendas.'
+      );
     }
 
     const rawBody = textResult.text;
@@ -55,7 +60,13 @@ export async function handleVendasCancelPost(event: RequestEvent) {
       scope,
       event.url.searchParams.get('vendedor_id') || event.url.searchParams.get('vendedor_ids')
     );
-    const sale = await fetchSaleForScope({ client, scope, saleId: vendaId, companyIds, vendedorIds });
+    const sale = await fetchSaleForScope({
+      client,
+      scope,
+      saleId: vendaId,
+      companyIds,
+      vendedorIds
+    });
     if (!sale) {
       return new Response('Venda nao encontrada.', { status: 404, headers: NO_STORE_HEADERS });
     }
@@ -86,13 +97,18 @@ export async function handleVendasCancelPost(event: RequestEvent) {
     // Reconstruir read model de ranking de forma assíncrona (fire-and-forget)
     triggerRebuildAsync({
       companyIds: saleCompanyIds,
-      executionContext: getPlatformExecutionContext(event.platform),
+      executionContext: getPlatformExecutionContext(event.platform)
     });
 
     // Publicar invalidação no KV para propagar para outras instâncias Workers (fire-and-forget)
     publishKvInvalidationAsync({ companyIds: saleCompanyIds });
 
-    registrarLog(event, { userId: user.id, modulo: 'Vendas', acao: 'venda_cancelada', detalhes: { id: vendaId } });
+    registrarLog(event, {
+      userId: user.id,
+      modulo: 'Vendas',
+      acao: 'venda_cancelada',
+      detalhes: { id: vendaId }
+    });
 
     return json({ ok: true, cancelled: true }, { headers: NO_STORE_HEADERS });
   } catch (err) {

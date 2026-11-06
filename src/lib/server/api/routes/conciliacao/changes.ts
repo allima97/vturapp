@@ -2,7 +2,14 @@
 // (só o nome/assinatura do handler e caminhos de import relativos mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
-import { ensureModuloAccess, getAdminClient, requireAuthenticatedUser, resolveScopedCompanyIds, resolveUserScope, toErrorResponse } from '$lib/server/v1';
+import {
+  ensureModuloAccess,
+  getAdminClient,
+  requireAuthenticatedUser,
+  resolveScopedCompanyIds,
+  resolveUserScope,
+  toErrorResponse
+} from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
 
 export async function handleConciliacaoChangesGet(event: RequestEvent) {
@@ -12,7 +19,12 @@ export async function handleConciliacaoChangesGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster && !scope.isFinanceiro && !scope.isGestor) {
-      ensureModuloAccess(scope, ['operacao_conciliacao', 'conciliacao'], 1, 'Sem acesso à Conciliação.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_conciliacao', 'conciliacao'],
+        1,
+        'Sem acesso à Conciliação.'
+      );
     }
 
     const requestedCompanyId = event.url.searchParams.get('company_id');
@@ -40,7 +52,9 @@ export async function handleConciliacaoChangesGet(event: RequestEvent) {
       const [y, m] = month.split('-');
       const start = `${y}-${m}-01T00:00:00`;
       const nextMonth =
-        Number(m) === 12 ? `${Number(y) + 1}-01-01T00:00:00` : `${y}-${String(Number(m) + 1).padStart(2, '0')}-01T00:00:00`;
+        Number(m) === 12
+          ? `${Number(y) + 1}-01-01T00:00:00`
+          : `${y}-${String(Number(m) + 1).padStart(2, '0')}-01T00:00:00`;
       query = query.gte('changed_at', start).lt('changed_at', nextMonth);
     }
 

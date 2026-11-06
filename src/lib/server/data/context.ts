@@ -1,5 +1,5 @@
-import { AsyncLocalStorage } from "node:async_hooks";
-import type { DataContext } from "./types";
+import { AsyncLocalStorage } from 'node:async_hooks';
+import type { DataContext } from './types';
 
 const storage = new AsyncLocalStorage<DataContext>();
 
@@ -14,7 +14,7 @@ export function getDataContext(): DataContext | null {
 export function requireDataContext(): DataContext {
   const context = getDataContext();
   if (!context?.db) {
-    throw new Error("Banco D1 indisponivel nesta requisicao.");
+    throw new Error('Banco D1 indisponivel nesta requisicao.');
   }
   return context;
 }

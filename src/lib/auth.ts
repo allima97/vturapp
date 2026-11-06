@@ -14,12 +14,12 @@
  * Referência: docs/f1/F1-04-better-auth.md, docs/adr/ADR-002-autenticacao.md
  */
 
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { twoFactor } from "better-auth/plugins";
-import { drizzle } from "drizzle-orm/d1";
-import * as schema from "$lib/server/db/schema";
-import { sendEmailWithRetry } from "$lib/server/email/client";
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { twoFactor } from 'better-auth/plugins';
+import { drizzle } from 'drizzle-orm/d1';
+import * as schema from '$lib/server/db/schema';
+import { sendEmailWithRetry } from '$lib/server/email/client';
 
 /**
  * Cria uma instância Better Auth conectada ao D1.
@@ -33,29 +33,24 @@ export function createAuth(
   d1: D1Database,
   secret: string,
   baseURL?: string,
-  resendApiKey?: string,
+  resendApiKey?: string
 ) {
   const db = drizzle(d1, { schema });
-  const appBaseURL = baseURL ?? "http://localhost:5173";
+  const appBaseURL = baseURL ?? 'http://localhost:5173';
 
   // Helper interno para envio de e-mails transacionais
-  async function sendAuthEmail(
-    to: string,
-    subject: string,
-    html: string,
-    text: string,
-  ) {
+  async function sendAuthEmail(to: string, subject: string, html: string, text: string) {
     if (!resendApiKey) {
       // Dev: só loga (sem envio real)
       console.info(`[auth email — dev] Para: ${to} | ${subject}`);
       return;
     }
     await sendEmailWithRetry(resendApiKey, {
-      from: "autenticacao@vturapp.com.br",
+      from: 'autenticacao@vturapp.com.br',
       to,
       subject,
       html,
-      text,
+      text
     });
   }
 
@@ -64,7 +59,7 @@ export function createAuth(
     baseURL: appBaseURL,
 
     database: drizzleAdapter(db, {
-      provider: "sqlite",
+      provider: 'sqlite'
     }),
 
     // ── Auth methods ──────────────────────────────────────────────────────
@@ -78,36 +73,24 @@ export function createAuth(
       requireEmailVerification: Boolean(resendApiKey),
 
       /** Envia e-mail de verificação após cadastro */
-      sendVerificationEmail: async ({
-        user,
-        url,
-      }: {
-        user: { email: string };
-        url: string;
-      }) => {
+      sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
         await sendAuthEmail(
           user.email,
-          "Confirme seu e-mail — VTUR",
+          'Confirme seu e-mail — VTUR',
           templateVerificacao(url),
-          `Confirme seu e-mail: ${url}`,
+          `Confirme seu e-mail: ${url}`
         );
       },
 
       /** Envia e-mail de redefinição de senha */
-      sendResetPassword: async ({
-        user,
-        url,
-      }: {
-        user: { email: string };
-        url: string;
-      }) => {
+      sendResetPassword: async ({ user, url }: { user: { email: string }; url: string }) => {
         await sendAuthEmail(
           user.email,
-          "Redefina sua senha — VTUR",
+          'Redefina sua senha — VTUR',
           templateResetSenha(user.email, url),
-          `Redefina sua senha: ${url}`,
+          `Redefina sua senha: ${url}`
         );
-      },
+      }
     },
 
     // ── Plugins ───────────────────────────────────────────────────────────
@@ -116,26 +99,26 @@ export function createAuth(
        * Two-Factor Authentication (TOTP).
        * F1-04: prova que o plugin funciona com D1.
        */
-      twoFactor(),
+      twoFactor()
     ],
 
     // ── Trusted origins ───────────────────────────────────────────────────
     trustedOrigins: [
-      "http://localhost:5173", // vite dev
-      "http://localhost:8787", // wrangler dev
-      appBaseURL,
+      'http://localhost:5173', // vite dev
+      'http://localhost:8787', // wrangler dev
+      appBaseURL
     ],
 
     // ── Sessão ────────────────────────────────────────────────────────────
     session: {
       expiresIn: 60 * 60 * 24 * 30, // 30 dias
-      updateAge: 60 * 60 * 24, // renovar se mais novo que 24h
+      updateAge: 60 * 60 * 24 // renovar se mais novo que 24h
     },
 
     advanced: {
       database: {
-        generateId: "uuid",
-      },
+        generateId: 'uuid'
+      }
     },
 
     databaseHooks: {
@@ -148,14 +131,14 @@ export function createAuth(
               INSERT INTO legado_users (id, email, nome_completo, active)
               VALUES (?1, ?2, ?3, 1)
               ON CONFLICT (id) DO NOTHING
-            `,
+            `
               )
               .bind(created.id, created.email, created.name || created.email)
               .run();
-          },
-        },
-      },
-    },
+          }
+        }
+      }
+    }
   });
 }
 
@@ -168,10 +151,10 @@ export type AuthInstance = ReturnType<typeof createAuth>;
 
 function esc(s: string): string {
   return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 function templateVerificacao(url: string): string {

@@ -28,21 +28,28 @@ export async function handleOrcamentosIdResumoVendaGet(event: RequestEvent) {
         'Sem acesso ao resumo do orçamento para venda.'
       );
     }
-    if (!isUuid(id)) return json({ error: 'ID invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const quoteScope = await resolveQuoteCreatorScope(client, scope, {
-      companyId: event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id'),
+      companyId:
+        event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id'),
       vendedorRaw: event.url.searchParams.get('vendedor_id')
     });
 
     const { data: quote, error: quoteError } = await client
       .from('quote')
-      .select('id, client_id, client_name, client_whatsapp, client_email, created_by, status, status_negociacao, last_interaction_notes')
+      .select(
+        'id, client_id, client_name, client_whatsapp, client_email, created_by, status, status_negociacao, last_interaction_notes'
+      )
       .eq('id', id)
       .maybeSingle();
     if (quoteError) throw quoteError;
     if (!quote || !isQuoteCreatorAllowed(quoteScope, quote.created_by)) {
-      return json({ error: 'Orcamento nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Orcamento nao encontrado.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
     }
 
     let cliente = null;
@@ -55,19 +62,26 @@ export async function handleOrcamentosIdResumoVendaGet(event: RequestEvent) {
       cliente = clienteData;
     }
 
-    return json({
-      id: quote.id,
-      codigo: `ORC-${quote.id.slice(0, 8).toUpperCase()}`,
-      client_id: quote.client_id,
-      client_name: quote.client_name || cliente?.nome || null,
-      client_whatsapp: quote.client_whatsapp || null,
-      client_email: quote.client_email || cliente?.email || null,
-      cliente: cliente || { nome: quote.client_name || 'Cliente manual', email: quote.client_email || null, telefone: quote.client_whatsapp || null },
-      notes: quote.last_interaction_notes || null,
-      observacoes: quote.last_interaction_notes || null,
-      status: quote.status,
-      status_negociacao: quote.status_negociacao
-    }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      {
+        id: quote.id,
+        codigo: `ORC-${quote.id.slice(0, 8).toUpperCase()}`,
+        client_id: quote.client_id,
+        client_name: quote.client_name || cliente?.nome || null,
+        client_whatsapp: quote.client_whatsapp || null,
+        client_email: quote.client_email || cliente?.email || null,
+        cliente: cliente || {
+          nome: quote.client_name || 'Cliente manual',
+          email: quote.client_email || null,
+          telefone: quote.client_whatsapp || null
+        },
+        notes: quote.last_interaction_notes || null,
+        observacoes: quote.last_interaction_notes || null,
+        status: quote.status,
+        status_negociacao: quote.status_negociacao
+      },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar resumo do orçamento.');
   }

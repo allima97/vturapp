@@ -25,7 +25,7 @@ describe('campos: erro/ajuda ligados ao campo', () => {
     ['FieldInput com máscara', FieldInput, { mask: 'cpf' }],
     ['FieldSelect', FieldSelect, { options: [{ value: 'a', label: 'A' }] }],
     ['FieldTextarea', FieldTextarea, {}],
-    ['FieldCheckbox', FieldCheckbox, {}],
+    ['FieldCheckbox', FieldCheckbox, {}]
   ])('%s: com erro → aria-invalid e aria-describedby apontando para a mensagem', (_n, C, extra) => {
     const body = html(C, { label: 'Nome', id: 'f1', error: 'Campo obrigatório', ...extra });
     expect(body).toContain('aria-invalid="true"');
@@ -55,8 +55,15 @@ describe('campos: erro/ajuda ligados ao campo', () => {
 describe('FieldRadioGroup', () => {
   it('o rótulo nomeia o grupo (antes apontava para um id inexistente)', () => {
     const body = html(FieldRadioGroup, {
-      label: 'Tipo', id: 'g1', name: 'tipo', required: true, error: 'Escolha um',
-      options: [{ value: 'pf', label: 'PF' }, { value: 'pj', label: 'PJ' }],
+      label: 'Tipo',
+      id: 'g1',
+      name: 'tipo',
+      required: true,
+      error: 'Escolha um',
+      options: [
+        { value: 'pf', label: 'PF' },
+        { value: 'pj', label: 'PJ' }
+      ]
     });
     expect(body).toMatch(/<label[^>]*id="g1-label"/);
     expect(body).not.toContain('for="g1"');
@@ -71,7 +78,7 @@ describe('Tabs', () => {
   const items = [
     { key: 'a', label: 'A' },
     { key: 'b', label: 'B', disabled: true },
-    { key: 'c', label: 'C' },
+    { key: 'c', label: 'C' }
   ];
 
   it('só a aba ativa entra na ordem do Tab (tabindex móvel)', () => {

@@ -13,10 +13,14 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./root', () => ({ handlePaisesGet: spy('handlePaisesGet'), handlePaisesPost: spy('handlePaisesPost'), handlePaisesDelete: spy('handlePaisesDelete') }));
+vi.mock('./root', () => ({
+  handlePaisesGet: spy('handlePaisesGet'),
+  handlePaisesPost: spy('handlePaisesPost'),
+  handlePaisesDelete: spy('handlePaisesDelete')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
@@ -24,12 +28,10 @@ import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/paises', 'handlePaisesGet', {}],
   ['POST', '/api/v1/paises', 'handlePaisesPost', {}],
-  ['DELETE', '/api/v1/paises', 'handlePaisesDelete', {}],
+  ['DELETE', '/api/v1/paises', 'handlePaisesDelete', {}]
 ];
 
-const SEM_HANDLER: Array<[string, string]> = [
-  ['PUT', '/api/v1/paises'],
-];
+const SEM_HANDLER: Array<[string, string]> = [['PUT', '/api/v1/paises']];
 
 function ev(method: string, path: string) {
   const request = new Request(`https://vturapp.test${path}`, { method });

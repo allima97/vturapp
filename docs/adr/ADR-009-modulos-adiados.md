@@ -2,7 +2,7 @@
 
 **Status:** ACEITO  
 **Fase:** F5-01  
-**Data:** 2026-10-30  
+**Data:** 2026-10-30
 
 ## Contexto
 
@@ -11,6 +11,7 @@ o status de cada módulo ao final de F5, com justificativa para inclusão, adiam
 ou exclusão do escopo de lançamento.
 
 **Critério de aceite (herdado de F3/F4):**
+
 - CONCLUÍDO: rota v2 implementada + testes passando + isolamento de tenant provado
 - ADIADO: schema e modelo de domínio preservados; rota v2 não exposta; motivo documentado
 - EXCLUÍDO: removido intencionalmente do produto; razão de negócio documentada
@@ -91,18 +92,18 @@ bloqueante.
 
 ## Resumo
 
-| Módulo | Domínio | Status |
-|--------|---------|--------|
-| M01 | Identidade/Auth | ✅ CONCLUÍDO |
-| M02 | Clientes/Anexos | ✅ CONCLUÍDO |
-| M03 | Produtos/FormasPgto | ⏸ ADIADO |
-| M04 | Vendas/Recebimentos | ✅ CONCLUÍDO |
-| M05 | Comissões | ❌ EXCLUÍDO |
-| M06 | Conciliação/Import | ❌ EXCLUÍDO |
-| M07 | Orçamentos/Roteiros | ⏸ ADIADO |
-| M08 | Agenda/Tarefas | ⏸ ADIADO |
-| M09 | Mural/Recados | ⏸ ADIADO (código pronto) |
-| M10 | Destinos | ⏸ ADIADO |
+| Módulo | Domínio             | Status                   |
+| ------ | ------------------- | ------------------------ |
+| M01    | Identidade/Auth     | ✅ CONCLUÍDO             |
+| M02    | Clientes/Anexos     | ✅ CONCLUÍDO             |
+| M03    | Produtos/FormasPgto | ⏸ ADIADO                 |
+| M04    | Vendas/Recebimentos | ✅ CONCLUÍDO             |
+| M05    | Comissões           | ❌ EXCLUÍDO              |
+| M06    | Conciliação/Import  | ❌ EXCLUÍDO              |
+| M07    | Orçamentos/Roteiros | ⏸ ADIADO                 |
+| M08    | Agenda/Tarefas      | ⏸ ADIADO                 |
+| M09    | Mural/Recados       | ⏸ ADIADO (código pronto) |
+| M10    | Destinos            | ⏸ ADIADO                 |
 
 **Aceite de lançamento:** M01, M02, M04 CONCLUÍDOS cobrem o fluxo principal
 (vender, cobrar, entregar). M05/M06 excluídos por decisão de produto documentada.

@@ -2,7 +2,13 @@
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
-import { ensureModuloAccess, getAdminClient, requireAuthenticatedUser, resolveUserScope, toErrorResponse } from '$lib/server/v1';
+import {
+  ensureModuloAccess,
+  getAdminClient,
+  requireAuthenticatedUser,
+  resolveUserScope,
+  toErrorResponse
+} from '$lib/server/v1';
 import { fetchProdutoById, sanitizeProdutoPayload } from '$lib/server/cadastros-base';
 import { invalidateCatalogReadModels } from '$lib/server/readModelCache';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
@@ -34,16 +40,25 @@ export async function handleProdutosCreatePost(event: RequestEvent) {
     const payload = sanitizeProdutoPayload(body);
 
     if (!payload.nome) {
-      return json({ error: 'Nome do produto é obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Nome do produto é obrigatório.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
     if (!payload.destino) {
       return json({ error: 'Destino é obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
     }
     if (!payload.tipo_produto) {
-      return json({ error: 'Tipo de produto é obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Tipo de produto é obrigatório.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
     if (!payload.todas_as_cidades && !payload.cidade_id) {
-      return json({ error: 'Cidade é obrigatória para produtos não globais.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Cidade é obrigatória para produtos não globais.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const insertPayload = {
@@ -59,7 +74,10 @@ export async function handleProdutosCreatePost(event: RequestEvent) {
 
     if (insertError) throw insertError;
 
-    invalidateCatalogReadModels({ companyIds: scope.companyId ? [scope.companyId] : undefined, userId: user.id });
+    invalidateCatalogReadModels({
+      companyIds: scope.companyId ? [scope.companyId] : undefined,
+      userId: user.id
+    });
     const produto = await fetchProdutoById(client, data.id);
     return json({ success: true, data: produto }, { status: 201, headers: NO_STORE_HEADERS });
   } catch (err) {

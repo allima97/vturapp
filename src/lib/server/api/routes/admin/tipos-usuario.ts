@@ -76,20 +76,23 @@ export async function handleAdminTiposUsuarioGet(event: RequestEvent) {
       userRows.push(...((usersRes.data || []) as UserTypeUserRow[]));
     }
 
-	const defaultPermCounts = new Map<string, number>();
-	for (const row of defaultPermRows) {
-	  if (row?.ativo === false || !row?.user_type_id) continue;
-	  defaultPermCounts.set(
-	    String(row.user_type_id),
-	    Number(defaultPermCounts.get(String(row.user_type_id)) || 0) + 1
-	  );
-	}
+    const defaultPermCounts = new Map<string, number>();
+    for (const row of defaultPermRows) {
+      if (row?.ativo === false || !row?.user_type_id) continue;
+      defaultPermCounts.set(
+        String(row.user_type_id),
+        Number(defaultPermCounts.get(String(row.user_type_id)) || 0) + 1
+      );
+    }
 
-	const userCounts = new Map<string, number>();
-	for (const row of userRows) {
-	  if (!row?.user_type_id) continue;
-	  userCounts.set(String(row.user_type_id), Number(userCounts.get(String(row.user_type_id)) || 0) + 1);
-	}
+    const userCounts = new Map<string, number>();
+    for (const row of userRows) {
+      if (!row?.user_type_id) continue;
+      userCounts.set(
+        String(row.user_type_id),
+        Number(userCounts.get(String(row.user_type_id)) || 0) + 1
+      );
+    }
 
     return json(
       {
@@ -123,14 +126,23 @@ export async function handleAdminTiposUsuarioPost(event: RequestEvent) {
 
     ensureCanManagePermissions(scope);
 
-    const action = String(body.action || 'save').trim().toLowerCase();
+    const action = String(body.action || 'save')
+      .trim()
+      .toLowerCase();
     const id = String(body.id || '').trim();
     const managedTypes = await loadManagedUserTypes(client, scope);
 
     if (action === 'delete') {
-      if (!id) return new Response('Tipo de usuario nao informado.', { status: 400, headers: NO_STORE_HEADERS });
+      if (!id)
+        return new Response('Tipo de usuario nao informado.', {
+          status: 400,
+          headers: NO_STORE_HEADERS
+        });
       if (!managedTypes.some((row) => row.id === id)) {
-        return new Response('Tipo de usuario fora do escopo.', { status: 403, headers: NO_STORE_HEADERS });
+        return new Response('Tipo de usuario fora do escopo.', {
+          status: 403,
+          headers: NO_STORE_HEADERS
+        });
       }
       const { error: deleteError } = await client.from('user_types').delete().eq('id', id);
       if (deleteError) throw deleteError;
@@ -141,15 +153,24 @@ export async function handleAdminTiposUsuarioPost(event: RequestEvent) {
     const description = String(body.description || '').trim() || null;
 
     if (!name) {
-      return new Response('Nome do tipo de usuario obrigatorio.', { status: 400, headers: NO_STORE_HEADERS });
+      return new Response('Nome do tipo de usuario obrigatorio.', {
+        status: 400,
+        headers: NO_STORE_HEADERS
+      });
     }
     if (!scope.isAdmin && isRestrictedUserTypeName(name)) {
-      return new Response('Sem permissao para criar ou editar perfis ADMIN/MASTER.', { status: 403, headers: NO_STORE_HEADERS });
+      return new Response('Sem permissao para criar ou editar perfis ADMIN/MASTER.', {
+        status: 403,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     if (id) {
       if (!managedTypes.some((row) => row.id === id)) {
-        return new Response('Tipo de usuario fora do escopo.', { status: 403, headers: NO_STORE_HEADERS });
+        return new Response('Tipo de usuario fora do escopo.', {
+          status: 403,
+          headers: NO_STORE_HEADERS
+        });
       }
       const { error: updateError } = await client
         .from('user_types')

@@ -24,7 +24,8 @@ export async function handleRoteirosDeleteDelete(event: RequestEvent) {
     ensureModuloAccess(scope, ['Orcamentos'], 4, 'Sem acesso para excluir Roteiros.');
 
     const id = event.url.searchParams.get('id') || '';
-    if (!id || !isUuid(id)) return json({ error: 'ID invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!id || !isUuid(id))
+      return json({ error: 'ID invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     // Verifica ownership
     let roteiroQuery = client.from('roteiro_personalizado').select('id').eq('id', id);
@@ -37,12 +38,10 @@ export async function handleRoteirosDeleteDelete(event: RequestEvent) {
     const { data: roteiro, error: findErr } = await roteiroQuery.maybeSingle();
 
     if (findErr) throw findErr;
-    if (!roteiro) return json({ error: 'Roteiro nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!roteiro)
+      return json({ error: 'Roteiro nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
 
-    const { error } = await client
-      .from('roteiro_personalizado')
-      .delete()
-      .eq('id', id);
+    const { error } = await client.from('roteiro_personalizado').delete().eq('id', id);
 
     if (error) throw error;
 

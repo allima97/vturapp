@@ -2,9 +2,22 @@
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
-import { getAdminClient, requireAuthenticatedUser, resolveAccessibleClientIds, resolveScopedCompanyIds, resolveScopedVendedorIds, resolveUserScope, sanitizePostgrestSearchTerm, toErrorResponse } from '$lib/server/v1';
+import {
+  getAdminClient,
+  requireAuthenticatedUser,
+  resolveAccessibleClientIds,
+  resolveScopedCompanyIds,
+  resolveScopedVendedorIds,
+  resolveUserScope,
+  sanitizePostgrestSearchTerm,
+  toErrorResponse
+} from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
-import { canUseCompanyClienteScope, ensureClienteModuloAccess, resolveCompanyClienteIds } from '$lib/server/clientes';
+import {
+  canUseCompanyClienteScope,
+  ensureClienteModuloAccess,
+  resolveCompanyClienteIds
+} from '$lib/server/clientes';
 import { chunkArray, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 type ClienteLookupRow = {
@@ -40,25 +53,25 @@ export async function handleClientesGet(event: RequestEvent) {
       ensureClienteModuloAccess(scope, 1, 'Sem acesso a Clientes.');
     }
 
-    const rawSearch = sanitizePostgrestSearchTerm(event.url.searchParams.get('search')).toLowerCase();
+    const rawSearch = sanitizePostgrestSearchTerm(
+      event.url.searchParams.get('search')
+    ).toLowerCase();
     const search = rawSearch.length >= 2 ? rawSearch : '';
     const companyIds = resolveScopedCompanyIds(scope, event.url.searchParams.get('empresa_id'));
     const requestedVendedorRaw = event.url.searchParams.get('vendedor_id');
     const vendedorIds = await resolveScopedVendedorIds(client, scope, requestedVendedorRaw);
     const canUseCompanyScope = canUseCompanyClienteScope(scope, requestedVendedorRaw);
-    const companyClientIds = canUseCompanyScope && companyIds.length > 0
-      ? await resolveCompanyClienteIds(client, companyIds)
-      : null;
+    const companyClientIds =
+      canUseCompanyScope && companyIds.length > 0
+        ? await resolveCompanyClienteIds(client, companyIds)
+        : null;
     const accessibleClientIds = canUseCompanyScope
       ? null
       : await resolveAccessibleClientIds(client, { companyIds, vendedorIds });
     const scopedClientIds = companyClientIds || accessibleClientIds;
 
     if (scopedClientIds && scopedClientIds.length === 0) {
-      return json(
-        { items: [], total: 0 },
-        { headers: DYNAMIC_READ_HEADERS }
-      );
+      return json({ items: [], total: 0 }, { headers: DYNAMIC_READ_HEADERS });
     }
 
     const buildQuery = (clientIds?: string[], companyIdsFilter = companyIds) => {
@@ -75,7 +88,9 @@ export async function handleClientesGet(event: RequestEvent) {
       }
 
       if (search) {
-        query = query.or(`nome.ilike.%${search}%,email.ilike.%${search}%,cpf.ilike.%${search}%,telefone.ilike.%${search}%`);
+        query = query.or(
+          `nome.ilike.%${search}%,email.ilike.%${search}%,cpf.ilike.%${search}%,telefone.ilike.%${search}%`
+        );
       }
 
       return query;
@@ -93,7 +108,7 @@ export async function handleClientesGet(event: RequestEvent) {
           if (result.error) {
             return { data: null, error: result.error } as typeof result;
           }
-          rows.push(...(((result.data || []) as unknown) as ClienteLookupRow[]));
+          rows.push(...((result.data || []) as unknown as ClienteLookupRow[]));
         }
 
         return { data: dedupeClientes(rows).slice(0, search ? 50 : 300), error: null };
@@ -106,7 +121,7 @@ export async function handleClientesGet(event: RequestEvent) {
           if (result.error) {
             return { data: null, error: result.error } as typeof result;
           }
-          rows.push(...(((result.data || []) as unknown) as ClienteLookupRow[]));
+          rows.push(...((result.data || []) as unknown as ClienteLookupRow[]));
           if (dedupeClientes(rows).length >= (search ? 50 : 300)) break;
         }
 
@@ -119,10 +134,7 @@ export async function handleClientesGet(event: RequestEvent) {
     const { data, error } = await fetchClientes();
     if (error) throw error;
 
-    return json(
-      { items: data || [], total: data?.length || 0 },
-      { headers: DYNAMIC_READ_HEADERS }
-    );
+    return json({ items: data || [], total: data?.length || 0 }, { headers: DYNAMIC_READ_HEADERS });
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar clientes.');
   }

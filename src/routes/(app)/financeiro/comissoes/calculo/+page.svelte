@@ -1,10 +1,24 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { PageHeader, Card, Button, Dialog, DataTable, FieldInput, FieldSelect, BottomSheet } from '$lib/components/ui';
-  import { 
-    Calculator, RefreshCw, AlertCircle,
-    DollarSign, TrendingUp, Wallet, SlidersHorizontal
+  import {
+    PageHeader,
+    Card,
+    Button,
+    Dialog,
+    DataTable,
+    FieldInput,
+    FieldSelect,
+    BottomSheet
+  } from '$lib/components/ui';
+  import {
+    Calculator,
+    RefreshCw,
+    AlertCircle,
+    DollarSign,
+    TrendingUp,
+    Wallet,
+    SlidersHorizontal
   } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { currentMonthRangeISODate, parseISODateParts, todayISODateLocal } from '$lib/date';
@@ -65,7 +79,7 @@
     total_recibos?: number;
     detalhes: VendaCalculada[];
   } | null = null;
-  
+
   let comissoesPendentes: VendaCalculada[] = [];
   let persistenciaDisponivel = true;
 
@@ -136,7 +150,7 @@
     const range = currentMonthRangeISODate();
     filtroDataInicio = range.inicio;
     filtroDataFim = range.fim;
-    
+
     void (async () => {
       await loadUserContext();
       await Promise.all([loadComissoes(), loadVendedores()]);
@@ -248,9 +262,14 @@
     const controller = new AbortController();
     vendedoresAbortController = controller;
     try {
-      const data = await apiGet<VendedoresResponse>('/api/v1/financeiro/comissoes/vendedores', {
-        empresa_id: empresaId || undefined
-      }, controller.signal, 60_000);
+      const data = await apiGet<VendedoresResponse>(
+        '/api/v1/financeiro/comissoes/vendedores',
+        {
+          empresa_id: empresaId || undefined
+        },
+        controller.signal,
+        60_000
+      );
       if (requestSeq !== vendedoresRequestSeq) return;
       vendedores = data.items || [];
     } catch (err) {
@@ -277,10 +296,9 @@
       });
       resultadoCalculo = data;
       showResultDialog = true;
-      
+
       // Recarrega comissões pendentes
       await loadComissoes();
-      
     } catch (err) {
       toast.error(toUserMessage(err, 'Erro ao calcular comissões'));
     } finally {
@@ -316,7 +334,9 @@
   }
 
   function formatPercent(value: number) {
-    return `${Number(value || 0).toFixed(2).replace('.', ',')}%`;
+    return `${Number(value || 0)
+      .toFixed(2)
+      .replace('.', ',')}%`;
   }
 
   function buildKpiLabel(label: string, values: number[]) {
@@ -338,33 +358,33 @@
     { key: 'numero_venda', label: 'Venda', sortable: true, width: '120px' },
     { key: 'cliente', label: 'Cliente', sortable: true },
     { key: 'produto', label: 'Produto', sortable: true },
-    { 
-      key: 'valor_venda', 
-      label: 'Valor Recibo', 
-      sortable: true, 
+    {
+      key: 'valor_venda',
+      label: 'Valor Recibo',
+      sortable: true,
       align: 'right' as const,
       formatter: (value: number) => BRL_CURRENCY_FORMATTER.format(value)
     },
-    { 
-      key: 'percentual', 
-      label: '%', 
-      sortable: true, 
+    {
+      key: 'percentual',
+      label: '%',
+      sortable: true,
       width: '80px',
       align: 'center' as const,
       formatter: (value: number) => `${value}%`
     },
-    { 
-      key: 'valor_comissao', 
-      label: 'Comissão + seguro', 
-      sortable: true, 
+    {
+      key: 'valor_comissao',
+      label: 'Comissão + seguro',
+      sortable: true,
       align: 'right' as const,
       formatter: (value: number) => BRL_CURRENCY_FORMATTER.format(value)
     },
     { key: 'regra', label: 'Regra', sortable: true, width: '150px' },
-    { 
-      key: 'status', 
-      label: 'Status', 
-      sortable: true, 
+    {
+      key: 'status',
+      label: 'Status',
+      sortable: true,
       width: '100px',
       formatter: (value: string) => getStatusBadge(value)
     }
@@ -376,32 +396,32 @@
     { key: 'cliente', label: 'Cliente', sortable: true },
     { key: 'produto', label: 'Produto', sortable: true },
     { key: 'vendedor', label: 'Vendedor', sortable: true, width: '150px' },
-    { 
-      key: 'data_venda', 
-      label: 'Data', 
-      sortable: true, 
+    {
+      key: 'data_venda',
+      label: 'Data',
+      sortable: true,
       width: '100px',
       formatter: (value: string) => formatDate(value)
     },
-    { 
-      key: 'valor_venda', 
-      label: 'Valor Recibo', 
-      sortable: true, 
+    {
+      key: 'valor_venda',
+      label: 'Valor Recibo',
+      sortable: true,
       align: 'right' as const,
       formatter: (value: number) => BRL_CURRENCY_FORMATTER.format(value)
     },
-    { 
-      key: 'percentual_aplicado', 
-      label: '%', 
-      sortable: true, 
+    {
+      key: 'percentual_aplicado',
+      label: '%',
+      sortable: true,
       width: '60px',
       align: 'center' as const,
       formatter: (value: number) => `${value}%`
     },
-    { 
-      key: 'valor_comissao', 
-      label: 'Comissão + seguro', 
-      sortable: true, 
+    {
+      key: 'valor_comissao',
+      label: 'Comissão + seguro',
+      sortable: true,
       align: 'right' as const,
       formatter: (value: number) => BRL_CURRENCY_FORMATTER.format(value)
     },
@@ -428,11 +448,23 @@
     }
   ];
 
-  $: totalComissaoGeralPeriodo = comissoesPendentes.reduce((acc, c) => acc + Number(c.valor_comissao_geral ?? c.valor_comissao ?? 0), 0);
-  $: totalSeguroPeriodo = comissoesPendentes.reduce((acc, c) => acc + Number(c.valor_comissao_seguro || 0), 0);
+  $: totalComissaoGeralPeriodo = comissoesPendentes.reduce(
+    (acc, c) => acc + Number(c.valor_comissao_geral ?? c.valor_comissao ?? 0),
+    0
+  );
+  $: totalSeguroPeriodo = comissoesPendentes.reduce(
+    (acc, c) => acc + Number(c.valor_comissao_seguro || 0),
+    0
+  );
   $: totalComissaoComSeguroPeriodo = totalComissaoGeralPeriodo + totalSeguroPeriodo;
-  $: labelComissao = buildKpiLabel('Comissão', comissoesPendentes.map((c) => Number(c.percentual_comissao_geral || 0)));
-  $: labelSeguro = buildKpiLabel('Seguro Viagem', comissoesPendentes.map((c) => Number(c.percentual_seguro || 0)));
+  $: labelComissao = buildKpiLabel(
+    'Comissão',
+    comissoesPendentes.map((c) => Number(c.percentual_comissao_geral || 0))
+  );
+  $: labelSeguro = buildKpiLabel(
+    'Seguro Viagem',
+    comissoesPendentes.map((c) => Number(c.percentual_seguro || 0))
+  );
   $: quantidadePorStatus = comissoesPendentes.reduce(
     (acc, item) => {
       const status = String(item.status || '').toLowerCase();
@@ -463,7 +495,7 @@
   <title>Cálculo de Comissões | VTUR</title>
 </svelte:head>
 
-<PageHeader 
+<PageHeader
   title="Cálculo de Comissões"
   subtitle="Acompanhe o cálculo e o estado persistido das comissões por período"
   color="financeiro"
@@ -483,7 +515,7 @@
 </div>
 
 <Card header="Filtros de Cálculo" color="financeiro" class="mb-6 hidden sm:block">
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-6">
     {#if canSelectEmpresa}
       <FieldSelect
         label="Empresa"
@@ -495,12 +527,7 @@
       />
     {/if}
 
-    <FieldInput
-      label="Data Início"
-      type="date"
-      bind:value={filtroDataInicio}
-      class_name="w-full"
-    />
+    <FieldInput label="Data Início" type="date" bind:value={filtroDataInicio} class_name="w-full" />
 
     <FieldInput
       label="Data Fim"
@@ -520,12 +547,7 @@
       class_name="w-full"
     />
 
-    <FieldInput
-      label="Ano"
-      type="number"
-      bind:value={filtroAno}
-      class_name="w-full"
-    />
+    <FieldInput label="Ano" type="number" bind:value={filtroAno} class_name="w-full" />
 
     <FieldSelect
       label="Status"
@@ -545,13 +567,8 @@
     />
   </div>
 
-  <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
-    <Button
-      variant="primary"
-      color="financeiro"
-      on:click={openConfirmDialog}
-      disabled={calculando}
-    >
+  <div class="mt-6 flex justify-end gap-3 border-t pt-4">
+    <Button variant="primary" color="financeiro" on:click={openConfirmDialog} disabled={calculando}>
       {#if calculando}
         <RefreshCw size={16} class="mr-2 animate-spin" />
         Calculando...
@@ -576,12 +593,7 @@
       />
     {/if}
 
-    <FieldInput
-      label="Data Início"
-      type="date"
-      bind:value={filtroDataInicio}
-      class_name="w-full"
-    />
+    <FieldInput label="Data Início" type="date" bind:value={filtroDataInicio} class_name="w-full" />
 
     <FieldInput
       label="Data Fim"
@@ -601,12 +613,7 @@
       class_name="w-full"
     />
 
-    <FieldInput
-      label="Ano"
-      type="number"
-      bind:value={filtroAno}
-      class_name="w-full"
-    />
+    <FieldInput label="Ano" type="number" bind:value={filtroAno} class_name="w-full" />
 
     <FieldSelect
       label="Status"
@@ -650,7 +657,9 @@
 <!-- Resumo -->
 <div class="vtur-kpi-grid mb-6">
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500"><DollarSign size={20} /></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
+      <DollarSign size={20} />
+    </div>
     <div>
       <p class="text-sm font-medium text-slate-500">{labelComissao}</p>
       <p class="text-2xl font-bold text-slate-900">{formatCurrency(totalComissaoGeralPeriodo)}</p>
@@ -658,7 +667,9 @@
   </div>
 
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500"><Calculator size={20} /></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
+      <Calculator size={20} />
+    </div>
     <div>
       <p class="text-sm font-medium text-slate-500">Comissão total</p>
       <p class="text-2xl font-bold text-slate-900">
@@ -668,7 +679,9 @@
   </div>
 
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500"><Wallet size={20} /></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+      <Wallet size={20} />
+    </div>
     <div>
       <p class="text-sm font-medium text-slate-500">{labelSeguro}</p>
       <p class="text-2xl font-bold text-slate-900">
@@ -678,7 +691,9 @@
   </div>
 
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500"><TrendingUp size={20} /></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
+      <TrendingUp size={20} />
+    </div>
     <div>
       <p class="text-sm font-medium text-slate-500">Comissão + seguro</p>
       <p class="text-2xl font-bold text-slate-900">
@@ -690,16 +705,23 @@
 
 <!-- Lista de Comissões Pendentes -->
 <Card header={`Comissões do período - ${comissoesPendentes.length} registros`} color="financeiro">
-  <div class="mb-4 rounded-vtur-xl border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-600">
-    O painel agora mistura cálculo e persistência: ele mostra <strong>{quantidadePendentes}</strong> pendentes, <strong>{quantidadePagas}</strong> pagas e respeita o status salvo no módulo principal de comissões.
+  <div
+    class="rounded-vtur-xl mb-4 border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-slate-600"
+  >
+    O painel agora mistura cálculo e persistência: ele mostra <strong>{quantidadePendentes}</strong>
+    pendentes, <strong>{quantidadePagas}</strong> pagas e respeita o status salvo no módulo principal
+    de comissões.
   </div>
   {#if !persistenciaDisponivel}
-    <div class="mb-4 flex items-start gap-3 rounded-vtur-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+    <div
+      class="rounded-vtur-xl mb-4 flex items-start gap-3 border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900"
+    >
       <AlertCircle size={18} class="mt-0.5 shrink-0" />
       <div>
         <p class="font-medium">Persistência indisponível neste ambiente.</p>
         <p class="mt-1 text-amber-800">
-          O cálculo continua funcionando, mas os status persistidos de pagamento e cancelamento só ficarão completos quando a tabela <code>comissoes</code> estiver disponível.
+          O cálculo continua funcionando, mas os status persistidos de pagamento e cancelamento só
+          ficarão completos quando a tabela <code>comissoes</code> estiver disponível.
         </p>
       </div>
     </div>
@@ -728,20 +750,20 @@
   onConfirm={handleCalcular}
 >
   <div class="space-y-4">
-    <div class="p-4 bg-amber-50 rounded-lg border border-amber-200">
+    <div class="rounded-lg border border-amber-200 bg-amber-50 p-4">
       <div class="flex items-start gap-3">
-        <AlertCircle class="text-amber-600 mt-0.5" size={20} />
+        <AlertCircle class="mt-0.5 text-amber-600" size={20} />
         <div>
           <p class="font-medium text-amber-800">Atenção</p>
           <p class="text-sm text-amber-700">
-            O cálculo de comissões irá processar todos os recibos do período selecionado 
-            que ainda não possuem comissão calculada ou que precisam ser recalculadas.
+            O cálculo de comissões irá processar todos os recibos do período selecionado que ainda
+            não possuem comissão calculada ou que precisam ser recalculadas.
           </p>
         </div>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+    <div class="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
       <div>
         <p class="text-slate-500">Período</p>
         <p class="font-medium">
@@ -757,8 +779,8 @@
       <div>
         <p class="text-slate-500">Vendedor</p>
         <p class="font-medium">
-          {filtroVendedor 
-            ? getVendedorNome(vendedores.find(v => getVendedorId(v) === filtroVendedor))
+          {filtroVendedor
+            ? getVendedorNome(vendedores.find((v) => getVendedorId(v) === filtroVendedor))
             : 'Todos'}
         </p>
       </div>
@@ -783,18 +805,20 @@
   {#if resultadoCalculo}
     <div class="space-y-4">
       <!-- Resumo -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="p-4 bg-green-50 rounded-lg text-center">
+      <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="rounded-lg bg-green-50 p-4 text-center">
           <p class="text-sm text-green-600">Processadas</p>
           <p class="text-2xl font-bold text-green-700">{resultadoCalculo.processadas}</p>
         </div>
-        <div class="p-4 bg-red-50 rounded-lg text-center">
+        <div class="rounded-lg bg-red-50 p-4 text-center">
           <p class="text-sm text-red-600">Erros</p>
           <p class="text-2xl font-bold text-red-700">{resultadoCalculo.erro}</p>
         </div>
-        <div class="p-4 bg-blue-50 rounded-lg text-center">
+        <div class="rounded-lg bg-blue-50 p-4 text-center">
           <p class="text-sm text-blue-600">Total Recibos</p>
-          <p class="text-2xl font-bold text-blue-700">{resultadoCalculo.total_recibos ?? resultadoCalculo.total_vendas}</p>
+          <p class="text-2xl font-bold text-blue-700">
+            {resultadoCalculo.total_recibos ?? resultadoCalculo.total_vendas}
+          </p>
         </div>
       </div>
 
@@ -813,11 +837,8 @@
       {/if}
 
       <!-- Ações -->
-      <div class="flex justify-end gap-3 pt-4 border-t">
-        <Button
-          variant="secondary"
-          on:click={() => goto('/financeiro/comissoes')}
-        >
+      <div class="flex justify-end gap-3 border-t pt-4">
+        <Button variant="secondary" on:click={() => goto('/financeiro/comissoes')}>
           <DollarSign size={16} class="mr-2" />
           Ir para Pagamentos
         </Button>

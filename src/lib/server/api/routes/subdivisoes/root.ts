@@ -20,7 +20,11 @@ import {
   invalidateCatalogReadModels,
   READ_MODEL_TAGS
 } from '$lib/server/readModelCache';
-import { CATALOG_READ_HEADERS, DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
+import {
+  CATALOG_READ_HEADERS,
+  DYNAMIC_READ_HEADERS,
+  NO_STORE_HEADERS
+} from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 
 const MAX_SUBDIVISOES_BODY_BYTES = 64 * 1024;
@@ -32,10 +36,12 @@ type SubdivisaoRow = {
   codigo_admin1: string | null;
   tipo: string | null;
   created_at: string | null;
-  pais?: {
-    id: string;
-    nome: string | null;
-  }[] | null;
+  pais?:
+    | {
+        id: string;
+        nome: string | null;
+      }[]
+    | null;
 };
 
 export async function handleSubdivisoesGet(event: RequestEvent) {
@@ -69,7 +75,9 @@ export async function handleSubdivisoesGet(event: RequestEvent) {
         loader: async () => {
           const { data, error: queryError } = await client
             .from('subdivisoes')
-            .select('id, nome, pais_id, codigo_admin1, tipo, created_at, pais:paises!pais_id(id, nome)')
+            .select(
+              'id, nome, pais_id, codigo_admin1, tipo, created_at, pais:paises!pais_id(id, nome)'
+            )
             .eq('id', id)
             .maybeSingle();
 
@@ -79,7 +87,10 @@ export async function handleSubdivisoesGet(event: RequestEvent) {
       });
 
       if (!item) {
-        return json({ error: 'Estado/Subdivisão não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Estado/Subdivisão não encontrado.' },
+          { status: 404, headers: NO_STORE_HEADERS }
+        );
       }
 
       return json(item, { headers: CATALOG_READ_HEADERS });
@@ -145,8 +156,10 @@ export async function handleSubdivisoesPost(event: RequestEvent) {
     const id = String(body.id || '').trim();
     const paisId = String(body.pais_id || '').trim();
 
-    if (!String(nome || '').trim()) return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
-    if (!paisId || !isUuid(paisId)) return json({ error: 'País obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!String(nome || '').trim())
+      return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!paisId || !isUuid(paisId))
+      return json({ error: 'País obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const payload = {
       nome: String(nome).trim(),
@@ -157,11 +170,20 @@ export async function handleSubdivisoesPost(event: RequestEvent) {
 
     let result;
     if (id && isUuid(id)) {
-      const { data, error: updateError } = await client.from('subdivisoes').update(payload).eq('id', id).select('id').single();
+      const { data, error: updateError } = await client
+        .from('subdivisoes')
+        .update(payload)
+        .eq('id', id)
+        .select('id')
+        .single();
       if (updateError) throw updateError;
       result = data;
     } else {
-      const { data, error: insertError } = await client.from('subdivisoes').insert(payload).select('id').single();
+      const { data, error: insertError } = await client
+        .from('subdivisoes')
+        .insert(payload)
+        .select('id')
+        .single();
       if (insertError) throw insertError;
       result = data;
     }
@@ -187,7 +209,8 @@ export async function handleSubdivisoesDelete(event: RequestEvent) {
     }
 
     const id = String(event.url.searchParams.get('id') || '').trim();
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const { error: deleteError } = await client.from('subdivisoes').delete().eq('id', id);
     if (deleteError) throw deleteError;

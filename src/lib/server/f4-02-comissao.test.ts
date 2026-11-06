@@ -40,8 +40,8 @@ function vendaFixture(
       valorTotalCentavos: it.valorTotalCentavos,
       pagaComissao: it.pagaComissao,
       notas: null,
-      criadoEm: '2026-01-01T00:00:00.000Z',
-    })),
+      criadoEm: '2026-01-01T00:00:00.000Z'
+    }))
   };
 }
 
@@ -95,7 +95,7 @@ describe('N. calcularComissao — cálculo puro', () => {
     const v = vendaFixture([
       { valorTotalCentavos: 5_000, pagaComissao: true },
       { valorTotalCentavos: 3_000, pagaComissao: false },
-      { valorTotalCentavos: 2_000, pagaComissao: true },
+      { valorTotalCentavos: 2_000, pagaComissao: true }
     ]);
     const r = calcularComissao(v, 10);
     expect(r.baseComissionavelCentavos).toBe(7_000); // 5000 + 2000
@@ -121,7 +121,7 @@ describe('N. calcularComissao — cálculo puro', () => {
   it('N9. zero itens comissionáveis → base e comissão = 0', () => {
     const v = vendaFixture([
       { valorTotalCentavos: 10_000, pagaComissao: false },
-      { valorTotalCentavos: 5_000, pagaComissao: false },
+      { valorTotalCentavos: 5_000, pagaComissao: false }
     ]);
     const r = calcularComissao(v, 15);
     expect(r.baseComissionavelCentavos).toBe(0);
@@ -131,13 +131,29 @@ describe('N. calcularComissao — cálculo puro', () => {
   // N10. Taxa inválida > 100 → VendaError
   it('N10. taxa > 100 → VendaError VALIDACAO', () => {
     const v = vendaFixture([{ valorTotalCentavos: 1_000, pagaComissao: true }]);
-    const err101 = (() => { try { calcularComissao(v, 101); } catch(e) { return e; } })(); expect(err101).toBeInstanceOf(Error); expect((err101 as { code: string }).code).toBe('VALIDACAO');
+    const err101 = (() => {
+      try {
+        calcularComissao(v, 101);
+      } catch (e) {
+        return e;
+      }
+    })();
+    expect(err101).toBeInstanceOf(Error);
+    expect((err101 as { code: string }).code).toBe('VALIDACAO');
   });
 
   // N11. Taxa negativa → VendaError
   it('N11. taxa negativa → VendaError VALIDACAO', () => {
     const v = vendaFixture([{ valorTotalCentavos: 1_000, pagaComissao: true }]);
-    const errN1 = (() => { try { calcularComissao(v, -1); } catch(e) { return e; } })(); expect(errN1).toBeInstanceOf(Error); expect((errN1 as { code: string }).code).toBe('VALIDACAO');
+    const errN1 = (() => {
+      try {
+        calcularComissao(v, -1);
+      } catch (e) {
+        return e;
+      }
+    })();
+    expect(errN1).toBeInstanceOf(Error);
+    expect((errN1 as { code: string }).code).toBe('VALIDACAO');
   });
 
   // N12. Taxa fracionária (10.5%)

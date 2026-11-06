@@ -20,7 +20,7 @@ export type PagamentosNaoComissionaveisResumo = {
 };
 
 function normalizeTerm(value?: string | null) {
-  return normalizeText(value || "", { trim: true, collapseWhitespace: true });
+  return normalizeText(value || '', { trim: true, collapseWhitespace: true });
 }
 
 function addToMap(map: Map<string, number>, key: string, value: number) {
@@ -35,14 +35,14 @@ function addToMap(map: Map<string, number>, key: string, value: number) {
  * antes havia 6 cópias desta lista/regra espalhadas pelo código.
  */
 export const DEFAULT_NAO_COMISSIONAVEIS: readonly string[] = [
-  "credito diversos",
-  "credito pax",
-  "credito passageiro",
-  "credito de viagem",
-  "credipax",
-  "vale viagem",
-  "carta de credito",
-  "credito",
+  'credito diversos',
+  'credito pax',
+  'credito passageiro',
+  'credito de viagem',
+  'credipax',
+  'vale viagem',
+  'carta de credito',
+  'credito'
 ];
 
 /**
@@ -53,7 +53,7 @@ export const DEFAULT_NAO_COMISSIONAVEIS: readonly string[] = [
 export function isFormaNaoComissionavel(nome?: string | null, termos?: string[] | null) {
   const normalized = normalizeTerm(nome);
   if (!normalized) return false;
-  if (normalized.includes("cartao") && normalized.includes("credito")) return false;
+  if (normalized.includes('cartao') && normalized.includes('credito')) return false;
   for (const termo of termos || []) {
     const normalizedTerm = normalizeTerm(termo);
     if (normalizedTerm && normalized.includes(normalizedTerm)) return true;
@@ -79,18 +79,18 @@ export function calcularNaoComissionavelResumo(
   const porRecibo = new Map<string, number>();
 
   for (const pagamento of pagamentos) {
-    const vendaId = String(pagamento.venda_id || "").trim();
+    const vendaId = String(pagamento.venda_id || '').trim();
     if (!vendaId) continue;
 
     const formaNomeResolvida = [
       pagamento.forma_nome,
       pagamento.forma?.nome,
       pagamento.operacao,
-      pagamento.plano,
+      pagamento.plano
     ].reduce((acc, value) => {
       if (!value) return acc;
       return acc ? `${acc} ${value}` : String(value);
-    }, "");
+    }, '');
     const pagaComissaoResolvido = pagamento.paga_comissao ?? pagamento.forma?.paga_comissao ?? null;
     const naoComissiona =
       pagaComissaoResolvido === false || isFormaNaoComissionavel(formaNomeResolvida, termos);
@@ -101,7 +101,7 @@ export function calcularNaoComissionavelResumo(
 
     addToMap(porVenda, vendaId, valorBase);
 
-    const vendaReciboId = String(pagamento.venda_recibo_id || "").trim();
+    const vendaReciboId = String(pagamento.venda_recibo_id || '').trim();
     if (vendaReciboId) {
       addToMap(porRecibo, vendaReciboId, valorBase);
     } else {
@@ -120,6 +120,12 @@ export function calcularNaoComissionavelPorVenda(
 }
 
 /** Igual a isFormaNaoComissionavel, mas usa DEFAULT_NAO_COMISSIONAVEIS quando `termos` vier vazio. */
-export function isFormaNaoComissionavelOuPadrao(nome?: string | null, termos?: readonly string[] | null) {
-  return isFormaNaoComissionavel(nome, termos && termos.length > 0 ? [...termos] : [...DEFAULT_NAO_COMISSIONAVEIS]);
+export function isFormaNaoComissionavelOuPadrao(
+  nome?: string | null,
+  termos?: readonly string[] | null
+) {
+  return isFormaNaoComissionavel(
+    nome,
+    termos && termos.length > 0 ? [...termos] : [...DEFAULT_NAO_COMISSIONAVEIS]
+  );
 }

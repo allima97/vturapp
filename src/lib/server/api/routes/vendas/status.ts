@@ -32,21 +32,30 @@ export async function handleVendasStatusPatch(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster) {
-      ensureModuloAccess(scope, ['vendas_consulta', 'vendas'], 3, 'Sem permissao para editar vendas.');
+      ensureModuloAccess(
+        scope,
+        ['vendas_consulta', 'vendas'],
+        3,
+        'Sem permissao para editar vendas.'
+      );
     }
 
     const id = String(event.url.searchParams.get('id') || '').trim();
     if (!id || !isUuid(id)) {
-      return json({ success: false, error: 'ID invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'ID invalido.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const body =
-      bodyResult.data && typeof bodyResult.data === 'object'
-        ? (bodyResult.data as JsonObject)
-        : {};
+      bodyResult.data && typeof bodyResult.data === 'object' ? (bodyResult.data as JsonObject) : {};
     const newStatus = String(body?.status || '').trim();
     if (!newStatus) {
-      return json({ success: false, error: 'Status obrigatorio.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'Status obrigatorio.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const companyIds = resolveScopedCompanyIds(scope, event.url.searchParams.get('empresa_id'));
@@ -58,7 +67,10 @@ export async function handleVendasStatusPatch(event: RequestEvent) {
     // ✅ Confirma ownership antes de atualizar
     const sale = await fetchSaleForScope({ client, scope, saleId: id, companyIds, vendedorIds });
     if (!sale) {
-      return json({ success: false, error: 'Venda nao encontrada.' }, { status: 404, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'Venda nao encontrada.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
     }
     const saleCompanyId = String(sale.company_id || '').trim();
 

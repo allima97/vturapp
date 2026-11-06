@@ -1,6 +1,7 @@
-<script>// @ts-nocheck (cópia do Flowbite-Svelte 0.48.6, ver README.md)
-import { twMerge } from "tailwind-merge";
-export let divClass = "my-1 h-px bg-gray-100 dark:bg-gray-600";
+<script>
+  // @ts-nocheck (cópia do Flowbite-Svelte 0.48.6, ver README.md)
+  import { twMerge } from 'tailwind-merge';
+  export let divClass = 'my-1 h-px bg-gray-100 dark:bg-gray-600';
 </script>
 
 <div {...$$restProps} class={twMerge(divClass, $$props.class)}></div>

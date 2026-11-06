@@ -145,7 +145,9 @@
   }
 
   function normalizeFeriadoDate(value: unknown) {
-    return String(value || '').trim().slice(0, 10);
+    return String(value || '')
+      .trim()
+      .slice(0, 10);
   }
 
   function getFeriados(data: string): Feriado[] {
@@ -436,10 +438,7 @@
   title="Escalas de Trabalho"
   subtitle="Atribua dias em lote ou ajuste células individuais da escala mensal."
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Parâmetros', href: '/parametros' },
-    { label: 'Escalas' }
-  ]}
+  breadcrumbs={[{ label: 'Parâmetros', href: '/parametros' }, { label: 'Escalas' }]}
   actions={[{ label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }]}
 />
 
@@ -461,7 +460,9 @@
 </Card>
 
 <Card color="financeiro" class="mb-6">
-  <div class="grid gap-4 xl:grid-cols-[minmax(220px,1.2fr)_minmax(180px,0.8fr)_120px_120px_minmax(180px,0.8fr)_auto] xl:items-end">
+  <div
+    class="grid gap-4 xl:grid-cols-[minmax(220px,1.2fr)_minmax(180px,0.8fr)_120px_120px_minmax(180px,0.8fr)_auto] xl:items-end"
+  >
     <FieldCheckbox
       label="Seleção múltipla"
       helper="Clique em várias datas do mesmo colaborador."
@@ -502,10 +503,21 @@
     </div>
 
     <div class="flex gap-2">
-      <Button variant="secondary" color="financeiro" on:click={() => clearMulti(true)} disabled={!multiAtivo || multiDatas.length === 0}>
+      <Button
+        variant="secondary"
+        color="financeiro"
+        on:click={() => clearMulti(true)}
+        disabled={!multiAtivo || multiDatas.length === 0}
+      >
         Limpar
       </Button>
-      <Button variant="primary" color="financeiro" on:click={applyMulti} disabled={!canEdit || !multiAtivo || multiDatas.length === 0} loading={applying}>
+      <Button
+        variant="primary"
+        color="financeiro"
+        on:click={applyMulti}
+        disabled={!canEdit || !multiAtivo || multiDatas.length === 0}
+        loading={applying}
+      >
         Aplicar
       </Button>
     </div>
@@ -527,14 +539,19 @@
 {:else}
   <Card color="financeiro" padding="none">
     <div class="overflow-x-visible md:overflow-x-auto">
-      <table class="min-w-full text-xs table-mobile-cards">
+      <table class="table-mobile-cards min-w-full text-xs">
         <thead class="border-b border-slate-200 bg-slate-50">
           <tr>
-            <th class="sticky left-0 z-10 min-w-[180px] bg-slate-50 px-4 py-3 text-left font-semibold text-slate-700">Colaborador</th>
+            <th
+              class="sticky left-0 z-10 min-w-[180px] bg-slate-50 px-4 py-3 text-left font-semibold text-slate-700"
+              >Colaborador</th
+            >
             {#each diasDoMes as { date, dow, day }}
               {@const feriadosDia = getFeriados(date)}
               <th
-                class="min-w-[42px] px-1 py-3 text-center font-medium {dow === 0 || dow === 6 ? 'text-red-500' : 'text-slate-600'} {feriadosDia.length ? 'bg-red-50' : ''}"
+                class="min-w-[42px] px-1 py-3 text-center font-medium {dow === 0 || dow === 6
+                  ? 'text-red-500'
+                  : 'text-slate-600'} {feriadosDia.length ? 'bg-red-50' : ''}"
                 title={formatFeriadosTitle(feriadosDia)}
               >
                 <div>{day}</div>
@@ -548,39 +565,62 @@
         <tbody class="divide-y divide-slate-100">
           {#each usuarios as usuario}
             <tr class="hover:bg-slate-50/50">
-              <td class="sticky left-0 z-10 border-r border-slate-100 bg-white px-4 py-2 font-medium text-slate-900">
+              <td
+                class="sticky left-0 z-10 border-r border-slate-100 bg-white px-4 py-2 font-medium text-slate-900"
+              >
                 {usuario.nome_completo || usuario.email || 'Usuário'}
               </td>
               {#each diasDoMes as { date, dow }}
                 {@const registro = getDiaRegistro(usuario.id, date)}
                 {@const feriadosDia = getFeriados(date)}
                 {@const feriadoTitle = formatFeriadosTitle(feriadosDia)}
-                {@const selected = multiAtivo && multiUsuarioId === usuario.id && multiDatas.includes(date)}
+                {@const selected =
+                  multiAtivo && multiUsuarioId === usuario.id && multiDatas.includes(date)}
                 <td class="p-0.5 text-center {dow === 0 || dow === 6 ? 'bg-slate-50/50' : ''}">
                   <Button
                     type="button"
                     variant="unstyled"
-                    class_name="flex h-8 w-full items-center justify-center rounded-sm transition-colors hover:bg-orange-50 {selected ? 'bg-orange-100 ring-2 ring-orange-300' : ''}"
+                    class_name="flex h-8 w-full items-center justify-center rounded-sm transition-colors hover:bg-orange-50 {selected
+                      ? 'bg-orange-100 ring-2 ring-orange-300'
+                      : ''}"
                     on:click={() => handleCellClick(usuario, date)}
-                    title={registro ? `${registro.tipo}${registro.hora_inicio ? ' ' + formatTimeRange(registro.hora_inicio, registro.hora_fim) : ''}` : feriadoTitle}
+                    title={registro
+                      ? `${registro.tipo}${registro.hora_inicio ? ' ' + formatTimeRange(registro.hora_inicio, registro.hora_fim) : ''}`
+                      : feriadoTitle}
                   >
                     {#if registro?.tipo}
-                      <span class="inline-flex h-7 min-w-7 items-center justify-center rounded-sm px-1 text-[10px] font-bold ring-1 {TIPO_COLOR[registro.tipo] || 'bg-slate-100 text-slate-600 ring-slate-200'}">
+                      <span
+                        class="inline-flex h-7 min-w-7 items-center justify-center rounded-sm px-1 text-[10px] font-bold ring-1 {TIPO_COLOR[
+                          registro.tipo
+                        ] || 'bg-slate-100 text-slate-600 ring-slate-200'}"
+                      >
                         {TIPO_CODIGO[registro.tipo] || '?'}
                         {#if registro.hora_inicio && registro.hora_fim}
-                          <span class="ml-0.5 hidden text-[9px] font-semibold xl:inline">{formatTimeRange(registro.hora_inicio, registro.hora_fim)}</span>
+                          <span class="ml-0.5 hidden text-[9px] font-semibold xl:inline"
+                            >{formatTimeRange(registro.hora_inicio, registro.hora_fim)}</span
+                          >
                         {/if}
                       </span>
                     {:else if feriadosDia.length}
-                      <span class="inline-flex h-7 w-7 items-center justify-center rounded-sm bg-red-100 text-[10px] font-bold text-red-600 ring-1 ring-red-200">H</span>
+                      <span
+                        class="inline-flex h-7 w-7 items-center justify-center rounded-sm bg-red-100 text-[10px] font-bold text-red-600 ring-1 ring-red-200"
+                        >H</span
+                      >
                     {:else}
-                      <span class="inline-flex h-7 w-7 items-center justify-center rounded-sm text-[12px] text-slate-300">·</span>
+                      <span
+                        class="inline-flex h-7 w-7 items-center justify-center rounded-sm text-[12px] text-slate-300"
+                        >·</span
+                      >
                     {/if}
                   </Button>
                 </td>
               {/each}
-              <td class="px-2 py-2 text-center font-semibold text-slate-700">{resumoPorUsuario[usuario.id]?.trabalhados || 0}</td>
-              <td class="px-2 py-2 text-center font-semibold text-slate-700">{resumoPorUsuario[usuario.id]?.folgas || 0}</td>
+              <td class="px-2 py-2 text-center font-semibold text-slate-700"
+                >{resumoPorUsuario[usuario.id]?.trabalhados || 0}</td
+              >
+              <td class="px-2 py-2 text-center font-semibold text-slate-700"
+                >{resumoPorUsuario[usuario.id]?.folgas || 0}</td
+              >
             </tr>
           {/each}
         </tbody>
@@ -590,7 +630,11 @@
     <div class="flex flex-wrap gap-3 border-t border-slate-100 px-4 py-3 text-xs text-slate-600">
       {#each TIPO_OPCOES.filter((t) => t.value) as opt}
         <span class="inline-flex items-center gap-1">
-          <span class="inline-flex h-5 w-5 items-center justify-center rounded-sm text-[10px] font-bold {TIPO_COLOR[opt.value] || 'bg-slate-100'}">
+          <span
+            class="inline-flex h-5 w-5 items-center justify-center rounded-sm text-[10px] font-bold {TIPO_COLOR[
+              opt.value
+            ] || 'bg-slate-100'}"
+          >
             {TIPO_CODIGO[opt.value] || '?'}
           </span>
           {opt.label}
@@ -603,7 +647,9 @@
         <div class="mb-2 font-semibold text-slate-800">Feriados do mês</div>
         <div class="flex flex-wrap gap-2">
           {#each feriadosResumo as item}
-            <span class="inline-flex items-center gap-1 rounded-full border border-red-100 bg-red-50 px-2 py-1 text-red-700">
+            <span
+              class="inline-flex items-center gap-1 rounded-full border border-red-100 bg-red-50 px-2 py-1 text-red-700"
+            >
               {formatDate(item.data)} · {item.nomes}
               <span class="text-red-500">({item.origem})</span>
             </span>
@@ -616,7 +662,9 @@
 
 <Dialog
   bind:open={modalOpen}
-  title={selectedCell ? `${selectedCell.usuario.nome_completo || 'Usuário'} - ${formatDate(selectedCell.data)}` : 'Escala'}
+  title={selectedCell
+    ? `${selectedCell.usuario.nome_completo || 'Usuário'} - ${formatDate(selectedCell.data)}`
+    : 'Escala'}
   color="financeiro"
   size="md"
   showCancel={true}
@@ -641,7 +689,12 @@
         <FieldInput id="esc-fim" label="Fim" type="time" bind:value={cellForm.hora_fim} />
       </div>
     {/if}
-    <FieldInput id="esc-obs" label="Observação" bind:value={cellForm.observacao} placeholder="Opcional" />
+    <FieldInput
+      id="esc-obs"
+      label="Observação"
+      bind:value={cellForm.observacao}
+      placeholder="Opcional"
+    />
   </div>
 
   <svelte:fragment slot="actions">

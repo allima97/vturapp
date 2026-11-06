@@ -12,18 +12,35 @@
 import { expect, it } from 'vitest';
 import { addMonthsISODate } from '$lib/date';
 import {
-  adicionarParcela, createPagamento, filtrarProdutosPorTipo, filtrarProdutosPorTipoCidade, gerarParcelas,
-  getValeViagemProdutoVirtual as getValeViagemProdutoVirtualBase, isProdutoCompativelCidade as isProdutoCompativelCidadeBase,
-  isValeViagemTipo as isValeViagemTipoBase, mergeCidadesById, mergeClientesById, produtoMatchesTipo as produtoMatchesTipoBase,
-  removerParcela, valoresDaCalculadora, type VendaFormOption, type VendaFormCliente, type VendaCalculadoraResultado,
+  adicionarParcela,
+  createPagamento,
+  filtrarProdutosPorTipo,
+  filtrarProdutosPorTipoCidade,
+  gerarParcelas,
+  getValeViagemProdutoVirtual as getValeViagemProdutoVirtualBase,
+  isProdutoCompativelCidade as isProdutoCompativelCidadeBase,
+  isValeViagemTipo as isValeViagemTipoBase,
+  mergeCidadesById,
+  mergeClientesById,
+  produtoMatchesTipo as produtoMatchesTipoBase,
+  removerParcela,
+  valoresDaCalculadora,
+  type VendaFormOption,
+  type VendaFormCliente,
+  type VendaCalculadoraResultado
 } from './form';
 
-type Option = VendaFormOption; type Cliente = VendaFormCliente; type CalculadoraResultado = VendaCalculadoraResultado;
+type Option = VendaFormOption;
+type Cliente = VendaFormCliente;
+type CalculadoraResultado = VendaCalculadoraResultado;
 
 /* eslint-disable */
 function antigo(st: any) {
   let { tipos, produtos, venda, pagamentos, clientes, cidades } = st;
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL'
+  });
   const PT_BR_BASE_COLLATOR = new Intl.Collator('pt-BR', { sensitivity: 'base' });
   const DIACRITICS_RE = /[\u0300-\u036f]/g;
 
@@ -45,7 +62,9 @@ function antigo(st: any) {
   }
 
   function parseMoney(value: string | number | null | undefined) {
-    const raw = String(value ?? '').trim().replace(/[^\d,.-]/g, '');
+    const raw = String(value ?? '')
+      .trim()
+      .replace(/[^\d,.-]/g, '');
     const normalized = raw.includes(',') ? raw.replace(/\./g, '').replace(',', '.') : raw;
     const parsed = Number(normalized);
     return Number.isFinite(parsed) ? parsed : 0;
@@ -82,12 +101,12 @@ function antigo(st: any) {
     const nome = String(cidade.nome || '').trim();
     const estado = String(
       cidade.estado ||
-      cidade.uf ||
-      cidade.sigla ||
-      cidade.subdivisao_nome ||
-      cidade.subdivisao?.sigla ||
-      cidade.subdivisao?.nome ||
-      ''
+        cidade.uf ||
+        cidade.sigla ||
+        cidade.subdivisao_nome ||
+        cidade.subdivisao?.sigla ||
+        cidade.subdivisao?.nome ||
+        ''
     ).trim();
     return estado ? `${nome} (${estado})` : nome;
   }
@@ -107,7 +126,13 @@ function antigo(st: any) {
 
     const nome = normalizeLookup(cidade.nome);
     const label = normalizeLookup(getCidadeLabel(cidade));
-    const estado = normalizeLookup(cidade.estado || cidade.uf || cidade.sigla || cidade.subdivisao_nome || cidade.subdivisao?.nome);
+    const estado = normalizeLookup(
+      cidade.estado ||
+        cidade.uf ||
+        cidade.sigla ||
+        cidade.subdivisao_nome ||
+        cidade.subdivisao?.nome
+    );
     const full = `${nome} ${estado}`.trim();
 
     if (nome === term) return 0;
@@ -130,18 +155,19 @@ function antigo(st: any) {
       const nomeDiff = PT_BR_BASE_COLLATOR.compare(String(a.nome || ''), String(b.nome || ''));
       if (nomeDiff !== 0) return nomeDiff;
 
-      return PT_BR_BASE_COLLATOR.compare(String(a.estado || a.subdivisao_nome || ''), String(b.estado || b.subdivisao_nome || ''));
+      return PT_BR_BASE_COLLATOR.compare(
+        String(a.estado || a.subdivisao_nome || ''),
+        String(b.estado || b.subdivisao_nome || '')
+      );
     });
   }
 
   function isValeViagemTipo(tipoId: string) {
     if (!tipoId) return false;
     const tipoSelecionado = tipos.find((item) => String(item.id) === String(tipoId));
-    return [
-      tipoId,
-      String(tipoSelecionado?.nome || ''),
-      String(tipoSelecionado?.tipo || '')
-    ].some((value) => normalizeText(value).includes('vale viagem'));
+    return [tipoId, String(tipoSelecionado?.nome || ''), String(tipoSelecionado?.tipo || '')].some(
+      (value) => normalizeText(value).includes('vale viagem')
+    );
   }
 
   function getValeViagemProdutoVirtual(tipoId: string): Option | null {
@@ -160,7 +186,9 @@ function antigo(st: any) {
   function produtoMatchesTipo(item: Option, tipoId: string) {
     if (!tipoId) return true;
     const selectedType = tipos.find((tipo) => String(tipo.id) === String(tipoId));
-    const tipoSelecionadoNome = normalizeText(String(selectedType?.nome || selectedType?.tipo || ''));
+    const tipoSelecionadoNome = normalizeText(
+      String(selectedType?.nome || selectedType?.tipo || '')
+    );
     const tipoProduto = normalizeText(String(item.tipo_produto || item.tipo || ''));
     return (
       String(item.tipo) === String(tipoId) ||
@@ -190,7 +218,11 @@ function antigo(st: any) {
     });
     const valeViagemVirtual = getValeViagemProdutoVirtual(tipoId);
     if (!valeViagemVirtual) return filtered;
-    if (filtered.some((item) => String(item.id) === String(valeViagemVirtual.id) || isValeViagemProduto(item))) {
+    if (
+      filtered.some(
+        (item) => String(item.id) === String(valeViagemVirtual.id) || isValeViagemProduto(item)
+      )
+    ) {
       return filtered;
     }
     return [valeViagemVirtual, ...filtered];
@@ -265,7 +297,11 @@ function antigo(st: any) {
     for (const item of items) {
       const id = String(item?.id || '').trim();
       if (!id) continue;
-      byId.set(id, { ...(byId.get(id) || {}), ...item, label: getCidadeLabel({ ...(byId.get(id) || {}), ...item }) });
+      byId.set(id, {
+        ...(byId.get(id) || {}),
+        ...item,
+        label: getCidadeLabel({ ...(byId.get(id) || {}), ...item })
+      });
     }
     cidades = sortCidades(Array.from(byId.values()));
   }
@@ -278,7 +314,21 @@ function antigo(st: any) {
     venda.valor_taxas = String(resultado.taxas || '');
   }
 
-  return { isValeViagemTipo, getValeViagemProdutoVirtual, produtoMatchesTipo, isProdutoCompativelCidade, getProdutosByTipo, getProdutosByTipoCidade, rebuildParcelas, addParcela, removeParcela, mergeClientes, mergeCidades, applyValoresCalculadora, state: () => ({ pagamentos, clientes, cidades, venda }) };
+  return {
+    isValeViagemTipo,
+    getValeViagemProdutoVirtual,
+    produtoMatchesTipo,
+    isProdutoCompativelCidade,
+    getProdutosByTipo,
+    getProdutosByTipoCidade,
+    rebuildParcelas,
+    addParcela,
+    removeParcela,
+    mergeClientes,
+    mergeCidades,
+    applyValoresCalculadora,
+    state: () => ({ pagamentos, clientes, cidades, venda })
+  };
 }
 function novo(st: any) {
   let { tipos, produtos, venda, pagamentos, clientes, cidades } = st;
@@ -350,11 +400,28 @@ function novo(st: any) {
     venda.valor_taxas = valores.valor_taxas;
   }
 
-  return { isValeViagemTipo, getValeViagemProdutoVirtual, produtoMatchesTipo, isProdutoCompativelCidade, getProdutosByTipo, getProdutosByTipoCidade, rebuildParcelas, addParcela, removeParcela, mergeClientes, mergeCidades, applyValoresCalculadora, state: () => ({ pagamentos, clientes, cidades, venda }) };
+  return {
+    isValeViagemTipo,
+    getValeViagemProdutoVirtual,
+    produtoMatchesTipo,
+    isProdutoCompativelCidade,
+    getProdutosByTipo,
+    getProdutosByTipoCidade,
+    rebuildParcelas,
+    addParcela,
+    removeParcela,
+    mergeClientes,
+    mergeCidades,
+    applyValoresCalculadora,
+    state: () => ({ pagamentos, clientes, cidades, venda })
+  };
 }
 const tipos = [
-  { id: 't1', nome: 'Aéreo', tipo: 'aereo' }, { id: 't2', nome: 'Hotel', tipo: 'hotel' },
-  { id: 't3', nome: 'Vale Viagem', tipo: 'vale' }, { id: 't4', nome: 'Pacote', tipo: null }, { id: 't5', nome: 'Seguro', tipo: 'seguro' },
+  { id: 't1', nome: 'Aéreo', tipo: 'aereo' },
+  { id: 't2', nome: 'Hotel', tipo: 'hotel' },
+  { id: 't3', nome: 'Vale Viagem', tipo: 'vale' },
+  { id: 't4', nome: 'Pacote', tipo: null },
+  { id: 't5', nome: 'Seguro', tipo: 'seguro' }
 ];
 const produtos = [
   { id: 'p1', nome: 'LATAM', tipo_produto: 't1', todas_as_cidades: true },
@@ -363,47 +430,114 @@ const produtos = [
   { id: 'p4', nome: 'Vale  Viagem Agência', tipo_produto: 'x' },
   { id: 'p5', nome: 'Pacote Nordeste', tipo: 'pacote', cidade_id: 'c1' },
   { id: 'p6', nome: 'Seguro', tipo_produto: 'SEGURO', todas_as_cidades: false },
-  { id: 'p7', nome: 'Hotel sem cidade', tipo_produto: 't2' },
+  { id: 'p7', nome: 'Hotel sem cidade', tipo_produto: 't2' }
 ];
-const cidades = [ { id: 'c1', nome: 'Rio de Janeiro', estado: 'RJ', grau_importancia: 2 }, { id: 'c2', nome: 'São Paulo', uf: 'SP', grau_importancia: 1 }, { id: 'c3', nome: 'Salvador', subdivisao: { sigla: 'BA' } } ];
-const clientes = [ { id: 'k1', nome: 'Ana', cpf: '1' }, { id: 'k2', nome: 'Bia' } ];
+const cidades = [
+  { id: 'c1', nome: 'Rio de Janeiro', estado: 'RJ', grau_importancia: 2 },
+  { id: 'c2', nome: 'São Paulo', uf: 'SP', grau_importancia: 1 },
+  { id: 'c3', nome: 'Salvador', subdivisao: { sigla: 'BA' } }
+];
+const clientes = [
+  { id: 'k1', nome: 'Ana', cpf: '1' },
+  { id: 'k2', nome: 'Bia' }
+];
 const tipoIds = ['', 't1', 't2', 't3', 't4', 't5', 'vale viagem', 'nao-existe'];
 const cidadeIds = ['', 'c1', 'c2', 'c9'];
 const mk = (destino = '') => ({
-  tipos, produtos, cidades: [...cidades], clientes: [...clientes],
-  venda: { destino_cidade_id: destino, valor_total: '', valor_total_bruto: '', desconto_comercial_aplicado: false, desconto_comercial_valor: '', valor_taxas: '' },
-  pagamentos: [ { ...createPagamento(), valor_total: '1.234,56', parcelas_qtd: 3, vencimento_primeira: '2026-01-31' }, { ...createPagamento(), valor_total: '100', parcelas_qtd: 0 }, { ...createPagamento(), valor_total: '', parcelas_qtd: '2' as any } ],
+  tipos,
+  produtos,
+  cidades: [...cidades],
+  clientes: [...clientes],
+  venda: {
+    destino_cidade_id: destino,
+    valor_total: '',
+    valor_total_bruto: '',
+    desconto_comercial_aplicado: false,
+    desconto_comercial_valor: '',
+    valor_taxas: ''
+  },
+  pagamentos: [
+    {
+      ...createPagamento(),
+      valor_total: '1.234,56',
+      parcelas_qtd: 3,
+      vencimento_primeira: '2026-01-31'
+    },
+    { ...createPagamento(), valor_total: '100', parcelas_qtd: 0 },
+    { ...createPagamento(), valor_total: '', parcelas_qtd: '2' as any }
+  ]
 });
 const clone = (v: any) => JSON.parse(JSON.stringify(v));
 
 it('funções de consulta: antigo === novo', () => {
   let n = 0;
   for (const destino of cidadeIds) {
-    const a = antigo(mk(destino)), b = novo(mk(destino));
+    const a = antigo(mk(destino)),
+      b = novo(mk(destino));
     for (const t of tipoIds) {
       expect(b.isValeViagemTipo(t)).toEqual(a.isValeViagemTipo(t));
       expect(b.getValeViagemProdutoVirtual(t)).toEqual(a.getValeViagemProdutoVirtual(t));
       expect(b.getProdutosByTipo(t)).toEqual(a.getProdutosByTipo(t));
-      for (const c of cidadeIds) expect(b.getProdutosByTipoCidade(t, c)).toEqual(a.getProdutosByTipoCidade(t, c));
-      for (const p of produtos) { expect(b.produtoMatchesTipo(p, t)).toEqual(a.produtoMatchesTipo(p, t)); n++; }
+      for (const c of cidadeIds)
+        expect(b.getProdutosByTipoCidade(t, c)).toEqual(a.getProdutosByTipoCidade(t, c));
+      for (const p of produtos) {
+        expect(b.produtoMatchesTipo(p, t)).toEqual(a.produtoMatchesTipo(p, t));
+        n++;
+      }
     }
-    for (const p of produtos) { expect(b.isProdutoCompativelCidade(p)).toEqual(a.isProdutoCompativelCidade(p)); for (const c of cidadeIds) expect(b.isProdutoCompativelCidade(p, c)).toEqual(a.isProdutoCompativelCidade(p, c)); }
+    for (const p of produtos) {
+      expect(b.isProdutoCompativelCidade(p)).toEqual(a.isProdutoCompativelCidade(p));
+      for (const c of cidadeIds)
+        expect(b.isProdutoCompativelCidade(p, c)).toEqual(a.isProdutoCompativelCidade(p, c));
+    }
   }
   expect(n).toBeGreaterThan(100);
 });
 
 it('funções que alteram estado: antigo === novo', () => {
   const ops: Array<(x: any) => void> = [
-    (x) => x.rebuildParcelas(0), (x) => x.rebuildParcelas(1), (x) => x.rebuildParcelas(2),
-    (x) => { x.rebuildParcelas(0); x.addParcela(0); x.removeParcela(0, 1); }, (x) => { x.addParcela(1); x.removeParcela(1, 0); x.removeParcela(1, 0); },
-    (x) => x.mergeClientes([]), (x) => x.mergeClientes([{ id: 'k2', nome: 'Bia 2', cpf: '9' }, { id: ' ', nome: 'x' }, { id: 'k3', nome: 'Caio' }]),
-    (x) => x.mergeCidades([]), (x) => x.mergeCidades([{ id: 'c3', nome: 'Salvador', estado: 'BA', grau_importancia: 1 }, { id: 'c4', nome: 'Aracaju', label: 'Aracaju - SE' }]),
-    (x) => x.applyValoresCalculadora({ valorFinal: 1000, valorBruto: '1100', descontoValor: 100, taxas: 0 }), (x) => x.applyValoresCalculadora({}),
+    (x) => x.rebuildParcelas(0),
+    (x) => x.rebuildParcelas(1),
+    (x) => x.rebuildParcelas(2),
+    (x) => {
+      x.rebuildParcelas(0);
+      x.addParcela(0);
+      x.removeParcela(0, 1);
+    },
+    (x) => {
+      x.addParcela(1);
+      x.removeParcela(1, 0);
+      x.removeParcela(1, 0);
+    },
+    (x) => x.mergeClientes([]),
+    (x) =>
+      x.mergeClientes([
+        { id: 'k2', nome: 'Bia 2', cpf: '9' },
+        { id: ' ', nome: 'x' },
+        { id: 'k3', nome: 'Caio' }
+      ]),
+    (x) => x.mergeCidades([]),
+    (x) =>
+      x.mergeCidades([
+        { id: 'c3', nome: 'Salvador', estado: 'BA', grau_importancia: 1 },
+        { id: 'c4', nome: 'Aracaju', label: 'Aracaju - SE' }
+      ]),
+    (x) =>
+      x.applyValoresCalculadora({
+        valorFinal: 1000,
+        valorBruto: '1100',
+        descontoValor: 100,
+        taxas: 0
+      }),
+    (x) => x.applyValoresCalculadora({})
   ];
   for (const op of ops) {
-    const sa = mk('c1'), sb = mk('c1');
-    const a = antigo(sa), b = novo(sb);
-    op(a); op(b);
+    const sa = mk('c1'),
+      sb = mk('c1');
+    const a = antigo(sa),
+      b = novo(sb);
+    op(a);
+    op(b);
     expect(clone(b.state())).toEqual(clone(a.state()));
   }
 });

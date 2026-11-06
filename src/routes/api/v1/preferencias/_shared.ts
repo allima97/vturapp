@@ -31,7 +31,14 @@ export async function requirePreferenciasScope(event: RequestEvent, minLevel: nu
   const scope = await resolveUserScope(client, user.id);
 
   if (!scope.isAdmin) {
-    ensureModuloAccess(scope, ['operacao_preferencias'], minLevel, minLevel >= 3 ? 'Sem permissão para gerenciar preferências.' : 'Sem acesso a Minhas Preferências.');
+    ensureModuloAccess(
+      scope,
+      ['operacao_preferencias'],
+      minLevel,
+      minLevel >= 3
+        ? 'Sem permissão para gerenciar preferências.'
+        : 'Sem acesso a Minhas Preferências.'
+    );
   }
 
   return { client, user, scope };
@@ -92,9 +99,7 @@ export function writeCache(key: string, payload: unknown, ttlMs: number) {
 }
 
 function readRecordValue(value: unknown, key: string) {
-  return value && typeof value === 'object'
-    ? (value as Record<string, unknown>)[key]
-    : undefined;
+  return value && typeof value === 'object' ? (value as Record<string, unknown>)[key] : undefined;
 }
 
 export function matchesBusca(item: unknown, busca: string) {

@@ -52,17 +52,19 @@ export async function handleVendasGestorEquipeGet(event: RequestEvent) {
       rowsById.set(String(row?.id || ''), row);
     }
 
-    const data = Array.from(rowsById.values())
-      .sort((left, right) =>
-        PT_BR_COLLATOR.compare(String(left?.nome_completo || ''), String(right?.nome_completo || ''))
-      );
+    const data = Array.from(rowsById.values()).sort((left, right) =>
+      PT_BR_COLLATOR.compare(String(left?.nome_completo || ''), String(right?.nome_completo || ''))
+    );
 
-    return json({
-      items: data.map((row) => ({
-        id: row.id,
-        nome_completo: row.nome_completo || ''
-      }))
-    }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      {
+        items: data.map((row) => ({
+          id: row.id,
+          nome_completo: row.nome_completo || ''
+        }))
+      },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar equipe do gestor.');
   }

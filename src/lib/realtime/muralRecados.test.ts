@@ -13,7 +13,7 @@ function fakeClient() {
     subscribe(cb: (s: string) => void) {
       cb('SUBSCRIBED');
       return canal;
-    },
+    }
   };
   const client = { channel: vi.fn(() => canal), removeChannel: vi.fn(async () => 'ok') };
   return { client, canal, disparar: () => handlers.forEach((h) => h({})) };
@@ -27,7 +27,10 @@ describe('recados em tempo real', () => {
     const onStatus = vi.fn();
     const parar = assinarRecadosDaEmpresa(client as any, 'emp-1', onMudanca, onStatus);
     expect(canal.filtros).toEqual([
-      ['postgres_changes', { event: '*', schema: 'public', table: 'mural_recados', filter: 'company_id=eq.emp-1' }],
+      [
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'mural_recados', filter: 'company_id=eq.emp-1' }
+      ]
     ]);
     expect(onStatus).toHaveBeenCalledWith('SUBSCRIBED');
     disparar();

@@ -8,7 +8,15 @@
   import FieldSelect from '$lib/components/ui/form/FieldSelect.svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import KPICard from '$lib/components/kpis/KPICard.svelte';
-  import { Plus, Plane, Calendar, FileText, Clock, CreditCard, SlidersHorizontal } from '$lib/icons';
+  import {
+    Plus,
+    Plane,
+    Calendar,
+    FileText,
+    Clock,
+    CreditCard,
+    SlidersHorizontal
+  } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { compareISODate, diffDaysISODate, todayISODateLocal } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
@@ -47,7 +55,7 @@
   let errorMessage: string | null = null;
   let viagensRequestSeq = 0;
   let viagensAbortController: AbortController | null = null;
-  
+
   type PeriodoEmbarque = '' | 'semana' | 'quinzena' | 'mes';
   type OrdenacaoViagem = 'embarque_asc' | 'embarque_desc' | 'retorno_asc' | 'cadastro_desc';
 
@@ -99,16 +107,23 @@
     loading = true;
     errorMessage = null;
     try {
-      const data = await apiGet<ViagensResponse>('/api/v1/viagens', {
-        status: filtroStatus || undefined,
-        periodo: filtroPeriodo || undefined,
-        ordenar: ordenacao,
-        limit: 500
-      }, controller.signal, 60_000);
+      const data = await apiGet<ViagensResponse>(
+        '/api/v1/viagens',
+        {
+          status: filtroStatus || undefined,
+          periodo: filtroPeriodo || undefined,
+          ordenar: ordenacao,
+          limit: 500
+        },
+        controller.signal,
+        60_000
+      );
       if (requestSeq !== viagensRequestSeq) return;
       viagens = (data.items || []).map((v) => ({
         id: String(v.id || ''),
-        codigo: v.venda_id ? `VND-${String(v.venda_id).slice(0, 8)}` : String(v.id || '').slice(0, 8),
+        codigo: v.venda_id
+          ? `VND-${String(v.venda_id).slice(0, 8)}`
+          : String(v.id || '').slice(0, 8),
         cliente: String(v.cliente_nome || ''),
         cliente_id: String(v.cliente_id || ''),
         destino: String(v.destino || ''),
@@ -174,8 +189,18 @@
       return;
     }
 
-    const headers = ['Código', 'Cliente', 'Destino', 'Início', 'Fim', 'Dias', 'Pessoas', 'Status', 'Valor'];
-    const rows = viagensFiltradas.map(v => [
+    const headers = [
+      'Código',
+      'Cliente',
+      'Destino',
+      'Início',
+      'Fim',
+      'Dias',
+      'Pessoas',
+      'Status',
+      'Valor'
+    ];
+    const rows = viagensFiltradas.map((v) => [
       v.codigo,
       v.cliente,
       v.destino,
@@ -187,20 +212,20 @@
       v.valor_total.toFixed(2).replace('.', ',')
     ]);
 
-    const csv = [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+    const csv = [headers.join(';'), ...rows.map((r) => r.join(';'))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = `viagens_${todayISODateLocal()}.csv`;
     link.click();
-    
+
     toast.success('Viagens exportadas com sucesso!');
   }
 
   const columns = [
-    { 
-      key: 'codigo', 
-      label: 'Código', 
+    {
+      key: 'codigo',
+      label: 'Código',
       sortable: true,
       width: '100px'
     },
@@ -209,19 +234,24 @@
       label: 'Cliente / Destino',
       sortable: true,
       formatter: (value: string, row: Viagem) => {
-        const dotColor = row.status === 'cancelada' ? '#f87171' : row.tipo === 'internacional' ? '#a78bfa' : '#4ade80';
+        const dotColor =
+          row.status === 'cancelada'
+            ? '#f87171'
+            : row.tipo === 'internacional'
+              ? '#a78bfa'
+              : '#4ade80';
         const destino = escapeHtml(row.destino || '');
         return `<div class="font-semibold text-slate-900 leading-tight">${escapeHtml(value)}</div><div class="text-xs text-slate-500 leading-tight"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:${dotColor};margin-right:4px;vertical-align:middle;"></span>${destino}</div>`;
       }
     },
-    { 
-      key: 'data_inicio', 
-      label: 'Período', 
+    {
+      key: 'data_inicio',
+      label: 'Período',
       sortable: true,
       formatter: (value: string, row: Viagem) => {
         const hoje = todayISODateLocal();
         let alerta = '';
-        
+
         if (row.status === 'em_viagem') {
           alerta = '<span class="text-amber-600 font-medium">• Em viagem</span>';
         } else if (row.status === 'concluida') {
@@ -230,30 +260,30 @@
           const dias = diffDaysISODate(hoje, value) ?? 0;
           if (dias <= 7) alerta = `<span class="text-red-600 font-medium">• Falta ${dias}d</span>`;
         }
-        
+
         return `<div class="leading-tight">${formatDate(value)} - ${formatDate(row.data_fim)}</div><div class="text-xs text-slate-500 leading-tight">${row.dias_viagem} dias ${alerta}</div>`;
       }
     },
-    { 
-      key: 'numero_pessoas', 
-      label: 'Viajantes', 
+    {
+      key: 'numero_pessoas',
+      label: 'Viajantes',
       sortable: true,
       width: '80px',
       align: 'center' as const,
       formatter: (value: number) => escapeHtml(String(value ?? 0))
     },
-    { 
-      key: 'valor_total', 
-      label: 'Valor', 
+    {
+      key: 'valor_total',
+      label: 'Valor',
       sortable: true,
       align: 'right' as const,
       formatter: (value: number) => {
         return BRL_CURRENCY_FORMATTER.format(value || 0);
       }
     },
-    { 
-      key: 'status', 
-      label: 'Status', 
+    {
+      key: 'status',
+      label: 'Status',
       sortable: true,
       formatter: (value: string) => {
         const styles: Record<string, string> = {
@@ -269,7 +299,7 @@
     {
       key: 'responsavel',
       label: 'Responsável',
-      sortable: true,
+      sortable: true
     }
   ];
 
@@ -288,7 +318,15 @@
       { pendentes: 0, confirmadas: 0, emViagem: 0, concluidas: 0, canceladas: 0, valorTotal: 0 }
     );
     const { pendentes, confirmadas, emViagem, concluidas, canceladas, valorTotal } = agregados;
-    return { total: lista.length, pendentes, confirmadas, emViagem, concluidas, canceladas, valorTotal };
+    return {
+      total: lista.length,
+      pendentes,
+      confirmadas,
+      emViagem,
+      concluidas,
+      canceladas,
+      valorTotal
+    };
   })();
 </script>
 
@@ -296,13 +334,11 @@
   <title>Viagens | VTUR</title>
 </svelte:head>
 
-<PageHeader 
+<PageHeader
   title="Viagens"
   subtitle="Gerencie viagens pendentes, confirmadas, em andamento e concluídas"
   color="clientes"
-  breadcrumbs={[
-    { label: 'Viagens' }
-  ]}
+  breadcrumbs={[{ label: 'Viagens' }]}
   actions={[
     {
       label: 'Nova Viagem',
@@ -315,45 +351,20 @@
 
 <!-- Resumo com KPICards -->
 <div class="vtur-kpi-grid vtur-kpi-grid-6 mb-6">
-  <KPICard 
-    title="Total" 
-    value={resumo.total}
-    color="clientes" 
-    icon={Plane}
-  />
-  
-  <KPICard 
-    title="Pendentes" 
-    value={resumo.pendentes}
-    color="clientes" 
-    icon={Calendar}
-  />
-  
-  <KPICard 
-    title="Confirmadas" 
-    value={resumo.confirmadas}
-    color="clientes" 
-    icon={Calendar}
-  />
+  <KPICard title="Total" value={resumo.total} color="clientes" icon={Plane} />
 
-  <KPICard 
-    title="Em viagem" 
-    value={resumo.emViagem}
-    color="clientes" 
-    icon={Clock}
-  />
+  <KPICard title="Pendentes" value={resumo.pendentes} color="clientes" icon={Calendar} />
 
-  <KPICard 
-    title="Concluídas" 
-    value={resumo.concluidas}
-    color="clientes" 
-    icon={FileText}
-  />
-  
-  <KPICard 
-    title="Valor Total" 
+  <KPICard title="Confirmadas" value={resumo.confirmadas} color="clientes" icon={Calendar} />
+
+  <KPICard title="Em viagem" value={resumo.emViagem} color="clientes" icon={Clock} />
+
+  <KPICard title="Concluídas" value={resumo.concluidas} color="clientes" icon={FileText} />
+
+  <KPICard
+    title="Valor Total"
     value={BRL_INTEGER_CURRENCY_FORMATTER.format(resumo.valorTotal)}
-    color="clientes" 
+    color="clientes"
     icon={CreditCard}
   />
 </div>
@@ -364,7 +375,7 @@
     <SlidersHorizontal size={16} class="mr-2" />
     Filtros
     {#if filtroStatus || filtroPeriodo}
-      <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-clientes-500"></span>
+      <span class="bg-clientes-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
     {/if}
   </Button>
 </div>
@@ -381,7 +392,11 @@
         <Calendar size={16} class="text-blue-500" />
         Recorte por embarque
       </div>
-      <div class="flex flex-wrap gap-2" role="group" aria-label="Filtro rápido por data de embarque">
+      <div
+        class="flex flex-wrap gap-2"
+        role="group"
+        aria-label="Filtro rápido por data de embarque"
+      >
         {#each periodoOptions as option}
           <Button
             variant={filtroPeriodo === option.value ? 'primary' : 'secondary'}
@@ -392,7 +407,11 @@
           >
             <span class="flex flex-col items-start leading-tight">
               <span>{option.label}</span>
-              <span class={filtroPeriodo === option.value ? 'text-[11px] text-white/80' : 'text-[11px] text-slate-500'}>
+              <span
+                class={filtroPeriodo === option.value
+                  ? 'text-[11px] text-white/80'
+                  : 'text-[11px] text-slate-500'}
+              >
                 {option.helper}
               </span>
             </span>
@@ -437,7 +456,11 @@
         >
           <span class="flex flex-col items-start leading-tight">
             <span>{option.label}</span>
-            <span class={filtroPeriodo === option.value ? 'text-[11px] text-white/80' : 'text-[11px] text-slate-500'}>
+            <span
+              class={filtroPeriodo === option.value
+                ? 'text-[11px] text-white/80'
+                : 'text-[11px] text-slate-500'}
+            >
               {option.helper}
             </span>
           </span>
