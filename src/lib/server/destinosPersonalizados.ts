@@ -87,14 +87,17 @@ export async function obterDestinoPersonalizado(
   return result ? toDestino(result) : null;
 }
 
+export function rotuloReferenciaIndisponivel(nome: string) {
+  return `${nome} (referência geográfica indisponível)`;
+}
+
 export async function rotuloDestinoPersonalizado(
   geoDb: D1Database,
   destino: DestinoPersonalizado,
   locale: string
 ): Promise<string> {
   const referencia = await getGeoNamesPlace(geoDb, destino.referenciaGeoNamesId);
-  if (!referencia)
-    throw new Error('Localidade de referência do destino não está disponível no GeoNames.');
+  if (!referencia) return rotuloReferenciaIndisponivel(destino.nome);
   const rotulo = await labelGeoNamesPlace(geoDb, referencia, locale);
   return [destino.nome, rotulo.label].join(', ');
 }

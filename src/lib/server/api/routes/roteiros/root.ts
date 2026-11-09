@@ -25,6 +25,7 @@ import {
 } from './cidades-busca';
 import { salvarRoteiroSimplificadoAtomico } from './salvar-simplificado-atomico';
 import { SalvamentoRoteiroAtomico } from './salvar-completo-atomico';
+import { IdentificacaoRegistroError } from '$lib/server/roteiroRegistrosLegados';
 
 const ROTEIRO_SUGESTAO_SELECT = 'id, company_id, tipo, valor, uso_count, created_at, updated_at';
 const MAX_ROTEIRO_BODY_BYTES = 512 * 1024;
@@ -218,6 +219,7 @@ export async function handleRoteirosPost(event: RequestEvent) {
           dias.map((dia, index) => {
             const day = isRecord(dia) ? dia : {};
             return {
+              ...(day.id != null && day.id !== '' ? { id: day.id } : {}),
               created_by: user.id,
               company_id: companyId,
               ordem: index + 1,
@@ -230,6 +232,11 @@ export async function handleRoteirosPost(event: RequestEvent) {
         );
       }
       const resultado = await atomico.executar();
+      if (resultado.erroIdentificacao)
+        return json(
+          { error: resultado.erroIdentificacao },
+          { status: 400, headers: NO_STORE_HEADERS }
+        );
       if (resultado.identidadesRemovidas)
         return json(
           {
@@ -371,6 +378,8 @@ export async function handleRoteirosPost(event: RequestEvent) {
 
     return json({ ok: true, id: roteiroId }, { headers: NO_STORE_HEADERS });
   } catch (err) {
+    if (err instanceof IdentificacaoRegistroError)
+      return json({ error: err.message }, { status: 400, headers: NO_STORE_HEADERS });
     logServerError('[roteiros] falha ao salvar roteiro', err);
     return toErrorResponse(err, 'Erro ao salvar roteiro.');
   }

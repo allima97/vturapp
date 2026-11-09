@@ -840,3 +840,273 @@ it.each([
     ).toEqual({ total: limite + 1 });
   }
 );
+
+type RegistroCidade = { id: string; cidade_id: string | null; cidade?: string | null };
+
+async function lerRegistros(roteiroId: string) {
+  const response = await handleRoteirosIdGet({ params: { id: roteiroId } } as never);
+  expect(response.status).toBe(200);
+  return response.json<{
+    roteiro: {
+      revisao: string;
+      dias: RegistroCidade[];
+      hoteis: RegistroCidade[];
+      passeios: RegistroCidade[];
+    };
+  }>();
+}
+
+it('protege dias, hotéis e passeios por registro, inclusive legados, inclusão, exclusão, duplicação e reordenação', async () => {
+  const created = await complete({
+    nome: 'Original',
+    dias: [
+      { cidade_id: 'geonames:1', cidade: 'Rome', descricao: 'A' },
+      { cidade_id: 'geonames:3', cidade: 'Milan', descricao: 'B' }
+    ],
+    hoteis: [
+      { cidade_id: 'geonames:1', cidade: 'Rome', hotel: 'A' },
+      { cidade_id: 'geonames:3', cidade: 'Milan', hotel: 'B' }
+    ],
+    passeios: [
+      { cidade_id: 'geonames:1', cidade: 'Rome', passeio: 'A' },
+      { cidade_id: 'geonames:3', cidade: 'Milan', passeio: 'B' }
+    ]
+  });
+  expect(created.status).toBe(200);
+  const { id, revisao } = await created.json<{ id: string; revisao: string }>();
+  const inicial = await lerRegistros(id);
+  const trocar = (itens: RegistroCidade[]) =>
+    itens.map((item, index) => ({
+      cidade_id: itens[1 - index].cidade_id,
+      cidade: itens[1 - index].cidade,
+      descricao: 'Trocado',
+      hotel: 'Trocado',
+      passeio: 'Trocado'
+    }));
+  const legado = await complete({
+    id,
+    revisao,
+    nome: 'Trocado',
+    dias: trocar(inicial.roteiro.dias),
+    hoteis: trocar(inicial.roteiro.hoteis),
+    passeios: trocar(inicial.roteiro.passeios)
+  });
+  expect(legado.status).toBe(409);
+  expect(await legado.json()).toMatchObject({
+    identidades_removidas: [
+      { colecao: 'dias', cidade_id: 'geonames:1', quantidade: 1 },
+      { colecao: 'dias', cidade_id: 'geonames:3', quantidade: 1 },
+      { colecao: 'hoteis', cidade_id: 'geonames:1', quantidade: 1 },
+      { colecao: 'hoteis', cidade_id: 'geonames:3', quantidade: 1 },
+      { colecao: 'passeios', cidade_id: 'geonames:1', quantidade: 1 },
+      { colecao: 'passeios', cidade_id: 'geonames:3', quantidade: 1 }
+    ]
+  });
+  expect((await lerRegistros(id)).roteiro.revisao).toBe(revisao);
+
+  const identificado = (itens: RegistroCidade[]) =>
+    itens.map((item, index) => ({
+      ...item,
+      cidade_id: itens[1 - index].cidade_id,
+      cidade: itens[1 - index].cidade
+    }));
+  const primeiraTroca = await complete({
+    id,
+    revisao,
+    nome: 'Trocado',
+    dias: identificado(inicial.roteiro.dias),
+    hoteis: identificado(inicial.roteiro.hoteis),
+    passeios: identificado(inicial.roteiro.passeios)
+  });
+  expect(primeiraTroca.status).toBe(409);
+  const { identidades_removidas } = await primeiraTroca.json<{
+    identidades_removidas: { colecao: string; cidade_id: string; quantidade: number }[];
+  }>();
+  const confirmada = await complete({
+    id,
+    revisao,
+    nome: 'Trocado',
+    dias: identificado(inicial.roteiro.dias),
+    hoteis: identificado(inicial.roteiro.hoteis),
+    passeios: identificado(inicial.roteiro.passeios),
+    identidades_removidas_confirmadas: identidades_removidas
+  });
+  expect(confirmada.status).toBe(200);
+  const { revisao: revisaoTrocada } = await confirmada.json<{ revisao: string }>();
+  const trocada = await lerRegistros(id);
+  expect(trocada.roteiro.dias.map((item) => item.id)).toEqual(
+    inicial.roteiro.dias.map((item) => item.id)
+  );
+  expect(trocada.roteiro.dias.map((item) => item.cidade_id)).toEqual(['geonames:3', 'geonames:1']);
+
+  const inverter = (itens: RegistroCidade[]) =>
+    [...itens].reverse().map((item, index) => ({ ...item, ordem: index }));
+  const reordenado = await complete({
+    id,
+    revisao: revisaoTrocada,
+    nome: 'Reordenado',
+    dias: inverter(trocada.roteiro.dias),
+    hoteis: inverter(trocada.roteiro.hoteis),
+    passeios: inverter(trocada.roteiro.passeios)
+  });
+  expect(reordenado.status).toBe(200);
+  const { revisao: revisaoReordenada } = await reordenado.json<{ revisao: string }>();
+  const ordem = await lerRegistros(id);
+  expect(ordem.roteiro.dias.map((item) => item.id)).toEqual(
+    [...trocada.roteiro.dias].reverse().map((item) => item.id)
+  );
+
+  const incluido = crypto.randomUUID();
+  const diasComInclusao = [
+    ...ordem.roteiro.dias.map((item, index) => ({ ...item, ordem: index })),
+    {
+      id: incluido,
+      ordem: ordem.roteiro.dias.length,
+      cidade_id: 'geonames:1',
+      cidade: 'Rome',
+      descricao: 'Extra'
+    }
+  ];
+  const comInclusao = await complete({
+    id,
+    revisao: revisaoReordenada,
+    nome: 'Incluído',
+    dias: diasComInclusao
+  });
+  expect(comInclusao.status).toBe(200);
+  const { revisao: revisaoInclusao } = await comInclusao.json<{ revisao: string }>();
+  expect((await lerRegistros(id)).roteiro.dias.map((item) => item.id)).toEqual([
+    ...ordem.roteiro.dias.map((item) => item.id),
+    incluido
+  ]);
+
+  const semUm = await complete({
+    id,
+    revisao: revisaoInclusao,
+    nome: 'Excluído',
+    dias: diasComInclusao.slice(0, -1)
+  });
+  expect(semUm.status).toBe(409);
+  expect(await semUm.json()).toMatchObject({
+    identidades_removidas: [{ colecao: 'dias', cidade_id: 'geonames:1', quantidade: 1 }]
+  });
+
+  const repetido = await complete({
+    id,
+    revisao: revisaoInclusao,
+    nome: 'Incluído',
+    dias: diasComInclusao.map((item) =>
+      item.id === incluido ? { ...item, id: incluido.toUpperCase() } : item
+    )
+  });
+  expect(repetido.status).toBe(200);
+  const aposRepetido = await lerRegistros(id);
+  expect(aposRepetido.roteiro.dias.map((item) => item.id)).toEqual([
+    ...ordem.roteiro.dias.map((item) => item.id),
+    incluido
+  ]);
+
+  const copiaId = crypto.randomUUID();
+  const copiaHotel = crypto.randomUUID();
+  const copiaPasseio = crypto.randomUUID();
+  const atual = await lerRegistros(id);
+  const duplicado = await complete({
+    nome: 'Cópia',
+    dias: [{ ...atual.roteiro.dias[0], id: copiaId }],
+    hoteis: [{ ...atual.roteiro.hoteis[0], id: copiaHotel }],
+    passeios: [{ ...atual.roteiro.passeios[0], id: copiaPasseio }]
+  });
+  expect(duplicado.status).toBe(200);
+  const copia = await duplicado.json<{ id: string }>();
+  expect(copia.id).not.toBe(id);
+  expect((await lerRegistros(copia.id)).roteiro.dias.map((item) => item.id)).toEqual([copiaId]);
+  expect((await lerRegistros(id)).roteiro.dias.map((item) => item.id)).toEqual(
+    atual.roteiro.dias.map((item) => item.id)
+  );
+
+  const roubo = await complete({
+    nome: 'Roubo',
+    dias: [{ ...atual.roteiro.dias[0], descricao: 'Alheio' }]
+  });
+  expect(roubo.status).toBe(400);
+  expect(await roubo.json()).toMatchObject({
+    error: expect.stringContaining('pertence a outro roteiro')
+  });
+  expect((await lerRegistros(id)).roteiro.revisao).toBe(aposRepetido.roteiro.revisao);
+});
+
+it('recusa identificação inválida ou duplicada de dia sem gravar', async () => {
+  const idDia = crypto.randomUUID();
+  const created = await complete({
+    nome: 'Original',
+    dias: [{ id: idDia, cidade_id: 'geonames:1', cidade: 'Rome', descricao: 'A' }]
+  });
+  const { id, revisao } = await created.json<{ id: string; revisao: string }>();
+  for (const dias of [
+    [
+      { id: idDia, cidade_id: 'geonames:1', cidade: 'Rome', descricao: 'A' },
+      { id: idDia, cidade_id: 'geonames:3', cidade: 'Milan', descricao: 'B' }
+    ],
+    [{ id: 'inválido', cidade_id: 'geonames:1', cidade: 'Rome', descricao: 'A' }]
+  ]) {
+    const response = await complete({ id, revisao, nome: 'Alterado', dias });
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({
+      error: expect.stringContaining('Identificação do dia')
+    });
+  }
+  expect(
+    await env.DB.prepare('SELECT nome, revisao FROM legado_roteiro_personalizado WHERE id = ?')
+      .bind(id)
+      .first()
+  ).toEqual({ nome: 'Original', revisao });
+  expect(
+    (
+      await env.DB.prepare('SELECT id, descricao FROM legado_roteiro_dia WHERE roteiro_id = ?')
+        .bind(id)
+        .all()
+    ).results
+  ).toEqual([{ id: idDia, descricao: 'A' }]);
+});
+
+it('preserva o id no salvamento simplificado e detecta a troca na posição legada', async () => {
+  const created = await simple({
+    nome: 'Original',
+    dias: [
+      { cidade_id: 'geonames:1', cidade: 'Rome', descricao: 'A' },
+      { cidade_id: 'geonames:3', cidade: 'Milan', descricao: 'B' }
+    ]
+  });
+  expect(created.status).toBe(200);
+  const { id, revisao } = await created.json<{ id: string; revisao: string }>();
+  const { roteiro } = await lerRegistros(id);
+  const mantido = await simple({
+    id,
+    revisao,
+    nome: 'Igual',
+    dias: roteiro.dias.map((item) => ({
+      id: item.id,
+      cidade_id: item.cidade_id,
+      descricao: 'A'
+    }))
+  });
+  expect(mantido.status).toBe(200);
+  const { revisao: revisaoMantida } = await mantido.json<{ revisao: string }>();
+  expect((await lerRegistros(id)).roteiro.dias.map((item) => item.id)).toEqual(
+    roteiro.dias.map((item) => item.id)
+  );
+  const trocado = await simple({
+    id,
+    revisao: revisaoMantida,
+    nome: 'Trocado',
+    dias: [
+      { cidade_id: 'geonames:3', descricao: 'B' },
+      { cidade_id: 'geonames:1', descricao: 'A' }
+    ]
+  });
+  expect(trocado.status).toBe(409);
+  expect((await lerRegistros(id)).roteiro.dias.map((item) => item.cidade_id)).toEqual([
+    'geonames:1',
+    'geonames:3'
+  ]);
+});

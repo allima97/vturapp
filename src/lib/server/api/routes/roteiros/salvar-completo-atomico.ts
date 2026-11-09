@@ -1,12 +1,18 @@
 import { prepareWrite } from '$lib/server/data/query';
 import {
   confirmacaoCorresponde,
-  identificarRemocoes,
   identificarRemocoesOpcionais,
-  type ColecaoIdentidade
+  identificarRemocoesRegistros,
+  type RegistroCidade
 } from '$lib/roteiroIdentidadesRemovidas';
 import { registroOpcionalIdValido } from '$lib/roteiroOpcionais';
 import { identificarOpcionaisLegados } from '$lib/server/roteiroOpcionaisLegados';
+import {
+  IdentificacaoRegistroError,
+  identificarRegistrosLegados,
+  rotuloRegistro,
+  type ColecaoRegistro
+} from '$lib/server/roteiroRegistrosLegados';
 
 type TabelaFilha =
   | 'roteiro_dia'
@@ -27,6 +33,27 @@ type Escopo = {
 function identificador(value: string) {
   if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(value)) throw new Error('Identificador SQL inválido.');
   return `"${value}"`;
+}
+
+type RegistroSalvo = RegistroCidade & { ordem: number | null };
+
+const TABELAS_REGISTRO = [
+  ['dias', 'roteiro_dia'],
+  ['hoteis', 'roteiro_hotel'],
+  ['passeios', 'roteiro_passeio']
+] as const;
+
+function ordenarRegistros(itens: readonly RegistroSalvo[]) {
+  return itens
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => {
+      if ((a.item.ordem === null) !== (b.item.ordem === null))
+        return a.item.ordem === null ? 1 : -1;
+      if (a.item.ordem !== null && b.item.ordem !== null && a.item.ordem !== b.item.ordem)
+        return a.item.ordem - b.item.ordem;
+      return a.index - b.index;
+    })
+    .map(({ item }) => item);
 }
 
 function identidadesOpcionais(items: unknown[]) {
@@ -55,7 +82,7 @@ export class SalvamentoRoteiroAtomico {
   private readonly condicao: string;
   private readonly parametros: (string | null)[];
   private readonly revisaoNova: string | null;
-  private readonly identidades: Partial<Record<ColecaoIdentidade, (string | null)[]>> = {};
+  private readonly registros: Partial<Record<ColecaoRegistro, RegistroSalvo[]>> = {};
   private opcionais: ReturnType<typeof identidadesOpcionais> | undefined;
   private novo = false;
 
@@ -116,7 +143,7 @@ export class SalvamentoRoteiroAtomico {
 
   excluir(tabela: TabelaFilha) {
     const campo = this.colecao(tabela);
-    if (this.protecao && campo) this.identidades[campo] = [];
+    if (this.protecao && campo) this.registros[campo] = [];
     this.statements.push(
       this.db
         .prepare(
@@ -128,12 +155,12 @@ export class SalvamentoRoteiroAtomico {
 
   inserir(tabela: TabelaFilha, rows: object[]) {
     for (const row of rows) {
-      const values = prepareWrite(tabela, { ...row, roteiro_id: this.id });
+      const bruto = { ...(row as Record<string, unknown>) };
       const campo = this.colecao(tabela);
-      if (this.protecao && campo && this.identidades[campo])
-        this.identidades[campo].push(
-          typeof values.cidade_id === 'string' ? values.cidade_id : null
-        );
+      const registroId = this.registrar(campo, bruto);
+      if (registroId) bruto.id = registroId;
+      else delete bruto.id;
+      const values = prepareWrite(tabela, { ...bruto, roteiro_id: this.id });
       const keys = Object.keys(values);
       this.statements.push(
         this.db
@@ -145,11 +172,89 @@ export class SalvamentoRoteiroAtomico {
     }
   }
 
-  private colecao(tabela: TabelaFilha): ColecaoIdentidade | null {
+  private colecao(tabela: TabelaFilha): ColecaoRegistro | null {
     if (tabela === 'roteiro_dia') return 'dias';
     if (tabela === 'roteiro_hotel') return 'hoteis';
     if (tabela === 'roteiro_passeio') return 'passeios';
     return null;
+  }
+
+  private registrar(campo: ColecaoRegistro | null, bruto: Record<string, unknown>) {
+    if (!this.protecao || !campo || !this.registros[campo]) return undefined;
+    let registroId: string | undefined;
+    if (bruto.id != null && bruto.id !== '') {
+      const rotulo = rotuloRegistro(campo);
+      if (typeof bruto.id !== 'string' || !registroOpcionalIdValido(bruto.id))
+        throw new IdentificacaoRegistroError(`Identificação do ${rotulo} inválida.`);
+      registroId = bruto.id.toLowerCase();
+      if (this.registros[campo].some((item) => item.registro_id === registroId))
+        throw new IdentificacaoRegistroError(`Identificação do ${rotulo} duplicada.`);
+    }
+    this.registros[campo].push({
+      ...(registroId ? { registro_id: registroId } : {}),
+      cidade_id: typeof bruto.cidade_id === 'string' ? bruto.cidade_id : null,
+      ordem: typeof bruto.ordem === 'number' && Number.isFinite(bruto.ordem) ? bruto.ordem : null
+    });
+    return registroId;
+  }
+
+  private async idsDeOutroRoteiro(tabela: string, ids: string[]) {
+    if (!ids.length) return false;
+    const encontrados = await this.db
+      .prepare(
+        `SELECT id FROM ${identificador(`legado_${tabela}`)} WHERE lower(id) IN (${ids.map(() => '?').join(', ')}) AND IFNULL(roteiro_id, '') != ? LIMIT 1`
+      )
+      .bind(...ids, this.id)
+      .all();
+    return encontrados.results.length > 0;
+  }
+
+  private async validarIdsDisponiveis() {
+    if (!this.protecao) return null;
+    for (const [campo, tabela] of TABELAS_REGISTRO) {
+      const ids = (this.registros[campo] ?? [])
+        .map((item) => item.registro_id)
+        .filter((id): id is string => Boolean(id));
+      if (await this.idsDeOutroRoteiro(tabela, ids))
+        return `Identificação do ${rotuloRegistro(campo)} pertence a outro roteiro.`;
+    }
+    return null;
+  }
+
+  private async remocoesDaColecao(
+    campo: ColecaoRegistro,
+    tabela: string
+  ): Promise<ReturnType<typeof identificarRemocoesRegistros>> {
+    const atuais = this.registros[campo] ?? [];
+    const rows = await this.db
+      .prepare(
+        `SELECT id, cidade_id FROM ${identificador(`legado_${tabela}`)} WHERE roteiro_id = ? ORDER BY ordem IS NULL, ordem, id`
+      )
+      .bind(this.id)
+      .all<{ id: string; cidade_id: string | null }>();
+    const anteriores = rows.results.map((row) => ({
+      registro_id: row.id.toLowerCase(),
+      cidade_id: row.cidade_id
+    }));
+    if (atuais.length > 0 && atuais.every((item) => !item.registro_id)) {
+      const posicao = (item: { cidade_id: string | null }) => ({ cidade_id: item.cidade_id });
+      return identificarRemocoesRegistros(
+        campo,
+        await identificarRegistrosLegados(
+          anteriores.map(posicao),
+          campo,
+          this.id,
+          this.revisaoEsperada ?? ''
+        ),
+        await identificarRegistrosLegados(
+          ordenarRegistros(atuais).map(posicao),
+          campo,
+          this.id,
+          this.revisaoEsperada ?? ''
+        )
+      );
+    }
+    return identificarRemocoesRegistros(campo, anteriores, atuais);
   }
 
   private async verificarIdentidades() {
@@ -161,18 +266,10 @@ export class SalvamentoRoteiroAtomico {
       .bind(...this.parametros, this.revisaoEsperada)
       .first<{ opcionais: string | null }>();
     if (!principal) return null;
-    const anteriores: Partial<Record<ColecaoIdentidade, (string | null)[]>> = {};
-    for (const [campo, tabela] of [
-      ['dias', 'roteiro_dia'],
-      ['hoteis', 'roteiro_hotel'],
-      ['passeios', 'roteiro_passeio']
-    ] as const) {
-      if (!(campo in this.identidades)) continue;
-      const rows = await this.db
-        .prepare(`SELECT cidade_id FROM ${identificador(`legado_${tabela}`)} WHERE roteiro_id = ?`)
-        .bind(this.id)
-        .all<{ cidade_id: string | null }>();
-      anteriores[campo] = rows.results.map((row) => row.cidade_id);
+    const removidasFilhas = [];
+    for (const [campo, tabela] of TABELAS_REGISTRO) {
+      if (!(campo in this.registros)) continue;
+      removidasFilhas.push(...(await this.remocoesDaColecao(campo, tabela)));
     }
     let removidasOpcionais: ReturnType<typeof identificarRemocoesOpcionais> = [];
     if (this.opcionais) {
@@ -187,10 +284,7 @@ export class SalvamentoRoteiroAtomico {
         this.opcionais
       );
     }
-    const removidas = [
-      ...identificarRemocoes(anteriores, this.identidades),
-      ...removidasOpcionais
-    ].sort((a, b) =>
+    const removidas = [...removidasFilhas, ...removidasOpcionais].sort((a, b) =>
       a.colecao === b.colecao
         ? a.cidade_id.localeCompare(b.cidade_id, 'en')
         : a.colecao.localeCompare(b.colecao, 'en')
@@ -202,6 +296,8 @@ export class SalvamentoRoteiroAtomico {
 
   async executar() {
     if (!this.statements.length) throw new Error('Salvamento sem roteiro principal.');
+    const erroIdentificacao = await this.validarIdsDisponiveis();
+    if (erroIdentificacao) return { atualizado: false, revisao: null, erroIdentificacao };
     const removidas = await this.verificarIdentidades();
     if (removidas) return { atualizado: false, revisao: null, identidadesRemovidas: removidas };
     const results = await this.db.batch(this.statements);

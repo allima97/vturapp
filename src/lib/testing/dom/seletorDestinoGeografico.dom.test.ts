@@ -107,6 +107,40 @@ it('resolve a identidade salva e exibe erro se ela não puder ser validada', asy
   await unmount(second);
 });
 
+it('mostra a referência GeoNames removida sem apagar o destino personalizado', async () => {
+  apiFetch.mockResolvedValueOnce({
+    item: {
+      id: 'personalizado:11111111-1111-4111-8111-111111111111',
+      nome: 'Praia Azul',
+      label: 'Praia Azul (referência geográfica indisponível)',
+      origem: 'personalizado',
+      referencia_indisponivel: true
+    }
+  });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Harness, {
+    target,
+    props: {
+      initialId: 'personalizado:11111111-1111-4111-8111-111111111111',
+      initialValue: 'Praia Azul'
+    }
+  });
+  await vi.waitFor(() =>
+    expect(target.textContent).toContain(
+      'referência GeoNames deste destino não está mais disponível'
+    )
+  );
+  expect(target.querySelector('[data-value]')?.textContent).toBe(
+    'Praia Azul (referência geográfica indisponível)'
+  );
+  expect(target.querySelector('[data-id]')?.textContent).toBe(
+    'personalizado:11111111-1111-4111-8111-111111111111'
+  );
+  expect(target.querySelector<HTMLInputElement>('#destino')?.checkValidity()).toBe(true);
+  await unmount(app);
+});
+
 it('rejeita resolução cujo ID não corresponde à identidade salva', async () => {
   apiFetch.mockResolvedValueOnce({ item: texas });
   const target = document.createElement('div');

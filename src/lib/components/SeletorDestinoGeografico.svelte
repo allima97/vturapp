@@ -9,6 +9,7 @@
     label: string;
     origem: 'geonames' | 'personalizado';
     referencia?: { regiao: string | null };
+    referencia_indisponivel?: boolean;
   };
   type Resultado = { items: Destino[]; podeHaverMais: boolean };
 
@@ -36,6 +37,7 @@
   let timer: ReturnType<typeof setTimeout> | undefined;
   let resolvendo = Boolean(destinoId);
   let validacaoFalhou = false;
+  let referenciaIndisponivel = false;
 
   $: invalido = validacaoFalhou || (Boolean(value.trim()) && !destinoId);
   $: valid = !resolvendo && !invalido && (!required || Boolean(value.trim() && destinoId));
@@ -98,6 +100,7 @@
     destinoId = '';
     resolvendo = false;
     validacaoFalhou = false;
+    referenciaIndisponivel = false;
     aberto = true;
     exata = false;
     erro = '';
@@ -116,6 +119,7 @@
     destinoId = destino.id;
     resolvendo = false;
     validacaoFalhou = false;
+    referenciaIndisponivel = Boolean(destino.referencia_indisponivel);
     carregando = false;
     aberto = false;
     itens = [];
@@ -146,6 +150,7 @@
         if (!item || item.id !== idInicial || !item.label)
           throw new Error('Resposta de destino inválida.');
         value = item.label;
+        referenciaIndisponivel = Boolean(item.referencia_indisponivel);
       })
       .catch(() => {
         if (atual !== sequencia || destinoId !== idInicial) return;
@@ -192,6 +197,12 @@
   <AtribuicaoGeoNames />
   {#if invalido}
     <p class="mt-1 text-xs text-red-600" role="alert">Selecione um destino na lista.</p>
+  {/if}
+  {#if referenciaIndisponivel}
+    <p class="mt-1 text-xs text-amber-700" role="status">
+      A referência GeoNames deste destino não está mais disponível. O nome personalizado foi
+      preservado; selecione outro destino para atualizar o vínculo.
+    </p>
   {/if}
   {#if aberto && (value.trim() || erro)}
     <div

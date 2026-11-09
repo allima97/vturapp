@@ -81,6 +81,7 @@
     removerPasseiosIncorporados,
     type RoteiroOpcionalCidade
   } from '$lib/roteiroOpcionais';
+  import { atribuirIdsRegistros, renovarIdsRegistros } from '$lib/roteiroRegistros';
   import AbaPasseios from './_components/AbaPasseios.svelte';
   import AbaPagamento from './_components/AbaPagamento.svelte';
   import AbaInvestimento from './_components/AbaInvestimento.svelte';
@@ -505,7 +506,12 @@
     }
     saving = true;
     try {
-      if (revisaoRoteiroAtiva) opcionais = atribuirIdsGruposOpcionais(opcionais);
+      if (revisaoRoteiroAtiva) {
+        opcionais = atribuirIdsGruposOpcionais(opcionais);
+        dias = atribuirIdsRegistros(dias);
+        hoteis = atribuirIdsRegistros(hoteis);
+        passeios = atribuirIdsRegistros(passeios);
+      }
       const payload = {
         ...(roteiroGeograficoAtivo ? { versao_identidade: VERSAO_ROTEIRO_IDENTIDADE } : {}),
         ...(revisaoRoteiroAtiva ? { revisao } : {}),
@@ -579,6 +585,9 @@
     duplicating = true;
     try {
       if (revisaoRoteiroAtiva) opcionais = atribuirIdsGruposOpcionais(opcionais);
+      const diasCopia = revisaoRoteiroAtiva ? renovarIdsRegistros(dias) : dias;
+      const hoteisCopia = revisaoRoteiroAtiva ? renovarIdsRegistros(hoteis) : hoteis;
+      const passeiosCopia = revisaoRoteiroAtiva ? renovarIdsRegistros(passeios) : passeios;
       const payload = await apiPost<{ id?: string }>('/api/v1/roteiros/save', {
         ...(roteiroGeograficoAtivo ? { versao_identidade: VERSAO_ROTEIRO_IDENTIDADE } : {}),
         nome: buildDuplicateName(nome),
@@ -591,18 +600,18 @@
         mostrar_pagamento_pdf: mostrarPagamentoPdf,
         mostrar_informacoes_pdf: mostrarInformacoesPdf,
         mostrar_rodape_pdf: mostrarRodapePdf,
-        dias: dias.map((d, i) => ({
+        dias: diasCopia.map((d, i) => ({
           ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(d) : d),
           ordem: i
         })),
-        hoteis: hoteis.map((h, i) => ({
+        hoteis: hoteisCopia.map((h, i) => ({
           ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(h) : h),
           ordem: i
         })),
-        opcionais: parseRoteiroOpcionais(removerPasseiosIncorporados(opcionais, passeios)).map(
+        opcionais: parseRoteiroOpcionais(removerPasseiosIncorporados(opcionais, passeiosCopia)).map(
           (item) => (revisaoRoteiroAtiva ? explicitarIdentidadeCidade(item) : item)
         ),
-        passeios: passeios.map((p, i) => ({
+        passeios: passeiosCopia.map((p, i) => ({
           ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(p) : p),
           ordem: i
         })),

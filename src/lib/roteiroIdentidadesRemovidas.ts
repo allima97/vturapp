@@ -34,9 +34,16 @@ export function identificarRemocoes(
   );
 }
 
-export function identificarRemocoesOpcionais(
-  anteriores: readonly { registro_id?: string; cidade_id: string | null }[],
-  atuais: readonly { registro_id?: string; cidade_id: string | null }[]
+export type RegistroCidade = {
+  registro_id?: string;
+  cidade_id: string | null;
+};
+
+/** Compara cada registro pelo id estável. Registros sem id continuam por contagem e não encobrem uma troca já identificada. */
+export function identificarRemocoesRegistros(
+  colecao: ColecaoIdentidade,
+  anteriores: readonly RegistroCidade[],
+  atuais: readonly RegistroCidade[]
 ): IdentidadeRemovida[] {
   const anterioresComId = new Map(
     anteriores.filter((item) => item.registro_id).map((item) => [item.registro_id, item.cidade_id])
@@ -54,7 +61,7 @@ export function identificarRemocoesOpcionais(
   const candidatas = atuais
     .filter((item) => !item.registro_id || !anterioresComId.has(item.registro_id))
     .map((item) => item.cidade_id);
-  const legadasRemovidas = identificarRemocoes({ opcionais: legadas }, { opcionais: candidatas });
+  const legadasRemovidas = identificarRemocoes({ [colecao]: legadas }, { [colecao]: candidatas });
   const contagem = new Map<string, number>();
   for (const id of perdidas) {
     if (id) contagem.set(id, (contagem.get(id) ?? 0) + 1);
@@ -62,12 +69,15 @@ export function identificarRemocoesOpcionais(
   for (const item of legadasRemovidas)
     contagem.set(item.cidade_id, (contagem.get(item.cidade_id) ?? 0) + item.quantidade);
   return [...contagem]
-    .map(([cidade_id, quantidade]) => ({
-      colecao: 'opcionais' as const,
-      cidade_id,
-      quantidade
-    }))
+    .map(([cidade_id, quantidade]) => ({ colecao, cidade_id, quantidade }))
     .sort((a, b) => a.cidade_id.localeCompare(b.cidade_id, 'en'));
+}
+
+export function identificarRemocoesOpcionais(
+  anteriores: readonly RegistroCidade[],
+  atuais: readonly RegistroCidade[]
+): IdentidadeRemovida[] {
+  return identificarRemocoesRegistros('opcionais', anteriores, atuais);
 }
 
 export function isIdentidadesRemovidas(value: unknown): value is IdentidadeRemovida[] {

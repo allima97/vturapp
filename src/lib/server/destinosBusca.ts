@@ -1,4 +1,9 @@
-import { buscarDestinosPersonalizados, obterDestinoPersonalizado } from './destinosPersonalizados';
+import {
+  buscarDestinosPersonalizados,
+  obterDestinoPersonalizado,
+  rotuloReferenciaIndisponivel,
+  type DestinoPersonalizado
+} from './destinosPersonalizados';
 import { destinoIdValido } from '$lib/destinoIdentidade';
 import {
   getGeoNamesPlace,
@@ -23,7 +28,25 @@ export type DestinoBusca = {
   label: string;
   origem: 'geonames' | 'personalizado';
   referencia: ReferenciaAdministrativa;
+  referencia_indisponivel?: boolean;
 };
+
+function destinoSemReferencia(destino: DestinoPersonalizado): DestinoBusca {
+  return {
+    id: `personalizado:${destino.id}`,
+    nome: destino.nome,
+    label: rotuloReferenciaIndisponivel(destino.nome),
+    origem: 'personalizado',
+    referencia_indisponivel: true,
+    referencia: {
+      localidade: destino.nome,
+      subdivisao_secundaria: null,
+      regiao: null,
+      pais: '',
+      codigo_pais: ''
+    }
+  };
+}
 
 export function referenciaAdministrativa(resultado: GeoNamesLabel): ReferenciaAdministrativa {
   return {
@@ -87,8 +110,7 @@ export async function buscarDestinos(
   }
   const rotulos = new Map(labels.map((label) => [label.id, label]));
   const resultadosLocais = locaisExibidos.map((destino): DestinoBusca => {
-    if (!porId.has(destino.referenciaGeoNamesId))
-      throw new Error('Localidade de referência do destino não está disponível no GeoNames.');
+    if (!porId.has(destino.referenciaGeoNamesId)) return destinoSemReferencia(destino);
     const referencia = rotulos.get(destino.referenciaGeoNamesId);
     if (!referencia) throw new Error('Rótulo da localidade de referência indisponível.');
     return {
@@ -141,8 +163,7 @@ export async function obterDestino(
     const destino = await obterDestinoPersonalizado(db, id.slice('personalizado:'.length));
     if (!destino) return null;
     const referencia = await getGeoNamesPlace(geoDb, destino.referenciaGeoNamesId);
-    if (!referencia)
-      throw new Error('Localidade de referência do destino não está disponível no GeoNames.');
+    if (!referencia) return destinoSemReferencia(destino);
     const resultado = await labelGeoNamesPlace(geoDb, referencia, locale);
     return {
       id,

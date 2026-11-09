@@ -21,10 +21,17 @@ import {
   validarIdentidadesExplicitas
 } from './cidades-busca';
 import { SalvamentoRoteiroAtomico } from './salvar-completo-atomico';
+import { IdentificacaoRegistroError } from '$lib/server/roteiroRegistrosLegados';
 
 const MAX_ROTEIRO_SAVE_BODY_BYTES = 512 * 1024;
 
+function idRegistro(value: unknown): { id: unknown } | Record<string, never> {
+  if (!revisaoRoteiroAtiva || value == null || value === '') return {};
+  return { id: value };
+}
+
 type RoteiroDiaPayload = {
+  id?: unknown;
   cidade?: string | null;
   cidade_id?: string | null;
   percurso?: string | null;
@@ -35,6 +42,7 @@ type RoteiroDiaPayload = {
 };
 
 type RoteiroDiaDraft = {
+  id?: unknown;
   created_by: string;
   company_id: string | null | undefined;
   roteiro_id: string;
@@ -47,6 +55,7 @@ type RoteiroDiaDraft = {
 };
 
 type RoteiroHotelPayload = {
+  id?: unknown;
   cidade?: string | null;
   cidade_id?: string | null;
   hotel?: string | null;
@@ -67,6 +76,7 @@ type RoteiroHotelPayload = {
 };
 
 type RoteiroHotelDraft = {
+  id?: unknown;
   roteiro_id: string;
   cidade: string | null;
   cidade_id?: string;
@@ -88,6 +98,7 @@ type RoteiroHotelDraft = {
 };
 
 type RoteiroPasseioPayload = {
+  id?: unknown;
   cidade?: string | null;
   cidade_id?: string | null;
   passeio?: string | null;
@@ -104,6 +115,7 @@ type RoteiroPasseioPayload = {
 };
 
 type RoteiroPasseioDraft = {
+  id?: unknown;
   roteiro_id: string;
   cidade: string | null;
   cidade_id?: string;
@@ -504,6 +516,7 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
         const hoteis = body.hoteis
           .map(
             (h: RoteiroHotelPayload, idx: number): RoteiroHotelDraft => ({
+              ...idRegistro(h.id),
               roteiro_id: roteiroId,
               cidade: h.cidade || null,
               ...(h.cidade_id ? { cidade_id: h.cidade_id } : {}),
@@ -568,6 +581,7 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
         const passeios = body.passeios
           .map(
             (p: RoteiroPasseioPayload, idx: number): RoteiroPasseioDraft => ({
+              ...idRegistro(p.id),
               roteiro_id: roteiroId,
               cidade: p.cidade || null,
               ...(p.cidade_id ? { cidade_id: p.cidade_id } : {}),
@@ -713,6 +727,7 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
             const data = dataRaw ? dataRaw : null;
             const descricao = String(d?.descricao || '').trim();
             return {
+              ...idRegistro(d.id),
               created_by: user.id,
               company_id: companyId,
               roteiro_id: roteiroId,
@@ -884,6 +899,11 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
 
     if (atomico) {
       const resultado = await atomico.executar();
+      if (resultado.erroIdentificacao)
+        return json(
+          { error: resultado.erroIdentificacao },
+          { status: 400, headers: NO_STORE_HEADERS }
+        );
       if (resultado.identidadesRemovidas)
         return json(
           {
@@ -907,6 +927,8 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
     }
     return json({ ok: true, id: roteiroId }, { headers: NO_STORE_HEADERS });
   } catch (err: unknown) {
+    if (err instanceof IdentificacaoRegistroError)
+      return json({ error: err.message }, { status: 400, headers: NO_STORE_HEADERS });
     const errorRecord =
       typeof err === 'object' && err !== null ? (err as Record<string, unknown>) : null;
     const code = String(errorRecord?.code || '');

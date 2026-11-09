@@ -2,7 +2,8 @@ import { expect, it } from 'vitest';
 import {
   confirmacaoCorresponde,
   identificarRemocoes,
-  identificarRemocoesOpcionais
+  identificarRemocoesOpcionais,
+  identificarRemocoesRegistros
 } from './roteiroIdentidadesRemovidas';
 
 it('conta reduções por identidade e coleção sem comparar nomes homônimos', () => {
@@ -45,6 +46,32 @@ it('detecta trocas entre grupos identificados e ignora reordenação', () => {
     { colecao: 'opcionais', cidade_id: 'geonames:1', quantidade: 1 },
     { colecao: 'opcionais', cidade_id: 'geonames:2', quantidade: 1 }
   ]);
+});
+
+it('detecta troca de identidade que preserva a contagem e ignora reordenação', () => {
+  const anteriores = [
+    { registro_id: 'a', cidade_id: 'geonames:1' },
+    { registro_id: 'b', cidade_id: 'geonames:3' }
+  ];
+  expect(identificarRemocoesRegistros('dias', anteriores, [...anteriores].reverse())).toEqual([]);
+  expect(
+    identificarRemocoesRegistros('hoteis', anteriores, [
+      { registro_id: 'a', cidade_id: 'geonames:3' },
+      { registro_id: 'b', cidade_id: 'geonames:1' }
+    ])
+  ).toEqual([
+    { colecao: 'hoteis', cidade_id: 'geonames:1', quantidade: 1 },
+    { colecao: 'hoteis', cidade_id: 'geonames:3', quantidade: 1 }
+  ]);
+  expect(
+    identificarRemocoesRegistros('passeios', anteriores, [
+      anteriores[0],
+      { registro_id: crypto.randomUUID(), cidade_id: 'geonames:3' }
+    ])
+  ).toEqual([{ colecao: 'passeios', cidade_id: 'geonames:3', quantidade: 1 }]);
+  expect(
+    identificarRemocoesRegistros('dias', anteriores, [anteriores[0], { cidade_id: 'geonames:1' }])
+  ).toEqual([{ colecao: 'dias', cidade_id: 'geonames:3', quantidade: 1 }]);
 });
 
 it('trata grupos legados por contagem sem usar grupos identificados para ocultar perdas', () => {
