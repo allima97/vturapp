@@ -1,5 +1,8 @@
 <script lang="ts">
   import { VTUR_LOGO_URL } from '$lib/brand';
+  import { explicitarIdentidadeCidade, VERSAO_ROTEIRO_IDENTIDADE } from '$lib/roteiroProtocolo';
+  import { revisaoRoteiroAtiva, roteiroGeograficoAtivo } from '$lib/config/destinosGeograficos';
+  import { salvarRoteiroComConfirmacao } from '$lib/features/roteiros/salvarComConfirmacao';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { browser } from '$app/environment';
@@ -72,8 +75,10 @@
   import AbaHoteis from './_components/AbaHoteis.svelte';
   import AbaOpcionais from './_components/AbaOpcionais.svelte';
   import {
+    atribuirIdsGruposOpcionais,
     buildOpcionaisHtml,
     parseRoteiroOpcionais,
+    removerPasseiosIncorporados,
     type RoteiroOpcionalCidade
   } from '$lib/roteiroOpcionais';
   import AbaPasseios from './_components/AbaPasseios.svelte';
@@ -103,6 +108,7 @@
   };
 
   type RoteiroPayload = {
+    revisao?: string;
     nome?: string | null;
     duracao?: number | string | null;
     inicio_cidade?: string | null;
@@ -195,8 +201,14 @@
   let incluirCabecalhoRodapePdf = $state(false);
   let abaAtiva: AbaId = $state('itinerario');
 
+  function selecionarAba(key: string) {
+    const aba = ABAS.find((item) => item.id === key);
+    if (aba) abaAtiva = aba.id;
+  }
+
   // Form fields
   let nome = $state('');
+  let revisao = $state<string | undefined>();
   let duracao = $state('');
   let inicioCidade = $state('');
   let fimCidade = $state('');
@@ -228,6 +240,11 @@
 
   // Sugestões
   let sugestoes: Record<string, string[]> = $state({});
+
+  $effect(() => {
+    const restantes = removerPasseiosIncorporados(opcionais, passeios);
+    if (restantes !== opcionais) opcionais = restantes;
+  });
 
   // Modals
   let showGerarModal = $state(false);
@@ -396,6 +413,7 @@
       if (seq !== loadSeq || destroyed) return;
       const r = payload.roteiro;
 
+      revisao = r.revisao;
       nome = r.nome || '';
       duracao = r.duracao != null ? String(r.duracao) : '';
       inicioCidade = mergeCidadesVisitadas(r.inicio_cidade, r.fim_cidade);
@@ -416,7 +434,11 @@
       }));
       hoteis = (r.hoteis || []).map((h) => ({ ...newHotel(h.ordem ?? 0), ...h }));
       opcionais = r.opcionais || [];
-      passeios = (r.passeios || []).map((p) => ({ ...newPasseio(p.ordem ?? 0), ...p }));
+      passeios = (r.passeios || []).map((p) => ({
+        ...newPasseio(p.ordem ?? 0),
+        ...p,
+        ingressos: p.ingressos || 'Não incluído'
+      }));
       transportes = (r.transportes || []).map((t) => ({ ...newTransporte(t.ordem ?? 0), ...t }));
       investimentos = (r.investimentos || []).map((i) => ({
         ...newInvestimento(i.ordem ?? 0),
@@ -460,14 +482,33 @@
   }
 
   // ─── Save ──────────────────────────────────────────────────────────────────
+  function cidadePendente() {
+    const campo = document.querySelector<HTMLInputElement>('[data-roteiro-cidade-pendente="true"]');
+    const pendente = [...dias, ...hoteis, ...passeios, ...opcionais].some(
+      (item) => item.cidade_pendente
+    );
+    if (!campo && !pendente) return false;
+    campo?.focus();
+    toast.error('Selecione ou confirme a cidade na lista de sugestões antes de continuar.');
+    return true;
+  }
+
   async function save() {
     if (!nome.trim()) {
       toast.error('Nome obrigatório.');
       return;
     }
+    if (browser && cidadePendente()) return;
+    if (revisaoRoteiroAtiva && typeof revisao !== 'string') {
+      toast.error('Revisão indisponível. Recarregue o roteiro antes de salvar.');
+      return;
+    }
     saving = true;
     try {
-      await apiPost('/api/v1/roteiros/save', {
+      if (revisaoRoteiroAtiva) opcionais = atribuirIdsGruposOpcionais(opcionais);
+      const payload = {
+        ...(roteiroGeograficoAtivo ? { versao_identidade: VERSAO_ROTEIRO_IDENTIDADE } : {}),
+        ...(revisaoRoteiroAtiva ? { revisao } : {}),
         id: roteiroId,
         nome: nome.trim(),
         duracao: duracao ? Number(duracao) : null,
@@ -479,14 +520,34 @@
         mostrar_pagamento_pdf: mostrarPagamentoPdf,
         mostrar_informacoes_pdf: mostrarInformacoesPdf,
         mostrar_rodape_pdf: mostrarRodapePdf,
-        dias: dias.map((d, i) => ({ ...d, ordem: i })),
-        hoteis: hoteis.map((h, i) => ({ ...h, ordem: i })),
-        opcionais: parseRoteiroOpcionais(opcionais),
-        passeios: passeios.map((p, i) => ({ ...p, ordem: i })),
+        dias: dias.map((d, i) => ({
+          ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(d) : d),
+          ordem: i
+        })),
+        hoteis: hoteis.map((h, i) => ({
+          ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(h) : h),
+          ordem: i
+        })),
+        opcionais: parseRoteiroOpcionais(removerPasseiosIncorporados(opcionais, passeios)).map(
+          (item) => (revisaoRoteiroAtiva ? explicitarIdentidadeCidade(item) : item)
+        ),
+        passeios: passeios.map((p, i) => ({
+          ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(p) : p),
+          ordem: i
+        })),
         transportes: transportes.map((t, i) => ({ ...t, ordem: i })),
         investimentos: investimentos.map((inv, i) => ({ ...inv, ordem: i })),
         pagamentos: pagamentos.map((p, i) => ({ ...p, ordem: i }))
-      });
+      };
+      const resultado = await salvarRoteiroComConfirmacao(payload, revisaoRoteiroAtiva);
+      if (!resultado) return;
+      if (revisaoRoteiroAtiva) {
+        if (typeof resultado.revisao !== 'string') {
+          revisao = undefined;
+          throw new Error('Revisão não recebida. Recarregue o roteiro antes de salvar novamente.');
+        }
+        revisao = resultado.revisao;
+      }
       toast.success('Roteiro salvo com sucesso!');
     } catch (err) {
       toast.error(toUserMessage(err, 'Erro ao salvar.'));
@@ -506,6 +567,7 @@
       toast.error('Preencha o nome do roteiro antes de duplicar.');
       return;
     }
+    if (browser && cidadePendente()) return;
 
     if (
       browser &&
@@ -516,7 +578,9 @@
 
     duplicating = true;
     try {
+      if (revisaoRoteiroAtiva) opcionais = atribuirIdsGruposOpcionais(opcionais);
       const payload = await apiPost<{ id?: string }>('/api/v1/roteiros/save', {
+        ...(roteiroGeograficoAtivo ? { versao_identidade: VERSAO_ROTEIRO_IDENTIDADE } : {}),
         nome: buildDuplicateName(nome),
         duracao: duracao ? Number(duracao) : null,
         inicio_cidade: inicioCidade.trim() || null,
@@ -527,10 +591,21 @@
         mostrar_pagamento_pdf: mostrarPagamentoPdf,
         mostrar_informacoes_pdf: mostrarInformacoesPdf,
         mostrar_rodape_pdf: mostrarRodapePdf,
-        dias: dias.map((d, i) => ({ ...d, ordem: i })),
-        hoteis: hoteis.map((h, i) => ({ ...h, ordem: i })),
-        opcionais: parseRoteiroOpcionais(opcionais),
-        passeios: passeios.map((p, i) => ({ ...p, ordem: i })),
+        dias: dias.map((d, i) => ({
+          ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(d) : d),
+          ordem: i
+        })),
+        hoteis: hoteis.map((h, i) => ({
+          ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(h) : h),
+          ordem: i
+        })),
+        opcionais: parseRoteiroOpcionais(removerPasseiosIncorporados(opcionais, passeios)).map(
+          (item) => (revisaoRoteiroAtiva ? explicitarIdentidadeCidade(item) : item)
+        ),
+        passeios: passeios.map((p, i) => ({
+          ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(p) : p),
+          ordem: i
+        })),
         transportes: transportes.map((t, i) => ({ ...t, ordem: i })),
         investimentos: investimentos.map((inv, i) => ({ ...inv, ordem: i })),
         pagamentos: pagamentos.map((p, i) => ({ ...p, ordem: i }))
@@ -579,6 +654,7 @@
     const nextItem: RotDia = {
       percurso: String(dia.percurso || '').trim(),
       cidade: String(dia.cidade || '').trim(),
+      cidade_id: dia.cidade_id ?? null,
       data: String(dia.data || '').trim(),
       descricao: String(dia.descricao || '').trim(),
       ordem: dias.length
@@ -1331,6 +1407,16 @@
             .hotel-preview-table.preview-table td:nth-child(5) { width: 18%; }
             .hotel-preview-table.preview-table th:nth-child(6),
             .hotel-preview-table.preview-table td:nth-child(6) { width: 24%; }
+            .passeio-preview-table.preview-table {
+              table-layout: fixed;
+              width: 100%;
+            }
+            .passeio-preview-table.preview-table th:nth-child(1),
+            .passeio-preview-table.preview-table td:nth-child(1) { width: 20%; }
+            .passeio-preview-table.preview-table th:nth-child(2),
+            .passeio-preview-table.preview-table td:nth-child(2) { width: 60%; }
+            .passeio-preview-table.preview-table th:nth-child(3),
+            .passeio-preview-table.preview-table td:nth-child(3) { width: 20%; }
             .flight-preview-table.preview-table { font-size: 13px; }
             .flight-preview-table.preview-table thead th { font-size: 12px; }
             .flight-preview-table.preview-table tbody td { font-size: 13px; }
@@ -1371,7 +1457,7 @@
             ${buildPreviewSection('Itinerário Detalhado', diasHtml)}
             ${buildPreviewRawSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
             ${buildPreviewRawSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
-            ${buildPreviewSection('Passeios Opcionais — sugestões sem data marcada, não incluídas no valor do roteiro', buildOpcionaisHtml(opcionais, escapePreviewHtml))}
+            ${buildPreviewSection('Passeios Opcionais — sugestões sem data marcada, não incluídas no valor do roteiro', buildOpcionaisHtml(removerPasseiosIncorporados(opcionais, passeios), escapePreviewHtml))}
             ${buildPreviewRawSection('Passagem Aérea', transportesHtml, 'preview-airfare-section')}
             ${buildPreviewRawSection('Investimento', investimentoHtml, 'preview-investimento-section')}
             ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
@@ -1550,7 +1636,8 @@
   <!-- ─── Abas ──────────────────────────────────────────────────────────── -->
   <Tabs
     className="mb-4"
-    bind:activeKey={abaAtiva}
+    activeKey={abaAtiva}
+    onSelect={selecionarAba}
     items={ABAS.map((aba) => ({
       key: aba.id,
       label: aba.label,
@@ -1585,7 +1672,11 @@
 
     <!-- ──────────────────── ABA: PASSEIOS ────────────────────────────────── -->
   {:else if abaAtiva === 'opcionais'}
-    <AbaOpcionais bind:opcionais />
+    <AbaOpcionais
+      bind:opcionais
+      cidadesItinerario={dias.map((dia) => ({ cidade: dia.cidade, cidade_id: dia.cidade_id }))}
+      passeiosIncorporados={passeios}
+    />
   {:else if abaAtiva === 'passeios'}
     <AbaPasseios
       {PASSEIO_TIPO_OPTIONS}

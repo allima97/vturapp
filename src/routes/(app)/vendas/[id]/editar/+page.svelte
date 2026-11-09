@@ -8,6 +8,8 @@
   import EtapaRecibos from './_components/EtapaRecibos.svelte';
   import EtapaResumo from './_components/EtapaResumo.svelte';
   import EtapasNavegacao from './_components/EtapasNavegacao.svelte';
+  import { vendasGeograficasAtivas } from '$lib/config/destinosGeograficos';
+  import { criarEstadoCidadeGeografica } from '$lib/features/vendas/cidadeGeograficaEstado';
   import { toast } from '$lib/stores/ui';
   import { toUserMessage } from '$lib/utils/errors';
   import { todayISODateLocal } from '$lib/date';
@@ -190,6 +192,7 @@
   let ensuringProdutoId = '';
   let errors: Record<string, string> = {};
   let lastDestinoCidadeId = '';
+  let estadoCidadeVenda = criarEstadoCidadeGeografica();
 
   let clientes: Cliente[] = [];
   let cidades: Option[] = [];
@@ -231,6 +234,7 @@
   function createRecibo(principal = false) {
     return {
       principal,
+      estadoCidade: criarEstadoCidadeGeografica(),
       usar_cidade_padrao: true,
       destino_cidade_id: '',
       tipo_produto_id: '',
@@ -387,6 +391,7 @@
         );
         return {
           principal: index === 0,
+          estadoCidade: criarEstadoCidadeGeografica(),
           usar_cidade_padrao:
             !cidadeReciboId || String(cidadeReciboId) === String(sale?.destino_cidade_id || ''),
           destino_cidade_id: cidadeReciboId,
@@ -674,6 +679,7 @@
   function toggleReciboCidadePadrao(index: number, checked: boolean) {
     const recibo = recibos[index];
     recibo.usar_cidade_padrao = checked;
+    if (checked && vendasGeograficasAtivas) recibo.estadoCidade = criarEstadoCidadeGeografica();
     if (!checked && !recibo.destino_cidade_id) {
       recibo.destino_cidade_id = venda.destino_cidade_id || '';
     }
@@ -835,6 +841,8 @@
     errors = {};
 
     if (step >= 0) {
+      if (vendasGeograficasAtivas && estadoCidadeVenda.pendente)
+        errors.destino_cidade_id = 'Selecione uma cidade da lista ou limpe o campo.';
       if (!venda.vendedor_id) errors.vendedor_id = 'Informe o vendedor.';
       if (!venda.cliente_id) errors.cliente_id = 'Informe o cliente.';
       const possuiProdutoLocalPadrao = recibos.some((recibo) => {
@@ -860,6 +868,8 @@
         if (!recibo.tipo_produto_id) errors[`recibo_tipo_${index}`] = 'Obrigatório';
         if (!recibo.produto_id) errors[`recibo_produto_${index}`] = 'Obrigatório';
         if (!cidadeReciboId) errors[`recibo_cidade_${index}`] = 'Selecione a cidade.';
+        if (vendasGeograficasAtivas && !recibo.usar_cidade_padrao && recibo.estadoCidade.pendente)
+          errors[`recibo_cidade_${index}`] = 'Selecione uma cidade da lista ou limpe o campo.';
         if (!recibo.numero_recibo) errors[`recibo_numero_${index}`] = 'Obrigatório';
         if (!recibo.tipo_pacote) errors[`recibo_pacote_${index}`] = 'Obrigatório';
         if (!recibo.data_inicio) errors[`recibo_inicio_${index}`] = 'Obrigatório';
@@ -941,6 +951,7 @@
       const payload = {
         venda: vendaPayload,
         recibos: recibos.map((item) => {
+          const { estadoCidade: _estadoCidade, ...dadosRecibo } = item;
           const produtoVirtualValeViagem =
             isValeViagemTipo(item.tipo_produto_id) &&
             String(item.produto_id) === String(item.tipo_produto_id);
@@ -950,7 +961,7 @@
           const cidadeReciboId = getReciboCidadeId(item);
 
           return {
-            ...item,
+            ...dadosRecibo,
             produto_id: tipoProdutoId,
             destino_cidade_id: cidadeReciboId || null,
             cidade_nome: getCidadeById(cidadeReciboId)?.nome || null,
@@ -1042,6 +1053,7 @@
         {cidades}
         {mergeClientes}
         {mergeCidades}
+        {estadoCidadeVenda}
       />
     {/if}
 

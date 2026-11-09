@@ -3,7 +3,7 @@
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import { type RotDia, addItem, moveDown, moveUp, newDia, removeItem } from './tipos';
-  import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
+  import CidadeRoteiro from './CidadeRoteiro.svelte';
   import { ChevronDown, ChevronUp, FileText, Plus, Trash2 } from '$lib/icons';
 
   let {
@@ -67,14 +67,44 @@
     </p>
   {:else}
     <div class="space-y-2">
-      {#each dias as dia, index}
+      {#each dias as dia, index (dia)}
         <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <div class="mb-2 flex items-center justify-between">
-            <span
-              class="bg-clientes-100 text-clientes-700 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold"
-            >
-              {index + 1}
-            </span>
+          <div class="flex items-start justify-between gap-2">
+            <details class="min-w-0 flex-1">
+              <summary
+                class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold"
+              >
+                <span class="flex min-w-0 items-center gap-2">
+                  <span
+                    class="bg-clientes-100 text-clientes-700 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                  >
+                    {index + 1}
+                  </span>
+                  <span class="truncate"
+                    >{String(dia.percurso ?? '').trim() || `Dia ${index + 1}`}</span
+                  >
+                </span>
+                <span aria-hidden="true" class="text-lg">
+                  <span class="indicador-mais">+</span><span class="indicador-menos">−</span>
+                </span>
+              </summary>
+              <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <CidadeRoteiro bind:destino={dias[index]} fieldId={`dia-cidade-${index}`} />
+                <FieldInput
+                  label="Percurso"
+                  bind:value={dia.percurso}
+                  placeholder="Ex: São Paulo → Lisboa"
+                  class_name="w-full"
+                />
+                <FieldInput label="Data" type="date" bind:value={dia.data} class_name="w-full" />
+                <FieldInput
+                  label="Descrição"
+                  bind:value={dia.descricao}
+                  placeholder="Atividades do dia"
+                  class_name="w-full"
+                />
+              </div>
+            </details>
             <div class="flex items-center gap-1">
               <Button
                 type="button"
@@ -119,28 +149,6 @@
               </Button>
             </div>
           </div>
-          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <CidadeDestinoAutocomplete
-              label="Cidade"
-              bind:value={dia.cidade}
-              placeholder="Cidade"
-              class_name="w-full"
-              endpoint="/api/v1/orcamentos/cidades-busca"
-            />
-            <FieldInput
-              label="Percurso"
-              bind:value={dia.percurso}
-              placeholder="Ex: São Paulo → Lisboa"
-              class_name="w-full"
-            />
-            <FieldInput label="Data" type="date" bind:value={dia.data} class_name="w-full" />
-            <FieldInput
-              label="Descrição"
-              bind:value={dia.descricao}
-              placeholder="Atividades do dia"
-              class_name="w-full"
-            />
-          </div>
         </div>
       {/each}
     </div>
@@ -159,3 +167,13 @@
     </div>
   {/if}
 </Card>
+
+<style>
+  details > summary .indicador-menos,
+  details[open] > summary .indicador-mais {
+    display: none;
+  }
+  details[open] > summary .indicador-menos {
+    display: inline;
+  }
+</style>

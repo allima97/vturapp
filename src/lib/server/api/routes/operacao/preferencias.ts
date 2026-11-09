@@ -119,6 +119,9 @@ export async function handleOperacaoPreferenciasPost(event: RequestEvent) {
     const cidadeId = String(cidade_id || '').trim();
     ensurePreferenciasAccess(scope, isUuid(idValue) ? 3 : 2);
 
+    if (!scope.companyId && !scope.usoIndividual && !scope.isAdmin)
+      return json({ error: 'Empresa inválida.' }, { status: 400, headers: NO_STORE_HEADERS });
+
     if (!String(nome || '').trim())
       return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
 

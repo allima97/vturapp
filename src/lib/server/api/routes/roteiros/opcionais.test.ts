@@ -1,6 +1,8 @@
 import { beforeEach, expect, it, vi } from 'vitest';
 import type { RequestEvent } from '@sveltejs/kit';
 
+const validarCidades = vi.hoisted(() => vi.fn(async () => null as string | null));
+vi.mock('./cidades-busca', () => ({ validarCidadesRoteiro: validarCidades }));
 const db = vi.hoisted(() => {
   const query: Record<string, any> = {};
   for (const method of ['select', 'eq', 'insert', 'update', 'single', 'maybeSingle'])
@@ -28,10 +30,14 @@ function save(body: Record<string, unknown>) {
       method: 'POST',
       body: JSON.stringify({ nome: 'Europa', ...body }),
       headers: { 'content-type': 'application/json' }
-    })
+    }),
+    platform: { env: { DB: {} } }
   } as RequestEvent);
 }
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  validarCidades.mockResolvedValue(null);
+});
 const opcionais = [
   { cidade: 'Paris', passeios: [{ nome: 'Sena', descricao: 'Cruzeiro noturno' }] }
 ];
@@ -56,5 +62,12 @@ it('cria roteiro com opcionais vazio quando o cliente não envia o campo', async
 });
 it('rejeita opcionais inválidos antes de qualquer gravação', async () => {
   expect((await save({ opcionais: [{ cidade: '', passeios: [] }] })).status).toBe(400);
+  expect(db.from).not.toHaveBeenCalled();
+});
+it('rejeita cidades fora do cadastro antes de qualquer gravação', async () => {
+  validarCidades.mockResolvedValue('Selecione uma cidade do cadastro.');
+  const response = await save({ dias: [{ cidade: 'Roma' }] });
+  expect(response.status).toBe(400);
+  expect(await response.json()).toEqual({ error: 'Selecione uma cidade do cadastro.' });
   expect(db.from).not.toHaveBeenCalled();
 });

@@ -8,6 +8,9 @@
   import Button from '$lib/components/ui/Button.svelte';
   import Dialog from '$lib/components/ui/Dialog.svelte';
   import { FieldInput, FieldSelect, LoadingState } from '$lib/components/ui';
+  import CidadeGeograficaAutocomplete from '$lib/components/vendas/CidadeGeograficaAutocomplete.svelte';
+  import { vendasGeograficasAtivas } from '$lib/config/destinosGeograficos';
+  import { criarEstadoCidadeGeografica } from '$lib/features/vendas/cidadeGeograficaEstado';
   import KPICard from '$lib/components/kpis/KPICard.svelte';
   import {
     ArrowLeft,
@@ -203,6 +206,7 @@
   let editingReciboId: string | null = null;
   let isEditingReciboDetails = false;
   let savingRecibo = false;
+  let estadoCidadeRecibo = criarEstadoCidadeGeografica();
   let reciboForm = {
     numero_recibo: '',
     produto_id: '',
@@ -280,6 +284,7 @@
 
   function startEditRecibo(recibo: VendaReciboResumo) {
     const reciboId = recibo.id ? String(recibo.id) : null;
+    estadoCidadeRecibo = criarEstadoCidadeGeografica();
     ensureReciboFormOptions(recibo);
     editingReciboId = reciboId;
     isEditingReciboDetails = false;
@@ -303,6 +308,7 @@
     showEditReciboDialog = false;
     editingReciboId = null;
     isEditingReciboDetails = false;
+    estadoCidadeRecibo = criarEstadoCidadeGeografica();
     reciboForm = {
       numero_recibo: '',
       produto_id: '',
@@ -326,6 +332,10 @@
     }
     if (!produtoId) {
       toast.error('Produto e obrigatorio.');
+      return;
+    }
+    if (vendasGeograficasAtivas && estadoCidadeRecibo.pendente) {
+      toast.error('Selecione uma cidade da lista ou limpe o campo.');
       return;
     }
     savingRecibo = true;
@@ -1248,13 +1258,29 @@
             options={produtoSelectOptions}
             disabled={!canEdit || !isEditingReciboDetails || savingRecibo}
           />
-          <FieldSelect
-            id="recibo-cidade"
-            label="Cidade"
-            bind:value={reciboForm.destino_cidade_id}
-            options={cidadeSelectOptions}
-            disabled={!canEdit || !isEditingReciboDetails || savingRecibo}
-          />
+          {#if vendasGeograficasAtivas}
+            <CidadeGeograficaAutocomplete
+              id="recibo-cidade"
+              label="Cidade"
+              bind:value={reciboForm.destino_cidade_id}
+              cities={cidadesBase}
+              estado={estadoCidadeRecibo}
+              disabled={!canEdit || !isEditingReciboDetails || savingRecibo}
+              on:loaded={(event) => {
+                for (const cidade of event.detail) {
+                  cidadesBase = [...cidadesBase.filter((item) => item.id !== cidade.id), cidade];
+                }
+              }}
+            />
+          {:else}
+            <FieldSelect
+              id="recibo-cidade"
+              label="Cidade"
+              bind:value={reciboForm.destino_cidade_id}
+              options={cidadeSelectOptions}
+              disabled={!canEdit || !isEditingReciboDetails || savingRecibo}
+            />
+          {/if}
           <FieldInput
             id="recibo-reserva"
             label="Reserva"

@@ -8,6 +8,10 @@ import type { DataClient, DataContext, QueryError, QueryResult } from './types';
 import { runRpc } from './rpc';
 import { createAuthApi } from './authApi';
 import { createStorageApi } from './storageApi';
+import {
+  fornecedoresGeograficosAtivos,
+  revisaoRoteiroAtiva
+} from '$lib/config/destinosGeograficos';
 
 type ColumnMeta = { kind: string; nullable: boolean };
 type TableMeta = { columns: Record<string, ColumnMeta>; primaryKey: string[] };
@@ -19,7 +23,38 @@ type Fk = {
   refColumn: string;
 };
 
-const tables = meta.tables as Record<string, TableMeta>;
+const tables: Record<string, TableMeta> = { ...meta.tables };
+for (const name of ['roteiro_dia', 'roteiro_hotel', 'roteiro_passeio']) {
+  tables[name] = {
+    ...tables[name],
+    columns: { ...tables[name].columns, cidade_id: { kind: 'text', nullable: true } }
+  };
+}
+tables.cidades = {
+  ...tables.cidades,
+  columns: {
+    ...tables.cidades.columns,
+    destino_geografico_id: { kind: 'text', nullable: true }
+  }
+};
+if (revisaoRoteiroAtiva) {
+  tables.roteiro_personalizado = {
+    ...tables.roteiro_personalizado,
+    columns: {
+      ...tables.roteiro_personalizado.columns,
+      revisao: { kind: 'text', nullable: false }
+    }
+  };
+}
+if (fornecedoresGeograficosAtivos) {
+  tables.fornecedores = {
+    ...tables.fornecedores,
+    columns: {
+      ...tables.fornecedores.columns,
+      cidade_geografica_id: { kind: 'text', nullable: true }
+    }
+  };
+}
 const fks = meta.fks as Fk[];
 
 type Filter =
@@ -415,7 +450,7 @@ function matchEmbedded(row: Record<string, unknown>, filter: Filter) {
   return true;
 }
 
-function prepareWrite(
+export function prepareWrite(
   table: string,
   value: Record<string, unknown>,
   mode: 'insert' | 'update' = 'insert'

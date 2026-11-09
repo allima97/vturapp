@@ -20,6 +20,9 @@
   import { toUserMessage } from '$lib/utils/errors';
   import { apiDelete, apiGet, apiPatch, apiPost, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
+  import CidadeGeograficaAutocomplete from '$lib/components/vendas/CidadeGeograficaAutocomplete.svelte';
+  import { produtosGeograficosAtivos } from '$lib/config/destinosGeograficos';
+  import { criarEstadoCidadeGeografica } from '$lib/features/vendas/cidadeGeograficaEstado';
 
   export let mode: 'produtos' | 'destinos' = 'produtos';
   export let produtoId: string | null = null;
@@ -128,6 +131,7 @@
   let atracoesSugestoes: string[] = [];
   let melhoresEpocasSugestoes: string[] = [];
   let form = { ...initialForm };
+  let estadoCidade = criarEstadoCidadeGeografica();
   let tarifas: Tarifa[] = [];
   const loadGuard = createLoadGuard();
 
@@ -313,6 +317,8 @@
     if (!form.nome.trim()) return toast.error('Nome é obrigatório.');
     if (!form.destino.trim()) return toast.error('Destino é obrigatório.');
     if (!form.tipo_produto) return toast.error('Tipo de produto é obrigatório.');
+    if (produtosGeograficosAtivos && !form.todas_as_cidades && estadoCidade.pendente)
+      return toast.error('Selecione uma cidade da lista ou limpe o campo.');
     if (!form.todas_as_cidades && !form.cidade_id)
       return toast.error('Cidade é obrigatória para produtos por cidade.');
 
@@ -414,10 +420,12 @@
             : 'Mantenha desligado para vincular o cadastro a uma cidade específica.'}
           color="financeiro"
           class_name="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
-          on:change={() => {
+          on:change={(event) => {
+            form.todas_as_cidades = (event.target as HTMLInputElement).checked;
             if (form.todas_as_cidades) {
               form.cidade_id = '';
               form.destino = 'Global';
+              estadoCidade = criarEstadoCidadeGeografica();
             }
           }}
         />
@@ -430,18 +438,35 @@
           placeholder="Ex: Passeio em Paris, Pacote Disney, Hotel em Gramado"
           class_name="md:col-span-2 w-full"
         />
-        <FieldSelect
-          id="produto-cidade"
-          label="Cidade"
-          bind:value={form.cidade_id}
-          options={[
-            { value: '', label: 'Selecione uma opção' },
-            ...cidades.map((c) => ({ value: c.id, label: cidadeLabel(c.id) }))
-          ]}
-          placeholder=""
-          disabled={form.todas_as_cidades}
-          class_name="w-full"
-        />
+        {#if produtosGeograficosAtivos && !form.todas_as_cidades}
+          <CidadeGeograficaAutocomplete
+            id="produto-cidade"
+            bind:value={form.cidade_id}
+            cities={cidades}
+            estado={estadoCidade}
+            urlBusca="/api/v1/produtos/cidades-geograficas"
+            urlConsulta="/api/v1/produtos/cidades-geograficas"
+            on:loaded={(event) => {
+              const novas = event.detail.filter(
+                (cidade) => !cidades.some((item) => item.id === cidade.id)
+              );
+              cidades = [...cidades, ...novas];
+            }}
+          />
+        {:else}
+          <FieldSelect
+            id="produto-cidade"
+            label="Cidade"
+            bind:value={form.cidade_id}
+            options={[
+              { value: '', label: 'Selecione uma opção' },
+              ...cidades.map((c) => ({ value: c.id, label: cidadeLabel(c.id) }))
+            ]}
+            placeholder=""
+            disabled={form.todas_as_cidades}
+            class_name="w-full"
+          />
+        {/if}
 
         <FieldDatalistInput
           id="produto-fornecedor"

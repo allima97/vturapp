@@ -259,6 +259,12 @@
         { key: 'cadastros_paises', name: 'Países', href: '/cadastros/paises', icon: Globe },
         { key: 'cadastros_estados', name: 'Estados', href: '/cadastros/estados', icon: MapPinned },
         { key: 'cadastros_cidades', name: 'Cidades', href: '/cadastros/cidades', icon: MapPin },
+        {
+          key: 'cadastros_opcionais',
+          name: 'Passeios Opcionais',
+          href: '/cadastros/opcionais',
+          icon: MapIcon
+        },
         { key: 'cadastros_destinos', name: 'Destinos', href: '/cadastros/destinos', icon: MapIcon },
         { key: 'cadastros_lote', name: 'Lote', href: '/cadastros/lote', icon: Package },
         {

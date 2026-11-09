@@ -295,7 +295,7 @@ function parsePasseioBlock(
     data_inicio: dates.data_inicio,
     data_fim: dates.data_fim,
     tipo: isSeguro ? 'Seguro Viagem' : 'Serviço',
-    ingressos: '',
+    ingressos: 'Não incluído',
     qtd_adultos,
     qtd_criancas,
     valor_original,

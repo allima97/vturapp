@@ -17,11 +17,13 @@
 
   export let items: TabItem[] = [];
   export let activeKey = '';
+  export let onSelect: ((key: string) => void) | undefined = undefined;
   export let className = '';
 
   function selectTab(key: string, disabled?: boolean) {
     if (disabled) return;
     activeKey = key;
+    onSelect?.(key);
   }
 
   let listEl: HTMLDivElement;

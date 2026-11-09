@@ -55,6 +55,8 @@ function honoModuleFor(file) {
   // Convenção dos geradores (migrate_*.py): routes/<dominio>/<segmentos-sem-[]-unidos-por-hifen>.ts
   // ('root' para a raiz do domínio). Mantém o formato antigo (pastas aninhadas) como alternativa.
   const flat = rest.length ? rest.map((s) => s.replace(/^\[|\]$/g, '')).join('-') : 'root';
+  if (dom === 'produtos' && flat === 'cidades-geograficas')
+    return join(routesDir, 'vendas', 'cidades-geograficas.ts');
   const candidates = dom
     ? [
         join(routesDir, dom, `${flat}.ts`),
@@ -100,6 +102,17 @@ function analyze(file) {
     tables[table] ??= new Set();
     tables[table].add(op);
   }
+  for (const m of src.matchAll(/\.prepare\(\s*(['"`])([\s\S]*?)\1\s*\)/g)) {
+    const sql = m[2];
+    const match = sql.match(
+      /^\s*(SELECT\b[\s\S]*?\bFROM|INSERT\s+INTO|UPDATE|DELETE\s+FROM)\s+["`]?([a-zA-Z0-9_]+)/i
+    );
+    if (!match) continue;
+    const table = match[2];
+    const operation = match[1].split(/\s+/)[0].toLowerCase();
+    tables[table] ??= new Set();
+    tables[table].add(operation);
+  }
   const tablesOut = Object.fromEntries(
     Object.entries(tables)
       .sort(([a], [b]) => a.localeCompare(b))
@@ -139,7 +152,7 @@ function analyze(file) {
       requireAuthenticatedUser: has(
         /requireAuthenticatedUser\s*\(|\brequire\w+Scope\s*\(|locals\.safeGetSession\s*\(/
       ),
-      resolveUserScope: has(/resolveUserScope\s*\(/),
+      resolveUserScope: has(/resolveUserScope\s*\(|\brequire\w+Scope\s*\(/),
       roles,
       rejectCrossOrigin: has(/rejectCrossOriginRequest\s*\(/),
       bodyLimit: has(/read(Json|Text)BodyLimited\s*\(/),

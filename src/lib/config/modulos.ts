@@ -159,6 +159,7 @@ export const ROTAS_MODULOS: Record<string, string> = {
   '/cadastros/paises': 'Paises',
   '/cadastros/estados': 'Subdivisoes',
   '/cadastros/cidades': 'Cidades',
+  '/cadastros/opcionais': 'Cadastros',
   '/cadastros/destinos': 'Destinos',
   '/cadastros/fornecedores': 'Fornecedores',
 

@@ -63,6 +63,10 @@ npm run d1:migrate:prod
 wrangler deploy --env production
 ```
 
+A migration `0017_preferencias_empresa_opcional.sql` deve ser aplicada antes do Worker
+para permitir preferências pessoais de usuários individuais ou administradores sem
+empresa. Os compartilhamentos continuam exigindo empresa.
+
 ### Primeiro administrador
 
 O banco novo não tem usuário. O comando abaixo cria o administrador global `admin@vtur.com.br` (conta Better Auth, perfil ADMIN, permissões e empresa da plataforma). Ele recusa a execução se já existir um ADMIN global.

@@ -785,6 +785,7 @@
         { key: 'cadastros_paises', label: 'Países', href: '/cadastros/paises' },
         { key: 'cadastros_estados', label: 'Estados', href: '/cadastros/estados' },
         { key: 'cadastros_cidades', label: 'Cidades', href: '/cadastros/cidades' },
+        { key: 'cadastros_opcionais', label: 'Passeios Opcionais', href: '/cadastros/opcionais' },
         { key: 'cadastros_destinos', label: 'Destinos', href: '/cadastros/destinos' },
         { key: 'cadastros_lote', label: 'Lote', href: '/cadastros/lote' },
         { key: 'cadastros_fornecedores', label: 'Fornecedores', href: '/cadastros/fornecedores' }

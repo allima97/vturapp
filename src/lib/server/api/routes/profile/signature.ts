@@ -93,14 +93,21 @@ export const handleProfileSignaturePatch = async (event: RequestEvent) => {
       .maybeSingle();
     if (userErr) throw userErr;
 
-    const { error } = await client.from('quote_print_settings').upsert(
-      {
-        owner_user_id: user.id,
-        company_id: userRow?.company_id || null,
-        consultor_nome: signature
-      },
-      { onConflict: 'owner_user_id' }
-    );
+    const { data: existing, error: settingsError } = await client
+      .from('quote_print_settings')
+      .select('id')
+      .eq('owner_user_id', user.id)
+      .maybeSingle();
+    if (settingsError) throw settingsError;
+
+    const payload = {
+      owner_user_id: user.id,
+      company_id: userRow?.company_id || null,
+      consultor_nome: signature
+    };
+    const { error } = existing?.id
+      ? await client.from('quote_print_settings').update(payload).eq('id', existing.id)
+      : await client.from('quote_print_settings').insert(payload);
     if (error) throw error;
 
     invalidateQuoteReadModels({

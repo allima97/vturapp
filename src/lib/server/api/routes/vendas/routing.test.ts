@@ -27,6 +27,9 @@ vi.mock('./cancel', () => ({ handleVendasCancelPost: spy('handleVendasCancelPost
 vi.mock('./cidades-busca', () => ({
   handleVendasCidadesBuscaGet: spy('handleVendasCidadesBuscaGet')
 }));
+vi.mock('./cidades-geograficas', () => ({
+  handleVendasCidadesGeograficasGet: spy('handleVendasCidadesGeograficasGet')
+}));
 vi.mock('./complementares', () => ({
   handleVendasComplementaresGet: spy('handleVendasComplementaresGet')
 }));
@@ -99,6 +102,7 @@ describe('rotas /api/v1/vendas no Hono', () => {
     ['POST', '/api/v1/vendas/cadastro-save', 'handleVendasCadastroSavePost'],
     ['POST', '/api/v1/vendas/cancel', 'handleVendasCancelPost'],
     ['GET', '/api/v1/vendas/cidades-busca', 'handleVendasCidadesBuscaGet'],
+    ['GET', '/api/v1/vendas/cidades-geograficas', 'handleVendasCidadesGeograficasGet'],
     ['GET', '/api/v1/vendas/complementares', 'handleVendasComplementaresGet'],
     ['POST', '/api/v1/vendas/create', 'handleVendasCreatePost'],
     ['GET', '/api/v1/vendas/gestor-equipe', 'handleVendasGestorEquipeGet'],

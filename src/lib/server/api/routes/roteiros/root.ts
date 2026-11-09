@@ -1,6 +1,10 @@
 // Migrado para Hono de src/routes/api/v1/roteiros/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import { json } from '@sveltejs/kit';
+import { revisaoRoteiroAtiva, roteiroGeograficoAtivo } from '$lib/config/destinosGeograficos';
+import { VERSAO_ROTEIRO_IDENTIDADE } from '$lib/roteiroProtocolo';
+import { decodificarRevisaoExclusao } from '$lib/roteiroRevisaoExclusao';
+import { validarLimitesRoteiro } from '$lib/roteiroLimites';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import {
   ensureModuloAccess,
@@ -14,6 +18,13 @@ import {
 } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import type { RequestEvent } from '@sveltejs/kit';
+import {
+  prepararCidadesGeograficasRoteiro,
+  validarCidadesRoteiro,
+  validarIdentidadesExplicitas
+} from './cidades-busca';
+import { salvarRoteiroSimplificadoAtomico } from './salvar-simplificado-atomico';
+import { SalvamentoRoteiroAtomico } from './salvar-completo-atomico';
 
 const ROTEIRO_SUGESTAO_SELECT = 'id, company_id, tipo, valor, uso_count, created_at, updated_at';
 const MAX_ROTEIRO_BODY_BYTES = 512 * 1024;
@@ -41,6 +52,7 @@ type RoteiroSugestaoRow = {
 
 type RoteiroDiaDraft = {
   cidade?: unknown;
+  cidade_id?: unknown;
   data?: unknown;
   descricao?: unknown;
 };
@@ -87,7 +99,9 @@ export async function handleRoteirosGet(event: RequestEvent) {
     const { data, error: queryError } = await applyRoteiroScope(
       client
         .from('roteiro_personalizado')
-        .select('id, nome, duracao, inicio_cidade, fim_cidade, created_at, updated_at')
+        .select(
+          `id, nome, duracao, inicio_cidade, fim_cidade, created_at, updated_at${revisaoRoteiroAtiva ? ', revisao' : ''}`
+        )
         .order('updated_at', { ascending: false })
         .limit(200),
       scope
@@ -119,20 +133,142 @@ export async function handleRoteirosPost(event: RequestEvent) {
       bodyResult.data && typeof bodyResult.data === 'object'
         ? (bodyResult.data as Record<string, unknown>)
         : {};
-    const { id, nome, duracao, inicio_cidade, fim_cidade, dias, itinerario_config } = body;
+    if (roteiroGeograficoAtivo && body.versao_identidade !== VERSAO_ROTEIRO_IDENTIDADE)
+      return json(
+        { error: 'Esta versão do editor está desatualizada. Recarregue a página antes de salvar.' },
+        { status: 409, headers: NO_STORE_HEADERS }
+      );
+    const { id, nome, duracao, inicio_cidade, fim_cidade, itinerario_config } = body;
+    let dias = body.dias;
     const roteiroIdFromBody = typeof id === 'string' ? id : null;
 
+    if (revisaoRoteiroAtiva) {
+      const limiteErro = validarLimitesRoteiro({ dias });
+      if (limiteErro)
+        return json({ error: limiteErro }, { status: 422, headers: NO_STORE_HEADERS });
+      const identidadeErro = validarIdentidadesExplicitas({ dias });
+      if (identidadeErro)
+        return json({ error: identidadeErro }, { status: 409, headers: NO_STORE_HEADERS });
+    }
     if (!String(nome || '').trim()) {
       return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
     }
 
+    if (Array.isArray(dias)) {
+      const db = event.platform?.env?.DB;
+      if (!db) throw new Error('Banco D1 indisponível para validar as cidades.');
+      if (roteiroGeograficoAtivo) {
+        const resultado = await prepararCidadesGeograficasRoteiro(db, event.platform?.env?.GEO_DB, {
+          dias
+        });
+        if (!resultado.ok)
+          return json(
+            { error: resultado.error },
+            { status: resultado.status, headers: NO_STORE_HEADERS }
+          );
+        dias = resultado.body.dias;
+      } else {
+        const erroCidade = await validarCidadesRoteiro(db, { dias });
+        if (erroCidade)
+          return json({ error: erroCidade }, { status: 400, headers: NO_STORE_HEADERS });
+      }
+    }
+
     // Buscar company_id do usuário
-    const { data: userProfile } = await dados
+    const { data: userProfile, error: userProfileError } = await dados
       .from('users')
       .select('company_id')
       .eq('id', user.id)
       .maybeSingle();
+    if (userProfileError) throw userProfileError;
     const companyId = (userProfile as UserCompanyRow | null)?.company_id || null;
+
+    if (revisaoRoteiroAtiva) {
+      if (!roteiroGeograficoAtivo)
+        throw new Error('Controle de revisão requer o roteiro geográfico.');
+      const db = event.platform?.env?.DB;
+      if (!db) throw new Error('Banco D1 indisponível para salvar o roteiro.');
+      if (roteiroIdFromBody && !isUuid(roteiroIdFromBody))
+        return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+      if (roteiroIdFromBody && typeof body.revisao !== 'string')
+        return json(
+          { error: 'Revisão ausente. Recarregue o roteiro antes de salvar.' },
+          { status: 409, headers: NO_STORE_HEADERS }
+        );
+      const roteiroId = roteiroIdFromBody || crypto.randomUUID();
+      const atomico = new SalvamentoRoteiroAtomico(
+        db,
+        roteiroId,
+        { userId: user.id },
+        roteiroIdFromBody ? String(body.revisao) : '',
+        { confirmadas: body.identidades_removidas_confirmadas }
+      );
+      const payload = {
+        nome: String(nome).trim(),
+        duracao: Number(duracao || 0) || null,
+        inicio_cidade: String(inicio_cidade || '').trim() || null,
+        fim_cidade: String(fim_cidade || '').trim() || null,
+        ...(roteiroIdFromBody ? {} : { created_by: user.id, company_id: companyId, opcionais: [] })
+      };
+      atomico.principal(payload, !roteiroIdFromBody);
+      if (Array.isArray(dias) && dias.length > 0) {
+        atomico.excluir('roteiro_dia');
+        atomico.inserir(
+          'roteiro_dia',
+          dias.map((dia, index) => {
+            const day = isRecord(dia) ? dia : {};
+            return {
+              created_by: user.id,
+              company_id: companyId,
+              ordem: index + 1,
+              cidade: String(day.cidade || '').trim(),
+              ...(typeof day.cidade_id === 'string' ? { cidade_id: day.cidade_id } : {}),
+              data: typeof day.data === 'string' ? day.data : null,
+              descricao: String(day.descricao || '').trim()
+            };
+          })
+        );
+      }
+      const resultado = await atomico.executar();
+      if (resultado.identidadesRemovidas)
+        return json(
+          {
+            error: 'Confirme a remoção dos vínculos geográficos antes de salvar.',
+            identidades_removidas: resultado.identidadesRemovidas
+          },
+          { status: 409, headers: NO_STORE_HEADERS }
+        );
+      if (!resultado.atualizado)
+        return json(
+          { error: 'Roteiro alterado ou indisponível. Recarregue antes de salvar.' },
+          { status: 409, headers: NO_STORE_HEADERS }
+        );
+      return json(
+        { ok: true, id: roteiroId, revisao: resultado.revisao },
+        { headers: NO_STORE_HEADERS }
+      );
+    }
+
+    if (roteiroGeograficoAtivo && Array.isArray(dias) && dias.length > 0) {
+      const db = event.platform?.env?.DB;
+      if (!db) throw new Error('Banco D1 indisponível para salvar o roteiro.');
+      const roteiroId = await salvarRoteiroSimplificadoAtomico(db, {
+        id: roteiroIdFromBody && isUuid(roteiroIdFromBody) ? roteiroIdFromBody : null,
+        userId: user.id,
+        companyId,
+        nome: String(nome).trim(),
+        duracao,
+        inicioCidade: inicio_cidade,
+        fimCidade: fim_cidade,
+        dias
+      });
+      if (!roteiroId)
+        return json(
+          { error: 'Roteiro não encontrado.' },
+          { status: 404, headers: NO_STORE_HEADERS }
+        );
+      return json({ ok: true, id: roteiroId }, { headers: NO_STORE_HEADERS });
+    }
 
     let roteiroId: string;
 
@@ -207,7 +343,11 @@ export async function handleRoteirosPost(event: RequestEvent) {
 
     // Salva dias se fornecidos
     if (Array.isArray(dias) && dias.length > 0) {
-      await dados.from('roteiro_dia').delete().eq('roteiro_id', roteiroId);
+      const { error: deleteError } = await dados
+        .from('roteiro_dia')
+        .delete()
+        .eq('roteiro_id', roteiroId);
+      if (deleteError) throw deleteError;
 
       const diasRows = dias.map((dia, index: number) => {
         const day = isRecord(dia) ? (dia as RoteiroDiaDraft) : {};
@@ -217,6 +357,7 @@ export async function handleRoteirosPost(event: RequestEvent) {
           company_id: companyId,
           ordem: index + 1,
           cidade: String(day.cidade || '').trim(),
+          ...(typeof day.cidade_id === 'string' ? { cidade_id: day.cidade_id } : {}),
           data: typeof day.data === 'string' ? day.data : null,
           descricao: String(day.descricao || '').trim() || null
         };
@@ -250,14 +391,22 @@ export async function handleRoteirosDelete(event: RequestEvent) {
     if (!isUuid(id))
       return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
-    // RLS garante que só o dono pode excluir
-    const { error: deleteError } = await dados
-      .from('roteiro_personalizado')
-      .delete()
-      .eq('id', id)
-      .eq('created_by', user.id);
+    const revisao = decodificarRevisaoExclusao(event.url.searchParams.get('revisao'));
+    if (revisaoRoteiroAtiva && revisao === null)
+      return json(
+        { error: 'Revisão ausente. Recarregue o roteiro antes de excluir.' },
+        { status: 409, headers: NO_STORE_HEADERS }
+      );
+    let query = dados.from('roteiro_personalizado').delete().eq('id', id).eq('created_by', user.id);
+    if (revisaoRoteiroAtiva) query = query.eq('revisao', revisao);
+    const { data: excluido, error: deleteError } = await query.select('id').maybeSingle();
 
     if (deleteError) throw deleteError;
+    if (revisaoRoteiroAtiva && !excluido)
+      return json(
+        { error: 'Roteiro alterado ou indisponível. Recarregue antes de excluir.' },
+        { status: 409, headers: NO_STORE_HEADERS }
+      );
 
     return json({ ok: true }, { headers: NO_STORE_HEADERS });
   } catch (err) {

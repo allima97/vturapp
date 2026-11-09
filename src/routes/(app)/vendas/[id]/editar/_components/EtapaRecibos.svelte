@@ -1,6 +1,8 @@
 <script lang="ts">
   import { Button, FieldCheckbox, FieldInput, FieldSelect, FormPanel } from '$lib/components/ui';
   import CidadeAutocomplete from '$lib/components/vendas/CidadeAutocomplete.svelte';
+  import CidadeGeograficaAutocomplete from '$lib/components/vendas/CidadeGeograficaAutocomplete.svelte';
+  import { vendasGeograficasAtivas } from '$lib/config/destinosGeograficos';
   import { getCidadeLabel } from '$lib/features/vendas/form';
   import { Plus, Receipt, Trash2 } from '$lib/icons';
   import type { Option, ReciboEditForm } from './types';
@@ -43,7 +45,7 @@
   </div>
 
   <div class="space-y-4">
-    {#each recibos as recibo, index}
+    {#each recibos as recibo, index (vendasGeograficasAtivas ? recibo.estadoCidade : index)}
       <div class="rounded-xl border border-slate-200 p-4">
         <div class="mb-3 flex items-center justify-between">
           <div class="flex items-center gap-3">
@@ -79,16 +81,30 @@
             </div>
             {#if !recibo.usar_cidade_padrao}
               <div class="mt-3">
-                <CidadeAutocomplete
-                  id={`venda-editar-recibo-cidade-${index}`}
-                  label="Cidade deste recibo"
-                  required={true}
-                  bind:value={recibo.destino_cidade_id}
-                  cities={cidades}
-                  error={errors[`recibo_cidade_${index}`]}
-                  on:loaded={(event) => mergeCidades(event.detail)}
-                  on:select={(event) => syncReciboCidade(index, String(event.detail?.id || ''))}
-                />
+                {#if vendasGeograficasAtivas}
+                  <CidadeGeograficaAutocomplete
+                    id={`venda-editar-recibo-cidade-${index}`}
+                    label="Cidade deste recibo"
+                    required={true}
+                    bind:value={recibo.destino_cidade_id}
+                    cities={cidades}
+                    estado={recibo.estadoCidade}
+                    error={errors[`recibo_cidade_${index}`]}
+                    on:loaded={(event) => mergeCidades(event.detail)}
+                    on:select={(event) => syncReciboCidade(index, String(event.detail?.id || ''))}
+                  />
+                {:else}
+                  <CidadeAutocomplete
+                    id={`venda-editar-recibo-cidade-${index}`}
+                    label="Cidade deste recibo"
+                    required={true}
+                    bind:value={recibo.destino_cidade_id}
+                    cities={cidades}
+                    error={errors[`recibo_cidade_${index}`]}
+                    on:loaded={(event) => mergeCidades(event.detail)}
+                    on:select={(event) => syncReciboCidade(index, String(event.detail?.id || ''))}
+                  />
+                {/if}
               </div>
             {/if}
           </div>

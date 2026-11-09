@@ -7,6 +7,16 @@
 
   const cadastros = [
     {
+      titulo: 'Passeios Opcionais',
+      descricao: 'Catálogo compartilhado de passeios opcionais por cidade',
+      icone: MapPin,
+      cor: 'financeiro',
+      rota: '/cadastros/opcionais',
+      stats: 'Catálogo',
+      acao: 'Novo Opcional',
+      inline: true
+    },
+    {
       titulo: 'Destinos',
       descricao: 'Gerencie destinos turísticos, cidades e países',
       icone: MapPin,
@@ -84,7 +94,7 @@
               variant="ghost"
               size="sm"
               color="financeiro"
-              on:click={() => goto(`${item.rota}/novo`)}
+              on:click={() => goto(item.inline ? item.rota : `${item.rota}/novo`)}
             >
               <Plus size={16} />
               {item.acao}

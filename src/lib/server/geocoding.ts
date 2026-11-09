@@ -97,7 +97,11 @@ function deduplicateResults(items: CidadeGeoResult[]): CidadeGeoResult[] {
  * Busca cidades no Nominatim pelo texto digitado pelo usuário.
  * Retorna sugestões ordenadas por relevância (Nominatim já faz isso).
  */
-export async function buscarCidadesGeo(query: string, limite = 8): Promise<CidadeGeoResult[]> {
+export async function buscarCidadesGeo(
+  query: string,
+  limite = 8,
+  options: { throwOnError?: boolean } = {}
+): Promise<CidadeGeoResult[]> {
   const q = query.trim();
   if (q.length < 2) return [];
 
@@ -119,6 +123,7 @@ export async function buscarCidadesGeo(query: string, limite = 8): Promise<Cidad
 
     if (!response.ok) {
       console.warn(`[geocoding] Nominatim retornou ${response.status}`);
+      if (options.throwOnError) throw new Error('Serviço de busca de cidades indisponível.');
       return [];
     }
 
@@ -128,6 +133,7 @@ export async function buscarCidadesGeo(query: string, limite = 8): Promise<Cidad
     return deduplicateResults(results).slice(0, limite);
   } catch (err) {
     console.warn('[geocoding] Falha ao buscar cidades:', err);
+    if (options.throwOnError) throw err;
     return [];
   }
 }

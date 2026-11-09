@@ -1,5 +1,8 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
+  import { VERSAO_ROTEIRO_IDENTIDADE } from '$lib/roteiroProtocolo';
+  import { codificarRevisaoExclusao } from '$lib/roteiroRevisaoExclusao';
+  import { revisaoRoteiroAtiva, roteiroGeograficoAtivo } from '$lib/config/destinosGeograficos';
   import { goto } from '$app/navigation';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
@@ -22,6 +25,7 @@
     fim_cidade: string | null;
     created_at: string | null;
     updated_at: string | null;
+    revisao?: string;
   };
 
   function mergeCidadesVisitadas(inicio?: string | null, fim?: string | null): string {
@@ -39,6 +43,7 @@
   let saving = false;
   let deletingId = '';
   let editingId: string | null = null;
+  let editingRevisao: string | undefined;
   let loadController: AbortController | null = null;
   let loadSeq = 0;
 
@@ -94,12 +99,14 @@
 
   function openNew() {
     editingId = null;
+    editingRevisao = undefined;
     form = { nome: '', duracao: '', cidades_visitadas: '' };
     modalOpen = true;
   }
 
   function openEdit(r: Roteiro) {
     editingId = r.id;
+    editingRevisao = r.revisao;
     form = {
       nome: r.nome,
       duracao: r.duracao != null ? String(r.duracao) : '',
@@ -113,9 +120,15 @@
       toast.error('Nome obrigatório.');
       return;
     }
+    if (revisaoRoteiroAtiva && editingId && typeof editingRevisao !== 'string') {
+      toast.error('Revisão indisponível. Recarregue a lista antes de salvar.');
+      return;
+    }
     saving = true;
     try {
       await apiPost('/api/v1/roteiros', {
+        ...(roteiroGeograficoAtivo ? { versao_identidade: VERSAO_ROTEIRO_IDENTIDADE } : {}),
+        ...(revisaoRoteiroAtiva && editingId ? { revisao: editingRevisao } : {}),
         id: editingId || undefined,
         nome: form.nome,
         duracao: form.duracao ? Number(form.duracao) : null,
@@ -132,11 +145,20 @@
     }
   }
 
-  async function deleteRoteiro(id: string) {
+  async function deleteRoteiro(roteiro: Roteiro) {
+    if (revisaoRoteiroAtiva && typeof roteiro.revisao !== 'string') {
+      toast.error('Revisão indisponível. Recarregue a lista antes de excluir.');
+      return;
+    }
     if (!(await confirmAction('Deseja excluir este roteiro?'))) return;
-    deletingId = id;
+    deletingId = roteiro.id;
     try {
-      await apiDelete('/api/v1/roteiros', { id });
+      await apiDelete('/api/v1/roteiros', {
+        id: roteiro.id,
+        ...(revisaoRoteiroAtiva && typeof roteiro.revisao === 'string'
+          ? { revisao: codificarRevisaoExclusao(roteiro.revisao) }
+          : {})
+      });
       toast.success('Roteiro excluído.');
       await load({ silent: true });
     } catch (err) {
@@ -189,7 +211,7 @@
       class_name="h-8 w-8 p-0! text-slate-400 hover:bg-red-50! hover:text-red-600!"
       on:click={(event) => {
         event.stopPropagation();
-        deleteRoteiro(row.id);
+        deleteRoteiro(row);
       }}
     >
       <Trash2 size={15} />

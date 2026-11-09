@@ -8,6 +8,7 @@ import { handleVendasCadastroBaseGet } from './cadastro-base';
 import { handleVendasCadastroSavePost } from './cadastro-save';
 import { handleVendasCancelPost } from './cancel';
 import { handleVendasCidadesBuscaGet } from './cidades-busca';
+import { handleVendasCidadesGeograficasGet } from './cidades-geograficas';
 import { handleVendasComplementaresGet } from './complementares';
 import { handleVendasCreatePost } from './create';
 import { handleVendasGestorEquipeGet } from './gestor-equipe';
@@ -33,6 +34,7 @@ export const vendasRoutes = new Hono<ApiEnv>()
   .post('/cadastro-save', (c) => handleVendasCadastroSavePost(c.env.event))
   .post('/cancel', (c) => handleVendasCancelPost(c.env.event))
   .get('/cidades-busca', (c) => handleVendasCidadesBuscaGet(c.env.event))
+  .get('/cidades-geograficas', (c) => handleVendasCidadesGeograficasGet(c.env.event))
   .get('/complementares', (c) => handleVendasComplementaresGet(c.env.event))
   .post('/create', (c) => handleVendasCreatePost(c.env.event))
   .get('/gestor-equipe', (c) => handleVendasGestorEquipeGet(c.env.event))

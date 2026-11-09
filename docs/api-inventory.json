@@ -1,6 +1,6 @@
 {
   "generatedBy": "scripts/api-inventory.mjs",
-  "count": 268,
+  "count": 274,
   "endpoints": [
     {
       "route": "/api/arquivos",
@@ -166,7 +166,7 @@
         "$lib/auth"
       ],
       "mutates": false,
-      "lines": 51
+      "lines": 50
     },
     {
       "route": "/api/auth/codigo",
@@ -5275,7 +5275,9 @@
         "invalidateCatalogReadModels"
       ],
       "imports": [
+        "$lib/config/destinosGeograficos",
         "$lib/server/api/sveltekit",
+        "$lib/server/fornecedorCidadeGeografica",
         "$lib/server/fornecedores",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
@@ -5284,7 +5286,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 215
+      "lines": 254
     },
     {
       "route": "/api/v1/fornecedores/create",
@@ -5317,6 +5319,7 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/fornecedorCidadeGeografica",
         "$lib/server/fornecedores",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
@@ -5324,7 +5327,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 104
+      "lines": 113
     },
     {
       "route": "/api/v1/health",
@@ -5402,7 +5405,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [
           "isAdmin"
         ],
@@ -5438,7 +5441,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [],
         "rejectCrossOrigin": false,
         "bodyLimit": false,
@@ -5467,7 +5470,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [],
         "rejectCrossOrigin": true,
         "bodyLimit": true,
@@ -5508,7 +5511,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [
           "isAdmin"
         ],
@@ -5541,6 +5544,117 @@
       ],
       "mutates": true,
       "lines": 210
+    },
+    {
+      "route": "/api/v1/opcionais",
+      "file": "src/routes/api/v1/opcionais/+server.ts",
+      "hono": "src/lib/server/api/routes/opcionais/root.ts",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": true,
+        "roles": [],
+        "rejectCrossOrigin": true,
+        "bodyLimit": true,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": true,
+        "debugOnly": false
+      },
+      "tables": {
+        "catalogo_opcionais": [
+          "delete",
+          "insert",
+          "select",
+          "update"
+        ]
+      },
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/catalogoOpcionais",
+        "$lib/destinoIdentidade",
+        "$lib/server/api/sveltekit",
+        "$lib/server/destinoPersistencia",
+        "$lib/server/httpCache",
+        "$lib/server/requestGuards",
+        "$lib/server/v1"
+      ],
+      "mutates": true,
+      "lines": 169
+    },
+    {
+      "route": "/api/v1/opcionais/cidades",
+      "file": "src/routes/api/v1/opcionais/cidades/+server.ts",
+      "hono": "src/lib/server/api/routes/opcionais/cidades.ts",
+      "methods": [
+        "GET"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": true,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/api/sveltekit",
+        "$lib/server/geocoding",
+        "$lib/server/httpCache",
+        "$lib/server/v1"
+      ],
+      "mutates": false,
+      "lines": 28
+    },
+    {
+      "route": "/api/v1/opcionais/importar",
+      "file": "src/routes/api/v1/opcionais/importar/+server.ts",
+      "hono": "src/lib/server/api/routes/opcionais/importar.ts",
+      "methods": [
+        "POST"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": true,
+        "roles": [],
+        "rejectCrossOrigin": true,
+        "bodyLimit": true,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {
+        "catalogo_opcionais": [
+          "insert",
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/catalogoOpcionais",
+        "$lib/destinoIdentidade",
+        "$lib/importarOpcionais",
+        "$lib/server/api/sveltekit",
+        "$lib/server/destinoPersistencia",
+        "$lib/server/httpCache",
+        "$lib/server/requestGuards",
+        "$lib/server/v1"
+      ],
+      "mutates": true,
+      "lines": 147
     },
     {
       "route": "/api/v1/operacao/campanhas",
@@ -5677,7 +5791,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 355
+      "lines": 358
     },
     {
       "route": "/api/v1/operacao/recados",
@@ -7099,7 +7213,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [],
         "rejectCrossOrigin": false,
         "bodyLimit": false,
@@ -7127,7 +7241,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [],
         "rejectCrossOrigin": false,
         "bodyLimit": false,
@@ -7155,7 +7269,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [
           "isAdmin"
         ],
@@ -7193,7 +7307,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [],
         "rejectCrossOrigin": false,
         "bodyLimit": false,
@@ -7228,7 +7342,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [
           "isAdmin"
         ],
@@ -7256,7 +7370,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 107
+      "lines": 108
     },
     {
       "route": "/api/v1/preferencias/share-accept",
@@ -7267,7 +7381,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [],
         "rejectCrossOrigin": true,
         "bodyLimit": true,
@@ -7303,7 +7417,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [],
         "rejectCrossOrigin": true,
         "bodyLimit": true,
@@ -7339,7 +7453,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [
           "isAdmin"
         ],
@@ -7484,6 +7598,44 @@
       "lines": 36
     },
     {
+      "route": "/api/v1/produtos/cidades-geograficas",
+      "file": "src/routes/api/v1/produtos/cidades-geograficas/+server.ts",
+      "hono": "src/lib/server/api/routes/vendas/cidades-geograficas.ts",
+      "methods": [
+        "GET"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": true,
+        "roles": [
+          "isAdmin",
+          "isMaster"
+        ],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": true,
+        "debugOnly": false
+      },
+      "tables": {
+        "legado_cidades": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/api/sveltekit",
+        "$lib/server/destinosBusca",
+        "$lib/server/geonames",
+        "$lib/server/httpCache",
+        "$lib/server/v1"
+      ],
+      "mutates": false,
+      "lines": 171
+    },
+    {
       "route": "/api/v1/produtos/create",
       "file": "src/routes/api/v1/produtos/create/+server.ts",
       "hono": "src/lib/server/api/routes/produtos/create.ts",
@@ -7584,6 +7736,9 @@
         "debugOnly": false
       },
       "tables": {
+        "quote_print_settings": [
+          "update"
+        ],
         "users": [
           "select"
         ]
@@ -7599,8 +7754,8 @@
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
-      "mutates": false,
-      "lines": 122
+      "mutates": true,
+      "lines": 129
     },
     {
       "route": "/api/v1/push/subscribe",
@@ -8282,13 +8437,17 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
+        "$lib/config/destinosGeograficos",
+        "$lib/roteiroLimites",
+        "$lib/roteiroProtocolo",
+        "$lib/roteiroRevisaoExclusao",
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 393
+      "lines": 544
     },
     {
       "route": "/api/v1/roteiros/[id]",
@@ -8329,12 +8488,46 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
+        "$lib/config/destinosGeograficos",
+        "$lib/roteiroLimites",
         "$lib/server/api/sveltekit",
+        "$lib/server/httpCache",
+        "$lib/server/roteiroOpcionaisLegados",
+        "$lib/server/v1"
+      ],
+      "mutates": false,
+      "lines": 171
+    },
+    {
+      "route": "/api/v1/roteiros/cidades-busca",
+      "file": "src/routes/api/v1/roteiros/cidades-busca/+server.ts",
+      "hono": "src/lib/server/api/routes/roteiros/cidades-busca.ts",
+      "methods": [
+        "GET"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": true,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": true,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/destinoIdentidade",
+        "$lib/server/api/sveltekit",
+        "$lib/server/destinoPersistencia",
         "$lib/server/httpCache",
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 123
+      "lines": 210
     },
     {
       "route": "/api/v1/roteiros/delete",
@@ -8367,13 +8560,15 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
+        "$lib/config/destinosGeograficos",
+        "$lib/roteiroRevisaoExclusao",
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 58
+      "lines": 78
     },
     {
       "route": "/api/v1/roteiros/dias-busca",
@@ -8410,7 +8605,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 116
+      "lines": 117
     },
     {
       "route": "/api/v1/roteiros/gerar-orcamento",
@@ -8491,12 +8686,13 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
+        "$lib/config/destinosGeograficos",
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 65
+      "lines": 68
     },
     {
       "route": "/api/v1/roteiros/save",
@@ -8526,6 +8722,7 @@
           "upsert"
         ],
         "roteiro_hotel": [
+          "delete",
           "insert"
         ],
         "roteiro_investimento": [
@@ -8550,14 +8747,17 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
+        "$lib/config/destinosGeograficos",
+        "$lib/roteiroLimites",
         "$lib/roteiroOpcionais",
+        "$lib/roteiroProtocolo",
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 762
+      "lines": 937
     },
     {
       "route": "/api/v1/roteiros/sugestoes-busca",
@@ -9524,6 +9724,44 @@
       ],
       "mutates": true,
       "lines": 176
+    },
+    {
+      "route": "/api/v1/vendas/cidades-geograficas",
+      "file": "src/routes/api/v1/vendas/cidades-geograficas/+server.ts",
+      "hono": "src/lib/server/api/routes/vendas/cidades-geograficas.ts",
+      "methods": [
+        "GET"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": true,
+        "roles": [
+          "isAdmin",
+          "isMaster"
+        ],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": true,
+        "debugOnly": false
+      },
+      "tables": {
+        "legado_cidades": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/api/sveltekit",
+        "$lib/server/destinosBusca",
+        "$lib/server/geonames",
+        "$lib/server/httpCache",
+        "$lib/server/v1"
+      ],
+      "mutates": false,
+      "lines": 171
     },
     {
       "route": "/api/v1/vendas/complementares",

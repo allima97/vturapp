@@ -84,6 +84,7 @@ declare global {
       env?: {
         // ── Novos bindings (D1 + R2) ────────────────────────────────────
         DB: D1Database;
+        GEO_DB?: D1Database;
         R2: R2Bucket;
         KV_BINDING: KVNamespace;
         ASSETS: Fetcher;

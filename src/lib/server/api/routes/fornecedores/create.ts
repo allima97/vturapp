@@ -13,6 +13,7 @@ import {
 import { fetchFornecedorById, sanitizeFornecedorPayload } from '$lib/server/fornecedores';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateCatalogReadModels } from '$lib/server/readModelCache';
+import { prepararCidadeFornecedor } from '$lib/server/fornecedorCidadeGeografica';
 
 const MAX_FORNECEDOR_CREATE_BODY_BYTES = 128 * 1024;
 const validationError = (message: string) =>
@@ -39,7 +40,15 @@ export async function handleFornecedoresCreatePost(event: RequestEvent) {
     }
 
     const body = readFornecedorCreateBody(bodyResult.data);
-    const payload = sanitizeFornecedorPayload(body, scope);
+    const cidade = await prepararCidadeFornecedor(
+      body,
+      null,
+      event.platform?.env?.DB,
+      event.platform?.env?.GEO_DB
+    );
+    if (!cidade.ok)
+      return json({ error: cidade.error }, { status: cidade.status, headers: NO_STORE_HEADERS });
+    const payload = { ...sanitizeFornecedorPayload(body, scope), ...cidade.cidade };
 
     if (!payload.company_id) {
       return validationError('Empresa do fornecedor não identificada.');

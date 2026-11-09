@@ -3,6 +3,9 @@ export type RotDia = {
   id?: string;
   ordem: number;
   cidade: string;
+  cidade_id?: string | null;
+  cidade_pendente?: boolean;
+  cidade_modo_geografico?: boolean;
   percurso: string;
   data: string;
   descricao: string;
@@ -12,6 +15,9 @@ export type RotHotel = {
   id?: string;
   ordem: number;
   cidade: string;
+  cidade_id?: string | null;
+  cidade_pendente?: boolean;
+  cidade_modo_geografico?: boolean;
   hotel: string;
   endereco: string;
   data_inicio: string;
@@ -32,6 +38,9 @@ export type RotPasseio = {
   id?: string;
   ordem: number;
   cidade: string;
+  cidade_id?: string | null;
+  cidade_pendente?: boolean;
+  cidade_modo_geografico?: boolean;
   passeio: string;
   fornecedor: string;
   data_inicio: string;
@@ -93,6 +102,7 @@ export type RotPagamento = {
 export interface DiaBuscaResult {
   percurso?: string | null;
   cidade?: string | null;
+  cidade_id?: string | null;
   data?: string | null;
   descricao?: string | null;
 }
@@ -130,7 +140,7 @@ export function newPasseio(ordem: number): RotPasseio {
     data_inicio: '',
     data_fim: '',
     tipo: 'Passeio',
-    ingressos: '',
+    ingressos: 'Não incluído',
     qtd_adultos: null,
     qtd_criancas: null,
     valor_original: null,

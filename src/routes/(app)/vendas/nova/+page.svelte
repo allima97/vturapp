@@ -14,6 +14,9 @@
     LoadingState
   } from '$lib/components/ui';
   import CidadeAutocomplete from '$lib/components/vendas/CidadeAutocomplete.svelte';
+  import CidadeGeograficaAutocomplete from '$lib/components/vendas/CidadeGeograficaAutocomplete.svelte';
+  import { vendasGeograficasAtivas } from '$lib/config/destinosGeograficos';
+  import { criarEstadoCidadeGeografica } from '$lib/features/vendas/cidadeGeograficaEstado';
   import ClienteAutocomplete from '$lib/components/vendas/ClienteAutocomplete.svelte';
   import { toast } from '$lib/stores/ui';
   import { toUserMessage } from '$lib/utils/errors';
@@ -128,6 +131,7 @@
   let ensuringCidadeId = '';
   let errors: Record<string, string> = {};
   let lastDestinoCidadeId = '';
+  let estadoCidadeVenda = criarEstadoCidadeGeografica();
 
   let clientes: Cliente[] = [];
   let cidades: Option[] = [];
@@ -184,6 +188,7 @@
   function createRecibo(principal = false) {
     return {
       principal,
+      estadoCidade: criarEstadoCidadeGeografica(),
       usar_cidade_padrao: true,
       destino_cidade_id: '',
       tipo_produto_id: '',
@@ -503,6 +508,7 @@
   function toggleReciboCidadePadrao(index: number, checked: boolean) {
     const recibo = recibos[index];
     recibo.usar_cidade_padrao = checked;
+    if (checked && vendasGeograficasAtivas) recibo.estadoCidade = criarEstadoCidadeGeografica();
     if (!checked && !recibo.destino_cidade_id) {
       recibo.destino_cidade_id = venda.destino_cidade_id || '';
     }
@@ -609,6 +615,8 @@
     errors = {};
 
     if (step >= 0) {
+      if (vendasGeograficasAtivas && estadoCidadeVenda.pendente)
+        errors.destino_cidade_id = 'Selecione uma cidade da lista ou limpe o campo.';
       if (canSelectEmpresa && !empresaId) errors.empresa_id = 'Selecione a empresa.';
       if (!venda.vendedor_id) errors.vendedor_id = 'Informe o vendedor.';
       if (!venda.cliente_id) errors.cliente_id = 'Informe o cliente.';
@@ -637,6 +645,8 @@
         if (!recibo.produto_id) errors[`recibo_produto_${index}`] = 'Obrigatório';
         if (!valeViagem && !cidadeReciboId)
           errors[`recibo_cidade_${index}`] = 'Selecione a cidade.';
+        if (vendasGeograficasAtivas && !recibo.usar_cidade_padrao && recibo.estadoCidade.pendente)
+          errors[`recibo_cidade_${index}`] = 'Selecione uma cidade da lista ou limpe o campo.';
         if (!recibo.numero_recibo) errors[`recibo_numero_${index}`] = 'Obrigatório';
         if (!valeViagem && !recibo.tipo_pacote) errors[`recibo_pacote_${index}`] = 'Obrigatório';
         if (!valeViagem && !recibo.data_inicio) errors[`recibo_inicio_${index}`] = 'Obrigatório';
@@ -679,11 +689,11 @@
   }
 
   async function handleSubmit() {
-    syncValeViagemCompactos();
     if (!validateStep(2)) {
       toast.error('Preencha os campos obrigatórios antes de salvar.');
       return;
     }
+    syncValeViagemCompactos();
 
     saving = true;
 
@@ -719,11 +729,12 @@
       const payload = {
         venda: vendaPayload,
         recibos: recibos.map((item) => {
+          const { estadoCidade: _estadoCidade, ...dadosRecibo } = item;
           const produtoVirtualValeViagem =
             isValeViagemTipo(item.tipo_produto_id) &&
             String(item.produto_id) === String(item.tipo_produto_id);
           return {
-            ...item,
+            ...dadosRecibo,
             produto_id: item.tipo_produto_id || item.produto_id,
             destino_cidade_id: getReciboCidadeId(item) || null,
             cidade_nome: getCidadeById(getReciboCidadeId(item))?.nome || null,
@@ -919,15 +930,27 @@
           </div>
 
           <div>
-            <CidadeAutocomplete
-              id="venda-nova-cidade"
-              label="Cidade padrão da venda"
-              placeholder="Digite a cidade (ex.: Orlando)"
-              bind:value={venda.destino_cidade_id}
-              cities={cidades}
-              error={errors.destino_cidade_id}
-              on:loaded={(event) => mergeCidades(event.detail)}
-            />
+            {#if vendasGeograficasAtivas}
+              <CidadeGeograficaAutocomplete
+                id="venda-nova-cidade"
+                label="Cidade padrão da venda"
+                bind:value={venda.destino_cidade_id}
+                cities={cidades}
+                estado={estadoCidadeVenda}
+                error={errors.destino_cidade_id}
+                on:loaded={(event) => mergeCidades(event.detail)}
+              />
+            {:else}
+              <CidadeAutocomplete
+                id="venda-nova-cidade"
+                label="Cidade padrão da venda"
+                placeholder="Digite a cidade (ex.: Orlando)"
+                bind:value={venda.destino_cidade_id}
+                cities={cidades}
+                error={errors.destino_cidade_id}
+                on:loaded={(event) => mergeCidades(event.detail)}
+              />
+            {/if}
             <p class="mt-1 text-xs text-slate-500">
               Use esta cidade em todos os recibos por padrão. Você pode trocar em recibos
               específicos na etapa seguinte.
@@ -1013,7 +1036,7 @@
         {/if}
 
         <div class="space-y-4">
-          {#each recibos as recibo, index}
+          {#each recibos as recibo, index (vendasGeograficasAtivas ? recibo.estadoCidade : index)}
             <div class="rounded-xl border border-slate-200 p-4">
               <div class="mb-3 flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -1085,17 +1108,32 @@
                     </div>
                     {#if !recibo.usar_cidade_padrao}
                       <div class="mt-3">
-                        <CidadeAutocomplete
-                          id={`venda-nova-recibo-cidade-${index}`}
-                          label="Cidade deste recibo"
-                          required={!isValeViagemRecibo(recibo)}
-                          bind:value={recibo.destino_cidade_id}
-                          cities={cidades}
-                          error={errors[`recibo_cidade_${index}`]}
-                          on:loaded={(event) => mergeCidades(event.detail)}
-                          on:select={(event) =>
-                            syncReciboCidade(index, String(event.detail?.id || ''))}
-                        />
+                        {#if vendasGeograficasAtivas}
+                          <CidadeGeograficaAutocomplete
+                            id={`venda-nova-recibo-cidade-${index}`}
+                            label="Cidade deste recibo"
+                            required={!isValeViagemRecibo(recibo)}
+                            bind:value={recibo.destino_cidade_id}
+                            cities={cidades}
+                            estado={recibo.estadoCidade}
+                            error={errors[`recibo_cidade_${index}`]}
+                            on:loaded={(event) => mergeCidades(event.detail)}
+                            on:select={(event) =>
+                              syncReciboCidade(index, String(event.detail?.id || ''))}
+                          />
+                        {:else}
+                          <CidadeAutocomplete
+                            id={`venda-nova-recibo-cidade-${index}`}
+                            label="Cidade deste recibo"
+                            required={!isValeViagemRecibo(recibo)}
+                            bind:value={recibo.destino_cidade_id}
+                            cities={cidades}
+                            error={errors[`recibo_cidade_${index}`]}
+                            on:loaded={(event) => mergeCidades(event.detail)}
+                            on:select={(event) =>
+                              syncReciboCidade(index, String(event.detail?.id || ''))}
+                          />
+                        {/if}
                       </div>
                     {/if}
                   </div>

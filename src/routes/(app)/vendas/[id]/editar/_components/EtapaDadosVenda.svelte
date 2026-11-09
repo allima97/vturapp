@@ -1,6 +1,9 @@
 <script lang="ts">
   import { FieldInput, FieldSelect, FormPanel } from '$lib/components/ui';
   import CidadeAutocomplete from '$lib/components/vendas/CidadeAutocomplete.svelte';
+  import CidadeGeograficaAutocomplete from '$lib/components/vendas/CidadeGeograficaAutocomplete.svelte';
+  import { vendasGeograficasAtivas } from '$lib/config/destinosGeograficos';
+  import type { EstadoCidadeGeografica } from '$lib/features/vendas/cidadeGeograficaEstado';
   import ClienteAutocomplete from '$lib/components/vendas/ClienteAutocomplete.svelte';
   import type { Cliente, Option, VendaEditForm } from './types';
 
@@ -13,6 +16,7 @@
   export let cidades: Option[];
   export let mergeClientes: (items: Cliente[]) => void;
   export let mergeCidades: (items: Option[]) => void;
+  export let estadoCidadeVenda: EstadoCidadeGeografica;
 </script>
 
 <FormPanel
@@ -66,15 +70,27 @@
     </div>
 
     <div>
-      <CidadeAutocomplete
-        id="venda-editar-cidade"
-        label="Cidade de destino"
-        placeholder="Digite a cidade (ex.: Orlando)"
-        bind:value={venda.destino_cidade_id}
-        cities={cidades}
-        error={errors.destino_cidade_id}
-        on:loaded={(event) => mergeCidades(event.detail)}
-      />
+      {#if vendasGeograficasAtivas}
+        <CidadeGeograficaAutocomplete
+          id="venda-editar-cidade"
+          label="Cidade de destino"
+          bind:value={venda.destino_cidade_id}
+          cities={cidades}
+          estado={estadoCidadeVenda}
+          error={errors.destino_cidade_id}
+          on:loaded={(event) => mergeCidades(event.detail)}
+        />
+      {:else}
+        <CidadeAutocomplete
+          id="venda-editar-cidade"
+          label="Cidade de destino"
+          placeholder="Digite a cidade (ex.: Orlando)"
+          bind:value={venda.destino_cidade_id}
+          cities={cidades}
+          error={errors.destino_cidade_id}
+          on:loaded={(event) => mergeCidades(event.detail)}
+        />
+      {/if}
       <p class="mt-1 text-xs text-slate-500">
         Use esta cidade em todos os recibos por padrão. Você pode trocar em recibos específicos na
         etapa seguinte.

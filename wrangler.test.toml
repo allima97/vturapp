@@ -11,6 +11,11 @@ database_name = "vturapp-test-db"
 database_id = "00000000-0000-0000-0000-000000000000"
 migrations_dir = "./drizzle"
 
+[[d1_databases]]
+binding = "GEO_TEST"
+database_name = "vturapp-test-geonames"
+database_id = "00000000-0000-0000-0000-000000000001"
+
 [[r2_buckets]]
 binding = "R2"
 bucket_name = "vturapp-test-files"

@@ -1,4 +1,7 @@
 import { parseRoteiroOpcionais } from '$lib/roteiroOpcionais';
+import { revisaoRoteiroAtiva, roteiroGeograficoAtivo } from '$lib/config/destinosGeograficos';
+import { VERSAO_ROTEIRO_IDENTIDADE } from '$lib/roteiroProtocolo';
+import { validarLimitesRoteiro } from '$lib/roteiroLimites';
 // Migrado para Hono de src/routes/api/v1/roteiros/save/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import { json, type RequestEvent } from '@sveltejs/kit';
@@ -9,15 +12,21 @@ import {
   resolveUserScope,
   ensureModuloAccess,
   toErrorResponse,
-  toISODateLocal,
   isUuid
 } from '$lib/server/v1';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
+import {
+  prepararCidadesGeograficasRoteiro,
+  validarCidadesRoteiro,
+  validarIdentidadesExplicitas
+} from './cidades-busca';
+import { SalvamentoRoteiroAtomico } from './salvar-completo-atomico';
 
 const MAX_ROTEIRO_SAVE_BODY_BYTES = 512 * 1024;
 
 type RoteiroDiaPayload = {
   cidade?: string | null;
+  cidade_id?: string | null;
   percurso?: string | null;
   data?: string | null;
   descricao?: string | null;
@@ -30,6 +39,7 @@ type RoteiroDiaDraft = {
   company_id: string | null | undefined;
   roteiro_id: string;
   cidade: string;
+  cidade_id?: string;
   percurso: string;
   data: string | null;
   descricao: string;
@@ -38,6 +48,7 @@ type RoteiroDiaDraft = {
 
 type RoteiroHotelPayload = {
   cidade?: string | null;
+  cidade_id?: string | null;
   hotel?: string | null;
   endereco?: string | null;
   data_inicio?: string | null;
@@ -58,6 +69,7 @@ type RoteiroHotelPayload = {
 type RoteiroHotelDraft = {
   roteiro_id: string;
   cidade: string | null;
+  cidade_id?: string;
   hotel: string | null;
   endereco: string | null;
   data_inicio: string | null;
@@ -77,6 +89,7 @@ type RoteiroHotelDraft = {
 
 type RoteiroPasseioPayload = {
   cidade?: string | null;
+  cidade_id?: string | null;
   passeio?: string | null;
   fornecedor?: string | null;
   data_inicio?: string | null;
@@ -93,6 +106,7 @@ type RoteiroPasseioPayload = {
 type RoteiroPasseioDraft = {
   roteiro_id: string;
   cidade: string | null;
+  cidade_id?: string;
   passeio: string | null;
   fornecedor: string | null;
   data_inicio: string | null;
@@ -223,6 +237,7 @@ function applyRoteiroScope<T>(
 
 function normalizeDiaKey(d: {
   cidade: string;
+  cidade_id?: string;
   percurso?: string | null;
   data: string | null;
   descricao: string;
@@ -237,7 +252,8 @@ function normalizeDiaKey(d: {
   const descricao = String(d.descricao || '')
     .trim()
     .toLocaleLowerCase();
-  return `${data}__${cidade}__${percurso}__${descricao}`;
+  const identidade = d.cidade_id ? `id:${d.cidade_id.toLowerCase()}` : `texto:${cidade}`;
+  return JSON.stringify([data, identidade, percurso, descricao]);
 }
 
 function stripPercursoField(list: RoteiroDiaDraft[]): Array<Omit<RoteiroDiaDraft, 'percurso'>> {
@@ -304,11 +320,25 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
 
     ensureModuloAccess(scope, ['Orcamentos'], 2, 'Sem acesso para salvar Roteiros.');
 
-    const body =
+    const rawBody =
       bodyResult.data && typeof bodyResult.data === 'object'
         ? (bodyResult.data as Record<string, unknown>)
         : null;
-    if (!body) return new Response('Body invalido.', { status: 400, headers: NO_STORE_HEADERS });
+    if (!rawBody) return new Response('Body invalido.', { status: 400, headers: NO_STORE_HEADERS });
+    if (roteiroGeograficoAtivo && rawBody.versao_identidade !== VERSAO_ROTEIRO_IDENTIDADE)
+      return json(
+        { error: 'Esta versão do editor está desatualizada. Recarregue a página antes de salvar.' },
+        { status: 409, headers: NO_STORE_HEADERS }
+      );
+    let body: Record<string, unknown> = rawBody;
+    if (revisaoRoteiroAtiva) {
+      const limiteErro = validarLimitesRoteiro(body);
+      if (limiteErro)
+        return json({ error: limiteErro }, { status: 422, headers: NO_STORE_HEADERS });
+      const identidadeErro = validarIdentidadesExplicitas(body);
+      if (identidadeErro)
+        return json({ error: identidadeErro }, { status: 409, headers: NO_STORE_HEADERS });
+    }
 
     const nome = String(body.nome || '').trim();
     if (!nome) return new Response('Nome obrigatorio.', { status: 400, headers: NO_STORE_HEADERS });
@@ -325,8 +355,37 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
       }
     }
 
+    if (['dias', 'hoteis', 'passeios', 'opcionais'].some((key) => Array.isArray(body[key]))) {
+      const db = event.platform?.env?.DB;
+      if (!db) throw new Error('Banco D1 indisponível para validar as cidades.');
+      if (roteiroGeograficoAtivo) {
+        const resultado = await prepararCidadesGeograficasRoteiro(db, event.platform?.env?.GEO_DB, {
+          ...body,
+          ...(opcionais !== undefined ? { opcionais } : {})
+        });
+        if (!resultado.ok)
+          return json(
+            { error: resultado.error },
+            { status: resultado.status, headers: NO_STORE_HEADERS }
+          );
+        body = resultado.body;
+        if (opcionais !== undefined) opcionais = parseRoteiroOpcionais(body.opcionais);
+      } else {
+        const erroCidade = await validarCidadesRoteiro(db, body);
+        if (erroCidade)
+          return json({ error: erroCidade }, { status: 400, headers: NO_STORE_HEADERS });
+      }
+    }
+
     const companyId = scope.companyId;
     const isNew = !body.id;
+    if (revisaoRoteiroAtiva && !roteiroGeograficoAtivo)
+      throw new Error('Controle de revisão requer o roteiro geográfico.');
+    if (revisaoRoteiroAtiva && !isNew && typeof body.revisao !== 'string')
+      return json(
+        { error: 'Revisão ausente. Recarregue o roteiro antes de salvar.' },
+        { status: 409, headers: NO_STORE_HEADERS }
+      );
 
     const incluiTexto = typeof body.inclui_texto === 'string' ? body.inclui_texto : null;
     const naoIncluiTexto = typeof body.nao_inclui_texto === 'string' ? body.nao_inclui_texto : null;
@@ -338,7 +397,22 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
     const mostrarRodapePdf = body.mostrar_rodape_pdf === false ? false : true;
 
     // Upsert roteiro principal
-    let roteiroId: string;
+    let roteiroId: string = isNew ? crypto.randomUUID() : String(body.id).trim();
+    const db = event.platform?.env?.DB;
+    if (roteiroGeograficoAtivo && !db)
+      throw new Error('Banco D1 indisponível para salvar o roteiro.');
+    const atomico =
+      roteiroGeograficoAtivo && db
+        ? new SalvamentoRoteiroAtomico(
+            db,
+            roteiroId,
+            scope,
+            revisaoRoteiroAtiva ? (isNew ? '' : String(body.revisao)) : undefined,
+            revisaoRoteiroAtiva
+              ? { confirmadas: body.identidades_removidas_confirmadas }
+              : undefined
+          )
+        : null;
 
     if (isNew) {
       const insertPayload: Record<string, unknown> = {
@@ -358,16 +432,19 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
         mostrar_rodape_pdf: mostrarRodapePdf
       };
 
-      const { data: roteiro, error: roteiroErr } = await client
-        .from('roteiro_personalizado')
-        .insert(insertPayload)
-        .select('id')
-        .single();
+      if (atomico) {
+        atomico.principal(insertPayload, true);
+      } else {
+        const { data: roteiro, error: roteiroErr } = await client
+          .from('roteiro_personalizado')
+          .insert(insertPayload)
+          .select('id')
+          .single();
 
-      if (roteiroErr || !roteiro) throw roteiroErr || new Error('Falha ao criar roteiro.');
-      roteiroId = roteiro.id;
+        if (roteiroErr || !roteiro) throw roteiroErr || new Error('Falha ao criar roteiro.');
+        roteiroId = roteiro.id;
+      }
     } else {
-      roteiroId = String(body.id).trim();
       if (!isUuid(roteiroId))
         return new Response('ID invalido.', { status: 400, headers: NO_STORE_HEADERS });
 
@@ -394,23 +471,42 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
         updated_at: new Date().toISOString()
       };
 
-      const { error: updateErr } = await client
-        .from('roteiro_personalizado')
-        .update(updatePayload)
-        .eq('id', roteiroId);
+      if (atomico) {
+        atomico.principal(updatePayload, false);
+      } else {
+        const { data: updated, error: updateErr } = await applyRoteiroScope(
+          client.from('roteiro_personalizado').update(updatePayload).eq('id', roteiroId),
+          scope
+        )
+          .select('id')
+          .maybeSingle();
 
-      if (updateErr) throw updateErr;
+        if (updateErr) throw updateErr;
+        if (!updated)
+          return new Response('Roteiro nao encontrado.', {
+            status: 404,
+            headers: NO_STORE_HEADERS
+          });
+      }
     }
 
     // Hotéis
     if (Array.isArray(body.hoteis)) {
-      await client.from('roteiro_hotel').delete().eq('roteiro_id', roteiroId);
+      if (atomico) atomico.excluir('roteiro_hotel');
+      else {
+        const { error: deleteError } = await client
+          .from('roteiro_hotel')
+          .delete()
+          .eq('roteiro_id', roteiroId);
+        if (deleteError) throw deleteError;
+      }
       if (body.hoteis.length > 0) {
         const hoteis = body.hoteis
           .map(
             (h: RoteiroHotelPayload, idx: number): RoteiroHotelDraft => ({
               roteiro_id: roteiroId,
               cidade: h.cidade || null,
+              ...(h.cidade_id ? { cidade_id: h.cidade_id } : {}),
               hotel: h.hotel || null,
               endereco: h.endereco || null,
               data_inicio: h.data_inicio || null,
@@ -449,21 +545,32 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
           );
 
         if (hoteis.length > 0) {
-          const { error } = await client.from('roteiro_hotel').insert(hoteis);
-          if (error) throw error;
+          if (atomico) atomico.inserir('roteiro_hotel', hoteis);
+          else {
+            const { error } = await client.from('roteiro_hotel').insert(hoteis);
+            if (error) throw error;
+          }
         }
       }
     }
 
     // Passeios
     if (Array.isArray(body.passeios)) {
-      await client.from('roteiro_passeio').delete().eq('roteiro_id', roteiroId);
+      if (atomico) atomico.excluir('roteiro_passeio');
+      else {
+        const { error: deleteError } = await client
+          .from('roteiro_passeio')
+          .delete()
+          .eq('roteiro_id', roteiroId);
+        if (deleteError) throw deleteError;
+      }
       if (body.passeios.length > 0) {
         const passeios = body.passeios
           .map(
             (p: RoteiroPasseioPayload, idx: number): RoteiroPasseioDraft => ({
               roteiro_id: roteiroId,
               cidade: p.cidade || null,
+              ...(p.cidade_id ? { cidade_id: p.cidade_id } : {}),
               passeio: p.passeio || null,
               fornecedor: p.fornecedor || null,
               data_inicio: p.data_inicio || null,
@@ -494,15 +601,25 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
           );
 
         if (passeios.length > 0) {
-          const { error } = await client.from('roteiro_passeio').insert(passeios);
-          if (error) throw error;
+          if (atomico) atomico.inserir('roteiro_passeio', passeios);
+          else {
+            const { error } = await client.from('roteiro_passeio').insert(passeios);
+            if (error) throw error;
+          }
         }
       }
     }
 
     // Transportes
     if (Array.isArray(body.transportes)) {
-      await client.from('roteiro_transporte').delete().eq('roteiro_id', roteiroId);
+      if (atomico) atomico.excluir('roteiro_transporte');
+      else {
+        const { error: deleteError } = await client
+          .from('roteiro_transporte')
+          .delete()
+          .eq('roteiro_id', roteiroId);
+        if (deleteError) throw deleteError;
+      }
       if (body.transportes.length > 0) {
         const transportes = body.transportes
           .map(
@@ -563,19 +680,25 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
           );
 
         if (transportes.length > 0) {
-          const { error } = await client.from('roteiro_transporte').insert(transportes);
-          if (error) throw error;
+          if (atomico) atomico.inserir('roteiro_transporte', transportes);
+          else {
+            const { error } = await client.from('roteiro_transporte').insert(transportes);
+            if (error) throw error;
+          }
         }
       }
     }
 
     // Dias do roteiro (itinerário)
     if (Array.isArray(body.dias)) {
-      const { error: delDiasErr } = await client
-        .from('roteiro_dia')
-        .delete()
-        .eq('roteiro_id', roteiroId);
-      if (delDiasErr) throw delDiasErr;
+      if (atomico) atomico.excluir('roteiro_dia');
+      else {
+        const { error: delDiasErr } = await client
+          .from('roteiro_dia')
+          .delete()
+          .eq('roteiro_id', roteiroId);
+        if (delDiasErr) throw delDiasErr;
+      }
 
       if (body.dias.length > 0) {
         const sorted = body.dias
@@ -594,6 +717,7 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
               company_id: companyId,
               roteiro_id: roteiroId,
               cidade,
+              ...(d.cidade_id ? { cidade_id: d.cidade_id } : {}),
               percurso,
               data,
               descricao,
@@ -609,18 +733,15 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
             )
           );
 
-        const seen = new Set<string>();
-        const unique: RoteiroDiaDraft[] = [];
-        for (const d of normalized) {
-          const key = normalizeDiaKey({
-            cidade: d.cidade,
-            percurso: d.percurso,
-            data: d.data,
-            descricao: d.descricao
+        let unique = normalized;
+        if (!revisaoRoteiroAtiva) {
+          const seen = new Set<string>();
+          unique = normalized.filter((d) => {
+            const key = normalizeDiaKey(d);
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
           });
-          if (seen.has(key)) continue;
-          seen.add(key);
-          unique.push(d);
         }
 
         const dias = unique.map((d, idx) => ({ ...d, ordem: idx }));
@@ -628,46 +749,59 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
         let payload: RoteiroDiaDraft[] | Array<Omit<RoteiroDiaDraft, 'percurso'>> = dias;
         let triedStrip = false;
 
-        for (let attempt = 0; attempt < 2; attempt++) {
-          const { error } = await client
-            .from('roteiro_dia')
-            .upsert(payload, { onConflict: 'roteiro_id,ordem' });
-          if (!error) break;
+        if (atomico) atomico.inserir('roteiro_dia', dias);
+        else
+          for (let attempt = 0; attempt < 2; attempt++) {
+            const { error } = await client
+              .from('roteiro_dia')
+              .upsert(payload, { onConflict: 'roteiro_id,ordem' });
+            if (!error) break;
 
-          if (!triedStrip && isMissingPercursoColumn(error)) {
-            payload = strippedDias;
-            triedStrip = true;
-            continue;
-          }
+            if (!triedStrip && isMissingPercursoColumn(error)) {
+              payload = strippedDias;
+              triedStrip = true;
+              continue;
+            }
 
-          if (isMissingOnConflictConstraint(error)) {
-            let { error: insertErr } = await client.from('roteiro_dia').insert(payload);
-            if (insertErr) {
-              if (!triedStrip && isMissingPercursoColumn(insertErr)) {
-                payload = strippedDias;
-                triedStrip = true;
-                ({ error: insertErr } = await client.from('roteiro_dia').insert(payload));
-              } else {
-                if (isDuplicateOrdensUnique(insertErr)) {
-                  await client.from('roteiro_dia').delete().eq('roteiro_id', roteiroId);
-                  const { error: retryErr } = await client.from('roteiro_dia').insert(payload);
-                  if (retryErr) throw retryErr;
+            if (isMissingOnConflictConstraint(error)) {
+              let { error: insertErr } = await client.from('roteiro_dia').insert(payload);
+              if (insertErr) {
+                if (!triedStrip && isMissingPercursoColumn(insertErr)) {
+                  payload = strippedDias;
+                  triedStrip = true;
+                  ({ error: insertErr } = await client.from('roteiro_dia').insert(payload));
                 } else {
-                  throw insertErr;
+                  if (isDuplicateOrdensUnique(insertErr)) {
+                    const { error: retryDeleteErr } = await client
+                      .from('roteiro_dia')
+                      .delete()
+                      .eq('roteiro_id', roteiroId);
+                    if (retryDeleteErr) throw retryDeleteErr;
+                    const { error: retryErr } = await client.from('roteiro_dia').insert(payload);
+                    if (retryErr) throw retryErr;
+                  } else {
+                    throw insertErr;
+                  }
                 }
               }
+              break;
             }
-            break;
-          }
 
-          throw error;
-        }
+            throw error;
+          }
       }
     }
 
     // Investimentos
     if (Array.isArray(body.investimentos)) {
-      await client.from('roteiro_investimento').delete().eq('roteiro_id', roteiroId);
+      if (atomico) atomico.excluir('roteiro_investimento');
+      else {
+        const { error: deleteError } = await client
+          .from('roteiro_investimento')
+          .delete()
+          .eq('roteiro_id', roteiroId);
+        if (deleteError) throw deleteError;
+      }
       if (body.investimentos.length > 0) {
         const investimentos = body.investimentos
           .map((i: RoteiroInvestimentoPayload, idx: number): RoteiroInvestimentoDraft => {
@@ -694,15 +828,25 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
           );
 
         if (investimentos.length > 0) {
-          const { error } = await client.from('roteiro_investimento').insert(investimentos);
-          if (error) throw error;
+          if (atomico) atomico.inserir('roteiro_investimento', investimentos);
+          else {
+            const { error } = await client.from('roteiro_investimento').insert(investimentos);
+            if (error) throw error;
+          }
         }
       }
     }
 
     // Pagamentos
     if (Array.isArray(body.pagamentos)) {
-      await client.from('roteiro_pagamento').delete().eq('roteiro_id', roteiroId);
+      if (atomico) atomico.excluir('roteiro_pagamento');
+      else {
+        const { error: deleteError } = await client
+          .from('roteiro_pagamento')
+          .delete()
+          .eq('roteiro_id', roteiroId);
+        if (deleteError) throw deleteError;
+      }
       if (body.pagamentos.length > 0) {
         const pagamentos = body.pagamentos
           .map((p: RoteiroPagamentoPayload, idx: number): RoteiroPagamentoDraft => {
@@ -729,12 +873,38 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
           );
 
         if (pagamentos.length > 0) {
-          const { error } = await client.from('roteiro_pagamento').insert(pagamentos);
-          if (error) throw error;
+          if (atomico) atomico.inserir('roteiro_pagamento', pagamentos);
+          else {
+            const { error } = await client.from('roteiro_pagamento').insert(pagamentos);
+            if (error) throw error;
+          }
         }
       }
     }
 
+    if (atomico) {
+      const resultado = await atomico.executar();
+      if (resultado.identidadesRemovidas)
+        return json(
+          {
+            error: 'Confirme a remoção dos vínculos geográficos antes de salvar.',
+            identidades_removidas: resultado.identidadesRemovidas
+          },
+          { status: 409, headers: NO_STORE_HEADERS }
+        );
+      if (!resultado.atualizado)
+        return revisaoRoteiroAtiva
+          ? json(
+              { error: 'Roteiro alterado ou indisponível. Recarregue antes de salvar.' },
+              { status: 409, headers: NO_STORE_HEADERS }
+            )
+          : new Response('Roteiro nao encontrado.', { status: 404, headers: NO_STORE_HEADERS });
+      if (revisaoRoteiroAtiva)
+        return json(
+          { ok: true, id: roteiroId, revisao: resultado.revisao },
+          { headers: NO_STORE_HEADERS }
+        );
+    }
     return json({ ok: true, id: roteiroId }, { headers: NO_STORE_HEADERS });
   } catch (err: unknown) {
     const errorRecord =

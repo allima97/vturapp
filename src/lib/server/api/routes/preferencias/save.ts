@@ -31,7 +31,8 @@ export async function handlePreferenciasSavePost(event: RequestEvent) {
     const { client, user, scope } = await requirePreferenciasScope(event, isUpdate ? 3 : 2);
 
     const companyId = scope.companyId;
-    if (!companyId) return buildNoStoreTextResponse('Empresa inválida.', 400);
+    if (!companyId && !scope.usoIndividual && !scope.isAdmin)
+      return buildNoStoreTextResponse('Empresa inválida.', 400);
 
     const nome = String(body?.nome || '').trim();
     if (!nome) return buildNoStoreTextResponse('nome obrigatorio.', 400);
@@ -70,7 +71,7 @@ export async function handlePreferenciasSavePost(event: RequestEvent) {
       if (error) throw error;
 
       invalidatePreferenceReadModels({
-        companyIds: [companyId],
+        companyIds: companyId ? [companyId] : [],
         userId: user.id
       });
       return buildNoStoreJsonResponse({ ok: true, item: data });
@@ -90,7 +91,7 @@ export async function handlePreferenciasSavePost(event: RequestEvent) {
     if (!data) return buildNoStoreTextResponse('Preferência não encontrada.', 404);
 
     invalidatePreferenceReadModels({
-      companyIds: [companyId],
+      companyIds: companyId ? [companyId] : [],
       userId: user.id
     });
     return buildNoStoreJsonResponse({ ok: true, item: data });

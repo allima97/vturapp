@@ -7,6 +7,7 @@ import {
   scopeCacheTags
 } from '$lib/server/readModelCache';
 import { chunkArray, dedupeById, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
+import { fornecedoresGeograficosAtivos } from '$lib/config/destinosGeograficos';
 
 type RowsResult<T> = { data: T[] | null; error: QueryError | null };
 type SingleResult<T> = { data: T | null; error: QueryError | null };
@@ -53,6 +54,7 @@ export type FornecedorRecord = {
   cep?: string | null;
   cidade?: string | null;
   estado?: string | null;
+  cidade_geografica_id?: string | null;
   telefone?: string | null;
   whatsapp?: string | null;
   telefone_emergencia?: string | null;
@@ -217,6 +219,7 @@ export async function fetchFornecedorById(client: DataClient, id: string) {
           'cep',
           'cidade',
           'estado',
+          ...(fornecedoresGeograficosAtivos ? ['cidade_geografica_id'] : []),
           'telefone',
           'whatsapp',
           'telefone_emergencia',

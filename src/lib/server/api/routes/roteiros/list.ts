@@ -9,6 +9,7 @@ import {
   toErrorResponse
 } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
+import { revisaoRoteiroAtiva } from '$lib/config/destinosGeograficos';
 
 function applyRoteiroScope<
   T extends { eq: (column: string, value: string | null | undefined) => T }
@@ -44,7 +45,9 @@ export async function handleRoteirosListGet(event: RequestEvent) {
     const { data, error } = await applyRoteiroScope(
       client
         .from('roteiro_personalizado')
-        .select('id, nome, duracao, inicio_cidade, fim_cidade, created_at, updated_at')
+        .select(
+          `id, nome, duracao, inicio_cidade, fim_cidade, created_at, updated_at${revisaoRoteiroAtiva ? ', revisao' : ''}`
+        )
         .order('updated_at', { ascending: false })
         .limit(200),
       scope

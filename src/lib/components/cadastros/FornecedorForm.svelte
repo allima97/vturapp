@@ -19,6 +19,8 @@
   import { toUserMessage } from '$lib/utils/errors';
   import { apiDelete, apiFetch, apiGet, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
+  import { fornecedoresGeograficosAtivos } from '$lib/config/destinosGeograficos';
+  import SeletorDestinoGeografico from '$lib/components/SeletorDestinoGeografico.svelte';
 
   export let fornecedorId: string | null = null;
 
@@ -52,6 +54,7 @@
     cep?: string | null;
     cidade?: string | null;
     estado?: string | null;
+    cidade_geografica_id?: string | null;
     telefone?: string | null;
     whatsapp?: string | null;
     telefone_emergencia?: string | null;
@@ -86,6 +89,12 @@
   let showDeleteDialog = false;
   let form = { ...initialForm };
   let cidadeBusca = '';
+  let cidadeGeograficaId = '';
+  let cidadeGeograficaEsperada: string | null = null;
+  let cidadeGeograficaTexto = '';
+  let cidadeGeograficaValida = false;
+  let modoGeografico = false;
+  let cidadeLegada: { cidade: string; estado: string } | null = null;
   let resultadosCidade: CidadeBusca[] = [];
   let buscandoCidade = false;
   let erroCidadeBusca = '';
@@ -136,6 +145,12 @@
         ? `${data.cidade} (${data.estado})`
         : data.cidade
       : '';
+    cidadeGeograficaId = data.cidade_geografica_id || '';
+    cidadeGeograficaEsperada = data.cidade_geografica_id ?? null;
+    cidadeGeograficaTexto = cidadeBusca;
+    modoGeografico = fornecedoresGeograficosAtivos && Boolean(cidadeGeograficaId);
+    if (fornecedoresGeograficosAtivos && !cidadeGeograficaId)
+      cidadeLegada = { cidade: form.cidade, estado: form.estado };
     produtosRelacionados = data.produtos || [];
     vouchersRelacionados = data.vouchers || [];
   }
@@ -144,6 +159,7 @@
     const request = fornecedorGuard.next();
     try {
       if (fornecedorId) await loadFornecedor(request.signal);
+      else if (fornecedoresGeograficosAtivos) modoGeografico = true;
       if (!fornecedorGuard.isCurrent(request.seq)) return;
     } catch (err) {
       if (isCanceledApiError(err)) return;
@@ -164,6 +180,9 @@
   }
 
   function selectCidade(cidade: CidadeBusca) {
+    if (cidadeSearchTimer) clearTimeout(cidadeSearchTimer);
+    cidadeGuard.abort();
+    buscandoCidade = false;
     form.cidade = cidade.nome || '';
     form.estado = cidade.subdivisao_nome || '';
     cidadeBusca =
@@ -176,12 +195,12 @@
 
   async function loadCidadeOptions() {
     if (cidadeSearchTimer) clearTimeout(cidadeSearchTimer);
+    cidadeGuard.abort();
+    resultadosCidade = [];
+    buscandoCidade = false;
+    erroCidadeBusca = '';
 
     if (!showCidadeOptions || cidadeBusca.trim().length < 2) {
-      cidadeGuard.abort();
-      resultadosCidade = [];
-      buscandoCidade = false;
-      erroCidadeBusca = '';
       return;
     }
 
@@ -203,7 +222,7 @@
         if (!cidadeGuard.isCurrent(request.seq)) return;
         resultadosCidade = resultados;
       } catch (err) {
-        if (isCanceledApiError(err)) return;
+        if (isCanceledApiError(err) || !cidadeGuard.isCurrent(request.seq)) return;
         resultadosCidade = [];
         erroCidadeBusca = 'Erro ao buscar cidades.';
       } finally {
@@ -219,6 +238,12 @@
   async function handleSubmit() {
     if (!form.nome_completo.trim()) return toast.error('Nome completo é obrigatório.');
     if (!form.nome_fantasia.trim()) return toast.error('Nome fantasia é obrigatório.');
+    if (
+      fornecedoresGeograficosAtivos &&
+      modoGeografico &&
+      (!cidadeGeograficaValida || !cidadeGeograficaId)
+    )
+      return toast.error('Selecione uma cidade geográfica válida.');
     if (!form.cidade.trim()) return toast.error('Cidade é obrigatória.');
     if (!form.estado.trim()) return toast.error('Estado é obrigatório.');
     if (!form.telefone.trim()) return toast.error('Telefone é obrigatório.');
@@ -239,7 +264,14 @@
         isCreateMode ? '/api/v1/fornecedores/create' : `/api/v1/fornecedores/${fornecedorId}`,
         {
           method: isCreateMode ? 'POST' : 'PUT',
-          body: form
+          body:
+            fornecedoresGeograficosAtivos && modoGeografico
+              ? {
+                  ...form,
+                  cidade_geografica_id: cidadeGeograficaId,
+                  ...(!isCreateMode ? { cidade_geografica_esperada: cidadeGeograficaEsperada } : {})
+                }
+              : form
         }
       );
       toast.success(
@@ -345,46 +377,106 @@
             class_name="w-full"
           />
         {/if}
-        <div class="relative">
-          <FieldInput
-            id="forn-cidade"
-            label="Cidade"
-            value={cidadeBusca}
-            placeholder="Buscar cidade..."
-            class_name="w-full"
-            on:input={(e) => handleCidadeInput((e.target as HTMLInputElement).value)}
-            on:focus={() => (showCidadeOptions = true)}
-            on:blur={() => setTimeout(() => (showCidadeOptions = false), 150)}
-          />
-          {#if showCidadeOptions}
-            <div
-              class="absolute z-10 mt-2 w-full rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
+        {#if fornecedoresGeograficosAtivos && modoGeografico}
+          <div>
+            <SeletorDestinoGeografico
+              fieldId="forn-cidade"
+              label="Cidade"
+              required
+              idioma="pt"
+              bind:destinoId={cidadeGeograficaId}
+              bind:value={cidadeGeograficaTexto}
+              bind:valid={cidadeGeograficaValida}
+              on:edit={() => {
+                form.cidade = '';
+                form.estado = '';
+              }}
+              on:select={(event) => {
+                form.cidade = event.detail.nome;
+                form.estado = event.detail.referencia?.regiao || '';
+              }}
+            />
+            {#if cidadeGeograficaId && !form.estado}
+              <p class="mt-1 text-xs text-red-600" role="alert">
+                O destino não possui estado ou região. Selecione outra localidade.
+              </p>
+            {/if}
+            {#if cidadeLegada}
+              <button
+                type="button"
+                class="mt-2 text-sm text-indigo-700 underline"
+                on:click={() => {
+                  modoGeografico = false;
+                  cidadeGeograficaId = '';
+                  cidadeGeograficaValida = false;
+                  form.cidade = cidadeLegada?.cidade || '';
+                  form.estado = cidadeLegada?.estado || '';
+                }}>Manter cidade anterior</button
+              >
+            {/if}
+          </div>
+        {:else if fornecedoresGeograficosAtivos}
+          <div>
+            <FieldInput
+              id="forn-cidade"
+              label="Cidade"
+              value={cidadeBusca}
+              readonly
+              class_name="w-full"
+            />
+            <p class="mt-1 text-xs text-slate-500">Cidade anterior sem identidade geográfica.</p>
+            <button
+              type="button"
+              class="mt-2 text-sm text-indigo-700 underline"
+              on:click={() => {
+                cidadeGeograficaTexto = cidadeBusca;
+                cidadeGeograficaValida = false;
+                modoGeografico = true;
+              }}>Selecionar cidade geográfica</button
             >
-              {#if buscandoCidade}
-                <div class="px-3 py-2 text-sm text-slate-500">Buscando cidades...</div>
-              {:else if erroCidadeBusca}
-                <div role="alert" class="px-3 py-2 text-sm text-red-500">{erroCidadeBusca}</div>
-              {:else if resultadosCidade.length === 0}
-                <div class="px-3 py-2 text-sm text-slate-500">Nenhuma cidade encontrada.</div>
-              {:else}
-                {#each resultadosCidade as cidade}
-                  <Button
-                    type="button"
-                    variant="unstyled"
-                    size="sm"
-                    class_name="block w-full justify-start! rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50"
-                    on:click={() => selectCidade(cidade)}
-                  >
-                    <div class="font-medium text-slate-900">{cidade.label || cidade.nome}</div>
-                    {#if cidade.pais_nome}
-                      <div class="text-xs text-slate-500">{cidade.pais_nome}</div>
-                    {/if}
-                  </Button>
-                {/each}
-              {/if}
-            </div>
-          {/if}
-        </div>
+          </div>
+        {:else}
+          <div class="relative">
+            <FieldInput
+              id="forn-cidade"
+              label="Cidade"
+              value={cidadeBusca}
+              placeholder="Buscar cidade..."
+              class_name="w-full"
+              on:input={(e) => handleCidadeInput((e.target as HTMLInputElement).value)}
+              on:focus={() => (showCidadeOptions = true)}
+              on:blur={() => setTimeout(() => (showCidadeOptions = false), 150)}
+            />
+            {#if showCidadeOptions}
+              <div
+                class="absolute z-10 mt-2 w-full rounded-xl border border-slate-200 bg-white p-2 shadow-lg"
+              >
+                {#if buscandoCidade}
+                  <div class="px-3 py-2 text-sm text-slate-500">Buscando cidades...</div>
+                {:else if erroCidadeBusca}
+                  <div role="alert" class="px-3 py-2 text-sm text-red-500">{erroCidadeBusca}</div>
+                {:else if resultadosCidade.length === 0}
+                  <div class="px-3 py-2 text-sm text-slate-500">Nenhuma cidade encontrada.</div>
+                {:else}
+                  {#each resultadosCidade as cidade}
+                    <Button
+                      type="button"
+                      variant="unstyled"
+                      size="sm"
+                      class_name="block w-full justify-start! rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-50"
+                      on:click={() => selectCidade(cidade)}
+                    >
+                      <div class="font-medium text-slate-900">{cidade.label || cidade.nome}</div>
+                      {#if cidade.pais_nome}
+                        <div class="text-xs text-slate-500">{cidade.pais_nome}</div>
+                      {/if}
+                    </Button>
+                  {/each}
+                {/if}
+              </div>
+            {/if}
+          </div>
+        {/if}
         <FieldInput
           id="forn-estado"
           label="Estado"
