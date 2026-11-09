@@ -33,3 +33,4 @@ src/src/
 /geonames.sqlite
 /geonames-sql
 /.geonames-isolated-ledger
+__pycache__/
