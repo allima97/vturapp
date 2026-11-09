@@ -11,6 +11,8 @@ APP_DB="vturapp-db-geo-isolado"
 GEO_DB="vturapp-geonames-isolado"
 SENTINEL_APP="00000000-0000-4000-8000-0000000000a1"
 SENTINEL_GEO="00000000-0000-4000-8000-0000000000a2"
+EXPECTED_APP="4f480221-b5e7-4639-9e28-d995b9615f7f"
+EXPECTED_GEO="bf40654b-8083-4fa1-8424-a923282d9888"
 PRODUCTION_IDS="36d3da2e-b186-48f8-bb3e-4f9a14b20235 96c13e55-60e3-4e3b-9ecc-b22da019c010"
 LEDGER="${GEO_LEDGER:-$ROOT/.geonames-isolated-ledger}"
 SQL_DIR="${GEO_SQL_DIR:-$ROOT/geonames-sql}"
@@ -47,9 +49,11 @@ guard() {
   for id in $PRODUCTION_IDS; do
     [[ "$app_id" != "$id" && "$geo_id" != "$id" ]] || refuse "o toml aponta para um banco de staging ou produção"
   done
+  [[ "$app_id" != "$SENTINEL_APP" && "$geo_id" != "$SENTINEL_GEO" ]] ||
+    refuse "os ids sentinela não podem ser usados em comando remoto"
   if [[ "${REQUIRE_REAL_IDS:-0}" == 1 ]]; then
-    [[ "$app_id" != "$SENTINEL_APP" && "$geo_id" != "$SENTINEL_GEO" ]] ||
-      refuse "substitua os ids sentinela pelos ids criados com wrangler d1 create"
+    [[ "$app_id" == "$EXPECTED_APP" && "$geo_id" == "$EXPECTED_GEO" ]] ||
+      refuse "env.geo precisa dos bancos isolados criados em 9/11/2026"
   fi
 }
 
@@ -109,17 +113,54 @@ PY
   done
 }
 
+d1_read() {
+  local sql="$1"
+  local attempt=1
+  local delay=10
+  local output status
+  while true; do
+    set +e
+    output=$(wrangler d1 execute "$GEO_DB" --remote --env "$ENV_NAME" --command "$sql" 2>&1)
+    status=$?
+    set -e
+    if [[ $status -eq 0 ]] && ! printf '%s\n' "$output" | grep -Eq 'overloaded|\[7429\]'; then
+      printf '%s\n' "$output"
+      return 0
+    fi
+    if [[ $status -ne 0 ]] && ! printf '%s\n' "$output" | grep -Eq 'overloaded|\[7429\]|timeout|temporar'; then
+      printf '%s\n' "$output" >&2
+      return "$status"
+    fi
+    if [[ $attempt -ge 5 ]]; then
+      printf '%s\n' "$output" >&2
+      refuse "consulta interrompida depois de ${attempt} tentativas"
+    fi
+    echo "D1 ocupado (tentativa ${attempt}); nova tentativa em ${delay}s." >&2
+    sleep "$delay"
+    attempt=$((attempt + 1))
+    delay=$((delay * 2))
+  done
+}
+
 cmd_verify() {
   REQUIRE_REAL_IDS=1 guard
-  wrangler d1 execute "$GEO_DB" --remote --env "$ENV_NAME" --command \
-    "SELECT 'place' AS tabela, count(*) AS linhas FROM place
-     UNION ALL SELECT 'alternate_name', count(*) FROM alternate_name
-     UNION ALL SELECT 'search_name', count(*) FROM search_name
-     UNION ALL SELECT 'short_search', count(*) FROM short_search;"
-  wrangler d1 execute "$GEO_DB" --remote --env "$ENV_NAME" --command \
+  local queries=(
+    "SELECT 'place' AS tabela, count(*) AS linhas FROM place;"
+    "SELECT 'alternate_name' AS tabela, count(*) AS linhas FROM alternate_name;"
+    "SELECT 'search_name' AS tabela, count(*) AS linhas FROM search_name;"
+    "SELECT 'short_search' AS tabela, count(*) AS linhas FROM short_search;"
     "SELECT feature_class, count(*) AS linhas FROM place GROUP BY feature_class ORDER BY feature_class;"
-  wrangler d1 execute "$GEO_DB" --remote --env "$ENV_NAME" --command \
     "SELECT count(*) AS lugares_sem_pais FROM place WHERE country_code = '';"
+  )
+  local sql index=0
+  for sql in "${queries[@]}"; do
+    if [[ $index -gt 0 ]]; then
+      echo "Pausa de 20s antes da próxima varredura." >&2
+      sleep 20
+    fi
+    d1_read "$sql"
+    index=$((index + 1))
+  done
 }
 
 cmd_benchmark() {
@@ -134,7 +175,7 @@ cmd_benchmark() {
 }
 
 cmd_rollback() {
-  guard
+  REQUIRE_REAL_IDS=1 guard
   [[ "${CONFIRM_GEO_ROLLBACK:-}" == "yes" ]] ||
     refuse "defina CONFIRM_GEO_ROLLBACK=yes para apagar somente os D1 isolados"
   wrangler d1 delete "$GEO_DB" --skip-confirmation || true
@@ -154,9 +195,9 @@ case "$step" in
     cat <<EOF
 Uso: scripts/geonames/isolated.sh <create|migrate|cost|load|verify|benchmark|rollback>
 
-Ordem: create, editar os ids no wrangler.toml, migrate, cost, exportar o SQL,
-load, verify, benchmark. rollback apaga apenas vturapp-db-geo-isolado e
-vturapp-geonames-isolado.
+Ordem já executada em 9/11/2026: create, migrate, cost, exportar o SQL, load,
+verify, benchmark. Os ids isolados estão em wrangler.toml. rollback apaga
+apenas vturapp-db-geo-isolado e vturapp-geonames-isolado.
 EOF
     ;;
 esac

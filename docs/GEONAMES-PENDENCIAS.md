@@ -6,10 +6,12 @@ Atualize-o a cada etapa, distinguindo validação local de alterações remotas.
 ## Situação
 
 - As flags geográficas e de revisão de roteiros estão desligadas.
-- A base mundial foi preparada localmente; o D1 remoto isolado contém apenas uma
-  amostra e não deve ser usado como base mundial.
-- O binding `GEO_DB` não está configurado em produção. As migrações locais
-  `0019` a `0023` ainda não foram aplicadas remotamente.
+- Em 9 de novembro de 2026 a base mundial foi carregada no D1 isolado
+  `vturapp-geonames-isolado` (`bf40654b-8083-4fa1-8424-a923282d9888`), binding
+  `GEO_DB` apenas em `[env.geo]`. Produção continua sem esse binding.
+- As migrações `0000` a `0024` foram aplicadas somente em
+  `vturapp-db-geo-isolado` (`4f480221-b5e7-4639-9e28-d995b9615f7f`). Não foram
+  aplicadas em staging nem em produção.
 - Não houve publicação desta integração.
 - Endereços de clientes, perfil e empresas preenchidos por CEP estão fora do
   escopo e devem permanecer intactos.
@@ -47,18 +49,17 @@ Atualize-o a cada etapa, distinguindo validação local de alterações remotas.
       diferenças em `destinos_revisao_geonames`, com status pendente, e é
       idempotente. O nome personalizado e a referência original permanecem.
       A aplicação remota dessa revisão continua por fazer.
-- [ ] Executar o runbook do ambiente isolado em `docs/GEONAMES-AMBIENTE-ISOLADO.md`.
-      O `[env.geo]` e o script idempotente estão prontos e recusam staging e
-      produção. As migrações e a carga ainda não foram aplicadas remotamente.
-- [x] Revalidar preços, consumo agregado e custo da carga mundial antes de
-      executá-la. A base local de 9 de novembro de 2026 cabe no teto de US$ 20
-      numa única carga (US$ 5,00; US$ 12,33 com margem de 20% nas escritas).
+- [x] Executar o runbook do ambiente isolado em `docs/GEONAMES-AMBIENTE-ISOLADO.md`.
+      Em 9 de novembro de 2026 as migrações `0000`–`0024` e a carga mundial
+      foram aplicadas só em `[env.geo]`. Staging e produção não foram usados.
+- [x] Revalidar preços e executar a carga isolada. `cost.py` confirmou 47.775.724
+      escritas, 1,662 GB, US$ 5,00 e US$ 12,33 com margem. A carga coube no teto.
       Uma segunda carga completa no mesmo mês não cabe. O teto inclui os US$ 5
-      do Workers Paid; alertas não constituem limite rígido. A execução remota
-      continua por fazer.
-- [ ] Carregar e validar a base mundial remota, medir consultas e custos,
-      conferir contagens, integridade e cobertura, sem considerar a amostra como
-      validação mundial.
+      do Workers Paid; alertas não constituem limite rígido.
+- [x] Carregar e validar a base mundial no D1 isolado. As contagens remotas
+      coincidiram com o SQLite. Três lugares sem país são entidades históricas
+      do GeoNames (URSS, Gallia Belgica e Império Acádio), não perda de dados.
+      O benchmark mediu 16, 5.369 e 1 linhas lidas. Isso não ativa produção.
 - [ ] Executar testes autenticados de ponta a ponta e regressões dos módulos,
       inclusive dados legados e cenários de falha e concorrência.
 - [ ] Somente após cumprir os itens acima, aplicar migrações e configuração
@@ -76,12 +77,9 @@ Atualize-o a cada etapa, distinguindo validação local de alterações remotas.
   foi removida; a resolução e a persistência conservam o id personalizado e um
   rótulo que declara a referência indisponível. A alteração de nome no GeoNames
   de teste atualiza o rótulo sem trocar o id.
-- Flags, binding remoto e carga mundial seguem intocados. O `[env.geo]` só
-  declara bancos isolados com ids sentinela; ninguém executou comando remoto.
-- A suíte completa passou de novo nesta etapa: 1470 testes em 186 arquivos
-  (unitários, DOM e Workers), além da checagem de tipos, do lint e do build
-  Cloudflare. A contagem da base foi feita no SQLite local; nenhum comando
-  remoto foi executado.
+- A carga isolada de 9 de novembro de 2026 está registrada em
+  `docs/GEONAMES-AMBIENTE-ISOLADO.md`. `size_after` = 1.647.247.360 bytes.
+  Flags e produção seguem intocados.
 
 ## Validação local anterior (9 de novembro de 2026)
 
