@@ -10,7 +10,9 @@ const state = vi.hoisted(() => ({
 }));
 vi.mock('$lib/config/destinosGeograficos', () => ({
   fornecedoresGeograficosAtivos: true,
-  revisaoRoteiroAtiva: false
+  revisaoRoteiroAtiva: false,
+  modulosOperacionaisGeograficosAtivos: false,
+  campoGeografico: () => ({})
 }));
 vi.mock('$lib/server/v1', async (original) => ({
   ...(await original<typeof import('$lib/server/v1')>()),

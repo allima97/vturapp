@@ -9,7 +9,9 @@ const mocks = vi.hoisted(() => ({
 }));
 vi.mock('$lib/config/destinosGeograficos', () => ({
   revisaoRoteiroAtiva: true,
-  roteiroGeograficoAtivo: true
+  roteiroGeograficoAtivo: true,
+  modulosOperacionaisGeograficosAtivos: false,
+  campoGeografico: () => ({})
 }));
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 vi.mock('$lib/services/api', () => ({

@@ -14,6 +14,7 @@ import {
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateQuoteReadModels } from '$lib/server/readModelCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
+import { complementarListaOperacional } from '$lib/server/destinoOperacional';
 
 const MAX_ORCAMENTO_CREATE_BODY_BYTES = 512 * 1024;
 
@@ -160,7 +161,18 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
       );
     }
 
-    const itensParaInserir = itens.map((item, index: number) => ({
+    const preparados = await complementarListaOperacional(
+      itens,
+      event.platform?.env?.DB,
+      event.platform?.env?.GEO_DB,
+      'city_name'
+    );
+    if (!preparados.ok)
+      return json(
+        { error: preparados.error },
+        { status: preparados.status, headers: NO_STORE_HEADERS }
+      );
+    const itensParaInserir = preparados.itens.map((item, index: number) => ({
       quote_id: quote.id,
       title: item.title || item.descricao || `Item ${index + 1}`,
       product_name: item.product_name || item.produto || null,
@@ -168,6 +180,7 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
       total_amount: Number(item.total_amount || item.valor_total || 0),
       order_index: item.order_index ?? index,
       city_name: item.city_name || item.cidade || null,
+      ...(item.destino_geografico_id ? { destino_geografico_id: item.destino_geografico_id } : {}),
       quantity: item.quantity || item.quantidade || 1,
       unit_price: item.unit_price || item.valor_unitario || 0
     }));

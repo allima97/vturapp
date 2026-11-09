@@ -25,7 +25,7 @@ it('preserva preferências e compartilhamentos ao permitir usuário sem empresa'
   expect(migration).toBeDefined();
   await applyD1Migrations(
     env.DB,
-    migrations.filter((item) => !item.name.startsWith('0017_'))
+    migrations.filter((item) => !item.name.startsWith('0017_') && !item.name.startsWith('0024_'))
   );
 
   const company = crypto.randomUUID();
@@ -51,6 +51,8 @@ it('preserva preferências e compartilhamentos ao permitir usuário sem empresa'
   ]);
   if (!migration) throw new Error('Migração 0017 não encontrada');
   await applyD1Migrations(env.DB, [migration]);
+  const operacional = migrations.find((item) => item.name.startsWith('0024_'));
+  if (operacional) await applyD1Migrations(env.DB, [operacional]);
 
   const savedShare = await env.DB.prepare(
     'SELECT preferencia_id, shared_by, shared_with, status FROM legado_minhas_preferencias_shares WHERE id = ?'

@@ -15,6 +15,7 @@ import {
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import { chunkArray, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
+import { complementarListaOperacional } from '$lib/server/destinoOperacional';
 
 const MAX_VOUCHER_BODY_BYTES = 512 * 1024;
 
@@ -30,10 +31,12 @@ type VoucherDiaDraft = {
   descricao?: string | null;
   data_referencia?: string | null;
   cidade?: string | null;
+  destino_geografico_id?: string | null;
 };
 
 type VoucherHotelDraft = {
   cidade?: string | null;
+  destino_geografico_id?: string | null;
   hotel?: string | null;
   endereco?: string | null;
   data_inicio?: string | null;
@@ -202,13 +205,25 @@ export async function handleVouchersPost(event: RequestEvent) {
     if (voucherError) throw voucherError;
 
     if (Array.isArray(body.dias) && body.dias.length > 0) {
-      const diasPayload = body.dias.map((dia, index) => ({
+      const diasPreparados = await complementarListaOperacional(
+        body.dias,
+        event.platform?.env?.DB,
+        event.platform?.env?.GEO_DB,
+        'cidade'
+      );
+      if (!diasPreparados.ok)
+        return json(
+          { error: diasPreparados.error },
+          { status: diasPreparados.status, headers: NO_STORE_HEADERS }
+        );
+      const diasPayload = diasPreparados.itens.map((dia, index) => ({
         voucher_id: voucher.id,
         dia_numero: dia.dia_numero || index + 1,
         titulo: dia.titulo || null,
         descricao: String(dia.descricao || ''),
         data_referencia: dia.data_referencia || null,
         cidade: dia.cidade || null,
+        ...(dia.destino_geografico_id ? { destino_geografico_id: dia.destino_geografico_id } : {}),
         ordem: index
       }));
       const { error: diasError } = await client.from('voucher_dias').insert(diasPayload);
@@ -216,9 +231,23 @@ export async function handleVouchersPost(event: RequestEvent) {
     }
 
     if (Array.isArray(body.hoteis) && body.hoteis.length > 0) {
-      const hoteisPayload = body.hoteis.map((hotel, index) => ({
+      const hoteisPreparados = await complementarListaOperacional(
+        body.hoteis,
+        event.platform?.env?.DB,
+        event.platform?.env?.GEO_DB,
+        'cidade'
+      );
+      if (!hoteisPreparados.ok)
+        return json(
+          { error: hoteisPreparados.error },
+          { status: hoteisPreparados.status, headers: NO_STORE_HEADERS }
+        );
+      const hoteisPayload = hoteisPreparados.itens.map((hotel, index) => ({
         voucher_id: voucher.id,
         cidade: String(hotel.cidade || ''),
+        ...(hotel.destino_geografico_id
+          ? { destino_geografico_id: hotel.destino_geografico_id }
+          : {}),
         hotel: String(hotel.hotel || ''),
         endereco: hotel.endereco || null,
         data_inicio: hotel.data_inicio || null,

@@ -11,12 +11,14 @@ export type VoucherDia = {
   descricao: string;
   data_referencia?: string | null;
   cidade?: string | null;
+  destino_geografico_id?: string;
   ordem: number;
 };
 
 export type VoucherHotel = {
   id?: string;
   cidade: string;
+  destino_geografico_id?: string;
   hotel: string;
   endereco?: string | null;
   data_inicio?: string | null;

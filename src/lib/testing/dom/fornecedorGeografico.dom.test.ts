@@ -2,7 +2,11 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { flushSync, mount, unmount } from 'svelte';
 
 const mocks = vi.hoisted(() => ({ get: vi.fn(), fetch: vi.fn(), error: vi.fn(), goto: vi.fn() }));
-vi.mock('$lib/config/destinosGeograficos', () => ({ fornecedoresGeograficosAtivos: true }));
+vi.mock('$lib/config/destinosGeograficos', () => ({
+  fornecedoresGeograficosAtivos: true,
+  modulosOperacionaisGeograficosAtivos: false,
+  campoGeografico: () => ({})
+}));
 vi.mock('$app/navigation', () => ({ goto: mocks.goto }));
 vi.mock('$lib/services/api', () => ({
   apiGet: mocks.get,

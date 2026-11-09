@@ -4,6 +4,8 @@
   import { onMount, onDestroy } from 'svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
+  import DestinoOperacional from '$lib/components/DestinoOperacional.svelte';
+  import { campoGeografico } from '$lib/config/destinosGeograficos';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import { FieldInput, FieldSelect, FieldTextarea, LoadingState } from '$lib/components/ui';
@@ -26,6 +28,7 @@
     unit_price: number;
     total_amount: number;
     city_name: string;
+    destino_geografico_id: string;
     order_index: number;
   }
 
@@ -79,6 +82,7 @@
       unit_price: 0,
       total_amount: 0,
       city_name: '',
+      destino_geografico_id: '',
       order_index: index
     };
   }
@@ -156,6 +160,7 @@
           unit_price: Number(item.unit_price ?? item.valor_unitario ?? 0),
           total_amount: Number(item.total_amount ?? item.valor_total ?? 0),
           city_name: String(item.city_name ?? item.cidade ?? ''),
+          destino_geografico_id: String(item.destino_geografico_id ?? ''),
           order_index: Number(item.order_index ?? index)
         })
       );
@@ -329,6 +334,7 @@
           unit_price: item.unit_price,
           total_amount: item.total_amount,
           city_name: item.city_name,
+          ...campoGeografico(item.destino_geografico_id),
           order_index: item.order_index
         }))
       };
@@ -584,13 +590,20 @@
               </div>
 
               <div class="md:col-span-2">
-                <CidadeDestinoAutocomplete
-                  id={`orcamento-editar-item-destino-${index}`}
+                <DestinoOperacional
+                  fieldId={`orcamento-editar-item-destino-${index}`}
                   label="Destino"
                   bind:value={item.city_name}
-                  placeholder="Cidade"
-                  class_name="w-full"
-                />
+                  bind:destinoId={item.destino_geografico_id}
+                >
+                  <CidadeDestinoAutocomplete
+                    id={`orcamento-editar-item-destino-${index}`}
+                    label="Destino"
+                    bind:value={item.city_name}
+                    placeholder="Cidade"
+                    class_name="w-full"
+                  />
+                </DestinoOperacional>
               </div>
 
               <div class="md:col-span-1">

@@ -16,6 +16,7 @@ import { invalidateQuoteReadModels } from '$lib/server/readModelCache';
 import { isQuoteCreatorAllowed, resolveQuoteCreatorScope } from '$lib/server/orcamentos';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import { chunkArray } from '$lib/utils/array';
+import { complementarListaOperacional } from '$lib/server/destinoOperacional';
 
 const MAX_ORCAMENTO_SAVE_BODY_BYTES = 2 * 1024 * 1024;
 
@@ -32,6 +33,7 @@ type QuoteItemPayload = {
   product_name: string | null;
   city_name: string | null;
   cidade_id?: string | null;
+  destino_geografico_id?: string | null;
   quantity: number;
   unit_price: number;
   total_amount: number;
@@ -179,7 +181,19 @@ export async function handleOrcamentosSavePost(event: RequestEvent) {
     if (!isUuid(quoteId))
       return new Response('Quote invalido.', { status: 400, headers: NO_STORE_HEADERS });
 
-    const items = Array.isArray(body?.items) ? (body.items as QuoteItemPayload[]) : [];
+    const recebidos = Array.isArray(body?.items) ? (body.items as QuoteItemPayload[]) : [];
+    const preparados = await complementarListaOperacional(
+      recebidos,
+      event.platform?.env?.DB,
+      event.platform?.env?.GEO_DB,
+      'city_name'
+    );
+    if (!preparados.ok)
+      return new Response(preparados.error, {
+        status: preparados.status,
+        headers: NO_STORE_HEADERS
+      });
+    const items = preparados.itens;
     const removedItemIds = Array.isArray(body?.removed_item_ids)
       ? (body.removed_item_ids as string[])
       : [];
@@ -257,6 +271,7 @@ export async function handleOrcamentosSavePost(event: RequestEvent) {
       product_name: item.product_name,
       city_name: item.city_name,
       cidade_id: item.cidade_id || null,
+      ...(item.destino_geografico_id ? { destino_geografico_id: item.destino_geografico_id } : {}),
       quantity: item.quantity,
       unit_price: item.unit_price,
       total_amount: item.total_amount,

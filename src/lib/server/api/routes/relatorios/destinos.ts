@@ -22,6 +22,8 @@ import {
 } from '$lib/server/readModelCache';
 import { getPlatformExecutionContext } from '$lib/server/readModelRebuild';
 import { fetchRelatorioDestinosReadModelRpc } from '$lib/server/reciboContribuicoesReadModel';
+import { modulosOperacionaisGeograficosAtivos } from '$lib/config/destinosGeograficos';
+import { chaveDestinoRelatorio } from '$lib/relatorioDestino';
 
 const DEFAULT_ITEMS_LIMIT = 250;
 const MAX_ITEMS_LIMIT = 1000;
@@ -186,8 +188,13 @@ export async function handleRelatoriosDestinosGet(event: RequestEvent) {
         >();
 
         for (const contribution of contributions) {
-          const destino = String(contribution.destinoNome || 'Destino nao informado');
-          const current = byDestino.get(destino) || {
+          const agrupado = chaveDestinoRelatorio(
+            contribution.destinoNome,
+            contribution.destinoGeograficoId,
+            modulosOperacionaisGeograficosAtivos
+          );
+          const destino = agrupado.destino;
+          const current = byDestino.get(agrupado.chave) || {
             destino,
             vendaKeys: new Set<string>(),
             quantidade: 0,
@@ -203,7 +210,7 @@ export async function handleRelatoriosDestinosGet(event: RequestEvent) {
             current.quantidade += 1;
           }
           current.receita += Number(contribution.bruto || 0);
-          byDestino.set(destino, current);
+          byDestino.set(agrupado.chave, current);
         }
 
         const items = Array.from(byDestino.values())

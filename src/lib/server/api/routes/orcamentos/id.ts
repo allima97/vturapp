@@ -14,6 +14,7 @@ import {
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateQuoteReadModels } from '$lib/server/readModelCache';
 import { isQuoteCreatorAllowed, resolveQuoteCreatorScope } from '$lib/server/orcamentos';
+import { complementarListaOperacional } from '$lib/server/destinoOperacional';
 
 const QUOTE_SELECT_FIELDS =
   'id, created_at, updated_at, created_by, client_id, client_name, client_whatsapp, client_email, status, status_negociacao, currency, total, data_embarque, data_final, last_interaction_at, last_interaction_notes';
@@ -261,8 +262,14 @@ export async function handleOrcamentosIdPatch(event: RequestEvent) {
 
     if (body.itens && Array.isArray(body.itens)) {
       await client.from('quote_item').delete().eq('quote_id', id);
-      const itens = body.itens as OrcamentoUpdateItem[];
-      const itensParaInserir = itens.map((item, index: number) => ({
+      const preparados = await complementarListaOperacional(
+        body.itens as OrcamentoUpdateItem[],
+        event.platform?.env?.DB,
+        event.platform?.env?.GEO_DB,
+        'city_name'
+      );
+      if (!preparados.ok) return errorResponse(preparados.error, preparados.status);
+      const itensParaInserir = preparados.itens.map((item, index: number) => ({
         quote_id: id,
         title: item.title || '',
         product_name: item.product_name || null,
@@ -271,6 +278,9 @@ export async function handleOrcamentosIdPatch(event: RequestEvent) {
         unit_price: item.unit_price || 0,
         total_amount: item.total_amount || 0,
         city_name: item.city_name || null,
+        ...(item.destino_geografico_id
+          ? { destino_geografico_id: item.destino_geografico_id }
+          : {}),
         order_index: index
       }));
       await client.from('quote_item').insert(itensParaInserir);

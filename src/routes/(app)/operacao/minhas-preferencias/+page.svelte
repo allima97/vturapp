@@ -14,6 +14,8 @@
   import { apiDelete, apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
   import { escapeHtml } from '$lib/utils/html';
+  import DestinoOperacional from '$lib/components/DestinoOperacional.svelte';
+  import { campoGeografico } from '$lib/config/destinosGeograficos';
   type Preferencia = {
     id: string;
     tipo_produto_id: string | null;
@@ -47,6 +49,7 @@
   let deletingId = '';
   let editingId: string | null = null;
   let cidadeBusca = '';
+  let destinoGeograficoId = '';
   let cidadeResultados: CidadeSugestao[] = [];
   let buscandoCidade = false;
   let cidadeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -166,6 +169,7 @@
     editingId = null;
     form = createForm();
     cidadeBusca = '';
+    destinoGeograficoId = '';
     cidadeResultados = [];
     modalOpen = true;
   }
@@ -182,6 +186,7 @@
       observacao: p.observacao || ''
     };
     cidadeBusca = p.cidade?.nome || '';
+    destinoGeograficoId = '';
     cidadeResultados = [];
     modalOpen = true;
   }
@@ -197,6 +202,7 @@
         id: editingId || undefined,
         tipo_produto_id: form.tipo_produto_id || null,
         cidade_id: form.cidade_id || null,
+        ...campoGeografico(destinoGeograficoId),
         nome: form.nome,
         localizacao: form.localizacao || null,
         classificacao: form.classificacao || null,
@@ -315,34 +321,41 @@
         class_name="w-full"
       />
     </div>
-    <div class="relative">
-      <FieldInput
-        id="pref-cidade"
-        label="Cidade"
-        bind:value={cidadeBusca}
-        on:input={onCidadeInput}
-        icon={Search}
-        class_name="w-full"
-        placeholder="Buscar cidade..."
-      />
-      {#if cidadeResultados.length > 0}
-        <div
-          class="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg"
-        >
-          {#each cidadeResultados as cidade}
-            <Button
-              type="button"
-              variant="unstyled"
-              size="sm"
-              class_name="block w-full rounded-none px-3 py-2 text-left text-sm hover:bg-slate-50"
-              on:click={() => selecionarCidade(cidade)}
-            >
-              {cidade.nome}{#if cidade.subdivisao_nome}, {cidade.subdivisao_nome}{/if}
-            </Button>
-          {/each}
-        </div>
-      {/if}
-    </div>
+    <DestinoOperacional
+      fieldId="pref-cidade-geo"
+      label="Cidade"
+      bind:value={cidadeBusca}
+      bind:destinoId={destinoGeograficoId}
+    >
+      <div class="relative">
+        <FieldInput
+          id="pref-cidade"
+          label="Cidade"
+          bind:value={cidadeBusca}
+          on:input={onCidadeInput}
+          icon={Search}
+          class_name="w-full"
+          placeholder="Buscar cidade..."
+        />
+        {#if cidadeResultados.length > 0}
+          <div
+            class="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg"
+          >
+            {#each cidadeResultados as cidade}
+              <Button
+                type="button"
+                variant="unstyled"
+                size="sm"
+                class_name="block w-full rounded-none px-3 py-2 text-left text-sm hover:bg-slate-50"
+                on:click={() => selecionarCidade(cidade)}
+              >
+                {cidade.nome}{#if cidade.subdivisao_nome}, {cidade.subdivisao_nome}{/if}
+              </Button>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    </DestinoOperacional>
     <FieldInput
       id="pref-localizacao"
       label="Localização"

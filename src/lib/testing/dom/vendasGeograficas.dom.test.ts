@@ -9,7 +9,11 @@ const mocks = vi.hoisted(() => ({
   goto: vi.fn(),
   error: vi.fn()
 }));
-vi.mock('$lib/config/destinosGeograficos', () => ({ vendasGeograficasAtivas: true }));
+vi.mock('$lib/config/destinosGeograficos', () => ({
+  vendasGeograficasAtivas: true,
+  modulosOperacionaisGeograficosAtivos: false,
+  campoGeografico: () => ({})
+}));
 vi.mock('$app/stores', async () => {
   const { readable } = await import('svelte/store');
   return {

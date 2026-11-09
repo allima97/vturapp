@@ -25,7 +25,9 @@ vi.mock('$lib/server/v1', async (original) => ({
 vi.mock('$lib/config/destinosGeograficos', () => ({
   roteiroGeograficoAtivo: true,
   revisaoRoteiroAtiva: false,
-  fornecedoresGeograficosAtivos: false
+  fornecedoresGeograficosAtivos: false,
+  modulosOperacionaisGeograficosAtivos: false,
+  campoGeografico: () => ({})
 }));
 import { handleRoteirosSavePost } from './save';
 import { handleRoteirosIdGet } from './id';

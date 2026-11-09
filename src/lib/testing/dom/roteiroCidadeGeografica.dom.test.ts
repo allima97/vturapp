@@ -3,7 +3,11 @@ import { flushSync, mount, tick, unmount } from 'svelte';
 
 const api = vi.hoisted(() => ({ fetch: vi.fn(), get: vi.fn() }));
 vi.mock('$lib/services/api', () => ({ apiFetch: api.fetch, apiGet: api.get }));
-vi.mock('$lib/config/destinosGeograficos', () => ({ roteiroGeograficoAtivo: true }));
+vi.mock('$lib/config/destinosGeograficos', () => ({
+  roteiroGeograficoAtivo: true,
+  modulosOperacionaisGeograficosAtivos: false,
+  campoGeografico: () => ({})
+}));
 import Harness from './harness/RoteiroCidadeGeograficaHarness.svelte';
 import ItinerarioHarness from './harness/RoteiroItinerarioHarness.svelte';
 import ServicosHarness from './harness/RoteiroServicosHarness.svelte';

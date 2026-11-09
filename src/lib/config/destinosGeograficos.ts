@@ -10,3 +10,14 @@ export const vendasGeograficasAtivas = false;
 export const produtosGeograficosAtivos = false;
 // Exige editor, proteção contra clientes antigos e migração de fornecedores.
 export const fornecedoresGeograficosAtivos = false;
+// Orçamentos, consultoria, viagens, vouchers, preferências e relatórios.
+// Permanece desligada: não grava identidade geográfica nem altera dados existentes.
+export const modulosOperacionaisGeograficosAtivos = false;
+
+export function campoGeografico(
+  id: string | null | undefined,
+  nome = 'destino_geografico_id'
+): Record<string, string> {
+  if (!modulosOperacionaisGeograficosAtivos || !id) return {};
+  return { [nome]: id };
+}

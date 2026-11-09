@@ -123,3 +123,30 @@ bucket_name = "vturapp-files"
 
 [env.production.triggers]
 crons = ["*/5 * * * *", "7 6 * * *"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AMBIENTE: geo
+# Banco e Worker isolados para a carga GeoNames. Não usa os ids de staging
+# nem de produção. Os ids abaixo são sentinelas: troque-os depois de
+# `wrangler d1 create` e antes de qualquer comando remoto. Não faça deploy
+# deste ambiente no lugar do aplicativo publicado.
+# ─────────────────────────────────────────────────────────────────────────────
+[env.geo]
+name = "vturapp-geo-isolado"
+compatibility_date = "2026-04-19"
+compatibility_flags = ["nodejs_compat"]
+
+[env.geo.placement]
+region = "aws:us-west-2"
+
+[[env.geo.d1_databases]]
+binding = "DB"
+database_name = "vturapp-db-geo-isolado"
+database_id = "00000000-0000-4000-8000-0000000000a1"
+migrations_dir = "./drizzle"
+
+[[env.geo.d1_databases]]
+binding = "GEO_DB"
+database_name = "vturapp-geonames-isolado"
+database_id = "00000000-0000-4000-8000-0000000000a2"
+migrations_dir = "./drizzle"

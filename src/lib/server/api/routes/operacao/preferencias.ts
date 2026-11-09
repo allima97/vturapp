@@ -12,6 +12,7 @@ import {
   toErrorResponse
 } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
+import { complementoDestinoOperacional } from '$lib/server/destinoOperacional';
 import {
   buildReadModelCacheKey,
   getCachedReadModel,
@@ -125,11 +126,22 @@ export async function handleOperacaoPreferenciasPost(event: RequestEvent) {
     if (!String(nome || '').trim())
       return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
 
+    const destinoGeografico = await complementoDestinoOperacional(
+      body,
+      event.platform?.env?.DB,
+      event.platform?.env?.GEO_DB
+    );
+    if (!destinoGeografico.ok)
+      return json(
+        { error: destinoGeografico.error },
+        { status: destinoGeografico.status, headers: NO_STORE_HEADERS }
+      );
     const payload = {
       created_by: scope.userId,
       company_id: scope.companyId,
       tipo_produto_id: isUuid(tipoProdutoId) ? tipoProdutoId : null,
       cidade_id: isUuid(cidadeId) ? cidadeId : null,
+      ...destinoGeografico.campos,
       nome: String(nome).trim(),
       localizacao: String(localizacao || '').trim() || null,
       classificacao: String(classificacao || '').trim() || null,

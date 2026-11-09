@@ -11,6 +11,7 @@ import {
   safeJsonParse
 } from '../../../../../routes/api/v1/preferencias/_shared';
 import { invalidatePreferenceReadModels } from '$lib/server/readModelCache';
+import { complementoDestinoOperacional } from '$lib/server/destinoOperacional';
 
 const MAX_PREFERENCIAS_SAVE_BODY_BYTES = 64 * 1024;
 
@@ -42,9 +43,17 @@ export async function handlePreferenciasSavePost(event: RequestEvent) {
     const cidadeId = isUuid(cidadeRaw) ? cidadeRaw : null;
     const tipoProdutoId = isUuid(tipoProdutoRaw) ? tipoProdutoRaw : null;
 
+    const destinoGeografico = await complementoDestinoOperacional(
+      body as object,
+      event.platform?.env?.DB,
+      event.platform?.env?.GEO_DB
+    );
+    if (!destinoGeografico.ok)
+      return buildNoStoreJsonResponse({ error: destinoGeografico.error }, destinoGeografico.status);
     const payload: Record<string, unknown> = {
       tipo_produto_id: tipoProdutoId,
       cidade_id: cidadeId,
+      ...destinoGeografico.campos,
       nome,
       localizacao: String(body?.localizacao || '').trim() || null,
       classificacao: String(body?.classificacao || '').trim() || null,

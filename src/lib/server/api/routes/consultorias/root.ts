@@ -12,6 +12,7 @@ import {
 } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateConsultoriaReadModels } from '$lib/server/readModelCache';
+import { complementoDestinoOperacional } from '$lib/server/destinoOperacional';
 
 // Espelha: vtur-app/src/pages/api/consultorias/
 // Tabela: consultorias_online
@@ -135,12 +136,24 @@ export async function handleConsultoriasPost(event: RequestEvent) {
       return errorResponse('data_hora é obrigatória.', 400);
     }
 
+    const destinoGeografico = await complementoDestinoOperacional(
+      body,
+      event.platform?.env?.DB,
+      event.platform?.env?.GEO_DB,
+      'destino_geografico_id',
+      'destino'
+    );
+    if (!destinoGeografico.ok)
+      return errorResponse(destinoGeografico.error, destinoGeografico.status);
     const payload = {
       cliente_id: isUuid(clienteId) ? clienteId : null,
       cliente_nome: clienteNome,
       data_hora: new Date(String(dataHora)).toISOString(),
       lembrete: String(body.lembrete || '15min').trim(),
-      destino: String(body.destino || '').trim() || null,
+      destino: destinoGeografico.campos.destino || String(body.destino || '').trim() || null,
+      ...('destino_geografico_id' in destinoGeografico.campos
+        ? { destino_geografico_id: destinoGeografico.campos.destino_geografico_id }
+        : {}),
       quantidade_pessoas: Math.max(
         1,
         Number(body.quantidade_pessoas ?? body.quantidadePessoas ?? 1) || 1
@@ -240,6 +253,16 @@ export async function handleConsultoriasPatch(event: RequestEvent) {
     }
     if (body.lembrete !== undefined) payload.lembrete = body.lembrete;
     if (body.destino !== undefined) payload.destino = String(body.destino || '').trim() || null;
+    const destinoGeografico = await complementoDestinoOperacional(
+      body,
+      event.platform?.env?.DB,
+      event.platform?.env?.GEO_DB,
+      'destino_geografico_id',
+      'destino'
+    );
+    if (!destinoGeografico.ok)
+      return errorResponse(destinoGeografico.error, destinoGeografico.status);
+    Object.assign(payload, destinoGeografico.campos);
     if (body.quantidade_pessoas !== undefined || body.quantidadePessoas !== undefined)
       payload.quantidade_pessoas =
         Number(body.quantidade_pessoas ?? body.quantidadePessoas ?? 1) || 1;

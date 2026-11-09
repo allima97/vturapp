@@ -14,6 +14,8 @@
   import Badge from '$lib/components/ui/Badge.svelte';
   import EmptyState from '$lib/components/ui/EmptyState.svelte';
   import { toast } from '$lib/stores/ui';
+  import DestinoOperacional from '$lib/components/DestinoOperacional.svelte';
+  import { campoGeografico } from '$lib/config/destinosGeograficos';
   import { toUserMessage } from '$lib/utils/errors';
   import { apiGet, apiPatch, apiPost, isCanceledApiError } from '$lib/services/api';
   import { safeOpenNewTab } from '$lib/security/url';
@@ -42,6 +44,7 @@
     data_hora: string;
     lembrete: string;
     destino: string;
+    destino_geografico_id: string;
     quantidade_pessoas: number;
     taxa_consultoria: number;
     notas: string;
@@ -91,6 +94,7 @@
       data_hora: '',
       lembrete: '15min',
       destino: '',
+      destino_geografico_id: '',
       quantidade_pessoas: 1,
       taxa_consultoria: 0,
       notas: ''
@@ -155,6 +159,7 @@
       data_hora: dataHoraLocal,
       lembrete: c.lembrete || '15min',
       destino: c.destino || '',
+      destino_geografico_id: '',
       quantidade_pessoas: c.quantidade_pessoas || 1,
       taxa_consultoria: c.taxa_consultoria || 0,
       notas: c.notas || ''
@@ -186,6 +191,7 @@
         data_hora: new Date(form.data_hora).toISOString(),
         lembrete: form.lembrete,
         destino: form.destino.trim() || null,
+        ...campoGeografico(form.destino_geografico_id),
         quantidade_pessoas: Number(form.quantidade_pessoas) || 1,
         taxa_consultoria: Number(form.taxa_consultoria) || 0,
         notas: form.notas.trim() || null
@@ -421,13 +427,20 @@
     </div>
 
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      <CidadeDestinoAutocomplete
-        id="destino"
+      <DestinoOperacional
+        fieldId="destino"
         label="Destino"
         bind:value={form.destino}
-        placeholder="Ex: Paris, Miami..."
-        endpoint="/api/v1/orcamentos/cidades-busca"
-      />
+        bind:destinoId={form.destino_geografico_id}
+      >
+        <CidadeDestinoAutocomplete
+          id="destino"
+          label="Destino"
+          bind:value={form.destino}
+          placeholder="Ex: Paris, Miami..."
+          endpoint="/api/v1/orcamentos/cidades-busca"
+        />
+      </DestinoOperacional>
       <FieldInput
         id="taxa"
         label="Taxa de Consultoria (R$)"

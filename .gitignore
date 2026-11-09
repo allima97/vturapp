@@ -28,3 +28,8 @@ src/src/
 .dev.vars
 !.dev.vars.example
 .secrets/
+
+# GeoNames local artifacts. Never commit the world database or import ledger.
+/geonames.sqlite
+/geonames-sql
+/.geonames-isolated-ledger

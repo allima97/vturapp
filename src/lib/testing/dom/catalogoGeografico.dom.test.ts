@@ -9,7 +9,11 @@ vi.mock('$lib/services/api', () => ({
   apiDelete: api.delete,
   apiGet: vi.fn()
 }));
-vi.mock('$lib/config/destinosGeograficos', () => ({ catalogoGeograficoAtivo: true }));
+vi.mock('$lib/config/destinosGeograficos', () => ({
+  catalogoGeograficoAtivo: true,
+  modulosOperacionaisGeograficosAtivos: false,
+  campoGeografico: () => ({})
+}));
 vi.mock('$lib/stores/ui', () => ({ toast }));
 vi.mock('$lib/stores/confirm', () => ({ confirmAction: vi.fn() }));
 import Page from '../../../routes/(app)/cadastros/opcionais/+page.svelte';

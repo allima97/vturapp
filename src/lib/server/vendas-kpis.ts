@@ -209,6 +209,7 @@ export type VendasKpiReciboContribution = {
   produtoId?: string | null;
   produtoNome?: string | null;
   destinoNome?: string | null;
+  destinoGeograficoId?: string | null;
   bruto: number;
   taxas: number;
   isSeguro: boolean;

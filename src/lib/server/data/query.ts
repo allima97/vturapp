@@ -10,6 +10,7 @@ import { createAuthApi } from './authApi';
 import { createStorageApi } from './storageApi';
 import {
   fornecedoresGeograficosAtivos,
+  modulosOperacionaisGeograficosAtivos,
   revisaoRoteiroAtiva
 } from '$lib/config/destinosGeograficos';
 
@@ -45,6 +46,24 @@ if (revisaoRoteiroAtiva) {
       revisao: { kind: 'text', nullable: false }
     }
   };
+}
+if (modulosOperacionaisGeograficosAtivos) {
+  for (const [name, columns] of [
+    ['quote_item', ['destino_geografico_id']],
+    ['consultorias_online', ['destino_geografico_id']],
+    ['viagens', ['destino_geografico_id', 'origem_geografica_id']],
+    ['voucher_dias', ['destino_geografico_id']],
+    ['voucher_hoteis', ['destino_geografico_id']],
+    ['minhas_preferencias', ['destino_geografico_id']]
+  ] as const) {
+    tables[name] = {
+      ...tables[name],
+      columns: {
+        ...tables[name].columns,
+        ...Object.fromEntries(columns.map((column) => [column, { kind: 'text', nullable: true }]))
+      }
+    };
+  }
 }
 if (fornecedoresGeograficosAtivos) {
   tables.fornecedores = {

@@ -14,6 +14,7 @@ import { resolveViagemStatus } from '$lib/viagens/status';
 import { invalidateTripReadModels } from '$lib/server/readModelCache';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
+import { complementoDestinoOperacional } from '$lib/server/destinoOperacional';
 
 const MAX_VIAGEM_CREATE_BODY_BYTES = 256 * 1024;
 
@@ -28,6 +29,8 @@ type ViagemCreateBody = {
   follow_up_text?: unknown;
   follow_up_fechado?: unknown;
   company_id?: unknown;
+  origem_geografica_id?: unknown;
+  destino_geografico_id?: unknown;
 };
 
 function readViagemCreateBody(value: unknown): ViagemCreateBody {
@@ -43,7 +46,9 @@ function readViagemCreateBody(value: unknown): ViagemCreateBody {
     observacoes: body.observacoes,
     follow_up_text: body.follow_up_text,
     follow_up_fechado: body.follow_up_fechado,
-    company_id: body.company_id
+    company_id: body.company_id,
+    origem_geografica_id: body.origem_geografica_id,
+    destino_geografico_id: body.destino_geografico_id
   };
 }
 
@@ -125,12 +130,38 @@ export async function handleViagensCreatePost(event: RequestEvent) {
       );
     }
 
+    const origemGeografica = await complementoDestinoOperacional(
+      body,
+      event.platform?.env?.DB,
+      event.platform?.env?.GEO_DB,
+      'origem_geografica_id',
+      'origem'
+    );
+    if (!origemGeografica.ok)
+      return json(
+        { error: origemGeografica.error },
+        { status: origemGeografica.status, headers: NO_STORE_HEADERS }
+      );
+    const destinoGeografico = await complementoDestinoOperacional(
+      body,
+      event.platform?.env?.DB,
+      event.platform?.env?.GEO_DB,
+      'destino_geografico_id',
+      'destino'
+    );
+    if (!destinoGeografico.ok)
+      return json(
+        { error: destinoGeografico.error },
+        { status: destinoGeografico.status, headers: NO_STORE_HEADERS }
+      );
     const payload = {
       company_id: companyId,
       responsavel_user_id: user.id,
       cliente_id: clienteId,
-      origem,
-      destino,
+      origem: origemGeografica.campos.origem || origem,
+      destino: destinoGeografico.campos.destino || destino,
+      ...origemGeografica.campos,
+      ...destinoGeografico.campos,
       data_inicio: dataInicio,
       data_fim: dataFim,
       status,

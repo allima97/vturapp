@@ -58,6 +58,8 @@
   import { addDaysISODate, diffDaysISODate } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
   import { apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
+  import DestinoOperacional from '$lib/components/DestinoOperacional.svelte';
+  import { campoGeografico } from '$lib/config/destinosGeograficos';
   import { createLoadGuard } from '$lib/utils/loadGuard';
   import type {
     VoucherProvider,
@@ -254,6 +256,7 @@
           ? addDaysToDate(form.data_inicio, form.dias.length)
           : null,
         cidade: null,
+        destino_geografico_id: '',
         ordem: form.dias.length
       }
     ];
@@ -408,6 +411,7 @@
       ...form.hoteis,
       {
         cidade: '',
+        destino_geografico_id: '',
         hotel: '',
         endereco: '',
         data_inicio: '',
@@ -569,8 +573,14 @@
         ativo: true,
         status: finalizar ? 'finalizado' : 'rascunho',
         extra_data: form.extra_data,
-        dias: form.dias,
-        hoteis: form.hoteis,
+        dias: form.dias.map(({ destino_geografico_id, ...dia }) => ({
+          ...dia,
+          ...campoGeografico(destino_geografico_id)
+        })),
+        hoteis: form.hoteis.map(({ destino_geografico_id, ...hotel }) => ({
+          ...hotel,
+          ...campoGeografico(destino_geografico_id)
+        })),
         viagem_id: viagemId
       };
 
@@ -966,13 +976,20 @@
                               bind:value={dia.titulo}
                               placeholder="Ex: Lisboa - Chegada"
                             />
-                            <CidadeDestinoAutocomplete
-                              id={`voucher-dia-cidade-${i}`}
+                            <DestinoOperacional
+                              fieldId={`voucher-dia-cidade-${i}`}
                               label="Cidade"
                               bind:value={dia.cidade}
-                              placeholder="Nome da cidade"
-                              endpoint="/api/v1/viagens/cidades-busca"
-                            />
+                              bind:destinoId={dia.destino_geografico_id}
+                            >
+                              <CidadeDestinoAutocomplete
+                                id={`voucher-dia-cidade-${i}`}
+                                label="Cidade"
+                                bind:value={dia.cidade}
+                                placeholder="Nome da cidade"
+                                endpoint="/api/v1/viagens/cidades-busca"
+                              />
+                            </DestinoOperacional>
                           </div>
                           <FieldTextarea
                             id={`voucher-dia-descricao-${i}`}
@@ -1097,14 +1114,22 @@
                       {#if activeHotelIndexes.includes(i)}
                         <div class="space-y-4 border-t border-slate-100 p-4" transition:slide>
                           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <CidadeDestinoAutocomplete
-                              id={`voucher-hotel-cidade-${i}`}
+                            <DestinoOperacional
+                              fieldId={`voucher-hotel-cidade-${i}`}
                               label="Cidade"
                               required={true}
                               bind:value={hotel.cidade}
-                              placeholder="Nome da cidade"
-                              endpoint="/api/v1/viagens/cidades-busca"
-                            />
+                              bind:destinoId={hotel.destino_geografico_id}
+                            >
+                              <CidadeDestinoAutocomplete
+                                id={`voucher-hotel-cidade-${i}`}
+                                label="Cidade"
+                                required={true}
+                                bind:value={hotel.cidade}
+                                placeholder="Nome da cidade"
+                                endpoint="/api/v1/viagens/cidades-busca"
+                              />
+                            </DestinoOperacional>
                             <FieldInput
                               id={`voucher-hotel-nome-${i}`}
                               label="Hotel"

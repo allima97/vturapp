@@ -15,7 +15,7 @@
 
   export let fieldId: string;
   export let destinoId: string | null | undefined = '';
-  export let value = '';
+  export let value: string | null | undefined = '';
   export let label = 'Cidade de destino';
   export let required = false;
   export let disabled = false;
@@ -39,13 +39,13 @@
   let validacaoFalhou = false;
   let referenciaIndisponivel = false;
 
-  $: invalido = validacaoFalhou || (Boolean(value.trim()) && !destinoId);
-  $: valid = !resolvendo && !invalido && (!required || Boolean(value.trim() && destinoId));
+  $: invalido = validacaoFalhou || (Boolean((value ?? '').trim()) && !destinoId);
+  $: valid = !resolvendo && !invalido && (!required || Boolean((value ?? '').trim() && destinoId));
   $: if (input) {
     input.setCustomValidity(
       resolvendo
         ? 'Aguarde a validação do destino.'
-        : required && !value.trim()
+        : required && !(value ?? '').trim()
           ? 'Selecione um destino.'
           : invalido
             ? 'Selecione um destino na lista.'
@@ -109,7 +109,7 @@
     sequencia++;
     dispatch('edit');
     if (timer) clearTimeout(timer);
-    timer = setTimeout(() => void buscar(value), 300);
+    timer = setTimeout(() => void buscar(value ?? ''), 300);
   }
 
   function selecionar(destino: Destino) {
@@ -133,7 +133,7 @@
       erro = 'Informe um código de país com duas letras, como BR ou IT.';
       return;
     }
-    void buscar(value, true, proximo);
+    void buscar(value ?? '', true, proximo);
   }
 
   onMount(() => {
@@ -204,7 +204,7 @@
       preservado; selecione outro destino para atualizar o vínculo.
     </p>
   {/if}
-  {#if aberto && (value.trim() || erro)}
+  {#if aberto && ((value ?? '').trim() || erro)}
     <div
       class="absolute z-50 mt-1 max-h-80 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg"
     >
@@ -224,7 +224,7 @@
             </li>
           {/each}
         </ul>
-      {:else if value.trim().length >= 2}
+      {:else if (value ?? '').trim().length >= 2}
         <p class="px-3 py-2 text-sm text-slate-500">Nenhum destino encontrado.</p>
       {/if}
       {#if mais && !exata}
@@ -232,7 +232,7 @@
           Há mais resultados. Digite mais letras ou use a busca exata.
         </p>
       {/if}
-      {#if value.trim()}
+      {#if (value ?? '').trim()}
         <div class="border-t border-slate-200 px-3 py-2">
           <label for={`${fieldId}-pais`} class="text-xs text-slate-600"
             >País na busca exata (código, opcional)</label

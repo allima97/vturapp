@@ -38,23 +38,24 @@ Atualize-o a cada etapa, distinguindo validação local de alterações remotas.
       novos; importar hotéis e passeios acrescenta registros sem reutilizar os
       ids anteriores. Confirmações fornecidas pela API não comprovam interação
       humana.
-- [ ] Integrar os campos operacionais restantes, incluindo orçamentos,
-      consultoria, viagens, vouchers, preferências e relatórios, conforme o uso de
-      cada módulo. Vendas, produtos e fornecedores já têm editor geográfico atrás
-      das flags, que permanecem desligadas. Os demais módulos continuam no
-      catálogo interno de cidades. Endereços por CEP não foram alterados.
-      Preservar dados existentes e permissões antes de qualquer ativação.
-- [ ] Concluir, no ambiente remoto, a atualização incremental da base e a
-      decisão de reatribuição em massa. Localmente, um destino personalizado
-      cuja referência GeoNames sumiu continua buscável e gravável, com o nome
-      preservado e o aviso de referência indisponível; uma localidade alterada
-      mantém o id e passa a exibir o nome atual. Região ausente continua fora
-      do rótulo. A atribuição CC BY 4.0 permanece nos seletores.
-- [ ] Conferir migrações, binding, ambiente e plano de recuperação; validar
-      localmente e depois em ambiente remoto isolado com dados representativos.
-- [ ] Revalidar preços, consumo agregado e custo da carga mundial antes de
-      executá-la. O teto autorizado por ciclo é US$ 20 no total, incluindo os
-      US$ 5 do plano Workers Paid; alertas não constituem limite rígido.
+- [x] Integrar localmente orçamentos, consultoria, viagens, vouchers,
+      preferências e relatórios sob `modulosOperacionaisGeograficosAtivos`,
+      que permanece desligada. Com a flag apagada, o texto e o `cidade_id`
+      internos seguem iguais e um id geográfico enviado é recusado. Endereços
+      por CEP não foram alterados. A ativação remota continua pendente.
+- [x] Não reatribuir referências em massa. A atualização incremental só grava
+      diferenças em `destinos_revisao_geonames`, com status pendente, e é
+      idempotente. O nome personalizado e a referência original permanecem.
+      A aplicação remota dessa revisão continua por fazer.
+- [ ] Executar o runbook do ambiente isolado em `docs/GEONAMES-AMBIENTE-ISOLADO.md`.
+      O `[env.geo]` e o script idempotente estão prontos e recusam staging e
+      produção. As migrações e a carga ainda não foram aplicadas remotamente.
+- [x] Revalidar preços, consumo agregado e custo da carga mundial antes de
+      executá-la. A base local de 9 de novembro de 2026 cabe no teto de US$ 20
+      numa única carga (US$ 5,00; US$ 12,33 com margem de 20% nas escritas).
+      Uma segunda carga completa no mesmo mês não cabe. O teto inclui os US$ 5
+      do Workers Paid; alertas não constituem limite rígido. A execução remota
+      continua por fazer.
 - [ ] Carregar e validar a base mundial remota, medir consultas e custos,
       conferir contagens, integridade e cobertura, sem considerar a amostra como
       validação mundial.
@@ -75,10 +76,12 @@ Atualize-o a cada etapa, distinguindo validação local de alterações remotas.
   foi removida; a resolução e a persistência conservam o id personalizado e um
   rótulo que declara a referência indisponível. A alteração de nome no GeoNames
   de teste atualiza o rótulo sem trocar o id.
-- Flags, binding `GEO_DB`, migrações remotas e carga mundial seguem intocados.
-- A suíte completa passou: 1467 testes em 184 arquivos (unitários, DOM e
-  Workers), além da checagem de tipos, do lint e do build Cloudflare. Esses
-  resultados não validam a carga nem o ambiente remoto.
+- Flags, binding remoto e carga mundial seguem intocados. O `[env.geo]` só
+  declara bancos isolados com ids sentinela; ninguém executou comando remoto.
+- A suíte completa passou de novo nesta etapa: 1470 testes em 186 arquivos
+  (unitários, DOM e Workers), além da checagem de tipos, do lint e do build
+  Cloudflare. A contagem da base foi feita no SQLite local; nenhum comando
+  remoto foi executado.
 
 ## Validação local anterior (9 de novembro de 2026)
 
