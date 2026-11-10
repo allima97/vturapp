@@ -58,7 +58,10 @@ export async function handleClientesCreatePost(event: RequestEvent) {
     } else if (isUuid(requestedCompanyId)) {
       // Qualquer papel com company_id explícito: valida se está no escopo
       if (!scopedIdSet.has(requestedCompanyId)) {
-        return json({ error: 'company_id fora do escopo.' }, { status: 403, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'company_id fora do escopo.' },
+          { status: 403, headers: NO_STORE_HEADERS }
+        );
       }
       companyId = requestedCompanyId;
     } else {
@@ -130,7 +133,10 @@ export async function handleClientesCreatePost(event: RequestEvent) {
       userId: user.id
     });
 
-    return json({ success: true, data, message: 'Cliente criado com sucesso.' }, { headers: NO_STORE_HEADERS });
+    return json(
+      { success: true, data, message: 'Cliente criado com sucesso.' },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao criar cliente.');
   }

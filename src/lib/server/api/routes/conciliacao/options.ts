@@ -27,12 +27,18 @@ export async function handleConciliacaoOptionsGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster && !scope.isFinanceiro && !scope.isGestor) {
-      ensureModuloAccess(scope, ['operacao_conciliacao', 'conciliacao'], 1, 'Sem acesso à Conciliação.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_conciliacao', 'conciliacao'],
+        1,
+        'Sem acesso à Conciliação.'
+      );
     }
 
     const companyIds = resolveScopedCompanyIds(scope, event.url.searchParams.get('company_id'));
 
-    if (companyIds.length === 0) return json({ vendedores: [], produtosMeta: [] }, { headers: DYNAMIC_READ_HEADERS });
+    if (companyIds.length === 0)
+      return json({ vendedores: [], produtosMeta: [] }, { headers: DYNAMIC_READ_HEADERS });
 
     const usersData = await fetchRankingVendedoresByCompanyIds(client, companyIds);
 
@@ -53,10 +59,13 @@ export async function handleConciliacaoOptionsGet(event: RequestEvent) {
       .order('nome')
       .limit(100);
 
-    return json({
-      vendedores: vendedoresFinal,
-      produtosMeta: produtosData || []
-    }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      {
+        vendedores: vendedoresFinal,
+        produtosMeta: produtosData || []
+      },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar opções da conciliação.');
   }

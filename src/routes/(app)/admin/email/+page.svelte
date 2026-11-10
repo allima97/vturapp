@@ -47,7 +47,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const payload = await apiGet<{ settings: EmailSettings }>('/api/v1/admin/email', undefined, request.signal);
+      const payload = await apiGet<{ settings: EmailSettings }>(
+        '/api/v1/admin/email',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       form = {
         smtp_host: payload.settings.smtp_host || '',
@@ -115,38 +119,98 @@
 <PageHeader
   title="E-mail"
   subtitle="Configuracoes globais de envio para administracao, avisos, suporte e financeiro."
-  breadcrumbs={[
-    { label: 'Administracao', href: '/admin' },
-    { label: 'E-mail' }
-  ]}
+  breadcrumbs={[{ label: 'Administracao', href: '/admin' }, { label: 'E-mail' }]}
   actions={[{ label: 'Atualizar', onClick: loadPage, variant: 'secondary', icon: RefreshCw }]}
 />
 
 <div class="space-y-6">
   <Card color="financeiro" title="Envio principal">
     <div class="grid gap-4 md:grid-cols-2">
-      <FieldInput id="resend-key" label="Resend API key" type="password" bind:value={form.resend_api_key} class_name="md:col-span-2 w-full" />
-      <FieldInput id="smtp-host" label="SMTP host" bind:value={form.smtp_host} class_name="w-full" />
-      <FieldInput id="smtp-port" label="SMTP port" bind:value={form.smtp_port} class_name="w-full" />
-      <FieldInput id="smtp-user" label="SMTP user" bind:value={form.smtp_user} class_name="w-full" />
-      <FieldInput id="smtp-pass" label="SMTP password" type="password" bind:value={form.smtp_pass} class_name="w-full" />
-      <FieldCheckbox label="SMTP seguro" bind:checked={form.smtp_secure} helper="Ativa TLS/SSL quando houver fallback SMTP." class_name="rounded-xl border border-slate-200 p-4" />
+      <FieldInput
+        id="resend-key"
+        label="Resend API key"
+        type="password"
+        bind:value={form.resend_api_key}
+        class_name="md:col-span-2 w-full"
+      />
+      <FieldInput
+        id="smtp-host"
+        label="SMTP host"
+        bind:value={form.smtp_host}
+        class_name="w-full"
+      />
+      <FieldInput
+        id="smtp-port"
+        label="SMTP port"
+        bind:value={form.smtp_port}
+        class_name="w-full"
+      />
+      <FieldInput
+        id="smtp-user"
+        label="SMTP user"
+        bind:value={form.smtp_user}
+        class_name="w-full"
+      />
+      <FieldInput
+        id="smtp-pass"
+        label="SMTP password"
+        type="password"
+        bind:value={form.smtp_pass}
+        class_name="w-full"
+      />
+      <FieldCheckbox
+        label="SMTP seguro"
+        bind:checked={form.smtp_secure}
+        helper="Ativa TLS/SSL quando houver fallback SMTP."
+        class_name="rounded-xl border border-slate-200 p-4"
+      />
     </div>
   </Card>
 
   <Card color="financeiro" title="Remetentes por area">
     <div class="grid gap-4 md:grid-cols-2">
-      <FieldInput id="from-alerta" label="Alerta" bind:value={form.alerta_from_email} class_name="w-full" />
-      <FieldInput id="from-admin" label="Admin" bind:value={form.admin_from_email} class_name="w-full" />
-      <FieldInput id="from-avisos" label="Avisos" bind:value={form.avisos_from_email} class_name="w-full" />
-      <FieldInput id="from-financeiro" label="Financeiro" bind:value={form.financeiro_from_email} class_name="w-full" />
-      <FieldInput id="from-suporte" label="Suporte" bind:value={form.suporte_from_email} class_name="w-full" />
+      <FieldInput
+        id="from-alerta"
+        label="Alerta"
+        bind:value={form.alerta_from_email}
+        class_name="w-full"
+      />
+      <FieldInput
+        id="from-admin"
+        label="Admin"
+        bind:value={form.admin_from_email}
+        class_name="w-full"
+      />
+      <FieldInput
+        id="from-avisos"
+        label="Avisos"
+        bind:value={form.avisos_from_email}
+        class_name="w-full"
+      />
+      <FieldInput
+        id="from-financeiro"
+        label="Financeiro"
+        bind:value={form.financeiro_from_email}
+        class_name="w-full"
+      />
+      <FieldInput
+        id="from-suporte"
+        label="Suporte"
+        bind:value={form.suporte_from_email}
+        class_name="w-full"
+      />
     </div>
   </Card>
 
   <Card color="financeiro" title="Validacao">
     <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto]">
-      <FieldInput id="test-email" label="Destino do teste" bind:value={testEmail} placeholder="email@empresa.com" class_name="w-full" />
+      <FieldInput
+        id="test-email"
+        label="Destino do teste"
+        bind:value={testEmail}
+        placeholder="email@empresa.com"
+        class_name="w-full"
+      />
       <div class="md:self-end">
         <Button variant="outline" on:click={sendTestEmail} loading={sendingTest}>
           <Send size={16} class="mr-2" />

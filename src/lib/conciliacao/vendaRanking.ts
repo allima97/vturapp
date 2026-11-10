@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient } from '$lib/dataClientTypes';
 import { calcularValorVendaReal, resolveConciliacaoStatus } from '$lib/conciliacao/business';
 import { normalizeReceiptKey } from '$lib/conciliacao/receiptNormalize';
 import { pickConciliacaoSourceRow } from '$lib/conciliacao/source';
@@ -15,7 +15,7 @@ type VendaRankingReciboInput = {
 };
 
 type VendaRankingParams = {
-  client: SupabaseClient;
+  client: DataClient;
   vendaId: string;
   companyId: string;
   recibos: VendaRankingReciboInput[];
@@ -110,7 +110,11 @@ function numeroReciboMatches(left?: string | null, right?: string | null) {
 
   const leftSignificantCore = stripLeadingZeros(leftCore);
   const rightSignificantCore = stripLeadingZeros(rightCore);
-  if (!leftSignificantCore || !rightSignificantCore || leftSignificantCore !== rightSignificantCore) {
+  if (
+    !leftSignificantCore ||
+    !rightSignificantCore ||
+    leftSignificantCore !== rightSignificantCore
+  ) {
     return false;
   }
 
@@ -131,24 +135,33 @@ function reciboDocumentVariants(recibo: VendaRankingReciboInput) {
 }
 
 function normalizeConsolidadoraReserva(value?: string | null) {
-  return toStr(value).replace(/^REXTUR[\s-]*/i, '').toUpperCase();
+  return toStr(value)
+    .replace(/^REXTUR[\s-]*/i, '')
+    .toUpperCase();
 }
 
 function isConsolidadoraRecibo(recibo: VendaRankingReciboInput) {
-  return normalizeReceiptKey(recibo.numero_recibo) === 'REXTUR' ||
-    normalizeReceiptKey(recibo.numero_recibo_normalizado) === 'REXTUR';
+  return (
+    normalizeReceiptKey(recibo.numero_recibo) === 'REXTUR' ||
+    normalizeReceiptKey(recibo.numero_recibo_normalizado) === 'REXTUR'
+  );
 }
 
 function matchesRecibo(row: ConciliacaoRow, recibo: VendaRankingReciboInput) {
   const linkedReciboId = toStr(row?.venda_recibo_id);
   if (linkedReciboId && linkedReciboId === toStr(recibo.id)) return true;
   if (isConsolidadoraRecibo(recibo)) {
-    return normalizeReceiptKey(row?.documento) === 'REXTUR' &&
+    return (
+      normalizeReceiptKey(row?.documento) === 'REXTUR' &&
       Boolean(normalizeConsolidadoraReserva(row?.numero_reserva)) &&
-      normalizeConsolidadoraReserva(row?.numero_reserva) === normalizeConsolidadoraReserva(recibo.numero_reserva);
+      normalizeConsolidadoraReserva(row?.numero_reserva) ===
+        normalizeConsolidadoraReserva(recibo.numero_reserva)
+    );
   }
-  return numeroReciboMatches(row?.documento, recibo.numero_recibo) ||
-    numeroReciboMatches(row?.documento, recibo.numero_recibo_normalizado);
+  return (
+    numeroReciboMatches(row?.documento, recibo.numero_recibo) ||
+    numeroReciboMatches(row?.documento, recibo.numero_recibo_normalizado)
+  );
 }
 
 function concSelect() {
@@ -210,7 +223,11 @@ async function fetchConciliacaoRows(params: VendaRankingParams) {
   const fuzzyTokens = Array.from(
     new Set(
       recibos
-        .map((recibo) => stripLeadingZeros(reciboCoreDigits(recibo.numero_recibo || recibo.numero_recibo_normalizado)))
+        .map((recibo) =>
+          stripLeadingZeros(
+            reciboCoreDigits(recibo.numero_recibo || recibo.numero_recibo_normalizado)
+          )
+        )
         .filter((token) => token.length >= 5)
     )
   );
@@ -241,7 +258,10 @@ function pickDisplaySourceRow(rows: ConciliacaoRow[]) {
   const sortedRows = [...(rows || [])].sort((a, b) =>
     toStr(a?.movimento_data).localeCompare(toStr(b?.movimento_data))
   );
-  const opfax = sortedRows.find((row) => resolveConciliacaoStatus({ status: row?.status, descricao: row?.descricao }) === 'OPFAX');
+  const opfax = sortedRows.find(
+    (row) =>
+      resolveConciliacaoStatus({ status: row?.status, descricao: row?.descricao }) === 'OPFAX'
+  );
   return {
     sourceRow: opfax || sortedRows[0] || null,
     confirmed: false
@@ -281,7 +301,7 @@ function isTableMissingError(error: unknown) {
   return code === '42p01' || message.includes('does not exist') || message.includes('relation');
 }
 
-async function fetchRateioMaps(client: SupabaseClient, reciboIds: string[], concIds: string[]) {
+async function fetchRateioMaps(client: DataClient, reciboIds: string[], concIds: string[]) {
   const byVendaRecibo = new Map<string, RateioRow>();
   const byConciliacao = new Map<string, RateioRow>();
 
@@ -289,7 +309,9 @@ async function fetchRateioMaps(client: SupabaseClient, reciboIds: string[], conc
     const batch = reciboIds.slice(index, index + 200);
     const { data, error } = await client
       .from('vendas_recibos_rateio')
-      .select('id, venda_recibo_id, conciliacao_recibo_id, vendedor_destino_id, percentual_origem, percentual_destino, ativo, observacao, vendedor_destino:users!vendedor_destino_id(id, nome_completo)')
+      .select(
+        'id, venda_recibo_id, conciliacao_recibo_id, vendedor_destino_id, percentual_origem, percentual_destino, ativo, observacao, vendedor_destino:users!vendedor_destino_id(id, nome_completo)'
+      )
       .eq('ativo', true)
       .in('venda_recibo_id', batch);
     // Tabela pode não existir ainda — retorna mapa vazio sem lançar
@@ -308,7 +330,9 @@ async function fetchRateioMaps(client: SupabaseClient, reciboIds: string[], conc
     const batch = concIds.slice(index, index + 200);
     const { data, error } = await client
       .from('vendas_recibos_rateio')
-      .select('id, venda_recibo_id, conciliacao_recibo_id, vendedor_destino_id, percentual_origem, percentual_destino, ativo, observacao, vendedor_destino:users!vendedor_destino_id(id, nome_completo)')
+      .select(
+        'id, venda_recibo_id, conciliacao_recibo_id, vendedor_destino_id, percentual_origem, percentual_destino, ativo, observacao, vendedor_destino:users!vendedor_destino_id(id, nome_completo)'
+      )
       .eq('ativo', true)
       .in('conciliacao_recibo_id', batch);
     if (error) {
@@ -334,9 +358,10 @@ export async function buildVendaRankingConciliacaoSnapshot(params: VendaRankingP
 
   const result = recibos.map((recibo) => {
     const concGrupo = concRows.filter((row) => matchesRecibo(row, recibo));
-    const { sourceRow, confirmed } = concGrupo.length > 0
-      ? pickDisplaySourceRow(concGrupo)
-      : { sourceRow: null, confirmed: false };
+    const { sourceRow, confirmed } =
+      concGrupo.length > 0
+        ? pickDisplaySourceRow(concGrupo)
+        : { sourceRow: null, confirmed: false };
     const hasConciliacao = Boolean(sourceRow);
     const concIdsForRecibo = collectIds(concGrupo, (row) => row?.id);
 
@@ -365,14 +390,18 @@ export async function buildVendaRankingConciliacaoSnapshot(params: VendaRankingP
       isSeguroViagem = Boolean(sourceRow?.is_seguro_viagem);
     }
 
-    const valorRankingEfetivo = confirmed && concValorRanking !== null ? concValorRanking : vendaValorRanking;
-    const valorTaxasEfetivo = confirmed && concValorTaxas !== null ? concValorTaxas : vendaValorTaxas;
-    const divergenciaValor = hasConciliacao && concValorRanking !== null
-      ? roundMoney(concValorRanking - vendaValorTotal)
-      : null;
-    const divergenciaTaxas = hasConciliacao && concValorTaxas !== null
-      ? roundMoney(concValorTaxas - vendaValorTaxas)
-      : null;
+    const valorRankingEfetivo =
+      confirmed && concValorRanking !== null ? concValorRanking : vendaValorRanking;
+    const valorTaxasEfetivo =
+      confirmed && concValorTaxas !== null ? concValorTaxas : vendaValorTaxas;
+    const divergenciaValor =
+      hasConciliacao && concValorRanking !== null
+        ? roundMoney(concValorRanking - vendaValorTotal)
+        : null;
+    const divergenciaTaxas =
+      hasConciliacao && concValorTaxas !== null
+        ? roundMoney(concValorTaxas - vendaValorTaxas)
+        : null;
 
     const rateioConc = concIdsForRecibo.reduce<RateioRow | null>(
       (found, id) => found || rateios.byConciliacao.get(id) || null,
@@ -404,15 +433,17 @@ export async function buildVendaRankingConciliacaoSnapshot(params: VendaRankingP
       ranking_produto_id: rankingProdutoId,
       ranking_produto_nome: rankingProdutoNome,
       is_seguro_viagem: isSeguroViagem,
-      rateio: rateio ? {
-        id: toStr(rateio.id),
-        ativo: Boolean(rateio.ativo),
-        vendedor_destino_id: toStr(rateio.vendedor_destino_id),
-        vendedor_destino: rateio.vendedor_destino || null,
-        percentual_origem: toNumber(rateio.percentual_origem),
-        percentual_destino: toNumber(rateio.percentual_destino),
-        observacao: rateio.observacao || null
-      } : null
+      rateio: rateio
+        ? {
+            id: toStr(rateio.id),
+            ativo: Boolean(rateio.ativo),
+            vendedor_destino_id: toStr(rateio.vendedor_destino_id),
+            vendedor_destino: rateio.vendedor_destino || null,
+            percentual_origem: toNumber(rateio.percentual_origem),
+            percentual_destino: toNumber(rateio.percentual_destino),
+            observacao: rateio.observacao || null
+          }
+        : null
     };
   });
 

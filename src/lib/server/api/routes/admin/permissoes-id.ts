@@ -42,7 +42,8 @@ type SystemModuleSettingRow = {
 export async function handleAdminPermissoesIdGet(event: RequestEvent) {
   try {
     const { session, user } = await event.locals.safeGetSession();
-    if (!session || !user) return new Response('Sessao invalida.', { status: 401, headers: NO_STORE_HEADERS });
+    if (!session || !user)
+      return new Response('Sessao invalida.', { status: 401, headers: NO_STORE_HEADERS });
 
     const client = getAdminClient();
     const scope = await resolveUserScope(client, user.id);
@@ -50,7 +51,8 @@ export async function handleAdminPermissoesIdGet(event: RequestEvent) {
     ensureCanManagePermissions(scope);
 
     const userId = String(event.params.id || '').trim();
-    if (!isUuid(userId)) return new Response('ID invalido.', { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(userId))
+      return new Response('ID invalido.', { status: 400, headers: NO_STORE_HEADERS });
 
     const targetUser = await loadManagedUser(client, scope, userId);
     const permissions = await loadUserPermissions(client, userId);
@@ -94,7 +96,8 @@ export async function handleAdminPermissoesIdPost(event: RequestEvent) {
     if (!bodyResult.ok) return bodyResult.response;
 
     const { session, user } = await event.locals.safeGetSession();
-    if (!session || !user) return new Response('Sessao invalida.', { status: 401, headers: NO_STORE_HEADERS });
+    if (!session || !user)
+      return new Response('Sessao invalida.', { status: 401, headers: NO_STORE_HEADERS });
 
     const client = getAdminClient();
     const scope = await resolveUserScope(client, user.id);
@@ -102,7 +105,8 @@ export async function handleAdminPermissoesIdPost(event: RequestEvent) {
     ensureCanManagePermissions(scope);
 
     const userId = String(event.params.id || '').trim();
-    if (!isUuid(userId)) return new Response('ID invalido.', { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(userId))
+      return new Response('ID invalido.', { status: 400, headers: NO_STORE_HEADERS });
 
     const body =
       bodyResult.data && typeof bodyResult.data === 'object'
@@ -110,7 +114,8 @@ export async function handleAdminPermissoesIdPost(event: RequestEvent) {
         : {};
 
     const targetUser = await loadManagedUser(client, scope, userId);
-    if (!targetUser) return new Response('Usuario fora do escopo.', { status: 403, headers: NO_STORE_HEADERS });
+    if (!targetUser)
+      return new Response('Usuario fora do escopo.', { status: 403, headers: NO_STORE_HEADERS });
 
     const permissions = Array.isArray(body.permissions) ? body.permissions : [];
     ensureAssignablePermissionSet(scope, permissions);

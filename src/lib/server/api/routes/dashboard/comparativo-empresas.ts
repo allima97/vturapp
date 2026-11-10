@@ -9,7 +9,7 @@ import {
   requireAuthenticatedUser,
   resolveScopedCompanyIds,
   resolveUserScope,
-  toErrorResponse,
+  toErrorResponse
 } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import {
@@ -73,13 +73,7 @@ function companyLabel(row: CompanyRow): string {
 }
 
 function hasComparativoData(rows?: ReadModelCompanyComparativoRow[] | null) {
-  return Boolean(
-    rows?.some(
-      (row) =>
-        toNum(row.totalVendas) > 0 ||
-        toNum(row.qtdVendas) > 0
-    )
-  );
+  return Boolean(rows?.some((row) => toNum(row.totalVendas) > 0 || toNum(row.qtdVendas) > 0));
 }
 
 const NO_MATCH = '00000000-0000-0000-0000-000000000000';
@@ -91,10 +85,7 @@ async function fetchAllVisibleCompanyIds(client: ReturnType<typeof getAdminClien
     ttlMs: 300_000,
     staleTtlMs: 1_800_000,
     loader: async () => {
-      const { data, error } = await client
-        .from('companies')
-        .select('id, active')
-        .limit(1000);
+      const { data, error } = await client.from('companies').select('id, active').limit(1000);
 
       if (error) throw error;
 
@@ -113,12 +104,12 @@ async function fetchAllVisibleCompanyIds(client: ReturnType<typeof getAdminClien
 export async function handleDashboardComparativoEmpresasGet(event: RequestEvent) {
   try {
     const client = getAdminClient();
-    const user   = await requireAuthenticatedUser(event);
-    const scope  = await resolveUserScope(client, user.id);
+    const user = await requireAuthenticatedUser(event);
+    const scope = await resolveUserScope(client, user.id);
 
     const tipoNome = String(scope.tipoNome || '').toUpperCase();
     const isMaster = tipoNome.includes('MASTER');
-    const isAdmin  = tipoNome.includes('ADMIN');
+    const isAdmin = tipoNome.includes('ADMIN');
 
     if (!isMaster && !isAdmin) {
       return json({ error: 'Acesso restrito.' }, { status: 403, headers: NO_STORE_HEADERS });
@@ -127,15 +118,22 @@ export async function handleDashboardComparativoEmpresasGet(event: RequestEvent)
     const { searchParams } = event.url;
     const { inicio: defInicio, fim: defFim } = getMonthRange();
     const inicio = String(searchParams.get('inicio') || defInicio).trim();
-    const fim    = String(searchParams.get('fim')    || defFim).trim();
-    const requestedCompanyId = String(searchParams.get('company_id') || searchParams.get('empresa_id') || '').trim();
+    const fim = String(searchParams.get('fim') || defFim).trim();
+    const requestedCompanyId = String(
+      searchParams.get('company_id') || searchParams.get('empresa_id') || ''
+    ).trim();
 
-    let companyIds = resolveScopedCompanyIds(scope, requestedCompanyId).filter(id => id !== NO_MATCH);
+    let companyIds = resolveScopedCompanyIds(scope, requestedCompanyId).filter(
+      (id) => id !== NO_MATCH
+    );
     const hasConfiguredCompanyScope = (scope.companyIds || []).some(isUuid);
 
     // Master sem master_empresas configurado e Admin sem filtro devem enxergar
     // o mesmo universo exibido nos filtros do dashboard/base: todas as empresas ativas.
-    if (companyIds.length === 0 && (scope.isAdmin || (scope.isMaster && !hasConfiguredCompanyScope))) {
+    if (
+      companyIds.length === 0 &&
+      (scope.isAdmin || (scope.isMaster && !hasConfiguredCompanyScope))
+    ) {
       if (isUuid(requestedCompanyId)) {
         companyIds = [requestedCompanyId];
       } else if (!requestedCompanyId) {
@@ -210,9 +208,8 @@ export async function handleDashboardComparativoEmpresasGet(event: RequestEvent)
                 totalVendas,
                 qtdVendas: row.qtdVendas,
                 totalMeta,
-                atingimentoPct: totalMeta > 0
-                  ? Math.round((totalVendas / totalMeta) * 1000) / 10
-                  : 0
+                atingimentoPct:
+                  totalMeta > 0 ? Math.round((totalVendas / totalMeta) * 1000) / 10 : 0
               };
             })
             .sort((a, b) => b.totalVendas - a.totalVendas);
@@ -241,27 +238,35 @@ export async function handleDashboardComparativoEmpresasGet(event: RequestEvent)
         })();
 
         const contributionsPromise = (async () => {
-          let payload = await fetchVendasKpiReciboContributions(client, {
-            dataInicio: inicio,
-            dataFim: fim,
-            companyIds,
-            vendedorIds: []
-          }, useNonBlockingReadModel
-            ? {
-                mode: 'stale-while-revalidate',
-                executionContext: getPlatformExecutionContext(event.platform),
-                fallbackToRawOnReadError: true,
-                fallbackToRawWhenEmpty: true
-              }
-            : undefined);
-
-          if (useNonBlockingReadModel && payload.contributions.length === 0) {
-            payload = await fetchVendasKpiReciboContributions(client, {
+          let payload = await fetchVendasKpiReciboContributions(
+            client,
+            {
               dataInicio: inicio,
               dataFim: fim,
               companyIds,
               vendedorIds: []
-            }, { mode: 'blocking' });
+            },
+            useNonBlockingReadModel
+              ? {
+                  mode: 'stale-while-revalidate',
+                  executionContext: getPlatformExecutionContext(event.platform),
+                  fallbackToRawOnReadError: true,
+                  fallbackToRawWhenEmpty: true
+                }
+              : undefined
+          );
+
+          if (useNonBlockingReadModel && payload.contributions.length === 0) {
+            payload = await fetchVendasKpiReciboContributions(
+              client,
+              {
+                dataInicio: inicio,
+                dataFim: fim,
+                companyIds,
+                vendedorIds: []
+              },
+              { mode: 'blocking' }
+            );
           }
 
           return payload;
@@ -282,7 +287,9 @@ export async function handleDashboardComparativoEmpresasGet(event: RequestEvent)
 
           const entry = vendasMap.get(cid) ?? { total: 0, ids: new Set<string>() };
           entry.total += total;
-          entry.ids.add(String(contribution.vendaKey || contribution.vendaId || contribution.reciboId));
+          entry.ids.add(
+            String(contribution.vendaKey || contribution.vendaId || contribution.reciboId)
+          );
           vendasMap.set(cid, entry);
         }
 
@@ -319,16 +326,15 @@ export async function handleDashboardComparativoEmpresasGet(event: RequestEvent)
           const totalVendas = Number((venda?.total ?? 0).toFixed(2));
           const qtdVendas = venda?.ids.size ?? 0;
           const totalMeta = metaMap.get(cid) ?? 0;
-          const atingimentoPct = totalMeta > 0
-            ? Math.round((totalVendas / totalMeta) * 1000) / 10
-            : 0;
+          const atingimentoPct =
+            totalMeta > 0 ? Math.round((totalVendas / totalMeta) * 1000) / 10 : 0;
           empresas.push({
             company_id: cid,
             nome: empresaMap.get(cid) || 'Empresa',
             totalVendas,
             qtdVendas,
             totalMeta,
-            atingimentoPct,
+            atingimentoPct
           });
         }
 

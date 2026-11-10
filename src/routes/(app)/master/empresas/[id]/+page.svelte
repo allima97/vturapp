@@ -118,20 +118,20 @@
           if (err instanceof ApiError) {
             const message = err.message || 'Nao foi possivel carregar a empresa.';
             if (err.status === 401) {
-            toast.error('Sessão expirada. Faça login novamente para continuar.');
-            const next = `${$page.url.pathname}${$page.url.search}`;
-            await goto(`/auth/login?session_expired=1&next=${encodeURIComponent(next)}`);
-            return;
+              toast.error('Sessão expirada. Faça login novamente para continuar.');
+              const next = `${$page.url.pathname}${$page.url.search}`;
+              await goto(`/auth/login?session_expired=1&next=${encodeURIComponent(next)}`);
+              return;
             }
             if (err.status === 403) {
-            toast.error(message || 'Você não tem permissão para acessar esta empresa.');
-            await goto('/master/empresas');
-            return;
+              toast.error(message || 'Você não tem permissão para acessar esta empresa.');
+              await goto('/master/empresas');
+              return;
             }
             if (err.status === 404) {
-            toast.error(message || 'Empresa não encontrada.');
-            await goto('/master/empresas');
-            return;
+              toast.error(message || 'Empresa não encontrada.');
+              await goto('/master/empresas');
+              return;
             }
           }
           throw err;
@@ -258,14 +258,46 @@
 <div class="space-y-6">
   <Card color="financeiro" title="Dados da empresa">
     <div class="grid gap-4 md:grid-cols-2">
-      <FieldInput id="empresa-legal" label="Nome da empresa" bind:value={form.nome_empresa} class_name="w-full" />
-      <FieldInput id="empresa-fantasia" label="Nome fantasia" bind:value={form.nome_fantasia} class_name="w-full" />
-      <FieldInput id="empresa-cnpj" label="CNPJ" bind:value={form.cnpj} mask="cnpj" class_name="w-full" />
-      <FieldInput id="empresa-telefone" label="Telefone" bind:value={form.telefone} mask="phone" class_name="w-full" />
-      <FieldInput id="empresa-endereco" label="Endereco" bind:value={form.endereco} class_name="md:col-span-2 w-full" />
+      <FieldInput
+        id="empresa-legal"
+        label="Nome da empresa"
+        bind:value={form.nome_empresa}
+        class_name="w-full"
+      />
+      <FieldInput
+        id="empresa-fantasia"
+        label="Nome fantasia"
+        bind:value={form.nome_fantasia}
+        class_name="w-full"
+      />
+      <FieldInput
+        id="empresa-cnpj"
+        label="CNPJ"
+        bind:value={form.cnpj}
+        mask="cnpj"
+        class_name="w-full"
+      />
+      <FieldInput
+        id="empresa-telefone"
+        label="Telefone"
+        bind:value={form.telefone}
+        mask="phone"
+        class_name="w-full"
+      />
+      <FieldInput
+        id="empresa-endereco"
+        label="Endereco"
+        bind:value={form.endereco}
+        class_name="md:col-span-2 w-full"
+      />
       <FieldInput id="empresa-cidade" label="Cidade" bind:value={form.cidade} class_name="w-full" />
       <FieldInput id="empresa-estado" label="Estado" bind:value={form.estado} class_name="w-full" />
-      <FieldCheckbox label="Empresa ativa" bind:checked={form.active} helper="Controla uso operacional do tenant." class_name="rounded-xl border border-slate-200 p-4" />
+      <FieldCheckbox
+        label="Empresa ativa"
+        bind:checked={form.active}
+        helper="Controla uso operacional do tenant."
+        class_name="rounded-xl border border-slate-200 p-4"
+      />
     </div>
   </Card>
 
@@ -290,14 +322,34 @@
         id="billing-plan"
         label="Plano"
         bind:value={form.billing_plan_id}
-        options={[{ value: '', label: 'Sem plano' }, ...plans.map((plan) => ({ value: plan.id, label: plan.nome || '' }))]}
+        options={[
+          { value: '', label: 'Sem plano' },
+          ...plans.map((plan) => ({ value: plan.id, label: plan.nome || '' }))
+        ]}
         placeholder=""
         class_name="w-full"
       />
 
-      <FieldInput id="billing-valor" label="Valor mensal" bind:value={form.billing_valor_mensal} class_name="w-full" />
-      <FieldInput id="billing-ultimo" label="Ultimo pagamento" type="date" bind:value={form.billing_ultimo_pagamento} class_name="w-full" />
-      <FieldInput id="billing-proximo" label="Proximo vencimento" type="date" bind:value={form.billing_proximo_vencimento} class_name="w-full" />
+      <FieldInput
+        id="billing-valor"
+        label="Valor mensal"
+        bind:value={form.billing_valor_mensal}
+        class_name="w-full"
+      />
+      <FieldInput
+        id="billing-ultimo"
+        label="Ultimo pagamento"
+        type="date"
+        bind:value={form.billing_ultimo_pagamento}
+        class_name="w-full"
+      />
+      <FieldInput
+        id="billing-proximo"
+        label="Proximo vencimento"
+        type="date"
+        bind:value={form.billing_proximo_vencimento}
+        class_name="w-full"
+      />
     </div>
   </Card>
 
@@ -309,7 +361,10 @@
             id="link-master"
             label="Master"
             bind:value={newLink.master_id}
-            options={mastersDisponiveis.map((m) => ({ value: m.id, label: m.nome_completo || m.nome || m.email || m.id }))}
+            options={mastersDisponiveis.map((m) => ({
+              value: m.id,
+              label: m.nome_completo || m.nome || m.email || m.id
+            }))}
             placeholder="Selecione uma opção"
             class_name="w-full"
           />
@@ -326,7 +381,12 @@
             class_name="w-full"
           />
           <div class="lg:self-end">
-            <Button variant="primary" color="financeiro" on:click={saveMasterLink} loading={linkSaving}>
+            <Button
+              variant="primary"
+              color="financeiro"
+              on:click={saveMasterLink}
+              loading={linkSaving}
+            >
               Adicionar vinculo
             </Button>
           </div>
@@ -334,9 +394,13 @@
 
         <div class="space-y-3">
           {#each masterLinks as link}
-            <div class="grid gap-3 rounded-xl border border-slate-200 p-4 lg:grid-cols-[minmax(0,1fr)_160px_auto_auto]">
+            <div
+              class="grid gap-3 rounded-xl border border-slate-200 p-4 lg:grid-cols-[minmax(0,1fr)_160px_auto_auto]"
+            >
               <div>
-                <p class="font-medium text-slate-900">{link.master?.nome_completo || link.master_id}</p>
+                <p class="font-medium text-slate-900">
+                  {link.master?.nome_completo || link.master_id}
+                </p>
                 <p class="text-xs text-slate-500">{link.master?.email || '-'}</p>
               </div>
               <div>
@@ -351,7 +415,8 @@
                   ]}
                   placeholder=""
                   class_name="w-full"
-                  on:change={(event) => updateMasterLink(link.id, (event.target as HTMLSelectElement).value)}
+                  on:change={(event) =>
+                    updateMasterLink(link.id, (event.target as HTMLSelectElement).value)}
                 />
               </div>
               <div class="lg:self-end">
@@ -370,6 +435,8 @@
 
   <div class="flex flex-wrap gap-3">
     <Button variant="secondary" href="/master/empresas">Voltar</Button>
-    <Button variant="primary" color="financeiro" on:click={saveCompany} loading={saving}>Salvar empresa</Button>
+    <Button variant="primary" color="financeiro" on:click={saveCompany} loading={saving}
+      >Salvar empresa</Button
+    >
   </div>
 </div>

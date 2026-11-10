@@ -38,8 +38,8 @@
     </div>
   {/if}
 
-  <div class={`overflow-hidden vtur-table-shell ${shadow ? 'shadow-xs' : ''}`.trim()}>
-    <Table striped={striped} hoverable={hoverable} class={`w-full text-sm table-mobile-cards ${tableClass}`.trim()}>
+  <div class={`vtur-table-shell overflow-hidden ${shadow ? 'shadow-xs' : ''}`.trim()}>
+    <Table {striped} {hoverable} class={`table-mobile-cards w-full text-sm ${tableClass}`.trim()}>
       <slot />
     </Table>
 

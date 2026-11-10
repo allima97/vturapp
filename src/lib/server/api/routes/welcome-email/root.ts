@@ -4,7 +4,11 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
 import { getAdminClient, logServerError, requireAuthenticatedUser } from '$lib/server/v1';
 import { renderEmailHtml, renderEmailText } from '$lib/server/emailMarkdown';
-import { resolveResendApiKey, resolveFromEmails, resolveSmtpConfig } from '$lib/server/emailSettings';
+import {
+  resolveResendApiKey,
+  resolveFromEmails,
+  resolveSmtpConfig
+} from '$lib/server/emailSettings';
 import { fetchWithTimeout } from '$lib/server/fetchWithTimeout';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { checkPersistentRateLimit } from '$lib/server/persistentRateLimit';
@@ -12,13 +16,13 @@ import { rejectCrossOriginRequest, rejectLargePayload } from '$lib/server/reques
 
 const MAX_WELCOME_EMAIL_BODY_BYTES = 8 * 1024;
 
-const TEMPLATE_NOME = "Bem-Vindo!";
-const TEMPLATE_ASSUNTO = "Bem-Vindo!";
+const TEMPLATE_NOME = 'Bem-Vindo!';
+const TEMPLATE_ASSUNTO = 'Bem-Vindo!';
 const errorResponse = (message: string, status: number) =>
   json({ error: message }, { status, headers: NO_STORE_HEADERS });
 
 function limparDigitos(valor?: string | null) {
-  return (valor || "").replace(/\D/g, "");
+  return (valor || '').replace(/\D/g, '');
 }
 
 function validarCpf(valor?: string | null) {
@@ -79,15 +83,15 @@ function perfilCompleto(perfil: {
   if (!validarTelefone(perfil.telefone)) return false;
   if (!perfil.cidade?.trim()) return false;
   if (!perfil.estado?.trim()) return false;
-  if (typeof perfil.uso_individual !== "boolean") return false;
+  if (typeof perfil.uso_individual !== 'boolean') return false;
   return true;
 }
 
 function applyTemplate(text: string, vars: Record<string, string>) {
   return text
-    .replace(/{{\s*nome\s*}}/gi, vars.nome || "")
-    .replace(/{{\s*email\s*}}/gi, vars.email || "")
-    .replace(/{{\s*empresa\s*}}/gi, vars.empresa || "");
+    .replace(/{{\s*nome\s*}}/gi, vars.nome || '')
+    .replace(/{{\s*email\s*}}/gi, vars.email || '')
+    .replace(/{{\s*empresa\s*}}/gi, vars.empresa || '');
 }
 
 function providerPayloadMessage(payload: unknown) {
@@ -107,36 +111,44 @@ async function enviarEmailResend(params: {
   const fromEmail = params.fromEmail;
   const key = params.apiKey;
   if (!key || !fromEmail) {
-    return { ok: false, status: "resend_not_configured" };
+    return { ok: false, status: 'resend_not_configured' };
   }
-  const resp = await fetchWithTimeout("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${key}`,
-      "Content-Type": "application/json",
+  const resp = await fetchWithTimeout(
+    'https://api.resend.com/emails',
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: fromEmail,
+        to: params.to,
+        subject: params.subject,
+        html: params.html,
+        text: params.text
+      })
     },
-    body: JSON.stringify({
-      from: fromEmail,
-      to: params.to,
-      subject: params.subject,
-      html: params.html,
-      text: params.text,
-    }),
-  }, 12_000);
-  const data = await resp.json().catch(() => ({}));
+    12_000
+  );
+  const data = (await resp.json().catch(() => ({}))) as { id?: string };
   if (!resp.ok) {
-    logServerError("[welcome-email] falha no Resend", new Error("Resend provider error"), {
+    logServerError('[welcome-email] falha no Resend', new Error('Resend provider error'), {
       status: resp.status,
-      message: providerPayloadMessage(data),
+      message: providerPayloadMessage(data)
     });
     return { ok: false, status: String(resp.status), error: data };
   }
   if (!data?.id) {
-    logServerError("[welcome-email] Resend sem id de mensagem", new Error("Resend invalid response"), {
-      status: resp.status,
-      message: providerPayloadMessage(data),
-    });
-    return { ok: false, status: "resend_invalid_response", error: data };
+    logServerError(
+      '[welcome-email] Resend sem id de mensagem',
+      new Error('Resend invalid response'),
+      {
+        status: resp.status,
+        message: providerPayloadMessage(data)
+      }
+    );
+    return { ok: false, status: 'resend_invalid_response', error: data };
   }
   return { ok: true, status: String(resp.status), id: data?.id };
 }
@@ -148,17 +160,17 @@ async function enviarEmailSendGrid(params: {
   text: string;
   fromEmail?: string;
 }) {
-  return { ok: false, status: "sendgrid_not_implemented" };
+  return { ok: false, status: 'sendgrid_not_implemented' };
 }
 
 async function marcarEmailEnviado(userId: string) {
   const adminClient = getAdminClient();
   const { error } = await adminClient
-    .from("users")
+    .from('users')
     .update({ welcome_email_sent: true })
-    .eq("id", userId);
+    .eq('id', userId);
   if (error) {
-    logServerError("Falha ao marcar welcome_email_sent", error);
+    logServerError('Falha ao marcar welcome_email_sent', error);
   }
 }
 
@@ -171,31 +183,39 @@ export const handleWelcomeEmailPost = async (event: RequestEvent) => {
     if (payloadError) return payloadError;
 
     const user = await requireAuthenticatedUser(event);
-    const client = locals.supabase;
+    const client = locals.dados;
 
-    const rl = await checkPersistentRateLimit('welcome-email', user.id, { max: 5, windowMs: 60_000 });
+    const rl = await checkPersistentRateLimit(
+      'welcome-email',
+      user.id,
+      { max: 5, windowMs: 60_000 },
+      event.platform?.env?.DB
+    );
     if (!rl.allowed) {
       return json(
         { error: 'Muitas requisicoes. Tente novamente em instantes.' },
-        { status: 429, headers: { ...NO_STORE_HEADERS, 'Retry-After': String(rl.retryAfterSeconds) } }
+        {
+          status: 429,
+          headers: { ...NO_STORE_HEADERS, 'Retry-After': String(rl.retryAfterSeconds) }
+        }
       );
     }
 
     const { data: perfil, error: perfilErr } = await client
-      .from("users")
+      .from('users')
       .select(
-        "id, nome_completo, cpf, data_nascimento, telefone, cep, numero, cidade, estado, uso_individual, email, welcome_email_sent, companies(nome_fantasia)"
+        'id, nome_completo, cpf, data_nascimento, telefone, cep, numero, cidade, estado, uso_individual, email, welcome_email_sent, companies(nome_fantasia)'
       )
-      .eq("id", user.id)
+      .eq('id', user.id)
       .maybeSingle();
 
     if (perfilErr) {
-      logServerError("[welcome-email] falha ao carregar perfil", perfilErr);
-      return errorResponse("Falha ao carregar perfil.", 500);
+      logServerError('[welcome-email] falha ao carregar perfil', perfilErr);
+      return errorResponse('Falha ao carregar perfil.', 500);
     }
 
     if (!perfil) {
-      return errorResponse("Usuário não encontrado.", 404);
+      return errorResponse('Usuário não encontrado.', 404);
     }
 
     if (perfil.welcome_email_sent) {
@@ -203,60 +223,62 @@ export const handleWelcomeEmailPost = async (event: RequestEvent) => {
     }
 
     if (!perfilCompleto(perfil)) {
-      return errorResponse("Perfil incompleto.", 400);
+      return errorResponse('Perfil incompleto.', 400);
     }
 
-    let recipientEmail = (perfil.email || user.email || "").trim().toLowerCase();
+    let recipientEmail = (perfil.email || user.email || '').trim().toLowerCase();
     if (!recipientEmail) {
       try {
         const adminClient = getAdminClient();
         const authResp = await adminClient.auth.admin.getUserById(user.id);
-        recipientEmail = String(authResp.data?.user?.email || "").trim().toLowerCase();
+        recipientEmail = String(authResp.data?.user?.email || '')
+          .trim()
+          .toLowerCase();
         if (recipientEmail) {
-          await client.from("users").update({ email: recipientEmail }).eq("id", user.id);
+          await client.from('users').update({ email: recipientEmail }).eq('id', user.id);
         }
       } catch (err) {
-        logServerError("[welcome-email] falha ao recuperar email via auth admin", err);
+        logServerError('[welcome-email] falha ao recuperar email via auth admin', err);
       }
     }
 
     if (!recipientEmail) {
-      return errorResponse("Usuário sem e-mail cadastrado.", 400);
+      return errorResponse('Usuário sem e-mail cadastrado.', 400);
     }
 
     let templateResp = await client
-      .from("admin_avisos_templates")
-      .select("id, nome, assunto, mensagem, ativo, sender_key")
-      .eq("nome", TEMPLATE_NOME)
+      .from('admin_avisos_templates')
+      .select('id, nome, assunto, mensagem, ativo, sender_key')
+      .eq('nome', TEMPLATE_NOME)
       .limit(1)
       .maybeSingle();
 
     if (!templateResp.data) {
       templateResp = await client
-        .from("admin_avisos_templates")
-        .select("id, nome, assunto, mensagem, ativo, sender_key")
-        .eq("assunto", TEMPLATE_ASSUNTO)
+        .from('admin_avisos_templates')
+        .select('id, nome, assunto, mensagem, ativo, sender_key')
+        .eq('assunto', TEMPLATE_ASSUNTO)
         .limit(1)
         .maybeSingle();
     }
 
     if (templateResp.error) {
-      logServerError("[welcome-email] falha ao carregar template", templateResp.error);
-      return errorResponse("Falha ao carregar template.", 500);
+      logServerError('[welcome-email] falha ao carregar template', templateResp.error);
+      return errorResponse('Falha ao carregar template.', 500);
     }
 
     const template = templateResp.data;
     if (!template) {
-      return errorResponse("Template Bem-Vindo! não encontrado.", 404);
+      return errorResponse('Template Bem-Vindo! não encontrado.', 404);
     }
     if (!template.ativo) {
-      return errorResponse("Template Bem-Vindo! está inativo.", 400);
+      return errorResponse('Template Bem-Vindo! está inativo.', 400);
     }
 
     const vars = {
-      nome: perfil.nome_completo || "",
+      nome: perfil.nome_completo || '',
       email: recipientEmail,
-      empresa: perfil.companies?.[0]?.nome_fantasia || "",
+      empresa: perfil.companies?.[0]?.nome_fantasia || ''
     };
 
     const subject = applyTemplate(template.assunto, vars);
@@ -268,15 +290,17 @@ export const handleWelcomeEmailPost = async (event: RequestEvent) => {
     const fromEmails = (await resolveFromEmails()) || {};
     const resendApiKey = await resolveResendApiKey();
 
-    const senderKey = String(template?.sender_key || "avisos").toLowerCase();
+    const senderKey = String(template?.sender_key || 'avisos').toLowerCase();
     const fromEmail =
-      (senderKey === "financeiro"
+      (senderKey === 'financeiro'
         ? fromEmails.financeiro
-        : senderKey === "suporte"
+        : senderKey === 'suporte'
           ? fromEmails.suporte
-          : senderKey === "admin"
+          : senderKey === 'admin'
             ? fromEmails.admin
-            : fromEmails.avisos) || fromEmails.default || smtpConfig.from;
+            : fromEmails.avisos) ||
+      fromEmails.default ||
+      smtpConfig.from;
 
     const to = [recipientEmail];
 
@@ -286,13 +310,13 @@ export const handleWelcomeEmailPost = async (event: RequestEvent) => {
       html,
       text,
       fromEmail,
-      apiKey: resendApiKey,
+      apiKey: resendApiKey
     });
 
     if (resendResp.ok) {
       await marcarEmailEnviado(user.id);
       return json(
-        { status: "sent", provider: "resend", id: resendResp.id },
+        { status: 'sent', provider: 'resend', id: resendResp.id },
         { status: 200, headers: NO_STORE_HEADERS }
       );
     }
@@ -301,14 +325,14 @@ export const handleWelcomeEmailPost = async (event: RequestEvent) => {
     if (sendgridResp.ok) {
       await marcarEmailEnviado(user.id);
       return json(
-        { status: "sent", provider: "sendgrid" },
+        { status: 'sent', provider: 'sendgrid' },
         { status: 200, headers: NO_STORE_HEADERS }
       );
     }
 
-    return errorResponse("Nenhum provedor de e-mail configurado.", 500);
+    return errorResponse('Nenhum provedor de e-mail configurado.', 500);
   } catch (error: unknown) {
-    logServerError("[welcome-email] falha ao enviar boas-vindas", error);
-    return errorResponse("Erro interno ao enviar e-mail de boas-vindas.", 500);
+    logServerError('[welcome-email] falha ao enviar boas-vindas', error);
+    return errorResponse('Erro interno ao enviar e-mail de boas-vindas.', 500);
   }
 };

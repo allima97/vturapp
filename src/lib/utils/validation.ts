@@ -32,11 +32,11 @@ export interface ValidationResult {
 
 // ─── Regex prontas ────────────────────────────────────────────────────────────
 
-export const CPF_PATTERN    = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
-export const CNPJ_PATTERN   = /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/;
-export const PHONE_PATTERN  = /^\(\d{2}\) \d{4,5}-\d{4}$/;
-export const EMAIL_PATTERN  = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-export const CEP_PATTERN    = /^\d{5}-\d{3}$/;
+export const CPF_PATTERN = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+export const CNPJ_PATTERN = /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/;
+export const PHONE_PATTERN = /^\(\d{2}\) \d{4,5}-\d{4}$/;
+export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const CEP_PATTERN = /^\d{5}-\d{3}$/;
 export const DATE_BR_PATTERN = /^\d{2}\/\d{2}\/\d{4}$/;
 const REPEATED_DIGITS_PATTERN = /^(\d)\1+$/;
 

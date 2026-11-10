@@ -104,7 +104,8 @@
         acc.valorConvertido += o.valor_total;
       }
       if (!o.last_interaction_at && !fechado) acc.semInteracao += 1;
-      if (o.last_interaction_at && getDiasSemInteracao(o.last_interaction_at) >= 7 && !fechado) acc.followupAtrasado += 1;
+      if (o.last_interaction_at && getDiasSemInteracao(o.last_interaction_at) >= 7 && !fechado)
+        acc.followupAtrasado += 1;
       if (isExpirando(o)) acc.expirando += 1;
       if (isCritico(o)) acc.criticos += 1;
       if (isProntoParaVenda(o)) acc.prontosVenda += 1;
@@ -136,16 +137,16 @@
   });
 
   $: resumo = {
-    total:         orcamentosAgregados.total,
-    novos:         orcamentosAgregados.novos,
-    pendentes:     orcamentosAgregados.pendentes,
-    enviados:      orcamentosAgregados.enviados,
-    aprovados:     orcamentosAgregados.aprovados,
-    convertidos:   orcamentosAgregados.convertidos,
-    semInteracao:  orcamentosAgregados.semInteracao,
+    total: orcamentosAgregados.total,
+    novos: orcamentosAgregados.novos,
+    pendentes: orcamentosAgregados.pendentes,
+    enviados: orcamentosAgregados.enviados,
+    aprovados: orcamentosAgregados.aprovados,
+    convertidos: orcamentosAgregados.convertidos,
+    semInteracao: orcamentosAgregados.semInteracao,
     followupAtrasado: orcamentosAgregados.followupAtrasado,
-    expirando:     orcamentosAgregados.expirando,
-    valorTotal:    orcamentosAgregados.valorTotal,
+    expirando: orcamentosAgregados.expirando,
+    valorTotal: orcamentosAgregados.valorTotal,
     valorAprovado: orcamentosAgregados.valorAprovado,
     valorConvertido: orcamentosAgregados.valorConvertido,
     get taxaConversao() {
@@ -185,7 +186,7 @@
   }
 
   function handleFiltroChange(key: string, value: string) {
-    if (key === 'status')  filtroStatus  = value;
+    if (key === 'status') filtroStatus = value;
     if (key === 'periodo') filtroPeriodo = value;
     void loadOrcamentos();
   }
@@ -206,8 +207,18 @@
       return;
     }
 
-    const headers = ['Código', 'Cliente', 'Destino', 'Criação', 'Validade', 'Valor', 'Status', 'Última interação', 'Responsável'];
-    const rows = orcamentosVisiveis.map(o => [
+    const headers = [
+      'Código',
+      'Cliente',
+      'Destino',
+      'Criação',
+      'Validade',
+      'Valor',
+      'Status',
+      'Última interação',
+      'Responsável'
+    ];
+    const rows = orcamentosVisiveis.map((o) => [
       o.codigo,
       o.cliente,
       o.destino,
@@ -219,7 +230,7 @@
       o.vendedor
     ]);
 
-    const csv = [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+    const csv = [headers.join(';'), ...rows.map((r) => r.join(';'))].join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -245,8 +256,7 @@
       label: 'Criação',
       sortable: true,
       width: '110px',
-      formatter: (value: string | null) =>
-        formatDate(value)
+      formatter: (value: string | null) => formatDate(value)
     },
     {
       key: 'last_interaction_at',
@@ -257,8 +267,11 @@
         if (!value) return '<span class="text-red-600 font-medium">Sem interação</span>';
         const diff = getDiasSemInteracao(value);
         const classe = diff >= 7 ? 'text-amber-700 font-medium' : 'text-slate-700';
-        const nota = row.last_interaction_notes ? `<div class="text-xs text-slate-500">${escapeHtml(row.last_interaction_notes)}</div>` : '';
-        const atraso = diff >= 7 ? `<div class="text-xs text-amber-700">${diff} dias sem contato</div>` : '';
+        const nota = row.last_interaction_notes
+          ? `<div class="text-xs text-slate-500">${escapeHtml(row.last_interaction_notes)}</div>`
+          : '';
+        const atraso =
+          diff >= 7 ? `<div class="text-xs text-amber-700">${diff} dias sem contato</div>` : '';
         return `<div><div class="${classe}">${formatDate(value)}</div>${atraso}${nota}</div>`;
       }
     },
@@ -271,13 +284,13 @@
         if (!value) return '-';
         const diff = getDiasParaValidade(value);
         const classe =
-          diff < 0  ? 'text-red-600 font-medium' :
-          diff <= 3 ? 'text-amber-600 font-medium' : '';
-        const alerta = diff < 0
-          ? '<div class="text-xs text-red-600">Expirado</div>'
-          : diff <= 3
-            ? `<div class="text-xs text-amber-600">Vence em ${diff}d</div>`
-            : '';
+          diff < 0 ? 'text-red-600 font-medium' : diff <= 3 ? 'text-amber-600 font-medium' : '';
+        const alerta =
+          diff < 0
+            ? '<div class="text-xs text-red-600">Expirado</div>'
+            : diff <= 3
+              ? `<div class="text-xs text-amber-600">Vence em ${diff}d</div>`
+              : '';
         return `<div><div class="${classe}">${formatDate(value)}</div>${alerta}</div>`;
       }
     },
@@ -297,16 +310,20 @@
       formatter: (value: string) => {
         const styles: Record<string, string> = {
           pendente: 'bg-amber-100 text-amber-700',
-          enviado:  'bg-blue-100 text-blue-700',
+          enviado: 'bg-blue-100 text-blue-700',
           aprovado: 'bg-green-100 text-green-700',
-          rejeitado:'bg-red-100 text-red-700',
+          rejeitado: 'bg-red-100 text-red-700',
           expirado: 'bg-slate-100 text-slate-600',
-          novo:     'bg-slate-100 text-slate-700',
-          fechado:  'bg-emerald-100 text-emerald-700'
+          novo: 'bg-slate-100 text-slate-700',
+          fechado: 'bg-emerald-100 text-emerald-700'
         };
         const labels: Record<string, string> = {
-          pendente: 'Pendente', enviado: 'Enviado', aprovado: 'Aprovado',
-          rejeitado: 'Rejeitado', expirado: 'Expirado', novo: 'Novo',
+          pendente: 'Pendente',
+          enviado: 'Enviado',
+          aprovado: 'Aprovado',
+          rejeitado: 'Rejeitado',
+          expirado: 'Expirado',
+          novo: 'Novo',
           fechado: 'Convertido em Venda'
         };
         const cl = styles[value] || 'bg-slate-100 text-slate-700';
@@ -324,13 +341,13 @@
       type: 'select' as const,
       options: [
         { value: '', label: 'Todos' },
-        { value: 'novo',      label: 'Novo' },
-        { value: 'pendente',  label: 'Pendente' },
-        { value: 'enviado',   label: 'Enviado' },
-        { value: 'aprovado',  label: 'Aprovado' },
-        { value: 'fechado',   label: 'Convertido em Venda' },
+        { value: 'novo', label: 'Novo' },
+        { value: 'pendente', label: 'Pendente' },
+        { value: 'enviado', label: 'Enviado' },
+        { value: 'aprovado', label: 'Aprovado' },
+        { value: 'fechado', label: 'Convertido em Venda' },
         { value: 'rejeitado', label: 'Rejeitado' },
-        { value: 'expirado',  label: 'Expirado' }
+        { value: 'expirado', label: 'Expirado' }
       ]
     },
     {
@@ -338,10 +355,10 @@
       label: 'Período',
       type: 'select' as const,
       options: [
-        { value: '',            label: 'Todos' },
-        { value: 'hoje',        label: 'Hoje' },
-        { value: 'semana',      label: 'Esta semana' },
-        { value: 'mes',         label: 'Este mês' },
+        { value: '', label: 'Todos' },
+        { value: 'hoje', label: 'Hoje' },
+        { value: 'semana', label: 'Esta semana' },
+        { value: 'mes', label: 'Este mês' },
         { value: 'mes_passado', label: 'Mês passado' }
       ]
     }
@@ -369,27 +386,36 @@
 
 <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
   <div>
-    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Painel executivo</p>
-    <p class="text-sm text-slate-500">Resumo do pipeline com foco em follow-up, vencimento e conversão em venda.</p>
+    <p class="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">Painel executivo</p>
+    <p class="text-sm text-slate-500">
+      Resumo do pipeline com foco em follow-up, vencimento e conversão em venda.
+    </p>
   </div>
 </div>
 
 {#if errorMessage}
-  <div role="alert" class="mb-6 rounded-vtur-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+  <div
+    role="alert"
+    class="rounded-vtur-lg mb-6 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+  >
     {errorMessage}
   </div>
 {/if}
 
 <div class="vtur-kpi-grid mb-6">
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500"><FileText size={20} /></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+      <FileText size={20} />
+    </div>
     <div>
       <p class="text-sm font-medium text-slate-500">Total</p>
       <p class="text-2xl font-bold text-slate-900">{resumo.total}</p>
     </div>
   </div>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-500"><Send size={20} /></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-500">
+      <Send size={20} />
+    </div>
     <div>
       <p class="text-sm font-medium text-slate-500">Enviados</p>
       <p class="text-2xl font-bold text-slate-900">{resumo.enviados}</p>
@@ -397,7 +423,9 @@
     </div>
   </div>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-500"><AlertCircle size={20} /></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-500">
+      <AlertCircle size={20} />
+    </div>
     <div>
       <p class="text-sm font-medium text-slate-500">Sem interação</p>
       <p class="text-2xl font-bold text-slate-900">{resumo.semInteracao}</p>
@@ -405,7 +433,9 @@
     </div>
   </div>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500"><ShoppingCart size={20} /></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
+      <ShoppingCart size={20} />
+    </div>
     <div>
       <p class="text-sm font-medium text-slate-500">Convertidos</p>
       <p class="text-2xl font-bold text-slate-900">{resumo.convertidos}</p>
@@ -463,8 +493,11 @@
   {/if}
 </div>
 
-<div class="mb-6 rounded-vtur-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 shadow-vtur-lg">
-  A lista exibe os orçamentos <strong>mais recentes primeiro</strong>. Use os filtros rápidos para ver apenas críticos ou prontos para venda.
+<div
+  class="rounded-vtur-xl shadow-vtur-lg mb-6 border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800"
+>
+  A lista exibe os orçamentos <strong>mais recentes primeiro</strong>. Use os filtros rápidos para
+  ver apenas críticos ou prontos para venda.
 </div>
 
 <DataTable

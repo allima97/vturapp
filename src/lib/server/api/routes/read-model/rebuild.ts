@@ -7,13 +7,13 @@ import {
   logServerError,
   requireAuthenticatedUser,
   resolveUserScope,
-  toErrorResponse,
+  toErrorResponse
 } from '$lib/server/v1';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import {
   markNightlyReadModelMonthsDirty,
   NIGHTLY_READ_MODEL_CRON,
-  rebuildReadModelForCompanyMonth,
+  rebuildReadModelForCompanyMonth
 } from '$lib/server/readModelRebuild';
 
 /**
@@ -53,7 +53,11 @@ type GlobalWithEnv = typeof globalThis & {
 };
 
 function getCronEnv(event: RequestEvent): CronEnv {
-  return (event.platform as PlatformWithEnv | undefined)?.env ?? (globalThis as GlobalWithEnv).__env__ ?? {};
+  return (
+    (event.platform as PlatformWithEnv | undefined)?.env ??
+    (globalThis as GlobalWithEnv).__env__ ??
+    {}
+  );
 }
 
 export async function handleReadModelRebuildPost(event: RequestEvent) {
@@ -87,7 +91,7 @@ export async function handleReadModelRebuildPost(event: RequestEvent) {
     const result = await rebuildReadModelForCompanyMonth(client, {
       companyIds: requestedCompanyIds,
       monthKeys,
-      rebuildAll: requestedCompanyIds.length === 0 && scope.isAdmin,
+      rebuildAll: requestedCompanyIds.length === 0 && scope.isAdmin
     });
 
     return json({ ok: true, ...result }, { headers: NO_STORE_HEADERS });
@@ -113,7 +117,7 @@ export async function handleReadModelRebuildGet(event: RequestEvent) {
     if (!cronSecret) {
       logServerError(
         '[read-model/rebuild] CRON_SECRET não configurado no Worker — cron recusado',
-        new Error('CRON_SECRET ausente'),
+        new Error('CRON_SECRET ausente')
       );
       return json({ error: 'Cron não configurado.' }, { status: 503, headers: NO_STORE_HEADERS });
     }
@@ -127,7 +131,10 @@ export async function handleReadModelRebuildGet(event: RequestEvent) {
     // desatualizados (ver markNightlyReadModelMonthsDirty). Falha aqui não impede
     // a reconstrução normal dos meses já marcados.
     let nightly: { companies: number; marked: number } | null = null;
-    if (String(event.request.headers.get(CRON_SCHEDULE_HEADER) || '').trim() === NIGHTLY_READ_MODEL_CRON) {
+    if (
+      String(event.request.headers.get(CRON_SCHEDULE_HEADER) || '').trim() ===
+      NIGHTLY_READ_MODEL_CRON
+    ) {
       try {
         nightly = await markNightlyReadModelMonthsDirty(client);
       } catch (error) {
@@ -138,10 +145,13 @@ export async function handleReadModelRebuildGet(event: RequestEvent) {
     const result = await rebuildReadModelForCompanyMonth(client, {
       companyIds: [],
       monthKeys: [],
-      rebuildAll: true,
+      rebuildAll: true
     });
 
-    return json({ ok: true, cron: true, ...(nightly ? { nightly } : {}), ...result }, { headers: NO_STORE_HEADERS });
+    return json(
+      { ok: true, cron: true, ...(nightly ? { nightly } : {}), ...result },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     logServerError('[read-model/rebuild] cron rebuild falhou', err);
     return toErrorResponse(err, 'Erro no cron rebuild.');

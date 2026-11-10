@@ -37,9 +37,17 @@ import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/reque
 
 const MAX_ADMIN_USER_BODY_BYTES = 64 * 1024;
 const ADMIN_USER_ALLOWED_UPDATE_FIELDS = [
-  'nome_completo', 'telefone', 'cidade', 'estado',
-  'active', 'uso_individual', 'participa_ranking',
-  'user_type_id', 'company_id', 'cargo', 'birth_date'
+  'nome_completo',
+  'telefone',
+  'cidade',
+  'estado',
+  'active',
+  'uso_individual',
+  'participa_ranking',
+  'user_type_id',
+  'company_id',
+  'cargo',
+  'birth_date'
 ] as const;
 
 function invalidateManagedUserCache(params: {
@@ -62,9 +70,7 @@ function invalidateManagedUserCache(params: {
 }
 
 function resolveFinanceiroCompanyIds(input: unknown, companyId?: string | null) {
-  const values = Array.isArray(input)
-    ? input.map((id: unknown) => String(id || '').trim())
-    : [];
+  const values = Array.isArray(input) ? input.map((id: unknown) => String(id || '').trim()) : [];
   return Array.from(new Set([...values, ...(companyId ? [companyId] : [])]));
 }
 
@@ -78,16 +84,17 @@ export async function handleAdminUsuariosIdGet(event: RequestEvent) {
 
     const userId = String(event.params.id || '').trim();
     const targetUser = await loadManagedUser(client, scope, userId);
-    const [permissions, defaultPermissions, userTypes, companies, templates, financeiroCompanyIds] = await Promise.all([
-      loadUserPermissions(client, userId),
-      targetUser.user_type_id
-        ? loadUserTypeDefaultPermissions(client, String(targetUser.user_type_id))
-        : Promise.resolve([]),
-      loadManagedUserTypes(client, scope),
-      loadManagedCompanies(client, scope),
-      loadAvisoTemplates(client).catch(() => []),
-      loadFinanceiroCompanyIds(client, scope, userId)
-    ]);
+    const [permissions, defaultPermissions, userTypes, companies, templates, financeiroCompanyIds] =
+      await Promise.all([
+        loadUserPermissions(client, userId),
+        targetUser.user_type_id
+          ? loadUserTypeDefaultPermissions(client, String(targetUser.user_type_id))
+          : Promise.resolve([]),
+        loadManagedUserTypes(client, scope),
+        loadManagedCompanies(client, scope),
+        loadAvisoTemplates(client).catch(() => []),
+        loadFinanceiroCompanyIds(client, scope, userId)
+      ]);
 
     return json({
       user: {
@@ -156,16 +163,24 @@ export async function handleAdminUsuariosIdPatch(event: RequestEvent) {
       const requestedTypeId = String(body.user_type_id || '').trim();
       if (!requestedTypeId) {
         if (!scope.isAdmin) {
-          return json({ error: 'Tipo de usuario obrigatorio.' }, { status: 400, headers: NO_STORE_HEADERS });
+          return json(
+            { error: 'Tipo de usuario obrigatorio.' },
+            { status: 400, headers: NO_STORE_HEADERS }
+          );
         }
       } else {
         const managedTypes = await loadManagedUserTypes(client, scope);
         const targetType = managedTypes.find((row) => row.id === requestedTypeId);
         if (!targetType) {
-          return json({ error: 'Tipo de usuario fora do escopo.' }, { status: 403, headers: NO_STORE_HEADERS });
+          return json(
+            { error: 'Tipo de usuario fora do escopo.' },
+            { status: 403, headers: NO_STORE_HEADERS }
+          );
         }
         ensureAssignableUserType(scope, targetType.name);
-        effectiveUserTypeName = String(targetType.name || '').trim().toUpperCase();
+        effectiveUserTypeName = String(targetType.name || '')
+          .trim()
+          .toUpperCase();
       }
     }
 
@@ -175,27 +190,43 @@ export async function handleAdminUsuariosIdPatch(event: RequestEvent) {
       if (body[field] !== undefined) updatePayload[field] = body[field];
     }
     const effectiveUsoIndividual =
-      body.uso_individual !== undefined ? Boolean(body.uso_individual) : Boolean(targetUser.uso_individual);
+      body.uso_individual !== undefined
+        ? Boolean(body.uso_individual)
+        : Boolean(targetUser.uso_individual);
     const effectiveCompanyId =
       body.company_id !== undefined
         ? String(body.company_id || '').trim()
         : String(targetUser.company_id || '').trim();
-    const financeiroCompanyIds = resolveFinanceiroCompanyIds(body.financeiro_company_ids, effectiveCompanyId);
+    const financeiroCompanyIds = resolveFinanceiroCompanyIds(
+      body.financeiro_company_ids,
+      effectiveCompanyId
+    );
     if (isFinanceiroRole(effectiveUserTypeName)) {
       if (effectiveUsoIndividual) {
-        return json({ error: 'Usuario financeiro deve ser corporativo e vinculado a empresa.' }, { status: 400, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Usuario financeiro deve ser corporativo e vinculado a empresa.' },
+          { status: 400, headers: NO_STORE_HEADERS }
+        );
       }
       if (financeiroCompanyIds.length === 0) {
-        return json({ error: 'Usuario financeiro deve ser vinculado a pelo menos uma empresa.' }, { status: 400, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Usuario financeiro deve ser vinculado a pelo menos uma empresa.' },
+          { status: 400, headers: NO_STORE_HEADERS }
+        );
       }
       updatePayload.participa_ranking = false;
     }
     const shouldSyncFinanceiroLinks =
       isFinanceiroRole(effectiveUserTypeName) &&
-      (Array.isArray(body.financeiro_company_ids) || body.user_type_id !== undefined || body.company_id !== undefined);
+      (Array.isArray(body.financeiro_company_ids) ||
+        body.user_type_id !== undefined ||
+        body.company_id !== undefined);
 
     if (Object.keys(updatePayload).length === 1 && !shouldSyncFinanceiroLinks) {
-      return json({ error: 'Nenhum campo para atualizar.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Nenhum campo para atualizar.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     let data: unknown = {
@@ -217,7 +248,11 @@ export async function handleAdminUsuariosIdPatch(event: RequestEvent) {
         .maybeSingle();
 
       if (error) throw error;
-      if (!updatedUser) return json({ error: 'Usuário não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+      if (!updatedUser)
+        return json(
+          { error: 'Usuário não encontrado.' },
+          { status: 404, headers: NO_STORE_HEADERS }
+        );
       data = updatedUser;
     }
 

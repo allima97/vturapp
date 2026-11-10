@@ -6,12 +6,12 @@
  * status, o mesmo corpo e fazer o mesmo conjunto de consultas.
  */
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createFakeSupabase, sortedQueryLog, type FakeSupabase } from '$lib/server/testing/fakeSupabase';
+import { createFakeDados, sortedQueryLog, type FakeDados } from '$lib/server/testing/fakeDados';
 
 const state = vi.hoisted(() => ({
   db: null as unknown,
   scope: null as Record<string, unknown> | null,
-  userId: 'u-admin',
+  userId: 'u-admin'
 }));
 
 vi.mock('$lib/server/v1', async (importOriginal) => {
@@ -21,7 +21,7 @@ vi.mock('$lib/server/v1', async (importOriginal) => {
     getAdminClient: () => state.db,
     requireAuthenticatedUser: async () => ({ id: state.userId }),
     resolveUserScope: async () => state.scope,
-    resolveScopedVendedorIds: async () => ['u-vend', 'u-outro'],
+    resolveScopedVendedorIds: async () => ['u-vend', 'u-outro']
   };
 });
 
@@ -42,7 +42,7 @@ const baseScope = {
   isMaster: false,
   isFinanceiro: false,
   isGestor: false,
-  isVendedor: false,
+  isVendedor: false
 };
 const vendedorScope = {
   ...baseScope,
@@ -51,46 +51,133 @@ const vendedorScope = {
   papel: 'VENDEDOR',
   isAdmin: false,
   isVendedor: true,
-  permissoes: { operacao_viagens: 4, viagens: 4, operacao: 4 },
+  permissoes: { operacao_viagens: 4, viagens: 4, operacao: 4 }
 };
 
 function tables() {
   return {
     viagens: [
       {
-        id: 'v-1', venda_id: 'venda-1', orcamento_id: null, cliente_id: 'cli-1', company_id: EMPRESA,
-        responsavel_user_id: 'u-outro', origem: 'São Paulo', destino: 'Lisboa',
-        data_inicio: '2026-01-10', data_fim: '2026-01-20', status: 'planejada',
-        observacoes: 'obs', follow_up_text: null, follow_up_fechado: false, recibo_id: 'rec-1',
-        created_at: '2025-12-01T00:00:00Z', updated_at: '2025-12-01T00:00:00Z',
+        id: 'v-1',
+        venda_id: 'venda-1',
+        orcamento_id: null,
+        cliente_id: 'cli-1',
+        company_id: EMPRESA,
+        responsavel_user_id: 'u-outro',
+        origem: 'São Paulo',
+        destino: 'Lisboa',
+        data_inicio: '2026-01-10',
+        data_fim: '2026-01-20',
+        status: 'planejada',
+        observacoes: 'obs',
+        follow_up_text: null,
+        follow_up_fechado: false,
+        recibo_id: 'rec-1',
+        created_at: '2025-12-01T00:00:00Z',
+        updated_at: '2025-12-01T00:00:00Z'
       },
       {
-        id: 'v-2', venda_id: null, orcamento_id: null, cliente_id: null, company_id: EMPRESA,
-        responsavel_user_id: 'u-admin', origem: null, destino: 'Rio',
-        data_inicio: '2027-03-01', data_fim: '2027-03-05', status: 'planejada',
-        observacoes: null, follow_up_text: null, follow_up_fechado: false, recibo_id: null,
-        created_at: '2025-12-01T00:00:00Z', updated_at: '2025-12-01T00:00:00Z',
-      },
+        id: 'v-2',
+        venda_id: null,
+        orcamento_id: null,
+        cliente_id: null,
+        company_id: EMPRESA,
+        responsavel_user_id: 'u-admin',
+        origem: null,
+        destino: 'Rio',
+        data_inicio: '2027-03-01',
+        data_fim: '2027-03-05',
+        status: 'planejada',
+        observacoes: null,
+        follow_up_text: null,
+        follow_up_fechado: false,
+        recibo_id: null,
+        created_at: '2025-12-01T00:00:00Z',
+        updated_at: '2025-12-01T00:00:00Z'
+      }
     ],
     clientes: [
-      { id: 'cli-1', nome: 'Maria', email: 'm@x', telefone: '11', whatsapp: '11', created_by: 'u-outro' },
+      {
+        id: 'cli-1',
+        nome: 'Maria',
+        email: 'm@x',
+        telefone: '11',
+        whatsapp: '11',
+        created_by: 'u-outro'
+      }
     ],
     vendas: [
-      { id: 'venda-1', valor_total: 1000, valor_total_pago: 400, status: 'confirmada', data_venda: '2025-11-30', vendedor_id: 'u-vend', cliente_id: 'cli-1' },
+      {
+        id: 'venda-1',
+        valor_total: 1000,
+        valor_total_pago: 400,
+        status: 'confirmada',
+        data_venda: '2025-11-30',
+        vendedor_id: 'u-vend',
+        cliente_id: 'cli-1'
+      }
     ],
     vendas_recibos: [
-      { id: 'rec-1', venda_id: 'venda-1', produto_id: 'p-1', produto_resolvido_id: null, numero_recibo: 'R1', numero_reserva: 'X1', tipo_pacote: null, valor_total: 600, valor_taxas: 10, data_inicio: '2026-01-10', data_fim: '2026-01-20', contrato_url: null },
-      { id: 'rec-2', venda_id: 'venda-1', produto_id: null, produto_resolvido_id: 'p-2', numero_recibo: 'R2', numero_reserva: 'X2', tipo_pacote: 'aereo', valor_total: 400, valor_taxas: 0, data_inicio: null, data_fim: null, contrato_url: null },
+      {
+        id: 'rec-1',
+        venda_id: 'venda-1',
+        produto_id: 'p-1',
+        produto_resolvido_id: null,
+        numero_recibo: 'R1',
+        numero_reserva: 'X1',
+        tipo_pacote: null,
+        valor_total: 600,
+        valor_taxas: 10,
+        data_inicio: '2026-01-10',
+        data_fim: '2026-01-20',
+        contrato_url: null
+      },
+      {
+        id: 'rec-2',
+        venda_id: 'venda-1',
+        produto_id: null,
+        produto_resolvido_id: 'p-2',
+        numero_recibo: 'R2',
+        numero_reserva: 'X2',
+        tipo_pacote: 'aereo',
+        valor_total: 400,
+        valor_taxas: 0,
+        data_inicio: null,
+        data_fim: null,
+        contrato_url: null
+      }
     ],
-    produtos: [
-      { id: 'p-1', nome: 'Hotel Lisboa' },
-    ],
+    produtos: [{ id: 'p-1', nome: 'Hotel Lisboa' }],
     vouchers: [
-      { id: 'vo-1', viagem_id: 'v-1', nome: 'Voucher 1', provider: 'vtur', codigo_systur: 'S1', codigo_fornecedor: 'F1', data_inicio: '2026-01-10', data_fim: '2026-01-20', ativo: true },
+      {
+        id: 'vo-1',
+        viagem_id: 'v-1',
+        nome: 'Voucher 1',
+        provider: 'vtur',
+        codigo_systur: 'S1',
+        codigo_fornecedor: 'F1',
+        data_inicio: '2026-01-10',
+        data_fim: '2026-01-20',
+        ativo: true
+      }
     ],
     viagem_passageiros: [
-      { id: 'pa-1', viagem_id: 'v-1', cliente_id: 'cli-1', papel: 'titular', observacoes: null, created_at: '2025-12-01T00:00:00Z', cliente: { id: 'cli-1', nome: 'Maria', cpf: '1', telefone: '11', data_nascimento: '1990-01-01' } },
-    ],
+      {
+        id: 'pa-1',
+        viagem_id: 'v-1',
+        cliente_id: 'cli-1',
+        papel: 'titular',
+        observacoes: null,
+        created_at: '2025-12-01T00:00:00Z',
+        cliente: {
+          id: 'cli-1',
+          nome: 'Maria',
+          cpf: '1',
+          telefone: '11',
+          data_nascimento: '1990-01-01'
+        }
+      }
+    ]
   };
 }
 
@@ -100,12 +187,17 @@ function event(id: string) {
 }
 
 async function call(id: string, scope: Record<string, unknown>, userId: string) {
-  const db: FakeSupabase = createFakeSupabase(tables());
+  const db: FakeDados = createFakeDados(tables());
   state.db = db;
   state.scope = scope;
   state.userId = userId;
   const response = await handleViagensIdGet(event(id));
-  return { status: response.status, body: await response.json(), queries: sortedQueryLog(db.log), maxInFlight: db.stats.maxInFlight };
+  return {
+    status: response.status,
+    body: await response.json(),
+    queries: sortedQueryLog(db.log),
+    maxInFlight: db.stats.maxInFlight
+  };
 }
 
 beforeAll(() => {

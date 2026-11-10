@@ -1,6 +1,6 @@
-export const SUPABASE_IN_BATCH_SIZE = 100;
+export const QUERY_IN_BATCH_SIZE = 100;
 
-export function chunkArray<T>(values: T[], size = SUPABASE_IN_BATCH_SIZE): T[][] {
+export function chunkArray<T>(values: T[], size = QUERY_IN_BATCH_SIZE): T[][] {
   const chunks: T[][] = [];
   for (let index = 0; index < values.length; index += size) {
     chunks.push(values.slice(index, index + size));
@@ -8,7 +8,7 @@ export function chunkArray<T>(values: T[], size = SUPABASE_IN_BATCH_SIZE): T[][]
   return chunks;
 }
 
-export function filterBatches<T>(values: T[], size = SUPABASE_IN_BATCH_SIZE): T[][] {
+export function filterBatches<T>(values: T[], size = QUERY_IN_BATCH_SIZE): T[][] {
   return values.length > size ? chunkArray(values, size) : [values];
 }
 

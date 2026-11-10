@@ -1,11 +1,11 @@
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { DataClient } from '$lib/dataClientTypes';
 import { normalizeText } from '$lib/normalizeText';
 import { logServerError } from '$lib/server/v1';
 import type { ReciboRelacionado } from './reciboReservaValidator';
 
 function normalizeNumero(valor?: string | null) {
-  if (!valor) return "";
-  return normalizeText(valor, { trim: true, collapseWhitespace: true }).replace(/\s+/g, "");
+  if (!valor) return '';
+  return normalizeText(valor, { trim: true, collapseWhitespace: true }).replace(/\s+/g, '');
 }
 
 function logViajaComError(context: string, error: unknown) {
@@ -38,14 +38,14 @@ export interface ReciboComplementarRow {
  * Cria vínculos automáticos "Viaja Com" entre recibos de diferentes
  * contratantes que compartilham a mesma reserva.
  *
- * @param params.client - Cliente Supabase
+ * @param params.client - Cliente Dados
  * @param params.vendaId - ID da venda atual
  * @param params.recibosNovos - Recibos recém-criados
  * @param params.recibosRelacionados - Recibos existentes com mesma reserva
  * @returns Número de vínculos criados
  */
 export async function criarVinculosViajaComAutomaticos(params: {
-  client: SupabaseClient;
+  client: DataClient;
   vendaId: string;
   recibosNovos: { id: string; numero_reserva?: string | null }[];
   recibosRelacionados?: ReciboRelacionado[] | null;
@@ -74,46 +74,42 @@ export async function criarVinculosViajaComAutomaticos(params: {
     for (const relacionado of relacionados) {
       try {
         // Cria vínculo: recibo novo aponta para recibo relacionado
-        const { error: erro1 } = await client
-          .from("vendas_recibos_complementares")
-          .upsert(
-            {
-              venda_id: vendaId,
-              recibo_id: relacionado.id,
-            },
-            {
-              onConflict: "venda_id,recibo_id",
-              ignoreDuplicates: true
-            }
-          );
+        const { error: erro1 } = await client.from('vendas_recibos_complementares').upsert(
+          {
+            venda_id: vendaId,
+            recibo_id: relacionado.id
+          },
+          {
+            onConflict: 'venda_id,recibo_id',
+            ignoreDuplicates: true
+          }
+        );
 
         if (erro1) {
-          logViajaComError("[viaja-com] erro ao criar vinculo direto", erro1);
+          logViajaComError('[viaja-com] erro ao criar vinculo direto', erro1);
           continue;
         }
 
         // Cria vínculo reverso: recibo relacionado aponta para recibo novo
-        const { error: erro2 } = await client
-          .from("vendas_recibos_complementares")
-          .upsert(
-            {
-              venda_id: relacionado.venda_id,
-              recibo_id: reciboNovo.id,
-            },
-            {
-              onConflict: "venda_id,recibo_id",
-              ignoreDuplicates: true
-            }
-          );
+        const { error: erro2 } = await client.from('vendas_recibos_complementares').upsert(
+          {
+            venda_id: relacionado.venda_id,
+            recibo_id: reciboNovo.id
+          },
+          {
+            onConflict: 'venda_id,recibo_id',
+            ignoreDuplicates: true
+          }
+        );
 
         if (erro2) {
-          logViajaComError("[viaja-com] erro ao criar vinculo reverso", erro2);
+          logViajaComError('[viaja-com] erro ao criar vinculo reverso', erro2);
           continue;
         }
 
         vinculosCriados += 2;
       } catch (error) {
-        logViajaComError("[viaja-com] erro ao criar vinculo", error);
+        logViajaComError('[viaja-com] erro ao criar vinculo', error);
       }
     }
   }
@@ -124,19 +120,20 @@ export async function criarVinculosViajaComAutomaticos(params: {
 /**
  * Busca todos os recibos complementares ("Viaja Com") de uma venda.
  *
- * @param params.client - Cliente Supabase
+ * @param params.client - Cliente Dados
  * @param params.vendaId - ID da venda
  * @returns Lista de recibos complementares com informações do cliente
  */
 export async function buscarRecibosComplementares(params: {
-  client: SupabaseClient;
+  client: DataClient;
   vendaId: string;
 }): Promise<ReciboComplementarRow[]> {
   const { client, vendaId } = params;
 
   const { data, error } = await client
-    .from("vendas_recibos_complementares")
-    .select(`
+    .from('vendas_recibos_complementares')
+    .select(
+      `
       recibo_id,
       vendas_recibos!inner(
         id,
@@ -148,11 +145,12 @@ export async function buscarRecibosComplementares(params: {
           clientes(nome)
         )
       )
-    `)
-    .eq("venda_id", vendaId);
+    `
+    )
+    .eq('venda_id', vendaId);
 
   if (error) {
-    logViajaComError("[viaja-com] erro ao buscar recibos complementares", error);
+    logViajaComError('[viaja-com] erro ao buscar recibos complementares', error);
     return [];
   }
 

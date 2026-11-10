@@ -23,7 +23,7 @@ describe('resolveViagemStatus (datas mandam, exceto cancelada)', () => {
     [{ status: 'confirmada', data_inicio: '2026-09-20', data_fim: '2026-09-30' }, 'em_viagem'],
     [{ status: 'confirmada', data_inicio: HOJE, data_fim: HOJE }, 'em_viagem'],
     [{ status: 'confirmada', data_inicio: '2026-09-20', data_fim: null }, 'em_viagem'],
-    [{ status: 'confirmada', data_inicio: null, data_fim: null }, 'pendente'],
+    [{ status: 'confirmada', data_inicio: null, data_fim: null }, 'pendente']
   ])('%o → %s', (input, esperado) => {
     expect(resolveViagemStatus({ ...input, hoje: HOJE })).toBe(esperado);
   });

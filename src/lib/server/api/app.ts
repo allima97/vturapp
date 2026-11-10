@@ -27,6 +27,7 @@ import { adminRoutes } from './routes/admin';
 import { orcamentosRoutes } from './routes/orcamentos';
 import { parametrosRoutes } from './routes/parametros';
 import { roteirosRoutes } from './routes/roteiros';
+import { opcionaisRoutes } from './routes/opcionais';
 import { viagensRoutes } from './routes/viagens';
 import { preferenciasRoutes } from './routes/preferencias';
 import { agendaRoutes } from './routes/agenda';
@@ -41,6 +42,7 @@ import { fornecedoresRoutes } from './routes/fornecedores';
 import { pagamentosRoutes } from './routes/pagamentos';
 import { tarefasRoutes } from './routes/tarefas';
 import { cidadesRoutes } from './routes/cidades';
+import { destinosGeograficosRoutes } from './routes/destinos-geograficos';
 import { circuitosRoutes } from './routes/circuitos';
 import { consultoriasRoutes } from './routes/consultorias';
 import { convitesRoutes } from './routes/convites';
@@ -65,6 +67,8 @@ import { usersRoutes } from './routes/users';
 import { voucherAssetsRoutes } from './routes/voucher-assets';
 import { welcomeEmailRoutes } from './routes/welcome-email';
 import { lgpdRoutes } from './routes/lgpd';
+import { r2ProofRoutes } from './routes/r2-proof';
+import { emailProofRoutes } from './routes/email-proof';
 
 export function createApiApp() {
   const app = new Hono<ApiEnv>().basePath('/api/v1');
@@ -86,6 +90,7 @@ export function createApiApp() {
   app.route('/orcamentos', orcamentosRoutes);
   app.route('/parametros', parametrosRoutes);
   app.route('/roteiros', roteirosRoutes);
+  app.route('/opcionais', opcionaisRoutes);
   app.route('/viagens', viagensRoutes);
   app.route('/preferencias', preferenciasRoutes);
   app.route('/agenda', agendaRoutes);
@@ -100,6 +105,7 @@ export function createApiApp() {
   app.route('/pagamentos', pagamentosRoutes);
   app.route('/tarefas', tarefasRoutes);
   app.route('/cidades', cidadesRoutes);
+  app.route('/destinos-geograficos', destinosGeograficosRoutes);
   app.route('/circuitos', circuitosRoutes);
   app.route('/consultorias', consultoriasRoutes);
   app.route('/convites', convitesRoutes);
@@ -124,6 +130,8 @@ export function createApiApp() {
   app.route('/voucher-assets', voucherAssetsRoutes);
   app.route('/welcome-email', welcomeEmailRoutes);
   app.route('/lgpd', lgpdRoutes);
+  app.route('/r2-proof', r2ProofRoutes); // F1-05 — remover em produção após F2-03
+  app.route('/email-proof', emailProofRoutes); // F1-07 — remover em produção após F2-03
 
   return app;
 }

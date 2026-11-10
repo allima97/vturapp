@@ -22,7 +22,7 @@ function readTurnstileVerifyBody(value: unknown): TurnstileVerifyBody | null {
   };
 }
 
-export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+export const POST: RequestHandler = async ({ request, getClientAddress, platform }) => {
   try {
     const originError = rejectCrossOriginRequest(request, 'Origem inválida.');
     if (originError) return originError;
@@ -34,10 +34,15 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
       remoteIp = null;
     }
 
-    const rateLimit = await checkPersistentRateLimit('turnstile-verify', remoteIp || 'unknown', {
-      max: 120,
-      windowMs: 60_000
-    });
+    const rateLimit = await checkPersistentRateLimit(
+      'turnstile-verify',
+      remoteIp || 'unknown',
+      {
+        max: 120,
+        windowMs: 60_000
+      },
+      platform?.env?.DB
+    );
     if (!rateLimit.allowed) {
       return json(
         { error: 'Muitas validações. Tente novamente em instantes.' },
@@ -59,12 +64,18 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 
     const result = await verifyTurnstileToken(token, remoteIp);
     if (!result.ok) {
-      return json({ error: result.message, codes: result.codes ?? [] }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: result.message, codes: result.codes ?? [] },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     return json({ ok: true, skipped: result.skipped ?? false }, { headers: NO_STORE_HEADERS });
   } catch (err) {
     logServerError('[turnstile/verify] erro ao validar desafio', err);
-    return json({ error: 'Erro ao validar desafio de segurança.' }, { status: 500, headers: NO_STORE_HEADERS });
+    return json(
+      { error: 'Erro ao validar desafio de segurança.' },
+      { status: 500, headers: NO_STORE_HEADERS }
+    );
   }
 };

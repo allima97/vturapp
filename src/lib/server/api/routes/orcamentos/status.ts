@@ -57,7 +57,8 @@ export async function handleOrcamentosStatusPatch(event: RequestEvent) {
         : {};
 
     const quoteScope = await resolveQuoteCreatorScope(client, scope, {
-      companyId: event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id'),
+      companyId:
+        event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id'),
       vendedorRaw: event.url.searchParams.get('vendedor_id')
     });
 
@@ -68,7 +69,10 @@ export async function handleOrcamentosStatusPatch(event: RequestEvent) {
       .maybeSingle();
     if (quoteError) throw quoteError;
     if (!quote || !isQuoteCreatorAllowed(quoteScope, quote.created_by)) {
-      return json({ error: 'Orcamento nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Orcamento nao encontrado.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
     }
 
     const updateData: OrcamentoStatusUpdate = { updated_at: new Date().toISOString() };
@@ -83,7 +87,9 @@ export async function handleOrcamentosStatusPatch(event: RequestEvent) {
       .from('quote')
       .update(updateData)
       .eq('id', id)
-      .select('id, status, status_negociacao, last_interaction_notes, last_interaction_at, updated_at')
+      .select(
+        'id, status, status_negociacao, last_interaction_notes, last_interaction_at, updated_at'
+      )
       .single();
     if (error) throw error;
 

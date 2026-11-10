@@ -18,7 +18,7 @@ import {
   cleanStringSet,
   chunkArray,
   dedupeById,
-  SUPABASE_IN_BATCH_SIZE,
+  QUERY_IN_BATCH_SIZE,
   uniqueCleanStrings
 } from '$lib/utils/array';
 
@@ -95,18 +95,18 @@ type AjusteVendedorRow = {
 };
 
 function isIsoDate(value?: string | null) {
-  const normalized = String(value || "").trim();
+  const normalized = String(value || '').trim();
   if (!normalized) return true;
   return ISO_DATE_PATTERN.test(normalized);
 }
 
 function isRateioTableMissingError(err: unknown) {
   const error = err as ErrorWithCode;
-  const code = String(error?.code || "").trim();
-  const message = String(error?.message || "").toLowerCase();
+  const code = String(error?.code || '').trim();
+  const message = String(error?.message || '').toLowerCase();
   return (
-    code === "42P01" &&
-    (message.includes("vendas_recibos_rateio") || message.includes("does not exist"))
+    code === '42P01' &&
+    (message.includes('vendas_recibos_rateio') || message.includes('does not exist'))
   );
 }
 
@@ -127,39 +127,52 @@ export async function handleFinanceiroAjustesVendasListGet(event: RequestEvent) 
       );
     }
 
-    if (!(scope.isAdmin || scope.papel === "MASTER" || scope.papel === "FINANCEIRO" || scope.papel === "GESTOR")) {
+    if (
+      !(
+        scope.isAdmin ||
+        scope.papel === 'MASTER' ||
+        scope.papel === 'FINANCEIRO' ||
+        scope.papel === 'GESTOR'
+      )
+    ) {
       return json(
-        { error: "Somente financeiro/gestor/master podem acessar Ajustes de Vendas." },
+        { error: 'Somente financeiro/gestor/master podem acessar Ajustes de Vendas.' },
         { status: 403, headers: NO_STORE_HEADERS }
       );
     }
 
     const url = event.url;
-    const requestedCompanyId = String(url.searchParams.get("company_id") || "").trim();
-    const inicio = String(url.searchParams.get("inicio") || "").trim();
-    const fim = String(url.searchParams.get("fim") || "").trim();
-    const vendedorId = String(url.searchParams.get("vendedor_id") || "").trim();
-    const termoRaw = sanitizePostgrestSearchTerm(url.searchParams.get("q"));
-    const termo = termoRaw.length >= 2 ? termoRaw : "";
-    const apenasRateados = url.searchParams.get("apenas_rateados") === "true";
-    const limitRaw = Number(url.searchParams.get("limit") || 80);
+    const requestedCompanyId = String(url.searchParams.get('company_id') || '').trim();
+    const inicio = String(url.searchParams.get('inicio') || '').trim();
+    const fim = String(url.searchParams.get('fim') || '').trim();
+    const vendedorId = String(url.searchParams.get('vendedor_id') || '').trim();
+    const termoRaw = sanitizePostgrestSearchTerm(url.searchParams.get('q'));
+    const termo = termoRaw.length >= 2 ? termoRaw : '';
+    const apenasRateados = url.searchParams.get('apenas_rateados') === 'true';
+    const limitRaw = Number(url.searchParams.get('limit') || 80);
     const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(200, Math.floor(limitRaw))) : 80;
 
     if (!isIsoDate(inicio) || !isIsoDate(fim)) {
-      return json({ error: "inicio/fim invalidos. Use YYYY-MM-DD." }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'inicio/fim invalidos. Use YYYY-MM-DD.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
     if (vendedorId && !isUuid(vendedorId)) {
-      return json({ error: "vendedor_id invalido." }, { status: 400, headers: NO_STORE_HEADERS });
+      return json({ error: 'vendedor_id invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
     }
 
     const companyIds = resolveScopedCompanyIds(scope, requestedCompanyId);
     if (companyIds.length === 0) {
-      return json({ error: "company_id nao resolvido para este usuario." }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'company_id nao resolvido para este usuario.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const buildVendaQuery = (companyIdsFilter = companyIds) => {
       let query = client
-        .from("vendas_recibos")
+        .from('vendas_recibos')
         .select(
           `
             id,
@@ -180,25 +193,25 @@ export async function handleFinanceiroAjustesVendasListGet(event: RequestEvent) 
             )
           `
         )
-        .eq("vendas.cancelada", false)
-        .order("data_venda", { ascending: false })
+        .eq('vendas.cancelada', false)
+        .order('data_venda', { ascending: false })
         .limit(limit);
 
       if (companyIdsFilter.length === 1) {
-        query = query.eq("vendas.company_id", companyIdsFilter[0]);
+        query = query.eq('vendas.company_id', companyIdsFilter[0]);
       } else if (companyIdsFilter.length > 1) {
-        query = query.in("vendas.company_id", companyIdsFilter);
+        query = query.in('vendas.company_id', companyIdsFilter);
       }
-      if (inicio) query = query.gte("data_venda", inicio);
-      if (fim) query = query.lte("data_venda", fim);
-      if (vendedorId) query = query.eq("vendas.vendedor_id", vendedorId);
+      if (inicio) query = query.gte('data_venda', inicio);
+      if (fim) query = query.lte('data_venda', fim);
+      if (vendedorId) query = query.eq('vendas.vendedor_id', vendedorId);
       if (termo) query = query.or(`numero_recibo.ilike.%${termo}%`);
 
       return query;
     };
 
     const fetchVendaRows = async () => {
-      if (companyIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (companyIds.length <= QUERY_IN_BATCH_SIZE) {
         return buildVendaQuery();
       }
 
@@ -211,9 +224,9 @@ export async function handleFinanceiroAjustesVendasListGet(event: RequestEvent) 
 
       return {
         data: dedupeById(rows)
-          .sort((a, b) => String(b?.data_venda || "").localeCompare(String(a?.data_venda || "")))
+          .sort((a, b) => String(b?.data_venda || '').localeCompare(String(a?.data_venda || '')))
           .slice(0, limit),
-        error: null,
+        error: null
       };
     };
 
@@ -226,7 +239,7 @@ export async function handleFinanceiroAjustesVendasListGet(event: RequestEvent) 
 
     const buildConciliacaoQuery = (companyIdsFilter = companyIds) => {
       let conciliacaoQuery = client
-        .from("conciliacao_recibos")
+        .from('conciliacao_recibos')
         .select(
           `
             id,
@@ -244,21 +257,21 @@ export async function handleFinanceiroAjustesVendasListGet(event: RequestEvent) 
             )
           `
         )
-        .in("company_id", companyIdsFilter)
-        .is("venda_recibo_id", null)
-        .neq("is_baixa_rac", true)
-        .order("movimento_data", { ascending: false })
+        .in('company_id', companyIdsFilter)
+        .is('venda_recibo_id', null)
+        .neq('is_baixa_rac', true)
+        .order('movimento_data', { ascending: false })
         .limit(limit);
 
-      if (inicio) conciliacaoQuery = conciliacaoQuery.gte("movimento_data", inicio);
-      if (fim) conciliacaoQuery = conciliacaoQuery.lte("movimento_data", fim);
-      if (vendedorId) conciliacaoQuery = conciliacaoQuery.eq("ranking_vendedor_id", vendedorId);
-      if (termo) conciliacaoQuery = conciliacaoQuery.ilike("documento", `%${termo}%`);
+      if (inicio) conciliacaoQuery = conciliacaoQuery.gte('movimento_data', inicio);
+      if (fim) conciliacaoQuery = conciliacaoQuery.lte('movimento_data', fim);
+      if (vendedorId) conciliacaoQuery = conciliacaoQuery.eq('ranking_vendedor_id', vendedorId);
+      if (termo) conciliacaoQuery = conciliacaoQuery.ilike('documento', `%${termo}%`);
       return conciliacaoQuery;
     };
 
     const fetchConciliacaoRows = async () => {
-      if (companyIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (companyIds.length <= QUERY_IN_BATCH_SIZE) {
         return buildConciliacaoQuery();
       }
 
@@ -271,9 +284,11 @@ export async function handleFinanceiroAjustesVendasListGet(event: RequestEvent) 
 
       return {
         data: dedupeById(rows)
-          .sort((a, b) => String(b?.movimento_data || "").localeCompare(String(a?.movimento_data || "")))
+          .sort((a, b) =>
+            String(b?.movimento_data || '').localeCompare(String(a?.movimento_data || ''))
+          )
           .slice(0, limit),
-        error: null,
+        error: null
       };
     };
 
@@ -284,13 +299,11 @@ export async function handleFinanceiroAjustesVendasListGet(event: RequestEvent) 
     const conciliacaoIds = uniqueCleanStrings(conciliacaoRows.map((row) => row?.id));
     const conciliacaoIdSet = cleanStringSet(conciliacaoIds);
 
-    let rateioMap = new Map<string, AjusteRateioRow>();
+    const rateioMap = new Map<string, AjusteRateioRow>();
     if (reciboIds.length > 0 || conciliacaoIds.length > 0) {
       const buildRateioQuery = () =>
-        client
-          .from("vendas_recibos_rateio")
-          .select(
-            `
+        client.from('vendas_recibos_rateio').select(
+          `
               id,
               venda_recibo_id,
               conciliacao_recibo_id,
@@ -306,17 +319,18 @@ export async function handleFinanceiroAjustesVendasListGet(event: RequestEvent) 
                 nome_completo
               )
             `
-          );
+        );
 
       const rateioDataRows: AjusteRateioRow[] = [];
       let rateioError: unknown = null;
-      const companyBatches = companyIds.length > SUPABASE_IN_BATCH_SIZE ? chunkArray(companyIds) : [companyIds];
+      const companyBatches =
+        companyIds.length > QUERY_IN_BATCH_SIZE ? chunkArray(companyIds) : [companyIds];
       for (const batch of companyBatches) {
         let scopedRateioQuery = buildRateioQuery();
         if (batch.length === 1) {
-          scopedRateioQuery = scopedRateioQuery.eq("company_id", batch[0]);
+          scopedRateioQuery = scopedRateioQuery.eq('company_id', batch[0]);
         } else if (batch.length > 1) {
-          scopedRateioQuery = scopedRateioQuery.in("company_id", batch);
+          scopedRateioQuery = scopedRateioQuery.in('company_id', batch);
         }
 
         const { data: batchData, error: batchError } = await scopedRateioQuery;
@@ -333,12 +347,15 @@ export async function handleFinanceiroAjustesVendasListGet(event: RequestEvent) 
         }
         if (!rateioMissingLogged) {
           rateioMissingLogged = true;
-          logServerError("[ajustes-vendas/list] tabela vendas_recibos_rateio ainda nao existe", rateioError);
+          logServerError(
+            '[ajustes-vendas/list] tabela vendas_recibos_rateio ainda nao existe',
+            rateioError
+          );
         }
       } else {
         for (const row of rateioDataRows) {
-          const vendaReciboKey = String(row?.venda_recibo_id || "").trim();
-          const concKey = String(row?.conciliacao_recibo_id || "").trim();
+          const vendaReciboKey = String(row?.venda_recibo_id || '').trim();
+          const concKey = String(row?.conciliacao_recibo_id || '').trim();
           if (vendaReciboKey && reciboIdSet.has(vendaReciboKey)) {
             rateioMap.set(`vr:${vendaReciboKey}`, row);
           }
@@ -356,110 +373,112 @@ export async function handleFinanceiroAjustesVendasListGet(event: RequestEvent) 
     if (vendedorIdsFromRows.length > 0) {
       for (const batch of chunkArray(vendedorIdsFromRows)) {
         const { data: vendedoresOrigem, error: vendedoresOrigemError } = await client
-          .from("users")
-          .select("id, nome_completo")
-          .in("id", batch);
+          .from('users')
+          .select('id, nome_completo')
+          .in('id', batch);
         if (vendedoresOrigemError) throw vendedoresOrigemError;
         for (const row of vendedoresOrigem || []) {
-          const id = String(row?.id || "").trim();
+          const id = String(row?.id || '').trim();
           if (!id) continue;
-          vendedorNomeMap.set(id, String(row?.nome_completo || "Sem vendedor"));
+          vendedorNomeMap.set(id, String(row?.nome_completo || 'Sem vendedor'));
         }
       }
     }
 
     const itensVendas = vendaRows.map((row) => {
-      const baseId = String(row?.id || "").trim();
+      const baseId = String(row?.id || '').trim();
       const rateio = rateioMap.get(`vr:${baseId}`) || null;
-      const vendedorOrigemId = String(row?.vendas?.vendedor_id || "");
+      const vendedorOrigemId = String(row?.vendas?.vendedor_id || '');
       return {
         id: `vr:${baseId}`,
-        recibo_tipo: "venda",
+        recibo_tipo: 'venda',
         recibo_origem_id: baseId,
-        venda_id: String(row?.venda_id || ""),
-        numero_recibo: String(row?.numero_recibo || "").trim() || "-",
-        data_venda: String(row?.data_venda || "").slice(0, 10),
+        venda_id: String(row?.venda_id || ''),
+        numero_recibo: String(row?.numero_recibo || '').trim() || '-',
+        data_venda: String(row?.data_venda || '').slice(0, 10),
         valor_total: Number(row?.valor_total || 0),
         valor_taxas: Number(row?.valor_taxas || 0),
         vendedor_origem_id: vendedorOrigemId,
-        vendedor_origem_nome: String(vendedorNomeMap.get(vendedorOrigemId) || "Sem vendedor"),
-        cliente_nome: String(row?.vendas?.clientes?.nome || ""),
+        vendedor_origem_nome: String(vendedorNomeMap.get(vendedorOrigemId) || 'Sem vendedor'),
+        cliente_nome: String(row?.vendas?.clientes?.nome || ''),
         rateio: rateio
           ? {
-              id: String(rateio?.id || ""),
+              id: String(rateio?.id || ''),
               ativo: Boolean(rateio?.ativo),
-              vendedor_destino_id: String(rateio?.vendedor_destino_id || ""),
+              vendedor_destino_id: String(rateio?.vendedor_destino_id || ''),
               vendedor_destino_nome: String(
-                rateio?.vendedor_destino?.nome_completo || "Sem vendedor"
+                rateio?.vendedor_destino?.nome_completo || 'Sem vendedor'
               ),
               percentual_origem: Number(rateio?.percentual_origem || 0),
               percentual_destino: Number(rateio?.percentual_destino || 0),
-              observacao: String(rateio?.observacao || ""),
-              updated_at: String(rateio?.updated_at || ""),
+              observacao: String(rateio?.observacao || ''),
+              updated_at: String(rateio?.updated_at || '')
             }
-          : null,
+          : null
       };
     });
 
     const itensConciliacao = conciliacaoRows.map((row) => {
-      const concId = String(row?.id || "").trim();
+      const concId = String(row?.id || '').trim();
       const rateio = rateioMap.get(`cr:${concId}`) || null;
-      const vendedorOrigemId = String(row?.ranking_vendedor_id || "");
+      const vendedorOrigemId = String(row?.ranking_vendedor_id || '');
       const bruto =
         Number(row?.valor_venda_real || 0) > 0
           ? Number(row?.valor_venda_real || 0)
           : Number(row?.valor_lancamentos || 0);
       return {
         id: `cr:${concId}`,
-        recibo_tipo: "conciliacao",
+        recibo_tipo: 'conciliacao',
         recibo_origem_id: concId,
-        venda_id: String(row?.venda_id || ""),
-        numero_recibo: String(row?.documento || "").trim() || "-",
-        data_venda: String(row?.movimento_data || "").slice(0, 10),
+        venda_id: String(row?.venda_id || ''),
+        numero_recibo: String(row?.documento || '').trim() || '-',
+        data_venda: String(row?.movimento_data || '').slice(0, 10),
         valor_total: Number(bruto || 0),
         valor_taxas: Number(row?.valor_taxas || 0),
         vendedor_origem_id: vendedorOrigemId,
         vendedor_origem_nome: String(
-          row?.users?.nome_completo || vendedorNomeMap.get(vendedorOrigemId) || "Sem vendedor"
+          row?.users?.nome_completo || vendedorNomeMap.get(vendedorOrigemId) || 'Sem vendedor'
         ),
-        cliente_nome: "",
+        cliente_nome: '',
         rateio: rateio
           ? {
-              id: String(rateio?.id || ""),
+              id: String(rateio?.id || ''),
               ativo: Boolean(rateio?.ativo),
-              vendedor_destino_id: String(rateio?.vendedor_destino_id || ""),
+              vendedor_destino_id: String(rateio?.vendedor_destino_id || ''),
               vendedor_destino_nome: String(
-                rateio?.vendedor_destino?.nome_completo || "Sem vendedor"
+                rateio?.vendedor_destino?.nome_completo || 'Sem vendedor'
               ),
               percentual_origem: Number(rateio?.percentual_origem || 0),
               percentual_destino: Number(rateio?.percentual_destino || 0),
-              observacao: String(rateio?.observacao || ""),
-              updated_at: String(rateio?.updated_at || ""),
+              observacao: String(rateio?.observacao || ''),
+              updated_at: String(rateio?.updated_at || '')
             }
-          : null,
+          : null
       };
     });
 
-    const itensUnificados = [...itensVendas, ...itensConciliacao]
-      .sort((a, b) => String(b?.data_venda || "").localeCompare(String(a?.data_venda || "")));
+    const itensUnificados = [...itensVendas, ...itensConciliacao].sort((a, b) =>
+      String(b?.data_venda || '').localeCompare(String(a?.data_venda || ''))
+    );
 
-    const items = (apenasRateados
-      ? itensUnificados.filter((item) => item.rateio && item.rateio.ativo)
-      : itensUnificados
+    const items = (
+      apenasRateados
+        ? itensUnificados.filter((item) => item.rateio && item.rateio.ativo)
+        : itensUnificados
     ).slice(0, limit);
 
     const vendedoresData = await fetchRankingVendedoresByCompanyIds(client, companyIds);
 
     const vendedores = ((vendedoresData || []) as AjusteVendedorRow[]).map((row) => ({
-      id: String(row?.id || ""),
-      nome_completo: String(row?.nome_completo || "Sem nome"),
+      id: String(row?.id || ''),
+      nome_completo: String(row?.nome_completo || 'Sem nome')
     }));
 
     return json({ items, vendedores }, { headers: SHORT_DYNAMIC_READ_HEADERS });
   } catch (err: unknown) {
-    logServerError("[financeiro/ajustes-vendas/list] erro ao carregar lista", err);
+    logServerError('[financeiro/ajustes-vendas/list] erro ao carregar lista', err);
     return json(
-      { error: "Erro ao carregar ajustes de vendas." },
+      { error: 'Erro ao carregar ajustes de vendas.' },
       { status: 500, headers: NO_STORE_HEADERS }
     );
   }

@@ -17,11 +17,21 @@ type ViaCepResponse = {
   erro?: boolean;
 };
 
-export const handleEnderecosCepGet = async ({ url, fetch, getClientAddress }: RequestEvent) => {
-  const rateLimit = await checkPersistentRateLimit('cep', getClientAddress() || 'unknown', {
-    max: 120,
-    windowMs: 60_000
-  });
+export const handleEnderecosCepGet = async ({
+  url,
+  fetch,
+  getClientAddress,
+  platform
+}: RequestEvent) => {
+  const rateLimit = await checkPersistentRateLimit(
+    'cep',
+    getClientAddress() || 'unknown',
+    {
+      max: 120,
+      windowMs: 60_000
+    },
+    platform?.env?.DB
+  );
   if (!rateLimit.allowed) {
     return json(
       { error: 'Muitas requisições. Tente novamente em instantes.' },
@@ -56,7 +66,10 @@ export const handleEnderecosCepGet = async ({ url, fetch, getClientAddress }: Re
 
     const contentType = String(response.headers.get('content-type') || '').toLowerCase();
     if (contentType && !contentType.includes('application/json')) {
-      return json({ error: 'Resposta invalida do provedor de CEP.' }, { status: 502, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Resposta invalida do provedor de CEP.' },
+        { status: 502, headers: NO_STORE_HEADERS }
+      );
     }
 
     const data = (await response.json()) as ViaCepResponse;
@@ -81,6 +94,9 @@ export const handleEnderecosCepGet = async ({ url, fetch, getClientAddress }: Re
     );
   } catch (err) {
     logServerError('[enderecos/cep] falha ao consultar CEP', err);
-    return json({ error: 'Nao foi possivel consultar o CEP.' }, { status: 502, headers: NO_STORE_HEADERS });
+    return json(
+      { error: 'Nao foi possivel consultar o CEP.' },
+      { status: 502, headers: NO_STORE_HEADERS }
+    );
   }
 };

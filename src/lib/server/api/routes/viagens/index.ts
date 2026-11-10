@@ -22,7 +22,9 @@ export const viagensRoutes = new Hono<ApiEnv>()
   .post('/delete', (c) => handleViagensDeletePost(c.env.event))
   .get('/dossie', (c) => handleViagensDossieGet(c.env.event))
   .post('/dossie-batch', (c) => handleViagensDossieBatchPost(c.env.event))
-  .get('/cliente/:id', (c) => handleViagensClienteIdGet(withRouteParams(c.env.event, c.req.param())))
+  .get('/cliente/:id', (c) =>
+    handleViagensClienteIdGet(withRouteParams(c.env.event, c.req.param()))
+  )
   .get('/:id', (c) => handleViagensIdGet(withRouteParams(c.env.event, c.req.param())))
   .patch('/:id', (c) => handleViagensIdPatch(withRouteParams(c.env.event, c.req.param())))
   .delete('/:id', (c) => handleViagensIdDelete(withRouteParams(c.env.event, c.req.param())));

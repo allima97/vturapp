@@ -8,11 +8,33 @@
   import Button from '$lib/components/ui/Button.svelte';
   import Dialog from '$lib/components/ui/Dialog.svelte';
   import { FieldInput, FieldSelect, LoadingState } from '$lib/components/ui';
+  import CidadeGeograficaAutocomplete from '$lib/components/vendas/CidadeGeograficaAutocomplete.svelte';
+  import { vendasGeograficasAtivas } from '$lib/config/destinosGeograficos';
+  import { criarEstadoCidadeGeografica } from '$lib/features/vendas/cidadeGeograficaEstado';
   import KPICard from '$lib/components/kpis/KPICard.svelte';
   import {
-    ArrowLeft, Edit, Trash2, ShoppingCart, User, Mail, Phone,
-    Calendar, MapPin, Receipt, CreditCard, FileText, TrendingUp, Package, XCircle,
-    AlertCircle, Clock, CheckCircle, Shield, BarChart2, AlertTriangle, Info
+    ArrowLeft,
+    Edit,
+    Trash2,
+    ShoppingCart,
+    User,
+    Mail,
+    Phone,
+    Calendar,
+    MapPin,
+    Receipt,
+    CreditCard,
+    FileText,
+    TrendingUp,
+    Package,
+    XCircle,
+    AlertCircle,
+    Clock,
+    CheckCircle,
+    Shield,
+    BarChart2,
+    AlertTriangle,
+    Info
   } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { permissoes } from '$lib/stores/permissoes';
@@ -184,6 +206,7 @@
   let editingReciboId: string | null = null;
   let isEditingReciboDetails = false;
   let savingRecibo = false;
+  let estadoCidadeRecibo = criarEstadoCidadeGeografica();
   let reciboForm = {
     numero_recibo: '',
     produto_id: '',
@@ -247,7 +270,10 @@
     const cidadeId = String(recibo?.destino_cidade_id || '').trim();
     const cidadeNome = String(recibo?.destino_cidade?.nome || '').trim();
     if (cidadeId && !cidadesBase.some((item) => item.id === cidadeId)) {
-      cidadesBase = [...cidadesBase, { id: cidadeId, label: cidadeNome || cidadeId, nome: cidadeNome || cidadeId }];
+      cidadesBase = [
+        ...cidadesBase,
+        { id: cidadeId, label: cidadeNome || cidadeId, nome: cidadeNome || cidadeId }
+      ];
     }
 
     const tipoPacote = String(recibo?.tipo_pacote || '').trim();
@@ -258,6 +284,7 @@
 
   function startEditRecibo(recibo: VendaReciboResumo) {
     const reciboId = recibo.id ? String(recibo.id) : null;
+    estadoCidadeRecibo = criarEstadoCidadeGeografica();
     ensureReciboFormOptions(recibo);
     editingReciboId = reciboId;
     isEditingReciboDetails = false;
@@ -281,6 +308,7 @@
     showEditReciboDialog = false;
     editingReciboId = null;
     isEditingReciboDetails = false;
+    estadoCidadeRecibo = criarEstadoCidadeGeografica();
     reciboForm = {
       numero_recibo: '',
       produto_id: '',
@@ -304,6 +332,10 @@
     }
     if (!produtoId) {
       toast.error('Produto e obrigatorio.');
+      return;
+    }
+    if (vendasGeograficasAtivas && estadoCidadeRecibo.pendente) {
+      toast.error('Selecione uma cidade da lista ou limpe o campo.');
       return;
     }
     savingRecibo = true;
@@ -374,7 +406,8 @@
     try {
       if (!MesclarVendasModal) {
         loadingMesclarModal = true;
-        MesclarVendasModal = (await import('$lib/components/modais/MesclarVendasModal.svelte')).default;
+        MesclarVendasModal = (await import('$lib/components/modais/MesclarVendasModal.svelte'))
+          .default;
       }
       showMesclar = true;
     } catch (err) {
@@ -450,7 +483,9 @@
       const idsWithoutNames = new Set<string>();
       for (const r of venda.recibos) {
         const produtoId = String(r?.produto_resolvido_id || r?.produto_id || '').trim();
-        const produtoNome = String(r?.produto_resolvido?.nome || r?.tipo_produtos?.nome || '').trim();
+        const produtoNome = String(
+          r?.produto_resolvido?.nome || r?.tipo_produtos?.nome || ''
+        ).trim();
         if (produtoId && produtoNome) {
           produtosCache[produtoId] = { id: produtoId, nome: produtoNome };
           continue;
@@ -504,8 +539,8 @@
         lastError = err;
         loading = true;
         loadingHint = fromSave
-            ? 'Atualizando os dados da venda...'
-            : 'Carregando a ficha completa da venda...';
+          ? 'Atualizando os dados da venda...'
+          : 'Carregando a ficha completa da venda...';
         startLoadingRecoveryGuard(3500);
       }
     }
@@ -586,7 +621,12 @@
   }
 
   async function handleExcluir() {
-    if (!(await confirmAction('Tem certeza que deseja excluir esta venda? Esta ação não pode ser desfeita.'))) return;
+    if (
+      !(await confirmAction(
+        'Tem certeza que deseja excluir esta venda? Esta ação não pode ser desfeita.'
+      ))
+    )
+      return;
 
     try {
       await apiDelete(`/api/v1/vendas/${vendaId}`);
@@ -606,7 +646,10 @@
   }
 
   function getReciboCidade(recibo: VendaReciboResumo): string {
-    return String(recibo?.destino_cidade?.nome || venda?.destino_cidade?.nome || '').trim() || 'Não informada';
+    return (
+      String(recibo?.destino_cidade?.nome || venda?.destino_cidade?.nome || '').trim() ||
+      'Não informada'
+    );
   }
 
   function getReciboProdutoNome(recibo: VendaReciboResumo): string {
@@ -616,11 +659,16 @@
 
   function getStatusColor(status: string | null | undefined): string {
     switch (status) {
-      case 'confirmada': return 'bg-green-100 text-green-700 border-green-200';
-      case 'pendente': return 'bg-amber-100 text-amber-700 border-amber-200';
-      case 'cancelada': return 'bg-red-100 text-red-700 border-red-200';
-      case 'concluida': return 'bg-blue-100 text-blue-700 border-blue-200';
-      default: return 'bg-slate-100 text-slate-700 border-slate-200';
+      case 'confirmada':
+        return 'bg-green-100 text-green-700 border-green-200';
+      case 'pendente':
+        return 'bg-amber-100 text-amber-700 border-amber-200';
+      case 'cancelada':
+        return 'bg-red-100 text-red-700 border-red-200';
+      case 'concluida':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      default:
+        return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   }
 
@@ -639,10 +687,16 @@
   $: valorLiquido = valorTotal - valorTaxas;
   $: quantidadeRecibos = venda?.recibos?.length || 0;
   $: totalRecibosValor = Array.isArray(venda?.recibos)
-    ? venda.recibos.reduce((acc: number, item: VendaReciboResumo) => acc + Number(item.valor_total || 0), 0)
+    ? venda.recibos.reduce(
+        (acc: number, item: VendaReciboResumo) => acc + Number(item.valor_total || 0),
+        0
+      )
     : 0;
   $: totalPagamentosValor = Array.isArray(venda?.pagamentos)
-    ? venda.pagamentos.reduce((acc: number, item: VendaPagamentoResumo) => acc + Number(item.valor_total || 0), 0)
+    ? venda.pagamentos.reduce(
+        (acc: number, item: VendaPagamentoResumo) => acc + Number(item.valor_total || 0),
+        0
+      )
     : totalRecibosValor > 0
       ? totalRecibosValor
       : Number(venda?.valor_total_pago || 0);
@@ -655,15 +709,38 @@
         )
       )
     : [];
-  $: destinoResumo = destinosVenda.join(', ') || venda?.destino_cidade?.nome || venda?.destino?.nome || venda?.destino || 'Não informado';
+  $: destinoResumo =
+    destinosVenda.join(', ') ||
+    venda?.destino_cidade?.nome ||
+    venda?.destino?.nome ||
+    venda?.destino ||
+    'Não informado';
   $: diferencaFinanceira = Number((totalPagamentosValor - totalRecibosValor).toFixed(2));
   $: fechamentoFinanceiroOk = Math.abs(diferencaFinanceira) < 0.01;
   $: conciliacaoPendente = venda?.conciliado === false;
   $: vendaPendente = venda?.status === 'pendente';
   $: isDonoVenda = !!venda?.vendedor_id && venda.vendedor_id === $permissoes.userId;
-  $: canEdit = !$permissoes.ready || $permissoes.isSystemAdmin || $permissoes.isMaster || $permissoes.isGestor || isDonoVenda || permissoes.can('vendas', 'edit');
-  $: canDelete = !$permissoes.ready || $permissoes.isSystemAdmin || $permissoes.isMaster || $permissoes.isGestor || isDonoVenda || permissoes.can('vendas', 'delete');
-  $: canCancel = !$permissoes.ready || $permissoes.isSystemAdmin || $permissoes.isMaster || $permissoes.isGestor || permissoes.can('vendas', 'edit') || permissoes.can('vendas', 'delete');
+  $: canEdit =
+    !$permissoes.ready ||
+    $permissoes.isSystemAdmin ||
+    $permissoes.isMaster ||
+    $permissoes.isGestor ||
+    isDonoVenda ||
+    permissoes.can('vendas', 'edit');
+  $: canDelete =
+    !$permissoes.ready ||
+    $permissoes.isSystemAdmin ||
+    $permissoes.isMaster ||
+    $permissoes.isGestor ||
+    isDonoVenda ||
+    permissoes.can('vendas', 'delete');
+  $: canCancel =
+    !$permissoes.ready ||
+    $permissoes.isSystemAdmin ||
+    $permissoes.isMaster ||
+    $permissoes.isGestor ||
+    permissoes.can('vendas', 'edit') ||
+    permissoes.can('vendas', 'delete');
   $: alertaOperacionalClasse = vendaPendente
     ? 'border-amber-200 bg-amber-50 text-amber-800'
     : conciliacaoPendente || !fechamentoFinanceiroOk
@@ -673,33 +750,48 @@
     { value: '', label: 'Selecione um produto' },
     ...produtosBase
       .slice()
-      .sort((left, right) => PT_BR_COLLATOR.compare(String(left.nome || ''), String(right.nome || '')))
+      .sort((left, right) =>
+        PT_BR_COLLATOR.compare(String(left.nome || ''), String(right.nome || ''))
+      )
       .map((produto) => ({ value: produto.id, label: produto.nome }))
   ];
   $: cidadeSelectOptions = [
     { value: '', label: 'Selecione uma cidade' },
     ...cidadesBase
       .slice()
-      .sort((left, right) => PT_BR_COLLATOR.compare(String(left.label || left.nome || ''), String(right.label || right.nome || '')))
+      .sort((left, right) =>
+        PT_BR_COLLATOR.compare(
+          String(left.label || left.nome || ''),
+          String(right.label || right.nome || '')
+        )
+      )
       .map((cidade) => ({ value: cidade.id, label: cidade.label || cidade.nome || cidade.id }))
   ];
   $: tipoPacoteOptions = [
     { value: '', label: 'Selecione um tipo de pacote' },
     ...tiposPacoteBase
       .slice()
-      .sort((left, right) => PT_BR_COLLATOR.compare(String(left.nome || ''), String(right.nome || '')))
+      .sort((left, right) =>
+        PT_BR_COLLATOR.compare(String(left.nome || ''), String(right.nome || ''))
+      )
       .map((tipo) => ({ value: tipo.nome, label: tipo.nome }))
   ];
 </script>
 
 <svelte:head>
-  <title>{venda ? `Venda ${venda.codigo || vendaIdSafe.slice(0, 8).toUpperCase()}` : 'Venda'} | VTUR</title>
+  <title
+    >{venda ? `Venda ${venda.codigo || vendaIdSafe.slice(0, 8).toUpperCase()}` : 'Venda'} | VTUR</title
+  >
 </svelte:head>
 
 {#if loading && !venda}
-  <div class="mx-auto mt-10 max-w-xl rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-xs">
+  <div
+    class="mx-auto mt-10 max-w-xl rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-xs"
+  >
     <div class="flex items-start gap-4">
-      <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-vendas-50 text-vendas-600">
+      <div
+        class="bg-vendas-50 text-vendas-600 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+      >
         <Clock size={20} />
       </div>
       <div class="min-w-0 flex-1">
@@ -709,22 +801,20 @@
           <LoadingState compact={true} />
         </div>
         {#if showLoadingRecovery}
-          <div class="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <div
+            class="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+          >
             <p class="font-semibold">A abertura está demorando mais que o esperado.</p>
-            <p class="mt-1">A venda pode já estar salva. Você pode tentar novamente ou voltar para a lista de vendas sem perder a importação.</p>
+            <p class="mt-1">
+              A venda pode já estar salva. Você pode tentar novamente ou voltar para a lista de
+              vendas sem perder a importação.
+            </p>
           </div>
           <div class="mt-4 flex flex-wrap gap-2">
-            <Button
-              variant="primary"
-              color="vendas"
-              on:click={() => carregarVenda()}
-            >
+            <Button variant="primary" color="vendas" on:click={() => carregarVenda()}>
               Tentar novamente
             </Button>
-            <Button
-              variant="secondary"
-              on:click={() => goto('/vendas')}
-            >
+            <Button variant="secondary" on:click={() => goto('/vendas')}>
               <ArrowLeft size={16} class="mr-2" />
               Voltar para Vendas
             </Button>
@@ -734,7 +824,9 @@
     </div>
   </div>
 {:else if error}
-  <div class="mx-auto mt-10 max-w-xl rounded-2xl border border-red-200 bg-white px-6 py-5 text-center shadow-xs">
+  <div
+    class="mx-auto mt-10 max-w-xl rounded-2xl border border-red-200 bg-white px-6 py-5 text-center shadow-xs"
+  >
     <p class="mb-2 text-base font-semibold text-red-700">Não foi possível abrir a venda agora.</p>
     <p class="mb-5 text-sm text-slate-600">{error}</p>
     <div class="flex flex-wrap justify-center gap-2">
@@ -748,8 +840,8 @@
     </div>
   </div>
 {:else if !venda}
-  <div class="text-center py-12">
-    <p class="text-slate-500 mb-4">Venda não encontrada ou sem permissão de acesso.</p>
+  <div class="py-12 text-center">
+    <p class="mb-4 text-slate-500">Venda não encontrada ou sem permissão de acesso.</p>
     <Button variant="secondary" on:click={() => goto('/vendas')}>
       <ArrowLeft size={16} class="mr-2" />
       Voltar para Vendas
@@ -758,48 +850,61 @@
 {:else if venda}
   <PageHeader
     title="Venda {venda.codigo || vendaIdSafe.slice(0, 8).toUpperCase()}"
-    subtitle="Criada em {formatDate(venda.created_at || venda.data_lancamento)} • Vendedor: {venda.vendedor?.nome_completo || 'Não informado'}"
+    subtitle="Criada em {formatDate(venda.created_at || venda.data_lancamento)} • Vendedor: {venda
+      .vendedor?.nome_completo || 'Não informado'}"
     color="vendas"
-    breadcrumbs={[
-      { label: 'Vendas', href: '/vendas' },
-      { label: venda.codigo || 'Detalhes' }
-    ]}
+    breadcrumbs={[{ label: 'Vendas', href: '/vendas' }, { label: venda.codigo || 'Detalhes' }]}
     actions={[
-      ...(canEdit ? [{
-        label: 'Editar',
-        href: `/vendas/${vendaId}/editar`,
-        variant: 'primary' as const,
-        icon: Edit
-      }, {
-        label: loadingMesclarModal ? 'Carregando...' : 'Mesclar',
-        onClick: openMesclarModal,
-        variant: 'secondary' as const,
-        icon: Merge
-      }] : []),
+      ...(canEdit
+        ? [
+            {
+              label: 'Editar',
+              href: `/vendas/${vendaId}/editar`,
+              variant: 'primary' as const,
+              icon: Edit
+            },
+            {
+              label: loadingMesclarModal ? 'Carregando...' : 'Mesclar',
+              onClick: openMesclarModal,
+              variant: 'secondary' as const,
+              icon: Merge
+            }
+          ]
+        : []),
       {
         label: 'Voltar',
         href: '/vendas',
         variant: 'secondary' as const,
         icon: ArrowLeft
       },
-      ...(venda.status !== 'cancelada' && canCancel ? [{
-        label: 'Cancelar Venda',
-        onClick: handleCancelar,
-        variant: 'danger' as const,
-        icon: XCircle,
-        loading: processando
-      }] : []),
-      ...(canDelete ? [{
-        label: 'Excluir',
-        onClick: handleExcluir,
-        variant: 'danger' as const,
-        icon: Trash2
-      }] : [])
+      ...(venda.status !== 'cancelada' && canCancel
+        ? [
+            {
+              label: 'Cancelar Venda',
+              onClick: handleCancelar,
+              variant: 'danger' as const,
+              icon: XCircle,
+              loading: processando
+            }
+          ]
+        : []),
+      ...(canDelete
+        ? [
+            {
+              label: 'Excluir',
+              onClick: handleExcluir,
+              variant: 'danger' as const,
+              icon: Trash2
+            }
+          ]
+        : [])
     ]}
   />
 
   {#if refreshing}
-    <div class="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-xs">
+    <div
+      class="mb-4 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 shadow-xs"
+    >
       <span class="h-2 w-2 animate-pulse rounded-full bg-blue-500"></span>
       Atualizando detalhes da venda
     </div>
@@ -807,8 +912,13 @@
 
   <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
     <div>
-      <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Painel executivo</p>
-      <p class="text-sm text-slate-500">Resumo da venda com foco em status operacional, conciliação, fechamento financeiro e estabilidade do caso.</p>
+      <p class="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">
+        Painel executivo
+      </p>
+      <p class="text-sm text-slate-500">
+        Resumo da venda com foco em status operacional, conciliação, fechamento financeiro e
+        estabilidade do caso.
+      </p>
     </div>
   </div>
 
@@ -818,23 +928,34 @@
       class_name="vtur-kpi-card w-full text-left"
       on:click={() => goto('/vendas')}
     >
-      <div class={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${vendaPendente ? 'bg-amber-50 text-amber-500' : venda?.status === 'cancelada' ? 'bg-red-50 text-red-500' : venda?.status === 'concluida' ? 'bg-blue-50 text-blue-500' : 'bg-green-50 text-green-500'}`}><FileText size={18} /></div>
+      <div
+        class={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${vendaPendente ? 'bg-amber-50 text-amber-500' : venda?.status === 'cancelada' ? 'bg-red-50 text-red-500' : venda?.status === 'concluida' ? 'bg-blue-50 text-blue-500' : 'bg-green-50 text-green-500'}`}
+      >
+        <FileText size={18} />
+      </div>
       <div class="min-w-0 flex-1">
         <p class="text-xs font-medium text-slate-500 sm:text-sm">Status operacional</p>
-        <p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">{getStatusLabel(venda.status)}</p>
+        <p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">
+          {getStatusLabel(venda.status)}
+        </p>
       </div>
     </Button>
-
 
     <Button
       variant="unstyled"
       class_name="vtur-kpi-card w-full text-left"
       on:click={() => goto('/financeiro/caixa')}
     >
-      <div class={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${fechamentoFinanceiroOk ? 'bg-green-50 text-green-500' : 'bg-amber-50 text-amber-500'}`}><AlertCircle size={18} /></div>
+      <div
+        class={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${fechamentoFinanceiroOk ? 'bg-green-50 text-green-500' : 'bg-amber-50 text-amber-500'}`}
+      >
+        <AlertCircle size={18} />
+      </div>
       <div class="min-w-0 flex-1">
         <p class="text-xs font-medium text-slate-500 sm:text-sm">Diferenca financeira</p>
-        <p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">{formatCurrency(diferencaFinanceira)}</p>
+        <p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">
+          {formatCurrency(diferencaFinanceira)}
+        </p>
       </div>
     </Button>
 
@@ -843,85 +964,138 @@
       class_name="vtur-kpi-card w-full text-left"
       on:click={() => goto('/vendas')}
     >
-      <div class={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${!vendaPendente && !conciliacaoPendente && fechamentoFinanceiroOk ? 'bg-green-50 text-green-500' : 'bg-slate-100 text-slate-500'}`}><CheckCircle size={18} /></div>
+      <div
+        class={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${!vendaPendente && !conciliacaoPendente && fechamentoFinanceiroOk ? 'bg-green-50 text-green-500' : 'bg-slate-100 text-slate-500'}`}
+      >
+        <CheckCircle size={18} />
+      </div>
       <div class="min-w-0 flex-1">
         <p class="text-xs font-medium text-slate-500 sm:text-sm">Situacao geral</p>
-        <p class="text-lg font-bold text-slate-900 sm:text-2xl">{!vendaPendente && !conciliacaoPendente && fechamentoFinanceiroOk ? 'Estavel' : 'Atencao'}</p>
+        <p class="text-lg font-bold text-slate-900 sm:text-2xl">
+          {!vendaPendente && !conciliacaoPendente && fechamentoFinanceiroOk ? 'Estavel' : 'Atencao'}
+        </p>
       </div>
     </Button>
   </div>
 
-  <div class="mb-6 p-4 rounded-lg border {getStatusColor(venda.status)} {venda.cancelada ? 'opacity-75' : ''}">
-    <div class="flex items-center justify-between flex-wrap gap-4">
+  <div
+    class="mb-6 rounded-lg border p-4 {getStatusColor(venda.status)} {venda.cancelada
+      ? 'opacity-75'
+      : ''}"
+  >
+    <div class="flex flex-wrap items-center justify-between gap-4">
       <div class="flex items-center gap-3">
         <span class="text-lg font-semibold">Status: {getStatusLabel(venda.status)}</span>
         {#if venda.cancelada}
-          <span class="px-2 py-1 bg-red-100 text-red-700 text-xs font-medium rounded-full">CANCELADA</span>
+          <span class="rounded-full bg-red-100 px-2 py-1 text-xs font-medium text-red-700"
+            >CANCELADA</span
+          >
         {/if}
       </div>
-      <div class="text-sm opacity-75">Última atualização: {formatDate(venda.updated_at || venda.data_venda)}</div>
+      <div class="text-sm opacity-75">
+        Última atualização: {formatDate(venda.updated_at || venda.data_venda)}
+      </div>
     </div>
   </div>
 
   <div class="mb-6 rounded-lg border px-4 py-3 {alertaOperacionalClasse}">
     {#if vendaPendente}
       <p class="text-sm font-semibold">Venda com pendência operacional</p>
-      <p class="mt-1 text-sm">Esta venda ainda está pendente e precisa de acompanhamento até confirmação final.</p>
+      <p class="mt-1 text-sm">
+        Esta venda ainda está pendente e precisa de acompanhamento até confirmação final.
+      </p>
     {:else if conciliacaoPendente && !fechamentoFinanceiroOk}
       <p class="text-sm font-semibold">Conciliação e financeiro em aberto</p>
-      <p class="mt-1 text-sm">A venda não está conciliada e há diferença entre recibos e pagamentos de {formatCurrency(diferencaFinanceira)}.</p>
+      <p class="mt-1 text-sm">
+        A venda não está conciliada e há diferença entre recibos e pagamentos de {formatCurrency(
+          diferencaFinanceira
+        )}.
+      </p>
     {:else if conciliacaoPendente}
       <p class="text-sm font-semibold">Conciliação pendente</p>
-      <p class="mt-1 text-sm">Os valores batem, mas a venda ainda não foi marcada como conciliada.</p>
+      <p class="mt-1 text-sm">
+        Os valores batem, mas a venda ainda não foi marcada como conciliada.
+      </p>
     {:else if !fechamentoFinanceiroOk}
       <p class="text-sm font-semibold">Diferença financeira identificada</p>
-      <p class="mt-1 text-sm">Há diferença entre recibos e pagamentos de {formatCurrency(diferencaFinanceira)} e vale revisar a composição financeira.</p>
+      <p class="mt-1 text-sm">
+        Há diferença entre recibos e pagamentos de {formatCurrency(diferencaFinanceira)} e vale revisar
+        a composição financeira.
+      </p>
     {:else}
       <p class="text-sm font-semibold">Venda operacionalmente estável</p>
-      <p class="mt-1 text-sm">Status, conciliação e fechamento financeiro estão alinhados nesta venda.</p>
+      <p class="mt-1 text-sm">
+        Status, conciliação e fechamento financeiro estão alinhados nesta venda.
+      </p>
     {/if}
   </div>
 
-  <div class="mb-6 rounded-lg border px-4 py-3 {fechamentoFinanceiroOk ? 'border-green-200 bg-green-50 text-green-700' : 'border-amber-200 bg-amber-50 text-amber-700'}">
+  <div
+    class="mb-6 rounded-lg border px-4 py-3 {fechamentoFinanceiroOk
+      ? 'border-green-200 bg-green-50 text-green-700'
+      : 'border-amber-200 bg-amber-50 text-amber-700'}"
+  >
     {#if fechamentoFinanceiroOk}
       <p class="text-sm font-medium">Recibos e pagamentos estão conciliados nesta venda.</p>
     {:else}
-      <p class="text-sm font-medium">Há diferença entre recibos e pagamentos: {formatCurrency(diferencaFinanceira)}</p>
+      <p class="text-sm font-medium">
+        Há diferença entre recibos e pagamentos: {formatCurrency(diferencaFinanceira)}
+      </p>
     {/if}
   </div>
 
   <div class="vtur-kpi-grid mb-6">
-    <KPICard title="Valor Total" value={formatCurrency(valorTotal)} color="vendas" icon={TrendingUp} />
+    <KPICard
+      title="Valor Total"
+      value={formatCurrency(valorTotal)}
+      color="vendas"
+      icon={TrendingUp}
+    />
     <KPICard title="Taxas" value={formatCurrency(valorTaxas)} color="vendas" icon={FileText} />
-    <KPICard title="Liquido" value={formatCurrency(valorLiquido)} color="vendas" icon={ShoppingCart} />
+    <KPICard
+      title="Liquido"
+      value={formatCurrency(valorLiquido)}
+      color="vendas"
+      icon={ShoppingCart}
+    />
     <KPICard title="Recibos" value={quantidadeRecibos} color="vendas" icon={Package} />
   </div>
 
-  <div class="mb-6 rounded-vtur-xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600 shadow-vtur-lg">
-    Esta venda reúne <strong>{quantidadeRecibos}</strong> recibo(s), total pago de <strong>{formatCurrency(totalPagamentosValor)}</strong> e total em recibos de <strong>{formatCurrency(totalRecibosValor)}</strong>, facilitando a leitura rápida da estabilidade operacional e financeira.
+  <div
+    class="rounded-vtur-xl shadow-vtur-lg mb-6 border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600"
+  >
+    Esta venda reúne <strong>{quantidadeRecibos}</strong> recibo(s), total pago de
+    <strong>{formatCurrency(totalPagamentosValor)}</strong>
+    e total em recibos de <strong>{formatCurrency(totalRecibosValor)}</strong>, facilitando a
+    leitura rápida da estabilidade operacional e financeira.
   </div>
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <div class="lg:col-span-2 space-y-6">
+  <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <div class="space-y-6 lg:col-span-2">
       <Card header="Dados do Cliente" color="vendas">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-vendas-100 flex items-center justify-center">
+            <div class="bg-vendas-100 flex h-10 w-10 items-center justify-center rounded-full">
               <User size={20} class="text-vendas-600" />
             </div>
             <div>
               <p class="text-sm text-slate-500">Cliente</p>
-              <p class="font-medium text-slate-900">{venda.cliente?.nome || venda.cliente || 'Não informado'}</p>
+              <p class="font-medium text-slate-900">
+                {venda.cliente?.nome || venda.cliente || 'Não informado'}
+              </p>
             </div>
           </div>
           {#if venda.cliente?.email || venda.cliente_email}
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-vendas-100 flex items-center justify-center">
+              <div class="bg-vendas-100 flex h-10 w-10 items-center justify-center rounded-full">
                 <Mail size={20} class="text-vendas-600" />
               </div>
               <div>
                 <p class="text-sm text-slate-500">Email</p>
-                <a href="mailto:{venda.cliente?.email || venda.cliente_email}" class="font-medium text-vendas-600 hover:underline">
+                <a
+                  href="mailto:{venda.cliente?.email || venda.cliente_email}"
+                  class="text-vendas-600 font-medium hover:underline"
+                >
                   {venda.cliente?.email || venda.cliente_email}
                 </a>
               </div>
@@ -929,12 +1103,14 @@
           {/if}
           {#if venda.cliente?.telefone || venda.cliente_telefone}
             <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-vendas-100 flex items-center justify-center">
+              <div class="bg-vendas-100 flex h-10 w-10 items-center justify-center rounded-full">
                 <Phone size={20} class="text-vendas-600" />
               </div>
               <div>
                 <p class="text-sm text-slate-500">Telefone</p>
-                <p class="font-medium text-slate-900">{venda.cliente?.telefone || venda.cliente_telefone}</p>
+                <p class="font-medium text-slate-900">
+                  {venda.cliente?.telefone || venda.cliente_telefone}
+                </p>
               </div>
             </div>
           {/if}
@@ -942,9 +1118,9 @@
       </Card>
 
       <Card header="Dados da Venda" color="vendas">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-vendas-100 flex items-center justify-center">
+            <div class="bg-vendas-100 flex h-10 w-10 items-center justify-center rounded-full">
               <Calendar size={20} class="text-vendas-600" />
             </div>
             <div>
@@ -953,7 +1129,7 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-vendas-100 flex items-center justify-center">
+            <div class="bg-vendas-100 flex h-10 w-10 items-center justify-center rounded-full">
               <MapPin size={20} class="text-vendas-600" />
             </div>
             <div>
@@ -962,7 +1138,7 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-vendas-100 flex items-center justify-center">
+            <div class="bg-vendas-100 flex h-10 w-10 items-center justify-center rounded-full">
               <Calendar size={20} class="text-vendas-600" />
             </div>
             <div>
@@ -971,7 +1147,7 @@
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full bg-vendas-100 flex items-center justify-center">
+            <div class="bg-vendas-100 flex h-10 w-10 items-center justify-center rounded-full">
               <Calendar size={20} class="text-vendas-600" />
             </div>
             <div>
@@ -985,15 +1161,17 @@
       <Card header="Recibos" color="vendas">
         {#if venda.recibos && venda.recibos.length > 0}
           <div class="overflow-x-visible md:overflow-x-auto">
-            <table class="w-full table-mobile-cards">
+            <table class="table-mobile-cards w-full">
               <thead>
                 <tr class="border-b border-slate-200">
-                  <th class="text-left py-3 px-3 text-sm font-semibold text-slate-600">Recibo</th>
-                  <th class="text-left py-3 px-3 text-sm font-semibold text-slate-600">Produto</th>
-                  <th class="text-left py-3 px-3 text-sm font-semibold text-slate-600">Cidade</th>
-                  <th class="text-center py-3 px-3 text-sm font-semibold text-slate-600">Reserva</th>
-                  <th class="text-center py-3 px-3 text-sm font-semibold text-slate-600">Período</th>
-                  <th class="text-right py-3 px-3 text-sm font-semibold text-slate-600">Valor</th>
+                  <th class="px-3 py-3 text-left text-sm font-semibold text-slate-600">Recibo</th>
+                  <th class="px-3 py-3 text-left text-sm font-semibold text-slate-600">Produto</th>
+                  <th class="px-3 py-3 text-left text-sm font-semibold text-slate-600">Cidade</th>
+                  <th class="px-3 py-3 text-center text-sm font-semibold text-slate-600">Reserva</th
+                  >
+                  <th class="px-3 py-3 text-center text-sm font-semibold text-slate-600">Período</th
+                  >
+                  <th class="px-3 py-3 text-right text-sm font-semibold text-slate-600">Valor</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
@@ -1011,29 +1189,41 @@
                     role="button"
                     aria-label={`Abrir detalhes do recibo ${recibo.numero_recibo || ''}`.trim()}
                   >
-                    <td class="py-3 px-3 text-slate-900" data-label="Recibo">
+                    <td class="px-3 py-3 text-slate-900" data-label="Recibo">
                       <p class="font-medium">{recibo.numero_recibo || 'N/A'}</p>
                     </td>
-                    <td class="py-3 px-3 text-slate-700" data-label="Produto">
+                    <td class="px-3 py-3 text-slate-700" data-label="Produto">
                       {getReciboProdutoNome(recibo)}
                     </td>
-                    <td class="py-3 px-3 text-slate-700" data-label="Cidade">{getReciboCidade(recibo)}</td>
-                    <td class="py-3 px-3 text-center text-slate-700" data-label="Reserva">{recibo.numero_reserva || '-'}</td>
-                    <td class="py-3 px-3 text-center text-slate-700" data-label="Período">{formatDate(recibo.data_inicio)} - {formatDate(recibo.data_fim)}</td>
-                    <td class="py-3 px-3 text-right font-medium text-slate-900" data-label="Valor">{formatCurrency(recibo.valor_total)}</td>
+                    <td class="px-3 py-3 text-slate-700" data-label="Cidade"
+                      >{getReciboCidade(recibo)}</td
+                    >
+                    <td class="px-3 py-3 text-center text-slate-700" data-label="Reserva"
+                      >{recibo.numero_reserva || '-'}</td
+                    >
+                    <td class="px-3 py-3 text-center text-slate-700" data-label="Período"
+                      >{formatDate(recibo.data_inicio)} - {formatDate(recibo.data_fim)}</td
+                    >
+                    <td class="px-3 py-3 text-right font-medium text-slate-900" data-label="Valor"
+                      >{formatCurrency(recibo.valor_total)}</td
+                    >
                   </tr>
                 {/each}
               </tbody>
               <tfoot>
                 <tr class="border-t-2 border-slate-200">
-                  <td colspan="5" class="py-4 px-3 text-right font-semibold text-slate-900">Total dos Recibos:</td>
-                  <td class="py-4 px-3 text-right text-xl font-bold text-vendas-600">{formatCurrency(totalRecibosValor)}</td>
+                  <td colspan="5" class="px-3 py-4 text-right font-semibold text-slate-900"
+                    >Total dos Recibos:</td
+                  >
+                  <td class="text-vendas-600 px-3 py-4 text-right text-xl font-bold"
+                    >{formatCurrency(totalRecibosValor)}</td
+                  >
                 </tr>
               </tfoot>
             </table>
           </div>
         {:else}
-          <div class="text-center py-8 text-slate-500">
+          <div class="py-8 text-center text-slate-500">
             <Receipt size={48} class="mx-auto mb-3 opacity-30" />
             <p>Nenhum recibo cadastrado</p>
           </div>
@@ -1043,7 +1233,9 @@
       <Dialog
         bind:open={showEditReciboDialog}
         title="Detalhes do recibo"
-        description={canEdit ? 'Revise os dados do recibo. Para alterar, clique em Editar.' : 'Visualizacao dos dados do recibo.'}
+        description={canEdit
+          ? 'Revise os dados do recibo. Para alterar, clique em Editar.'
+          : 'Visualizacao dos dados do recibo.'}
         color="vendas"
         size="lg"
         showConfirm={false}
@@ -1052,14 +1244,79 @@
         onclose={cancelEditRecibo}
       >
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <FieldInput id="recibo-numero" label="Recibo" bind:value={reciboForm.numero_recibo} required disabled={!canEdit || !isEditingReciboDetails || savingRecibo} />
-          <FieldSelect id="recibo-produto" label="Produto" bind:value={reciboForm.produto_id} options={produtoSelectOptions} disabled={!canEdit || !isEditingReciboDetails || savingRecibo} />
-          <FieldSelect id="recibo-cidade" label="Cidade" bind:value={reciboForm.destino_cidade_id} options={cidadeSelectOptions} disabled={!canEdit || !isEditingReciboDetails || savingRecibo} />
-          <FieldInput id="recibo-reserva" label="Reserva" bind:value={reciboForm.numero_reserva} disabled={!canEdit || !isEditingReciboDetails || savingRecibo} />
-          <FieldInput id="recibo-data-inicio" label="Periodo inicial" type="date" bind:value={reciboForm.data_inicio} disabled={!canEdit || !isEditingReciboDetails || savingRecibo} />
-          <FieldInput id="recibo-data-fim" label="Periodo final" type="date" bind:value={reciboForm.data_fim} min={reciboForm.data_inicio || null} disabled={!canEdit || !isEditingReciboDetails || savingRecibo} />
-          <FieldInput id="recibo-valor" label="Valor" type="number" step="0.01" bind:value={reciboForm.valor_total} disabled={!canEdit || !isEditingReciboDetails || savingRecibo} />
-          <FieldSelect id="recibo-tipo-pacote" label="Tipo de Pacote" bind:value={reciboForm.tipo_pacote} options={tipoPacoteOptions} disabled={!canEdit || !isEditingReciboDetails || savingRecibo} />
+          <FieldInput
+            id="recibo-numero"
+            label="Recibo"
+            bind:value={reciboForm.numero_recibo}
+            required
+            disabled={!canEdit || !isEditingReciboDetails || savingRecibo}
+          />
+          <FieldSelect
+            id="recibo-produto"
+            label="Produto"
+            bind:value={reciboForm.produto_id}
+            options={produtoSelectOptions}
+            disabled={!canEdit || !isEditingReciboDetails || savingRecibo}
+          />
+          {#if vendasGeograficasAtivas}
+            <CidadeGeograficaAutocomplete
+              id="recibo-cidade"
+              label="Cidade"
+              bind:value={reciboForm.destino_cidade_id}
+              cities={cidadesBase}
+              estado={estadoCidadeRecibo}
+              disabled={!canEdit || !isEditingReciboDetails || savingRecibo}
+              on:loaded={(event) => {
+                for (const cidade of event.detail) {
+                  cidadesBase = [...cidadesBase.filter((item) => item.id !== cidade.id), cidade];
+                }
+              }}
+            />
+          {:else}
+            <FieldSelect
+              id="recibo-cidade"
+              label="Cidade"
+              bind:value={reciboForm.destino_cidade_id}
+              options={cidadeSelectOptions}
+              disabled={!canEdit || !isEditingReciboDetails || savingRecibo}
+            />
+          {/if}
+          <FieldInput
+            id="recibo-reserva"
+            label="Reserva"
+            bind:value={reciboForm.numero_reserva}
+            disabled={!canEdit || !isEditingReciboDetails || savingRecibo}
+          />
+          <FieldInput
+            id="recibo-data-inicio"
+            label="Periodo inicial"
+            type="date"
+            bind:value={reciboForm.data_inicio}
+            disabled={!canEdit || !isEditingReciboDetails || savingRecibo}
+          />
+          <FieldInput
+            id="recibo-data-fim"
+            label="Periodo final"
+            type="date"
+            bind:value={reciboForm.data_fim}
+            min={reciboForm.data_inicio || null}
+            disabled={!canEdit || !isEditingReciboDetails || savingRecibo}
+          />
+          <FieldInput
+            id="recibo-valor"
+            label="Valor"
+            type="number"
+            step="0.01"
+            bind:value={reciboForm.valor_total}
+            disabled={!canEdit || !isEditingReciboDetails || savingRecibo}
+          />
+          <FieldSelect
+            id="recibo-tipo-pacote"
+            label="Tipo de Pacote"
+            bind:value={reciboForm.tipo_pacote}
+            options={tipoPacoteOptions}
+            disabled={!canEdit || !isEditingReciboDetails || savingRecibo}
+          />
         </div>
         <svelte:fragment slot="actions">
           {#if canEdit}
@@ -1074,7 +1331,11 @@
                 Salvar
               </Button>
             {:else}
-              <Button variant="primary" color="vendas" on:click={() => (isEditingReciboDetails = true)}>
+              <Button
+                variant="primary"
+                color="vendas"
+                on:click={() => (isEditingReciboDetails = true)}
+              >
                 Editar
               </Button>
             {/if}
@@ -1085,44 +1346,62 @@
       <Card header="Pagamentos" color="vendas">
         {#if venda.pagamentos && venda.pagamentos.length > 0}
           <div class="overflow-x-visible md:overflow-x-auto">
-            <table class="w-full table-mobile-cards">
+            <table class="table-mobile-cards w-full">
               <thead>
                 <tr class="border-b border-slate-200">
-                  <th class="text-left py-3 px-3 text-sm font-semibold text-slate-600">Forma</th>
-                  <th class="text-center py-3 px-3 text-sm font-semibold text-slate-600">Parcelas</th>
-                  <th class="text-center py-3 px-3 text-sm font-semibold text-slate-600">Comissão</th>
-                  <th class="text-right py-3 px-3 text-sm font-semibold text-slate-600">Valor</th>
+                  <th class="px-3 py-3 text-left text-sm font-semibold text-slate-600">Forma</th>
+                  <th class="px-3 py-3 text-center text-sm font-semibold text-slate-600"
+                    >Parcelas</th
+                  >
+                  <th class="px-3 py-3 text-center text-sm font-semibold text-slate-600"
+                    >Comissão</th
+                  >
+                  <th class="px-3 py-3 text-right text-sm font-semibold text-slate-600">Valor</th>
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
                 {#each venda.pagamentos as pagamento}
                   <tr class="hover:bg-slate-50">
-                    <td class="py-3 px-3 text-slate-900" data-label="Forma">
-                      <p class="font-medium">{pagamento.forma_nome || pagamento.forma_pagamento?.nome || 'N/A'}</p>
+                    <td class="px-3 py-3 text-slate-900" data-label="Forma">
+                      <p class="font-medium">
+                        {pagamento.forma_nome || pagamento.forma_pagamento?.nome || 'N/A'}
+                      </p>
                       {#if pagamento.operacao}
                         <p class="text-sm text-slate-500">{pagamento.operacao}</p>
                       {/if}
                     </td>
-                    <td class="py-3 px-3 text-center text-slate-700" data-label="Parcelas">{pagamento.parcelas_qtd || pagamento.parcelas?.length || 1}x</td>
-                    <td class="py-3 px-3 text-center" data-label="Comissão">
-                      <span class="px-2 py-1 text-xs rounded-full {pagamento.paga_comissao !== false ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-600'}">
+                    <td class="px-3 py-3 text-center text-slate-700" data-label="Parcelas"
+                      >{pagamento.parcelas_qtd || pagamento.parcelas?.length || 1}x</td
+                    >
+                    <td class="px-3 py-3 text-center" data-label="Comissão">
+                      <span
+                        class="rounded-full px-2 py-1 text-xs {pagamento.paga_comissao !== false
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-slate-100 text-slate-600'}"
+                      >
                         {pagamento.paga_comissao !== false ? 'Sim' : 'Não'}
                       </span>
                     </td>
-                    <td class="py-3 px-3 text-right font-medium text-slate-900" data-label="Valor">{formatCurrency(pagamento.valor_total)}</td>
+                    <td class="px-3 py-3 text-right font-medium text-slate-900" data-label="Valor"
+                      >{formatCurrency(pagamento.valor_total)}</td
+                    >
                   </tr>
                 {/each}
               </tbody>
               <tfoot>
                 <tr class="border-t-2 border-slate-200">
-                  <td colspan="3" class="py-4 px-3 text-right font-semibold text-slate-900">Total Pago:</td>
-                  <td class="py-4 px-3 text-right text-xl font-bold text-vendas-600">{formatCurrency(totalPagamentosValor)}</td>
+                  <td colspan="3" class="px-3 py-4 text-right font-semibold text-slate-900"
+                    >Total Pago:</td
+                  >
+                  <td class="text-vendas-600 px-3 py-4 text-right text-xl font-bold"
+                    >{formatCurrency(totalPagamentosValor)}</td
+                  >
                 </tr>
               </tfoot>
             </table>
           </div>
         {:else}
-          <div class="text-center py-8 text-slate-500">
+          <div class="py-8 text-center text-slate-500">
             <CreditCard size={48} class="mx-auto mb-3 opacity-30" />
             <p>Nenhum pagamento cadastrado</p>
           </div>
@@ -1132,7 +1411,7 @@
       {#if venda.notas || venda.observacoes}
         <Card header="Observações" color="vendas">
           <div class="prose prose-slate max-w-none">
-            <p class="text-slate-700 whitespace-pre-wrap">{venda.notas || venda.observacoes}</p>
+            <p class="whitespace-pre-wrap text-slate-700">{venda.notas || venda.observacoes}</p>
           </div>
         </Card>
       {/if}
@@ -1143,47 +1422,57 @@
            de Editar/Mesclar/Voltar, em vez de num card isolado aqui embaixo. -->
       <Card header="Resumo Financeiro" color="vendas">
         <div class="space-y-4">
-          <div class="flex justify-between items-center py-2 border-b border-slate-100">
+          <div class="flex items-center justify-between border-b border-slate-100 py-2">
             <span class="text-sm text-slate-500">Valor Total</span>
             <span class="font-semibold text-slate-900">{formatCurrency(venda.valor_total)}</span>
           </div>
-          <div class="flex justify-between items-center py-2 border-b border-slate-100">
+          <div class="flex items-center justify-between border-b border-slate-100 py-2">
             <span class="text-sm text-slate-500">Valor Bruto</span>
-            <span class="font-semibold text-slate-900">{formatCurrency(venda.valor_total_bruto)}</span>
+            <span class="font-semibold text-slate-900"
+              >{formatCurrency(venda.valor_total_bruto)}</span
+            >
           </div>
-          <div class="flex justify-between items-center py-2 border-b border-slate-100">
+          <div class="flex items-center justify-between border-b border-slate-100 py-2">
             <span class="text-sm text-slate-500">Taxas</span>
             <span class="font-semibold text-slate-900">{formatCurrency(venda.valor_taxas)}</span>
           </div>
-          <div class="flex justify-between items-center py-2 border-b border-slate-100">
+          <div class="flex items-center justify-between border-b border-slate-100 py-2">
             <span class="text-sm text-slate-500">Total Pago</span>
             <span class="font-semibold text-slate-900">{formatCurrency(totalPagamentosValor)}</span>
           </div>
-          <div class="flex justify-between items-center py-2 border-b border-slate-100">
+          <div class="flex items-center justify-between border-b border-slate-100 py-2">
             <span class="text-sm text-slate-500">Total Recibos</span>
             <span class="font-semibold text-slate-900">{formatCurrency(totalRecibosValor)}</span>
           </div>
-          <div class="flex justify-between items-center py-2 border-b border-slate-100">
+          <div class="flex items-center justify-between border-b border-slate-100 py-2">
             <span class="text-sm text-slate-500">Diferença</span>
-            <span class="font-semibold {fechamentoFinanceiroOk ? 'text-green-700' : 'text-amber-700'}">{formatCurrency(diferencaFinanceira)}</span>
+            <span
+              class="font-semibold {fechamentoFinanceiroOk ? 'text-green-700' : 'text-amber-700'}"
+              >{formatCurrency(diferencaFinanceira)}</span
+            >
           </div>
-          <div class="flex justify-between items-center py-2 border-b border-slate-100">
+          <div class="flex items-center justify-between border-b border-slate-100 py-2">
             <span class="text-sm text-slate-500">Conciliação</span>
-            <span class="font-semibold {conciliacaoPendente ? 'text-red-700' : 'text-green-700'}">{conciliacaoPendente ? 'Pendente' : 'OK'}</span>
+            <span class="font-semibold {conciliacaoPendente ? 'text-red-700' : 'text-green-700'}"
+              >{conciliacaoPendente ? 'Pendente' : 'OK'}</span
+            >
           </div>
-          <div class="flex justify-between items-center py-2">
+          <div class="flex items-center justify-between py-2">
             <span class="text-sm text-slate-500">Não Comissionado</span>
-            <span class="font-semibold text-slate-900">{formatCurrency(venda.valor_nao_comissionado)}</span>
+            <span class="font-semibold text-slate-900"
+              >{formatCurrency(venda.valor_nao_comissionado)}</span
+            >
           </div>
         </div>
       </Card>
 
       <!-- Card: Ranking e Conciliação por Recibo -->
       <Card header="Ranking e Conciliação" color="vendas">
-
         {#if rankingTotais?.algum_provisorio}
           <div class="mb-3 flex items-center gap-1">
-            <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+            <span
+              class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700"
+            >
               <Clock size={11} /> Provisório — conciliação pendente
             </span>
           </div>
@@ -1192,15 +1481,18 @@
         {#if rankingLoading}
           <LoadingState compact={true} />
         {:else if rankingRecibos.length === 0}
-          <p class="text-sm text-slate-400 py-4 text-center">Nenhum recibo encontrado.</p>
+          <p class="py-4 text-center text-sm text-slate-400">Nenhum recibo encontrado.</p>
         {:else}
           <!-- Alerta de divergência geral -->
           {#if rankingTotais?.algum_diverge}
-            <div class="mb-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+            <div
+              class="mb-3 flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2"
+            >
               <AlertTriangle size={15} class="mt-0.5 shrink-0 text-amber-600" />
               <p class="text-xs text-amber-800">
-                Um ou mais recibos possuem divergência entre os valores da venda e os valores conciliados.
-                O ranking usa o valor conciliado apenas quando a conciliação está confirmada.
+                Um ou mais recibos possuem divergência entre os valores da venda e os valores
+                conciliados. O ranking usa o valor conciliado apenas quando a conciliação está
+                confirmada.
               </p>
             </div>
           {/if}
@@ -1208,31 +1500,51 @@
           <!-- Lista de recibos -->
           <div class="space-y-3">
             {#each rankingRecibos as rec (rec.recibo_id)}
-              <div class="rounded-lg border {rec.diverge ? 'border-amber-200 bg-amber-50/40' : rec.provisorio ? 'border-slate-200 bg-slate-50/40' : 'border-green-100 bg-green-50/20'} p-3">
+              <div
+                class="rounded-lg border {rec.diverge
+                  ? 'border-amber-200 bg-amber-50/40'
+                  : rec.provisorio
+                    ? 'border-slate-200 bg-slate-50/40'
+                    : 'border-green-100 bg-green-50/20'} p-3"
+              >
                 <!-- Cabeçalho do recibo -->
-                <div class="flex items-center justify-between mb-2">
+                <div class="mb-2 flex items-center justify-between">
                   <div class="flex items-center gap-2">
-                    <Receipt size={13} class="text-slate-400 shrink-0" />
-                    <span class="text-sm font-semibold text-slate-800">{rec.numero_recibo || '-'}</span>
+                    <Receipt size={13} class="shrink-0 text-slate-400" />
+                    <span class="text-sm font-semibold text-slate-800"
+                      >{rec.numero_recibo || '-'}</span
+                    >
                     {#if rec.provisorio}
-                      <span class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500"
+                      >
                         <Clock size={10} /> Prov.
                       </span>
                     {:else if rec.conciliacao_status === 'confirmada'}
-                      <span class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700">
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full bg-green-100 px-2 py-0.5 text-xs text-green-700"
+                      >
                         <CheckCircle size={10} /> Conciliado
                       </span>
                     {:else if rec.tem_conciliacao}
-                      <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700">
-                        <Clock size={10} /> {rec.conciliacao_status || 'Pendente'}
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-700"
+                      >
+                        <Clock size={10} />
+                        {rec.conciliacao_status || 'Pendente'}
                       </span>
                     {:else}
-                      <span class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700">
-                        <Info size={10} /> {rec.conciliacao_status || 'Em aberto'}
+                      <span
+                        class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700"
+                      >
+                        <Info size={10} />
+                        {rec.conciliacao_status || 'Em aberto'}
                       </span>
                     {/if}
                   </div>
-                  <span class="text-sm font-bold {rec.provisorio ? 'text-slate-600' : 'text-slate-900'}">
+                  <span
+                    class="text-sm font-bold {rec.provisorio ? 'text-slate-600' : 'text-slate-900'}"
+                  >
                     {formatCurrency(rec.valor_ranking_efetivo)}
                   </span>
                 </div>
@@ -1240,12 +1552,14 @@
                 <!-- Linha: valor da venda vs conciliação -->
                 <div class="grid grid-cols-2 gap-2 text-xs text-slate-500">
                   <div>
-                    <span class="block text-slate-400 mb-0.5">Venda (entrada)</span>
-                    <span class="font-medium text-slate-700">{formatCurrency(rec.venda_valor_total)}</span>
+                    <span class="mb-0.5 block text-slate-400">Venda (entrada)</span>
+                    <span class="font-medium text-slate-700"
+                      >{formatCurrency(rec.venda_valor_total)}</span
+                    >
                   </div>
                   {#if rec.tem_conciliacao}
                     <div>
-                      <span class="block text-slate-400 mb-0.5">Conciliação</span>
+                      <span class="mb-0.5 block text-slate-400">Conciliação</span>
                       <span class="font-medium {rec.diverge ? 'text-amber-700' : 'text-green-700'}">
                         {formatCurrency(rec.conc_valor_ranking ?? 0)}
                       </span>
@@ -1254,9 +1568,12 @@
                 </div>
 
                 {#if rec.is_seguro_viagem || rec.ranking_produto_nome}
-                  <div class="mt-2 inline-flex items-center gap-1 rounded-sm bg-cyan-50 px-2 py-1 text-xs text-cyan-700 border border-cyan-100">
+                  <div
+                    class="mt-2 inline-flex items-center gap-1 rounded-sm border border-cyan-100 bg-cyan-50 px-2 py-1 text-xs text-cyan-700"
+                  >
                     <Package size={11} />
-                    Produto de ranking: {rec.ranking_produto_nome || (rec.is_seguro_viagem ? 'Seguro viagem' : 'Diferenciado')}
+                    Produto de ranking: {rec.ranking_produto_nome ||
+                      (rec.is_seguro_viagem ? 'Seguro viagem' : 'Diferenciado')}
                   </div>
                 {/if}
 
@@ -1278,9 +1595,13 @@
 
                 <!-- Rateio -->
                 {#if rec.rateio}
-                  <div class="mt-2 flex items-center gap-1 rounded-sm bg-indigo-50 px-2 py-1 text-xs text-indigo-700 border border-indigo-100">
+                  <div
+                    class="mt-2 flex items-center gap-1 rounded-sm border border-indigo-100 bg-indigo-50 px-2 py-1 text-xs text-indigo-700"
+                  >
                     <TrendingUp size={11} />
-                    Rateio: {rec.rateio.percentual_origem}% origem / {rec.rateio.percentual_destino}% para {rec.rateio.vendedor_destino?.nome_completo || rec.rateio.vendedor_destino_id}
+                    Rateio: {rec.rateio.percentual_origem}% origem / {rec.rateio
+                      .percentual_destino}% para {rec.rateio.vendedor_destino?.nome_completo ||
+                      rec.rateio.vendedor_destino_id}
                   </div>
                 {/if}
 
@@ -1289,21 +1610,29 @@
                   <div class="mt-2 grid grid-cols-3 gap-1 text-xs text-slate-400">
                     <div>
                       <span class="block">Lançamentos</span>
-                      <span class="font-medium text-slate-600">{formatCurrency(rec.conc_meta.valor_lancamentos)}</span>
+                      <span class="font-medium text-slate-600"
+                        >{formatCurrency(rec.conc_meta.valor_lancamentos)}</span
+                      >
                     </div>
                     <div>
                       <span class="block">Descontos</span>
-                      <span class="font-medium text-slate-600">{formatCurrency(rec.conc_meta.valor_descontos)}</span>
+                      <span class="font-medium text-slate-600"
+                        >{formatCurrency(rec.conc_meta.valor_descontos)}</span
+                      >
                     </div>
                     <div>
                       <span class="block">Abatimentos</span>
-                      <span class="font-medium text-slate-600">{formatCurrency(rec.conc_meta.valor_abatimentos)}</span>
+                      <span class="font-medium text-slate-600"
+                        >{formatCurrency(rec.conc_meta.valor_abatimentos)}</span
+                      >
                     </div>
                   </div>
                   {#if rec.conc_meta.valor_nao_comissionavel > 0}
                     <div class="mt-1 flex items-center gap-1 text-xs text-slate-400">
                       <span>Não comissionável:</span>
-                      <span class="font-medium text-slate-600">{formatCurrency(rec.conc_meta.valor_nao_comissionavel)}</span>
+                      <span class="font-medium text-slate-600"
+                        >{formatCurrency(rec.conc_meta.valor_nao_comissionavel)}</span
+                      >
                       <span class="text-slate-300">— deduzido do valor de ranking</span>
                     </div>
                   {/if}
@@ -1314,21 +1643,27 @@
 
           <!-- Total -->
           {#if rankingTotais}
-            <div class="mt-4 pt-3 border-t border-slate-200">
-              <div class="flex justify-between items-center">
+            <div class="mt-4 border-t border-slate-200 pt-3">
+              <div class="flex items-center justify-between">
                 <span class="text-sm font-semibold text-slate-700">Total Ranking</span>
-                <span class="text-base font-bold text-slate-900">{formatCurrency(rankingTotais.valor_ranking_efetivo)}</span>
+                <span class="text-base font-bold text-slate-900"
+                  >{formatCurrency(rankingTotais.valor_ranking_efetivo)}</span
+                >
               </div>
               {#if Math.abs(rankingTotais.divergencia_total) > 0.5}
-                <div class="mt-1 flex justify-between items-center text-xs text-amber-600">
+                <div class="mt-1 flex items-center justify-between text-xs text-amber-600">
                   <span>Divergência total venda vs conciliação</span>
-                  <span class="font-semibold">{formatCurrency(Math.abs(rankingTotais.divergencia_total))}</span>
+                  <span class="font-semibold"
+                    >{formatCurrency(Math.abs(rankingTotais.divergencia_total))}</span
+                  >
                 </div>
               {/if}
               {#if Math.abs(rankingTotais.divergencia_taxas_total || 0) > 0.5}
-                <div class="mt-1 flex justify-between items-center text-xs text-amber-600">
+                <div class="mt-1 flex items-center justify-between text-xs text-amber-600">
                   <span>Divergência total de taxas</span>
-                  <span class="font-semibold">{formatCurrency(Math.abs(rankingTotais.divergencia_taxas_total || 0))}</span>
+                  <span class="font-semibold"
+                    >{formatCurrency(Math.abs(rankingTotais.divergencia_taxas_total || 0))}</span
+                  >
                 </div>
               {/if}
               <p class="mt-2 text-xs text-slate-400">
@@ -1351,6 +1686,9 @@
     {vendaId}
     vendaCodigo={venda?.codigo || ''}
     onClose={() => (showMesclar = false)}
-    onMerged={() => { showMesclar = false; carregarVenda({ preserveData: true }); }}
+    onMerged={() => {
+      showMesclar = false;
+      carregarVenda({ preserveData: true });
+    }}
   />
 {/if}

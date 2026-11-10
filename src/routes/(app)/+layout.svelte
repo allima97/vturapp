@@ -11,7 +11,7 @@
   import { sessionSynced, auth } from '$lib/stores/auth';
   import { permissoes } from '$lib/stores/permissoes';
   import { toUserMessage } from '$lib/utils/errors';
-  import { createSupabaseBrowserClient } from '$lib/db/supabase';
+  import { createBrowserDataClient } from '$lib/db/browserData';
 
   let appReady = false;
   let permsInitialized = false;
@@ -22,8 +22,8 @@
 
   async function initPermissoes() {
     try {
-      const supabase = createSupabaseBrowserClient();
-      await permissoes.init(supabase);
+      const dados = createBrowserDataClient();
+      await permissoes.init(dados);
     } catch (err) {
       if (dev) console.error('[AppLayout] Erro ao inicializar permissoes:', err);
       const message = toUserMessage(err, '').toLowerCase();
@@ -35,10 +35,16 @@
         message.includes('jwt')
       ) {
         try {
-          const supabase = createSupabaseBrowserClient();
-          await supabase.auth.signOut();
+          const dados = createBrowserDataClient();
+          // Erro de permissão não é sessão inválida: só desloga se não houver sessão.
+          const {
+            data: { session }
+          } = await dados.auth.getSession();
+          if (session) return;
+          await dados.auth.signOut();
         } catch {
-          // noop
+          // Sem confirmar a ausência de sessão, não desloga o usuário.
+          return;
         }
         const next = `${window.location.pathname}${window.location.search || ''}`;
         window.location.assign(`/auth/login?session_expired=1&next=${encodeURIComponent(next)}`);
@@ -51,7 +57,7 @@
 
     const startApp = () => {
       // Libera a tela imediatamente — permissões carregam em background.
-      // Aguardar initPermissoes() aqui bloqueava appReady por 4+ queries Supabase,
+      // Aguardar initPermissoes() aqui bloqueava appReady por 4+ queries Dados,
       // causando tela branca após navegações client-side.
       appReady = true;
       const currentState = get(auth);

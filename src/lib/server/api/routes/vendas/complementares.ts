@@ -84,33 +84,32 @@ type ComplementarySuggestion = {
   resumo: ReturnType<typeof getResumo>;
 };
 
-function getResumo(recibo?: {
-  numero_recibo?: string | null;
-  valor_total?: number | null;
-  produto_nome?: string | null;
-}, venda?: {
-  cliente_nome?: string | null;
-  destino_nome?: string | null;
-  destino_cidade_nome?: string | null;
-}) {
+function getResumo(
+  recibo?: {
+    numero_recibo?: string | null;
+    valor_total?: number | null;
+    produto_nome?: string | null;
+  },
+  venda?: {
+    cliente_nome?: string | null;
+    destino_nome?: string | null;
+    destino_cidade_nome?: string | null;
+  }
+) {
   const numero = recibo?.numero_recibo ? `Recibo ${recibo.numero_recibo}` : 'Recibo';
   const cliente = venda?.cliente_nome || 'Cliente';
   const titulo = `${numero} - ${cliente}`.trim();
   const detalhes = [
     recibo?.produto_nome || '',
     venda?.destino_cidade_nome || venda?.destino_nome || '',
-    typeof recibo?.valor_total === 'number'
-      ? BRL_CURRENCY_FORMATTER.format(recibo.valor_total)
-      : ''
+    typeof recibo?.valor_total === 'number' ? BRL_CURRENCY_FORMATTER.format(recibo.valor_total) : ''
   ]
     .filter(Boolean)
     .join(' - ');
   return { titulo, detalhes };
 }
 
-function firstNome(
-  value?: Array<{ nome?: string | null }> | { nome?: string | null } | null,
-) {
+function firstNome(value?: Array<{ nome?: string | null }> | { nome?: string | null } | null) {
   if (Array.isArray(value)) return value[0]?.nome || '';
   return value?.nome || '';
 }
@@ -151,7 +150,8 @@ export async function handleVendasComplementaresGet(event: RequestEvent) {
       const buildReceiptsQuery = (companyIdsFilter?: string[], vendedorIdsFilter?: string[]) => {
         let receiptsQuery = client
           .from('vendas_recibos')
-          .select(`
+          .select(
+            `
             id,
             venda_id,
             numero_recibo,
@@ -166,20 +166,27 @@ export async function handleVendasComplementaresGet(event: RequestEvent) {
               destinos:produtos!destino_id (nome),
               destino_cidade:cidades!destino_cidade_id (nome)
             )
-          `)
+          `
+          )
           .limit(400);
 
-        if (companyIdsFilter && companyIdsFilter.length > 0) receiptsQuery = receiptsQuery.in('vendas.company_id', companyIdsFilter);
-        if (shouldApplySellerScope && vendedorIdsFilter && vendedorIdsFilter.length > 0) receiptsQuery = receiptsQuery.in('vendas.vendedor_id', vendedorIdsFilter);
+        if (companyIdsFilter && companyIdsFilter.length > 0)
+          receiptsQuery = receiptsQuery.in('vendas.company_id', companyIdsFilter);
+        if (shouldApplySellerScope && vendedorIdsFilter && vendedorIdsFilter.length > 0)
+          receiptsQuery = receiptsQuery.in('vendas.vendedor_id', vendedorIdsFilter);
         return receiptsQuery;
       };
 
       const scopedReceiptsData: SearchReceiptRow[] = [];
       const companyBatches = companyIds.length > 0 ? chunkArray(companyIds) : [undefined];
-      const vendedorBatches = shouldApplySellerScope && vendedorIds.length > 0 ? chunkArray(vendedorIds) : [undefined];
+      const vendedorBatches =
+        shouldApplySellerScope && vendedorIds.length > 0 ? chunkArray(vendedorIds) : [undefined];
       for (const companyBatch of companyBatches) {
         for (const vendedorBatch of vendedorBatches) {
-          const { data, error: scopedReceiptsError } = await buildReceiptsQuery(companyBatch, vendedorBatch);
+          const { data, error: scopedReceiptsError } = await buildReceiptsQuery(
+            companyBatch,
+            vendedorBatch
+          );
           if (scopedReceiptsError) throw scopedReceiptsError;
           scopedReceiptsData.push(...(data || []));
         }
@@ -204,15 +211,13 @@ export async function handleVendasComplementaresGet(event: RequestEvent) {
     // recibos vinculados → vendas vinculadas + recibos do par + vínculos do par), e a busca de
     // sugestões corre ao lado. Mesmas consultas, mesmo resultado; os erros continuam sendo
     // lançados na mesma ordem de antes (contrato: complementares.contract.test.ts).
-    const searchPromise = busca.length >= 2 ? loadSearchReceipts() : Promise.resolve([] as SearchReceiptRow[]);
+    const searchPromise =
+      busca.length >= 2 ? loadSearchReceipts() : Promise.resolve([] as SearchReceiptRow[]);
     // Se algo anterior falhar, a busca é descartada sem gerar rejeição solta.
     searchPromise.then(undefined, () => undefined);
 
     const [currentReceiptsResponse, currentLinksResponse] = await Promise.all([
-      client
-        .from('vendas_recibos')
-        .select('id')
-        .eq('venda_id', vendaId),
+      client.from('vendas_recibos').select('id').eq('venda_id', vendaId),
       client
         .from('vendas_recibos_complementares')
         .select('id, venda_id, recibo_id')
@@ -226,9 +231,12 @@ export async function handleVendasComplementaresGet(event: RequestEvent) {
       .filter(Boolean);
 
     const { data: currentLinksData, error: currentLinksError } = currentLinksResponse;
-    if (currentLinksError && String(currentLinksError.code || '') !== '42P01') throw currentLinksError;
+    if (currentLinksError && String(currentLinksError.code || '') !== '42P01')
+      throw currentLinksError;
 
-    const currentLinks: ComplementaryLinkRow[] = Array.isArray(currentLinksData) ? currentLinksData : [];
+    const currentLinks: ComplementaryLinkRow[] = Array.isArray(currentLinksData)
+      ? currentLinksData
+      : [];
     const linkedReceiptIds = currentLinks
       .map((row) => String(row?.recibo_id || '').trim())
       .filter(Boolean);
@@ -237,13 +245,15 @@ export async function handleVendasComplementaresGet(event: RequestEvent) {
     for (const batch of chunkArray(linkedReceiptIds)) {
       const { data, error: linkedReceiptsError } = await client
         .from('vendas_recibos')
-        .select(`
+        .select(
+          `
           id,
           venda_id,
           numero_recibo,
           valor_total,
           produto_resolvido:produtos!produto_resolvido_id (nome)
-        `)
+        `
+        )
         .in('id', batch);
       if (linkedReceiptsError) throw linkedReceiptsError;
       linkedReceiptsData.push(...(data || []));
@@ -258,7 +268,8 @@ export async function handleVendasComplementaresGet(event: RequestEvent) {
       for (const batch of chunkArray(linkedSalesIds)) {
         const { data, error: linkedSalesError } = await client
           .from('vendas')
-          .select(`
+          .select(
+            `
             id,
             cliente_id,
             destino_id,
@@ -266,7 +277,8 @@ export async function handleVendasComplementaresGet(event: RequestEvent) {
             clientes (nome),
             destinos:produtos!destino_id (nome),
             destino_cidade:cidades!destino_cidade_id (nome)
-          `)
+          `
+          )
           .in('id', batch);
         if (linkedSalesError) throw linkedSalesError;
         linkedSalesData.push(...(data || []));
@@ -294,7 +306,8 @@ export async function handleVendasComplementaresGet(event: RequestEvent) {
           .from('vendas_recibos_complementares')
           .select('id, venda_id, recibo_id')
           .in('venda_id', batch);
-        if (allPairLinksError && String(allPairLinksError.code || '') !== '42P01') throw allPairLinksError;
+        if (allPairLinksError && String(allPairLinksError.code || '') !== '42P01')
+          throw allPairLinksError;
         allPairLinksData.push(...(data || []));
       }
       return allPairLinksData;
@@ -346,7 +359,9 @@ export async function handleVendasComplementaresGet(event: RequestEvent) {
       receiptsBySale.set(saleRef, current);
     }
 
-    const allPairLinks: ComplementaryLinkRow[] = Array.isArray(allPairLinksData) ? allPairLinksData : [];
+    const allPairLinks: ComplementaryLinkRow[] = Array.isArray(allPairLinksData)
+      ? allPairLinksData
+      : [];
 
     const current = currentLinks.map((link) => {
       const recibo = linkedReceiptsById[String(link?.recibo_id || '')];

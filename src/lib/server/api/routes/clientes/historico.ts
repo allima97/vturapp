@@ -25,7 +25,7 @@ function sortByDateDesc<T>(items: T[], getDate: (item: T) => string | null) {
   );
 }
 
-const SUPABASE_IN_BATCH_SIZE = 150;
+const QUERY_IN_BATCH_SIZE = 150;
 
 type ClienteHistoricoVenda = {
   id: string;
@@ -110,7 +110,7 @@ async function fetchBatched<T>(
   loader: (batch: string[]) => PromiseLike<{ data: T[] | null; error: unknown }>
 ) {
   const batchResults = await Promise.all(
-    chunkArray(values, SUPABASE_IN_BATCH_SIZE).map(async (batch) => {
+    chunkArray(values, QUERY_IN_BATCH_SIZE).map(async (batch) => {
       const { data, error } = await loader(batch);
       if (error) throw error;
       return data || [];
@@ -166,9 +166,13 @@ export async function handleClientesHistoricoGet(event: RequestEvent) {
         const fetchScopedVendas = async (buildBaseQuery: () => ScopedVendasQuery) => {
           const rows: VendaHistoricoRow[] = [];
           const companyBatches =
-            filters.companyIds.length > 0 ? chunkArray(filters.companyIds, SUPABASE_IN_BATCH_SIZE) : [null];
+            filters.companyIds.length > 0
+              ? chunkArray(filters.companyIds, QUERY_IN_BATCH_SIZE)
+              : [null];
           const vendedorBatches =
-            filters.vendedorIds.length > 0 ? chunkArray(filters.vendedorIds, SUPABASE_IN_BATCH_SIZE) : [null];
+            filters.vendedorIds.length > 0
+              ? chunkArray(filters.vendedorIds, QUERY_IN_BATCH_SIZE)
+              : [null];
 
           for (const companyBatch of companyBatches) {
             for (const vendedorBatch of vendedorBatches) {
@@ -196,7 +200,7 @@ export async function handleClientesHistoricoGet(event: RequestEvent) {
           )
           .eq('client_id', clienteId)
           .order('created_at', { ascending: false })
-          .then((response) => response);
+          .then((response: any) => response);
         // Se o titular falhar antes, a resposta dos orçamentos é descartada sem gerar rejeição solta.
         quotesPromise.then(undefined, () => undefined);
 
@@ -218,27 +222,27 @@ export async function handleClientesHistoricoGet(event: RequestEvent) {
 
             if (viagemIds.length > 0) {
               const viagensRows = await fetchBatched<ViagemVendaRow>(viagemIds, (batch) =>
-                client
-                  .from('viagens')
-                  .select('id, venda_id')
-                  .in('id', batch)
+                client.from('viagens').select('id, venda_id').in('id', batch)
               );
 
               const vendaIds = Array.from(
-                new Set(
-                  viagensRows
-                    .map((row) => String(row.venda_id || '').trim())
-                    .filter(Boolean)
-                )
+                new Set(viagensRows.map((row) => String(row.venda_id || '').trim()).filter(Boolean))
               );
 
               if (vendaIds.length > 0) {
-                vendasPassageiro = await fetchBatched<VendaHistoricoRow>(vendaIds, async (batch) => ({
-                  data: await fetchScopedVendas(() =>
-                    client.from('vendas').select(vendaSelect).in('id', batch) as unknown as ScopedVendasQuery
-                  ),
-                  error: null
-                }));
+                vendasPassageiro = await fetchBatched<VendaHistoricoRow>(
+                  vendaIds,
+                  async (batch) => ({
+                    data: await fetchScopedVendas(
+                      () =>
+                        client
+                          .from('vendas')
+                          .select(vendaSelect)
+                          .in('id', batch) as unknown as ScopedVendasQuery
+                    ),
+                    error: null
+                  })
+                );
               }
             }
           } catch {
@@ -248,8 +252,12 @@ export async function handleClientesHistoricoGet(event: RequestEvent) {
         };
 
         const [vendasTitular, vendasPassageiro] = await Promise.all([
-          fetchScopedVendas(() =>
-            client.from('vendas').select(vendaSelect).eq('cliente_id', clienteId) as unknown as ScopedVendasQuery
+          fetchScopedVendas(
+            () =>
+              client
+                .from('vendas')
+                .select(vendaSelect)
+                .eq('cliente_id', clienteId) as unknown as ScopedVendasQuery
           ),
           loadVendasPassageiro()
         ]);
@@ -268,22 +276,22 @@ export async function handleClientesHistoricoGet(event: RequestEvent) {
           Array.from(vendasMap.values()),
           (row) => row?.data_lancamento || null
         );
-        const vendaIds = vendasData
-          .map((row) => String(row?.id || '').trim())
-          .filter(Boolean);
+        const vendaIds = vendasData.map((row) => String(row?.id || '').trim()).filter(Boolean);
 
-        const [{ data: recibosData, error: recibosError }, { data: quoteRows, error: quotesError }] =
-          await Promise.all([
-            vendaIds.length > 0
-              ? fetchBatched<ReciboHistoricoRow>(vendaIds, (batch) =>
-                  client
-                    .from('vendas_recibos')
-                    .select('venda_id, valor_total, valor_taxas')
-                    .in('venda_id', batch)
-                ).then((data) => ({ data, error: null }))
-              : Promise.resolve({ data: [], error: null }),
-            quotesPromise
-          ]);
+        const [
+          { data: recibosData, error: recibosError },
+          { data: quoteRows, error: quotesError }
+        ] = await Promise.all([
+          vendaIds.length > 0
+            ? fetchBatched<ReciboHistoricoRow>(vendaIds, (batch) =>
+                client
+                  .from('vendas_recibos')
+                  .select('venda_id, valor_total, valor_taxas')
+                  .in('venda_id', batch)
+              ).then((data) => ({ data, error: null }))
+            : Promise.resolve({ data: [], error: null }),
+          quotesPromise
+        ]);
 
         if (recibosError) throw recibosError;
         if (quotesError) throw quotesError;
@@ -291,9 +299,7 @@ export async function handleClientesHistoricoGet(event: RequestEvent) {
         const cidadeIds = Array.from(
           new Set(
             vendasData
-              .map((row) =>
-                String(row?.destino_cidade_id || row?.destino?.cidade_id || '').trim()
-              )
+              .map((row) => String(row?.destino_cidade_id || row?.destino?.cidade_id || '').trim())
               .filter(Boolean)
           )
         );
@@ -310,18 +316,12 @@ export async function handleClientesHistoricoGet(event: RequestEvent) {
         const [cidadesResult, creatorsResult] = await Promise.allSettled([
           cidadeIds.length > 0
             ? fetchBatched<CidadeRow>(cidadeIds, (batch) =>
-                client
-                  .from('cidades')
-                  .select('id, nome')
-                  .in('id', batch)
+                client.from('cidades').select('id, nome').in('id', batch)
               )
             : Promise.resolve(null),
           filters.companyIds.length > 0 && creatorIds.length > 0
             ? fetchBatched<UserCompanyRow>(creatorIds, (batch) =>
-                client
-                  .from('users')
-                  .select('id, company_id')
-                  .in('id', batch)
+                client.from('users').select('id, company_id').in('id', batch)
               )
             : Promise.resolve(null)
         ]);
@@ -332,10 +332,7 @@ export async function handleClientesHistoricoGet(event: RequestEvent) {
         if (cidadesResult.value) {
           const cidadesData = cidadesResult.value;
           cidadesMap = new Map(
-            cidadesData.map((row) => [
-              String(row?.id || '').trim(),
-              String(row?.nome || '').trim()
-            ])
+            cidadesData.map((row) => [String(row?.id || '').trim(), String(row?.nome || '').trim()])
           );
         }
 
@@ -354,14 +351,8 @@ export async function handleClientesHistoricoGet(event: RequestEvent) {
           const recs = ((recibosData || []) as ReciboHistoricoRow[]).filter(
             (recibo) => recibo.venda_id === row.id
           );
-          const total = recs.reduce(
-            (acc, recibo) => acc + Number(recibo.valor_total || 0),
-            0
-          );
-          const taxas = recs.reduce(
-            (acc, recibo) => acc + Number(recibo.valor_taxas || 0),
-            0
-          );
+          const total = recs.reduce((acc, recibo) => acc + Number(recibo.valor_total || 0), 0);
+          const taxas = recs.reduce((acc, recibo) => acc + Number(recibo.valor_taxas || 0), 0);
           const cidadeId = String(row?.destino_cidade_id || row?.destino?.cidade_id || '').trim();
           return {
             id: row.id,
@@ -381,8 +372,7 @@ export async function handleClientesHistoricoGet(event: RequestEvent) {
               return filterVendedorIdSet.has(String(row.created_by || '').trim());
             }
             if (filters.companyIds.length === 0) return true;
-            const creatorCompany =
-              creatorCompanyMap.get(String(row.created_by || '').trim()) || '';
+            const creatorCompany = creatorCompanyMap.get(String(row.created_by || '').trim()) || '';
             return creatorCompany ? filterCompanyIdSet.has(creatorCompany) : true;
           })
           .map((row) => ({
@@ -390,8 +380,7 @@ export async function handleClientesHistoricoGet(event: RequestEvent) {
             data_orcamento: row.created_at || null,
             status: row.status_negociacao || row.status || null,
             valor: row.total ?? null,
-            produto_nome:
-              row.quote_item?.[0]?.title || row.quote_item?.[0]?.item_type || null
+            produto_nome: row.quote_item?.[0]?.title || row.quote_item?.[0]?.item_type || null
           }));
 
         return { vendas, orcamentos };

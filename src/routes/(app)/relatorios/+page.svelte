@@ -17,7 +17,8 @@
   const relatorios = [
     {
       titulo: 'Vendas detalhado',
-      descricao: 'Drill-down operacional com leitura por venda, cliente, destino, valor e comissão.',
+      descricao:
+        'Drill-down operacional com leitura por venda, cliente, destino, valor e comissão.',
       icone: ShoppingCart,
       rota: '/relatorios/vendas'
     },
@@ -50,7 +51,8 @@
   // Relatório de Performance por agência: master e gestor (e admin do sistema).
   const relatorioPerformance = {
     titulo: 'Performance da agência',
-    descricao: 'Resumo do mês por empresa: vendas, meta, produtos, destinos e orçamentos (com PDF).',
+    descricao:
+      'Resumo do mês por empresa: vendas, meta, produtos, destinos e orçamentos (com PDF).',
     icone: FileText,
     rota: '/relatorios/performance'
   };
@@ -80,16 +82,25 @@
     <h2 class="text-lg font-semibold text-slate-900">Relatórios disponíveis</h2>
   </div>
 
-  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 {relatoriosVisiveis.length > 5 ? 'lg:grid-cols-3 xl:grid-cols-6' : 'lg:grid-cols-5'}">
+  <div
+    class="grid grid-cols-1 gap-4 sm:grid-cols-2 {relatoriosVisiveis.length > 5
+      ? 'lg:grid-cols-3 xl:grid-cols-6'
+      : 'lg:grid-cols-5'}"
+  >
     {#each relatoriosVisiveis as relatorio}
-      <Card color="financeiro" class="group h-full transition-all duration-200 hover:shadow-lg p-4!">
+      <Card
+        color="financeiro"
+        class="group h-full p-4! transition-all duration-200 hover:shadow-lg"
+      >
         <div class="mb-3 flex items-start justify-between gap-2">
-          <div class="rounded-lg bg-financeiro-50 p-2.5">
+          <div class="bg-financeiro-50 rounded-lg p-2.5">
             <svelte:component this={relatorio.icone} size={20} class="text-financeiro-600" />
           </div>
         </div>
 
-        <h3 class="mb-1 text-base font-semibold leading-tight text-slate-900">{relatorio.titulo}</h3>
+        <h3 class="mb-1 text-base leading-tight font-semibold text-slate-900">
+          {relatorio.titulo}
+        </h3>
         <p class="mb-3 text-xs leading-5 text-slate-500">{relatorio.descricao}</p>
 
         <Button
@@ -99,7 +110,7 @@
           class_name="inline-flex items-center gap-1 text-sm font-medium text-financeiro-700 hover:text-orange-800 transition-colors"
         >
           Abrir relatório
-          <ArrowRight size={16} class="group-hover:translate-x-1 transition-transform" />
+          <ArrowRight size={16} class="transition-transform group-hover:translate-x-1" />
         </Button>
       </Card>
     {/each}

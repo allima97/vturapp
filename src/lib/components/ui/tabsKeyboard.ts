@@ -6,9 +6,11 @@
 export function nextTabIndex(
   items: ReadonlyArray<{ disabled?: boolean }>,
   current: number,
-  key: string,
+  key: string
 ): number | null {
-  const enabled = items.map((item, index) => (item.disabled ? -1 : index)).filter((index) => index >= 0);
+  const enabled = items
+    .map((item, index) => (item.disabled ? -1 : index))
+    .filter((index) => index >= 0);
   if (enabled.length === 0) return null;
   if (key === 'Home') return enabled[0];
   if (key === 'End') return enabled[enabled.length - 1];
@@ -20,7 +22,10 @@ export function nextTabIndex(
 }
 
 /** Índice que recebe tabindex=0 (a aba ativa ou, se nenhuma, a primeira habilitada). */
-export function focusableTabIndex(items: ReadonlyArray<{ key: string; disabled?: boolean }>, activeKey: string): number {
+export function focusableTabIndex(
+  items: ReadonlyArray<{ key: string; disabled?: boolean }>,
+  activeKey: string
+): number {
   const active = items.findIndex((item) => item.key === activeKey && !item.disabled);
   if (active >= 0) return active;
   return items.findIndex((item) => !item.disabled);

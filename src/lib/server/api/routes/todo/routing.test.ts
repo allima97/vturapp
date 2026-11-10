@@ -13,13 +13,20 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
 vi.mock('./batch', () => ({ handleTodoBatchPost: spy('handleTodoBatchPost') }));
 vi.mock('./board', () => ({ handleTodoBoardGet: spy('handleTodoBoardGet') }));
-vi.mock('./category', () => ({ handleTodoCategoryPost: spy('handleTodoCategoryPost'), handleTodoCategoryDelete: spy('handleTodoCategoryDelete') }));
-vi.mock('./item', () => ({ handleTodoItemPost: spy('handleTodoItemPost'), handleTodoItemPatch: spy('handleTodoItemPatch'), handleTodoItemDelete: spy('handleTodoItemDelete') }));
+vi.mock('./category', () => ({
+  handleTodoCategoryPost: spy('handleTodoCategoryPost'),
+  handleTodoCategoryDelete: spy('handleTodoCategoryDelete')
+}));
+vi.mock('./item', () => ({
+  handleTodoItemPost: spy('handleTodoItemPost'),
+  handleTodoItemPatch: spy('handleTodoItemPatch'),
+  handleTodoItemDelete: spy('handleTodoItemDelete')
+}));
 vi.mock('./item-id', () => ({ handleTodoItemIdGet: spy('handleTodoItemIdGet') }));
 
 import { apiApp } from '../../app';
@@ -33,7 +40,7 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['POST', '/api/v1/todo/item', 'handleTodoItemPost', {}],
   ['PATCH', '/api/v1/todo/item', 'handleTodoItemPatch', {}],
   ['DELETE', '/api/v1/todo/item', 'handleTodoItemDelete', {}],
-  ['GET', '/api/v1/todo/item/id-123', 'handleTodoItemIdGet', {"id": "id-123"}],
+  ['GET', '/api/v1/todo/item/id-123', 'handleTodoItemIdGet', { id: 'id-123' }]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
@@ -41,7 +48,7 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/todo/board'],
   ['PUT', '/api/v1/todo/category'],
   ['PUT', '/api/v1/todo/item'],
-  ['PUT', '/api/v1/todo/item/id-123'],
+  ['PUT', '/api/v1/todo/item/id-123']
 ];
 
 function ev(method: string, path: string) {

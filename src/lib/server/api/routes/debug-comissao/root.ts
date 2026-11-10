@@ -45,7 +45,7 @@ type DebugRecibo = {
   } | null;
 };
 
-type SyntheticVendaRow = (ReturnType<typeof buildConciliacaoSyntheticVendas>)[number];
+type SyntheticVendaRow = ReturnType<typeof buildConciliacaoSyntheticVendas>[number];
 type DebugSyntheticRow = SyntheticVendaRow & {
   vendas_recibos?: DebugRecibo[] | null;
   recibos: DebugRecibo[];
@@ -84,7 +84,12 @@ export async function handleDebugComissaoGet(event: RequestEvent) {
       return debugJson({ error: 'Sem acesso ao diagnóstico de comissão.' }, { status: 403 });
     }
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['Comissionamento', 'financeiro'], 1, 'Sem acesso ao diagnóstico de comissão.');
+      ensureModuloAccess(
+        scope,
+        ['Comissionamento', 'financeiro'],
+        1,
+        'Sem acesso ao diagnóstico de comissão.'
+      );
     }
 
     const companyIds = resolveScopedCompanyIds(scope, event.url.searchParams.get('empresa_id'));
@@ -105,100 +110,132 @@ export async function handleDebugComissaoGet(event: RequestEvent) {
     });
 
     const syntheticVendas = buildConciliacaoSyntheticVendas(concReceipts);
-    const syntheticRows = syntheticVendas.map((row): DebugSyntheticRow => ({
-      ...row,
-      recibos: Array.isArray(row?.vendas_recibos) ? row.vendas_recibos : []
-    }));
+    const syntheticRows = syntheticVendas.map(
+      (row): DebugSyntheticRow => ({
+        ...row,
+        recibos: Array.isArray(row?.vendas_recibos) ? row.vendas_recibos : []
+      })
+    );
 
     const periodoMeta = dataInicio ? dataInicio.slice(0, 7) + '-01' : '';
     const ctx = await fetchCommissionContext(client, {
       companyIds,
       rows: syntheticRows as unknown as CommissionRowsInput,
-      periodo: periodoMeta,
+      periodo: periodoMeta
     });
     const params = ctx.params;
 
     // Diagnóstico deep para "Passagem Facial"
     const passagemRows = syntheticRows.filter((row) =>
-      (row.recibos || []).some((r) =>
-        String(r?.tipo_produtos?.nome || '').toLowerCase().includes('passagem') ||
-        String(r?.produto_id || '') === '5ef10eb0-2b54-42bd-bc1e-d3dbb727726e'
+      (row.recibos || []).some(
+        (r) =>
+          String(r?.tipo_produtos?.nome || '')
+            .toLowerCase()
+            .includes('passagem') ||
+          String(r?.produto_id || '') === '5ef10eb0-2b54-42bd-bc1e-d3dbb727726e'
       )
     );
 
     // Calcula comissão via engine completo para estas rows
     const { pctMetaGeral, pctByReceiptId } = calcularComissaoRows(
       syntheticRows as unknown as CommissionRowsInput,
-      ctx,
+      ctx
     );
 
     const diag = passagemRows.slice(0, 3).map((row) => {
-      return (row.recibos || []).filter((r) =>
-        String(r?.tipo_produtos?.nome || '').toLowerCase().includes('passagem') ||
-        String(r?.produto_id || '') === '5ef10eb0-2b54-42bd-bc1e-d3dbb727726e'
-      ).map((recibo) => {
-        const productId = String(recibo?.tipo_produtos?.id || recibo?.produto_id || '');
-        const produtoRegraBase = productId ? ctx.regraProdutoMap[productId] || null : null;
-        const selectedRuleHasFixed = Boolean(produtoRegraBase && regraProdutoTemFixo(produtoRegraBase));
-        const hcOverride =
-          recibo?.valor_bruto_override != null ||
-          recibo?.valor_liquido_override != null ||
-          recibo?.valor_meta_override != null;
-        const hcCommRule = hasConciliacaoCommissionRule(params);
-        const hcBandRules = hasConciliacaoBandRules(params);
-        const legacyRule = buildLegacyConciliacaoRule(params);
-        const shouldApply = hcOverride && hcCommRule;
+      return (row.recibos || [])
+        .filter(
+          (r) =>
+            String(r?.tipo_produtos?.nome || '')
+              .toLowerCase()
+              .includes('passagem') ||
+            String(r?.produto_id || '') === '5ef10eb0-2b54-42bd-bc1e-d3dbb727726e'
+        )
+        .map((recibo) => {
+          const productId = String(recibo?.tipo_produtos?.id || recibo?.produto_id || '');
+          const produtoRegraBase = productId ? ctx.regraProdutoMap[productId] || null : null;
+          const selectedRuleHasFixed = Boolean(
+            produtoRegraBase && regraProdutoTemFixo(produtoRegraBase)
+          );
+          const hcOverride =
+            recibo?.valor_bruto_override != null ||
+            recibo?.valor_liquido_override != null ||
+            recibo?.valor_meta_override != null;
+          const hcCommRule = hasConciliacaoCommissionRule(params);
+          const hcBandRules = hasConciliacaoBandRules(params);
+          const legacyRule = buildLegacyConciliacaoRule(params);
+          const shouldApply = hcOverride && hcCommRule;
 
-        const bandKey = resolveConciliacaoBandKey({
-          conciliacao_faixas_loja: params?.conciliacao_faixas_loja ?? null,
-          faixa_comissao: recibo?.faixa_comissao ?? null,
-          percentual_comissao_loja: recibo?.percentual_comissao_loja != null ? Number(recibo.percentual_comissao_loja) : null,
-          is_seguro_viagem: recibo?.is_seguro_viagem ?? null
+          const bandKey = resolveConciliacaoBandKey({
+            conciliacao_faixas_loja: params?.conciliacao_faixas_loja ?? null,
+            faixa_comissao: recibo?.faixa_comissao ?? null,
+            percentual_comissao_loja:
+              recibo?.percentual_comissao_loja != null
+                ? Number(recibo.percentual_comissao_loja)
+                : null,
+            is_seguro_viagem: recibo?.is_seguro_viagem ?? null
+          });
+
+          const selection = resolveConciliacaoCommissionSelection(params, {
+            faixa_comissao: recibo?.faixa_comissao ?? null,
+            percentual_comissao_loja:
+              recibo?.percentual_comissao_loja != null
+                ? Number(recibo.percentual_comissao_loja)
+                : null,
+            is_seguro_viagem: recibo?.is_seguro_viagem ?? null
+          });
+
+          const pctCalculado =
+            selection.kind === 'CONCILIACAO' && selection.rule
+              ? calcularPctPorRegra(selection.rule, pctMetaGeral)
+              : null;
+
+          const pctEngineCalculado = recibo?.id
+            ? (pctByReceiptId.get(String(recibo.id)) ?? null)
+            : null;
+
+          return {
+            produto: recibo?.tipo_produtos?.nome,
+            product_id: productId,
+            percentual_comissao_loja: recibo?.percentual_comissao_loja,
+            faixa_comissao: recibo?.faixa_comissao,
+            valor_bruto_override: recibo?.valor_bruto_override,
+            valor_liquido_override: recibo?.valor_liquido_override,
+            hcOverride,
+            hcCommRule,
+            hcBandRules,
+            hasLegacyRule: Boolean(legacyRule),
+            selectedRuleHasFixed,
+            produtoRegraBase,
+            shouldApply,
+            bandKey,
+            selection_kind: selection.kind,
+            selection_rule: selection.rule,
+            pctMetaGeral,
+            pctCalculado,
+            pctEngineCalculado,
+            params_conciliacao_regra_ativa: params?.conciliacao_regra_ativa,
+            params_faixas_count: params?.conciliacao_faixas_loja?.length
+          };
         });
-
-        const selection = resolveConciliacaoCommissionSelection(params, {
-          faixa_comissao: recibo?.faixa_comissao ?? null,
-          percentual_comissao_loja: recibo?.percentual_comissao_loja != null ? Number(recibo.percentual_comissao_loja) : null,
-          is_seguro_viagem: recibo?.is_seguro_viagem ?? null
-        });
-
-        const pctCalculado = selection.kind === 'CONCILIACAO' && selection.rule
-          ? calcularPctPorRegra(selection.rule, pctMetaGeral)
-          : null;
-
-        const pctEngineCalculado = recibo?.id ? pctByReceiptId.get(String(recibo.id)) ?? null : null;
-
-        return {
-          produto: recibo?.tipo_produtos?.nome,
-          product_id: productId,
-          percentual_comissao_loja: recibo?.percentual_comissao_loja,
-          faixa_comissao: recibo?.faixa_comissao,
-          valor_bruto_override: recibo?.valor_bruto_override,
-          valor_liquido_override: recibo?.valor_liquido_override,
-          hcOverride,
-          hcCommRule,
-          hcBandRules,
-          hasLegacyRule: Boolean(legacyRule),
-          selectedRuleHasFixed,
-          produtoRegraBase,
-          shouldApply,
-          bandKey,
-          selection_kind: selection.kind,
-          selection_rule: selection.rule,
-          pctMetaGeral,
-          pctCalculado,
-          pctEngineCalculado,
-          params_conciliacao_regra_ativa: params?.conciliacao_regra_ativa,
-          params_faixas_count: params?.conciliacao_faixas_loja?.length
-        };
-      });
     });
 
-    return debugJson({ diag, params_summary: {
-      conciliacao_regra_ativa: params?.conciliacao_regra_ativa,
-      conciliacao_tipo: params?.conciliacao_tipo,
-      faixas: params?.conciliacao_faixas_loja?.map((f: ConciliacaoFaixaResumo) => ({ faixa_loja: f.faixa_loja, ativo: f.ativo, tipo_calculo: f.tipo_calculo, meta_nao_atingida: f.meta_nao_atingida, percentual_min: f.percentual_min, percentual_max: f.percentual_max }))
-    }, pctMetaGeral });
+    return debugJson({
+      diag,
+      params_summary: {
+        conciliacao_regra_ativa: params?.conciliacao_regra_ativa,
+        conciliacao_tipo: params?.conciliacao_tipo,
+        faixas: params?.conciliacao_faixas_loja?.map((f: ConciliacaoFaixaResumo) => ({
+          faixa_loja: f.faixa_loja,
+          ativo: f.ativo,
+          tipo_calculo: f.tipo_calculo,
+          meta_nao_atingida: f.meta_nao_atingida,
+          percentual_min: f.percentual_min,
+          percentual_max: f.percentual_max
+        }))
+      },
+      pctMetaGeral
+    });
   } catch (e: unknown) {
     const response = toErrorResponse(e, 'Erro no diagnóstico de comissão.');
     response.headers.set('Cache-Control', DEBUG_HEADERS['Cache-Control']);

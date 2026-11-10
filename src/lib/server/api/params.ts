@@ -16,6 +16,6 @@ export function withRouteParams(event: RequestEvent, params: Record<string, stri
       if (prop === 'params') return merged;
       const value = Reflect.get(target, prop, receiver);
       return typeof value === 'function' ? value.bind(target) : value;
-    },
+    }
   });
 }

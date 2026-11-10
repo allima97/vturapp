@@ -10,9 +10,9 @@ describe('sanitizeImportedClienteNome', () => {
   });
 
   it('drops everything before the last //', () => {
-    expect(sanitizeImportedClienteNome('LIXO / TESTE // ACOMPANHANTE // Juan Jose Martinez Parra')).toBe(
-      'Juan Jose Martinez Parra'
-    );
+    expect(
+      sanitizeImportedClienteNome('LIXO / TESTE // ACOMPANHANTE // Juan Jose Martinez Parra')
+    ).toBe('Juan Jose Martinez Parra');
   });
 
   it('keeps the original name when // is absent', () => {

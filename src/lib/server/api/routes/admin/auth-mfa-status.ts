@@ -19,9 +19,7 @@ function normalizeUserIds(value: unknown) {
   if (!Array.isArray(value)) return [];
   return Array.from(
     new Set(
-      value
-        .map((item) => String(item || '').trim())
-        .filter((item) => /^[0-9a-f-]{36}$/i.test(item))
+      value.map((item) => String(item || '').trim()).filter((item) => /^[0-9a-f-]{36}$/i.test(item))
     )
   ).slice(0, MAX_MFA_STATUS_USERS);
 }
@@ -44,7 +42,10 @@ export async function handleAdminAuthMfaStatusPost(event: RequestEvent) {
     ensureCanManageUsers(scope);
 
     const userIds = normalizeUserIds(body.user_ids);
-    const statuses: Record<string, { enabled: boolean; verified_count: number; factor_count: number }> = {};
+    const statuses: Record<
+      string,
+      { enabled: boolean; verified_count: number; factor_count: number }
+    > = {};
 
     for (const userId of userIds) {
       await loadManagedUser(client, scope, userId);

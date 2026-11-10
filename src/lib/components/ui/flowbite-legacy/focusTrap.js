@@ -9,25 +9,26 @@ const selectorTabbable = `
   iframe, object, embed, *[tabindex]:not([tabindex='-1']):not([disabled]), *[contenteditable=true]
 `;
 const focusTrap = (node) => {
-    const handleFocusTrap = (e) => {
-        const isTabPressed = e.key === 'Tab' || e.keyCode === 9;
-        if (!isTabPressed) {
-            return;
-        }
-        const tabbable = Array.from(node.querySelectorAll(selectorTabbable)).filter((el) => el instanceof HTMLElement && el.hidden !== true);
-        let index = tabbable.indexOf(document.activeElement);
-        if (index === -1 && e.shiftKey)
-            index = 0;
-        index += tabbable.length + (e.shiftKey ? -1 : 1);
-        index %= tabbable.length;
-        tabbable[index].focus();
-        e.preventDefault();
-    };
-    document.addEventListener('keydown', handleFocusTrap, true);
-    return {
-        destroy() {
-            document.removeEventListener('keydown', handleFocusTrap, true);
-        }
-    };
+  const handleFocusTrap = (e) => {
+    const isTabPressed = e.key === 'Tab' || e.keyCode === 9;
+    if (!isTabPressed) {
+      return;
+    }
+    const tabbable = Array.from(node.querySelectorAll(selectorTabbable)).filter(
+      (el) => el instanceof HTMLElement && el.hidden !== true
+    );
+    let index = tabbable.indexOf(document.activeElement);
+    if (index === -1 && e.shiftKey) index = 0;
+    index += tabbable.length + (e.shiftKey ? -1 : 1);
+    index %= tabbable.length;
+    tabbable[index].focus();
+    e.preventDefault();
+  };
+  document.addEventListener('keydown', handleFocusTrap, true);
+  return {
+    destroy() {
+      document.removeEventListener('keydown', handleFocusTrap, true);
+    }
+  };
 };
 export default focusTrap;

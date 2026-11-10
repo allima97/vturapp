@@ -165,9 +165,27 @@
     { key: 'destino', label: 'Destino', sortable: true, width: '180px' },
     { key: 'cidade_nome', label: 'Cidade', sortable: true, width: '180px' },
     { key: 'fornecedor_nome', label: 'Fornecedor', sortable: true, width: '180px' },
-    { key: 'todas_as_cidades', label: 'Abrangência', sortable: true, width: '120px', formatter: (_value: unknown, row: Produto) => abrangenciaBadge(row) },
-    { key: 'ativo', label: 'Status', sortable: true, width: '110px', formatter: (value: boolean) => statusBadge(value) },
-    { key: 'updated_at', label: 'Atualizado', sortable: true, width: '120px', formatter: (value: string) => formatDate(value) }
+    {
+      key: 'todas_as_cidades',
+      label: 'Abrangência',
+      sortable: true,
+      width: '120px',
+      formatter: (_value: unknown, row: Produto) => abrangenciaBadge(row)
+    },
+    {
+      key: 'ativo',
+      label: 'Status',
+      sortable: true,
+      width: '110px',
+      formatter: (value: boolean) => statusBadge(value)
+    },
+    {
+      key: 'updated_at',
+      label: 'Atualizado',
+      sortable: true,
+      width: '120px',
+      formatter: (value: string) => formatDate(value)
+    }
   ];
 
   $: routeBase = mode === 'destinos' ? '/cadastros/destinos' : '/cadastros/produtos';
@@ -183,34 +201,56 @@
 </svelte:head>
 
 <PageHeader
-  title={title}
-  subtitle={subtitle}
+  {title}
+  {subtitle}
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Cadastros', href: '/cadastros' },
-    { label: title }
-  ]}
+  breadcrumbs={[{ label: 'Cadastros', href: '/cadastros' }, { label: title }]}
   actions={[
-    { label: mode === 'destinos' ? 'Novo destino' : 'Novo produto', onClick: () => goto(`${routeBase}/novo`), variant: 'primary', icon: Plus }
+    {
+      label: mode === 'destinos' ? 'Novo destino' : 'Novo produto',
+      onClick: () => goto(`${routeBase}/novo`),
+      variant: 'primary',
+      icon: Plus
+    }
   ]}
 />
 
 <div class="vtur-kpi-grid mb-6">
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500"><Package size={20} /></div>
-    <div><p class="text-sm font-medium text-slate-500">Total</p><p class="text-2xl font-bold text-slate-900">{stats.total}</p></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
+      <Package size={20} />
+    </div>
+    <div>
+      <p class="text-sm font-medium text-slate-500">Total</p>
+      <p class="text-2xl font-bold text-slate-900">{stats.total}</p>
+    </div>
   </div>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500"><MapPin size={20} /></div>
-    <div><p class="text-sm font-medium text-slate-500">Ativos</p><p class="text-2xl font-bold text-slate-900">{stats.ativos}</p></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
+      <MapPin size={20} />
+    </div>
+    <div>
+      <p class="text-sm font-medium text-slate-500">Ativos</p>
+      <p class="text-2xl font-bold text-slate-900">{stats.ativos}</p>
+    </div>
   </div>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500"><Globe2 size={20} /></div>
-    <div><p class="text-sm font-medium text-slate-500">Globais</p><p class="text-2xl font-bold text-slate-900">{stats.globais}</p></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+      <Globe2 size={20} />
+    </div>
+    <div>
+      <p class="text-sm font-medium text-slate-500">Globais</p>
+      <p class="text-2xl font-bold text-slate-900">{stats.globais}</p>
+    </div>
   </div>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-500"><Hotel size={20} /></div>
-    <div><p class="text-sm font-medium text-slate-500">Hospedagem</p><p class="text-2xl font-bold text-slate-900">{stats.hospedagem}</p></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-500">
+      <Hotel size={20} />
+    </div>
+    <div>
+      <p class="text-sm font-medium text-slate-500">Hospedagem</p>
+      <p class="text-2xl font-bold text-slate-900">{stats.hospedagem}</p>
+    </div>
   </div>
 </div>
 

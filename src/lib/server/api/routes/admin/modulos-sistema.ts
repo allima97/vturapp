@@ -130,7 +130,8 @@ export async function handleAdminModulosSistemaPost(event: RequestEvent) {
         : {};
     const { module_key, enabled, reason } = body;
 
-    if (!module_key) return json({ error: 'module_key obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!module_key)
+      return json({ error: 'module_key obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const payload = {
       module_key,
@@ -151,7 +152,10 @@ export async function handleAdminModulosSistemaPost(event: RequestEvent) {
       modulo: 'Admin',
       acao: 'modulos_globais_atualizados',
       detalhes: async () => {
-        const { data } = await client.from('system_module_settings').select('module_key').eq('enabled', false);
+        const { data } = await client
+          .from('system_module_settings')
+          .select('module_key')
+          .eq('enabled', false);
         return {
           disabled_modules: ((data || []) as Array<{ module_key: string | null }>)
             .map((row) => String(row.module_key || ''))

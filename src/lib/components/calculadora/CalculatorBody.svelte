@@ -13,21 +13,63 @@
   const calculatorKeys: CalculatorKey[] = [
     { label: 'AC', action: 'clear', gridColumn: '1', gridRow: '1', variant: 'danger' },
     { label: '+/-', action: 'toggle_sign', gridColumn: '2', gridRow: '1', variant: 'function' },
-    { label: '%', action: 'append', value: '%', gridColumn: '3', gridRow: '1', variant: 'function' },
-    { label: '/', action: 'append', value: '/', gridColumn: '4', gridRow: '1', variant: 'operator' },
+    {
+      label: '%',
+      action: 'append',
+      value: '%',
+      gridColumn: '3',
+      gridRow: '1',
+      variant: 'function'
+    },
+    {
+      label: '/',
+      action: 'append',
+      value: '/',
+      gridColumn: '4',
+      gridRow: '1',
+      variant: 'operator'
+    },
     { label: '7', action: 'append', value: '7', gridColumn: '1', gridRow: '2', variant: 'number' },
     { label: '8', action: 'append', value: '8', gridColumn: '2', gridRow: '2', variant: 'number' },
     { label: '9', action: 'append', value: '9', gridColumn: '3', gridRow: '2', variant: 'number' },
-    { label: 'x', action: 'append', value: 'x', gridColumn: '4', gridRow: '2', variant: 'operator' },
+    {
+      label: 'x',
+      action: 'append',
+      value: 'x',
+      gridColumn: '4',
+      gridRow: '2',
+      variant: 'operator'
+    },
     { label: '4', action: 'append', value: '4', gridColumn: '1', gridRow: '3', variant: 'number' },
     { label: '5', action: 'append', value: '5', gridColumn: '2', gridRow: '3', variant: 'number' },
     { label: '6', action: 'append', value: '6', gridColumn: '3', gridRow: '3', variant: 'number' },
-    { label: '-', action: 'append', value: '-', gridColumn: '4', gridRow: '3', variant: 'operator' },
+    {
+      label: '-',
+      action: 'append',
+      value: '-',
+      gridColumn: '4',
+      gridRow: '3',
+      variant: 'operator'
+    },
     { label: '1', action: 'append', value: '1', gridColumn: '1', gridRow: '4', variant: 'number' },
     { label: '2', action: 'append', value: '2', gridColumn: '2', gridRow: '4', variant: 'number' },
     { label: '3', action: 'append', value: '3', gridColumn: '3', gridRow: '4', variant: 'number' },
-    { label: '+', action: 'append', value: '+', gridColumn: '4', gridRow: '4', variant: 'operator' },
-    { label: '0', action: 'append', value: '0', gridColumn: '1 / span 2', gridRow: '5', variant: 'number' },
+    {
+      label: '+',
+      action: 'append',
+      value: '+',
+      gridColumn: '4',
+      gridRow: '4',
+      variant: 'operator'
+    },
+    {
+      label: '0',
+      action: 'append',
+      value: '0',
+      gridColumn: '1 / span 2',
+      gridRow: '5',
+      variant: 'number'
+    },
     { label: ',', action: 'append', value: '.', gridColumn: '3', gridRow: '5', variant: 'number' },
     { label: '=', action: 'evaluate', gridColumn: '4', gridRow: '5', variant: 'operator' }
   ];
@@ -256,7 +298,11 @@
     return value;
   }
 
-  function parseExpression(tokens: Token[], indexRef: { index: number }, base: number | null): number {
+  function parseExpression(
+    tokens: Token[],
+    indexRef: { index: number },
+    base: number | null
+  ): number {
     let value = parseTerm(tokens, indexRef, base);
     while (indexRef.index < tokens.length) {
       const token = tokens[indexRef.index];
@@ -306,9 +352,7 @@
     const target = event.target as HTMLElement | null;
     const tagName = target?.tagName || '';
     const isEditable =
-      tagName === 'INPUT' ||
-      tagName === 'TEXTAREA' ||
-      Boolean(target?.isContentEditable);
+      tagName === 'INPUT' || tagName === 'TEXTAREA' || Boolean(target?.isContentEditable);
 
     if (event.key === 'Enter') {
       event.preventDefault();
@@ -437,8 +481,12 @@
       </div>
     </div>
 
-    <div class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 shadow-xs">
-      Use o teclado ou os botões. <code>Enter</code> calcula, <code>Backspace</code> apaga, <code>Delete</code> limpa e <code>F9</code> inverte o sinal.
+    <div
+      class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-600 shadow-xs"
+    >
+      Use o teclado ou os botões. <code>Enter</code> calcula, <code>Backspace</code> apaga,
+      <code>Delete</code>
+      limpa e <code>F9</code> inverte o sinal.
     </div>
   </div>
 

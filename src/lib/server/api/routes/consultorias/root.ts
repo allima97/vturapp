@@ -1,17 +1,18 @@
 // Migrado para Hono de src/routes/api/v1/consultorias/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
-import { json } from "@sveltejs/kit";
-import type { RequestEvent } from "@sveltejs/kit";
-import { readJsonBodyLimited, rejectCrossOriginRequest } from "$lib/server/requestGuards";
+import { json } from '@sveltejs/kit';
+import type { RequestEvent } from '@sveltejs/kit';
+import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import {
   getAdminClient,
   isUuid,
   requireAuthenticatedUser,
   resolveUserScope,
-  toErrorResponse,
-} from "$lib/server/v1";
-import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from "$lib/server/httpCache";
-import { invalidateConsultoriaReadModels } from "$lib/server/readModelCache";
+  toErrorResponse
+} from '$lib/server/v1';
+import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
+import { invalidateConsultoriaReadModels } from '$lib/server/readModelCache';
+import { complementoDestinoOperacional } from '$lib/server/destinoOperacional';
 
 // Espelha: vtur-app/src/pages/api/consultorias/
 // Tabela: consultorias_online
@@ -65,7 +66,7 @@ export async function handleConsultoriasGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     let query = client
-      .from("consultorias_online")
+      .from('consultorias_online')
       .select(
         `
         id,
@@ -83,19 +84,19 @@ export async function handleConsultoriasGet(event: RequestEvent) {
         created_by,
         created_at,
         updated_at
-      `,
+      `
       )
-      .order("data_hora", { ascending: true })
+      .order('data_hora', { ascending: true })
       .limit(200);
 
     // Filtro por status (fechada/aberta)
-    const status = event.url.searchParams.get("status");
-    if (status === "fechada") query = query.eq("fechada", true);
-    else if (status === "aberta") query = query.eq("fechada", false);
+    const status = event.url.searchParams.get('status');
+    if (status === 'fechada') query = query.eq('fechada', true);
+    else if (status === 'aberta') query = query.eq('fechada', false);
 
     // Não-admin vê apenas as próprias consultorias
     if (!scope.isAdmin && !scope.isGestor && !scope.isMaster) {
-      query = query.eq("created_by", user.id);
+      query = query.eq('created_by', user.id);
     }
 
     const { data, error } = await query;
@@ -103,7 +104,7 @@ export async function handleConsultoriasGet(event: RequestEvent) {
 
     return json(data || [], { headers: DYNAMIC_READ_HEADERS });
   } catch (err) {
-    return toErrorResponse(err, "Erro ao listar consultorias.");
+    return toErrorResponse(err, 'Erro ao listar consultorias.');
   }
 }
 
@@ -119,55 +120,61 @@ export async function handleConsultoriasPost(event: RequestEvent) {
     await resolveUserScope(client, user.id);
 
     const body =
-      bodyResult.data && typeof bodyResult.data === "object"
+      bodyResult.data && typeof bodyResult.data === 'object'
         ? (bodyResult.data as ConsultoriaRequestBody)
         : {};
 
-    const clienteNome = String(getBodyValue(body, "cliente_nome", "clienteNome") ?? "").trim();
-    const dataHora = getBodyValue(body, "data_hora", "dataHora");
-    const clienteId = asOptionalString(getBodyValue(body, "cliente_id", "clienteId"));
-    const orcamentoId = asOptionalString(getBodyValue(body, "orcamento_id", "orcamentoId"));
+    const clienteNome = String(getBodyValue(body, 'cliente_nome', 'clienteNome') ?? '').trim();
+    const dataHora = getBodyValue(body, 'data_hora', 'dataHora');
+    const clienteId = asOptionalString(getBodyValue(body, 'cliente_id', 'clienteId'));
+    const orcamentoId = asOptionalString(getBodyValue(body, 'orcamento_id', 'orcamentoId'));
 
     if (!clienteNome) {
-      return errorResponse("cliente_nome é obrigatório.", 400);
+      return errorResponse('cliente_nome é obrigatório.', 400);
     }
     if (!dataHora) {
-      return errorResponse("data_hora é obrigatória.", 400);
+      return errorResponse('data_hora é obrigatória.', 400);
     }
 
+    const destinoGeografico = await complementoDestinoOperacional(
+      body,
+      event.platform?.env?.DB,
+      event.platform?.env?.GEO_DB,
+      'destino_geografico_id',
+      'destino'
+    );
+    if (!destinoGeografico.ok)
+      return errorResponse(destinoGeografico.error, destinoGeografico.status);
     const payload = {
-      cliente_id: isUuid(clienteId)
-        ? clienteId
-        : null,
+      cliente_id: isUuid(clienteId) ? clienteId : null,
       cliente_nome: clienteNome,
       data_hora: new Date(String(dataHora)).toISOString(),
-      lembrete: String(body.lembrete || "15min").trim(),
-      destino: String(body.destino || "").trim() || null,
+      lembrete: String(body.lembrete || '15min').trim(),
+      destino: destinoGeografico.campos.destino || String(body.destino || '').trim() || null,
+      ...('destino_geografico_id' in destinoGeografico.campos
+        ? { destino_geografico_id: destinoGeografico.campos.destino_geografico_id }
+        : {}),
       quantidade_pessoas: Math.max(
         1,
-        Number(body.quantidade_pessoas ?? body.quantidadePessoas ?? 1) || 1,
+        Number(body.quantidade_pessoas ?? body.quantidadePessoas ?? 1) || 1
       ),
-      orcamento_id: isUuid(orcamentoId)
-        ? orcamentoId
-        : null,
-      taxa_consultoria: Number.isFinite(
-        Number(body.taxa_consultoria ?? body.taxaConsultoria ?? 0),
-      )
+      orcamento_id: isUuid(orcamentoId) ? orcamentoId : null,
+      taxa_consultoria: Number.isFinite(Number(body.taxa_consultoria ?? body.taxaConsultoria ?? 0))
         ? Number(body.taxa_consultoria ?? body.taxaConsultoria ?? 0)
         : 0,
-      notas: String(body.notas || "").trim() || null,
-      created_by: user.id,
+      notas: String(body.notas || '').trim() || null,
+      created_by: user.id
     };
 
     const { data, error } = await client
-      .from("consultorias_online")
+      .from('consultorias_online')
       .insert(payload)
       .select(
         `
         id, cliente_id, cliente_nome, data_hora, lembrete, destino,
         quantidade_pessoas, orcamento_id, taxa_consultoria, notas,
         fechada, created_at
-      `,
+      `
       )
       .single();
 
@@ -175,12 +182,12 @@ export async function handleConsultoriasPost(event: RequestEvent) {
 
     invalidateConsultoriaReadModels({
       vendedorIds: [user.id],
-      userId: user.id,
+      userId: user.id
     });
 
     return json(data, { status: 201, headers: NO_STORE_HEADERS });
   } catch (err) {
-    return toErrorResponse(err, "Erro ao criar consultoria.");
+    return toErrorResponse(err, 'Erro ao criar consultoria.');
   }
 }
 
@@ -196,25 +203,24 @@ export async function handleConsultoriasPatch(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     const body =
-      bodyResult.data && typeof bodyResult.data === "object"
+      bodyResult.data && typeof bodyResult.data === 'object'
         ? (bodyResult.data as ConsultoriaRequestBody)
         : {};
-    const id = String(body.id || "").trim();
+    const id = String(body.id || '').trim();
 
     if (!isUuid(id)) {
-      return errorResponse("id da consultoria inválido.", 400);
+      return errorResponse('id da consultoria inválido.', 400);
     }
 
     // Verificar acesso: dono ou admin/gestor/master
     const { data: existing, error: checkErr } = await client
-      .from("consultorias_online")
-      .select("id, created_by")
-      .eq("id", id)
+      .from('consultorias_online')
+      .select('id, created_by')
+      .eq('id', id)
       .maybeSingle();
 
     if (checkErr) throw checkErr;
-    if (!existing)
-      return errorResponse("Consultoria não encontrada.", 404);
+    if (!existing) return errorResponse('Consultoria não encontrada.', 404);
     const existingConsultoria = existing as ConsultoriaExistingRow;
 
     const podeEditar =
@@ -225,72 +231,66 @@ export async function handleConsultoriasPatch(event: RequestEvent) {
 
     if (!podeEditar) {
       return json(
-        { error: "Sem permissão para editar esta consultoria." },
-        { status: 403, headers: NO_STORE_HEADERS },
+        { error: 'Sem permissão para editar esta consultoria.' },
+        { status: 403, headers: NO_STORE_HEADERS }
       );
     }
 
     const payload: Record<string, unknown> = {
-      updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
 
     // Aceitar campos em snake_case (padrão) ou camelCase (compatibilidade)
     if (body.cliente_id !== undefined || body.clienteId !== undefined) {
-      const val = asOptionalString(getBodyValue(body, "cliente_id", "clienteId"));
+      const val = asOptionalString(getBodyValue(body, 'cliente_id', 'clienteId'));
       payload.cliente_id = isUuid(val) ? val : null;
     }
     if (body.cliente_nome !== undefined || body.clienteNome !== undefined)
-      payload.cliente_nome =
-        String(body.cliente_nome ?? body.clienteNome ?? "").trim() || null;
+      payload.cliente_nome = String(body.cliente_nome ?? body.clienteNome ?? '').trim() || null;
     if (body.data_hora !== undefined || body.dataHora !== undefined) {
-      const raw = getBodyValue(body, "data_hora", "dataHora");
+      const raw = getBodyValue(body, 'data_hora', 'dataHora');
       if (raw) payload.data_hora = new Date(String(raw)).toISOString();
     }
     if (body.lembrete !== undefined) payload.lembrete = body.lembrete;
-    if (body.destino !== undefined)
-      payload.destino = String(body.destino || "").trim() || null;
-    if (
-      body.quantidade_pessoas !== undefined ||
-      body.quantidadePessoas !== undefined
-    )
+    if (body.destino !== undefined) payload.destino = String(body.destino || '').trim() || null;
+    const destinoGeografico = await complementoDestinoOperacional(
+      body,
+      event.platform?.env?.DB,
+      event.platform?.env?.GEO_DB,
+      'destino_geografico_id',
+      'destino'
+    );
+    if (!destinoGeografico.ok)
+      return errorResponse(destinoGeografico.error, destinoGeografico.status);
+    Object.assign(payload, destinoGeografico.campos);
+    if (body.quantidade_pessoas !== undefined || body.quantidadePessoas !== undefined)
       payload.quantidade_pessoas =
         Number(body.quantidade_pessoas ?? body.quantidadePessoas ?? 1) || 1;
     if (body.orcamento_id !== undefined || body.orcamentoId !== undefined) {
-      const val = asOptionalString(getBodyValue(body, "orcamento_id", "orcamentoId"));
+      const val = asOptionalString(getBodyValue(body, 'orcamento_id', 'orcamentoId'));
       payload.orcamento_id = isUuid(val) ? val : null;
     }
-    if (
-      body.taxa_consultoria !== undefined ||
-      body.taxaConsultoria !== undefined
-    )
-      payload.taxa_consultoria =
-        Number(body.taxa_consultoria ?? body.taxaConsultoria ?? 0) || 0;
-    if (body.notas !== undefined)
-      payload.notas = String(body.notas || "").trim() || null;
+    if (body.taxa_consultoria !== undefined || body.taxaConsultoria !== undefined)
+      payload.taxa_consultoria = Number(body.taxa_consultoria ?? body.taxaConsultoria ?? 0) || 0;
+    if (body.notas !== undefined) payload.notas = String(body.notas || '').trim() || null;
     if (body.fechada !== undefined) payload.fechada = Boolean(body.fechada);
-    if (body.fechada_em !== undefined)
-      payload.fechada_em = body.fechada_em || null;
+    if (body.fechada_em !== undefined) payload.fechada_em = body.fechada_em || null;
 
     if (Object.keys(payload).length === 1) {
-      return errorResponse("Nenhum campo para atualizar.", 400);
+      return errorResponse('Nenhum campo para atualizar.', 400);
     }
 
-    const { error } = await client
-      .from("consultorias_online")
-      .update(payload)
-      .eq("id", id);
+    const { error } = await client.from('consultorias_online').update(payload).eq('id', id);
 
     if (error) throw error;
 
     invalidateConsultoriaReadModels({
-      vendedorIds: [String(existingConsultoria.created_by || "")].filter(
-        Boolean,
-      ),
-      userId: user.id,
+      vendedorIds: [String(existingConsultoria.created_by || '')].filter(Boolean),
+      userId: user.id
     });
 
     return new Response(null, { status: 204, headers: NO_STORE_HEADERS });
   } catch (err) {
-    return toErrorResponse(err, "Erro ao atualizar consultoria.");
+    return toErrorResponse(err, 'Erro ao atualizar consultoria.');
   }
 }

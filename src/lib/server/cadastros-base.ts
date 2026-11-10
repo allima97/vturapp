@@ -1,4 +1,4 @@
-import type { PostgrestError, SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient, QueryError } from '$lib/server/data';
 import type { UserScope } from '$lib/server/v1';
 import { isUuid, normalizeText, parseIntSafe, sanitizePostgrestSearchTerm } from '$lib/server/v1';
 import {
@@ -8,8 +8,8 @@ import {
   scopeCacheTags
 } from '$lib/server/readModelCache';
 
-type QueryResult<T> = { data: T[] | null; error: PostgrestError | null };
-type OptionalResult<T> = { data: T | null; error: PostgrestError | null };
+type QueryResult<T> = { data: T[] | null; error: QueryError | null };
+type OptionalResult<T> = { data: T | null; error: QueryError | null };
 type CatalogRow = Record<string, unknown> & {
   id?: string;
   nome?: string;
@@ -18,14 +18,17 @@ type CatalogRow = Record<string, unknown> & {
   uf?: string;
   pais?: string;
   subdivisao_nome?: string;
-  subdivisao?: {
-    codigo_admin1?: string | null;
-    nome?: string | null;
-  } | Array<Record<string, unknown>> | null;
+  subdivisao?:
+    | {
+        codigo_admin1?: string | null;
+        nome?: string | null;
+      }
+    | Array<Record<string, unknown>>
+    | null;
 };
 
 function isMissingColumnOrRelation(err: unknown) {
-  const error = err as Partial<PostgrestError> | null | undefined;
+  const error = err as Partial<QueryError> | null | undefined;
   const code = String(error?.code || '');
   const message = String(error?.message || '');
   return (
@@ -99,7 +102,7 @@ export type ProdutoTarifaItem = {
 };
 
 export async function fetchProdutosBase(
-  client: SupabaseClient,
+  client: DataClient,
   scope: UserScope,
   params: URLSearchParams
 ) {
@@ -144,7 +147,8 @@ export async function fetchProdutosBase(
     .order(all || search ? 'nome' : 'created_at', { ascending: Boolean(all || search) });
 
   if (isUuid(tipoProdutoId)) produtosQuery = produtosQuery.eq('tipo_produto', tipoProdutoId);
-  if (ativoRaw === 'true' || ativoRaw === 'false') produtosQuery = produtosQuery.eq('ativo', ativoRaw === 'true');
+  if (ativoRaw === 'true' || ativoRaw === 'false')
+    produtosQuery = produtosQuery.eq('ativo', ativoRaw === 'true');
   if (isUuid(fornecedorId)) produtosQuery = produtosQuery.eq('fornecedor_id', fornecedorId);
   if (!all) {
     const from = (page - 1) * pageSize;
@@ -155,7 +159,12 @@ export async function fetchProdutosBase(
   if (search) {
     const like = `%${search}%`;
     produtosQuery = produtosQuery.or(
-      ['nome.ilike.' + like, 'destino.ilike.' + like, 'atracao_principal.ilike.' + like, 'melhor_epoca.ilike.' + like].join(',')
+      [
+        'nome.ilike.' + like,
+        'destino.ilike.' + like,
+        'atracao_principal.ilike.' + like,
+        'melhor_epoca.ilike.' + like
+      ].join(',')
     );
   }
 
@@ -179,8 +188,16 @@ export async function fetchProdutosBase(
           fornecedores
         ] = await Promise.all([
           optionalRows(client.from('paises').select('id, nome').order('nome')),
-          optionalRows(client.from('subdivisoes').select('id, nome, codigo_admin1, pais_id').order('nome')),
-          optionalRows(client.from('tipo_produtos').select('id, nome, tipo, ativo').eq('ativo', true).order('nome')),
+          optionalRows(
+            client.from('subdivisoes').select('id, nome, codigo_admin1, pais_id').order('nome')
+          ),
+          optionalRows(
+            client
+              .from('tipo_produtos')
+              .select('id, nome, tipo, ativo')
+              .eq('ativo', true)
+              .order('nome')
+          ),
           optionalRows(
             client
               .from('produtos')
@@ -195,7 +212,9 @@ export async function fetchProdutosBase(
               .order('nome', { ascending: true })
               .limit(5000)
           ),
-          optionalRows(client.from('cidades').select('id, nome').order('nome', { ascending: true }).limit(5000)),
+          optionalRows(
+            client.from('cidades').select('id, nome').order('nome', { ascending: true }).limit(5000)
+          ),
           scope.companyId
             ? optionalRows(
                 client
@@ -235,8 +254,8 @@ export async function fetchProdutosBase(
   if (produtosResp.error) throw produtosResp.error;
 
   const cidadesMap = new Map<string, CatalogRow>();
-  for (const row of cidadesBase) cidadesMap.set(String(row.id), { ...row });
-  for (const row of cidadesComPais) {
+  for (const row of cidadesBase as CatalogRow[]) cidadesMap.set(String(row.id), { ...row });
+  for (const row of cidadesComPais as CatalogRow[]) {
     cidadesMap.set(String(row.id), {
       ...(cidadesMap.get(String(row.id)) || {}),
       ...row
@@ -245,14 +264,17 @@ export async function fetchProdutosBase(
 
   let produtos = ((produtosResp.data || []) as unknown as ProdutoBaseItem[]).map((row) => ({
     ...row,
-    todas_as_cidades: row?.todas_as_cidades === true || (!row?.cidade_id && row?.todas_as_cidades !== false)
+    todas_as_cidades:
+      row?.todas_as_cidades === true || (!row?.cidade_id && row?.todas_as_cidades !== false)
   })) as ProdutoBaseItem[];
 
   if (search) {
     const term = normalizeText(search);
     produtos = produtos.filter((produto) => {
       const cidade = produto.cidade_id ? cidadesMap.get(produto.cidade_id) : null;
-      const subdivisao = Array.isArray(cidade?.subdivisao) ? cidade?.subdivisao[0] : cidade?.subdivisao;
+      const subdivisao = Array.isArray(cidade?.subdivisao)
+        ? cidade?.subdivisao[0]
+        : cidade?.subdivisao;
       const estado =
         cidade?.estado ||
         cidade?.uf ||
@@ -261,7 +283,9 @@ export async function fetchProdutosBase(
         subdivisao?.nome ||
         '';
       const pais = cidade?.pais || '';
-      const tipo = tipos.find((item) => String((item as CatalogRow).id || '') === produto.tipo_produto) as CatalogRow | undefined;
+      const tipo = tipos.find(
+        (item) => String((item as CatalogRow).id || '') === produto.tipo_produto
+      ) as CatalogRow | undefined;
       return [
         produto.nome,
         produto.destino,
@@ -281,14 +305,14 @@ export async function fetchProdutosBase(
     subdivisoes,
     tipos,
     produtos,
-    total: search || all ? produtos.length : produtosResp.count ?? produtos.length,
+    total: search || all ? produtos.length : (produtosResp.count ?? produtos.length),
     destinosProdutos,
     cidades: Array.from(cidadesMap.values()),
     fornecedores
   };
 }
 
-export async function fetchProdutoById(client: SupabaseClient, id: string) {
+export async function fetchProdutoById(client: DataClient, id: string) {
   const base = await optionalSingle<ProdutoBaseItem>(
     client
       .from('produtos')
@@ -336,17 +360,30 @@ export async function fetchProdutoById(client: SupabaseClient, id: string) {
         )
       : Promise.resolve(null),
     base.tipo_produto
-      ? optionalSingle(client.from('tipo_produtos').select('id, nome, tipo, ativo').eq('id', base.tipo_produto).maybeSingle())
+      ? optionalSingle(
+          client
+            .from('tipo_produtos')
+            .select('id, nome, tipo, ativo')
+            .eq('id', base.tipo_produto)
+            .maybeSingle()
+        )
       : Promise.resolve(null),
     base.fornecedor_id
-      ? optionalSingle(client.from('fornecedores').select('id, nome_completo, nome_fantasia').eq('id', base.fornecedor_id).maybeSingle())
+      ? optionalSingle(
+          client
+            .from('fornecedores')
+            .select('id, nome_completo, nome_fantasia')
+            .eq('id', base.fornecedor_id)
+            .maybeSingle()
+        )
       : Promise.resolve(null),
     fetchProdutoTarifas(client, id)
   ]);
 
   return {
     ...base,
-    todas_as_cidades: base?.todas_as_cidades === true || (!base?.cidade_id && base?.todas_as_cidades !== false),
+    todas_as_cidades:
+      base?.todas_as_cidades === true || (!base?.cidade_id && base?.todas_as_cidades !== false),
     cidade,
     tipo,
     fornecedor,
@@ -354,7 +391,7 @@ export async function fetchProdutoById(client: SupabaseClient, id: string) {
   };
 }
 
-export async function fetchProdutoTarifas(client: SupabaseClient, produtoId: string) {
+export async function fetchProdutoTarifas(client: DataClient, produtoId: string) {
   if (!isUuid(produtoId)) return [] as ProdutoTarifaItem[];
 
   const rows = await optionalRows<ProdutoTarifaItem>(
@@ -396,7 +433,8 @@ export function sanitizeProdutoPayload(body: Record<string, unknown>) {
     duracao_sugerida: String(body?.duracao_sugerida || body?.duracao || '').trim() || null,
     nivel_preco: String(body?.nivel_preco || '').trim() || null,
     imagem_url: String(body?.imagem_url || '').trim() || null,
-    informacoes_importantes: String(body?.informacoes_importantes || body?.descricao || '').trim() || null,
+    informacoes_importantes:
+      String(body?.informacoes_importantes || body?.descricao || '').trim() || null,
     ativo: body?.ativo !== false,
     fornecedor_id: isUuid(String(body?.fornecedor_id || '')) ? String(body.fornecedor_id) : null,
     circuito_id: isUuid(String(body?.circuito_id || '')) ? String(body.circuito_id) : null,
@@ -420,7 +458,8 @@ export function sanitizeTarifasPayload(produtoId: string, rawTarifas: unknown[])
 
   return (Array.isArray(rawTarifas) ? rawTarifas : [])
     .map((rawItem) => {
-      const item = rawItem && typeof rawItem === 'object' ? (rawItem as Record<string, unknown>) : {};
+      const item =
+        rawItem && typeof rawItem === 'object' ? (rawItem as Record<string, unknown>) : {};
       return {
         produto_id: produtoId,
         acomodacao: String(item?.acomodacao || '').trim(),
@@ -437,6 +476,14 @@ export function sanitizeTarifasPayload(produtoId: string, rawTarifas: unknown[])
         valor_em_reais: Number(item?.valor_em_reais || 0) || 0
       };
     })
-    .filter((item) => item.acomodacao || item.tipo || item.valor_neto || item.valor_venda || item.validade_de || item.validade_ate)
+    .filter(
+      (item) =>
+        item.acomodacao ||
+        item.tipo ||
+        item.valor_neto ||
+        item.valor_venda ||
+        item.validade_de ||
+        item.validade_ate
+    )
     .slice(0, 400);
 }

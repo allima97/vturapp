@@ -24,87 +24,90 @@
       key: 'informativos',
       label: 'Informativos',
       items: [
-        { key: 'dashboard',       label: 'Dashboard',        href: '/dashboard' },
-        { key: 'tarefas',         label: 'Tarefas',           href: '/operacao/tarefas' },
-        { key: 'agenda',          label: 'Agenda',            href: '/operacao/agenda' },
-        { key: 'acompanhamento',  label: 'Follow-up',    href: '/operacao/acompanhamento' },
-        { key: 'recados',         label: 'Recados',           href: '/operacao/recados' },
-        { key: 'aniversariantes', label: 'Aniversariantes',   href: '/aniversariantes' }
+        { key: 'dashboard', label: 'Dashboard', href: '/dashboard' },
+        { key: 'tarefas', label: 'Tarefas', href: '/operacao/tarefas' },
+        { key: 'agenda', label: 'Agenda', href: '/operacao/agenda' },
+        { key: 'acompanhamento', label: 'Follow-up', href: '/operacao/acompanhamento' },
+        { key: 'recados', label: 'Recados', href: '/operacao/recados' },
+        { key: 'aniversariantes', label: 'Aniversariantes', href: '/aniversariantes' }
       ]
     },
     {
       key: 'operacao',
       label: 'Operação',
       items: [
-        { key: 'vendas',              label: 'Vendas',            href: '/vendas' },
-        { key: 'ultimas_compras',     label: 'Últimas Compras',   href: '/operacao/ultimas-compras' },
-        { key: 'clientes',            label: 'Clientes',          href: '/clientes' },
-        { key: 'viagens',             label: 'Viagens',           href: '/operacao/viagens' },
-        { key: 'orcamentos',          label: 'Orçamentos',        href: '/orcamentos' },
-        { key: 'roteiros',            label: 'Roteiros',          href: '/orcamentos/roteiros' },
-        { key: 'vouchers',            label: 'Vouchers',          href: '/operacao/vouchers' },
-        { key: 'controle_sac',        label: 'Controle SAC',      href: '/operacao/controle-sac' },
-        { key: 'campanhas',           label: 'Campanhas',         href: '/operacao/campanhas' },
-        { key: 'documentos',          label: 'Documentos',        href: '/operacao/documentos-viagens' },
-        { key: 'consultoria_online',  label: 'Consultoria Online', href: '/consultoria-online' },
-        { key: 'relatorios',          label: 'Relatórios',        href: '/relatorios' },
-        { key: 'rel_ranking',         label: 'Ranking',           href: '/relatorios/ranking' }
+        { key: 'vendas', label: 'Vendas', href: '/vendas' },
+        { key: 'ultimas_compras', label: 'Últimas Compras', href: '/operacao/ultimas-compras' },
+        { key: 'clientes', label: 'Clientes', href: '/clientes' },
+        { key: 'viagens', label: 'Viagens', href: '/operacao/viagens' },
+        { key: 'orcamentos', label: 'Orçamentos', href: '/orcamentos' },
+        { key: 'roteiros', label: 'Roteiros', href: '/orcamentos/roteiros' },
+        { key: 'vouchers', label: 'Vouchers', href: '/operacao/vouchers' },
+        { key: 'controle_sac', label: 'Controle SAC', href: '/operacao/controle-sac' },
+        { key: 'campanhas', label: 'Campanhas', href: '/operacao/campanhas' },
+        { key: 'documentos', label: 'Documentos', href: '/operacao/documentos-viagens' },
+        { key: 'consultoria_online', label: 'Consultoria Online', href: '/consultoria-online' },
+        { key: 'relatorios', label: 'Relatórios', href: '/relatorios' },
+        { key: 'rel_ranking', label: 'Ranking', href: '/relatorios/ranking' }
       ]
     },
     {
       key: 'financeiro',
       label: 'Financeiro',
       items: [
-        { key: 'caixa',            label: 'Caixa',               href: '/financeiro/caixa' },
-        { key: 'comissoes',        label: 'Comissões',           href: '/financeiro/comissoes' },
-        { key: 'fechamento',       label: 'Fechamento',          href: '/comissoes/fechamento' },
-        { key: 'ajustes_vendas',   label: 'Ajustes Vendas',      href: '/financeiro/ajustes-vendas' },
-        { key: 'formas_pagamento', label: 'Formas de Pagamento', href: '/financeiro/formas-pagamento' },
-        { key: 'notas_fiscais',    label: 'Notas Fiscais',       href: '/financeiro/notas-fiscais' },
-        { key: 'regras',           label: 'Regras',              href: '/financeiro/regras' }
+        { key: 'caixa', label: 'Caixa', href: '/financeiro/caixa' },
+        { key: 'comissoes', label: 'Comissões', href: '/financeiro/comissoes' },
+        { key: 'fechamento', label: 'Fechamento', href: '/comissoes/fechamento' },
+        { key: 'ajustes_vendas', label: 'Ajustes Vendas', href: '/financeiro/ajustes-vendas' },
+        {
+          key: 'formas_pagamento',
+          label: 'Formas de Pagamento',
+          href: '/financeiro/formas-pagamento'
+        },
+        { key: 'notas_fiscais', label: 'Notas Fiscais', href: '/financeiro/notas-fiscais' },
+        { key: 'regras', label: 'Regras', href: '/financeiro/regras' }
       ]
     },
     {
       key: 'parametros',
       label: 'Parâmetros',
       items: [
-        { key: 'parametros',    label: 'Parâmetros',    href: '/parametros' },
-        { key: 'metas',         label: 'Metas',         href: '/parametros/metas' },
-        { key: 'equipe',        label: 'Equipe',        href: '/parametros/equipe' },
-        { key: 'escalas',       label: 'Escalas',       href: '/parametros/escalas' },
-        { key: 'cambios',       label: 'Câmbios',       href: '/parametros/cambios' },
-        { key: 'tipo_pacotes',  label: 'Tipo Pacotes',  href: '/parametros/tipo-pacotes' },
+        { key: 'parametros', label: 'Parâmetros', href: '/parametros' },
+        { key: 'metas', label: 'Metas', href: '/parametros/metas' },
+        { key: 'equipe', label: 'Equipe', href: '/parametros/equipe' },
+        { key: 'escalas', label: 'Escalas', href: '/parametros/escalas' },
+        { key: 'cambios', label: 'Câmbios', href: '/parametros/cambios' },
+        { key: 'tipo_pacotes', label: 'Tipo Pacotes', href: '/parametros/tipo-pacotes' },
         { key: 'tipo_produtos', label: 'Tipo Produtos', href: '/parametros/tipo-produtos' },
         { key: 'vouchers_assets', label: 'Vouchers', href: '/parametros/vouchers' },
-        { key: 'orcamentos_pdf',label: 'Orçamentos PDF',href: '/parametros/orcamentos' },
-        { key: 'crm',           label: 'CRM',           href: '/parametros/crm' },
-        { key: 'avisos',        label: 'Avisos',        href: '/parametros/avisos' },
-        { key: 'empresa',       label: 'Empresa',       href: '/parametros/empresa' }
+        { key: 'orcamentos_pdf', label: 'Orçamentos PDF', href: '/parametros/orcamentos' },
+        { key: 'crm', label: 'CRM', href: '/parametros/crm' },
+        { key: 'avisos', label: 'Avisos', href: '/parametros/avisos' },
+        { key: 'empresa', label: 'Empresa', href: '/parametros/empresa' }
       ]
     },
     {
       key: 'cadastros',
       label: 'Cadastros',
       items: [
-        { key: 'cadastros_produtos',    label: 'Produtos',     href: '/cadastros/produtos' },
-        { key: 'cadastros_circuitos',   label: 'Circuitos',    href: '/cadastros/circuitos' },
-        { key: 'cadastros_paises',      label: 'Países',       href: '/cadastros/paises' },
-        { key: 'cadastros_estados',     label: 'Estados',      href: '/cadastros/estados' },
-        { key: 'cadastros_cidades',     label: 'Cidades',      href: '/cadastros/cidades' },
-        { key: 'cadastros_destinos',    label: 'Destinos',     href: '/cadastros/destinos' },
-        { key: 'cadastros_lote',        label: 'Lote',         href: '/cadastros/lote' },
-        { key: 'cadastros_fornecedores',label: 'Fornecedores', href: '/cadastros/fornecedores' }
+        { key: 'cadastros_produtos', label: 'Produtos', href: '/cadastros/produtos' },
+        { key: 'cadastros_circuitos', label: 'Circuitos', href: '/cadastros/circuitos' },
+        { key: 'cadastros_cidades', label: 'Cidades', href: '/cadastros/cidades' },
+        { key: 'cadastros_opcionais', label: 'Passeios Opcionais', href: '/cadastros/opcionais' },
+        { key: 'cadastros_destinos', label: 'Destinos', href: '/cadastros/destinos' },
+        { key: 'cadastros_lote', label: 'Lote', href: '/cadastros/lote' },
+        { key: 'cadastros_fornecedores', label: 'Fornecedores', href: '/cadastros/fornecedores' }
       ]
     },
     {
       key: 'perfil',
       label: 'Perfil',
       items: [
-        { key: 'meu_perfil',        label: 'Meu Perfil',        href: '/perfil' },
-        { key: 'minha_escala',      label: 'Minha Escala',      href: '/perfil/escala' },
-        { key: 'autenticacao_2fa',  label: 'Autenticação 2FA',  href: '/perfil/mfa' },
+        { key: 'meu_perfil', label: 'Meu Perfil', href: '/perfil' },
+        { key: 'minha_escala', label: 'Minha Escala', href: '/perfil/escala' },
+        { key: 'autenticacao_2fa', label: 'Autenticação 2FA', href: '/perfil/mfa' },
         { key: 'personalizar_menu', label: 'Personalizar Menu', href: '/perfil/personalizar' },
-        { key: 'preferencias',      label: 'Preferências',      href: '/operacao/minhas-preferencias' }
+        { key: 'preferencias', label: 'Preferências', href: '/operacao/minhas-preferencias' }
       ]
     }
   ];
@@ -112,7 +115,8 @@
   // Filtra um item de acordo com as permissões do usuário — mesma lógica do Sidebar.
   function podeVerItem(href: string): boolean {
     if (!$permissoes.ready) return true; // aguarda carregamento
-    if (href === '/operacao/ultimas-compras' && !($permissoes.isMaster || $permissoes.isGestor)) return false;
+    if (href === '/operacao/ultimas-compras' && !($permissoes.isMaster || $permissoes.isGestor))
+      return false;
     if (href === '/comissoes/fechamento' && !$permissoes.isFinanceiro) return false;
     if (href === '/financeiro/notas-fiscais' && !$permissoes.isFinanceiro) return false;
     if ($permissoes.isSystemAdmin) {
@@ -130,12 +134,10 @@
   // quando o store de permissões ficar pronto (ready = true).
   $: {
     $permissoes;
-    secoesVisiveis = SECOES
-      .map((secao) => ({
-        ...secao,
-        items: secao.items.filter((item) => podeVerItem(item.href))
-      }))
-      .filter((secao) => secao.items.length > 0);
+    secoesVisiveis = SECOES.map((secao) => ({
+      ...secao,
+      items: secao.items.filter((item) => podeVerItem(item.href))
+    })).filter((secao) => secao.items.length > 0);
   }
 
   type MenuPrefs = {
@@ -164,7 +166,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const payload = await apiGet<MenuPrefsResponse>('/api/v1/menu/prefs', undefined, request.signal);
+      const payload = await apiGet<MenuPrefsResponse>(
+        '/api/v1/menu/prefs',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       const hidden = Array.isArray(payload?.prefs?.hidden) ? payload.prefs.hidden : [];
       prefs = { hidden };
@@ -290,13 +296,8 @@
 <PageHeader
   title="Personalizar Menu"
   subtitle="Mostre ou oculte itens do menu lateral conforme sua preferência."
-  breadcrumbs={[
-    { label: 'Perfil', href: '/perfil' },
-    { label: 'Personalizar Menu' }
-  ]}
-  actions={[
-    { label: 'Resetar', onClick: resetPrefs, variant: 'secondary', icon: RefreshCw }
-  ]}
+  breadcrumbs={[{ label: 'Perfil', href: '/perfil' }, { label: 'Personalizar Menu' }]}
+  actions={[{ label: 'Resetar', onClick: resetPrefs, variant: 'secondary', icon: RefreshCw }]}
 />
 
 {#if loading}
@@ -338,12 +339,7 @@
     {/if}
 
     <div class="flex justify-end">
-      <Button
-        type="button"
-        variant="primary"
-        loading={saving}
-        on:click={save}
-      >
+      <Button type="button" variant="primary" loading={saving} on:click={save}>
         <Save size={16} class="mr-2" />
         {saving ? 'Salvando...' : 'Salvar preferências'}
       </Button>

@@ -2,9 +2,9 @@
 
 Gerado por `node scripts/api-inventory.mjs` — **não editar à mão**. JSON completo em `docs/api-inventory.json`.
 
-- Endpoints: **258** (126 gravam no banco)
-- Domínios: 50
-- Migrados para Hono: **249** (marcados com <sub>hono</sub>)
+- Endpoints: **274** (128 gravam no banco)
+- Domínios: 54
+- Migrados para Hono: **254** (marcados com <sub>hono</sub>)
 
 ## Pontos de atenção (detectados automaticamente)
 
@@ -71,17 +71,31 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/v1/agenda/range` <sub>hono</sub> | GET | ✔ | ✔ | Vendedor |  |  | agenda_itens(R), users(R) | — | — |
 | `/v1/agenda/update` <sub>hono</sub> | PATCH POST | ✔ | ✔ | Admin | ✔ | ✔ | agenda_itens(R/U) | — | — |
 
-### auth (9)
+### arquivos (5)
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
+| `/arquivos` | POST | ✔ |  |  |  |  | — | — | — |
+| `/arquivos/assinado/[exp]/[signature]/[bucket]/[...path]` | GET |  |  |  |  |  | — | — | — |
+| `/arquivos/assinatura` | POST | ✔ |  |  |  |  | — | — | — |
+| `/arquivos/baixar` | GET | ✔ |  |  |  |  | — | — | — |
+| `/arquivos/publico/[bucket]/[...path]` | GET |  |  |  |  |  | — | — | — |
+
+### auth (13)
+
+| Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
+|---|---|:-:|:-:|---|:-:|:-:|---|---|---|
+| `/auth/[...auth]` | GET POST |  |  |  |  |  | — | — | — |
+| `/auth/codigo` | POST |  |  |  |  |  | — | — | — |
 | `/auth/convite/activate` | POST |  |  |  | ✔ | ✔ | user_convites(R/U), users(UP) | — | — |
 | `/auth/login` <sub>turnstile</sub> | POST |  |  |  | ✔ | ✔ | — | — | — |
+| `/auth/mfa/fatores` | DELETE GET POST |  |  |  |  |  | — | — | — |
+| `/auth/mfa/nivel` | GET |  |  |  |  |  | — | — | — |
+| `/auth/mfa/verificar` | POST |  |  |  |  |  | — | — | — |
 | `/auth/passkeys` | DELETE GET | ✔ |  |  | ✔ | ✔ | — | — | — |
-| `/auth/passkeys/login/options` | POST |  |  |  | ✔ | ✔ | — | — | — |
-| `/auth/passkeys/login/verify` | POST |  |  |  | ✔ | ✔ | — | — | — |
 | `/auth/passkeys/register/options` | POST | ✔ |  |  |  |  | — | — | — |
 | `/auth/passkeys/register/verify` | POST | ✔ |  |  | ✔ | ✔ | — | — | — |
+| `/auth/senha` | POST |  |  |  |  |  | — | — | — |
 | `/auth/set-session` | POST |  |  |  | ✔ | ✔ | — | — | — |
 | `/auth/turnstile/verify` <sub>turnstile</sub> | POST |  |  |  | ✔ | ✔ | — | — | — |
 
@@ -98,7 +112,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
-| `/v1/cidades` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin | ✔ | ✔ | cidades(D/R/U) | — | invalidateCatalogReadModels |
+| `/v1/cidades` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin | ✔ |  | cidades(D/R) | — | invalidateCatalogReadModels |
 | `/v1/cidades/[id]` <sub>hono</sub> | DELETE GET PATCH | ✔ | ✔ | Admin | ✔ | ✔ | cidades(D/R/U) | — | invalidateCatalogReadModels |
 
 ### circuitos (2)
@@ -131,7 +145,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/v1/clientes/list` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | clientes(R), quote(R), users(R), vendas(R) | — | — |
 | `/v1/clientes/resolve-import` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | clientes(C/R/U) | — | invalidateClientReadModels |
 | `/v1/clientes/template-dispatches` <sub>hono</sub> | GET POST | ✔ | ✔ | Admin Gestor Master Vendedor | ✔ | ✔ | cliente_template_dispatches(C/R), clientes(R), vendas(R) | — | — |
-| `/v1/clientes/templates/send` <sub>hono</sub> | POST | ✔ | ✔ |  | ✔ | ✔ | companies(R), master_empresas(R), user_message_template_themes(R), user_message_templates(R), users(R) | — | — |
+| `/v1/clientes/templates/send` <sub>hono</sub> | POST | ✔ | ✔ |  | ✔ | ✔ | master_empresas(R), user_message_template_themes(R), user_message_templates(R), users(R) | — | — |
 
 ### conciliacao (18)
 
@@ -174,7 +188,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
-| `/v1/crm/library` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | companies(R), crm_template_categories(R), master_empresas(R), quote_print_settings(R), user_crm_assinaturas(R), user_message_template_themes(R) | — | — |
+| `/v1/crm/library` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | crm_template_categories(R), master_empresas(R), user_crm_assinaturas(R), user_message_template_themes(R) | — | — |
 | `/v1/crm/signature` <sub>hono</sub> | POST | ✔ |  |  | ✔ | ✔ | user_crm_assinaturas(UP) | — | — |
 
 ### cron (2)
@@ -183,6 +197,12 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
 | `/v1/cron/alerta-comissao` <sub>hono cron-secret</sub> | GET POST |  |  |  |  | ✔ | — | — | — |
 | `/v1/cron/lembretes-consultoria` <sub>hono cron-secret</sub> | POST |  |  |  |  | ✔ | — | — | — |
+
+### dados (1)
+
+| Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
+|---|---|:-:|:-:|---|:-:|:-:|---|---|---|
+| `/dados/consulta` | POST | ✔ |  |  |  |  | — | — | — |
 
 ### dashboard (11)
 
@@ -281,10 +301,18 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
-| `/v1/mural/bootstrap` <sub>hono</sub> | GET | ✔ |  | Admin |  |  | companies(R) | — | — |
-| `/v1/mural/company` <sub>hono</sub> | GET | ✔ |  |  |  |  | — | — | — |
-| `/v1/mural/read` <sub>hono</sub> | POST | ✔ |  |  | ✔ | ✔ | mural_recados(R), mural_recados_leituras(UP) | — | invalidateMuralReadModels |
-| `/v1/mural/recados` <sub>hono</sub> | DELETE GET POST | ✔ |  | Admin | ✔ | ✔ | mural_recados(D/C/R), users(R) | — | invalidateMuralReadModels |
+| `/v1/mural/bootstrap` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | companies(R) | — | — |
+| `/v1/mural/company` <sub>hono</sub> | GET | ✔ | ✔ |  |  |  | — | — | — |
+| `/v1/mural/read` <sub>hono</sub> | POST | ✔ | ✔ |  | ✔ | ✔ | mural_recados(R), mural_recados_leituras(UP) | — | invalidateMuralReadModels |
+| `/v1/mural/recados` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin | ✔ | ✔ | mural_recados(D/C/R), users(R) | — | invalidateMuralReadModels |
+
+### opcionais (3)
+
+| Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
+|---|---|:-:|:-:|---|:-:|:-:|---|---|---|
+| `/v1/opcionais` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ |  | ✔ | ✔ | catalogo_opcionais(D/C/R/U) | — | — |
+| `/v1/opcionais/cidades` <sub>hono</sub> | GET | ✔ | ✔ |  |  |  | — | — | — |
+| `/v1/opcionais/importar` <sub>hono</sub> | POST | ✔ | ✔ |  | ✔ | ✔ | catalogo_opcionais(C/R) | — | — |
 
 ### operacao (5)
 
@@ -302,7 +330,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
 | `/v1/orcamentos/[id]` <sub>hono</sub> | DELETE GET PATCH | ✔ | ✔ | Admin | ✔ | ✔ | clientes(R), quote(R/U), quote_item(C/R), quote_item_segment(R) | — | invalidateQuoteReadModels |
 | `/v1/orcamentos/[id]/resumo-venda` <sub>hono</sub> | GET | ✔ | ✔ | Admin Financeiro |  |  | clientes(R), quote(R) | — | — |
-| `/v1/orcamentos/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin Financeiro |  |  | cidades(R) | buscar_cidades | — |
+| `/v1/orcamentos/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin Financeiro |  |  | — | — | — |
 | `/v1/orcamentos/cliente-create` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | clientes(C) | — | invalidateClientReadModels |
 | `/v1/orcamentos/clientes` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | clientes(R) | — | — |
 | `/v1/orcamentos/create` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | clientes(R), quote(C), quote_item(C) | — | invalidateQuoteReadModels |
@@ -315,20 +343,19 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/v1/orcamentos/status` <sub>hono</sub> | PATCH | ✔ | ✔ | Admin | ✔ | ✔ | quote(R/U) | — | invalidateQuoteReadModels |
 | `/v1/orcamentos/tipos` <sub>hono</sub> | GET | ✔ | ✔ | Admin Financeiro |  |  | tipo_produtos(R) | — | — |
 
-### pagamentos (4)
+### pagamentos (3)
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
 | `/v1/pagamentos` <sub>hono</sub> | GET POST | ✔ | ✔ | Admin | ✔ | ✔ | vendas(R), vendas_pagamentos(C/R) | — | invalidatePagamentoReadModels, invalidateReadModelCache |
 | `/v1/pagamentos/[id]` <sub>hono</sub> | DELETE GET PATCH | ✔ | ✔ | Admin | ✔ | ✔ | vendas_pagamentos(D/R/U) | — | invalidatePagamentoReadModels, invalidateReadModelCache |
-| `/v1/pagamentos/[id]/conciliar` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | vendas_pagamentos(R/U) | — | invalidatePagamentoReadModels, invalidateReadModelCache |
 | `/v1/pagamentos/upload` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ |  | vendas_pagamentos(R/U) | — | invalidatePagamentoReadModels, invalidateReadModelCache |
 
 ### paises (1)
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
-| `/v1/paises` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin | ✔ | ✔ | paises(D/R/U) | — | invalidateCatalogReadModels |
+| `/v1/paises` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin |  |  | paises(R) | — | — |
 
 ### parametros (12)
 
@@ -351,22 +378,23 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
-| `/v1/preferencias/base` <sub>hono</sub> | GET | ✔ |  |  |  |  | — | — | — |
-| `/v1/preferencias/cidades-busca` <sub>hono</sub> | GET | ✔ |  |  |  |  | cidades(R) | buscar_cidades | — |
-| `/v1/preferencias/delete` <sub>hono</sub> | POST | ✔ |  | Admin | ✔ | ✔ | minhas_preferencias(D) | — | invalidatePreferenceReadModels |
-| `/v1/preferencias/list` <sub>hono</sub> | GET | ✔ |  |  |  |  | minhas_preferencias(R), minhas_preferencias_shares(R) | — | — |
-| `/v1/preferencias/save` <sub>hono</sub> | POST | ✔ |  | Admin | ✔ | ✔ | minhas_preferencias(C/U) | — | invalidatePreferenceReadModels |
-| `/v1/preferencias/share-accept` <sub>hono</sub> | POST | ✔ |  |  | ✔ | ✔ | minhas_preferencias_shares(U) | — | invalidatePreferenceReadModels |
-| `/v1/preferencias/share-revoke` <sub>hono</sub> | POST | ✔ |  |  | ✔ | ✔ | minhas_preferencias_shares(U) | — | invalidatePreferenceReadModels |
-| `/v1/preferencias/share` <sub>hono</sub> | POST | ✔ |  | Admin | ✔ | ✔ | minhas_preferencias(R), minhas_preferencias_shares(UP), users(R) | — | invalidatePreferenceReadModels |
+| `/v1/preferencias/base` <sub>hono</sub> | GET | ✔ | ✔ |  |  |  | — | — | — |
+| `/v1/preferencias/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ |  |  |  | — | — | — |
+| `/v1/preferencias/delete` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | minhas_preferencias(D) | — | invalidatePreferenceReadModels |
+| `/v1/preferencias/list` <sub>hono</sub> | GET | ✔ | ✔ |  |  |  | minhas_preferencias(R), minhas_preferencias_shares(R) | — | — |
+| `/v1/preferencias/save` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | minhas_preferencias(C/U) | — | invalidatePreferenceReadModels |
+| `/v1/preferencias/share-accept` <sub>hono</sub> | POST | ✔ | ✔ |  | ✔ | ✔ | minhas_preferencias_shares(U) | — | invalidatePreferenceReadModels |
+| `/v1/preferencias/share-revoke` <sub>hono</sub> | POST | ✔ | ✔ |  | ✔ | ✔ | minhas_preferencias_shares(U) | — | invalidatePreferenceReadModels |
+| `/v1/preferencias/share` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | minhas_preferencias(R), minhas_preferencias_shares(UP), users(R) | — | invalidatePreferenceReadModels |
 
-### produtos (5)
+### produtos (6)
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
 | `/v1/produtos` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | — | — | — |
 | `/v1/produtos/[id]` <sub>hono</sub> | DELETE GET PATCH | ✔ | ✔ | Admin | ✔ | ✔ | produtos(U), produtos_tarifas(D) | — | invalidateCatalogReadModels |
 | `/v1/produtos/base` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | — | — | — |
+| `/v1/produtos/cidades-geograficas` <sub>hono</sub> | GET | ✔ | ✔ | Admin Master |  |  | legado_cidades(R) | — | — |
 | `/v1/produtos/create` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | produtos(C) | — | invalidateCatalogReadModels |
 | `/v1/produtos/tarifas` <sub>hono</sub> | GET POST | ✔ | ✔ | Admin | ✔ | ✔ | produtos_tarifas(D) | — | invalidateCatalogReadModels |
 
@@ -374,7 +402,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
-| `/v1/profile/signature` <sub>hono</sub> | GET PATCH | ✔ | ✔ |  | ✔ | ✔ | users(R) | — | invalidateQuoteReadModels |
+| `/v1/profile/signature` <sub>hono</sub> | GET PATCH | ✔ | ✔ |  | ✔ | ✔ | quote_print_settings(U), users(R) | — | invalidateQuoteReadModels |
 
 ### push (2)
 
@@ -400,7 +428,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
 | `/v1/relatorios/base` <sub>hono</sub> | GET | ✔ | ✔ | Admin Vendedor |  |  | companies(R), users(R) | — | — |
-| `/v1/relatorios/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | — | buscar_cidades | — |
+| `/v1/relatorios/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | — | — | — |
 | `/v1/relatorios/clientes` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | clientes(R) | — | — |
 | `/v1/relatorios/destinos` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | — | — | — |
 | `/v1/relatorios/produtos-recibos` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | — | — | — |
@@ -413,17 +441,18 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/v1/relatorios/vendas-por-produto` <sub>hono</sub> | GET |  |  |  |  |  | — | — | — |
 | `/v1/relatorios/vendas` <sub>hono</sub> | GET | ✔ | ✔ | Admin Financeiro Gestor Master Vendedor |  |  | cidades(R), parametros_comissao(R), users(R), vendas(R), vendas_pagamentos(R), vendas_recibos_rateio(R) | — | — |
 
-### roteiros (10)
+### roteiros (11)
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
 | `/v1/roteiros` <sub>hono</sub> | DELETE GET PATCH POST | ✔ | ✔ | Admin Gestor Master | ✔ | ✔ | roteiro_dia(D/C), roteiro_personalizado(D/C/R/U), roteiro_sugestoes(D/R/U), users(R) | — | — |
 | `/v1/roteiros/[id]` <sub>hono</sub> | GET | ✔ | ✔ | Admin Gestor Master |  |  | roteiro_dia(R), roteiro_investimento(R), roteiro_passeio(R), roteiro_personalizado(R) | — | — |
+| `/v1/roteiros/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ |  |  |  | — | — | — |
 | `/v1/roteiros/delete` <sub>hono</sub> | DELETE | ✔ | ✔ | Admin Gestor Master | ✔ |  | roteiro_personalizado(D/R) | — | — |
 | `/v1/roteiros/dias-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin Gestor Master |  |  | roteiro_dia(R) | — | — |
 | `/v1/roteiros/gerar-orcamento` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | clientes(R), quote(C), quote_item(C), roteiro_personalizado(R) | — | invalidateQuoteReadModels |
 | `/v1/roteiros/list` <sub>hono</sub> | GET | ✔ | ✔ | Admin Gestor Master |  |  | roteiro_personalizado(R) | — | — |
-| `/v1/roteiros/save` <sub>hono</sub> | POST | ✔ | ✔ | Admin Gestor Master | ✔ | ✔ | roteiro_dia(C/UP), roteiro_hotel(C), roteiro_investimento(D/C), roteiro_pagamento(C), roteiro_passeio(C), roteiro_personalizado(C/R/U), roteiro_transporte(C) | — | — |
+| `/v1/roteiros/save` <sub>hono</sub> | POST | ✔ | ✔ | Admin Gestor Master | ✔ | ✔ | roteiro_dia(C/UP), roteiro_hotel(D/C), roteiro_investimento(D/C), roteiro_pagamento(C), roteiro_passeio(C), roteiro_personalizado(C/R/U), roteiro_transporte(C) | — | — |
 | `/v1/roteiros/sugestoes-busca` <sub>hono</sub> | GET | ✔ | ✔ |  |  |  | roteiro_sugestoes(R) | — | — |
 | `/v1/roteiros/sugestoes-remover` <sub>hono</sub> | POST | ✔ | ✔ |  | ✔ | ✔ | roteiro_sugestoes(D) | — | — |
 | `/v1/roteiros/sugestoes-salvar` <sub>hono</sub> | POST | ✔ | ✔ |  | ✔ | ✔ | roteiro_sugestoes(C/R) | — | — |
@@ -432,7 +461,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
-| `/v1/subdivisoes` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin | ✔ | ✔ | subdivisoes(D/R/U) | — | invalidateCatalogReadModels |
+| `/v1/subdivisoes` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin |  |  | subdivisoes(R) | — | — |
 
 ### tarefas (3)
 
@@ -471,7 +500,13 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
 | `/v1/users/aniversariantes` <sub>hono</sub> | GET | ✔ | ✔ |  |  |  | users(R) | — | — |
 
-### vendas (21)
+### v2 (1)
+
+| Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
+|---|---|:-:|:-:|---|:-:|:-:|---|---|---|
+| `/v2/[...path]` | DELETE GET PATCH POST PUT |  |  |  |  |  | — | — | — |
+
+### vendas (22)
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
@@ -481,7 +516,8 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/v1/vendas/cadastro-base` <sub>hono</sub> | GET | ✔ | ✔ | Admin Financeiro Gestor Master |  |  | cidades(R), clientes(R), companies(R), produtos(R), tipo_pacotes(R), tipo_produtos(R) | — | — |
 | `/v1/vendas/cadastro-save` <sub>hono</sub> | POST | ✔ | ✔ | Admin Financeiro Gestor Master | ✔ | ✔ | users(R), vendas(C/R/U) | — | invalidateSalesReadModels, publishKvInvalidationAsync, triggerRebuildAsync |
 | `/v1/vendas/cancel` <sub>hono</sub> | POST | ✔ | ✔ | Admin Master | ✔ | ✔ | vendas_recibos(D) | — | invalidateSalesReadModels, publishKvInvalidationAsync, triggerRebuildAsync |
-| `/v1/vendas/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin Master |  |  | cidades(R) | buscar_cidades | — |
+| `/v1/vendas/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin Master |  |  | cidades(C/R) | — | — |
+| `/v1/vendas/cidades-geograficas` <sub>hono</sub> | GET | ✔ | ✔ | Admin Master |  |  | legado_cidades(R) | — | — |
 | `/v1/vendas/complementares` <sub>hono</sub> | GET | ✔ | ✔ | Admin Financeiro Gestor Master |  |  | vendas(R), vendas_recibos(R), vendas_recibos_complementares(R) | — | — |
 | `/v1/vendas/create` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | users(R), vendas(C) | — | invalidateSalesReadModels |
 | `/v1/vendas/gestor-equipe` <sub>hono</sub> | GET | ✔ | ✔ | Admin Gestor |  |  | users(R) | — | — |
@@ -503,7 +539,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
 | `/v1/viagens` <sub>hono</sub> | GET | ✔ | ✔ | Admin Vendedor |  |  | clientes(R), users(R), vendas(R), viagem_passageiros(R), viagens(R) | — | — |
 | `/v1/viagens/[id]` <sub>hono</sub> | DELETE GET PATCH | ✔ | ✔ | Admin Gestor Master Vendedor | ✔ | ✔ | clientes(R), produtos(R), vendas(R), vendas_recibos(R), viagens(D/R/U), vouchers(R) | — | invalidateTripReadModels |
-| `/v1/viagens/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | cidades(R) | buscar_cidades | — |
+| `/v1/viagens/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | — | — | — |
 | `/v1/viagens/cliente/[id]` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | clientes(R), vendas(R), viagens(R) | — | — |
 | `/v1/viagens/clientes` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | clientes(R) | — | — |
 | `/v1/viagens/create` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | clientes(R), viagens(C) | — | invalidateTripReadModels |
@@ -525,7 +561,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/v1/vouchers` <sub>hono</sub> | GET POST | ✔ | ✔ | Admin | ✔ | ✔ | viagens(R), voucher_dias(C), voucher_hoteis(C), vouchers(R) | — | — |
 | `/v1/vouchers/[id]` <sub>hono</sub> | DELETE GET PATCH | ✔ | ✔ | Admin | ✔ | ✔ | voucher_dias(D/C), voucher_hoteis(C), vouchers(D/R) | — | — |
 | `/v1/vouchers/create` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | vouchers(C) | — | — |
-| `/v1/vouchers/delete` <sub>hono</sub> | DELETE | ✔ | ✔ | Admin | ✔ |  | vouchers(R) | — | — |
+| `/v1/vouchers/delete` <sub>hono</sub> | DELETE | ✔ | ✔ | Admin | ✔ |  | vouchers(D/R) | — | — |
 
 ### welcome-email (1)
 

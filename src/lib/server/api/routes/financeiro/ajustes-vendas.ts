@@ -21,7 +21,7 @@ import {
   cleanStringSet,
   chunkArray,
   dedupeById,
-  SUPABASE_IN_BATCH_SIZE,
+  QUERY_IN_BATCH_SIZE,
   uniqueCleanStrings
 } from '$lib/utils/array';
 
@@ -164,7 +164,8 @@ export async function handleFinanceiroAjustesVendasGet(event: RequestEvent) {
     const buildQuery = (companyIdsFilter = companyIds) => {
       let query = client
         .from('vendas_recibos')
-        .select(`
+        .select(
+          `
           id,
           venda_id,
           numero_recibo,
@@ -179,7 +180,8 @@ export async function handleFinanceiroAjustesVendasGet(event: RequestEvent) {
             company_id,
             clientes!cliente_id(nome)
           )
-        `)
+        `
+        )
         .eq('vendas.cancelada', false)
         .order('data_venda', { ascending: false })
         .limit(limit);
@@ -200,7 +202,7 @@ export async function handleFinanceiroAjustesVendasGet(event: RequestEvent) {
     };
 
     const fetchRows = async () => {
-      if (companyIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (companyIds.length <= QUERY_IN_BATCH_SIZE) {
         return buildQuery();
       }
 
@@ -230,16 +232,18 @@ export async function handleFinanceiroAjustesVendasGet(event: RequestEvent) {
     }
 
     // Busca rateios separadamente (evita joins problemáticos)
-    let rateioMap = new Map<string, AjusteRateioRow>();
+    const rateioMap = new Map<string, AjusteRateioRow>();
     if (reciboIds.length > 0) {
       for (const batch of chunkArray(reciboIds)) {
         const { data: rateioData, error: rateioError } = await client
           .from('vendas_recibos_rateio')
-          .select(`
+          .select(
+            `
             id, venda_recibo_id, ativo,
             vendedor_destino_id, percentual_origem, percentual_destino, observacao, updated_at,
             vendedor_destino:users!vendedor_destino_id(id, nome_completo)
-          `)
+          `
+          )
           .in('venda_recibo_id', batch);
 
         if (rateioError && !String(rateioError.code || '').includes('42P01')) throw rateioError;
@@ -254,7 +258,10 @@ export async function handleFinanceiroAjustesVendasGet(event: RequestEvent) {
     const vendedorNomeMap = new Map<string, string>();
     if (vendedorIdsFromRows.length > 0) {
       for (const batch of chunkArray(vendedorIdsFromRows)) {
-        const { data: vData } = await client.from('users').select('id, nome_completo').in('id', batch);
+        const { data: vData } = await client
+          .from('users')
+          .select('id, nome_completo')
+          .in('id', batch);
         for (const v of vData || []) {
           vendedorNomeMap.set(v.id, v.nome_completo);
         }
@@ -275,16 +282,18 @@ export async function handleFinanceiroAjustesVendasGet(event: RequestEvent) {
         vendedor_origem_id: vendedorOrigemId,
         vendedor_origem_nome: vendedorNomeMap.get(vendedorOrigemId) || 'Vendedor',
         cliente_nome: String(row.vendas?.clientes?.nome || ''),
-        rateio: rateio ? {
-          id: String(rateio.id || ''),
-          ativo: Boolean(rateio.ativo),
-          vendedor_destino_id: String(rateio.vendedor_destino_id || ''),
-          vendedor_destino: rateio.vendedor_destino || null,
-          percentual_origem: Number(rateio.percentual_origem || 0),
-          percentual_destino: Number(rateio.percentual_destino || 0),
-          observacao: rateio.observacao || null,
-          updated_at: rateio.updated_at || null
-        } : null
+        rateio: rateio
+          ? {
+              id: String(rateio.id || ''),
+              ativo: Boolean(rateio.ativo),
+              vendedor_destino_id: String(rateio.vendedor_destino_id || ''),
+              vendedor_destino: rateio.vendedor_destino || null,
+              percentual_origem: Number(rateio.percentual_origem || 0),
+              percentual_destino: Number(rateio.percentual_destino || 0),
+              observacao: rateio.observacao || null,
+              updated_at: rateio.updated_at || null
+            }
+          : null
       };
     });
 
@@ -346,11 +355,15 @@ export async function handleFinanceiroAjustesVendasPost(event: RequestEvent) {
     const isVendaRecibo = ajusteIdRaw.startsWith('vr:');
     const rawId = ajusteIdRaw.replace(/^vr:/, '').replace(/^cr:/, '').trim();
 
-    if (!isUuid(rawId)) return json({ error: 'ID do recibo inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(rawId))
+      return json({ error: 'ID do recibo inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const pct = Number(percentual_destino);
     if (!Number.isFinite(pct) || pct < 0 || pct >= 100) {
-      return json({ error: 'Percentual deve ser >= 0 e < 100.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Percentual deve ser >= 0 e < 100.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     // Busca o recibo na tabela correta (vendas_recibos ou conciliacao_recibos)
@@ -366,7 +379,11 @@ export async function handleFinanceiroAjustesVendasPost(event: RequestEvent) {
         .eq('id', rawId)
         .maybeSingle();
       if (concErr) throw concErr;
-      if (!concRow) return json({ error: 'Recibo de conciliação não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+      if (!concRow)
+        return json(
+          { error: 'Recibo de conciliação não encontrado.' },
+          { status: 404, headers: NO_STORE_HEADERS }
+        );
       const conciliacao = concRow as AjusteConciliacaoRow;
       reciboCompany = String(conciliacao?.company_id || '');
       vendedorOrigemId = String(conciliacao?.ranking_vendedor_id || '').trim();
@@ -379,7 +396,11 @@ export async function handleFinanceiroAjustesVendasPost(event: RequestEvent) {
         .eq('vendas.cancelada', false)
         .maybeSingle();
       if (reciboErr) throw reciboErr;
-      if (!reciboRow) return json({ error: 'Recibo não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+      if (!reciboRow)
+        return json(
+          { error: 'Recibo não encontrado.' },
+          { status: 404, headers: NO_STORE_HEADERS }
+        );
       const recibo = reciboRow as AjusteReciboRateioRow;
       reciboCompany = recibo?.vendas?.company_id || null;
       vendedorOrigemId = String(recibo?.vendas?.vendedor_id || '').trim();
@@ -387,26 +408,33 @@ export async function handleFinanceiroAjustesVendasPost(event: RequestEvent) {
     }
 
     if (!scope.isAdmin && !scope.companyIds.includes(String(reciboCompany || ''))) {
-      return json({ error: 'Recibo fora do escopo da empresa.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Recibo fora do escopo da empresa.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
     if (!isUuid(String(reciboCompany || ''))) {
-      return json({ error: 'Recibo sem empresa válida para rateio.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Recibo sem empresa válida para rateio.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     if (!isUuid(vendedorOrigemId)) {
-      return json({ error: 'Recibo sem vendedor válido para rateio.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Recibo sem vendedor válido para rateio.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     if (pct === 0) {
-      let clearQuery = client
-        .from('vendas_recibos_rateio')
-        .update({
-          ativo: false,
-          percentual_origem: 100,
-          percentual_destino: 0,
-          observacao: String(observacao || '').trim() || null,
-          updated_by: user.id
-        });
+      let clearQuery = client.from('vendas_recibos_rateio').update({
+        ativo: false,
+        percentual_origem: 100,
+        percentual_destino: 0,
+        observacao: String(observacao || '').trim() || null,
+        updated_by: user.id
+      });
 
       clearQuery = vendaReciboId
         ? clearQuery.eq('venda_recibo_id', vendaReciboId)
@@ -422,11 +450,17 @@ export async function handleFinanceiroAjustesVendasPost(event: RequestEvent) {
     }
 
     if (!isUuid(vendedorDestinoId)) {
-      return json({ error: 'Vendedor destino inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Vendedor destino inválido.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     if (vendedorDestinoId === vendedorOrigemId) {
-      return json({ error: 'O vendedor destino deve ser diferente do vendedor de origem.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'O vendedor destino deve ser diferente do vendedor de origem.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     // Confirma que o produto do recibo soma na meta (produtos diferenciados)
@@ -449,23 +483,31 @@ export async function handleFinanceiroAjustesVendasPost(event: RequestEvent) {
       .eq('active', true)
       .maybeSingle();
 
-    if (!vendedorRow) return json({ error: 'Vendedor destino não encontrado ou inativo.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!vendedorRow)
+      return json(
+        { error: 'Vendedor destino não encontrado ou inativo.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
     const vendedorDestino = vendedorRow as VendedorDestinoRow;
     if (!scope.isAdmin && vendedorDestino.company_id !== reciboCompany) {
-      return json({ error: 'Vendedor destino fora do escopo da empresa.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Vendedor destino fora do escopo da empresa.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     // Restrição de gestor: só pode ratear vendas da própria equipe
     if (scope.isGestor) {
       const gestorCompanyIds = reciboCompany ? [reciboCompany] : scope.companyIds;
       const equipeIds = uniqueCleanStrings(
-        (await fetchRankingVendedoresByCompanyIds(client, gestorCompanyIds)).map(
-          (row) => row?.id
-        )
+        (await fetchRankingVendedoresByCompanyIds(client, gestorCompanyIds)).map((row) => row?.id)
       );
       const equipeSet = cleanStringSet(equipeIds);
       if (!equipeSet.has(vendedorOrigemId) || !equipeSet.has(vendedorDestinoId)) {
-        return json({ error: 'Gestor só pode ratear vendas da própria empresa.' }, { status: 403, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Gestor só pode ratear vendas da própria empresa.' },
+          { status: 403, headers: NO_STORE_HEADERS }
+        );
       }
     }
 
@@ -499,9 +541,7 @@ export async function handleFinanceiroAjustesVendasPost(event: RequestEvent) {
         .eq('id', existingRateio.id);
       if (updateError) throw updateError;
     } else {
-      const { error: insertError } = await client
-        .from('vendas_recibos_rateio')
-        .insert(payload);
+      const { error: insertError } = await client.from('vendas_recibos_rateio').insert(payload);
       if (insertError) throw insertError;
     }
 

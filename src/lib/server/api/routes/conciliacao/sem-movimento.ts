@@ -37,7 +37,8 @@ function readSemMovimentoBody(value: unknown): SemMovimentoBody {
 }
 
 function isTableMissingError(error: unknown, tableName: string) {
-  const errorRecord = typeof error === 'object' && error !== null ? (error as Record<string, unknown>) : null;
+  const errorRecord =
+    typeof error === 'object' && error !== null ? (error as Record<string, unknown>) : null;
   const msg = String(errorRecord?.message || error || '').toLowerCase();
   const code = String(errorRecord?.code || '').trim();
   return (
@@ -61,7 +62,11 @@ export async function handleConciliacaoSemMovimentoGet(event: RequestEvent) {
     const url = new URL(event.request.url);
     const companyId = resolveScopedCompanyId(scope, url.searchParams.get('companyId'));
 
-    if (!companyId) return json({ error: 'Selecione uma empresa para listar dias sem movimento.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!companyId)
+      return json(
+        { error: 'Selecione uma empresa para listar dias sem movimento.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
 
     const { data, error } = await client
       .from('conciliacao_dias_sem_movimento')
@@ -72,7 +77,10 @@ export async function handleConciliacaoSemMovimentoGet(event: RequestEvent) {
 
     if (error) {
       if (isTableMissingError(error, 'conciliacao_dias_sem_movimento')) {
-        return json({ ok: true, dias: [], tabela_nao_existe: true }, { headers: DYNAMIC_READ_HEADERS });
+        return json(
+          { ok: true, dias: [], tabela_nao_existe: true },
+          { headers: DYNAMIC_READ_HEADERS }
+        );
       }
       throw error;
     }
@@ -103,9 +111,16 @@ export async function handleConciliacaoSemMovimentoPost(event: RequestEvent) {
     const dataStr = String(body?.data || '').trim();
     const observacao = String(body?.observacao || '').trim() || null;
 
-    if (!companyId) return json({ error: 'Selecione uma empresa para marcar dia sem movimento.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!companyId)
+      return json(
+        { error: 'Selecione uma empresa para marcar dia sem movimento.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     if (!dataStr || !/^\d{4}-\d{2}-\d{2}$/.test(dataStr)) {
-      return json({ error: 'Data inválida. Use formato YYYY-MM-DD.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Data inválida. Use formato YYYY-MM-DD.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     // Verifica se já existe importação para essa data
@@ -119,27 +134,35 @@ export async function handleConciliacaoSemMovimentoPost(event: RequestEvent) {
     const existentesCount = (existentes as CountResult | null)?.count || 0;
     if (existentesCount > 0) {
       return json(
-        { error: `Não é possível marcar "sem movimento" para ${dataStr}, pois já existem registros importados para esta data.` },
+        {
+          error: `Não é possível marcar "sem movimento" para ${dataStr}, pois já existem registros importados para esta data.`
+        },
         { status: 409, headers: NO_STORE_HEADERS }
       );
     }
 
     const { data, error } = await client
       .from('conciliacao_dias_sem_movimento')
-      .upsert({
-        company_id: companyId,
-        data: dataStr,
-        marcado_por: user.id,
-        marcado_em: new Date().toISOString(),
-        observacao
-      }, { onConflict: 'company_id,data' })
+      .upsert(
+        {
+          company_id: companyId,
+          data: dataStr,
+          marcado_por: user.id,
+          marcado_em: new Date().toISOString(),
+          observacao
+        },
+        { onConflict: 'company_id,data' }
+      )
       .select('id, company_id, data, marcado_por, marcado_em, observacao')
       .single();
 
     if (error) {
       if (isTableMissingError(error, 'conciliacao_dias_sem_movimento')) {
         return json(
-          { error: 'A tabela de dias sem movimento ainda não foi provisionada no ambiente. Execute a migração 20260430_conciliacao_dias_sem_movimento.sql no Supabase.' },
+          {
+            error:
+              'A tabela de dias sem movimento ainda não foi provisionada no ambiente. Execute a migração 20260430_conciliacao_dias_sem_movimento.sql no Dados.'
+          },
           { status: 503, headers: NO_STORE_HEADERS }
         );
       }
@@ -172,7 +195,11 @@ export async function handleConciliacaoSemMovimentoDelete(event: RequestEvent) {
     const companyId = resolveScopedCompanyId(scope, String(body.companyId || '').trim() || null);
     const dataStr = String(body?.data || '').trim();
 
-    if (!companyId) return json({ error: 'Selecione uma empresa para remover dia sem movimento.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!companyId)
+      return json(
+        { error: 'Selecione uma empresa para remover dia sem movimento.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     if (!dataStr || !/^\d{4}-\d{2}-\d{2}$/.test(dataStr)) {
       return json({ error: 'Data inválida.' }, { status: 400, headers: NO_STORE_HEADERS });
     }
@@ -185,7 +212,10 @@ export async function handleConciliacaoSemMovimentoDelete(event: RequestEvent) {
 
     if (error) {
       if (isTableMissingError(error, 'conciliacao_dias_sem_movimento')) {
-        return json({ error: 'A tabela de dias sem movimento ainda não foi provisionada no ambiente.' }, { status: 503, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'A tabela de dias sem movimento ainda não foi provisionada no ambiente.' },
+          { status: 503, headers: NO_STORE_HEADERS }
+        );
       }
       throw error;
     }

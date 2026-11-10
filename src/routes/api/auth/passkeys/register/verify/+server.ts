@@ -41,7 +41,10 @@ export const POST: RequestHandler = async (event) => {
     const name = String(body?.name || 'Passkey').trim();
 
     if (!challengeId || !response) {
-      return json({ error: 'Dados da passkey incompletos.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Dados da passkey incompletos.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     await verifyRegistration({

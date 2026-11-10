@@ -1,23 +1,23 @@
 export function construirLinkWhatsApp(numero?: string | null, codigoPais?: string | null) {
   if (!numero) return null;
-  const digits = numero.replace(/\D/g, "");
+  const digits = numero.replace(/\D/g, '');
   if (!digits) return null;
-  const countryDigits = (codigoPais || "").replace(/\D/g, "");
+  const countryDigits = (codigoPais || '').replace(/\D/g, '');
   const fullNumber =
     countryDigits && !digits.startsWith(countryDigits) ? `${countryDigits}${digits}` : digits;
   return `https://wa.me/${fullNumber}`;
 }
 
 export function getPrimeiroNome(nomeCompleto?: string | null) {
-  if (!nomeCompleto) return "";
-  return nomeCompleto.trim().split(/\s+/)[0] || "";
+  if (!nomeCompleto) return '';
+  return nomeCompleto.trim().split(/\s+/)[0] || '';
 }
 
 export function getSaudacaoPorHora(date = new Date()) {
   const hora = date.getHours();
-  if (hora >= 5 && hora < 12) return "Bom dia";
-  if (hora >= 12 && hora < 18) return "Boa tarde";
-  return "Boa noite";
+  if (hora >= 5 && hora < 12) return 'Bom dia';
+  if (hora >= 12 && hora < 18) return 'Boa tarde';
+  return 'Boa noite';
 }
 
 export function construirLinkWhatsAppComTexto(
@@ -31,8 +31,8 @@ export function construirLinkWhatsAppComTexto(
   return `${base}?text=${encodeURIComponent(texto)}`;
 }
 
-export function montarMensagemAniversario(nomeCompleto?: string | null, assinatura = "André Lima") {
-  const primeiroNome = getPrimeiroNome(nomeCompleto) || "Cliente";
+export function montarMensagemAniversario(nomeCompleto?: string | null, assinatura = 'André Lima') {
+  const primeiroNome = getPrimeiroNome(nomeCompleto) || 'Cliente';
   return `${primeiroNome}, feliz aniversário!
 
 Que seu novo ano seja cheio de viagens,
@@ -46,28 +46,30 @@ ${assinatura}`;
 
 export function construirUrlCartaoAniversario(
   nomeCompleto?: string | null,
-  assinatura = "André Lima",
+  assinatura = 'André Lima',
   origin?: string | null
 ) {
-  const primeiroNome = getPrimeiroNome(nomeCompleto) || "Cliente";
-  const baseOrigin = (origin || "").trim() || (typeof window !== "undefined" ? window.location.origin : "");
-  if (!baseOrigin) return "";
+  const primeiroNome = getPrimeiroNome(nomeCompleto) || 'Cliente';
+  const baseOrigin =
+    (origin || '').trim() || (typeof window !== 'undefined' ? window.location.origin : '');
+  if (!baseOrigin) return '';
   const params = new URLSearchParams({
     nome: primeiroNome,
-    theme_name: "birthday-elegant",
-    width: "1080",
-    height: "1080",
-    titulo: "Feliz Aniversário!",
-    corpo: "Que seu novo ano seja cheio de viagens, conquistas e momentos inesquecíveis.\nAproveite cada instante!",
+    theme_name: 'birthday-elegant',
+    width: '1080',
+    height: '1080',
+    titulo: 'Feliz Aniversário!',
+    corpo:
+      'Que seu novo ano seja cheio de viagens, conquistas e momentos inesquecíveis.\nAproveite cada instante!',
     assinatura,
-    v: String(Date.now()),
+    v: String(Date.now())
   });
   return `${baseOrigin}/api/v1/cards/render.svg?${params.toString()}`;
 }
 
-export function montarMensagemFollowUp(nomeCompleto?: string | null, assinatura = "André Lima") {
+export function montarMensagemFollowUp(nomeCompleto?: string | null, assinatura = 'André Lima') {
   const saudacao = getSaudacaoPorHora();
-  const primeiroNome = getPrimeiroNome(nomeCompleto) || "cliente";
+  const primeiroNome = getPrimeiroNome(nomeCompleto) || 'cliente';
   return `${saudacao} Sr./Sra. ${primeiroNome}, tudo bem?
 
 Estou passando para saber como foi sua viagem.

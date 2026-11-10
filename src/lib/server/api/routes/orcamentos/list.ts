@@ -13,7 +13,13 @@ import {
   getMonthRange,
   toISODateLocal
 } from '$lib/server/v1';
-import { addDaysISODate, addMonthsISODate, monthRangeFromKey, parseISODateLocal, todayISODateLocal } from '$lib/date';
+import {
+  addDaysISODate,
+  addMonthsISODate,
+  monthRangeFromKey,
+  parseISODateLocal,
+  todayISODateLocal
+} from '$lib/date';
 import { DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
 import {
   buildReadModelCacheKey,
@@ -22,7 +28,7 @@ import {
   scopeCacheTags
 } from '$lib/server/readModelCache';
 import { resolveQuoteCreatorScope } from '$lib/server/orcamentos';
-import { chunkArray, SUPABASE_IN_BATCH_SIZE, uniqueCleanStrings } from '$lib/utils/array';
+import { chunkArray, QUERY_IN_BATCH_SIZE, uniqueCleanStrings } from '$lib/utils/array';
 
 type OrcamentoRow = {
   id: string;
@@ -38,7 +44,12 @@ type OrcamentoRow = {
   created_by: string | null;
   last_interaction_at?: string | null;
   last_interaction_notes?: string | null;
-  cliente?: { id?: string | null; nome?: string | null; cpf?: string | null; email?: string | null } | null;
+  cliente?: {
+    id?: string | null;
+    nome?: string | null;
+    cpf?: string | null;
+    email?: string | null;
+  } | null;
 };
 
 type OrcamentoItemRow = {
@@ -67,7 +78,9 @@ function addDays(isoDate: string | null, days: number) {
   return isoDate ? addDaysISODate(isoDate, days) : null;
 }
 
-export function deriveStatus(row: Pick<OrcamentoRow, "status_negociacao" | "status">): 'novo' | 'pendente' | 'enviado' | 'aprovado' | 'rejeitado' | 'expirado' | 'fechado' {
+export function deriveStatus(
+  row: Pick<OrcamentoRow, 'status_negociacao' | 'status'>
+): 'novo' | 'pendente' | 'enviado' | 'aprovado' | 'rejeitado' | 'expirado' | 'fechado' {
   const status = normalizeText(row.status_negociacao || row.status);
 
   if (status.includes('fech')) return 'fechado';
@@ -127,7 +140,7 @@ export async function handleOrcamentosListGet(event: RequestEvent) {
     });
     const companyIds = quoteScope.companyIds;
     const creatorIds = quoteScope.creatorIds;
-    
+
     const statusFilter = searchParams.get('status');
     const periodoFilter = getPeriodoFilter(searchParams.get('periodo'));
     const shouldFilterByCreatorIds = !quoteScope.allAccess;
@@ -182,15 +195,20 @@ export async function handleOrcamentosListGet(event: RequestEvent) {
       }
 
       if (periodoFilter?.from && periodoFilter?.to) {
-        query = query.gte('created_at', periodoFilter.from).lte('created_at', periodoFilter.to + 'T23:59:59');
+        query = query
+          .gte('created_at', periodoFilter.from)
+          .lte('created_at', periodoFilter.to + 'T23:59:59');
       }
 
       return query;
     };
 
     const fetchQuoteRows = async (selectClause: string) => {
-      if (!shouldFilterByCreatorIds || scopedCreatorIds.length <= SUPABASE_IN_BATCH_SIZE) {
-        return buildQuoteQuery(selectClause, shouldFilterByCreatorIds ? scopedCreatorIds : undefined);
+      if (!shouldFilterByCreatorIds || scopedCreatorIds.length <= QUERY_IN_BATCH_SIZE) {
+        return buildQuoteQuery(
+          selectClause,
+          shouldFilterByCreatorIds ? scopedCreatorIds : undefined
+        );
       }
 
       const rows: OrcamentoRow[] = [];
@@ -199,7 +217,7 @@ export async function handleOrcamentosListGet(event: RequestEvent) {
         if (result.error) {
           return { data: null, error: result.error } as typeof result;
         }
-        rows.push(...(((result.data || []) as unknown) as OrcamentoRow[]));
+        rows.push(...((result.data || []) as unknown as OrcamentoRow[]));
       }
 
       return { data: dedupeOrcamentos(rows).slice(0, 500), error: null };
@@ -214,34 +232,50 @@ export async function handleOrcamentosListGet(event: RequestEvent) {
         const queryResult = await fetchQuoteRows(joinedSelect);
         const queryError = queryResult.error;
 
-        if (!queryError) return ((queryResult.data || []) as OrcamentoRow[]);
+        if (!queryError) return (queryResult.data || []) as OrcamentoRow[];
 
         logServerError('[orcamentos/list] erro na query com join; usando fallback', queryError);
         const fallback = await fetchQuoteRows(fallbackSelect);
         if (fallback.error) throw fallback.error;
-        return ((fallback.data || []) as OrcamentoRow[]);
+        return (fallback.data || []) as OrcamentoRow[];
       }
     });
 
     // Derivar IDs necessários para o enrichment
-    const clientIdsFromData = uniqueCleanStrings(((data || []) as OrcamentoRow[]).map((row) => row.client_id));
+    const clientIdsFromData = uniqueCleanStrings(
+      ((data || []) as OrcamentoRow[]).map((row) => row.client_id)
+    );
     const quoteIds = ((data || []) as OrcamentoRow[])
       .map((row) => String(row.id || '').trim())
       .filter(Boolean);
-    const rowCreatorIds = uniqueCleanStrings(((data || []) as OrcamentoRow[]).map((row) => row.created_by));
+    const rowCreatorIds = uniqueCleanStrings(
+      ((data || []) as OrcamentoRow[]).map((row) => row.created_by)
+    );
 
     // Os 3 enrichments são completamente independentes entre si — executar em paralelo.
     const [clientesData, quoteItems, creators] = await Promise.all([
       clientIdsFromData.length > 0
-        ? getCachedReadModel<Array<{ id?: string | null; nome?: string | null; email?: string | null }>>({
-            key: buildReadModelCacheKey('orcamentos-list:clientes-map', { clientIds: clientIdsFromData }),
+        ? getCachedReadModel<
+            Array<{ id?: string | null; nome?: string | null; email?: string | null }>
+          >({
+            key: buildReadModelCacheKey('orcamentos-list:clientes-map', {
+              clientIds: clientIdsFromData
+            }),
             tags: listCacheTags,
             ttlMs: 120_000,
             staleTtlMs: 600_000,
             loader: async () => {
-              const rows: Array<{ id?: string | null; nome?: string | null; email?: string | null }> = [];
+              const rows: Array<{
+                id?: string | null;
+                nome?: string | null;
+                email?: string | null;
+              }> = [];
               for (const batch of chunkArray(clientIdsFromData)) {
-                const { data: batchRows, error } = await client.from('clientes').select('id, nome, email').in('id', batch).limit(500);
+                const { data: batchRows, error } = await client
+                  .from('clientes')
+                  .select('id, nome, email')
+                  .in('id', batch)
+                  .limit(500);
                 if (error) throw error;
                 rows.push(...(batchRows || []));
               }
@@ -261,14 +295,18 @@ export async function handleOrcamentosListGet(event: RequestEvent) {
               for (const batch of chunkArray(quoteIds)) {
                 const withCity = await client
                   .from('quote_item')
-                  .select('id, quote_id, title, product_name, item_type, total_amount, order_index, city_name')
+                  .select(
+                    'id, quote_id, title, product_name, item_type, total_amount, order_index, city_name'
+                  )
                   .in('quote_id', batch)
                   .order('order_index', { ascending: true })
                   .limit(5000);
                 if (withCity.error) {
                   const fallback = await client
                     .from('quote_item')
-                    .select('id, quote_id, title, product_name, item_type, total_amount, order_index')
+                    .select(
+                      'id, quote_id, title, product_name, item_type, total_amount, order_index'
+                    )
                     .in('quote_id', batch)
                     .order('order_index', { ascending: true })
                     .limit(5000);
@@ -284,15 +322,27 @@ export async function handleOrcamentosListGet(event: RequestEvent) {
         : Promise.resolve([]),
 
       rowCreatorIds.length > 0
-        ? getCachedReadModel<Array<{ id?: string | null; nome_completo?: string | null; email?: string | null }>>({
-            key: buildReadModelCacheKey('orcamentos-list:creators-map', { creatorIds: rowCreatorIds }),
+        ? getCachedReadModel<
+            Array<{ id?: string | null; nome_completo?: string | null; email?: string | null }>
+          >({
+            key: buildReadModelCacheKey('orcamentos-list:creators-map', {
+              creatorIds: rowCreatorIds
+            }),
             tags: listCacheTags,
             ttlMs: 120_000,
             staleTtlMs: 600_000,
             loader: async () => {
-              const rows: Array<{ id?: string | null; nome_completo?: string | null; email?: string | null }> = [];
+              const rows: Array<{
+                id?: string | null;
+                nome_completo?: string | null;
+                email?: string | null;
+              }> = [];
               for (const batch of chunkArray(rowCreatorIds)) {
-                const { data: batchRows, error } = await client.from('users').select('id, nome_completo, email').in('id', batch).limit(500);
+                const { data: batchRows, error } = await client
+                  .from('users')
+                  .select('id, nome_completo, email')
+                  .in('id', batch)
+                  .limit(500);
                 if (error) throw error;
                 rows.push(...(batchRows || []));
               }
@@ -305,7 +355,10 @@ export async function handleOrcamentosListGet(event: RequestEvent) {
     // Montar mapas a partir dos dados em paralelo
     const clienteMap = new Map<string, { nome: string; email: string }>();
     for (const c of clientesData) {
-      clienteMap.set(String(c.id || ''), { nome: String(c.nome || 'Cliente'), email: String(c.email || '') });
+      clienteMap.set(String(c.id || ''), {
+        nome: String(c.nome || 'Cliente'),
+        email: String(c.email || '')
+      });
     }
 
     const quoteItemsMap = new Map<string, OrcamentoItemRow[]>();
@@ -321,7 +374,10 @@ export async function handleOrcamentosListGet(event: RequestEvent) {
     for (const row of creators) {
       const id = String(row?.id || '').trim();
       if (!id) continue;
-      creatorMap.set(id, { nome: String(row?.nome_completo || 'Equipe VTUR'), email: String(row?.email || '') });
+      creatorMap.set(id, {
+        nome: String(row?.nome_completo || 'Equipe VTUR'),
+        email: String(row?.email || '')
+      });
     }
 
     let items = ((data || []) as OrcamentoRow[]).map((row) => {
@@ -334,12 +390,25 @@ export async function handleOrcamentosListGet(event: RequestEvent) {
       return {
         id: row.id,
         codigo: `ORC-${row.id.slice(0, 8).toUpperCase()}`,
-        cliente: String(row.cliente?.nome || row.client_name || clienteMap.get(String(row.client_id || ''))?.nome || 'Cliente sem nome'),
+        cliente: String(
+          row.cliente?.nome ||
+            row.client_name ||
+            clienteMap.get(String(row.client_id || ''))?.nome ||
+            'Cliente sem nome'
+        ),
         cliente_id: String(row.client_id || ''),
-        cliente_email: String(row.cliente?.email || row.client_email || clienteMap.get(String(row.client_id || ''))?.email || ''),
+        cliente_email: String(
+          row.cliente?.email ||
+            row.client_email ||
+            clienteMap.get(String(row.client_id || ''))?.email ||
+            ''
+        ),
         cliente_telefone: String(row.client_whatsapp || ''),
         destino: String(
-          firstItem?.city_name || firstItem?.product_name || firstItem?.title || 'Orçamento sem itens'
+          firstItem?.city_name ||
+            firstItem?.product_name ||
+            firstItem?.title ||
+            'Orçamento sem itens'
         ),
         created_at: row.created_at || null,
         data_criacao: row.created_at?.slice(0, 10) || null,
@@ -358,7 +427,7 @@ export async function handleOrcamentosListGet(event: RequestEvent) {
     });
 
     if (statusFilter) {
-      items = items.filter(item => item.status === statusFilter);
+      items = items.filter((item) => item.status === statusFilter);
     }
 
     return json(items, { headers: DYNAMIC_READ_HEADERS });

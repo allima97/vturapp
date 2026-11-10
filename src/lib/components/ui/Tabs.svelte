@@ -17,11 +17,13 @@
 
   export let items: TabItem[] = [];
   export let activeKey = '';
+  export let onSelect: ((key: string) => void) | undefined = undefined;
   export let className = '';
 
   function selectTab(key: string, disabled?: boolean) {
     if (disabled) return;
     activeKey = key;
+    onSelect?.(key);
   }
 
   let listEl: HTMLDivElement;
@@ -40,7 +42,12 @@
 </script>
 
 <!-- svelte-ignore a11y_interactive_supports_focus -->
-<div class={`vtur-tabs ${className}`.trim()} role="tablist" bind:this={listEl} on:keydown={handleKeydown}>
+<div
+  class={`vtur-tabs ${className}`.trim()}
+  role="tablist"
+  bind:this={listEl}
+  on:keydown={handleKeydown}
+>
   {#each items as item, index}
     <Button
       type="button"
@@ -60,9 +67,7 @@
       {#if item.badge != null && item.badge !== '' && item.badge !== 0}
         <span
           class={`inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[10px] font-bold ${
-            activeKey === item.key
-              ? 'bg-blue-100 text-blue-700'
-              : 'bg-slate-100 text-slate-600'
+            activeKey === item.key ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
           }`}
         >
           {item.badge}

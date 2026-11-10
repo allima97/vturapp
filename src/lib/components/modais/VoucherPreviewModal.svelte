@@ -40,8 +40,8 @@
       : 'calc(1rem + var(--vtur-sidebar-width) + 1rem)';
 
   let iframe: HTMLIFrameElement;
-  
-  $: docHtml = (open && voucher) ? buildVoucherPreviewDocument(voucher, assets) : '';
+
+  $: docHtml = open && voucher ? buildVoucherPreviewDocument(voucher, assets) : '';
 
   const dispatch = createEventDispatcher();
 
@@ -88,11 +88,15 @@
           // noop
         }
       };
-      popup.addEventListener('load', () => {
-        popup.focus();
-        popup.print();
-        setTimeout(cleanup, 4000);
-      }, { once: true });
+      popup.addEventListener(
+        'load',
+        () => {
+          popup.focus();
+          popup.print();
+          setTimeout(cleanup, 4000);
+        },
+        { once: true }
+      );
       return;
     }
 
@@ -113,7 +117,8 @@
   function ensureBaseHref(html: string) {
     const baseTag = `<base href="${window.location.origin}/">`;
     if (/<base\s+href=/i.test(html)) return html;
-    if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, (head) => `${head}\n${baseTag}`);
+    if (/<head[^>]*>/i.test(html))
+      return html.replace(/<head[^>]*>/i, (head) => `${head}\n${baseTag}`);
     return `<!doctype html><html><head>${baseTag}</head><body>${html}</body></html>`;
   }
 </script>
@@ -122,47 +127,51 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
-    class="fixed z-100 flex flex-col bg-slate-100 voucher-preview-area"
-    style="left: {contentLeft}; top: {$isMobile ? 'var(--vtur-topbar-height)' : 'var(--vtur-desktop-shell-top)'};"
+    class="voucher-preview-area fixed z-100 flex flex-col bg-slate-100"
+    style="left: {contentLeft}; top: {$isMobile
+      ? 'var(--vtur-topbar-height)'
+      : 'var(--vtur-desktop-shell-top)'};"
     transition:fade={{ duration: 150 }}
   >
     <!-- Header fixo com ações - Responsivo -->
-    <header 
-      class="voucher-preview__header bg-white border-b border-slate-200 shadow-xs shrink-0"
-    >
+    <header class="voucher-preview__header shrink-0 border-b border-slate-200 bg-white shadow-xs">
       <div class="voucher-preview__meta min-w-0">
         <h2 class="voucher-preview__title truncate">{voucher.nome}</h2>
         <p class="voucher-preview__subtitle">
-          {voucher.provider === 'special_tours' ? 'Special Tours' : voucher.provider === 'europamundo' ? 'Europamundo' : 'Sato Tours'}
+          {voucher.provider === 'special_tours'
+            ? 'Special Tours'
+            : voucher.provider === 'europamundo'
+              ? 'Europamundo'
+              : 'Sato Tours'}
           {#if voucher.codigo_fornecedor}
             <span class="hidden sm:inline"> • Código: {voucher.codigo_fornecedor}</span>
           {/if}
         </p>
       </div>
-      
+
       <div class="voucher-preview__actions shrink-0">
         <!-- Botões com ícones apenas no mobile, texto no desktop -->
         <Button variant="primary" on:click={handleEdit} class_name="px-2! md:px-4!">
           <Edit size={18} />
-          <span class="hidden md:inline ml-2">Editar</span>
+          <span class="ml-2 hidden md:inline">Editar</span>
         </Button>
         <Button variant="secondary" on:click={handlePrint} class_name="px-2! md:px-4!">
           <Printer size={18} />
-          <span class="hidden md:inline ml-2">Imprimir</span>
+          <span class="ml-2 hidden md:inline">Imprimir</span>
         </Button>
         <Button variant="primary" on:click={handleSavePdf} class_name="px-2! md:px-4!">
           <FileDown size={18} />
-          <span class="hidden md:inline ml-2">Salvar PDF</span>
+          <span class="ml-2 hidden md:inline">Salvar PDF</span>
         </Button>
         <Button variant="secondary" on:click={handleDuplicate} class_name="px-2! md:px-4!">
           <Copy size={18} />
-          <span class="hidden md:inline ml-2">Duplicar</span>
+          <span class="ml-2 hidden md:inline">Duplicar</span>
         </Button>
         <Button variant="danger" on:click={handleDelete} class_name="px-2! md:px-4!">
           <Trash2 size={18} />
-          <span class="hidden md:inline ml-2">Excluir voucher</span>
+          <span class="ml-2 hidden md:inline">Excluir voucher</span>
         </Button>
-        <Button 
+        <Button
           variant="ghost"
           size="sm"
           class_name="voucher-preview__close"
@@ -176,12 +185,12 @@
 
     <!-- Preview do Voucher -->
     <div class="flex-1 overflow-hidden p-2 md:p-4">
-      <div class="max-w-5xl mx-auto h-full flex flex-col">
+      <div class="mx-auto flex h-full max-w-5xl flex-col">
         {#if docHtml}
           <iframe
             bind:this={iframe}
             srcdoc={docHtml}
-            class="w-full flex-1 bg-white shadow-lg rounded-lg border border-slate-200"
+            class="w-full flex-1 rounded-lg border border-slate-200 bg-white shadow-lg"
             title="Voucher Preview"
             sandbox="allow-modals allow-same-origin"
             referrerpolicy="no-referrer"

@@ -87,9 +87,8 @@
 
   $: dialogToneClass = toneClasses[color] ?? toneClasses.blue;
   $: dialogSize = sizeMap[size] ?? 'md';
-  $: contentClass = size === 'full'
-    ? 'vtur-dialog__surface vtur-dialog__surface--full'
-    : 'vtur-dialog__surface';
+  $: contentClass =
+    size === 'full' ? 'vtur-dialog__surface vtur-dialog__surface--full' : 'vtur-dialog__surface';
   $: dialogClass = respectAppShell
     ? 'vtur-dialog-shell vtur-dialog-shell--respect-app'
     : 'vtur-dialog-shell';
@@ -118,7 +117,9 @@
           id={labelId}
           class="vtur-dialog__title"
           use:dialogLabel={{ labelId, descriptionId: description ? descriptionId : null }}
-        >{title}</h3>
+        >
+          {title}
+        </h3>
         {#if description}
           <p id={descriptionId} class="vtur-dialog__description">{description}</p>
         {/if}

@@ -53,7 +53,8 @@ export async function handleOrcamentosInteracaoPost(event: RequestEvent) {
     }
 
     const quoteScope = await resolveQuoteCreatorScope(client, scope, {
-      companyId: event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id')
+      companyId:
+        event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id')
     });
 
     const { data: quote, error: quoteError } = await client
@@ -113,12 +114,15 @@ export async function handleOrcamentosInteracaoGet(event: RequestEvent) {
     }
 
     const quoteScope = await resolveQuoteCreatorScope(client, scope, {
-      companyId: event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id')
+      companyId:
+        event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id')
     });
 
     const { data, error } = await client
       .from('quote')
-      .select('id, created_by, status_negociacao, last_interaction_at, last_interaction_notes, updated_at')
+      .select(
+        'id, created_by, status_negociacao, last_interaction_at, last_interaction_notes, updated_at'
+      )
       .eq('id', quoteId)
       .maybeSingle();
     if (error) throw error;
@@ -126,14 +130,18 @@ export async function handleOrcamentosInteracaoGet(event: RequestEvent) {
       return json({ success: true, interacoes: [] }, { headers: DYNAMIC_READ_HEADERS });
     }
 
-    const interacoes = data?.last_interaction_at ? [{
-      id: data.id,
-      quote_id: quoteId,
-      tipo: 'status',
-      observacoes: data.last_interaction_notes,
-      status: data.status_negociacao,
-      created_at: data.last_interaction_at
-    }] : [];
+    const interacoes = data?.last_interaction_at
+      ? [
+          {
+            id: data.id,
+            quote_id: quoteId,
+            tipo: 'status',
+            observacoes: data.last_interaction_notes,
+            status: data.status_negociacao,
+            created_at: data.last_interaction_at
+          }
+        ]
+      : [];
 
     return json({ success: true, interacoes }, { headers: DYNAMIC_READ_HEADERS });
   } catch (err) {

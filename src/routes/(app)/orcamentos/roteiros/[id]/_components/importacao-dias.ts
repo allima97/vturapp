@@ -62,11 +62,18 @@ export function isImportStopHeader(line: string): boolean {
   );
 }
 
-export function mapImportedTitleToDia(ordem: number, tituloBruto: string, descricaoLinhas: string[]): RotDia {
+export function mapImportedTitleToDia(
+  ordem: number,
+  tituloBruto: string,
+  descricaoLinhas: string[]
+): RotDia {
   const titulo = normalizeImportLine(tituloBruto);
-  const descricao = descricaoLinhas.map((line) => normalizeImportLine(line)).filter(Boolean).join('\n');
+  const descricao = descricaoLinhas
+    .map((line) => normalizeImportLine(line))
+    .filter(Boolean)
+    .join('\n');
   const routeParts = titulo
-    .split(/\s(?:->|→|\/|\-|–|—)\s/)
+    .split(/\s(?:->|→|\/|-|–|—)\s/)
     .map((part) => normalizeImportLine(part))
     .filter(Boolean);
 
@@ -83,7 +90,9 @@ export function mapImportedTitleToDia(ordem: number, tituloBruto: string, descri
 }
 
 export function parseDiasImportText(text: string): RotDia[] {
-  const raw = String(text || '').replace(/\r/g, '').trim();
+  const raw = String(text || '')
+    .replace(/\r/g, '')
+    .trim();
   if (!raw) return [];
 
   const lines = raw.split('\n');
@@ -96,7 +105,13 @@ export function parseDiasImportText(text: string): RotDia[] {
 
   const commitCurrent = () => {
     if (!currentTitle.trim() && currentDescription.length === 0) return;
-    parsed.push(mapImportedTitleToDia(parsed.length, currentTitle || `Dia ${parsed.length + 1}`, currentDescription));
+    parsed.push(
+      mapImportedTitleToDia(
+        parsed.length,
+        currentTitle || `Dia ${parsed.length + 1}`,
+        currentDescription
+      )
+    );
     currentTitle = '';
     currentDescription = [];
   };
@@ -145,7 +160,12 @@ export function parseDiasImportText(text: string): RotDia[] {
 
   const blocks = raw
     .split(/\n{2,}/)
-    .map((block) => block.split('\n').map((line) => normalizeImportLine(line)).filter(Boolean))
+    .map((block) =>
+      block
+        .split('\n')
+        .map((line) => normalizeImportLine(line))
+        .filter(Boolean)
+    )
     .filter((block) => block.length > 0);
 
   return reorder(

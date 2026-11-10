@@ -19,7 +19,7 @@ async function montar() {
   menuVisivel.set([
     { secao: 'INFORMATIVOS', nome: 'Dashboard', href: '/dashboard' },
     { secao: 'OPERAÇÃO', nome: 'Vendas', href: '/vendas' },
-    { secao: 'OPERAÇÃO', nome: 'Clientes', href: '/clientes' },
+    { secao: 'OPERAÇÃO', nome: 'Clientes', href: '/clientes' }
   ]);
   target = document.createElement('div');
   document.body.appendChild(target);
@@ -28,7 +28,9 @@ async function montar() {
 }
 
 async function tecla(el: EventTarget, key: string, extra: KeyboardEventInit = {}) {
-  el.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...extra }));
+  el.dispatchEvent(
+    new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true, ...extra })
+  );
   flushSync();
   await tick();
 }
@@ -52,9 +54,11 @@ describe('busca rápida (Ctrl+K)', () => {
     await tick();
     expect(campo()).toBeTruthy();
     expect(document.activeElement).toBe(campo());
-    expect([...document.querySelectorAll('[role="option"]')].map((o) => o.textContent?.replace(/\s+/g, ' ').trim())).toEqual([
-      'Dashboard INFORMATIVOS', 'Vendas OPERAÇÃO', 'Clientes OPERAÇÃO',
-    ]);
+    expect(
+      [...document.querySelectorAll('[role="option"]')].map((o) =>
+        o.textContent?.replace(/\s+/g, ' ').trim()
+      )
+    ).toEqual(['Dashboard INFORMATIVOS', 'Vendas OPERAÇÃO', 'Clientes OPERAÇÃO']);
   });
 
   it('filtra sem acento, ↓ muda a escolha e Enter abre a tela', async () => {
@@ -66,7 +70,10 @@ describe('busca rápida (Ctrl+K)', () => {
     flushSync();
     await tick();
     const opcoes = () => [...document.querySelectorAll('[role="option"]')];
-    expect(opcoes().map((o) => o.querySelector('span')?.textContent)).toEqual(['Clientes', 'Vendas']); // Vendas entra pela seção (OPERAÇÃO)
+    expect(opcoes().map((o) => o.querySelector('span')?.textContent)).toEqual([
+      'Clientes',
+      'Vendas'
+    ]); // Vendas entra pela seção (OPERAÇÃO)
     expect(input.getAttribute('aria-activedescendant')).toBe(opcoes()[0].id);
     await tecla(input, 'ArrowDown');
     expect(opcoes()[1].getAttribute('aria-selected')).toBe('true');
@@ -99,6 +106,8 @@ describe('busca rápida (Ctrl+K)', () => {
     flushSync();
     await tick();
     expect(document.querySelector('[role="listbox"]')).toBeNull();
-    expect(document.querySelector('[role="status"]')?.textContent).toContain('Nenhuma tela encontrada');
+    expect(document.querySelector('[role="status"]')?.textContent).toContain(
+      'Nenhuma tela encontrada'
+    );
   });
 });

@@ -33,7 +33,8 @@ export async function handleVendasKpis(event: RequestEvent) {
     const inicio = String(searchParams.get('inicio') || '').trim();
     const fim = String(searchParams.get('fim') || '').trim();
     const requestedCompanyId = searchParams.get('empresa_id') || searchParams.get('company_id');
-    const requestedVendedorRaw = searchParams.get('vendedor_ids') || searchParams.get('vendedor_id');
+    const requestedVendedorRaw =
+      searchParams.get('vendedor_ids') || searchParams.get('vendedor_id');
     const hasRequestedVendedorFilter = String(requestedVendedorRaw || '').trim().length > 0;
     const tipoNome = String(scope.tipoNome || '').toUpperCase();
     const isAdminByType = tipoNome.includes('ADMIN');
@@ -47,7 +48,9 @@ export async function handleVendasKpis(event: RequestEvent) {
     if (isAdminByType) {
       vendedorIds = await resolveScopedVendedorIds(client, scope, requestedVendedorRaw);
     } else if (isGestorByType) {
-      companyIds = scope.companyId ? [scope.companyId] : resolveScopedCompanyIds(scope, requestedCompanyId);
+      companyIds = scope.companyId
+        ? [scope.companyId]
+        : resolveScopedCompanyIds(scope, requestedCompanyId);
       if (hasRequestedVendedorFilter) {
         const requestedIds = parseUuidList(requestedVendedorRaw);
         const allGestorVendedores = await fetchVendedorIdsByCompanyIds(client, companyIds);
@@ -81,34 +84,37 @@ export async function handleVendasKpis(event: RequestEvent) {
       vendedorIds = [scope.userId];
     }
 
-    const accessibleClientIds = !scope.isAdmin &&
+    const accessibleClientIds =
+      !scope.isAdmin &&
       !isMasterByType &&
       !isFinanceiroByType &&
       !isGestorByType &&
       vendedorIds.length === 0 &&
       companyIds.length === 0
-      ? await resolveAccessibleClientIds(client, { companyIds, vendedorIds })
-      : [];
+        ? await resolveAccessibleClientIds(client, { companyIds, vendedorIds })
+        : [];
 
     const useNonBlockingReadModel =
-      (isAdminByType || isMasterByType) &&
-      companyIds.length > 1 &&
-      !hasRequestedVendedorFilter;
+      (isAdminByType || isMasterByType) && companyIds.length > 1 && !hasRequestedVendedorFilter;
 
-    const { agg: kpis } = await fetchVendasKpiReciboContributions(client, {
-      dataInicio: inicio,
-      dataFim: fim,
-      companyIds,
-      vendedorIds,
-      accessibleClientIds
-    }, useNonBlockingReadModel
-      ? {
-          mode: 'stale-while-revalidate',
-          executionContext: getPlatformExecutionContext(event.platform),
-          fallbackToRawOnReadError: true,
-          fallbackToRawWhenEmpty: true
-        }
-      : undefined);
+    const { agg: kpis } = await fetchVendasKpiReciboContributions(
+      client,
+      {
+        dataInicio: inicio,
+        dataFim: fim,
+        companyIds,
+        vendedorIds,
+        accessibleClientIds
+      },
+      useNonBlockingReadModel
+        ? {
+            mode: 'stale-while-revalidate',
+            executionContext: getPlatformExecutionContext(event.platform),
+            fallbackToRawOnReadError: true,
+            fallbackToRawWhenEmpty: true
+          }
+        : undefined
+    );
 
     return json({ kpis }, { headers: DYNAMIC_READ_HEADERS });
   } catch (err) {

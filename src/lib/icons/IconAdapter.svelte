@@ -17,7 +17,22 @@
     [key: string]: unknown;
   };
 
-  let { icon: Icon, size = 24, strokeWidth = 2, color = 'currentColor', class: className = '', ...rest }: Props = $props();
+  let {
+    icon: Icon,
+    size = 24,
+    strokeWidth = 2,
+    color = 'currentColor',
+    class: className = '',
+    ...rest
+  }: Props = $props();
 </script>
 
-<Icon {...rest} size={'none' as any} width={size} height={size} {color} {strokeWidth} class={`shrink ${className}`.trim()} />
+<Icon
+  {...rest}
+  size={'none' as any}
+  width={size}
+  height={size}
+  {color}
+  {strokeWidth}
+  class={`shrink ${className}`.trim()}
+/>

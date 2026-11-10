@@ -1,6 +1,6 @@
 // Migrado para Hono de src/routes/api/v1/dashboard/consultorias/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
-import { json, type RequestEvent } from "@sveltejs/kit";
+import { json, type RequestEvent } from '@sveltejs/kit';
 import {
   fetchVendedorIdsByCompanyIds,
   getAdminClient,
@@ -8,29 +8,23 @@ import {
   requireAuthenticatedUser,
   resolveScopedCompanyIds,
   resolveScopedVendedorIds,
-  resolveUserScope,
-} from "$lib/server/v1";
+  resolveUserScope
+} from '$lib/server/v1';
 import {
   buildReadModelCacheKey,
   getCachedReadModel,
   READ_MODEL_TAGS,
-  scopeCacheTags,
-} from "$lib/server/readModelCache";
-import { NO_STORE_HEADERS, SHORT_DYNAMIC_READ_HEADERS } from "$lib/server/httpCache";
-import { chunkArray, SUPABASE_IN_BATCH_SIZE } from "$lib/utils/array";
+  scopeCacheTags
+} from '$lib/server/readModelCache';
+import { NO_STORE_HEADERS, SHORT_DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
+import { chunkArray, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const NO_STORE_TEXT_HEADERS = {
-  "Content-Type": "text/plain; charset=utf-8",
-  ...NO_STORE_HEADERS,
+  'Content-Type': 'text/plain; charset=utf-8',
+  ...NO_STORE_HEADERS
 };
 
-const CONSULTORIA_PERMISSION_LEVELS = new Set([
-  "view",
-  "create",
-  "edit",
-  "delete",
-  "admin",
-]);
+const CONSULTORIA_PERMISSION_LEVELS = new Set(['view', 'create', 'edit', 'delete', 'admin']);
 
 type DashboardConsultoriaRow = {
   id: string | null;
@@ -41,28 +35,22 @@ type DashboardConsultoriaRow = {
   orcamento_id: string | null;
 };
 
-function clampIntParam(
-  value: string | null,
-  fallback: number,
-  min: number,
-  max: number,
-) {
+function clampIntParam(value: string | null, fallback: number, min: number, max: number) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(max, Math.max(min, Math.trunc(parsed)));
 }
 
 function isRpcMissing(error: unknown, fnName: string) {
-  const err = error && typeof error === "object" ? (error as Record<string, unknown>) : {};
-  const code = String(err.code || "");
-  const message = String(err.message || "").toLowerCase();
-  const needle = String(fnName || "").toLowerCase();
+  const err = error && typeof error === 'object' ? (error as Record<string, unknown>) : {};
+  const code = String(err.code || '');
+  const message = String(err.message || '').toLowerCase();
+  const needle = String(fnName || '').toLowerCase();
   return (
-    code === "42883" ||
+    code === '42883' ||
     (needle &&
       message.includes(needle) &&
-      (message.includes("does not exist") ||
-        message.includes("could not find")))
+      (message.includes('does not exist') || message.includes('could not find')))
   );
 }
 
@@ -76,16 +64,13 @@ export async function handleDashboardConsultoriasGet(event: RequestEvent) {
       scope.isAdmin ||
       scope.isMaster ||
       scope.isGestor ||
-      ["consultoria_online", "consultoria", "dashboard"].some((modulo) =>
+      ['consultoria_online', 'consultoria', 'dashboard'].some((modulo) =>
         Object.entries(scope.permissoes).some(([key, nivel]) => {
-          const normalized = String(key || "")
+          const normalized = String(key || '')
             .trim()
             .toLowerCase();
-          return (
-            normalized === modulo &&
-            CONSULTORIA_PERMISSION_LEVELS.has(String(nivel))
-          );
-        }),
+          return normalized === modulo && CONSULTORIA_PERMISSION_LEVELS.has(String(nivel));
+        })
       );
 
     if (!canConsultoria) {
@@ -93,34 +78,30 @@ export async function handleDashboardConsultoriasGet(event: RequestEvent) {
       return json({ items: [] }, { headers: NO_STORE_HEADERS });
     }
 
-    const mode = String(event.url.searchParams.get("mode") || "geral")
+    const mode = String(event.url.searchParams.get('mode') || 'geral')
       .trim()
       .toLowerCase();
-    const noCache =
-      String(event.url.searchParams.get("no_cache") || "").trim() === "1";
-    const limit = clampIntParam(event.url.searchParams.get("limit"), 50, 1, 50);
+    const noCache = String(event.url.searchParams.get('no_cache') || '').trim() === '1';
+    const limit = clampIntParam(event.url.searchParams.get('limit'), 50, 1, 50);
 
-    if (mode !== "geral" && mode !== "gestor") {
-      return new Response("mode invalido (use mode=geral ou mode=gestor).", {
+    if (mode !== 'geral' && mode !== 'gestor') {
+      return new Response('mode invalido (use mode=geral ou mode=gestor).', {
         status: 400,
-        headers: NO_STORE_TEXT_HEADERS,
+        headers: NO_STORE_TEXT_HEADERS
       });
     }
 
     const companyIds =
-      mode === "gestor"
-        ? resolveScopedCompanyIds(
-            scope,
-            event.url.searchParams.get("company_id"),
-          )
+      mode === 'gestor'
+        ? resolveScopedCompanyIds(scope, event.url.searchParams.get('company_id'))
         : [];
     let vendedorIds = await resolveScopedVendedorIds(
       client,
       scope,
-      event.url.searchParams.get("vendedor_ids"),
+      event.url.searchParams.get('vendedor_ids')
     );
 
-    if (scope.isMaster && mode !== "gestor") {
+    if (scope.isMaster && mode !== 'gestor') {
       vendedorIds = [scope.userId];
     }
 
@@ -130,7 +111,7 @@ export async function handleDashboardConsultoriasGet(event: RequestEvent) {
     limite.setDate(limite.getDate() + 30);
     const limiteIso = limite.toISOString();
 
-    const cacheKey = buildReadModelCacheKey("dashboard:consultorias", {
+    const cacheKey = buildReadModelCacheKey('dashboard:consultorias', {
       mode,
       userId: user.id,
       papel: scope.papel,
@@ -138,24 +119,20 @@ export async function handleDashboardConsultoriasGet(event: RequestEvent) {
       vendedorIds,
       limit,
       inicio: agoraIso.slice(0, 10),
-      fim: limiteIso.slice(0, 10),
+      fim: limiteIso.slice(0, 10)
     });
     const loadPayload = async () => {
       try {
-        const { data: rpcData, error: rpcErr } = await client.rpc(
-          "rpc_dashboard_consultorias",
-          {
-            p_company_id: companyId,
-            p_vendedor_ids: vendedorIds.length > 0 ? vendedorIds : null,
-            p_inicio: agoraIso,
-            p_fim: limiteIso,
-          },
-        );
+        const { data: rpcData, error: rpcErr } = await client.rpc('rpc_dashboard_consultorias', {
+          p_company_id: companyId,
+          p_vendedor_ids: vendedorIds.length > 0 ? vendedorIds : null,
+          p_inicio: agoraIso,
+          p_fim: limiteIso
+        });
         if (rpcErr) throw rpcErr;
-        return { items: (rpcData || []).slice(0, limit) };
+        return { items: (Array.isArray(rpcData) ? rpcData : []).slice(0, limit) };
       } catch (rpcError: unknown) {
-        if (!isRpcMissing(rpcError, "rpc_dashboard_consultorias"))
-          throw rpcError;
+        if (!isRpcMissing(rpcError, 'rpc_dashboard_consultorias')) throw rpcError;
       }
 
       const creatorIds =
@@ -171,16 +148,16 @@ export async function handleDashboardConsultoriasGet(event: RequestEvent) {
 
       const fetchRows = async (ids?: string[]) => {
         let consultoriasQuery = client
-          .from("consultorias_online")
-          .select("id, cliente_nome, data_hora, lembrete, destino, orcamento_id")
-          .eq("fechada", false)
-          .gte("data_hora", agoraIso)
-          .lte("data_hora", limiteIso)
-          .order("data_hora", { ascending: true })
+          .from('consultorias_online')
+          .select('id, cliente_nome, data_hora, lembrete, destino, orcamento_id')
+          .eq('fechada', false)
+          .gte('data_hora', agoraIso)
+          .lte('data_hora', limiteIso)
+          .order('data_hora', { ascending: true })
           .limit(limit);
 
         if (ids && ids.length > 0) {
-          consultoriasQuery = consultoriasQuery.in("created_by", ids);
+          consultoriasQuery = consultoriasQuery.in('created_by', ids);
         }
 
         const { data, error } = await consultoriasQuery;
@@ -188,27 +165,23 @@ export async function handleDashboardConsultoriasGet(event: RequestEvent) {
         return (data || []) as DashboardConsultoriaRow[];
       };
 
-      if (creatorIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (creatorIds.length <= QUERY_IN_BATCH_SIZE) {
         return {
-          items: await fetchRows(creatorIds.length > 0 ? creatorIds : undefined),
+          items: await fetchRows(creatorIds.length > 0 ? creatorIds : undefined)
         };
       }
 
-      const batchRows = await Promise.all(
-        chunkArray(creatorIds).map((batch) => fetchRows(batch))
-      );
+      const batchRows = await Promise.all(chunkArray(creatorIds).map((batch) => fetchRows(batch)));
       const rows = batchRows.flat();
 
       const rowsById = new Map<string, DashboardConsultoriaRow>();
       for (const row of rows) {
-        rowsById.set(String(row?.id || ""), row);
+        rowsById.set(String(row?.id || ''), row);
       }
 
       const dedupedRows = Array.from(rowsById.values())
         .sort((left, right) =>
-          String(left?.data_hora || "").localeCompare(
-            String(right?.data_hora || ""),
-          ),
+          String(left?.data_hora || '').localeCompare(String(right?.data_hora || ''))
         )
         .slice(0, limit);
 
@@ -226,25 +199,22 @@ export async function handleDashboardConsultoriasGet(event: RequestEvent) {
             ...scopeCacheTags({
               companyIds: companyId ? [companyId] : companyIds,
               vendedorIds,
-              userId: user.id,
-            }),
+              userId: user.id
+            })
           ],
           ttlMs: 120_000,
           staleTtlMs: 600_000,
-          loader: loadPayload,
+          loader: loadPayload
         });
 
     return json(payload, {
-      headers: noCache ? NO_STORE_HEADERS : SHORT_DYNAMIC_READ_HEADERS,
+      headers: noCache ? NO_STORE_HEADERS : SHORT_DYNAMIC_READ_HEADERS
     });
   } catch (error: unknown) {
-    logServerError(
-      "[dashboard/consultorias] falha ao carregar consultorias",
-      error,
-    );
+    logServerError('[dashboard/consultorias] falha ao carregar consultorias', error);
     return json(
-      { error: "Erro interno ao carregar consultorias." },
-      { status: 500, headers: NO_STORE_HEADERS },
+      { error: 'Erro interno ao carregar consultorias.' },
+      { status: 500, headers: NO_STORE_HEADERS }
     );
   }
 }

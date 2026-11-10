@@ -1,20 +1,22 @@
 import { dev } from '$app/environment';
 import { normalizeText } from '$lib/normalizeText';
-import { supabase as supabaseBrowser } from '$lib/db/supabase';
+import { browserData as dadosBrowser } from '$lib/db/browserData';
 import {
   calcularNaoComissionavelPorVenda as calcularNaoComissionavelPorVendaShared,
   calcularNaoComissionavelResumo,
   DEFAULT_NAO_COMISSIONAVEIS,
-  isFormaNaoComissionavel as isFormaNaoComissionavelBase,
+  isFormaNaoComissionavel as isFormaNaoComissionavelBase
 } from '$lib/naoComissionavel';
 import { uniqueCleanStrings } from '$lib/utils/array';
 
-
-const DEFAULT_NAO_COMISSIONAVEIS_NORMALIZED = DEFAULT_NAO_COMISSIONAVEIS.reduce<string[]>((items, termo) => {
-  const normalized = normalizeText(termo, { trim: true, collapseWhitespace: true });
-  if (normalized) items.push(normalized);
-  return items;
-}, []);
+const DEFAULT_NAO_COMISSIONAVEIS_NORMALIZED = DEFAULT_NAO_COMISSIONAVEIS.reduce<string[]>(
+  (items, termo) => {
+    const normalized = normalizeText(termo, { trim: true, collapseWhitespace: true });
+    if (normalized) items.push(normalized);
+    return items;
+  },
+  []
+);
 
 let cachedTermosNaoComissionaveis: string[] | null = null;
 let termosLoadPromise: Promise<string[]> | null = null;
@@ -25,7 +27,7 @@ interface ParametroPagamentoNaoComissionavelRow {
 }
 
 function normalizeTerm(value?: string | null) {
-  return normalizeText(value || "", { trim: true, collapseWhitespace: true });
+  return normalizeText(value || '', { trim: true, collapseWhitespace: true });
 }
 
 export async function carregarTermosNaoComissionaveis(options: { force?: boolean } = {}) {
@@ -35,11 +37,11 @@ export async function carregarTermosNaoComissionaveis(options: { force?: boolean
 
   termosLoadPromise = (async () => {
     try {
-      const { data, error } = await supabaseBrowser
-        .from("parametros_pagamentos_nao_comissionaveis")
-        .select("termo, termo_normalizado, ativo")
-        .eq("ativo", true)
-        .order("termo", { ascending: true });
+      const { data, error } = await dadosBrowser
+        .from('parametros_pagamentos_nao_comissionaveis')
+        .select('termo, termo_normalizado, ativo')
+        .eq('ativo', true)
+        .order('termo', { ascending: true });
       if (error) throw error;
       const rows = (data || []) as ParametroPagamentoNaoComissionavelRow[];
       const termos = rows.reduce<string[]>((items, row) => {
@@ -51,7 +53,7 @@ export async function carregarTermosNaoComissionaveis(options: { force?: boolean
       cachedTermosNaoComissionaveis = unique;
       return unique;
     } catch (err) {
-      if (dev) console.warn("[pagamentoUtils] Falha ao carregar termos nao comissionaveis.", err);
+      if (dev) console.warn('[pagamentoUtils] Falha ao carregar termos nao comissionaveis.', err);
     } finally {
       termosLoadPromise = null;
     }

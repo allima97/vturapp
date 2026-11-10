@@ -1,8 +1,8 @@
-export type VoucherProvider = "special_tours" | "europamundo" | "sato_tours";
+export type VoucherProvider = 'special_tours' | 'europamundo' | 'sato_tours';
 
-export type VoucherAssetProvider = "vtur" | VoucherProvider | "generic";
+export type VoucherAssetProvider = 'vtur' | VoucherProvider | 'generic';
 
-export type VoucherAssetKind = "logo" | "image" | "app_icon";
+export type VoucherAssetKind = 'logo' | 'image' | 'app_icon';
 
 export type VoucherDia = {
   id?: string;
@@ -11,12 +11,14 @@ export type VoucherDia = {
   descricao: string;
   data_referencia?: string | null;
   cidade?: string | null;
+  destino_geografico_id?: string;
   ordem: number;
 };
 
 export type VoucherHotel = {
   id?: string;
   cidade: string;
+  destino_geografico_id?: string;
   hotel: string;
   endereco?: string | null;
   data_inicio?: string | null;

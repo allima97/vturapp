@@ -8,7 +8,10 @@ let fieldCounter = 0;
 export function uniqueFieldId(label?: string | null): string {
   fieldCounter += 1;
   if (label) {
-    const base = label.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    const base = label
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
     return `${base}-${fieldCounter}`;
   }
   return `field-${fieldCounter}`;

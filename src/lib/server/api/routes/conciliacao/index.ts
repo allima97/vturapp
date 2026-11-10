@@ -14,7 +14,11 @@ import { handleConciliacaoOptionsGet } from './options';
 import { handleConciliacaoRateioInfoGet } from './rateio-info';
 import { handleConciliacaoRevertPost } from './revert';
 import { handleConciliacaoRunPost } from './run';
-import { handleConciliacaoSemMovimentoGet, handleConciliacaoSemMovimentoPost, handleConciliacaoSemMovimentoDelete } from './sem-movimento';
+import {
+  handleConciliacaoSemMovimentoGet,
+  handleConciliacaoSemMovimentoPost,
+  handleConciliacaoSemMovimentoDelete
+} from './sem-movimento';
 import { handleConciliacaoStatusCronologicoGet } from './status-cronologico';
 import { handleConciliacaoSummaryGet } from './summary';
 import { handleConciliacaoUpdateValoresPost } from './update-valores';

@@ -1,3 +1,4 @@
+import type { DataClient } from '$lib/server/data';
 /**
  * Proteção das linhas do read model antes de gravar (25/09/2026).
  *
@@ -16,7 +17,6 @@
  * nenhuma contagem muda, em nenhum filtro. Se não for, o mês não é gravado e
  * o comportamento fica como antes (cálculo na hora).
  */
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { chunkArray } from '$lib/utils/array';
 
 export type GuardedContributionRow = {
@@ -37,7 +37,7 @@ export const RECEIPT_COUNT_KEYS: Record<string, (row: GuardedContributionRow) =>
   // relatorios/ranking.ts
   ranking: (r) => `${s(r.venda_key)}::${s(r.recibo_id) || s(r.recibo_numero)}`,
   // relatorios/destinos.ts, relatorios/clientes.ts + RPCs relatorio_destinos/clientes
-  vendas: (r) => s(r.venda_key) || s(r.recibo_id) || `${s(r.recibo_numero)}|${s(r.data_recibo)}`,
+  vendas: (r) => s(r.venda_key) || s(r.recibo_id) || `${s(r.recibo_numero)}|${s(r.data_recibo)}`
 };
 
 /**
@@ -46,7 +46,7 @@ export const RECEIPT_COUNT_KEYS: Record<string, (row: GuardedContributionRow) =>
  */
 export function findBrokenReceiptCountKey(
   before: GuardedContributionRow[],
-  after: GuardedContributionRow[],
+  after: GuardedContributionRow[]
 ): string | null {
   for (const [name, keyOf] of Object.entries(RECEIPT_COUNT_KEYS)) {
     const forward = new Map<string, string>();
@@ -66,7 +66,7 @@ export function findBrokenReceiptCountKey(
 }
 
 /** Busca quais recibo_id existem em vendas_recibos. Erro de consulta → lança (mês fica como antes). */
-async function fetchExistingReciboIds(client: SupabaseClient, ids: string[]) {
+async function fetchExistingReciboIds(client: DataClient, ids: string[]) {
   const existing = new Set<string>();
   for (const batch of chunkArray(ids)) {
     const { data, error } = await client.from('vendas_recibos').select('id').in('id', batch);
@@ -83,8 +83,8 @@ async function fetchExistingReciboIds(client: SupabaseClient, ids: string[]) {
  * Lança erro se isso mudaria alguma contagem (o chamador marca o mês como 'error').
  */
 export async function guardContributionRowsForeignKeys<T extends GuardedContributionRow>(
-  client: SupabaseClient,
-  rows: T[],
+  client: DataClient,
+  rows: T[]
 ): Promise<{ rows: T[]; nulledReciboIds: number }> {
   const ids = [...new Set(rows.map((row) => s(row.recibo_id)).filter(Boolean))];
   if (ids.length === 0) return { rows, nulledReciboIds: 0 };
@@ -103,7 +103,7 @@ export async function guardContributionRowsForeignKeys<T extends GuardedContribu
   const broken = findBrokenReceiptCountKey(rows, guarded);
   if (broken) {
     throw new Error(
-      `read model: recibo sem vínculo mudaria a contagem de recibos (chave "${broken}"); mês não gravado.`,
+      `read model: recibo sem vínculo mudaria a contagem de recibos (chave "${broken}"); mês não gravado.`
     );
   }
   return { rows: guarded, nulledReciboIds };

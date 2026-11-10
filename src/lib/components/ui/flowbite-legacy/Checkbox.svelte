@@ -1,31 +1,58 @@
-<script>// @ts-nocheck (cópia do Flowbite-Svelte 0.48.6, ver README.md)
-import { getContext } from "svelte";
-import { labelClass, inputClass } from "./Radio.svelte";
-import Label from "./Label.svelte";
-export let color = "primary";
-export let custom = false;
-export let inline = false;
-export let group = [];
-export let choices = [];
-export let value = "on";
-export let checked = void 0;
-export let spacing = $$slots.default ? "me-2" : "";
-export let groupLabelClass = "";
-export let groupInputClass = "";
-let background = getContext("background");
+<script>
+  // @ts-nocheck (cópia do Flowbite-Svelte 0.48.6, ver README.md)
+  import { getContext } from 'svelte';
+  import { labelClass, inputClass } from './Radio.svelte';
+  import Label from './Label.svelte';
+  export let color = 'primary';
+  export let custom = false;
+  export let inline = false;
+  export let group = [];
+  export let choices = [];
+  export let value = 'on';
+  export let checked = void 0;
+  export let spacing = $$slots.default ? 'me-2' : '';
+  export let groupLabelClass = '';
+  export let groupInputClass = '';
+  let background = getContext('background');
 </script>
+
 {#if choices.length > 0}
-  {#each choices as {value, label}, i}
-    <Label class={labelClass(inline, groupLabelClass)} show={$$slots.default} for={`checkbox-${i}`}>{ label }
-      <input id={`checkbox-${i}`} type="checkbox" value={ value } bind:group {...$$restProps}  class={inputClass(custom, color, true, background, spacing, groupInputClass)} />
+  {#each choices as { value, label }, i}
+    <Label class={labelClass(inline, groupLabelClass)} show={$$slots.default} for={`checkbox-${i}`}
+      >{label}
+      <input
+        id={`checkbox-${i}`}
+        type="checkbox"
+        {value}
+        bind:group
+        {...$$restProps}
+        class={inputClass(custom, color, true, background, spacing, groupInputClass)}
+      />
       <slot />
     </Label>
   {/each}
 {:else}
-<Label class={labelClass(inline, $$props.class)} show={$$slots.default}>
-  <input type="checkbox" bind:checked on:keyup on:keydown on:keypress on:focus on:blur on:click on:mouseover on:mouseenter on:mouseleave on:paste on:change {value} {...$$restProps} class={inputClass(custom, color, true, background, spacing, $$slots.default || $$props.class)} />
-  <slot />
-</Label>
+  <Label class={labelClass(inline, $$props.class)} show={$$slots.default}>
+    <input
+      type="checkbox"
+      bind:checked
+      on:keyup
+      on:keydown
+      on:keypress
+      on:focus
+      on:blur
+      on:click
+      on:mouseover
+      on:mouseenter
+      on:mouseleave
+      on:paste
+      on:change
+      {value}
+      {...$$restProps}
+      class={inputClass(custom, color, true, background, spacing, $$slots.default || $$props.class)}
+    />
+    <slot />
+  </Label>
 {/if}
 
 <!--

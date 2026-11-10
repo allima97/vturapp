@@ -13,11 +13,14 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
 vi.mock('./context', () => ({ handleUserContextGet: spy('handleUserContextGet') }));
-vi.mock('./profile', () => ({ handleUserProfileGet: spy('handleUserProfileGet'), handleUserProfilePatch: spy('handleUserProfilePatch') }));
+vi.mock('./profile', () => ({
+  handleUserProfileGet: spy('handleUserProfileGet'),
+  handleUserProfilePatch: spy('handleUserProfilePatch')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
@@ -25,12 +28,12 @@ import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/user/context', 'handleUserContextGet', {}],
   ['GET', '/api/v1/user/profile', 'handleUserProfileGet', {}],
-  ['PATCH', '/api/v1/user/profile', 'handleUserProfilePatch', {}],
+  ['PATCH', '/api/v1/user/profile', 'handleUserProfilePatch', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/user/context'],
-  ['PUT', '/api/v1/user/profile'],
+  ['PUT', '/api/v1/user/profile']
 ];
 
 function ev(method: string, path: string) {

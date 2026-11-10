@@ -17,6 +17,7 @@
       ? 'bg-slate-100 text-slate-500'
       : neg
         ? 'bg-red-100 text-red-700'
-        : 'bg-emerald-100 text-emerald-700'}">{rotulo}</span>
+        : 'bg-emerald-100 text-emerald-700'}">{rotulo}</span
+  >
   {#if legenda}<span>{legenda}</span>{/if}
 </div>

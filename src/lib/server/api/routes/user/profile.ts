@@ -9,9 +9,18 @@ import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/reque
 
 const MAX_USER_PROFILE_BODY_BYTES = 64 * 1024;
 const USER_PROFILE_ALLOWED_UPDATE_FIELDS = [
-  'nome_completo', 'cpf', 'data_nascimento',
-  'telefone', 'whatsapp', 'rg', 'cep', 'endereco', 'numero',
-  'complemento', 'cidade', 'estado'
+  'nome_completo',
+  'cpf',
+  'data_nascimento',
+  'telefone',
+  'whatsapp',
+  'rg',
+  'cep',
+  'endereco',
+  'numero',
+  'complemento',
+  'cidade',
+  'estado'
 ];
 
 type UserProfileBody = Record<string, unknown> & {
@@ -30,17 +39,20 @@ export async function handleUserProfileGet(event: RequestEvent) {
 
     const { data, error: queryError } = await client
       .from('users')
-      .select(`
+      .select(
+        `
         id, nome_completo, cpf, data_nascimento, telefone, whatsapp,
         rg, cep, endereco, numero, complemento, cidade, estado, email, uso_individual,
         avatar_url, company_id, created_by_gestor, must_change_password,
         company:companies!company_id(nome_empresa, nome_fantasia, cnpj, endereco, telefone, cidade, estado)
-      `)
+      `
+      )
       .eq('id', user.id)
       .maybeSingle();
 
     if (queryError) throw queryError;
-    if (!data) return json({ error: 'Perfil não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!data)
+      return json({ error: 'Perfil não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
 
     return json(data, { headers: NO_STORE_HEADERS });
   } catch (err) {
@@ -82,13 +94,21 @@ export async function handleUserProfilePatch(event: RequestEvent) {
     }
 
     if (Object.keys(payload).length === 0) {
-      return json({ error: 'Nenhum campo para atualizar.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Nenhum campo para atualizar.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { error: updateError } = await client.from('users').update(payload).eq('id', user.id);
     if (updateError) throw updateError;
 
-    registrarLog(event, { userId: user.id, modulo: 'perfil', acao: 'perfil_atualizado', detalhes: { ...payload } });
+    registrarLog(event, {
+      userId: user.id,
+      modulo: 'perfil',
+      acao: 'perfil_atualizado',
+      detalhes: { ...payload }
+    });
 
     return json({ ok: true }, { headers: NO_STORE_HEADERS });
   } catch (err) {

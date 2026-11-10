@@ -95,7 +95,11 @@
   }
 
   function hasOptionId(payload: unknown): payload is SubdivisaoOption {
-    return Boolean(payload && typeof payload === 'object' && String((payload as { id?: unknown }).id || '').trim());
+    return Boolean(
+      payload &&
+      typeof payload === 'object' &&
+      String((payload as { id?: unknown }).id || '').trim()
+    );
   }
 
   function getSelectedOption() {
@@ -143,7 +147,11 @@
 
     loading = true;
     try {
-      const payload = await apiGet<SubdivisoesListResponse>('/api/v1/subdivisoes', { q: query, page: 1, pageSize: maxResults });
+      const payload = await apiGet<SubdivisoesListResponse>('/api/v1/subdivisoes', {
+        q: query,
+        page: 1,
+        pageSize: maxResults
+      });
       if (currentQuery !== query) return;
       const items = Array.isArray(payload?.items) ? payload.items : [];
       results = uniqueOptions([
@@ -170,7 +178,10 @@
 
     const normalized = normalizeLookup(typed);
     const exact = uniqueOptions(results).find((item) => {
-      return normalizeLookup(item.nome) === normalized || normalizeLookup(getOptionLabel(item)) === normalized;
+      return (
+        normalizeLookup(item.nome) === normalized ||
+        normalizeLookup(getOptionLabel(item)) === normalized
+      );
     });
 
     if (exact) {
@@ -231,7 +242,10 @@
       event.preventDefault();
       open = true;
       if (results.length > 0) {
-        activeIndex = activeIndex < 0 ? results.length - 1 : (activeIndex - 1 + results.length) % results.length;
+        activeIndex =
+          activeIndex < 0
+            ? results.length - 1
+            : (activeIndex - 1 + results.length) % results.length;
       }
       return;
     }
@@ -295,11 +309,15 @@
   />
 
   {#if open}
-    <div class="mt-2 max-h-72 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+    <div
+      class="mt-2 max-h-72 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg"
+    >
       {#if loading}
         <div class="px-3 py-2 text-sm text-slate-500">Carregando estados...</div>
       {:else if searchText.trim().length < minChars}
-        <div class="px-3 py-2 text-sm text-slate-500">Digite pelo menos {minChars} letras para buscar.</div>
+        <div class="px-3 py-2 text-sm text-slate-500">
+          Digite pelo menos {minChars} letras para buscar.
+        </div>
       {:else if results.length === 0}
         <div class="px-3 py-2 text-sm text-slate-500">Nenhum estado/província encontrado.</div>
       {:else}
@@ -307,7 +325,9 @@
           <button
             type="button"
             class={`w-full px-3 py-2 text-left text-sm transition-colors ${
-              index === activeIndex ? 'bg-blue-50 text-blue-700' : 'hover:bg-slate-50 text-slate-700'
+              index === activeIndex
+                ? 'bg-blue-50 text-blue-700'
+                : 'text-slate-700 hover:bg-slate-50'
             }`}
             on:mousedown|preventDefault={() => selectOption(option)}
           >

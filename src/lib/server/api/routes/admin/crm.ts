@@ -46,7 +46,12 @@ export async function handleAdminCrmGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['admin', 'parametros_avisos', 'avisos', 'parametros'], 1, 'Sem acesso ao CRM Admin.');
+      ensureModuloAccess(
+        scope,
+        ['admin', 'parametros_avisos', 'avisos', 'parametros'],
+        1,
+        'Sem acesso ao CRM Admin.'
+      );
     }
 
     // Categorias
@@ -59,7 +64,9 @@ export async function handleAdminCrmGet(event: RequestEvent) {
     // Temas
     const { data: temas } = await client
       .from('user_message_template_themes')
-      .select('id, nome, categoria_id, asset_url, storage_path, scope, greeting_text, mensagem_max_linhas, mensagem_max_palavras, assinatura_max_linhas, assinatura_max_palavras, ativo')
+      .select(
+        'id, nome, categoria_id, asset_url, storage_path, scope, greeting_text, mensagem_max_linhas, mensagem_max_palavras, assinatura_max_linhas, assinatura_max_palavras, ativo'
+      )
       .order('nome')
       .limit(200);
 
@@ -73,7 +80,7 @@ export async function handleAdminCrmGet(event: RequestEvent) {
     return json(
       {
         categorias: categorias || [],
-        temas: (temas || []).map((tema) => ({
+        temas: (temas || []).map((tema: any) => ({
           ...tema,
           asset_url: resolveThemeAssetMeta(tema).asset_url
         })),
@@ -98,7 +105,12 @@ export async function handleAdminCrmPost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['admin', 'parametros_avisos', 'avisos', 'parametros'], 3, 'Sem permissão para editar CRM Admin.');
+      ensureModuloAccess(
+        scope,
+        ['admin', 'parametros_avisos', 'avisos', 'parametros'],
+        3,
+        'Sem permissão para editar CRM Admin.'
+      );
     }
 
     const body = readAdminCrmBody(bodyResult.data);
@@ -115,10 +127,12 @@ export async function handleAdminCrmPost(event: RequestEvent) {
     };
 
     const table = tableMap[entity];
-    if (!table) return json({ error: 'Entidade inválida.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!table)
+      return json({ error: 'Entidade inválida.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     if (action === 'delete') {
-      if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+      if (!isUuid(id))
+        return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
       const { error: deleteError } = await client.from(table).delete().eq('id', id);
       if (deleteError) throw deleteError;
       return json({ ok: true }, { headers: NO_STORE_HEADERS });

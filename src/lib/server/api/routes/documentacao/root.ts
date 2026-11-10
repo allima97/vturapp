@@ -82,7 +82,10 @@ async function requireAdmin(event: Parameters<RequestHandler>[0]) {
   if (!scope.isAdmin) {
     return {
       ok: false as const,
-      response: json({ error: 'Somente administradores podem editar a documentação.' }, { status: 403, headers: NO_STORE_HEADERS })
+      response: json(
+        { error: 'Somente administradores podem editar a documentação.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      )
     };
   }
   return { ok: true as const, client, user };
@@ -95,37 +98,39 @@ export const handleDocumentacaoGet = async (event: RequestEvent) => {
 
     try {
       const { data: sectionsData, error: sectionsError } = await client
-        .from("system_documentation_sections")
-        .select("id, slug, role_scope, module_key, route_pattern, title, summary, content_markdown, tone, sort_order, is_active, updated_at")
-        .order("sort_order", { ascending: true })
-        .order("title", { ascending: true });
+        .from('system_documentation_sections')
+        .select(
+          'id, slug, role_scope, module_key, route_pattern, title, summary, content_markdown, tone, sort_order, is_active, updated_at'
+        )
+        .order('sort_order', { ascending: true })
+        .order('title', { ascending: true });
 
       if (!sectionsError && sectionsData && sectionsData.length > 0) {
         return json(
           {
             sections: sectionsData,
-            source: "sections"
+            source: 'sections'
           },
           {
-            headers: NO_STORE_HEADERS,
+            headers: NO_STORE_HEADERS
           }
         );
       }
     } catch (err) {
-      logServerError("[documentacao] falha ao ler system_documentation_sections", err);
+      logServerError('[documentacao] falha ao ler system_documentation_sections', err);
     }
 
     try {
       const { data, error } = await client
-        .from("system_documentation")
-        .select("id, slug, markdown, updated_at")
-        .order("updated_at", { ascending: false })
+        .from('system_documentation')
+        .select('id, slug, markdown, updated_at')
+        .order('updated_at', { ascending: false })
         .limit(10);
 
       if (!error && data && data.length > 0) {
         return json(
           {
-            sections: data.map((doc) => ({
+            sections: data.map((doc: any) => ({
               id: doc.id,
               slug: doc.slug,
               role_scope: 'all',
@@ -139,21 +144,27 @@ export const handleDocumentacaoGet = async (event: RequestEvent) => {
               is_active: true,
               updated_at: doc.updated_at
             })),
-            source: "legacy"
+            source: 'legacy'
           },
           {
-            headers: NO_STORE_HEADERS,
+            headers: NO_STORE_HEADERS
           }
         );
       }
     } catch (err) {
-      logServerError("[documentacao] falha ao ler system_documentation", err);
+      logServerError('[documentacao] falha ao ler system_documentation', err);
     }
 
-    return json({ error: "Documentacao nao encontrada." }, { status: 404, headers: NO_STORE_HEADERS });
+    return json(
+      { error: 'Documentacao nao encontrada.' },
+      { status: 404, headers: NO_STORE_HEADERS }
+    );
   } catch (error) {
-    logServerError("[documentacao] falha ao carregar documentação", error);
-    return json({ error: "Erro interno ao carregar documentação." }, { status: 500, headers: NO_STORE_HEADERS });
+    logServerError('[documentacao] falha ao carregar documentação', error);
+    return json(
+      { error: 'Erro interno ao carregar documentação.' },
+      { status: 500, headers: NO_STORE_HEADERS }
+    );
   }
 };
 
@@ -170,13 +181,19 @@ export const handleDocumentacaoPost = async (event: RequestEvent) => {
 
     const body = readDocumentacaoBody(bodyResult.data);
     const id = String(body.id || '').trim();
-    const role_scope = VALID_ROLES.has(String(body.role_scope || 'all')) ? String(body.role_scope || 'all') : 'all';
-    const tone = VALID_TONES.has(String(body.tone || 'info')) ? String(body.tone || 'info') : 'info';
+    const role_scope = VALID_ROLES.has(String(body.role_scope || 'all'))
+      ? String(body.role_scope || 'all')
+      : 'all';
+    const tone = VALID_TONES.has(String(body.tone || 'info'))
+      ? String(body.tone || 'info')
+      : 'info';
     const title = String(body.title || '').trim();
     const content_markdown = String(body.content_markdown || '').trim();
 
-    if (!title) return json({ error: 'Título obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
-    if (!content_markdown) return json({ error: 'Conteúdo obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!title)
+      return json({ error: 'Título obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!content_markdown)
+      return json({ error: 'Conteúdo obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const payload = {
       slug: normalizeSlug(body.slug),
@@ -194,7 +211,10 @@ export const handleDocumentacaoPost = async (event: RequestEvent) => {
     };
 
     if (id && isUuid(id)) {
-      const { error } = await admin.client.from('system_documentation_sections').update(payload).eq('id', id);
+      const { error } = await admin.client
+        .from('system_documentation_sections')
+        .update(payload)
+        .eq('id', id);
       if (error) throw error;
     } else {
       const { error } = await admin.client.from('system_documentation_sections').insert({
@@ -206,8 +226,11 @@ export const handleDocumentacaoPost = async (event: RequestEvent) => {
 
     return json({ ok: true }, { headers: NO_STORE_HEADERS });
   } catch (error) {
-    logServerError("[documentacao] falha ao salvar documentação", error);
-    return json({ error: toUserMessage(error, "Erro interno ao salvar documentação.") }, { status: 500, headers: NO_STORE_HEADERS });
+    logServerError('[documentacao] falha ao salvar documentação', error);
+    return json(
+      { error: toUserMessage(error, 'Erro interno ao salvar documentação.') },
+      { status: 500, headers: NO_STORE_HEADERS }
+    );
   }
 };
 
@@ -220,14 +243,21 @@ export const handleDocumentacaoDelete = async (event: RequestEvent) => {
     if (!admin.ok) return admin.response;
 
     const id = String(event.url.searchParams.get('id') || '').trim();
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
-    const { error } = await admin.client.from('system_documentation_sections').delete().eq('id', id);
+    const { error } = await admin.client
+      .from('system_documentation_sections')
+      .delete()
+      .eq('id', id);
     if (error) throw error;
 
     return json({ ok: true }, { headers: NO_STORE_HEADERS });
   } catch (error) {
-    logServerError("[documentacao] falha ao excluir documentação", error);
-    return json({ error: toUserMessage(error, "Erro interno ao excluir documentação.") }, { status: 500, headers: NO_STORE_HEADERS });
+    logServerError('[documentacao] falha ao excluir documentação', error);
+    return json(
+      { error: toUserMessage(error, 'Erro interno ao excluir documentação.') },
+      { status: 500, headers: NO_STORE_HEADERS }
+    );
   }
 };

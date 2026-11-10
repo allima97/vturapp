@@ -1,24 +1,30 @@
 name = "vturapp"
 main = ".svelte-kit/cloudflare/_worker.js"
 compatibility_date = "2026-04-19"
+# Better Auth escolhe node:crypto (scrypt) no export "workerd".
+# Sem esta flag a Cloudflare recusa o script: No such module "node:crypto".
+# A raiz, [env.staging] e [env.production] repetem a flag. Bindings de D1/R2
+# não são herdados entre ambientes, então cada um declara os seus.
+compatibility_flags = ["nodejs_compat"]
 
-# Configure os bindings no Cloudflare, fora do repositorio:
-#   wrangler secret put PUBLIC_SUPABASE_URL
-#   wrangler secret put PUBLIC_SUPABASE_ANON_KEY
-#   wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+# ─────────────────────────────────────────────────────────────────────────────
+# SECRETS — configure via wrangler secret (nunca neste arquivo):
 #
-# Secrets para o Cron Trigger (rebuild do read model de ranking):
-#   wrangler secret put CRON_SECRET       # segredo validado pelo endpoint GET /api/v1/read-model/rebuild
-#   wrangler secret put WORKER_BASE_URL   # URL base do worker, ex: https://vtur-svelte.pages.dev
+#   Produção:
+#     wrangler secret put BETTER_AUTH_SECRET
+#     wrangler secret put RESEND_API_KEY
 #
-# Nao fixe credenciais/projetos de producao neste arquivo.
-
-# Fase 3.4 (velocidade): o banco (Supabase) fica em us-west-2 (Oregon). Sem esta
-# opção o Worker roda perto do usuário (São Paulo) e CADA consulta ao banco
-# atravessa o continente (~200 ms). Com ela, o Worker roda ao lado do banco:
-# o usuário paga uma ida até lá por requisição e as consultas ficam em poucos ms.
-# Arquivos estáticos (assets) continuam saindo do ponto mais próximo do usuário.
-# Para desfazer: remova este bloco e publique de novo.
+#   Staging (wrangler secret put --env staging ...):
+#     wrangler secret put BETTER_AUTH_SECRET --env staging
+#     wrangler secret put RESEND_API_KEY --env staging
+#
+#   Cron (handler scheduled() nativo):
+#     wrangler secret put CRON_SECRET
+#     wrangler secret put WORKER_BASE_URL
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# PLACEMENT
+# Oregon permanece como placement atual. Reavaliar latencia com D1 antes de mudar.
 [placement]
 region = "aws:us-west-2"
 
@@ -26,17 +32,144 @@ region = "aws:us-west-2"
 directory = ".svelte-kit/cloudflare"
 binding = "ASSETS"
 
-# KV Cache: cache distribuído compartilhado entre todas as instâncias Workers.
-# Usado para broadcast de invalidação de cache cross-instance.
+# ─── KV ───────────────────────────────────────────────────────────────────────
 [[kv_namespaces]]
 binding = "KV_BINDING"
 id = "60fa423718914712bec4f489d41c3dd6"
 
-# Cron Trigger: reconstrói o read model de ranking a cada 5 minutos.
-# O endpoint GET /api/v1/read-model/rebuild valida o header x-cron-secret
-# (configurado via: wrangler secret put CRON_SECRET)
+# ─── D1 — banco relacional principal ─────────────────────────────────────────
+# D1 de produção recém-provisionado; manter migrations alinhadas com staging.
+[[d1_databases]]
+binding = "DB"
+database_name = "vturapp-db"
+database_id = "36d3da2e-b186-48f8-bb3e-4f9a14b20235"
+migrations_dir = "./drizzle"
+
+# Referência GeoNames já carregada. O aplicativo só lê; a escrita é recusada
+# em runtime. Não aplique migrações nem importação neste binding.
+[[d1_databases]]
+binding = "GEO_DB"
+database_name = "vturapp-geonames-isolado"
+database_id = "bf40654b-8083-4fa1-8424-a923282d9888"
+
+[vars]
+PUBLIC_DEPLOY_ENV = "production"
+PUBLIC_GEONAMES_ATIVO = "1"
+
+# ─── R2 — arquivos privados ───────────────────────────────────────────────────
+# Produção: criar com `wrangler r2 bucket create vturapp-files`.
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "vturapp-files"
+
+# ─── CRON ─────────────────────────────────────────────────────────────────────
+# O handler scheduled() será implementado diretamente no Worker em F1-02,
+# eliminando o scripts/patch-worker-scheduled.js.
+# Crons mantidos com os mesmos horários; o handler de lógica muda.
 [triggers]
-# "7 6 * * *" = rodada noturna às 03:07 de Brasília (marca os meses anteriores para
-# refazer; o cron de 5 min reconstrói durante a madrugada). Ver NIGHTLY_READ_MODEL_CRON
-# em src/lib/server/readModelRebuild.ts — os dois valores precisam ser iguais.
 crons = ["*/5 * * * *", "7 6 * * *"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AMBIENTE: staging
+# ─────────────────────────────────────────────────────────────────────────────
+[env.staging]
+name = "vturapp-staging"
+compatibility_date = "2026-04-19"
+compatibility_flags = ["nodejs_compat"]
+
+[env.staging.placement]
+region = "aws:us-west-2"
+
+[env.staging.assets]
+directory = ".svelte-kit/cloudflare"
+binding = "ASSETS"
+
+[[env.staging.kv_namespaces]]
+binding = "KV_BINDING"
+id = "10586afa5db14a7ab8d2e406ba98d5da"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "vturapp-db-staging"
+database_id = "96c13e55-60e3-4e3b-9ecc-b22da019c010"
+migrations_dir = "./drizzle"
+
+# Referência GeoNames já carregada. O aplicativo só lê; a escrita é recusada
+# em runtime. Não aplique migrações nem importação neste binding.
+[[env.staging.d1_databases]]
+binding = "GEO_DB"
+database_name = "vturapp-geonames-isolado"
+database_id = "bf40654b-8083-4fa1-8424-a923282d9888"
+
+[env.staging.vars]
+PUBLIC_DEPLOY_ENV = "staging"
+PUBLIC_GEONAMES_ATIVO = "1"
+
+[[env.staging.r2_buckets]]
+binding = "R2"
+bucket_name = "vturapp-files-staging"
+
+[env.staging.triggers]
+crons = ["*/5 * * * *", "7 6 * * *"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AMBIENTE: production
+# Mesmos recursos da raiz, para `wrangler deploy --env production` e
+# `d1:migrate:prod` resolverem o banco remoto com nodejs_compat.
+# ─────────────────────────────────────────────────────────────────────────────
+[env.production]
+name = "vturapp"
+compatibility_date = "2026-04-19"
+compatibility_flags = ["nodejs_compat"]
+
+[env.production.placement]
+region = "aws:us-west-2"
+
+[env.production.assets]
+directory = ".svelte-kit/cloudflare"
+binding = "ASSETS"
+
+[[env.production.kv_namespaces]]
+binding = "KV_BINDING"
+id = "60fa423718914712bec4f489d41c3dd6"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "vturapp-db"
+database_id = "36d3da2e-b186-48f8-bb3e-4f9a14b20235"
+migrations_dir = "./drizzle"
+
+[[env.production.r2_buckets]]
+binding = "R2"
+bucket_name = "vturapp-files"
+
+[env.production.triggers]
+crons = ["*/5 * * * *", "7 6 * * *"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AMBIENTE: geo
+# Bancos isolados criados em 9/11/2026. Não herda KV nem R2 de propósito:
+# este ambiente só executa D1 e não deve apontar para os namespaces ou
+# buckets de staging e produção. O aviso do Wrangler sobre bindings ausentes
+# é esperado. Não faça deploy deste ambiente no lugar do aplicativo publicado.
+# GEO_DB não tem migrations_dir: o schema vem dos arquivos SQL do GeoNames,
+# não das migrações do aplicativo.
+# ─────────────────────────────────────────────────────────────────────────────
+[env.geo]
+name = "vturapp-geo-isolado"
+compatibility_date = "2026-04-19"
+compatibility_flags = ["nodejs_compat"]
+
+[env.geo.placement]
+region = "aws:us-west-2"
+
+[[env.geo.d1_databases]]
+binding = "DB"
+database_name = "vturapp-db-geo-isolado"
+database_id = "4f480221-b5e7-4639-9e28-d995b9615f7f"
+migrations_dir = "./drizzle"
+
+[[env.geo.d1_databases]]
+binding = "GEO_DB"
+database_name = "vturapp-geonames-isolado"
+database_id = "bf40654b-8083-4fa1-8424-a923282d9888"

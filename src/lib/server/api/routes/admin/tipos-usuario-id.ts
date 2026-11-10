@@ -33,12 +33,19 @@ export async function handleAdminTiposUsuarioIdGet(event: RequestEvent) {
     const userTypes = await loadManagedUserTypes(client, scope);
     const target = userTypes.find((row) => row.id === typeId);
     if (!target) {
-      return new Response('Tipo de usuario nao encontrado.', { status: 404, headers: NO_STORE_HEADERS });
+      return new Response('Tipo de usuario nao encontrado.', {
+        status: 404,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const [defaultPermsRes, usersRes] = await Promise.all([
       loadUserTypeDefaultPermissions(client, typeId),
-      client.from('users').select('id, nome_completo, email').eq('user_type_id', typeId).order('nome_completo')
+      client
+        .from('users')
+        .select('id, nome_completo, email')
+        .eq('user_type_id', typeId)
+        .order('nome_completo')
     ]);
 
     if (usersRes.error) throw usersRes.error;

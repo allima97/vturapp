@@ -77,10 +77,20 @@ export async function handleAdminUsuariosGet(event: RequestEvent) {
     ensureCanManageUsers(scope);
 
     const search = String(event.url.searchParams.get('q') || '').trim();
-    const tipo = String(event.url.searchParams.get('tipo') || '').trim().toUpperCase();
-    const companyId = String(event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id') || '').trim();
-    const status = String(event.url.searchParams.get('status') || event.url.searchParams.get('ativo') || '').trim().toLowerCase();
-    const usoIndividual = String(event.url.searchParams.get('uso_individual') || '').trim().toLowerCase();
+    const tipo = String(event.url.searchParams.get('tipo') || '')
+      .trim()
+      .toUpperCase();
+    const companyId = String(
+      event.url.searchParams.get('company_id') || event.url.searchParams.get('empresa_id') || ''
+    ).trim();
+    const status = String(
+      event.url.searchParams.get('status') || event.url.searchParams.get('ativo') || ''
+    )
+      .trim()
+      .toLowerCase();
+    const usoIndividual = String(event.url.searchParams.get('uso_individual') || '')
+      .trim()
+      .toLowerCase();
 
     let rows = await listManagedUsers(client, scope);
 
@@ -164,7 +174,9 @@ export async function handleAdminUsuariosPost(event: RequestEvent) {
     ensureCanManageUsers(scope);
 
     const requestedId = String(body.id || '').trim();
-    const email = String(body.email || '').trim().toLowerCase();
+    const email = String(body.email || '')
+      .trim()
+      .toLowerCase();
     const password = String(body.password || '').trim();
     const nomeCompleto = String(body.nome_completo || '').trim() || null;
     const userTypeId = String(body.user_type_id || '').trim() || null;
@@ -185,24 +197,38 @@ export async function handleAdminUsuariosPost(event: RequestEvent) {
         .maybeSingle();
 
       if (typeError || !userTypeRow) {
-        return new Response('Tipo de usuario invalido.', { status: 400, headers: NO_STORE_HEADERS });
+        return new Response('Tipo de usuario invalido.', {
+          status: 400,
+          headers: NO_STORE_HEADERS
+        });
       }
 
-      userTypeName = String((userTypeRow as UserTypeNameRow).name || '').trim().toUpperCase();
+      userTypeName = String((userTypeRow as UserTypeNameRow).name || '')
+        .trim()
+        .toUpperCase();
       ensureAssignableUserType(scope, userTypeName);
     }
 
     if (!requestedId) {
       if (!email) {
-        return new Response('E-mail obrigatorio para criar usuario.', { status: 400, headers: NO_STORE_HEADERS });
+        return new Response('E-mail obrigatorio para criar usuario.', {
+          status: 400,
+          headers: NO_STORE_HEADERS
+        });
       }
 
       if (!password || password.length < 8) {
-        return new Response('Senha obrigatoria com pelo menos 8 caracteres.', { status: 400, headers: NO_STORE_HEADERS });
+        return new Response('Senha obrigatoria com pelo menos 8 caracteres.', {
+          status: 400,
+          headers: NO_STORE_HEADERS
+        });
       }
 
       if (!userTypeId) {
-        return new Response('Tipo de usuario obrigatorio.', { status: 400, headers: NO_STORE_HEADERS });
+        return new Response('Tipo de usuario obrigatorio.', {
+          status: 400,
+          headers: NO_STORE_HEADERS
+        });
       }
 
       if (!usoIndividual) {
@@ -210,16 +236,28 @@ export async function handleAdminUsuariosPost(event: RequestEvent) {
       }
 
       if (!scope.isAdmin && usoIndividual) {
-        return new Response('Somente ADMIN pode criar usuario individual sem empresa.', { status: 403, headers: NO_STORE_HEADERS });
+        return new Response('Somente ADMIN pode criar usuario individual sem empresa.', {
+          status: 403,
+          headers: NO_STORE_HEADERS
+        });
       }
 
-      const financeiroCompanyIds = resolveFinanceiroCompanyIds(financeiroCompanyIdsInput, companyId);
+      const financeiroCompanyIds = resolveFinanceiroCompanyIds(
+        financeiroCompanyIdsInput,
+        companyId
+      );
       if (isFinanceiroRole(userTypeName)) {
         if (usoIndividual) {
-          return new Response('Usuario financeiro deve ser corporativo e vinculado a empresa.', { status: 400, headers: NO_STORE_HEADERS });
+          return new Response('Usuario financeiro deve ser corporativo e vinculado a empresa.', {
+            status: 400,
+            headers: NO_STORE_HEADERS
+          });
         }
         if (financeiroCompanyIds.length === 0) {
-          return new Response('Usuario financeiro deve ser vinculado a pelo menos uma empresa.', { status: 400, headers: NO_STORE_HEADERS });
+          return new Response('Usuario financeiro deve ser vinculado a pelo menos uma empresa.', {
+            status: 400,
+            headers: NO_STORE_HEADERS
+          });
         }
       }
 
@@ -264,7 +302,10 @@ export async function handleAdminUsuariosPost(event: RequestEvent) {
     const effectiveUsoIndividual =
       'uso_individual' in body ? usoIndividual : Boolean(currentUser.uso_individual);
     const effectiveCompanyId = companyId || currentUser.company_id || null;
-    const financeiroCompanyIds = resolveFinanceiroCompanyIds(financeiroCompanyIdsInput, effectiveCompanyId);
+    const financeiroCompanyIds = resolveFinanceiroCompanyIds(
+      financeiroCompanyIdsInput,
+      effectiveCompanyId
+    );
 
     if (requestedId !== scope.userId) {
       ensureAssignableCompany(scope, effectiveUsoIndividual ? null : effectiveCompanyId);
@@ -272,10 +313,16 @@ export async function handleAdminUsuariosPost(event: RequestEvent) {
 
     if (isFinanceiroRole(effectiveUserTypeName)) {
       if (effectiveUsoIndividual) {
-        return new Response('Usuario financeiro deve ser corporativo e vinculado a empresa.', { status: 400, headers: NO_STORE_HEADERS });
+        return new Response('Usuario financeiro deve ser corporativo e vinculado a empresa.', {
+          status: 400,
+          headers: NO_STORE_HEADERS
+        });
       }
       if (financeiroCompanyIds.length === 0) {
-        return new Response('Usuario financeiro deve ser vinculado a pelo menos uma empresa.', { status: 400, headers: NO_STORE_HEADERS });
+        return new Response('Usuario financeiro deve ser vinculado a pelo menos uma empresa.', {
+          status: 400,
+          headers: NO_STORE_HEADERS
+        });
       }
     }
 
@@ -292,10 +339,16 @@ export async function handleAdminUsuariosPost(event: RequestEvent) {
     if ('email' in body && email) updatePayload.email = email;
 
     if (Object.keys(updatePayload).length === 0) {
-      return new Response('Nenhuma alteracao informada.', { status: 400, headers: NO_STORE_HEADERS });
+      return new Response('Nenhuma alteracao informada.', {
+        status: 400,
+        headers: NO_STORE_HEADERS
+      });
     }
 
-    const { error: updateError } = await client.from('users').update(updatePayload).eq('id', requestedId);
+    const { error: updateError } = await client
+      .from('users')
+      .update(updatePayload)
+      .eq('id', requestedId);
     if (updateError) throw updateError;
 
     if (userTypeId) {

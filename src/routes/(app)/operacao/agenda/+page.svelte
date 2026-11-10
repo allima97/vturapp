@@ -6,7 +6,13 @@
   import Button from '$lib/components/ui/Button.svelte';
   import DataTable from '$lib/components/ui/DataTable.svelte';
   import Badge from '$lib/components/ui/Badge.svelte';
-  import { BottomSheet, FieldInput, FieldTextarea, FieldCheckbox, LoadingState } from '$lib/components/ui';
+  import {
+    BottomSheet,
+    FieldInput,
+    FieldTextarea,
+    FieldCheckbox,
+    LoadingState
+  } from '$lib/components/ui';
   import KPICard from '$lib/components/kpis/KPICard.svelte';
   import { diffDaysISODate, formatISODateBR, todayISODateLocal, toISODateLocal } from '$lib/date';
   import { toast } from '$lib/stores/ui';
@@ -257,13 +263,14 @@
     initializingCalendar = true;
 
     try {
-      const [{ Calendar }, interactionPlugin, dayGridPlugin, timeGridPlugin, ptBrLocale] = await Promise.all([
-        import('@fullcalendar/core'),
-        import('@fullcalendar/interaction'),
-        import('@fullcalendar/daygrid'),
-        import('@fullcalendar/timegrid'),
-        import('@fullcalendar/core/locales/pt-br')
-      ]);
+      const [{ Calendar }, interactionPlugin, dayGridPlugin, timeGridPlugin, ptBrLocale] =
+        await Promise.all([
+          import('@fullcalendar/core'),
+          import('@fullcalendar/interaction'),
+          import('@fullcalendar/daygrid'),
+          import('@fullcalendar/timegrid'),
+          import('@fullcalendar/core/locales/pt-br')
+        ]);
 
       const isMobile = window.innerWidth < 640;
       currentView = isMobile ? 'timeGridDay' : 'dayGridMonth';
@@ -380,9 +387,7 @@
     await loadRange(visibleRange.inicio, visibleRange.fim, true);
   }
 
-  function openCreateModal(
-    preset: Partial<EventForm> = {}
-  ) {
+  function openCreateModal(preset: Partial<EventForm> = {}) {
     selectedEventId = null;
     selectedEventSource = 'evento';
     eventForm = {
@@ -428,7 +433,9 @@
         start_date: eventForm.startDate,
         end_date: eventForm.endDate || eventForm.startDate,
         start_at: eventForm.allDay ? null : `${eventForm.startDate}T${eventForm.startTime}`,
-        end_at: eventForm.allDay ? null : `${eventForm.endDate || eventForm.startDate}T${eventForm.endTime}`,
+        end_at: eventForm.allDay
+          ? null
+          : `${eventForm.endDate || eventForm.startDate}T${eventForm.endTime}`,
         all_day: eventForm.allDay
       };
 
@@ -516,11 +523,14 @@
   title="Agenda"
   subtitle="Agenda operacional pessoal, com eventos reais e aniversarios da empresa como no fluxo legado."
   color="operacao"
-  breadcrumbs={[
-    { label: 'Agenda' }
-  ]}
+  breadcrumbs={[{ label: 'Agenda' }]}
   actions={[
-    { label: 'Atualizar', onClick: () => loadRange(visibleRange.inicio, visibleRange.fim, true), variant: 'secondary', icon: RefreshCw },
+    {
+      label: 'Atualizar',
+      onClick: () => loadRange(visibleRange.inicio, visibleRange.fim, true),
+      variant: 'secondary',
+      icon: RefreshCw
+    },
     { label: 'Novo evento', onClick: () => openCreateModal(), variant: 'primary', icon: Plus }
   ]}
 />
@@ -533,7 +543,9 @@
 </div>
 
 <Card color="operacao" padding="none" class="mb-6">
-  <div class="border-b border-slate-100 px-5 py-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+  <div
+    class="flex flex-col gap-3 border-b border-slate-100 px-5 py-4 lg:flex-row lg:items-center lg:justify-between"
+  >
     <div>
       <h3 class="text-lg font-semibold text-slate-900">Calendario</h3>
       <p class="text-sm text-slate-500">
@@ -542,7 +554,9 @@
     </div>
     <div class="flex items-center gap-2">
       {#if refreshing}
-        <span class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+        <span
+          class="inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600"
+        >
           <Loader2 size={14} class="animate-spin" />
           Atualizando
         </span>
@@ -553,31 +567,31 @@
   </div>
 
   <!-- Seletor de visão customizado — só mobile, aparece ABAIXO do header do FC -->
-  <div class="fc-mobile-view-switcher sm:hidden px-4 pb-4 pt-1">
+  <div class="fc-mobile-view-switcher px-4 pt-1 pb-4 sm:hidden">
     <div class="view-switcher-bar">
       <Button
         type="button"
         variant="unstyled"
         class_name="view-btn {currentView === 'dayGridMonth' ? 'active' : ''}"
-        on:click={() => changeView('dayGridMonth')}
-      >Mês</Button>
+        on:click={() => changeView('dayGridMonth')}>Mês</Button
+      >
       <Button
         type="button"
         variant="unstyled"
         class_name="view-btn {currentView === 'timeGridWeek' ? 'active' : ''}"
-        on:click={() => changeView('timeGridWeek')}
-      >Semana</Button>
+        on:click={() => changeView('timeGridWeek')}>Semana</Button
+      >
       <Button
         type="button"
         variant="unstyled"
         class_name="view-btn {currentView === 'timeGridDay' ? 'active' : ''}"
-        on:click={() => changeView('timeGridDay')}
-      >Dia</Button>
+        on:click={() => changeView('timeGridDay')}>Dia</Button
+      >
     </div>
   </div>
 
   <div class="relative min-h-168">
-    <div bind:this={calendarEl} class="p-4 md:p-5 min-h-168"></div>
+    <div bind:this={calendarEl} class="min-h-168 p-4 md:p-5"></div>
     {#if loading}
       <div class="absolute inset-0 bg-white/80 backdrop-blur-xs">
         <LoadingState className="h-full" />
@@ -592,18 +606,18 @@
     <SlidersHorizontal size={16} class="mr-2" />
     Filtros
     {#if searchQuery.trim()}
-      <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-operacao-500"></span>
+      <span class="bg-operacao-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
     {/if}
   </Button>
 </div>
 
 <Card color="operacao">
-  <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 mb-4">
+  <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
     <div>
       <h3 class="text-lg font-semibold text-slate-900">Compromissos do periodo</h3>
       <p class="text-sm text-slate-500">Lista operacional do intervalo visivel no calendario.</p>
     </div>
-    <div class="max-w-md w-full hidden sm:block">
+    <div class="hidden w-full max-w-md sm:block">
       <FieldInput
         bind:value={searchQuery}
         icon={Search}
@@ -663,22 +677,24 @@
     <div class="space-y-4">
       <div class="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
         <h4 class="font-semibold text-amber-900">{eventForm.titulo}</h4>
-        <p class="mt-1 text-sm text-amber-700">Evento gerado automaticamente para aniversario da empresa.</p>
+        <p class="mt-1 text-sm text-amber-700">
+          Evento gerado automaticamente para aniversario da empresa.
+        </p>
       </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-          <span class="block text-xs uppercase tracking-wide text-slate-400">Data</span>
+          <span class="block text-xs tracking-wide text-slate-400 uppercase">Data</span>
           <strong class="text-slate-900">{formatDateTimeLabel(eventForm.startDate, true)}</strong>
         </div>
         <div class="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-          <span class="block text-xs uppercase tracking-wide text-slate-400">Descricao</span>
+          <span class="block text-xs tracking-wide text-slate-400 uppercase">Descricao</span>
           <strong class="text-slate-900">{eventForm.descricao || 'Aniversario'}</strong>
         </div>
       </div>
     </div>
   {:else}
     <div class="space-y-5">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div class="md:col-span-2">
           <FieldInput
             id="agenda-title"

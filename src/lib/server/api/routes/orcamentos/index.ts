@@ -32,7 +32,9 @@ export const orcamentosRoutes = new Hono<ApiEnv>()
   .post('/save', (c) => handleOrcamentosSavePost(c.env.event))
   .patch('/status', (c) => handleOrcamentosStatusPatch(c.env.event))
   .get('/tipos', (c) => handleOrcamentosTiposGet(c.env.event))
-  .get('/:id/resumo-venda', (c) => handleOrcamentosIdResumoVendaGet(withRouteParams(c.env.event, c.req.param())))
+  .get('/:id/resumo-venda', (c) =>
+    handleOrcamentosIdResumoVendaGet(withRouteParams(c.env.event, c.req.param()))
+  )
   .get('/:id', (c) => handleOrcamentosIdGet(withRouteParams(c.env.event, c.req.param())))
   .patch('/:id', (c) => handleOrcamentosIdPatch(withRouteParams(c.env.event, c.req.param())))
   .delete('/:id', (c) => handleOrcamentosIdDelete(withRouteParams(c.env.event, c.req.param())));

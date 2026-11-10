@@ -1,7 +1,12 @@
 import { Hono } from 'hono';
 import type { ApiEnv } from '../../types';
 import { withRouteParams } from '../../params';
-import { handleRoteirosGet, handleRoteirosPost, handleRoteirosDelete, handleRoteirosPatch } from './root';
+import {
+  handleRoteirosGet,
+  handleRoteirosPost,
+  handleRoteirosDelete,
+  handleRoteirosPatch
+} from './root';
 import { handleRoteirosIdGet } from './id';
 import { handleRoteirosDeleteDelete } from './delete';
 import { handleRoteirosDiasBuscaGet } from './dias-busca';
@@ -11,6 +16,7 @@ import { handleRoteirosSavePost } from './save';
 import { handleRoteirosSugestoesBuscaGet } from './sugestoes-busca';
 import { handleRoteirosSugestoesRemoverPost } from './sugestoes-remover';
 import { handleRoteirosSugestoesSalvarPost } from './sugestoes-salvar';
+import { handleRoteirosCidadesBuscaGet } from './cidades-busca';
 
 // /api/v1/roteiros/* atendido pelo Hono (gerado por migrate_domain.py). Estáticas antes de '/:param'.
 export const roteirosRoutes = new Hono<ApiEnv>()
@@ -19,6 +25,7 @@ export const roteirosRoutes = new Hono<ApiEnv>()
   .delete('/', (c) => handleRoteirosDelete(c.env.event))
   .patch('/', (c) => handleRoteirosPatch(c.env.event))
   .delete('/delete', (c) => handleRoteirosDeleteDelete(c.env.event))
+  .get('/cidades-busca', (c) => handleRoteirosCidadesBuscaGet(c.env.event))
   .get('/dias-busca', (c) => handleRoteirosDiasBuscaGet(c.env.event))
   .post('/gerar-orcamento', (c) => handleRoteirosGerarOrcamentoPost(c.env.event))
   .get('/list', (c) => handleRoteirosListGet(c.env.event))

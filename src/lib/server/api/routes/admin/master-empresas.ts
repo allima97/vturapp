@@ -11,7 +11,7 @@ import {
   resolveUserScope,
   toErrorResponse
 } from '$lib/server/v1';
-import { cleanStringSet, chunkArray, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { cleanStringSet, chunkArray, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const MAX_MASTER_EMPRESAS_BODY_BYTES = 16 * 1024;
 
@@ -40,7 +40,8 @@ export async function handleAdminMasterEmpresasGet(event: RequestEvent) {
         .order('created_at', { ascending: false });
 
       if (companyId) query = query.eq('company_id', companyId);
-      else if (companyIdsFilter && companyIdsFilter.length > 0) query = query.in('company_id', companyIdsFilter);
+      else if (companyIdsFilter && companyIdsFilter.length > 0)
+        query = query.in('company_id', companyIdsFilter);
 
       return query;
     };
@@ -54,7 +55,7 @@ export async function handleAdminMasterEmpresasGet(event: RequestEvent) {
 
       const accessible = getAccessibleCompanyIds(scope);
       if (!accessible.length) return [];
-      if (accessible.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (accessible.length <= QUERY_IN_BATCH_SIZE) {
         const { data, error: queryError } = await buildQuery(accessible);
         if (queryError) throw queryError;
         return data || [];
@@ -95,7 +96,9 @@ export async function handleAdminMasterEmpresasPost(event: RequestEvent) {
 
     ensureCanManageCompanies(scope);
 
-    const action = String(body.action || 'save').trim().toLowerCase();
+    const action = String(body.action || 'save')
+      .trim()
+      .toLowerCase();
     const id = String(body.id || '').trim();
     const masterId = String(body.master_id || '').trim();
     const companyId = String(body.company_id || '').trim();
@@ -104,7 +107,8 @@ export async function handleAdminMasterEmpresasPost(event: RequestEvent) {
     const accessibleSet = accessible ? cleanStringSet(accessible) : null;
 
     if (action === 'delete') {
-      if (!id) return new Response('Vinculo nao informado.', { status: 400, headers: NO_STORE_HEADERS });
+      if (!id)
+        return new Response('Vinculo nao informado.', { status: 400, headers: NO_STORE_HEADERS });
 
       // ✅ Verifica ownership antes de deletar
       if (!scope.isAdmin) {
@@ -114,7 +118,10 @@ export async function handleAdminMasterEmpresasPost(event: RequestEvent) {
           .eq('id', id)
           .maybeSingle();
         if (!vinculo || !accessibleSet?.has(String(vinculo.company_id || '').trim())) {
-          return new Response('Vinculo fora do escopo.', { status: 403, headers: NO_STORE_HEADERS });
+          return new Response('Vinculo fora do escopo.', {
+            status: 403,
+            headers: NO_STORE_HEADERS
+          });
         }
       }
 
@@ -124,7 +131,8 @@ export async function handleAdminMasterEmpresasPost(event: RequestEvent) {
     }
 
     if (action === 'update') {
-      if (!id) return new Response('Vinculo nao informado.', { status: 400, headers: NO_STORE_HEADERS });
+      if (!id)
+        return new Response('Vinculo nao informado.', { status: 400, headers: NO_STORE_HEADERS });
 
       // ✅ Verifica ownership antes de atualizar
       if (!scope.isAdmin) {
@@ -134,7 +142,10 @@ export async function handleAdminMasterEmpresasPost(event: RequestEvent) {
           .eq('id', id)
           .maybeSingle();
         if (!vinculo || !accessibleSet?.has(String(vinculo.company_id || '').trim())) {
-          return new Response('Vinculo fora do escopo.', { status: 403, headers: NO_STORE_HEADERS });
+          return new Response('Vinculo fora do escopo.', {
+            status: 403,
+            headers: NO_STORE_HEADERS
+          });
         }
       }
 
@@ -151,11 +162,17 @@ export async function handleAdminMasterEmpresasPost(event: RequestEvent) {
 
     // action === 'save' (insert)
     if (!masterId || !companyId) {
-      return new Response('Master e empresa sao obrigatorios.', { status: 400, headers: NO_STORE_HEADERS });
+      return new Response('Master e empresa sao obrigatorios.', {
+        status: 400,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     if (!scope.isAdmin && !accessibleSet?.has(companyId)) {
-      return new Response('Empresa fora do escopo permitido.', { status: 403, headers: NO_STORE_HEADERS });
+      return new Response('Empresa fora do escopo permitido.', {
+        status: 403,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const { error: insertError } = await client.from('master_empresas').insert({

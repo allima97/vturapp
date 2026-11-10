@@ -128,7 +128,9 @@ export function removerParcela(parcelas: VendaFormParcela[], parcelaIndex: numbe
 // ---------------------------------------------------------------- valores
 
 export function parseMoney(value: string | number | null | undefined) {
-  const raw = String(value ?? '').trim().replace(/[^\d,.-]/g, '');
+  const raw = String(value ?? '')
+    .trim()
+    .replace(/[^\d,.-]/g, '');
   const normalized = raw.includes(',') ? raw.replace(/\./g, '').replace(',', '.') : raw;
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -172,11 +174,9 @@ export function getSelectValue(event: Event) {
 export function isValeViagemTipo(tipos: VendaFormOption[], tipoId: string) {
   if (!tipoId) return false;
   const tipoSelecionado = tipos.find((item) => String(item.id) === String(tipoId));
-  return [
-    tipoId,
-    String(tipoSelecionado?.nome || ''),
-    String(tipoSelecionado?.tipo || '')
-  ].some((value) => normalizeText(value).includes('vale viagem'));
+  return [tipoId, String(tipoSelecionado?.nome || ''), String(tipoSelecionado?.tipo || '')].some(
+    (value) => normalizeText(value).includes('vale viagem')
+  );
 }
 
 export function isValeViagemProduto(item: VendaFormOption) {
@@ -184,7 +184,10 @@ export function isValeViagemProduto(item: VendaFormOption) {
   return nome.includes('vale viagem');
 }
 
-export function getValeViagemProdutoVirtual(tipos: VendaFormOption[], tipoId: string): VendaFormOption | null {
+export function getValeViagemProdutoVirtual(
+  tipos: VendaFormOption[],
+  tipoId: string
+): VendaFormOption | null {
   if (!isValeViagemTipo(tipos, tipoId)) return null;
   const tipoSelecionado = tipos.find((item) => String(item.id) === String(tipoId));
   return {
@@ -197,7 +200,11 @@ export function getValeViagemProdutoVirtual(tipos: VendaFormOption[], tipoId: st
   };
 }
 
-export function produtoMatchesTipo(tipos: VendaFormOption[], item: VendaFormOption, tipoId: string) {
+export function produtoMatchesTipo(
+  tipos: VendaFormOption[],
+  item: VendaFormOption,
+  tipoId: string
+) {
   if (!tipoId) return true;
   const selectedType = tipos.find((tipo) => String(tipo.id) === String(tipoId));
   const tipoSelecionadoNome = normalizeText(String(selectedType?.nome || selectedType?.tipo || ''));
@@ -240,7 +247,11 @@ export function filtrarProdutosPorTipoCidade<T extends VendaFormOption>(
   });
   const valeViagemVirtual = getValeViagemProdutoVirtual(tipos, tipoId);
   if (!valeViagemVirtual) return filtered;
-  if (filtered.some((item) => String(item.id) === String(valeViagemVirtual.id) || isValeViagemProduto(item))) {
+  if (
+    filtered.some(
+      (item) => String(item.id) === String(valeViagemVirtual.id) || isValeViagemProduto(item)
+    )
+  ) {
     return filtered;
   }
   return [valeViagemVirtual, ...filtered];
@@ -274,12 +285,12 @@ export function getCidadeLabel(cidade: VendaFormOption) {
   const nome = String(cidade.nome || '').trim();
   const estado = String(
     cidade.estado ||
-    cidade.uf ||
-    cidade.sigla ||
-    cidade.subdivisao_nome ||
-    cidade.subdivisao?.sigla ||
-    cidade.subdivisao?.nome ||
-    ''
+      cidade.uf ||
+      cidade.sigla ||
+      cidade.subdivisao_nome ||
+      cidade.subdivisao?.sigla ||
+      cidade.subdivisao?.nome ||
+      ''
   ).trim();
   return estado ? `${nome} (${estado})` : nome;
 }
@@ -295,7 +306,9 @@ export function getCidadeSearchScore(cidade: VendaFormOption, input: string) {
 
   const nome = normalizeLookup(cidade.nome);
   const label = normalizeLookup(getCidadeLabel(cidade));
-  const estado = normalizeLookup(cidade.estado || cidade.uf || cidade.sigla || cidade.subdivisao_nome || cidade.subdivisao?.nome);
+  const estado = normalizeLookup(
+    cidade.estado || cidade.uf || cidade.sigla || cidade.subdivisao_nome || cidade.subdivisao?.nome
+  );
   const full = `${nome} ${estado}`.trim();
 
   if (nome === term) return 0;
@@ -318,7 +331,10 @@ export function sortCidades<T extends VendaFormOption>(items: T[], input = ''): 
     const nomeDiff = PT_BR_BASE_COLLATOR.compare(String(a.nome || ''), String(b.nome || ''));
     if (nomeDiff !== 0) return nomeDiff;
 
-    return PT_BR_BASE_COLLATOR.compare(String(a.estado || a.subdivisao_nome || ''), String(b.estado || b.subdivisao_nome || ''));
+    return PT_BR_BASE_COLLATOR.compare(
+      String(a.estado || a.subdivisao_nome || ''),
+      String(b.estado || b.subdivisao_nome || '')
+    );
   });
 }
 
@@ -331,7 +347,11 @@ export function mergeCidadesById<T extends VendaFormOption>(atuais: T[], items: 
   for (const item of items) {
     const id = String(item?.id || '').trim();
     if (!id) continue;
-    byId.set(id, { ...(byId.get(id) || {}), ...item, label: getCidadeLabel({ ...(byId.get(id) || {}), ...item }) } as T);
+    byId.set(id, {
+      ...(byId.get(id) || {}),
+      ...item,
+      label: getCidadeLabel({ ...(byId.get(id) || {}), ...item })
+    } as T);
   }
   return sortCidades(Array.from(byId.values()));
 }

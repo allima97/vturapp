@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { supabase } from '$lib/db/supabase';
+  import { browserData as dados } from '$lib/db/browserData';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
@@ -12,7 +12,15 @@
   import { createLoadGuard } from '$lib/utils/loadGuard';
   import { browserSupportsWebAuthn, startRegistration } from '@simplewebauthn/browser';
   import type { PublicKeyCredentialCreationOptionsJSON } from '@simplewebauthn/browser';
-  import { Shield, KeyRound, CheckCircle, AlertCircle, Trash2, QrCode, Fingerprint } from '$lib/icons';
+  import {
+    Shield,
+    KeyRound,
+    CheckCircle,
+    AlertCircle,
+    Trash2,
+    QrCode,
+    Fingerprint
+  } from '$lib/icons';
 
   import { confirmAction } from '$lib/stores/confirm';
   type MfaFactor = {
@@ -63,7 +71,7 @@
     const request = factorsGuard.next();
     loading = true;
     try {
-      const { data, error: factorsError } = await supabase.auth.mfa.listFactors();
+      const { data, error: factorsError } = await dados.auth.mfa.listFactors();
       if (factorsError) throw factorsError;
       if (!factorsGuard.isCurrent(request.seq)) return;
       factors = data?.totp || [];
@@ -78,7 +86,11 @@
     const request = passkeysGuard.next();
     passkeysLoading = true;
     try {
-      const payload = await apiGet<PasskeysResponse>('/api/auth/passkeys', undefined, request.signal);
+      const payload = await apiGet<PasskeysResponse>(
+        '/api/auth/passkeys',
+        undefined,
+        request.signal
+      );
       if (!passkeysGuard.isCurrent(request.seq)) return;
       passkeys = payload.passkeys || [];
     } catch (err: unknown) {
@@ -93,16 +105,16 @@
     enrolling = true;
     error = null;
     try {
-      const { data, error: enrollError } = await supabase.auth.mfa.enroll({
+      const { data, error: enrollError } = await dados.auth.mfa.enroll({
         factorType: 'totp',
         friendlyName: 'Autenticador VTUR'
       });
       if (enrollError) throw enrollError;
 
       enrollmentData = {
-        factorId: data.id,
-        qrCode: data.totp.qr_code,
-        secret: data.totp.secret
+        factorId: String(data.id || ''),
+        qrCode: data.totp?.qr_code || '',
+        secret: data.totp?.secret || ''
       };
     } catch (err: unknown) {
       error = toUserMessage(err, 'Erro ao iniciar configuração 2FA.');
@@ -118,17 +130,20 @@
     }
 
     const code = verificationCode.replace(/\D/g, '').slice(0, 6);
-    if (code.length !== 6) { error = 'Código deve ter 6 dígitos.'; return; }
+    if (code.length !== 6) {
+      error = 'Código deve ter 6 dígitos.';
+      return;
+    }
 
     verifying = true;
     error = null;
     try {
-      const { data: challengeData, error: challengeError } = await supabase.auth.mfa.challenge({
+      const { data: challengeData, error: challengeError } = await dados.auth.mfa.challenge({
         factorId: enrollmentData.factorId
       });
       if (challengeError) throw challengeError;
 
-      const { error: verifyError } = await supabase.auth.mfa.verify({
+      const { error: verifyError } = await dados.auth.mfa.verify({
         factorId: enrollmentData.factorId,
         challengeId: challengeData.id,
         code
@@ -141,21 +156,27 @@
       await loadFactors();
     } catch (err: unknown) {
       const message = toUserMessage(err, 'Erro ao verificar código.');
-      error = message.includes('invalid') || message.includes('Invalid')
-        ? 'Código inválido. Verifique o aplicativo autenticador.'
-        : message;
+      error =
+        message.includes('invalid') || message.includes('Invalid')
+          ? 'Código inválido. Verifique o aplicativo autenticador.'
+          : message;
     } finally {
       verifying = false;
     }
   }
 
   async function removeFactor(factorId: string) {
-    if (!(await confirmAction('Deseja remover este fator de autenticação? Você precisará configurar novamente para usar 2FA.'))) return;
+    if (
+      !(await confirmAction(
+        'Deseja remover este fator de autenticação? Você precisará configurar novamente para usar 2FA.'
+      ))
+    )
+      return;
 
     removing = true;
     error = null;
     try {
-      const { error: unenrollError } = await supabase.auth.mfa.unenroll({ factorId });
+      const { error: unenrollError } = await dados.auth.mfa.unenroll({ factorId });
       if (unenrollError) throw unenrollError;
 
       toast.success('Fator 2FA removido.');
@@ -177,7 +198,10 @@
     error = null;
 
     try {
-      const optionsPayload = await apiPost<PasskeyRegistrationOptionsResponse>('/api/auth/passkeys/register/options', null);
+      const optionsPayload = await apiPost<PasskeyRegistrationOptionsResponse>(
+        '/api/auth/passkeys/register/options',
+        null
+      );
 
       const registration = await startRegistration({ optionsJSON: optionsPayload.options });
       await apiPost('/api/auth/passkeys/register/verify', {
@@ -196,7 +220,12 @@
   }
 
   async function removePasskey(passkeyId: string) {
-    if (!(await confirmAction('Deseja remover esta passkey? Ela não poderá mais ser usada para entrar no sistema.'))) return;
+    if (
+      !(await confirmAction(
+        'Deseja remover esta passkey? Ela não poderá mais ser usada para entrar no sistema.'
+      ))
+    )
+      return;
 
     removingPasskeyId = passkeyId;
     error = null;
@@ -251,17 +280,16 @@
 <PageHeader
   title="Autenticação em Duas Etapas (2FA)"
   subtitle="Configure um autenticador para proteger sua conta com verificação adicional."
-  breadcrumbs={[
-    { label: 'Perfil', href: '/perfil' },
-    { label: '2FA' }
-  ]}
+  breadcrumbs={[{ label: 'Perfil', href: '/perfil' }, { label: '2FA' }]}
 />
 
 {#if loading}
   <LoadingState />
 {:else}
   {#if error}
-    <div class="mb-6 rounded-vtur-lg border border-red-200 bg-red-50 px-4 py-3 flex items-center gap-2 text-sm text-red-700">
+    <div
+      class="rounded-vtur-lg mb-6 flex items-center gap-2 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+    >
       <AlertCircle size={16} />
       {error}
     </div>
@@ -270,8 +298,15 @@
   <!-- Status atual -->
   <Card class="mb-6">
     <div class="flex items-center gap-4">
-      <div class="flex h-12 w-12 items-center justify-center rounded-full {verifiedFactors.length > 0 ? 'bg-green-100' : 'bg-slate-100'}">
-        <Shield size={24} class="{verifiedFactors.length > 0 ? 'text-green-600' : 'text-slate-400'}" />
+      <div
+        class="flex h-12 w-12 items-center justify-center rounded-full {verifiedFactors.length > 0
+          ? 'bg-green-100'
+          : 'bg-slate-100'}"
+      >
+        <Shield
+          size={24}
+          class={verifiedFactors.length > 0 ? 'text-green-600' : 'text-slate-400'}
+        />
       </div>
       <div>
         <p class="font-semibold text-slate-900">
@@ -284,7 +319,9 @@
         </p>
       </div>
       {#if verifiedFactors.length > 0}
-        <span class="ml-auto inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+        <span
+          class="ml-auto inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700"
+        >
           <CheckCircle size={12} />
           Protegido
         </span>
@@ -317,23 +354,31 @@
       </div>
 
       {#if passkeysLoading}
-        <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+        <div
+          class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500"
+        >
           Carregando passkeys...
         </div>
       {:else if passkeys.length === 0}
-        <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-500">
+        <div
+          class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-4 text-sm text-slate-500"
+        >
           Nenhuma passkey cadastrada para esta conta.
         </div>
       {:else}
         <div class="space-y-3">
           {#each passkeys as passkey}
-            <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+            <div
+              class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+            >
               <div class="flex items-center gap-3">
                 <Fingerprint size={18} class="text-blue-600" />
                 <div>
                   <p class="font-medium text-slate-900">{passkey.name || 'Passkey'}</p>
                   <p class="text-xs text-slate-500">
-                    Criada em {formatDateTime(passkey.created_at)} · Último uso: {formatDateTime(passkey.last_used_at)}
+                    Criada em {formatDateTime(passkey.created_at)} · Último uso: {formatDateTime(
+                      passkey.last_used_at
+                    )}
                   </p>
                 </div>
               </div>
@@ -359,12 +404,18 @@
     <Card title="Fatores configurados" class="mb-6">
       <div class="space-y-3">
         {#each verifiedFactors as factor}
-          <div class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+          <div
+            class="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
+          >
             <div class="flex items-center gap-3">
               <KeyRound size={18} class="text-green-600" />
               <div>
-                <p class="font-medium text-slate-900">{factor.friendly_name || 'Autenticador TOTP'}</p>
-                <p class="text-xs text-slate-500">Verificado · {factor.factor_type?.toUpperCase() || 'TOTP'}</p>
+                <p class="font-medium text-slate-900">
+                  {factor.friendly_name || 'Autenticador TOTP'}
+                </p>
+                <p class="text-xs text-slate-500">
+                  Verificado · {factor.factor_type?.toUpperCase() || 'TOTP'}
+                </p>
               </div>
             </div>
             <Button
@@ -385,8 +436,9 @@
   <!-- Configurar novo fator -->
   {#if !enrollmentData}
     <Card title="Configurar autenticador">
-      <p class="text-sm text-slate-600 mb-4">
-        Use um aplicativo autenticador como Google Authenticator, Authy ou Microsoft Authenticator para gerar códigos de verificação.
+      <p class="mb-4 text-sm text-slate-600">
+        Use um aplicativo autenticador como Google Authenticator, Authy ou Microsoft Authenticator
+        para gerar códigos de verificação.
       </p>
       <Button variant="primary" loading={enrolling} on:click={startEnrollment}>
         <QrCode size={16} class="mr-2" />
@@ -397,16 +449,18 @@
     <Card title="Escanear QR Code">
       <div class="space-y-6">
         <div class="flex flex-col items-center gap-4">
-          <p class="text-sm text-slate-600 text-center">
+          <p class="text-center text-sm text-slate-600">
             Abra seu aplicativo autenticador e escaneie o QR Code abaixo.
           </p>
-          <!-- QR Code como imagem SVG/PNG do Supabase -->
+          <!-- QR Code como imagem SVG/PNG do Dados -->
           <div class="rounded-xl border border-slate-200 bg-white p-4">
             <img src={enrollmentData.qrCode} alt="QR Code 2FA" class="h-48 w-48" />
           </div>
           <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-center">
-            <p class="text-xs text-slate-500 mb-1">Ou insira o código manualmente:</p>
-            <code class="text-sm font-mono font-semibold text-slate-900 break-all">{enrollmentData.secret}</code>
+            <p class="mb-1 text-xs text-slate-500">Ou insira o código manualmente:</p>
+            <code class="font-mono text-sm font-semibold break-all text-slate-900"
+              >{enrollmentData.secret}</code
+            >
           </div>
         </div>
 
@@ -421,10 +475,14 @@
             autocomplete="one-time-code"
             class_name="[&_input]:w-full [&_input]:text-center [&_input]:text-2xl [&_input]:font-mono [&_input]:tracking-widest"
             on:input={(event) => {
-              verificationCode = (event.currentTarget as HTMLInputElement).value.replace(/\D/g, '').slice(0, 6);
+              verificationCode = (event.currentTarget as HTMLInputElement).value
+                .replace(/\D/g, '')
+                .slice(0, 6);
             }}
           />
-          <p class="mt-1 text-xs text-slate-500">Informe o código de 6 dígitos gerado pelo aplicativo.</p>
+          <p class="mt-1 text-xs text-slate-500">
+            Informe o código de 6 dígitos gerado pelo aplicativo.
+          </p>
         </div>
 
         <div class="flex gap-3">

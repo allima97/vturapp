@@ -1,14 +1,15 @@
 <script lang="ts">
   import '../app.css';
+  import '$lib/styles/reescrita.css';
   import { onMount } from 'svelte';
   import { beforeNavigate } from '$app/navigation';
   import { browser, dev } from '$app/environment';
-  import { supabase } from '$lib/db/supabase';
+  import { browserData } from '$lib/db/browserData';
+  import type { Session, User } from '$lib/stores/auth';
   import { abortInFlightApiReads } from '$lib/services/api';
   import { auth, sessionSynced } from '$lib/stores/auth';
   import { toast } from '$lib/stores/ui';
   import type { LayoutData } from './$types';
-  import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 
   type RootLayoutData = LayoutData & {
     session?: Session | null;
@@ -34,7 +35,14 @@
   }
 
   function isPublicRoute(path: string): boolean {
-    return path.startsWith('/auth/') || path === '/negado';
+    // A área da reescrita usa Better Auth; não pode depender da sessão Dados
+    // que protege o aplicativo legado. Os dados seguem protegidos pela API v2.
+    return (
+      path.startsWith('/auth/') ||
+      path === '/reescrita' ||
+      path.startsWith('/reescrita/') ||
+      path === '/negado'
+    );
   }
 
   function redirectToLogin(reason: string) {
@@ -46,10 +54,13 @@
     const sinceSession = Date.now() - lastSessionAt;
     if (sinceSession < 5000) {
       if (pendingRedirectTimer === null) {
-        pendingRedirectTimer = window.setTimeout(() => {
-          pendingRedirectTimer = null;
-          void verifySessionOrRedirect(reason);
-        }, 5000 - sinceSession + 200);
+        pendingRedirectTimer = window.setTimeout(
+          () => {
+            pendingRedirectTimer = null;
+            void verifySessionOrRedirect(reason);
+          },
+          5000 - sinceSession + 200
+        );
       }
       return;
     }
@@ -62,13 +73,16 @@
     window.location.assign(`/auth/login?session_expired=1&next=${encodeURIComponent(next)}`);
   }
 
-  // Fonte da verdade é a sessão do cliente Supabase — NÃO o auth store, que já
+  // Fonte da verdade é a sessão do cliente Dados — NÃO o auth store, que já
   // é limpo no SIGNED_OUT (antes a checagem exigia get(auth).user, que nesse
   // momento era sempre null, e por isso o redirecionamento nunca acontecia).
   async function verifySessionOrRedirect(reason: string) {
     if (!browser || isRedirecting || isPublicRoute(window.location.pathname)) return;
     try {
-      const { data: { session }, error } = await supabase.auth.getSession();
+      const {
+        data: { session },
+        error
+      } = await browserData.auth.getSession();
       if (session && !error) {
         lastSessionAt = Date.now();
         return;
@@ -104,7 +118,8 @@
       });
 
       if (!result.ok) {
-        if (dev) console.warn(`[Auth] Falha ao sincronizar sessão (${source}) status:`, result.status);
+        if (dev)
+          console.warn(`[Auth] Falha ao sincronizar sessão (${source}) status:`, result.status);
       }
 
       sessionSynced.set(true);
@@ -132,37 +147,37 @@
     (async () => {
       const {
         data: { subscription }
-      } = supabase.auth.onAuthStateChange(
-        async (event: AuthChangeEvent, session: Session | null) => {
-          if (
-            (event === 'SIGNED_IN' ||
-              event === 'TOKEN_REFRESHED' ||
-              event === 'USER_UPDATED' ||
-              event === 'PASSWORD_RECOVERY' ||
-              event === 'MFA_CHALLENGE_VERIFIED') &&
-            session
-          ) {
-            lastSessionAt = Date.now();
-            isRedirecting = false; // cancela redirecionamento pendente
-            auth.setAuth(session.user, session);
-            await syncServerSession(session, event);
-          } else if (event === 'SIGNED_OUT') {
-            auth.clear();
-            sessionSynced.set(true);
-            // Aguarda um momento para confirmar que realmente não há sessão
-            // (pode ser uma race condition durante refresh automático do token).
-            // Em rota pública (ex.: logout intencional) não faz nada.
-            setTimeout(() => {
-              if (cancelled) return;
-              void verifySessionOrRedirect('Sessão encerrada (SIGNED_OUT)');
-            }, 800);
-          }
+      } = browserData.auth.onAuthStateChange(async (event: string, session) => {
+        if (
+          (event === 'SIGNED_IN' ||
+            event === 'TOKEN_REFRESHED' ||
+            event === 'USER_UPDATED' ||
+            event === 'PASSWORD_RECOVERY' ||
+            event === 'MFA_CHALLENGE_VERIFIED') &&
+          session
+        ) {
+          lastSessionAt = Date.now();
+          isRedirecting = false; // cancela redirecionamento pendente
+          auth.setAuth(session.user, session);
+          await syncServerSession(session, event);
+        } else if (event === 'SIGNED_OUT') {
+          auth.clear();
+          sessionSynced.set(true);
+          // Aguarda um momento para confirmar que realmente não há sessão
+          // (pode ser uma race condition durante refresh automático do token).
+          // Em rota pública (ex.: logout intencional) não faz nada.
+          setTimeout(() => {
+            if (cancelled) return;
+            void verifySessionOrRedirect('Sessão encerrada (SIGNED_OUT)');
+          }, 800);
         }
-      );
+      });
 
       unsubscribe = () => subscription.unsubscribe();
 
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session }
+      } = await browserData.auth.getSession();
       if (cancelled) return;
 
       if (session) {
@@ -173,6 +188,24 @@
           await syncServerSession(session, 'mount');
         }
       } else {
+        // Sessão válida no servidor mas ausente no navegador: restaura antes de desistir.
+        const serverSession = data.session;
+        if (serverSession?.access_token && serverSession?.refresh_token) {
+          try {
+            const { data: restored, error: restoreError } = await browserData.auth.setSession({
+              access_token: serverSession.access_token,
+              refresh_token: serverSession.refresh_token
+            });
+            if (cancelled) return;
+            if (restored?.session && !restoreError) {
+              lastSessionAt = Date.now();
+              sessionSynced.set(true);
+              return;
+            }
+          } catch (restoreErr) {
+            if (dev) console.warn('[Auth] Falha ao restaurar sessão no navegador:', restoreErr);
+          }
+        }
         sessionSynced.set(true);
         // Sem sessão no navegador em rota protegida: vai para o login.
         if (!isPublicRoute(window.location.pathname)) {
@@ -201,7 +234,8 @@
     // Verifica sessão quando a aba volta ao primeiro plano, quando a janela
     // ganha foco e periodicamente — cobre a sessão encerrada pelo sistema
     // enquanto o usuário está parado na mesma tela.
-    const handleVisibilityChange = () => void checkSession('Sessão expirada enquanto a aba estava inativa');
+    const handleVisibilityChange = () =>
+      void checkSession('Sessão expirada enquanto a aba estava inativa');
     const handleFocus = () => void checkSession('Sessão expirada (foco na janela)');
     const pollTimer = window.setInterval(
       () => void checkSession('Sessão expirada (checagem periódica)'),
@@ -220,5 +254,9 @@
     };
   });
 </script>
+
+<svelte:head>
+  <title>VTUR</title>
+</svelte:head>
 
 <slot />

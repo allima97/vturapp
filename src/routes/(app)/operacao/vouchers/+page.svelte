@@ -31,7 +31,7 @@
   const contextGuard = createLoadGuard();
   const dataGuard = createLoadGuard();
   const previewGuard = createLoadGuard();
-  
+
   $: showDeleteDialog = !!deleteConfirmVoucher;
   $: voucherStats = vouchers.reduce(
     (acc, voucher) => {
@@ -47,9 +47,9 @@
 
   const columns = [
     { key: 'nome', label: 'Nome', sortable: true },
-    { 
-      key: 'provider', 
-      label: 'Fornecedor', 
+    {
+      key: 'provider',
+      label: 'Fornecedor',
       sortable: true,
       width: '140px',
       formatter: (v: VoucherProvider) => {
@@ -67,28 +67,29 @@
       }
     },
     { key: 'codigo_fornecedor', label: 'Código', sortable: true, width: '120px' },
-    { 
-      key: 'data_inicio', 
-      label: 'Data Início', 
+    {
+      key: 'data_inicio',
+      label: 'Data Início',
       sortable: true,
       width: '120px',
       formatter: (v: string) => formatDate(v)
     },
-    { 
-      key: 'data_fim', 
-      label: 'Data Fim', 
+    {
+      key: 'data_fim',
+      label: 'Data Fim',
       sortable: true,
       width: '120px',
       formatter: (v: string) => formatDate(v)
     },
-    { 
-      key: 'ativo', 
-      label: 'Status', 
+    {
+      key: 'ativo',
+      label: 'Status',
       sortable: true,
       width: '100px',
-      formatter: (v: boolean) => v 
-        ? '<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Ativo</span>'
-        : '<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600">Inativo</span>'
+      formatter: (v: boolean) =>
+        v
+          ? '<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">Ativo</span>'
+          : '<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600">Inativo</span>'
     }
   ];
 
@@ -124,7 +125,7 @@
       loading = false;
       return;
     }
-    
+
     loading = true;
     try {
       const vouchersData = await apiGet<{ items?: VoucherRecord[] }>(
@@ -148,7 +149,8 @@
     loadingPreviewModal = true;
     try {
       if (!VoucherPreviewModal) {
-        VoucherPreviewModal = (await import('$lib/components/modais/VoucherPreviewModal.svelte')).default;
+        VoucherPreviewModal = (await import('$lib/components/modais/VoucherPreviewModal.svelte'))
+          .default;
         if (!previewGuard.isCurrent(request.seq)) return false;
       }
       if (!assetsLoaded && companyId) {
@@ -200,7 +202,7 @@
 
   async function handleDelete() {
     if (!deleteConfirmVoucher) return;
-    
+
     try {
       await apiDelete(`/api/v1/vouchers/${deleteConfirmVoucher.id}`);
       toast.success('Voucher excluído!');
@@ -290,27 +292,22 @@
       duplicating = false;
     }
   }
-
 </script>
 
 <svelte:head>
   <title>Vouchers | VTUR</title>
 </svelte:head>
 
-<PageHeader 
+<PageHeader
   title="Vouchers"
   subtitle="Gerenciamento de vouchers Special Tours, Europamundo e Sato Tours"
   color="clientes"
-  breadcrumbs={[
-    { label: 'Vouchers' }
-  ]}
-  actions={[
-    { label: 'Novo Voucher', onClick: handleNew, variant: 'primary', icon: Plus }
-  ]}
+  breadcrumbs={[{ label: 'Vouchers' }]}
+  actions={[{ label: 'Novo Voucher', onClick: handleNew, variant: 'primary', icon: Plus }]}
 />
 
 <!-- Resumo -->
-<div class="mb-6 vtur-kpi-grid vtur-kpi-grid-5">
+<div class="vtur-kpi-grid vtur-kpi-grid-5 mb-6">
   <div class="vtur-kpi-card">
     <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-50 text-teal-500">
       <Ticket size={20} />
@@ -346,7 +343,9 @@
   </div>
 
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500">
+    <div
+      class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-500"
+    >
       <Ticket size={20} />
     </div>
     <div>
@@ -406,10 +405,10 @@
   cancelText="Cancelar"
   confirmVariant="danger"
   onConfirm={handleDelete}
-  onCancel={() => deleteConfirmVoucher = null}
+  onCancel={() => (deleteConfirmVoucher = null)}
 >
   <p class="text-slate-600">
-    Tem certeza que deseja excluir o voucher <strong>{deleteConfirmVoucher?.nome}</strong>?
-    Esta ação não pode ser desfeita.
+    Tem certeza que deseja excluir o voucher <strong>{deleteConfirmVoucher?.nome}</strong>? Esta
+    ação não pode ser desfeita.
   </p>
 </Dialog>

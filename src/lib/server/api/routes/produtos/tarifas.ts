@@ -2,9 +2,19 @@
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json, error } from '@sveltejs/kit';
-import { ensureModuloAccess, getAdminClient, requireAuthenticatedUser, resolveUserScope, toErrorResponse } from '$lib/server/v1';
+import {
+  ensureModuloAccess,
+  getAdminClient,
+  requireAuthenticatedUser,
+  resolveUserScope,
+  toErrorResponse
+} from '$lib/server/v1';
 import { fetchProdutoTarifas, sanitizeTarifasPayload } from '$lib/server/cadastros-base';
-import { CATALOG_READ_HEADERS, DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
+import {
+  CATALOG_READ_HEADERS,
+  DYNAMIC_READ_HEADERS,
+  NO_STORE_HEADERS
+} from '$lib/server/httpCache';
 import { invalidateCatalogReadModels } from '$lib/server/readModelCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 
@@ -54,9 +64,15 @@ export async function handleProdutosTarifasPost(event: RequestEvent) {
     const produtoId = String(body?.produto_id || '').trim();
     if (!produtoId) throw error(400, 'produto_id é obrigatório.');
 
-    const tarifas = sanitizeTarifasPayload(produtoId, Array.isArray(body?.tarifas) ? body.tarifas : []);
+    const tarifas = sanitizeTarifasPayload(
+      produtoId,
+      Array.isArray(body?.tarifas) ? body.tarifas : []
+    );
 
-    const { error: deleteError } = await client.from('produtos_tarifas').delete().eq('produto_id', produtoId);
+    const { error: deleteError } = await client
+      .from('produtos_tarifas')
+      .delete()
+      .eq('produto_id', produtoId);
     if (deleteError) throw deleteError;
 
     if (tarifas.length > 0) {
@@ -64,7 +80,10 @@ export async function handleProdutosTarifasPost(event: RequestEvent) {
       if (insertError) throw insertError;
     }
 
-    invalidateCatalogReadModels({ companyIds: scope.companyId ? [scope.companyId] : undefined, userId: user.id });
+    invalidateCatalogReadModels({
+      companyIds: scope.companyId ? [scope.companyId] : undefined,
+      userId: user.id
+    });
     return json({ success: true }, { headers: NO_STORE_HEADERS });
   } catch (err) {
     return toErrorResponse(err, 'Erro ao salvar tarifas.');

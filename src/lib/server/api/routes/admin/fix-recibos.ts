@@ -192,7 +192,8 @@ function numeroReciboMatches(left?: string | null, right?: string | null) {
 
   const leftSignificantCore = stripLeadingZeros(leftCore);
   const rightSignificantCore = stripLeadingZeros(rightCore);
-  if (!leftSignificantCore || !rightSignificantCore || leftSignificantCore !== rightSignificantCore) return false;
+  if (!leftSignificantCore || !rightSignificantCore || leftSignificantCore !== rightSignificantCore)
+    return false;
 
   const leftPrefix = extractReciboPrefix(left);
   const rightPrefix = extractReciboPrefix(right);
@@ -299,7 +300,10 @@ function normalizeDocumentVariants(input: string) {
   return Array.from(variants).slice(0, MAX_DOC_VARIANTS);
 }
 
-async function searchUsers(event: RequestEvent, scope: Awaited<ReturnType<typeof resolveUserScope>>) {
+async function searchUsers(
+  event: RequestEvent,
+  scope: Awaited<ReturnType<typeof resolveUserScope>>
+) {
   const client = getAdminClient();
   const term = sanitizePostgrestSearchTerm(event.url.searchParams.get('busca_usuario'), 60);
   if (!term || term.length < 2) {
@@ -309,7 +313,9 @@ async function searchUsers(event: RequestEvent, scope: Awaited<ReturnType<typeof
   const searchExpression = `nome_completo.ilike.%${term}%,email.ilike.%${term}%`;
   let query = client
     .from('users')
-    .select('id, nome_completo, email, company_id, active, uso_individual, participa_ranking, user_types(name)')
+    .select(
+      'id, nome_completo, email, company_id, active, uso_individual, participa_ranking, user_types(name)'
+    )
     .or(searchExpression)
     .limit(15);
 
@@ -322,9 +328,11 @@ async function searchUsers(event: RequestEvent, scope: Awaited<ReturnType<typeof
   const scopedCompanySet = cleanStringSet(scope.companyIds);
   return adminJson({
     usuarios: (data || [])
-      .filter((row) => scope.isAdmin || scopedCompanySet.has(String(row.company_id || '').trim()))
+      .filter(
+        (row: any) => scope.isAdmin || scopedCompanySet.has(String(row.company_id || '').trim())
+      )
       .filter(isRankingEligibleUser)
-      .map((row) => ({
+      .map((row: any) => ({
         id: row.id,
         nome_completo: row.nome_completo || row.email || row.id,
         email: row.email || null,
@@ -414,26 +422,25 @@ async function searchDocuments(event: RequestEvent) {
       { data: exactRows, error: exactError },
       { data: normalizedRows, error: normalizedError },
       { data: reservaRows, error: reservaError }
-    ] =
-      await Promise.all([
-        client
-          .from('vendas_recibos')
-          .select(candidateSelect)
-          .in('numero_recibo', docVariants)
-          .limit(100),
-        normalizedVariants.length > 0
-          ? client
-              .from('vendas_recibos')
-              .select(candidateSelect)
-              .in('numero_recibo_normalizado', normalizedVariants)
-              .limit(100)
-          : Promise.resolve({ data: [], error: null }),
-        client
-          .from('vendas_recibos')
-          .select(candidateSelect)
-          .in('numero_reserva', docVariants)
-          .limit(100)
-      ]);
+    ] = await Promise.all([
+      client
+        .from('vendas_recibos')
+        .select(candidateSelect)
+        .in('numero_recibo', docVariants)
+        .limit(100),
+      normalizedVariants.length > 0
+        ? client
+            .from('vendas_recibos')
+            .select(candidateSelect)
+            .in('numero_recibo_normalizado', normalizedVariants)
+            .limit(100)
+        : Promise.resolve({ data: [], error: null }),
+      client
+        .from('vendas_recibos')
+        .select(candidateSelect)
+        .in('numero_reserva', docVariants)
+        .limit(100)
+    ]);
     if (exactError) throw exactError;
     if (normalizedError) throw normalizedError;
     if (reservaError) throw reservaError;
@@ -474,15 +481,13 @@ async function searchDocuments(event: RequestEvent) {
   }
 
   const candidatoVendedorIds = collectUniqueUuidValues(
-    candidatos.map((row) => firstRelation<FixReciboVendaRelation>(row.vendas)?.vendedor_id),
+    candidatos.map((row) => firstRelation<FixReciboVendaRelation>(row.vendas)?.vendedor_id)
   );
 
-  const vendedorIds = collectUniqueUuidValues(
-    [
-      ...foundRows.map((row) => row.ranking_vendedor_id),
-      ...candidatoVendedorIds
-    ],
-  );
+  const vendedorIds = collectUniqueUuidValues([
+    ...foundRows.map((row) => row.ranking_vendedor_id),
+    ...candidatoVendedorIds
+  ]);
   const vendedorNomes = new Map<string, string>();
   if (vendedorIds.length > 0) {
     for (const vendedorBatch of chunkArray(vendedorIds)) {
@@ -581,7 +586,9 @@ export async function handleAdminFixRecibosPost(event: RequestEvent) {
 
     const { data: registro, error: registroError } = await client
       .from('conciliacao_recibos')
-      .select('id, company_id, documento, ranking_vendedor_id, venda_id, venda_recibo_id, valor_lancamentos, valor_taxas, valor_descontos, valor_abatimentos, valor_venda_real')
+      .select(
+        'id, company_id, documento, ranking_vendedor_id, venda_id, venda_recibo_id, valor_lancamentos, valor_taxas, valor_descontos, valor_abatimentos, valor_venda_real'
+      )
       .eq('id', id)
       .maybeSingle();
     if (registroError) throw registroError;
@@ -606,7 +613,9 @@ export async function handleAdminFixRecibosPost(event: RequestEvent) {
 
       const { data: vendedor, error: vendedorError } = await client
         .from('users')
-        .select('id, nome_completo, email, company_id, active, uso_individual, participa_ranking, user_types(name)')
+        .select(
+          'id, nome_completo, email, company_id, active, uso_individual, participa_ranking, user_types(name)'
+        )
         .eq('id', vendedorId)
         .maybeSingle();
       if (vendedorError) throw vendedorError;
@@ -642,10 +651,7 @@ export async function handleAdminFixRecibosPost(event: RequestEvent) {
 
       invalidateSalesReadModels({
         companyIds: [companyId],
-        vendedorIds: [
-          String(registro.ranking_vendedor_id || '').trim(),
-          vendedorId
-        ].filter(isUuid),
+        vendedorIds: [String(registro.ranking_vendedor_id || '').trim(), vendedorId].filter(isUuid),
         userId: user.id
       });
       return adminJson({ ok: true, updated: data });
@@ -653,7 +659,8 @@ export async function handleAdminFixRecibosPost(event: RequestEvent) {
 
     if (action === 'fix_link') {
       const vendaReciboId = String(body.venda_recibo_id || '').trim();
-      if (!isUuid(vendaReciboId)) return adminJson({ error: 'Recibo de venda inválido.' }, { status: 400 });
+      if (!isUuid(vendaReciboId))
+        return adminJson({ error: 'Recibo de venda inválido.' }, { status: 400 });
 
       const { data: candidato, error: candidatoError } = await client
         .from('vendas_recibos')
@@ -663,11 +670,15 @@ export async function handleAdminFixRecibosPost(event: RequestEvent) {
         .eq('id', vendaReciboId)
         .maybeSingle();
       if (candidatoError) throw candidatoError;
-      if (!candidato) return adminJson({ error: 'Recibo de venda não encontrado.' }, { status: 404 });
+      if (!candidato)
+        return adminJson({ error: 'Recibo de venda não encontrado.' }, { status: 404 });
 
       const venda = firstRelation<FixReciboVendaRelation>(candidato.vendas);
       if (!venda || String(venda.company_id || '') !== companyId) {
-        return adminJson({ error: 'Recibo de venda fora da empresa da conciliação.' }, { status: 422 });
+        return adminJson(
+          { error: 'Recibo de venda fora da empresa da conciliação.' },
+          { status: 422 }
+        );
       }
 
       const registroDocumentKey = documentKey(registro.documento);
@@ -686,7 +697,9 @@ export async function handleAdminFixRecibosPost(event: RequestEvent) {
       if (rankingVendedorId) {
         const { data: vendedor, error: vendedorError } = await client
           .from('users')
-          .select('id, nome_completo, email, company_id, active, uso_individual, participa_ranking, user_types(name)')
+          .select(
+            'id, nome_completo, email, company_id, active, uso_individual, participa_ranking, user_types(name)'
+          )
           .eq('id', rankingVendedorId)
           .maybeSingle();
         if (vendedorError) throw vendedorError;
@@ -722,7 +735,9 @@ export async function handleAdminFixRecibosPost(event: RequestEvent) {
           last_checked_at: new Date().toISOString()
         })
         .eq('id', id)
-        .select('id, documento, venda_id, venda_recibo_id, ranking_vendedor_id, match_total, match_taxas');
+        .select(
+          'id, documento, venda_id, venda_recibo_id, ranking_vendedor_id, match_total, match_taxas'
+        );
       if (error) throw error;
 
       await insertFixAudit({
@@ -754,12 +769,14 @@ export async function handleAdminFixRecibosPost(event: RequestEvent) {
 
       if (hasValorLancamentos) {
         const value = Number(body.valor_lancamentos);
-        if (!Number.isFinite(value)) return adminJson({ error: 'valor_lancamentos inválido.' }, { status: 400 });
+        if (!Number.isFinite(value))
+          return adminJson({ error: 'valor_lancamentos inválido.' }, { status: 400 });
         updates.valor_lancamentos = value;
       }
       if (hasValorVendaReal) {
         const value = Number(body.valor_venda_real);
-        if (!Number.isFinite(value)) return adminJson({ error: 'valor_venda_real inválido.' }, { status: 400 });
+        if (!Number.isFinite(value))
+          return adminJson({ error: 'valor_venda_real inválido.' }, { status: 400 });
         updates.valor_venda_real = value;
 
         // O ranking canônico calcula a base por:

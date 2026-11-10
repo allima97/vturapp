@@ -1,4 +1,4 @@
-import { VTUR_LOGO_URL } from "$lib/brand";
+import { VTUR_LOGO_URL } from '$lib/brand';
 // Migrado para Hono de src/routes/api/v1/cards/aniversario.svg/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
@@ -6,54 +6,66 @@ import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { checkPersistentRateLimit } from '$lib/server/persistentRateLimit';
 
 const SVG_HEADERS = {
-  "Content-Type": "image/svg+xml; charset=utf-8",
-  "Cache-Control": "private, max-age=3600, no-transform",
-  "X-Content-Type-Options": "nosniff",
+  'Content-Type': 'image/svg+xml; charset=utf-8',
+  'Cache-Control': 'private, max-age=3600, no-transform',
+  'X-Content-Type-Options': 'nosniff'
 } as const;
 
 const ERROR_HEADERS = {
-  "Content-Type": "application/json; charset=utf-8",
-  ...NO_STORE_HEADERS,
+  'Content-Type': 'application/json; charset=utf-8',
+  ...NO_STORE_HEADERS
 } as const;
 
 function escapeXml(value: string) {
   return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }
 
 function clampText(value: string | null, fallback: string, maxLength: number) {
-  const normalized = String(value || "")
-    .replace(/\0/g, "")
+  const normalized = String(value || '')
+    .replace(/\0/g, '')
     .trim()
     .slice(0, maxLength);
   return normalized || fallback;
 }
 
-export const handleCardsAniversarioSvgGet = async ({ request, getClientAddress }: RequestEvent) => {
-  const rateLimit = await checkPersistentRateLimit('cards-aniversario', getClientAddress() || 'unknown', {
-    max: 240,
-    windowMs: 60_000
-  });
+export const handleCardsAniversarioSvgGet = async ({
+  request,
+  getClientAddress,
+  platform
+}: RequestEvent) => {
+  const rateLimit = await checkPersistentRateLimit(
+    'cards-aniversario',
+    getClientAddress() || 'unknown',
+    {
+      max: 240,
+      windowMs: 60_000
+    },
+    platform?.env?.DB
+  );
   if (!rateLimit.allowed) {
     return new Response(
-      JSON.stringify({ error: "rate_limited", message: "Muitas requisições. Tente novamente em instantes." }),
+      JSON.stringify({
+        error: 'rate_limited',
+        message: 'Muitas requisições. Tente novamente em instantes.'
+      }),
       {
         status: 429,
         headers: {
           ...ERROR_HEADERS,
-          "Retry-After": String(rateLimit.retryAfterSeconds),
-        },
+          'Retry-After': String(rateLimit.retryAfterSeconds)
+        }
       }
     );
   }
 
   const url = new URL(request.url);
-  const nome = clampText(url.searchParams.get("nome"), "Cliente", 80);
-  const assinatura = clampText(url.searchParams.get("assinatura"), "Sua agência de viagens", 80);
+  const nome = clampText(url.searchParams.get('nome'), 'Cliente', 80);
+  const assinatura = clampText(url.searchParams.get('assinatura'), 'Sua agência de viagens', 80);
 
   const nomeEsc = escapeXml(nome);
   const assinaturaEsc = escapeXml(assinatura);
@@ -119,6 +131,6 @@ export const handleCardsAniversarioSvgGet = async ({ request, getClientAddress }
 
   return new Response(svg, {
     status: 200,
-    headers: SVG_HEADERS,
+    headers: SVG_HEADERS
   });
 };

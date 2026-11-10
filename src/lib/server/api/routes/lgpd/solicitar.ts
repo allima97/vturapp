@@ -18,13 +18,20 @@ import { registrarLog } from '$lib/server/auditLog';
 const MAX_BODY = 16 * 1024;
 
 const TIPOS_VALIDOS = [
-  'acesso', 'portabilidade', 'retificacao', 'eliminacao',
-  'revogacao', 'oposicao', 'informacao'
+  'acesso',
+  'portabilidade',
+  'retificacao',
+  'eliminacao',
+  'revogacao',
+  'oposicao',
+  'informacao'
 ] as const;
-type TipoSolicitacao = typeof TIPOS_VALIDOS[number];
+type TipoSolicitacao = (typeof TIPOS_VALIDOS)[number];
 
 function cleanStr(v: unknown, max = 500): string {
-  return String(v ?? '').trim().slice(0, max);
+  return String(v ?? '')
+    .trim()
+    .slice(0, max);
 }
 
 function isTipoValido(v: unknown): v is TipoSolicitacao {
@@ -36,9 +43,11 @@ function isEmailBasico(email: string): boolean {
 }
 
 function resolveIp(request: Request): string | null {
-  return request.headers.get('cf-connecting-ip')?.trim()
-    || request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    || null;
+  return (
+    request.headers.get('cf-connecting-ip')?.trim() ||
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    null
+  );
 }
 
 async function verificarTurnstile(token: string, ip: string | null): Promise<boolean> {
@@ -54,7 +63,7 @@ async function verificarTurnstile(token: string, ip: string | null): Promise<boo
       body: form,
       signal: AbortSignal.timeout(8_000)
     });
-    const data = await resp.json() as { success?: boolean };
+    const data = (await resp.json()) as { success?: boolean };
     return data.success === true;
   } catch {
     return false;
@@ -82,15 +91,24 @@ export async function handleLgpdSolicitarPost(event: RequestEvent) {
     const descricao = cleanStr(body.descricao, 2000);
     const cpf = cleanStr(body.cpf, 20);
 
-    if (!nome) return json({ error: 'Nome é obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
-    if (!email || !isEmailBasico(email)) return json({ error: 'E-mail inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
-    if (!descricao) return json({ error: 'Descrição da solicitação é obrigatória.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!nome)
+      return json({ error: 'Nome é obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!email || !isEmailBasico(email))
+      return json({ error: 'E-mail inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!descricao)
+      return json(
+        { error: 'Descrição da solicitação é obrigatória.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
 
     // Verificação Turnstile (anti-spam)
     const turnstileToken = cleanStr(body.turnstileToken, 2048);
     const ip = resolveIp(event.request);
     if (turnstileToken && !(await verificarTurnstile(turnstileToken, ip))) {
-      return json({ error: 'Verificação de segurança falhou. Tente novamente.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Verificação de segurança falhou. Tente novamente.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const client = getAdminClient();
@@ -105,7 +123,10 @@ export async function handleLgpdSolicitarPost(event: RequestEvent) {
 
     if ((count ?? 0) >= 3) {
       return json(
-        { error: 'Limite de solicitações atingido para este e-mail. Aguarde 7 dias ou entre em contato diretamente.' },
+        {
+          error:
+            'Limite de solicitações atingido para este e-mail. Aguarde 7 dias ou entre em contato diretamente.'
+        },
         { status: 429, headers: NO_STORE_HEADERS }
       );
     }
@@ -130,7 +151,10 @@ export async function handleLgpdSolicitarPost(event: RequestEvent) {
 
     if (insertErr || !solicitacao) {
       logServerError('[lgpd/solicitar] erro ao gravar solicitação', insertErr);
-      return json({ error: 'Erro ao registrar solicitação. Tente novamente.' }, { status: 500, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Erro ao registrar solicitação. Tente novamente.' },
+        { status: 500, headers: NO_STORE_HEADERS }
+      );
     }
 
     // Log de auditoria (best-effort, fire-and-forget)
@@ -140,13 +164,15 @@ export async function handleLgpdSolicitarPost(event: RequestEvent) {
       detalhes: { id: solicitacao.id, tipo, titular_email: email }
     });
 
-    return json({
-      ok: true,
-      protocolo: solicitacao.id,
-      prazo: solicitacao.prazo_legal,
-      mensagem: `Solicitação registrada com sucesso. Protocolo: ${solicitacao.id}. Prazo de resposta: 15 dias corridos (LGPD Art. 18, § 4).`
-    }, { headers: NO_STORE_HEADERS });
-
+    return json(
+      {
+        ok: true,
+        protocolo: solicitacao.id,
+        prazo: solicitacao.prazo_legal,
+        mensagem: `Solicitação registrada com sucesso. Protocolo: ${solicitacao.id}. Prazo de resposta: 15 dias corridos (LGPD Art. 18, § 4).`
+      },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     logServerError('[lgpd/solicitar] erro inesperado', err);
     return json({ error: 'Erro interno.' }, { status: 500, headers: NO_STORE_HEADERS });

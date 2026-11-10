@@ -1,8 +1,8 @@
+import type { QueryError } from '$lib/server/data';
 // Migrado para Hono de src/routes/api/v1/tipo-produtos/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
-import type { PostgrestError } from '@supabase/supabase-js';
 import {
   ensureModuloAccess,
   getAdminClient,
@@ -34,7 +34,7 @@ type TipoProdutosBody = {
 };
 
 function isMissingColumnError(err: unknown) {
-  const error = err as Partial<PostgrestError> | null | undefined;
+  const error = err as Partial<QueryError> | null | undefined;
   const code = String(error?.code || '');
   const message = String(error?.message || '').toLowerCase();
   const details = String(error?.details || '').toLowerCase();
@@ -216,7 +216,8 @@ export async function handleTipoProdutosDelete(event: RequestEvent) {
     }
 
     const id = String(event.url.searchParams.get('id') || '').trim();
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const { error: deleteError } = await client.from('tipo_produtos').delete().eq('id', id);
     if (deleteError) throw deleteError;

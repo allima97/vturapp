@@ -45,14 +45,22 @@
   };
 
   const STATUS_LABELS: Record<string, string> = {
-    active: 'Ativa', trial: 'Trial', past_due: 'Atrasada',
-    suspended: 'Suspensa', canceled: 'Cancelada'
+    active: 'Ativa',
+    trial: 'Trial',
+    past_due: 'Atrasada',
+    suspended: 'Suspensa',
+    canceled: 'Cancelada'
   };
-  const STATUS_OPTIONS = Object.entries(STATUS_LABELS).map(([key, label]) => ({ value: key, label }));
+  const STATUS_OPTIONS = Object.entries(STATUS_LABELS).map(([key, label]) => ({
+    value: key,
+    label
+  }));
 
   const STATUS_COLORS: Record<string, string> = {
-    active: 'bg-green-100 text-green-700', trial: 'bg-blue-100 text-blue-700',
-    past_due: 'bg-amber-100 text-amber-700', suspended: 'bg-orange-100 text-orange-700',
+    active: 'bg-green-100 text-green-700',
+    trial: 'bg-blue-100 text-blue-700',
+    past_due: 'bg-amber-100 text-amber-700',
+    suspended: 'bg-orange-100 text-orange-700',
     canceled: 'bg-red-100 text-red-700'
   };
 
@@ -71,20 +79,26 @@
 
   const columns = [
     { key: 'company_nome', label: 'Empresa', sortable: true },
-    { key: 'plan_nome', label: 'Plano', sortable: true, formatter: (v: string | null) => `<span>${escapeHtml(v || '-')}</span>` },
+    {
+      key: 'plan_nome',
+      label: 'Plano',
+      sortable: true,
+      formatter: (v: string | null) => `<span>${escapeHtml(v || '-')}</span>`
+    },
     {
       key: 'status',
       label: 'Status',
       sortable: true,
       width: '120px',
-      formatter: (v: string) => `<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_COLORS[v] || 'bg-slate-100 text-slate-600'}">${escapeHtml(STATUS_LABELS[v] || v)}</span>`
+      formatter: (v: string) =>
+        `<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${STATUS_COLORS[v] || 'bg-slate-100 text-slate-600'}">${escapeHtml(STATUS_LABELS[v] || v)}</span>`
     },
     {
       key: 'valor_mensal',
       label: 'Mensalidade',
       sortable: true,
       align: 'right' as const,
-      formatter: (v: number | null) => v != null ? BRL_CURRENCY_FORMATTER.format(v) : '-'
+      formatter: (v: number | null) => (v != null ? BRL_CURRENCY_FORMATTER.format(v) : '-')
     },
     {
       key: 'proximo_vencimento',
@@ -113,7 +127,9 @@
       );
       if (!loadGuard.isCurrent(request.seq)) return;
       billings = (payload.items || []).map((item) => {
-        const billing = Array.isArray(item.billing) ? item.billing[0] || null : item.billing || null;
+        const billing = Array.isArray(item.billing)
+          ? item.billing[0] || null
+          : item.billing || null;
         const plan = Array.isArray(billing?.plan) ? billing.plan[0] || null : billing?.plan || null;
 
         return {
@@ -190,32 +206,33 @@
 <PageHeader
   title="Financeiro Admin"
   subtitle="Gerencie o billing e status de assinatura das empresas."
-  breadcrumbs={[
-    { label: 'Admin', href: '/admin' },
-    { label: 'Financeiro' }
-  ]}
-  actions={[
-    { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }
-  ]}
+  breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Financeiro' }]}
+  actions={[{ label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }]}
 />
 
 <div class="vtur-kpi-grid vtur-kpi-grid-3 mb-6">
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500"><Building2 size={20} /></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
+      <Building2 size={20} />
+    </div>
     <div>
       <p class="text-sm font-medium text-slate-500">Empresas ativas</p>
       <p class="text-2xl font-bold text-slate-900">{ativas}</p>
     </div>
   </div>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-500"><Building2 size={20} /></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-500">
+      <Building2 size={20} />
+    </div>
     <div>
       <p class="text-sm font-medium text-slate-500">Atrasadas</p>
       <p class="text-2xl font-bold text-slate-900">{atrasadas}</p>
     </div>
   </div>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500"><DollarSign size={20} /></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
+      <DollarSign size={20} />
+    </div>
     <div>
       <p class="text-sm font-medium text-slate-500">MRR (ativas)</p>
       <p class="text-2xl font-bold text-slate-900">{BRL_CURRENCY_FORMATTER.format(totalMrr)}</p>
@@ -256,10 +273,30 @@
       placeholder=""
       class_name="w-full"
     />
-    <FieldInput id="bill-valor" label="Mensalidade (R$)" type="number" step="0.01" bind:value={form.valor_mensal} placeholder="0,00" class_name="w-full" />
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <FieldInput id="bill-ultimo" label="Último pagamento" type="date" bind:value={form.ultimo_pagamento} class_name="w-full" />
-      <FieldInput id="bill-proximo" label="Próx. vencimento" type="date" bind:value={form.proximo_vencimento} class_name="w-full" />
+    <FieldInput
+      id="bill-valor"
+      label="Mensalidade (R$)"
+      type="number"
+      step="0.01"
+      bind:value={form.valor_mensal}
+      placeholder="0,00"
+      class_name="w-full"
+    />
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <FieldInput
+        id="bill-ultimo"
+        label="Último pagamento"
+        type="date"
+        bind:value={form.ultimo_pagamento}
+        class_name="w-full"
+      />
+      <FieldInput
+        id="bill-proximo"
+        label="Próx. vencimento"
+        type="date"
+        bind:value={form.proximo_vencimento}
+        class_name="w-full"
+      />
     </div>
   </div>
 </Dialog>

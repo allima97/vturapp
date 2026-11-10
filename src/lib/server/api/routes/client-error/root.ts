@@ -32,20 +32,32 @@ function sanitizePayload(payload: unknown) {
   };
 }
 
-export const handleClientErrorPost = async ({ request, getClientAddress }: RequestEvent) => {
+export const handleClientErrorPost = async ({
+  request,
+  getClientAddress,
+  platform
+}: RequestEvent) => {
   try {
     const originError = rejectCrossOriginRequest(request, 'Origem inválida.');
     if (originError) return originError;
 
     const clientAddress = getClientAddress();
-    const rateLimit = await checkPersistentRateLimit('client-error', clientAddress || 'unknown', {
-      max: 30,
-      windowMs: 60_000
-    });
+    const rateLimit = await checkPersistentRateLimit(
+      'client-error',
+      clientAddress || 'unknown',
+      {
+        max: 30,
+        windowMs: 60_000
+      },
+      platform?.env?.DB
+    );
     if (!rateLimit.allowed) {
       return json(
         { error: 'Muitas requisições.' },
-        { status: 429, headers: { ...NO_STORE_HEADERS, 'Retry-After': String(rateLimit.retryAfterSeconds) } }
+        {
+          status: 429,
+          headers: { ...NO_STORE_HEADERS, 'Retry-After': String(rateLimit.retryAfterSeconds) }
+        }
       );
     }
 

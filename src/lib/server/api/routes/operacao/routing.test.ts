@@ -13,14 +13,34 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./campanhas', () => ({ handleOperacaoCampanhasGet: spy('handleOperacaoCampanhasGet'), handleOperacaoCampanhasPost: spy('handleOperacaoCampanhasPost'), handleOperacaoCampanhasDelete: spy('handleOperacaoCampanhasDelete') }));
-vi.mock('./documentos-viagens', () => ({ handleOperacaoDocumentosViagensGet: spy('handleOperacaoDocumentosViagensGet'), handleOperacaoDocumentosViagensDelete: spy('handleOperacaoDocumentosViagensDelete') }));
-vi.mock('./preferencias', () => ({ handleOperacaoPreferenciasGet: spy('handleOperacaoPreferenciasGet'), handleOperacaoPreferenciasPost: spy('handleOperacaoPreferenciasPost'), handleOperacaoPreferenciasDelete: spy('handleOperacaoPreferenciasDelete'), handleOperacaoPreferenciasPatch: spy('handleOperacaoPreferenciasPatch') }));
-vi.mock('./recados', () => ({ handleOperacaoRecadosGet: spy('handleOperacaoRecadosGet'), handleOperacaoRecadosPost: spy('handleOperacaoRecadosPost'), handleOperacaoRecadosDelete: spy('handleOperacaoRecadosDelete') }));
-vi.mock('./sac', () => ({ handleOperacaoSacGet: spy('handleOperacaoSacGet'), handleOperacaoSacPost: spy('handleOperacaoSacPost'), handleOperacaoSacDelete: spy('handleOperacaoSacDelete') }));
+vi.mock('./campanhas', () => ({
+  handleOperacaoCampanhasGet: spy('handleOperacaoCampanhasGet'),
+  handleOperacaoCampanhasPost: spy('handleOperacaoCampanhasPost'),
+  handleOperacaoCampanhasDelete: spy('handleOperacaoCampanhasDelete')
+}));
+vi.mock('./documentos-viagens', () => ({
+  handleOperacaoDocumentosViagensGet: spy('handleOperacaoDocumentosViagensGet'),
+  handleOperacaoDocumentosViagensDelete: spy('handleOperacaoDocumentosViagensDelete')
+}));
+vi.mock('./preferencias', () => ({
+  handleOperacaoPreferenciasGet: spy('handleOperacaoPreferenciasGet'),
+  handleOperacaoPreferenciasPost: spy('handleOperacaoPreferenciasPost'),
+  handleOperacaoPreferenciasDelete: spy('handleOperacaoPreferenciasDelete'),
+  handleOperacaoPreferenciasPatch: spy('handleOperacaoPreferenciasPatch')
+}));
+vi.mock('./recados', () => ({
+  handleOperacaoRecadosGet: spy('handleOperacaoRecadosGet'),
+  handleOperacaoRecadosPost: spy('handleOperacaoRecadosPost'),
+  handleOperacaoRecadosDelete: spy('handleOperacaoRecadosDelete')
+}));
+vi.mock('./sac', () => ({
+  handleOperacaoSacGet: spy('handleOperacaoSacGet'),
+  handleOperacaoSacPost: spy('handleOperacaoSacPost'),
+  handleOperacaoSacDelete: spy('handleOperacaoSacDelete')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
@@ -40,7 +60,7 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['DELETE', '/api/v1/operacao/recados', 'handleOperacaoRecadosDelete', {}],
   ['GET', '/api/v1/operacao/sac', 'handleOperacaoSacGet', {}],
   ['POST', '/api/v1/operacao/sac', 'handleOperacaoSacPost', {}],
-  ['DELETE', '/api/v1/operacao/sac', 'handleOperacaoSacDelete', {}],
+  ['DELETE', '/api/v1/operacao/sac', 'handleOperacaoSacDelete', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
@@ -48,7 +68,7 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/operacao/documentos-viagens'],
   ['PUT', '/api/v1/operacao/preferencias'],
   ['PUT', '/api/v1/operacao/recados'],
-  ['PUT', '/api/v1/operacao/sac'],
+  ['PUT', '/api/v1/operacao/sac']
 ];
 
 function ev(method: string, path: string) {

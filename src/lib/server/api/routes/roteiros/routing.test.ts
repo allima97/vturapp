@@ -13,19 +13,35 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./root', () => ({ handleRoteirosGet: spy('handleRoteirosGet'), handleRoteirosPost: spy('handleRoteirosPost'), handleRoteirosDelete: spy('handleRoteirosDelete'), handleRoteirosPatch: spy('handleRoteirosPatch') }));
+vi.mock('./root', () => ({
+  handleRoteirosGet: spy('handleRoteirosGet'),
+  handleRoteirosPost: spy('handleRoteirosPost'),
+  handleRoteirosDelete: spy('handleRoteirosDelete'),
+  handleRoteirosPatch: spy('handleRoteirosPatch')
+}));
 vi.mock('./id', () => ({ handleRoteirosIdGet: spy('handleRoteirosIdGet') }));
 vi.mock('./delete', () => ({ handleRoteirosDeleteDelete: spy('handleRoteirosDeleteDelete') }));
 vi.mock('./dias-busca', () => ({ handleRoteirosDiasBuscaGet: spy('handleRoteirosDiasBuscaGet') }));
-vi.mock('./gerar-orcamento', () => ({ handleRoteirosGerarOrcamentoPost: spy('handleRoteirosGerarOrcamentoPost') }));
+vi.mock('./cidades-busca', () => ({
+  handleRoteirosCidadesBuscaGet: spy('handleRoteirosCidadesBuscaGet')
+}));
+vi.mock('./gerar-orcamento', () => ({
+  handleRoteirosGerarOrcamentoPost: spy('handleRoteirosGerarOrcamentoPost')
+}));
 vi.mock('./list', () => ({ handleRoteirosListGet: spy('handleRoteirosListGet') }));
 vi.mock('./save', () => ({ handleRoteirosSavePost: spy('handleRoteirosSavePost') }));
-vi.mock('./sugestoes-busca', () => ({ handleRoteirosSugestoesBuscaGet: spy('handleRoteirosSugestoesBuscaGet') }));
-vi.mock('./sugestoes-remover', () => ({ handleRoteirosSugestoesRemoverPost: spy('handleRoteirosSugestoesRemoverPost') }));
-vi.mock('./sugestoes-salvar', () => ({ handleRoteirosSugestoesSalvarPost: spy('handleRoteirosSugestoesSalvarPost') }));
+vi.mock('./sugestoes-busca', () => ({
+  handleRoteirosSugestoesBuscaGet: spy('handleRoteirosSugestoesBuscaGet')
+}));
+vi.mock('./sugestoes-remover', () => ({
+  handleRoteirosSugestoesRemoverPost: spy('handleRoteirosSugestoesRemoverPost')
+}));
+vi.mock('./sugestoes-salvar', () => ({
+  handleRoteirosSugestoesSalvarPost: spy('handleRoteirosSugestoesSalvarPost')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
@@ -35,15 +51,16 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['POST', '/api/v1/roteiros', 'handleRoteirosPost', {}],
   ['DELETE', '/api/v1/roteiros', 'handleRoteirosDelete', {}],
   ['PATCH', '/api/v1/roteiros', 'handleRoteirosPatch', {}],
-  ['GET', '/api/v1/roteiros/id-123', 'handleRoteirosIdGet', {"id": "id-123"}],
+  ['GET', '/api/v1/roteiros/id-123', 'handleRoteirosIdGet', { id: 'id-123' }],
   ['DELETE', '/api/v1/roteiros/delete', 'handleRoteirosDeleteDelete', {}],
   ['GET', '/api/v1/roteiros/dias-busca', 'handleRoteirosDiasBuscaGet', {}],
+  ['GET', '/api/v1/roteiros/cidades-busca', 'handleRoteirosCidadesBuscaGet', {}],
   ['POST', '/api/v1/roteiros/gerar-orcamento', 'handleRoteirosGerarOrcamentoPost', {}],
   ['GET', '/api/v1/roteiros/list', 'handleRoteirosListGet', {}],
   ['POST', '/api/v1/roteiros/save', 'handleRoteirosSavePost', {}],
   ['GET', '/api/v1/roteiros/sugestoes-busca', 'handleRoteirosSugestoesBuscaGet', {}],
   ['POST', '/api/v1/roteiros/sugestoes-remover', 'handleRoteirosSugestoesRemoverPost', {}],
-  ['POST', '/api/v1/roteiros/sugestoes-salvar', 'handleRoteirosSugestoesSalvarPost', {}],
+  ['POST', '/api/v1/roteiros/sugestoes-salvar', 'handleRoteirosSugestoesSalvarPost', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
@@ -56,7 +73,7 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/roteiros/save'],
   ['PUT', '/api/v1/roteiros/sugestoes-busca'],
   ['PUT', '/api/v1/roteiros/sugestoes-remover'],
-  ['PUT', '/api/v1/roteiros/sugestoes-salvar'],
+  ['PUT', '/api/v1/roteiros/sugestoes-salvar']
 ];
 
 function ev(method: string, path: string) {

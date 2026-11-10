@@ -12,7 +12,7 @@ import {
 } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
-import { cleanStringSet, chunkArray, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { cleanStringSet, chunkArray, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const TEMPLATE_DISPATCH_SELECT =
   'id, user_id, company_id, cliente_id, template_id, canal, categoria, status, recipient_name, recipient_contact, subject, sent_at, sent_day, created_at, updated_at';
@@ -37,7 +37,12 @@ export const handleClientesTemplateDispatchesGet = async (event: RequestEvent) =
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['parametros_crm', 'crm', 'clientes'], 1, 'Sem acesso a envios de templates.');
+      ensureModuloAccess(
+        scope,
+        ['parametros_crm', 'crm', 'clientes'],
+        1,
+        'Sem acesso a envios de templates.'
+      );
     }
 
     const clienteId = String(event.url.searchParams.get('cliente_id') || '').trim();
@@ -68,7 +73,7 @@ export const handleClientesTemplateDispatchesGet = async (event: RequestEvent) =
     };
 
     const fetchItems = async () => {
-      if (scope.isAdmin || scope.companyIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (scope.isAdmin || scope.companyIds.length <= QUERY_IN_BATCH_SIZE) {
         const { data, error } = await buildQuery(scope.companyIds);
         if (error) throw error;
         return data || [];
@@ -88,7 +93,9 @@ export const handleClientesTemplateDispatchesGet = async (event: RequestEvent) =
 
       return Array.from(rowsById.values())
         .sort((left, right) =>
-          String(right?.sent_at || right?.created_at || '').localeCompare(String(left?.sent_at || left?.created_at || ''))
+          String(right?.sent_at || right?.created_at || '').localeCompare(
+            String(left?.sent_at || left?.created_at || '')
+          )
         )
         .slice(0, limit);
     };
@@ -112,7 +119,12 @@ export const handleClientesTemplateDispatchesPost = async (event: RequestEvent) 
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['parametros_crm', 'crm', 'clientes'], 2, 'Sem acesso a enviar templates.');
+      ensureModuloAccess(
+        scope,
+        ['parametros_crm', 'crm', 'clientes'],
+        2,
+        'Sem acesso a enviar templates.'
+      );
     }
 
     const body =
@@ -133,7 +145,10 @@ export const handleClientesTemplateDispatchesPost = async (event: RequestEvent) 
     }
 
     if (!recipientContact) {
-      return json({ error: 'recipientContact obrigatorio.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'recipientContact obrigatorio.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { data: cliente, error: clienteError } = await client
@@ -151,7 +166,10 @@ export const handleClientesTemplateDispatchesPost = async (event: RequestEvent) 
       const scopedCompanySet = cleanStringSet(scope.companyIds);
       const dentroDaEmpresa = clienteCompanyId && scopedCompanySet.has(clienteCompanyId);
       if (!dentroDaEmpresa) {
-        return json({ error: 'Cliente fora do seu escopo.' }, { status: 403, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Cliente fora do seu escopo.' },
+          { status: 403, headers: NO_STORE_HEADERS }
+        );
       }
 
       if (scope.isVendedor && !scope.isGestor && !scope.isMaster) {
@@ -163,7 +181,10 @@ export const handleClientesTemplateDispatchesPost = async (event: RequestEvent) 
           .limit(1);
         if (vendaError) throw vendaError;
         if (!vendaDoUsuario || vendaDoUsuario.length === 0) {
-          return json({ error: 'Cliente fora do seu escopo.' }, { status: 403, headers: NO_STORE_HEADERS });
+          return json(
+            { error: 'Cliente fora do seu escopo.' },
+            { status: 403, headers: NO_STORE_HEADERS }
+          );
         }
       }
     }
@@ -178,7 +199,7 @@ export const handleClientesTemplateDispatchesPost = async (event: RequestEvent) 
       status: 'sent',
       recipient_name: recipientName || null,
       recipient_contact: recipientContact,
-      subject: subject || null,
+      subject: subject || null
     };
 
     const { data, error } = await client

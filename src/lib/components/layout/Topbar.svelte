@@ -14,15 +14,20 @@
   let showBusca = false;
   // Fase 5.1: no Mac o atalho é ⌘K; nos demais, Ctrl+K.
   const atalhoBusca =
-    typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? '⌘K' : 'Ctrl K';
-  let CalculatorModalComponent: typeof import('$lib/components/modais/CalculatorModal.svelte').default | null = null;
+    typeof navigator !== 'undefined' &&
+    /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)
+      ? '⌘K'
+      : 'Ctrl K';
+  let CalculatorModalComponent:
+    | typeof import('$lib/components/modais/CalculatorModal.svelte').default
+    | null = null;
   let calculatorLoadPromise: Promise<boolean> | null = null;
   let logoutController: AbortController | null = null;
 
   $: currentUser = $auth.user;
   $: userDisplayName =
-    currentUser?.user_metadata?.nome_completo ||
-    currentUser?.user_metadata?.nome ||
+    String(currentUser?.user_metadata?.nome_completo || '') ||
+    String(currentUser?.user_metadata?.nome || '') ||
     currentUser?.email?.split('@')[0] ||
     'Usuario';
   $: userEmail = currentUser?.email || 'Sem email';
@@ -74,7 +79,7 @@
       });
       if (!response.ok) throw new Error('logout_failed');
       // Usa window.location.assign em vez de goto() para evitar uncaught promise
-      // quando o Supabase dispara SIGNED_OUT via BroadcastChannel ao mesmo tempo
+      // quando o Dados dispara SIGNED_OUT via BroadcastChannel ao mesmo tempo
       window.location.assign('/auth/login');
     } catch {
       toast.error('Erro ao fazer logout.');
@@ -131,7 +136,10 @@
         >
           <Search size={16} />
           <span>Buscar</span>
-          <kbd class="rounded border border-white/20 bg-white/10 px-1.5 py-0.5 font-sans text-[11px] opacity-80" aria-hidden="true">{atalhoBusca}</kbd>
+          <kbd
+            class="rounded border border-white/20 bg-white/10 px-1.5 py-0.5 font-sans text-[11px] opacity-80"
+            aria-hidden="true">{atalhoBusca}</kbd
+          >
         </Button>
       {/if}
 
@@ -227,7 +235,10 @@
           </DropdownItem>
           <DropdownDivider />
           <DropdownItem
-            on:click={() => { userDropdownOpen = false; handleLogout(); }}
+            on:click={() => {
+              userDropdownOpen = false;
+              handleLogout();
+            }}
             class_name="text-red-600 hover:bg-red-50"
           >
             <LogOut size={15} class="mr-2" />

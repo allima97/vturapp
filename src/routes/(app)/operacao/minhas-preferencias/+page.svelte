@@ -14,6 +14,8 @@
   import { apiDelete, apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
   import { escapeHtml } from '$lib/utils/html';
+  import DestinoOperacional from '$lib/components/DestinoOperacional.svelte';
+  import { campoGeografico } from '$lib/config/destinosGeograficos';
   type Preferencia = {
     id: string;
     tipo_produto_id: string | null;
@@ -47,6 +49,7 @@
   let deletingId = '';
   let editingId: string | null = null;
   let cidadeBusca = '';
+  let destinoGeograficoId = '';
   let cidadeResultados: CidadeSugestao[] = [];
   let buscandoCidade = false;
   let cidadeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -105,7 +108,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const payload = await apiGet<{ items?: Preferencia[]; tipos?: TipoProduto[] }>('/api/v1/operacao/preferencias', undefined, request.signal);
+      const payload = await apiGet<{ items?: Preferencia[]; tipos?: TipoProduto[] }>(
+        '/api/v1/operacao/preferencias',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       preferencias = payload.items || [];
       tipos = payload.tipos || [];
@@ -126,10 +133,14 @@
     const request = cidadeGuard.next();
     buscandoCidade = true;
     try {
-      const payload = await apiGet<CidadesBuscaResponse | CidadeSugestao[]>('/api/v1/vendas/cidades-busca', {
-        q,
-        limite: 10
-      }, request.signal);
+      const payload = await apiGet<CidadesBuscaResponse | CidadeSugestao[]>(
+        '/api/v1/vendas/cidades-busca',
+        {
+          q,
+          limite: 10
+        },
+        request.signal
+      );
       if (!cidadeGuard.isCurrent(request.seq)) return;
       cidadeResultados = Array.isArray(payload) ? payload : payload.items || [];
     } catch (err) {
@@ -147,7 +158,9 @@
 
   function selecionarCidade(cidade: CidadeSugestao) {
     form.cidade_id = cidade.id;
-    form.cidade_nome = cidade.subdivisao_nome ? `${cidade.nome} (${cidade.subdivisao_nome})` : cidade.nome;
+    form.cidade_nome = cidade.subdivisao_nome
+      ? `${cidade.nome} (${cidade.subdivisao_nome})`
+      : cidade.nome;
     cidadeBusca = form.cidade_nome;
     cidadeResultados = [];
   }
@@ -156,6 +169,7 @@
     editingId = null;
     form = createForm();
     cidadeBusca = '';
+    destinoGeograficoId = '';
     cidadeResultados = [];
     modalOpen = true;
   }
@@ -172,18 +186,23 @@
       observacao: p.observacao || ''
     };
     cidadeBusca = p.cidade?.nome || '';
+    destinoGeograficoId = '';
     cidadeResultados = [];
     modalOpen = true;
   }
 
   async function save() {
-    if (!form.nome.trim()) { toast.error('Nome obrigatório.'); return; }
+    if (!form.nome.trim()) {
+      toast.error('Nome obrigatório.');
+      return;
+    }
     saving = true;
     try {
       await apiPost('/api/v1/operacao/preferencias', {
         id: editingId || undefined,
         tipo_produto_id: form.tipo_produto_id || null,
         cidade_id: form.cidade_id || null,
+        ...campoGeografico(destinoGeograficoId),
         nome: form.nome,
         localizacao: form.localizacao || null,
         classificacao: form.classificacao || null,
@@ -228,9 +247,7 @@
   title="Minhas Preferências"
   subtitle="Cadastre seus destinos e produtos favoritos para agilizar a criação de orçamentos."
   color="operacao"
-  breadcrumbs={[
-    { label: 'Minhas Preferências' }
-  ]}
+  breadcrumbs={[{ label: 'Minhas Preferências' }]}
   actions={[
     { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw },
     { label: 'Nova Preferência', onClick: openNew, variant: 'primary', icon: Plus }
@@ -254,7 +271,10 @@
       color="operacao"
       title="Excluir"
       disabled={deletingId === row.id}
-      on:click={(e) => {e.stopPropagation(); deletePref(row.id);}}
+      on:click={(e) => {
+        e.stopPropagation();
+        deletePref(row.id);
+      }}
     >
       <Trash2 size={15} />
     </Button>
@@ -301,32 +321,41 @@
         class_name="w-full"
       />
     </div>
-    <div class="relative">
-      <FieldInput
-        id="pref-cidade"
-        label="Cidade"
-        bind:value={cidadeBusca}
-        on:input={onCidadeInput}
-        icon={Search}
-        class_name="w-full"
-        placeholder="Buscar cidade..."
-      />
-      {#if cidadeResultados.length > 0}
-        <div class="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg">
-          {#each cidadeResultados as cidade}
-            <Button
-              type="button"
-              variant="unstyled"
-              size="sm"
-              class_name="block w-full rounded-none px-3 py-2 text-left text-sm hover:bg-slate-50"
-              on:click={() => selecionarCidade(cidade)}
-            >
-              {cidade.nome}{#if cidade.subdivisao_nome}, {cidade.subdivisao_nome}{/if}
-            </Button>
-          {/each}
-        </div>
-      {/if}
-    </div>
+    <DestinoOperacional
+      fieldId="pref-cidade-geo"
+      label="Cidade"
+      bind:value={cidadeBusca}
+      bind:destinoId={destinoGeograficoId}
+    >
+      <div class="relative">
+        <FieldInput
+          id="pref-cidade"
+          label="Cidade"
+          bind:value={cidadeBusca}
+          on:input={onCidadeInput}
+          icon={Search}
+          class_name="w-full"
+          placeholder="Buscar cidade..."
+        />
+        {#if cidadeResultados.length > 0}
+          <div
+            class="absolute z-20 mt-1 w-full rounded-lg border border-slate-200 bg-white shadow-lg"
+          >
+            {#each cidadeResultados as cidade}
+              <Button
+                type="button"
+                variant="unstyled"
+                size="sm"
+                class_name="block w-full rounded-none px-3 py-2 text-left text-sm hover:bg-slate-50"
+                on:click={() => selecionarCidade(cidade)}
+              >
+                {cidade.nome}{#if cidade.subdivisao_nome}, {cidade.subdivisao_nome}{/if}
+              </Button>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    </DestinoOperacional>
     <FieldInput
       id="pref-localizacao"
       label="Localização"

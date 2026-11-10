@@ -82,7 +82,11 @@ export async function handleDashboardDebugAggregatesGet(event: RequestEvent) {
       const vid = String(v.id || '').trim();
       if (vid) vendaIds.push(vid);
 
-      if (String(v.status || '').trim().toLowerCase() === 'cancelado') {
+      if (
+        String(v.status || '')
+          .trim()
+          .toLowerCase() === 'cancelado'
+      ) {
         vendasCanceladasStatus += toNumber(v.valor_total_bruto);
         continue;
       }
@@ -179,20 +183,25 @@ export async function handleDashboardDebugAggregatesGet(event: RequestEvent) {
           count_linked_to_venda: concLinked,
           count_relevant_docs: relevantDocs.size
         },
-        conciliacao_sample: ((concRecords || []) as ConciliacaoDebugRow[]).slice(0, 5).map((row) => ({
-          id: row.id,
-          documento: String(row.documento || '').replace(/\d(?=\d{4})/g, '*'),
-          status: row.status,
-          valor_lancamentos: row.valor_lancamentos,
-          valor_venda_real: row.valor_venda_real,
-          movimento_data: row.movimento_data,
-          vinculada: Boolean(row.venda_id || row.venda_recibo_id)
-        }))
+        conciliacao_sample: ((concRecords || []) as ConciliacaoDebugRow[])
+          .slice(0, 5)
+          .map((row) => ({
+            id: row.id,
+            documento: String(row.documento || '').replace(/\d(?=\d{4})/g, '*'),
+            status: row.status,
+            valor_lancamentos: row.valor_lancamentos,
+            valor_venda_real: row.valor_venda_real,
+            movimento_data: row.movimento_data,
+            vinculada: Boolean(row.venda_id || row.venda_recibo_id)
+          }))
       },
       { headers: DEBUG_HEADERS }
     );
   } catch (error) {
     logServerError('[dashboard/debug-aggregates]', error);
-    return json({ error: 'Erro ao carregar diagnostico.' }, { status: 500, headers: DEBUG_HEADERS });
+    return json(
+      { error: 'Erro ao carregar diagnostico.' },
+      { status: 500, headers: DEBUG_HEADERS }
+    );
   }
 }

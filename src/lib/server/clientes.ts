@@ -1,5 +1,5 @@
+import type { DataClient } from '$lib/server/data';
 import { error } from '@sveltejs/kit';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   buildReadModelCacheKey,
   READ_MODEL_TAGS,
@@ -30,10 +30,12 @@ export function canUseCompanyClienteScope(scope: UserScope, vendedorParam?: stri
   if (scope.usoIndividual) return false;
   if ((scope.companyIds || []).length > 0 || scope.companyId) return true;
 
-  return tipoNome.includes('MASTER') || tipoNome.includes('FINANCEIRO') || tipoNome.includes('GESTOR');
+  return (
+    tipoNome.includes('MASTER') || tipoNome.includes('FINANCEIRO') || tipoNome.includes('GESTOR')
+  );
 }
 
-export async function resolveCompanyClienteIds(client: SupabaseClient, companyIds: string[]) {
+export async function resolveCompanyClienteIds(client: DataClient, companyIds: string[]) {
   const scopedCompanyIds = uniqueCleanStrings(companyIds || []).sort();
   if (scopedCompanyIds.length === 0) return [];
 
@@ -55,7 +57,7 @@ export async function resolveCompanyClienteIds(client: SupabaseClient, companyId
     loader: async () => {
       // Substitui o cruzamento de lotes em JS (4 rodadas sequenciais) por
       // uma única chamada RPC (função company_cliente_ids, ver
-      // supabase/migrations) que reproduz a mesma lógica de OR.
+      // dados/migrations) que reproduz a mesma lógica de OR.
       const { data, error: rpcError } = await client.rpc('company_cliente_ids', {
         p_company_ids: scopedCompanyIds
       });
@@ -170,12 +172,15 @@ export function matchesClienteBusca(
   if (!digits) return false;
 
   const documentoDigits = String(item.cpf || '').replace(/\D/g, '');
-  const phoneDigits = `${String(item.telefone || '')} ${String(item.whatsapp || '')}`.replace(/\D/g, '');
+  const phoneDigits = `${String(item.telefone || '')} ${String(item.whatsapp || '')}`.replace(
+    /\D/g,
+    ''
+  );
   return documentoDigits.includes(digits) || phoneDigits.includes(digits);
 }
 
 export async function resolveClienteScopedFilters(
-  client: SupabaseClient,
+  client: DataClient,
   scope: UserScope,
   companyParam?: string | null,
   vendedorParam?: string | null
@@ -217,7 +222,7 @@ export function ensureClienteModuloAccess(
 }
 
 export async function ensureClienteAccess(
-  client: SupabaseClient,
+  client: DataClient,
   scope: UserScope,
   clienteId: string,
   companyParam?: string | null,
@@ -287,7 +292,7 @@ export async function ensureClienteAccess(
   // Substitui as 3 rodadas de duplo loop empresa x vendedor (cliente
   // criado/atribuido, venda do cliente, cliente como passageiro de viagem)
   // por uma única chamada RPC (função can_access_cliente_by_vendedor_scope,
-  // ver supabase/migrations) que reproduz a mesma lógica de OR.
+  // ver dados/migrations) que reproduz a mesma lógica de OR.
   const { data: canAccess, error: canAccessError } = await client.rpc(
     'can_access_cliente_by_vendedor_scope',
     {

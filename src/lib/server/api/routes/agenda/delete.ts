@@ -5,7 +5,13 @@ import { json } from '@sveltejs/kit';
 import { ensureAgendaAccess } from '$lib/server/agenda';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { rejectCrossOriginRequest } from '$lib/server/requestGuards';
-import { getAdminClient, isUuid, requireAuthenticatedUser, resolveUserScope, toErrorResponse } from '$lib/server/v1';
+import {
+  getAdminClient,
+  isUuid,
+  requireAuthenticatedUser,
+  resolveUserScope,
+  toErrorResponse
+} from '$lib/server/v1';
 
 export async function handleAgendaDeleteDelete(event: RequestEvent) {
   try {
@@ -34,7 +40,10 @@ export async function handleAgendaDeleteDelete(event: RequestEvent) {
     }
 
     if (!scope.isAdmin && String(existing.user_id || '') !== user.id) {
-      return json({ error: 'Sem acesso a este evento.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Sem acesso a este evento.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { error } = await client.from('agenda_itens').delete().eq('id', id);

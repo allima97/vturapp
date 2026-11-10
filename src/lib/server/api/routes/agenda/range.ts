@@ -43,7 +43,10 @@ export async function handleAgendaRangeGet(event: RequestEvent) {
 
     const { inicio, fim } = buildAgendaRangeParams(event.url.searchParams);
     if (!isIsoDate(inicio) || !isIsoDate(fim)) {
-      return json({ error: 'inicio e fim devem estar no formato YYYY-MM-DD.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'inicio e fim devem estar no formato YYYY-MM-DD.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const overlapFilter = buildAgendaOverlapFilter(inicio, fim);
@@ -63,7 +66,10 @@ export async function handleAgendaRangeGet(event: RequestEvent) {
       if (item) items.push(item);
     }
 
-    const birthdayCompanyIds = resolveScopedCompanyIds(scope, event.url.searchParams.get('company_id'));
+    const birthdayCompanyIds = resolveScopedCompanyIds(
+      scope,
+      event.url.searchParams.get('company_id')
+    );
     const birthdayCompanyId = birthdayCompanyIds[0] || scope.companyId || null;
 
     if (!scope.isVendedor && birthdayCompanyId) {
@@ -94,17 +100,17 @@ export async function handleAgendaRangeGet(event: RequestEvent) {
         const startYear = Number(inicio.slice(0, 4));
         const endYear = Number(fim.slice(0, 4));
 
-	        for (const row of birthdayUsers || []) {
-	          const userId = String(row?.id || '').trim();
-	          const nome = String(row?.nome_completo || '').trim() || '(Sem nome)';
-	          const nascimento = String(row?.data_nascimento || '').trim();
-	          if (!userId || !nascimento) continue;
+        for (const row of birthdayUsers || []) {
+          const userId = String(row?.id || '').trim();
+          const nome = String(row?.nome_completo || '').trim() || '(Sem nome)';
+          const nascimento = String(row?.data_nascimento || '').trim();
+          if (!userId || !nascimento) continue;
 
-	          const parsed = parseDateToUTC(nascimento);
-	          if (Number.isNaN(parsed.getTime())) continue;
+          const parsed = parseDateToUTC(nascimento);
+          if (Number.isNaN(parsed.getTime())) continue;
 
-	          const month = parsed.getUTCMonth() + 1;
-	          const day = parsed.getUTCDate();
+          const month = parsed.getUTCMonth() + 1;
+          const day = parsed.getUTCDate();
 
           for (let year = startYear; year <= endYear; year += 1) {
             const iso = safeISODate(year, month, day);
@@ -117,10 +123,10 @@ export async function handleAgendaRangeGet(event: RequestEvent) {
               end: null,
               descricao: 'Aniversario',
               allDay: true,
-	              source: 'birthday'
-	            });
-	          }
-	        }
+              source: 'birthday'
+            });
+          }
+        }
       } catch (birthdayErr) {
         logServerError('[agenda/range] Falha ao carregar aniversarios', birthdayErr);
       }
@@ -128,11 +134,14 @@ export async function handleAgendaRangeGet(event: RequestEvent) {
 
     items.sort((a, b) => String(a.start).localeCompare(String(b.start)));
 
-    return json({
-      inicio,
-      fim,
-      items
-    }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      {
+        inicio,
+        fim,
+        items
+      },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar agenda.');
   }

@@ -3,226 +3,213 @@
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
-  import SubdivisaoAutocomplete from '$lib/components/cadastros/SubdivisaoAutocomplete.svelte';
   import Dialog from '$lib/components/ui/Dialog.svelte';
   import DataTable from '$lib/components/ui/DataTable.svelte';
+  import SeletorDestinoGeografico from '$lib/components/SeletorDestinoGeografico.svelte';
   import { toast } from '$lib/stores/ui';
-  import { BottomSheet, FieldInput, FieldSelect } from '$lib/components/ui';
-  import { apiDelete, apiGet, apiPost } from '$lib/services/api';
-  import { Plus, Trash2, RefreshCw, Search, SlidersHorizontal } from '$lib/icons';
+  import { BottomSheet, FieldInput } from '$lib/components/ui';
+  import { apiDelete, apiGet, apiPatch, apiPost } from '$lib/services/api';
+  import { Edit2, Plus, Trash2, RefreshCw, Search, SlidersHorizontal } from '$lib/icons';
   import { escapeHtml } from '$lib/utils/html';
   import { toUserMessage } from '$lib/utils/errors';
   import { createDebouncedReloader } from '$lib/utils/autoReload';
-
   import { confirmAction } from '$lib/stores/confirm';
-  type Cidade = {
+
+  type Destino = {
     id: string;
     nome: string;
-    subdivisao_id: string | null;
-    descricao: string | null;
-    created_at: string | null;
-    subdivisao?: { id: string; nome: string; pais?: { id: string; nome: string } | null } | null;
+    label: string;
+    origem: 'geonames' | 'personalizado';
+    referencia_id?: string;
+    referencia_indisponivel?: boolean;
+    referencia: {
+      localidade: string;
+      regiao: string | null;
+      pais: string;
+    };
   };
 
-  type Subdivisao = { id: string; nome: string; pais_id: string; pais?: { nome: string } | null };
-
-  type SubdivisoesResponse = {
-    items?: Subdivisao[] | null;
-    total?: number;
-    page?: number;
-    pageSize?: number;
+  type BuscaResponse = {
+    items?: Destino[] | null;
+    podeHaverMais?: boolean;
   };
 
-  type CidadesResponse = {
-    items?: Cidade[] | null;
-    total?: number;
-    page?: number;
-    pageSize?: number;
-  };
-
-  let cidades: Cidade[] = [];
-  let subdivisoes: Subdivisao[] = [];
-  let loading = true;
-  let loadingSubdivisoes = true;
+  let destinos: Destino[] = [];
+  let podeHaverMais = false;
+  let loading = false;
   let modalOpen = false;
   let saving = false;
   let deletingId = '';
-  let editingId: string | null = null;
+  let editando: Destino | null = null;
   let busca = '';
-  let buscaSubdivisao = '';
-  let filtroSubdivisao = '';
-  let totalCidades = 0;
   let autoReloadEnabled = false;
   let lastAutoReloadKey = '';
-  let lastSubdivisoesKey = '';
   let showFilterSheet = false;
+  let nome = '';
+  let referenciaId = '';
+  let referenciaValida = false;
   const autoReload = createDebouncedReloader(() => load(), 300);
-  const subdivisoesAutoReload = createDebouncedReloader(() => loadSubdivisoes(), 300);
 
-  let form = { nome: '', subdivisao_id: '', descricao: '' };
+  function texto(valor: string | null | undefined) {
+    const limpo = valor?.trim();
+    return escapeHtml(limpo || '—');
+  }
 
   const columns = [
-    { key: 'nome', label: 'Cidade', sortable: true },
+    { key: 'nome', label: 'Nome', sortable: true },
     {
-      key: 'subdivisao',
-      label: 'Estado/Província',
+      key: 'origem',
+      label: 'Origem',
       sortable: false,
-      formatter: (_: unknown, row: Cidade) => {
-        const sub = row.subdivisao?.nome || '-';
-        const pais = row.subdivisao?.pais?.nome || '';
-        return `<span>${pais ? `${escapeHtml(sub)} · ${escapeHtml(pais)}` : escapeHtml(sub)}</span>`;
-      }
+      formatter: (valor: Destino['origem']) =>
+        valor === 'personalizado' ? 'Personalizado' : 'GeoNames'
     },
-    { key: 'descricao', label: 'Descrição', sortable: false, formatter: (v: string | null) => `<span>${escapeHtml(v || '-')}</span>` }
+    {
+      key: 'cidade',
+      label: 'Cidade',
+      sortable: false,
+      formatter: (_: unknown, row: Destino) => texto(row.referencia.localidade)
+    },
+    {
+      key: 'estado',
+      label: 'Estado',
+      sortable: false,
+      formatter: (_: unknown, row: Destino) => texto(row.referencia.regiao)
+    },
+    {
+      key: 'pais',
+      label: 'País',
+      sortable: false,
+      formatter: (_: unknown, row: Destino) => texto(row.referencia.pais)
+    }
   ];
-
-  async function loadSubdivisoes() {
-    const term = buscaSubdivisao.trim();
-    if (term.length < 2) {
-      subdivisoes = [];
-      loadingSubdivisoes = false;
-      return;
-    }
-
-    loadingSubdivisoes = true;
-    try {
-      const payload = await apiGet<SubdivisoesResponse>('/api/v1/subdivisoes', { q: term, page: 1, pageSize: 200 }, undefined, 30_000);
-      subdivisoes = Array.isArray(payload?.items) ? payload.items : [];
-    } catch (_err) {
-      subdivisoes = [];
-    } finally {
-      loadingSubdivisoes = false;
-    }
-  }
 
   async function load() {
     const term = busca.trim();
-    const hasCityTerm = term.length >= 2;
-    const hasSubdivisaoFilter = Boolean(filtroSubdivisao);
-
-    if (!hasCityTerm && !hasSubdivisaoFilter) {
-      cidades = [];
-      totalCidades = 0;
+    if (Array.from(term).length < 2) {
+      destinos = [];
+      podeHaverMais = false;
       loading = false;
       return;
     }
 
     loading = true;
-    let payload: CidadesResponse | null = null;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        payload = await apiGet<CidadesResponse>('/api/v1/cidades', {
-          q: hasCityTerm ? term : undefined,
-          subdivisao_id: hasSubdivisaoFilter ? filtroSubdivisao : undefined,
-          page: 1,
-          pageSize: 200
-        }, undefined, 30_000);
-        break;
-      } catch (err) {
-        if (attempt < 2) {
-          await new Promise(r => setTimeout(r, 300));
-          continue;
-        }
-        toast.error(toUserMessage(err, 'Não foi possível carregar as cidades. Tente novamente.'));
-        loading = false;
-        return;
-      }
+    try {
+      const payload = await apiGet<BuscaResponse>(
+        '/api/v1/destinos-geograficos/busca',
+        { q: term, idioma: 'pt', limite: 20 },
+        undefined,
+        30_000
+      );
+      destinos = Array.isArray(payload?.items) ? payload.items : [];
+      podeHaverMais = Boolean(payload?.podeHaverMais);
+    } catch (err) {
+      destinos = [];
+      podeHaverMais = false;
+      toast.error(toUserMessage(err, 'Não foi possível buscar destinos. Tente novamente.'));
+    } finally {
+      loading = false;
     }
-    cidades = Array.isArray(payload?.items) ? payload.items : [];
-    totalCidades = Number(payload?.total || cidades.length);
-    loading = false;
   }
 
-  function openNew() {
-    editingId = null;
-    form = { nome: '', subdivisao_id: '', descricao: '' };
+  function abrirNovo() {
+    editando = null;
+    nome = '';
+    referenciaId = '';
+    referenciaValida = false;
     modalOpen = true;
   }
 
-  function openEdit(c: Cidade) {
-    editingId = c.id;
-    form = { nome: c.nome, subdivisao_id: c.subdivisao_id || '', descricao: c.descricao || '' };
+  function abrirEdicao(destino: Destino) {
+    if (destino.origem !== 'personalizado') {
+      toast.error('Destinos do GeoNames são somente leitura.');
+      return;
+    }
+    editando = destino;
+    nome = destino.nome;
+    referenciaId = destino.referencia_id || '';
+    referenciaValida = Boolean(referenciaId);
     modalOpen = true;
   }
 
-  async function save() {
-    if (!form.nome.trim()) { toast.error('Nome obrigatório.'); return; }
+  function referenciaGeonamesId() {
+    if (!referenciaId.startsWith('geonames:')) return null;
+    const numero = Number(referenciaId.slice('geonames:'.length));
+    return Number.isSafeInteger(numero) && numero > 0 ? numero : null;
+  }
+
+  async function salvar() {
+    const referencia = referenciaGeonamesId();
+    if (!nome.trim()) {
+      toast.error('Informe o nome do destino.');
+      return;
+    }
+    if (!referencia) {
+      toast.error('Escolha uma localidade do GeoNames como referência.');
+      return;
+    }
     saving = true;
     try {
-      await apiPost('/api/v1/cidades', {
-        id: editingId || undefined,
-        nome: form.nome,
-        subdivisao_id: form.subdivisao_id || null,
-        descricao: form.descricao || null
-      });
-      toast.success(editingId ? 'Cidade atualizada.' : 'Cidade criada.');
+      if (editando) {
+        await apiPatch('/api/v1/destinos-geograficos', {
+          id: editando.id,
+          nome,
+          referenciaGeoNamesId: referencia
+        });
+        toast.success('Destino personalizado atualizado.');
+      } else {
+        await apiPost('/api/v1/destinos-geograficos', {
+          nome,
+          referenciaGeoNamesId: referencia
+        });
+        toast.success('Destino personalizado criado.');
+      }
       modalOpen = false;
       await load();
     } catch (err) {
-      toast.error(toUserMessage(err, 'Erro ao salvar.'));
+      toast.error(toUserMessage(err, 'Erro ao salvar o destino.'));
     } finally {
       saving = false;
     }
   }
 
-  async function deleteCidade(id: string) {
-    if (!(await confirmAction('Deseja excluir esta cidade?'))) return;
-    deletingId = id;
+  async function excluir(destino: Destino) {
+    if (destino.origem !== 'personalizado') return;
+    if (
+      !(await confirmAction(
+        'Excluir este destino personalizado? O lugar no GeoNames não será apagado.'
+      ))
+    )
+      return;
+    deletingId = destino.id;
     try {
-      await apiDelete('/api/v1/cidades', { id });
-      toast.success('Cidade excluída.');
+      await apiDelete('/api/v1/destinos-geograficos', { id: destino.id });
+      toast.success('Destino personalizado excluído.');
       await load();
     } catch (err) {
-      toast.error(toUserMessage(err, 'Erro ao excluir.'));
+      toast.error(toUserMessage(err, 'Não foi possível excluir o destino.'));
     } finally {
       deletingId = '';
     }
   }
 
   onMount(() => {
-    // Modo sob demanda: evita carregar a tabela inteira sem filtro.
-    lastAutoReloadKey = buildAutoReloadKey();
-    lastSubdivisoesKey = buildSubdivisoesKey();
+    lastAutoReloadKey = busca.trim();
     autoReloadEnabled = true;
-    void load();
-    void loadSubdivisoes();
   });
 
   onDestroy(() => {
     autoReload.cancel();
-    subdivisoesAutoReload.cancel();
   });
 
-  function buildAutoReloadKey() {
-    return [busca.trim(), filtroSubdivisao].join('|');
-  }
-
-  function buildSubdivisoesKey() {
-    return buscaSubdivisao.trim();
-  }
-
-  function scheduleAutoReload() {
+  function agendarBusca() {
     autoReload.schedule();
   }
 
-  function scheduleSubdivisoesReload() {
-    subdivisoesAutoReload.schedule();
-  }
-
-  // O $: do modo legado só reage às variáveis escritas nesta linha (não enxerga dentro de
-  // buildAutoReloadKey()). Por isso a mesma expressão da função fica aqui, idêntica.
-  $: autoReloadKey = [busca.trim(), filtroSubdivisao].join('|');
-  $: if (autoReloadEnabled && autoReloadKey !== lastAutoReloadKey) {
-    lastAutoReloadKey = autoReloadKey;
-    scheduleAutoReload();
-  }
-
-  // O $: do modo legado só reage às variáveis escritas nesta linha (não enxerga dentro de
-  // buildSubdivisoesKey()). Por isso a mesma expressão da função fica aqui, idêntica.
-  $: subdivisoesKey = buscaSubdivisao.trim();
-  $: if (autoReloadEnabled && subdivisoesKey !== lastSubdivisoesKey) {
-    lastSubdivisoesKey = subdivisoesKey;
-    scheduleSubdivisoesReload();
+  $: termoBusca = busca.trim();
+  $: if (autoReloadEnabled && termoBusca !== lastAutoReloadKey) {
+    lastAutoReloadKey = termoBusca;
+    agendarBusca();
   }
 </script>
 
@@ -232,143 +219,136 @@
 
 <PageHeader
   title="Cidades"
-  subtitle="Cadastro de cidades utilizadas nos destinos e produtos."
-  breadcrumbs={[
-    { label: 'Cadastros', href: '/cadastros' },
-    { label: 'Cidades' }
-  ]}
+  subtitle="Busque destinos no GeoNames ou cadastre um nome próprio ligado a uma localidade."
+  breadcrumbs={[{ label: 'Cadastros', href: '/cadastros' }, { label: 'Cidades' }]}
   actions={[
     { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw },
-    { label: 'Nova Cidade', onClick: openNew, variant: 'primary', icon: Plus }
+    { label: 'Nova cidade', onClick: abrirNovo, variant: 'primary', icon: Plus }
   ]}
 />
 
-<!-- Mobile: botão de filtros -->
 <div class="mb-4 sm:hidden">
   <Button variant="secondary" class_name="w-full" on:click={() => (showFilterSheet = true)}>
     <SlidersHorizontal size={16} class="mr-2" />
-    Filtros
-    {#if busca.trim() || filtroSubdivisao}
+    Busca
+    {#if busca.trim()}
       <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
     {/if}
   </Button>
 </div>
 
 <Card class="mb-6 hidden sm:block">
-  <div class="flex flex-wrap gap-4 items-end">
-    <FieldInput
-      bind:value={busca}
-      icon={Search}
-      placeholder="Buscar cidade..."
-      class_name="flex-1 min-w-[200px]"
-      on:input={(event) => {
-        const target = event.target as HTMLInputElement | null;
-        busca = target?.value ?? busca;
-        scheduleAutoReload();
-      }}
-    />
-    <FieldSelect
-      id="cid-sub"
-      label="Estado/Província"
-      bind:value={filtroSubdivisao}
-      options={[
-        { value: '', label: 'Todos' },
-        ...subdivisoes.map((s) => ({ value: s.id, label: s.nome }))
-      ]}
-      placeholder={null}
-      disabled={loadingSubdivisoes || buscaSubdivisao.trim().length < 2}
-    />
-    <FieldInput
-      id="cid-sub-search"
-      label="Buscar Estado/Província"
-      bind:value={buscaSubdivisao}
-      placeholder="Digite 2+ letras para carregar estados..."
-      class_name="min-w-[260px]"
-      on:input={(event) => {
-        const target = event.target as HTMLInputElement | null;
-        buscaSubdivisao = target?.value ?? buscaSubdivisao;
-        scheduleSubdivisoesReload();
-      }}
-    />
-  </div>
+  <FieldInput
+    bind:value={busca}
+    icon={Search}
+    placeholder="Digite pelo menos 2 letras"
+    class_name="w-full"
+    on:input={(event) => {
+      const target = event.target as HTMLInputElement | null;
+      busca = target?.value ?? busca;
+      agendarBusca();
+    }}
+  />
 </Card>
 
-<BottomSheet bind:open={showFilterSheet} title="Filtrar Cidades">
-  <div class="space-y-4">
-    <FieldInput
-      id="cid-busca-mobile"
-      bind:value={busca}
-      icon={Search}
-      placeholder="Buscar cidade..."
-      class_name="w-full"
-    />
-    <FieldSelect
-      id="cid-sub-mobile"
-      label="Estado/Província"
-      bind:value={filtroSubdivisao}
-      options={[
-        { value: '', label: 'Todos' },
-        ...subdivisoes.map((s) => ({ value: s.id, label: s.nome }))
-      ]}
-      placeholder={null}
-      class_name="w-full"
-      disabled={loadingSubdivisoes || buscaSubdivisao.trim().length < 2}
-    />
-    <FieldInput
-      id="cid-sub-search-mobile"
-      label="Buscar Estado/Província"
-      bind:value={buscaSubdivisao}
-      placeholder="Digite 2+ letras para carregar estados..."
-      class_name="w-full"
-    />
-  </div>
-  <Button variant="primary" class_name="w-full mt-2" on:click={() => (showFilterSheet = false)}>
-    Aplicar filtros
+<BottomSheet bind:open={showFilterSheet} title="Buscar destinos">
+  <FieldInput
+    id="cid-busca-mobile"
+    bind:value={busca}
+    icon={Search}
+    placeholder="Digite pelo menos 2 letras"
+    class_name="w-full"
+  />
+  <Button variant="primary" class_name="w-full mt-4" on:click={() => (showFilterSheet = false)}>
+    Ver resultados
   </Button>
 </BottomSheet>
 
-<DataTable {columns} data={cidades} {loading} title="Cidades cadastradas" searchable={false} emptyMessage="Nenhuma cidade encontrada"
-  onRowClick={(row) => openEdit(row)}>
+<DataTable
+  {columns}
+  data={destinos}
+  {loading}
+  title="Resultados"
+  searchable={false}
+  emptyMessage={busca.trim().length >= 2
+    ? 'Nenhum destino encontrado'
+    : 'Digite pelo menos 2 letras para buscar'}
+  onRowClick={(row) => abrirEdicao(row)}
+>
   <svelte:fragment slot="row-actions" let:row>
-    <Button
-      variant="ghost"
-      size="sm"
-      class_name="p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
-      disabled={deletingId === row.id}
-      title="Excluir cidade"
-      ariaLabel="Excluir cidade"
-      on:click={(event) => {
-        event.stopPropagation();
-        deleteCidade(row.id);
-      }}
-    >
-      <Trash2 size={15} />
-    </Button>
+    {#if row.origem === 'personalizado'}
+      <Button
+        variant="ghost"
+        size="sm"
+        class_name="p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+        title="Editar destino"
+        ariaLabel="Editar destino"
+        on:click={(event) => {
+          event.stopPropagation();
+          abrirEdicao(row);
+        }}
+      >
+        <Edit2 size={15} />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        class_name="p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+        disabled={deletingId === row.id}
+        title="Excluir destino"
+        ariaLabel="Excluir destino"
+        on:click={(event) => {
+          event.stopPropagation();
+          excluir(row);
+        }}
+      >
+        <Trash2 size={15} />
+      </Button>
+    {/if}
   </svelte:fragment>
 </DataTable>
 
-<Dialog bind:open={modalOpen} title={editingId ? 'Editar Cidade' : 'Nova Cidade'} size="sm" showCancel={true} cancelText="Cancelar" showConfirm={true} confirmText={editingId ? 'Salvar' : 'Criar'} loading={saving} onConfirm={save} onCancel={() => (modalOpen = false)}>
+{#if podeHaverMais}
+  <p class="mt-3 text-sm text-slate-600">Há mais resultados. Refine o nome para continuar.</p>
+{/if}
+
+<Dialog
+  bind:open={modalOpen}
+  title={editando ? 'Editar destino personalizado' : 'Nova cidade'}
+  size="md"
+  showCancel={true}
+  cancelText="Cancelar"
+  showConfirm={true}
+  confirmText={editando ? 'Salvar' : 'Criar'}
+  loading={saving}
+  onConfirm={salvar}
+  onCancel={() => (modalOpen = false)}
+>
   <div class="space-y-4">
     <FieldInput
       id="cid-nome"
-      label="Nome *"
-      bind:value={form.nome}
-      placeholder="Nome da cidade"
+      label="Nome"
+      required={true}
+      bind:value={nome}
+      placeholder="Ex.: Porto de Galinhas"
       class_name="w-full"
     />
-    <SubdivisaoAutocomplete
-      id="cid-sub-form"
-      label="Estado/Província"
-      bind:value={form.subdivisao_id}
-      placeholder="Digite para buscar estados..."
-      helper="Digite pelo menos 2 letras e selecione a opção desejada."
-    />
-    <FieldInput
-      id="cid-desc"
-      label="Descrição"
-      bind:value={form.descricao}
-      placeholder="Opcional"
-      class_name="w-full"
-    />
+    {#if modalOpen}
+      <SeletorDestinoGeografico
+        fieldId="cid-referencia"
+        label="Localidade de referência no GeoNames"
+        required={true}
+        somenteGeonames={true}
+        bind:destinoId={referenciaId}
+        bind:valid={referenciaValida}
+      />
+    {/if}
+    <p class="text-xs text-slate-500">
+      O nome fica livre. A referência precisa ser um lugar do GeoNames, como Ipojuca-PE. Nada é
+      gravado na base GeoNames.
+    </p>
+    {#if nome.trim() && !referenciaValida}
+      <p class="text-xs text-amber-700">Selecione a localidade na lista antes de salvar.</p>
+    {/if}
   </div>
 </Dialog>

@@ -21,22 +21,12 @@
     </div>
 
     <div class="actions">
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={page <= 1}
-        on:click={() => onPrev?.()}
-      >
+      <Button variant="outline" size="sm" disabled={page <= 1} on:click={() => onPrev?.()}>
         <ChevronLeft size={16} />
         Anterior
       </Button>
       <span>Página {page} de {totalPages}</span>
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={page >= totalPages}
-        on:click={() => onNext?.()}
-      >
+      <Button variant="outline" size="sm" disabled={page >= totalPages} on:click={() => onNext?.()}>
         Próxima
         <ChevronRight size={16} />
       </Button>

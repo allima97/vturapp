@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient } from '$lib/server/data';
 import type { ReportVendaRow } from '$lib/server/relatorios';
 import type { ResolvedReceiptCommission, ResolvedVendaCommission } from '$lib/server/comissoes';
 import { chunkArray, uniqueCleanStrings as uniqueIds } from '$lib/utils/array';
@@ -57,13 +57,13 @@ function getPeriodFromDate(dateIso?: string | null) {
   return { mes: now.getMonth() + 1, ano: now.getFullYear() };
 }
 
-const SUPABASE_IN_BATCH_SIZE = 150;
+const QUERY_IN_BATCH_SIZE = 150;
 
 function buildFilterBatches(filters: Array<{ column: string; values: string[] }>) {
   return filters.reduce<Array<Array<{ column: string; values: string[] }>>>(
     (groups, filter) =>
       groups.flatMap((group) =>
-        chunkArray(filter.values, SUPABASE_IN_BATCH_SIZE).map((values) => [
+        chunkArray(filter.values, QUERY_IN_BATCH_SIZE).map((values) => [
           ...group,
           { column: filter.column, values }
         ])
@@ -91,7 +91,7 @@ export function buildPersistedReciboComissaoKey(
 }
 
 export async function fetchPersistedComissoes(
-  client: SupabaseClient,
+  client: DataClient,
   params: {
     vendaIds?: string[];
     reciboIds?: string[];
@@ -152,7 +152,7 @@ export async function fetchPersistedComissoes(
 }
 
 export async function persistPaidComissoes(params: {
-  client: SupabaseClient;
+  client: DataClient;
   userId: string;
   rows: ReportVendaRow[];
   resolvedByKey: Map<string, ResolvedVendaCommission>;
@@ -160,7 +160,15 @@ export async function persistPaidComissoes(params: {
   dataPagamento: string;
   observacoesPagamento?: string | null;
 }) {
-  const { client, userId, rows, resolvedByKey, existingByKey, dataPagamento, observacoesPagamento } = params;
+  const {
+    client,
+    userId,
+    rows,
+    resolvedByKey,
+    existingByKey,
+    dataPagamento,
+    observacoesPagamento
+  } = params;
 
   const inserts: Record<string, unknown>[] = [];
   const updates: Array<{ id: string; payload: Record<string, unknown> }> = [];
@@ -240,7 +248,7 @@ export type PersistReceiptPaymentRow = {
 };
 
 export async function persistPaidReceiptComissoes(params: {
-  client: SupabaseClient;
+  client: DataClient;
   userId: string;
   rows: PersistReceiptPaymentRow[];
   resolvedByKey: Map<string, ResolvedReceiptCommission>;
@@ -248,7 +256,15 @@ export async function persistPaidReceiptComissoes(params: {
   dataPagamento: string;
   observacoesPagamento?: string | null;
 }) {
-  const { client, userId, rows, resolvedByKey, existingByKey, dataPagamento, observacoesPagamento } = params;
+  const {
+    client,
+    userId,
+    rows,
+    resolvedByKey,
+    existingByKey,
+    dataPagamento,
+    observacoesPagamento
+  } = params;
 
   const inserts: Record<string, unknown>[] = [];
   const updates: Array<{ id: string; payload: Record<string, unknown> }> = [];
@@ -342,14 +358,19 @@ export function applyPersistedComissao(
           ? 'processando'
           : 'pendente';
 
-  const valorComissao = persisted.valor_comissao != null ? toNum(persisted.valor_comissao) : base.valor_comissao;
+  const valorComissao =
+    persisted.valor_comissao != null ? toNum(persisted.valor_comissao) : base.valor_comissao;
 
   return {
     valor_venda: persisted.valor_venda != null ? toNum(persisted.valor_venda) : base.valor_venda,
     valor_comissionavel:
-      persisted.valor_comissionavel != null ? toNum(persisted.valor_comissionavel) : base.valor_comissionavel,
+      persisted.valor_comissionavel != null
+        ? toNum(persisted.valor_comissionavel)
+        : base.valor_comissionavel,
     percentual_aplicado:
-      persisted.percentual_aplicado != null ? toNum(persisted.percentual_aplicado) : base.percentual_aplicado,
+      persisted.percentual_aplicado != null
+        ? toNum(persisted.percentual_aplicado)
+        : base.percentual_aplicado,
     valor_comissao: valorComissao,
     status,
     valor_pago: status === 'pago' ? valorComissao : 0

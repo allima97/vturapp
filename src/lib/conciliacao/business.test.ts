@@ -12,7 +12,7 @@ import {
   normalizeConciliacaoStatus,
   resolveConciliacaoComissaoLoja,
   resolveConciliacaoStatus,
-  temValorFinanceiro,
+  temValorFinanceiro
 } from './business';
 
 describe('status de conciliação', () => {
@@ -42,7 +42,12 @@ describe('status de conciliação', () => {
 describe('valores', () => {
   it('valor_venda_real = lançamentos − descontos − abatimentos (taxas NÃO entram)', () => {
     expect(
-      calcularValorVendaReal({ valorLancamentos: 1000, valorTaxas: 150, valorDescontos: 50, valorAbatimentos: 25 }),
+      calcularValorVendaReal({
+        valorLancamentos: 1000,
+        valorTaxas: 150,
+        valorDescontos: 50,
+        valorAbatimentos: 25
+      })
     ).toBe(925);
     expect(calcularValorVendaReal({ valorLancamentos: 100, valorDescontos: 300 })).toBe(0);
   });
@@ -56,9 +61,13 @@ describe('valores', () => {
   it('comissão da loja: cascata comissao_loja → saldo → calculada_loja → visao_master → percentual', () => {
     expect(resolveConciliacaoComissaoLoja({ valorComissaoLoja: 10, valorSaldo: 20 })).toBe(10);
     expect(resolveConciliacaoComissaoLoja({ valorSaldo: 20, valorCalculadaLoja: 30 })).toBe(20);
-    expect(resolveConciliacaoComissaoLoja({ valorCalculadaLoja: 30, valorVisaoMaster: 40 })).toBe(30);
+    expect(resolveConciliacaoComissaoLoja({ valorCalculadaLoja: 30, valorVisaoMaster: 40 })).toBe(
+      30
+    );
     expect(resolveConciliacaoComissaoLoja({ valorVisaoMaster: 40 })).toBe(40);
-    expect(resolveConciliacaoComissaoLoja({ percentualComissaoLoja: 10, valorVendaReal: 500 })).toBe(50);
+    expect(
+      resolveConciliacaoComissaoLoja({ percentualComissaoLoja: 10, valorVendaReal: 500 })
+    ).toBe(50);
     expect(resolveConciliacaoComissaoLoja({})).toBe(0);
   });
 
@@ -86,7 +95,7 @@ describe('faixa de comissão', () => {
     // exatamente 35,6% NÃO entra na faixa de seguro. Mudar isso altera a
     // classificação de recibos — decidir junto com a regra do vturapp original.
     [35.6, 'MAIOR_OU_IGUAL_10'],
-    [35.61, 'MAIOR_OU_IGUAL_10'],
+    [35.61, 'MAIOR_OU_IGUAL_10']
   ])('%s%% → %s', (pct, faixa) => {
     expect(classificarFaixaComissao(pct as number | null)).toBe(faixa);
   });
@@ -108,7 +117,7 @@ describe('buildConciliacaoMetrics (função central)', () => {
       valorDescontos: 100,
       valorAbatimentos: 0,
       valorNaoComissionavel: 100,
-      valorSaldo: 120,
+      valorSaldo: 120
     });
     expect(m).toEqual({
       status: 'BAIXA',
@@ -118,12 +127,16 @@ describe('buildConciliacaoMetrics (função central)', () => {
       percentualComissaoLoja: 12,
       faixaComissao: 'MAIOR_OU_IGUAL_10',
       isSeguroViagem: false,
-      temValorFinanceiro: true,
+      temValorFinanceiro: true
     });
   });
 
   it('seguro viagem: 32% cai na faixa SEGURO_32_35', () => {
-    const m = buildConciliacaoMetrics({ descricao: 'BAIXA', valorLancamentos: 500, valorSaldo: 160 });
+    const m = buildConciliacaoMetrics({
+      descricao: 'BAIXA',
+      valorLancamentos: 500,
+      valorSaldo: 160
+    });
     expect(m.percentualComissaoLoja).toBe(32);
     expect(m.faixaComissao).toBe('SEGURO_32_35');
     expect(m.isSeguroViagem).toBe(true);

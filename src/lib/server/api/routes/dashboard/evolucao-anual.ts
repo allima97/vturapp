@@ -10,14 +10,14 @@ import {
   requireAuthenticatedUser,
   resolveScopedCompanyIds,
   resolveUserScope,
-  toErrorResponse,
+  toErrorResponse
 } from '$lib/server/v1';
 import { fetchVendasKpiReciboContributions } from '$lib/server/vendas-kpis';
 import {
   buildReadModelCacheKey,
   getCachedReadModel,
   READ_MODEL_TAGS,
-  scopeCacheTags,
+  scopeCacheTags
 } from '$lib/server/readModelCache';
 import { DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
 import { cleanStringSet } from '$lib/utils/array';
@@ -62,16 +62,15 @@ function emptyMeses(): MesBucket[] {
   return Array.from({ length: 12 }, (_, i) => ({
     mes: i + 1,
     totalVendas: 0,
-    qtdVendas: 0,
+    qtdVendas: 0
   }));
 }
 
 function getExecutionContext(platform: unknown): ExecutionContextLike | null {
-  const ctx =
-    platform && typeof platform === 'object'
-      ? (platform as { ctx?: unknown }).ctx
-      : null;
-  return ctx && typeof ctx === 'object' && typeof (ctx as ExecutionContextLike).waitUntil === 'function'
+  const ctx = platform && typeof platform === 'object' ? (platform as { ctx?: unknown }).ctx : null;
+  return ctx &&
+    typeof ctx === 'object' &&
+    typeof (ctx as ExecutionContextLike).waitUntil === 'function'
     ? (ctx as ExecutionContextLike)
     : null;
 }
@@ -83,10 +82,7 @@ async function fetchAllVisibleCompanyIds(client: ReturnType<typeof getAdminClien
     ttlMs: 300_000,
     staleTtlMs: 1_800_000,
     loader: async () => {
-      const { data, error } = await client
-        .from('companies')
-        .select('id, active')
-        .limit(1000);
+      const { data, error } = await client.from('companies').select('id, active').limit(1000);
 
       if (error) throw error;
 
@@ -94,7 +90,7 @@ async function fetchAllVisibleCompanyIds(client: ReturnType<typeof getAdminClien
         .filter((row) => row?.active !== false)
         .map((row) => String(row?.id || '').trim())
         .filter(isUuid);
-    },
+    }
   });
 }
 
@@ -110,7 +106,12 @@ export async function handleDashboardEvolucaoAnualGet(event: RequestEvent) {
 
     // Acesso: qualquer usuário com permissão de relatórios ou dashboard
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['relatorios', 'dashboard'], 1, 'Sem acesso à análise de desempenho.');
+      ensureModuloAccess(
+        scope,
+        ['relatorios', 'dashboard'],
+        1,
+        'Sem acesso à análise de desempenho.'
+      );
     }
 
     const tipoNome = String(scope.tipoNome || '').toUpperCase();
@@ -171,7 +172,9 @@ export async function handleDashboardEvolucaoAnualGet(event: RequestEvent) {
       }
     } else if (isGestor) {
       // Gestor: sua empresa + equipe
-      effectiveCompanyIds = scope.companyId ? [scope.companyId] : resolveScopedCompanyIds(scope, null);
+      effectiveCompanyIds = scope.companyId
+        ? [scope.companyId]
+        : resolveScopedCompanyIds(scope, null);
       const teamIds = await fetchVendedorIdsByCompanyIds(client, effectiveCompanyIds);
       const teamIdSet = cleanStringSet(teamIds);
       if (vendedorIdParam && isUuid(vendedorIdParam) && teamIdSet.has(vendedorIdParam)) {
@@ -182,7 +185,9 @@ export async function handleDashboardEvolucaoAnualGet(event: RequestEvent) {
       }
     } else {
       // Vendedor: apenas suas próprias vendas
-      effectiveCompanyIds = scope.companyId ? [scope.companyId] : resolveScopedCompanyIds(scope, null);
+      effectiveCompanyIds = scope.companyId
+        ? [scope.companyId]
+        : resolveScopedCompanyIds(scope, null);
       effectiveVendedorIds = [scope.userId];
     }
 
@@ -190,7 +195,7 @@ export async function handleDashboardEvolucaoAnualGet(event: RequestEvent) {
       userId: user.id,
       anos: [...requestedAnos].sort(),
       effectiveCompanyIds: [...effectiveCompanyIds].sort(),
-      effectiveVendedorIds: [...effectiveVendedorIds].sort(),
+      effectiveVendedorIds: [...effectiveVendedorIds].sort()
     });
 
     const result = await getCachedReadModel<EvolucaoAnualResult>({
@@ -200,7 +205,7 @@ export async function handleDashboardEvolucaoAnualGet(event: RequestEvent) {
       tags: [
         READ_MODEL_TAGS.dashboard,
         READ_MODEL_TAGS.sales,
-        ...scopeCacheTags({ companyIds: effectiveCompanyIds, userId: user.id }),
+        ...scopeCacheTags({ companyIds: effectiveCompanyIds, userId: user.id })
       ],
       loader: async () => {
         const anosOrdenados = [...requestedAnos].sort();
@@ -214,20 +219,24 @@ export async function handleDashboardEvolucaoAnualGet(event: RequestEvent) {
         // IMPORTANTE: passamos vendedorIds vazio para que fetchSalesReportRows filtre
         // apenas por companyIds (AND company_id IN ...) sem duplo filtro AND vendedor_id IN.
         // Para filtro por vendedor específico, filtramos DEPOIS nas contributions.
-        const { contributions } = await fetchVendasKpiReciboContributions(client, {
-          dataInicio,
-          dataFim,
-          companyIds: effectiveCompanyIds,
-          vendedorIds: [],
-          accessibleClientIds: [],
-        }, useNonBlockingReadModel
-          ? {
-              mode: 'stale-while-revalidate',
-              executionContext: getExecutionContext(event.platform),
-              fallbackToRawOnReadError: true,
-              fallbackToRawWhenEmpty: true
-            }
-          : undefined);
+        const { contributions } = await fetchVendasKpiReciboContributions(
+          client,
+          {
+            dataInicio,
+            dataFim,
+            companyIds: effectiveCompanyIds,
+            vendedorIds: [],
+            accessibleClientIds: []
+          },
+          useNonBlockingReadModel
+            ? {
+                mode: 'stale-while-revalidate',
+                executionContext: getExecutionContext(event.platform),
+                fallbackToRawOnReadError: true,
+                fallbackToRawWhenEmpty: true
+              }
+            : undefined
+        );
 
         // Inicializa buckets
         const anosMap = new Map<number, MesBucket[]>();
@@ -239,9 +248,8 @@ export async function handleDashboardEvolucaoAnualGet(event: RequestEvent) {
         const vendaKeySets = new Map<string, Set<string>>();
 
         // Set de vendedorIds para filtro pós-query (quando há filtro específico)
-        const vendedorFilterSet = effectiveVendedorIds.length > 0
-          ? new Set(effectiveVendedorIds)
-          : null;
+        const vendedorFilterSet =
+          effectiveVendedorIds.length > 0 ? new Set(effectiveVendedorIds) : null;
 
         for (const c of contributions) {
           const bruto = toNum(c.bruto);
@@ -290,19 +298,17 @@ export async function handleDashboardEvolucaoAnualGet(event: RequestEvent) {
           const prev = anos[i - 1];
           const curr = anos[i];
           const key = `${prev.ano}->${curr.ano}`;
-          crescimentoYoY[key] = prev.totalAno > 0
-            ? Math.round(((curr.totalAno - prev.totalAno) / prev.totalAno) * 1000) / 10
-            : null;
+          crescimentoYoY[key] =
+            prev.totalAno > 0
+              ? Math.round(((curr.totalAno - prev.totalAno) / prev.totalAno) * 1000) / 10
+              : null;
         }
 
         return { anos, crescimentoYoY };
-      },
+      }
     });
 
-    return json(
-      { anos: requestedAnos, data: result },
-      { headers: DYNAMIC_READ_HEADERS },
-    );
+    return json({ anos: requestedAnos, data: result }, { headers: DYNAMIC_READ_HEADERS });
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar evolução anual de vendas.');
   }

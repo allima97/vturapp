@@ -20,7 +20,9 @@
   <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div>
       <p class="font-semibold text-slate-900">Redirecionando para a tela atual de regras.</p>
-      <p class="mt-1 text-sm text-slate-500">Use a seção financeira consolidada para editar regras por empresa.</p>
+      <p class="mt-1 text-sm text-slate-500">
+        Use a seção financeira consolidada para editar regras por empresa.
+      </p>
     </div>
     <Button href="/financeiro/regras" variant="outline" color="financeiro">
       <Settings size={16} class="mr-2" /> Abrir regras

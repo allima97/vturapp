@@ -7,10 +7,15 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('identidade dos cartões', () => {
   it('usa VTur e ignora parâmetros de logo externo', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => new Response('', { status: 404 })));
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response('', { status: 404 }))
+    );
     const event = {
-      request: new Request('https://vtur.test/api/v1/cards/render?logo_url=https://example.com/old.png&logo_path=old/logo.png'),
-      locals: { safeGetSession: async () => ({ user: null }) },
+      request: new Request(
+        'https://vtur.test/api/v1/cards/render?logo_url=https://example.com/old.png&logo_path=old/logo.png'
+      ),
+      locals: { safeGetSession: async () => ({ user: null }) }
     } as unknown as RequestEvent;
     const { svg } = await renderCardSvg(event);
     expect(svg).toContain(VTUR_LOGO_URL);

@@ -19,7 +19,7 @@ import {
   scopeCacheTags
 } from '$lib/server/readModelCache';
 import { resolveCompanyClienteIds } from '$lib/server/clientes';
-import { chunkArray, dedupeById, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { chunkArray, dedupeById, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const PT_BR_COLLATOR = new Intl.Collator('pt-BR');
 const PT_BR_BASE_COLLATOR = new Intl.Collator('pt-BR', { sensitivity: 'base' });
@@ -38,13 +38,16 @@ type CidadeRow = {
   id?: string | null;
   nome?: string | null;
   grau_importancia?: number | string | null;
-  subdivisao?: {
-    nome?: string | null;
-    codigo_admin1?: string | null;
-  } | Array<{
-    nome?: string | null;
-    codigo_admin1?: string | null;
-  }> | null;
+  subdivisao?:
+    | {
+        nome?: string | null;
+        codigo_admin1?: string | null;
+      }
+    | Array<{
+        nome?: string | null;
+        codigo_admin1?: string | null;
+      }>
+    | null;
 };
 
 type CidadeOption = {
@@ -90,10 +93,20 @@ function isIgnorableQueryError(err: unknown) {
   const error = err && typeof err === 'object' ? (err as QueryErrorLike) : null;
   const code = String(error?.code || '');
   const message = String(error?.message || '');
-  return code === 'PGRST205' || code === '42P01' || code === '42703' || message.includes('PGRST205') || message.includes('42P01') || message.includes('42703');
+  return (
+    code === 'PGRST205' ||
+    code === '42P01' ||
+    code === '42703' ||
+    message.includes('PGRST205') ||
+    message.includes('42P01') ||
+    message.includes('42703')
+  );
 }
 
-function safeRows<T = unknown>(result: QueryResultLike<T> | null | undefined, options?: { optional?: boolean }) {
+function safeRows<T = unknown>(
+  result: QueryResultLike<T> | null | undefined,
+  options?: { optional?: boolean }
+) {
   const optional = options?.optional ?? true;
   const err = result?.error;
   if (err) {
@@ -118,11 +131,17 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster) {
-      ensureModuloAccess(scope, ['vendas_consulta', 'vendas', 'vendas_cadastro'], 1, 'Sem acesso a Vendas.');
+      ensureModuloAccess(
+        scope,
+        ['vendas_consulta', 'vendas', 'vendas_cadastro'],
+        1,
+        'Sem acesso a Vendas.'
+      );
     }
 
     const companyIds = resolveScopedCompanyIds(scope, event.url.searchParams.get('empresa_id'));
-    const activeCompanyIds = companyIds.length > 0 ? companyIds : scope.companyId ? [scope.companyId] : [];
+    const activeCompanyIds =
+      companyIds.length > 0 ? companyIds : scope.companyId ? [scope.companyId] : [];
     const includeFlag = (name: string, defaultValue = true) => {
       const raw = event.url.searchParams.get(name);
       if (raw == null || raw === '') return defaultValue;
@@ -137,7 +156,11 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
     const includeEmpresas = includeFlag('include_empresas');
     const includeVendedores = includeFlag('include_vendedores');
 
-    let vendedoresEquipe: Array<{ id: string; nome_completo: string | null; company_id?: string | null }> = [
+    let vendedoresEquipe: Array<{
+      id: string;
+      nome_completo: string | null;
+      company_id?: string | null;
+    }> = [
       { id: scope.userId, nome_completo: scope.nome || 'Você', company_id: scope.companyId || null }
     ];
     let clientes: unknown[] = [];
@@ -149,12 +172,25 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
     let empresas: Array<{ id: string | null | undefined; nome: string }> = [];
     const canLoadClientes =
       includeClientes &&
-      (scope.isAdmin || !scope.isFinanceiro || hasModuloAccess(scope, ['clientes', 'clientes_consulta'], 1));
+      (scope.isAdmin ||
+        !scope.isFinanceiro ||
+        hasModuloAccess(scope, ['clientes', 'clientes_consulta'], 1));
 
     const cacheScopeTags = scopeCacheTags({ companyIds: activeCompanyIds, userId: user.id });
 
-    if (includeVendedores && (scope.isGestor || scope.isMaster || scope.isFinanceiro) && activeCompanyIds.length > 0) {
-      const data = await getCachedReadModel<Array<{ id?: string | null; nome_completo?: string | null; email?: string | null; company_id?: string | null }>>({
+    if (
+      includeVendedores &&
+      (scope.isGestor || scope.isMaster || scope.isFinanceiro) &&
+      activeCompanyIds.length > 0
+    ) {
+      const data = await getCachedReadModel<
+        Array<{
+          id?: string | null;
+          nome_completo?: string | null;
+          email?: string | null;
+          company_id?: string | null;
+        }>
+      >({
         key: buildReadModelCacheKey('vendas-cadastro-base:vendedores', {
           companyIds: activeCompanyIds
         }),
@@ -170,7 +206,9 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
           company_id: row.company_id || null
         }))
         .filter((row) => row.id)
-        .sort((a, b) => PT_BR_COLLATOR.compare(String(a.nome_completo || ''), String(b.nome_completo || '')));
+        .sort((a, b) =>
+          PT_BR_COLLATOR.compare(String(a.nome_completo || ''), String(b.nome_completo || ''))
+        );
     }
 
     const buildClientesQuery = (idsFilter: string[], clientIdsFilter?: string[]) => {
@@ -186,12 +224,13 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
 
     const fetchClientesBase = async () => {
       if (!canLoadClientes) return { data: [], error: null };
-      const companyClientIds = activeCompanyIds.length > 0
-        ? await resolveCompanyClienteIds(client, activeCompanyIds)
-        : null;
+      const companyClientIds =
+        activeCompanyIds.length > 0
+          ? await resolveCompanyClienteIds(client, activeCompanyIds)
+          : null;
 
       if (companyClientIds && companyClientIds.length === 0) return { data: [], error: null };
-      if (companyClientIds && companyClientIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (companyClientIds && companyClientIds.length <= QUERY_IN_BATCH_SIZE) {
         return buildClientesQuery(activeCompanyIds, companyClientIds);
       }
       if (companyClientIds) {
@@ -205,13 +244,16 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
 
         return {
           data: dedupeById(rows)
-            .sort((left, right) => PT_BR_COLLATOR.compare(String(left?.nome || ''), String(right?.nome || '')))
+            .sort((left, right) =>
+              PT_BR_COLLATOR.compare(String(left?.nome || ''), String(right?.nome || ''))
+            )
             .slice(0, INITIAL_CLIENTES_LIMIT),
           error: null
         };
       }
 
-      if (activeCompanyIds.length <= SUPABASE_IN_BATCH_SIZE) return buildClientesQuery(activeCompanyIds);
+      if (activeCompanyIds.length <= QUERY_IN_BATCH_SIZE)
+        return buildClientesQuery(activeCompanyIds);
 
       const rows: ClienteRow[] = [];
       for (const batch of chunkArray(activeCompanyIds)) {
@@ -222,7 +264,9 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
 
       return {
         data: dedupeById(rows)
-          .sort((left, right) => PT_BR_COLLATOR.compare(String(left?.nome || ''), String(right?.nome || '')))
+          .sort((left, right) =>
+            PT_BR_COLLATOR.compare(String(left?.nome || ''), String(right?.nome || ''))
+          )
           .slice(0, INITIAL_CLIENTES_LIMIT),
         error: null
       };
@@ -269,9 +313,14 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
       tags: [READ_MODEL_TAGS.catalog],
       ttlMs: 600_000,
       staleTtlMs: 3_600_000,
-      loader: async () => includeTipos
-        ? await client.from('tipo_produtos').select('id, nome, tipo').order('nome', { ascending: true }).limit(200)
-        : { data: [], error: null }
+      loader: async () =>
+        includeTipos
+          ? await client
+              .from('tipo_produtos')
+              .select('id, nome, tipo')
+              .order('nome', { ascending: true })
+              .limit(200)
+          : { data: [], error: null }
     });
     const pacotesQuery = getCachedReadModel({
       key: buildReadModelCacheKey('vendas-cadastro-base:tipos-pacote', {
@@ -280,9 +329,14 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
       tags: [READ_MODEL_TAGS.catalog, READ_MODEL_TAGS.comissoes],
       ttlMs: 600_000,
       staleTtlMs: 3_600_000,
-      loader: async () => includeTiposPacote
-        ? await client.from('tipo_pacotes').select('id, nome, ativo').order('nome', { ascending: true }).limit(200)
-        : { data: [], error: null }
+      loader: async () =>
+        includeTiposPacote
+          ? await client
+              .from('tipo_pacotes')
+              .select('id, nome, ativo')
+              .order('nome', { ascending: true })
+              .limit(200)
+          : { data: [], error: null }
     });
     const buildFormasQuery = (idsFilter: string[]) => {
       let query = client
@@ -296,7 +350,7 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
 
     const fetchFormasBase = async () => {
       if (!includeFormas) return { data: [], error: null };
-      if (activeCompanyIds.length <= SUPABASE_IN_BATCH_SIZE) return buildFormasQuery(activeCompanyIds);
+      if (activeCompanyIds.length <= QUERY_IN_BATCH_SIZE) return buildFormasQuery(activeCompanyIds);
 
       const rows: FormaPagamentoRow[] = [];
       for (const batch of chunkArray(activeCompanyIds)) {
@@ -307,7 +361,9 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
 
       return {
         data: dedupeById(rows)
-          .sort((left, right) => PT_BR_COLLATOR.compare(String(left?.nome || ''), String(right?.nome || '')))
+          .sort((left, right) =>
+            PT_BR_COLLATOR.compare(String(left?.nome || ''), String(right?.nome || ''))
+          )
           .slice(0, 200),
         error: null
       };
@@ -323,7 +379,8 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
     const fetchEmpresasBase = async () => {
       if (!includeEmpresas) return { data: [], error: null };
       if (activeCompanyIds.length === 0) return { data: [], error: null };
-      if (activeCompanyIds.length <= SUPABASE_IN_BATCH_SIZE) return buildEmpresasQuery(activeCompanyIds);
+      if (activeCompanyIds.length <= QUERY_IN_BATCH_SIZE)
+        return buildEmpresasQuery(activeCompanyIds);
 
       const rows: EmpresaRow[] = [];
       for (const batch of chunkArray(activeCompanyIds)) {
@@ -343,57 +400,52 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
       };
     };
 
-    const [
-      clientesRes,
-      cidadesRes,
-      produtosRes,
-      tiposRes,
-      pacotesRes,
-      formasRes,
-      empresasRes
-    ] = await Promise.all([
-      getCachedReadModel({
-        key: buildReadModelCacheKey('vendas-cadastro-base:clientes', {
-          companyIds: activeCompanyIds,
-          canLoadClientes
+    const [clientesRes, cidadesRes, produtosRes, tiposRes, pacotesRes, formasRes, empresasRes] =
+      await Promise.all([
+        getCachedReadModel({
+          key: buildReadModelCacheKey('vendas-cadastro-base:clientes', {
+            companyIds: activeCompanyIds,
+            canLoadClientes
+          }),
+          tags: [READ_MODEL_TAGS.clients, ...cacheScopeTags],
+          ttlMs: 120_000,
+          staleTtlMs: 600_000,
+          loader: fetchClientesBase
         }),
-        tags: [READ_MODEL_TAGS.clients, ...cacheScopeTags],
-        ttlMs: 120_000,
-        staleTtlMs: 600_000,
-        loader: fetchClientesBase
-      }),
-      cidadesQuery,
-      produtosQuery,
-      tiposQuery,
-      pacotesQuery,
-      getCachedReadModel({
-        key: buildReadModelCacheKey('vendas-cadastro-base:formas-pagamento', {
-          companyIds: activeCompanyIds,
-          includeFormas
+        cidadesQuery,
+        produtosQuery,
+        tiposQuery,
+        pacotesQuery,
+        getCachedReadModel({
+          key: buildReadModelCacheKey('vendas-cadastro-base:formas-pagamento', {
+            companyIds: activeCompanyIds,
+            includeFormas
+          }),
+          tags: [READ_MODEL_TAGS.payments, READ_MODEL_TAGS.finance, ...cacheScopeTags],
+          ttlMs: 300_000,
+          staleTtlMs: 1_800_000,
+          loader: fetchFormasBase
         }),
-        tags: [READ_MODEL_TAGS.payments, READ_MODEL_TAGS.finance, ...cacheScopeTags],
-        ttlMs: 300_000,
-        staleTtlMs: 1_800_000,
-        loader: fetchFormasBase
-      }),
-      getCachedReadModel({
-        key: buildReadModelCacheKey('vendas-cadastro-base:empresas', {
-          companyIds: activeCompanyIds,
-          includeEmpresas
-        }),
-        tags: [READ_MODEL_TAGS.users, ...cacheScopeTags],
-        ttlMs: 300_000,
-        staleTtlMs: 1_800_000,
-        loader: fetchEmpresasBase
-      })
-    ]);
+        getCachedReadModel({
+          key: buildReadModelCacheKey('vendas-cadastro-base:empresas', {
+            companyIds: activeCompanyIds,
+            includeEmpresas
+          }),
+          tags: [READ_MODEL_TAGS.users, ...cacheScopeTags],
+          ttlMs: 300_000,
+          staleTtlMs: 1_800_000,
+          loader: fetchEmpresasBase
+        })
+      ]);
 
     clientes = safeRows<ClienteRow>(clientesRes);
     const cidadesRaw = safeRows<CidadeRow>(cidadesRes);
     cidades = cidadesRaw
       .map((row) => {
-      // subdivisoes.codigo_admin1 = state code (e.g. "SP"), subdivisoes.nome = state name
-        const sub = Array.isArray(row?.subdivisao) ? (row.subdivisao[0] ?? null) : (row?.subdivisao ?? null);
+        // subdivisoes.codigo_admin1 = state code (e.g. "SP"), subdivisoes.nome = state name
+        const sub = Array.isArray(row?.subdivisao)
+          ? (row.subdivisao[0] ?? null)
+          : (row?.subdivisao ?? null);
         const estado = sub?.codigo_admin1 || sub?.nome || null;
         return {
           id: row.id,
@@ -405,7 +457,8 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
         };
       })
       .sort((a, b) => {
-        const importanceDiff = getImportanceRank(a?.grau_importancia) - getImportanceRank(b?.grau_importancia);
+        const importanceDiff =
+          getImportanceRank(a?.grau_importancia) - getImportanceRank(b?.grau_importancia);
         if (importanceDiff !== 0) return importanceDiff;
         const nomeDiff = PT_BR_BASE_COLLATOR.compare(String(a?.nome || ''), String(b?.nome || ''));
         if (nomeDiff !== 0) return nomeDiff;
@@ -429,33 +482,38 @@ export async function handleVendasCadastroBaseGet(event: RequestEvent) {
     if (formasRes?.error) warningParts.push('formas_pagamento');
     const warning = warningParts.length > 0 ? `Falha parcial em: ${warningParts.join(', ')}` : null;
 
-    return json({
-      user: {
-        id: scope.userId,
-        papel: scope.papel,
-        company_id: scope.companyId,
-        company_ids: activeCompanyIds,
-        uso_individual: scope.usoIndividual,
-        is_gestor: scope.isGestor,
-        can_assign_vendedor: scope.isGestor || scope.isMaster || scope.isFinanceiro || scope.isAdmin
+    return json(
+      {
+        user: {
+          id: scope.userId,
+          papel: scope.papel,
+          company_id: scope.companyId,
+          company_ids: activeCompanyIds,
+          uso_individual: scope.usoIndividual,
+          is_gestor: scope.isGestor,
+          can_assign_vendedor:
+            scope.isGestor || scope.isMaster || scope.isFinanceiro || scope.isAdmin
+        },
+        empresas,
+        vendedoresEquipe,
+        clientes,
+        cidades,
+        produtos: produtos
+          .filter((row) => row?.ativo !== false)
+          .map((row) => ({
+            ...row,
+            todas_as_cidades:
+              row?.todas_as_cidades === true || (!row?.cidade_id && row?.todas_as_cidades !== false)
+          })),
+        tipos,
+        tiposPacote,
+        formasPagamento,
+        warning
       },
-      empresas,
-      vendedoresEquipe,
-      clientes,
-      cidades,
-      produtos: produtos
-        .filter((row) => row?.ativo !== false)
-        .map((row) => ({
-          ...row,
-          todas_as_cidades: row?.todas_as_cidades === true || (!row?.cidade_id && row?.todas_as_cidades !== false)
-        })),
-      tipos,
-      tiposPacote,
-      formasPagamento,
-      warning
-    }, {
-      headers: SHORT_DYNAMIC_READ_HEADERS
-    });
+      {
+        headers: SHORT_DYNAMIC_READ_HEADERS
+      }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar base do cadastro de vendas.');
   }

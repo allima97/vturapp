@@ -13,7 +13,7 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
 vi.mock('./root', () => ({ handleWelcomeEmailPost: spy('handleWelcomeEmailPost') }));
@@ -22,12 +22,10 @@ import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 
 const CASES: Array<[string, string, string, Record<string, string>]> = [
-  ['POST', '/api/v1/welcome-email', 'handleWelcomeEmailPost', {}],
+  ['POST', '/api/v1/welcome-email', 'handleWelcomeEmailPost', {}]
 ];
 
-const SEM_HANDLER: Array<[string, string]> = [
-  ['PUT', '/api/v1/welcome-email'],
-];
+const SEM_HANDLER: Array<[string, string]> = [['PUT', '/api/v1/welcome-email']];
 
 function ev(method: string, path: string) {
   const request = new Request(`https://vturapp.test${path}`, { method });

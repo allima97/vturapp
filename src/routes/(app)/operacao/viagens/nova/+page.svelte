@@ -14,6 +14,9 @@
     PageHeader
   } from '$lib/components/ui';
   import ClienteAutocomplete from '$lib/components/vendas/ClienteAutocomplete.svelte';
+  import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
+  import DestinoOperacional from '$lib/components/DestinoOperacional.svelte';
+  import { campoGeografico } from '$lib/config/destinosGeograficos';
   import { toast } from '$lib/stores/ui';
   import { ArrowLeft, Plane, RefreshCw } from '$lib/icons';
   import { apiGet, apiPost } from '$lib/services/api';
@@ -49,6 +52,9 @@
   let destinoOptions: string[] = [];
   let origemTimer: ReturnType<typeof setTimeout> | null = null;
   let destinoTimer: ReturnType<typeof setTimeout> | null = null;
+
+  let origemGeograficaId = '';
+  let destinoGeograficoId = '';
 
   let form = {
     cliente_id: '',
@@ -154,7 +160,11 @@
 
     saving = true;
     try {
-      const payload = await apiPost<{ viagem?: { id?: string } }>('/api/v1/viagens/create', form);
+      const payload = await apiPost<{ viagem?: { id?: string } }>('/api/v1/viagens/create', {
+        ...form,
+        ...campoGeografico(origemGeograficaId, 'origem_geografica_id'),
+        ...campoGeografico(destinoGeograficoId)
+      });
 
       toast.success('Viagem criada com sucesso.');
 
@@ -190,10 +200,7 @@
   title="Nova Viagem"
   subtitle="Cadastre uma viagem operacional com cliente, roteiro base e acompanhamento."
   color="clientes"
-  breadcrumbs={[
-    { label: 'Viagens', href: '/operacao/viagens' },
-    { label: 'Nova viagem' }
-  ]}
+  breadcrumbs={[{ label: 'Viagens', href: '/operacao/viagens' }, { label: 'Nova viagem' }]}
   actions={[
     { label: 'Voltar', href: '/operacao/viagens', variant: 'secondary', icon: ArrowLeft },
     { label: 'Recarregar clientes', onClick: loadClientes, variant: 'secondary', icon: RefreshCw }
@@ -225,27 +232,42 @@
         class_name="w-full"
       />
 
-      <FieldDatalistInput
-        id="viagem-origem"
+      <DestinoOperacional
+        fieldId="viagem-origem"
         label="Origem"
+        required={true}
         bind:value={form.origem}
-        options={origemOptions}
-        placeholder="Ex.: São Paulo"
-        required={true}
-        class_name="w-full"
-        on:input={() => queueCitySearch('origem', form.origem)}
-      />
+        bind:destinoId={origemGeograficaId}
+      >
+        <FieldDatalistInput
+          id="viagem-origem"
+          label="Origem"
+          bind:value={form.origem}
+          options={origemOptions}
+          placeholder="Ex.: São Paulo"
+          required={true}
+          class_name="w-full"
+          on:input={() => queueCitySearch('origem', form.origem)}
+        />
+      </DestinoOperacional>
 
-      <FieldDatalistInput
-        id="viagem-destino"
+      <DestinoOperacional
+        fieldId="viagem-destino"
         label="Destino"
-        bind:value={form.destino}
-        options={destinoOptions}
-        placeholder="Ex.: Maceió"
         required={true}
-        class_name="w-full"
-        on:input={() => queueCitySearch('destino', form.destino)}
-      />
+        bind:value={form.destino}
+        bind:destinoId={destinoGeograficoId}
+      >
+        <CidadeDestinoAutocomplete
+          id="viagem-destino"
+          label="Destino"
+          bind:value={form.destino}
+          placeholder="Ex.: Maceió"
+          required={true}
+          class_name="w-full"
+          endpoint="/api/v1/viagens/cidades-busca"
+        />
+      </DestinoOperacional>
 
       <FieldInput
         id="viagem-data-inicio"

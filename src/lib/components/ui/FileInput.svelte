@@ -45,7 +45,9 @@
   />
 
   {#if fileNames.length > 0}
-    <div class="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+    <div
+      class="mt-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"
+    >
       {#if fileNames.length === 1}
         <span class="font-medium text-slate-700">{fileNames[0]}</span>
       {:else}

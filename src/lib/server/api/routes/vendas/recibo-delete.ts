@@ -34,7 +34,12 @@ export async function handleVendasReciboDeletePost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster) {
-      ensureModuloAccess(scope, ['vendas_consulta', 'vendas'], 4, 'Sem permissao para excluir recibos.');
+      ensureModuloAccess(
+        scope,
+        ['vendas_consulta', 'vendas'],
+        4,
+        'Sem permissao para excluir recibos.'
+      );
     }
 
     const rawBody = textResult.text;
@@ -42,7 +47,10 @@ export async function handleVendasReciboDeletePost(event: RequestEvent) {
     const vendaId = String(body?.venda_id || '').trim();
     const reciboId = String(body?.recibo_id || '').trim();
     if (!isUuid(vendaId) || !isUuid(reciboId)) {
-      return new Response('venda_id ou recibo_id invalido.', { status: 400, headers: NO_STORE_HEADERS });
+      return new Response('venda_id ou recibo_id invalido.', {
+        status: 400,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const companyIds = resolveScopedCompanyIds(
@@ -54,7 +62,13 @@ export async function handleVendasReciboDeletePost(event: RequestEvent) {
       scope,
       event.url.searchParams.get('vendedor_ids') || event.url.searchParams.get('vendedor_id')
     );
-    const sale = await fetchSaleForScope({ client, scope, saleId: vendaId, companyIds, vendedorIds });
+    const sale = await fetchSaleForScope({
+      client,
+      scope,
+      saleId: vendaId,
+      companyIds,
+      vendedorIds
+    });
     if (!sale) {
       return new Response('Venda nao encontrada.', { status: 404, headers: NO_STORE_HEADERS });
     }
@@ -73,7 +87,7 @@ export async function handleVendasReciboDeletePost(event: RequestEvent) {
     // Reconstruir read model de ranking de forma assíncrona (fire-and-forget)
     triggerRebuildAsync({
       companyIds: scopedCompanyIds,
-      executionContext: getPlatformExecutionContext(event.platform),
+      executionContext: getPlatformExecutionContext(event.platform)
     });
 
     // Publicar invalidação no KV para propagar para outras instâncias Workers (fire-and-forget)
@@ -83,7 +97,7 @@ export async function handleVendasReciboDeletePost(event: RequestEvent) {
       userId: user.id,
       modulo: 'Vendas',
       acao: 'recibo_excluido',
-      detalhes: { venda_id: vendaId, recibo_id: reciboId },
+      detalhes: { venda_id: vendaId, recibo_id: reciboId }
     });
 
     return json({ ok: true }, { headers: NO_STORE_HEADERS });

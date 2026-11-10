@@ -10,7 +10,10 @@ import {
   resolveUserScope,
   toErrorResponse
 } from '$lib/server/v1';
-import { resolveGroupedReceiptCommissions, type ResolvedReceiptCommission } from '$lib/server/comissoes';
+import {
+  resolveGroupedReceiptCommissions,
+  type ResolvedReceiptCommission
+} from '$lib/server/comissoes';
 import {
   buildPersistedReciboComissaoKey,
   fetchPersistedComissoes,
@@ -28,7 +31,7 @@ import { toFiniteNumber as toNum } from '$lib/utils/values';
 
 const MAX_COMISSOES_PAYMENT_BODY_BYTES = 64 * 1024;
 
-const SUPABASE_IN_BATCH_SIZE = 150;
+const QUERY_IN_BATCH_SIZE = 150;
 
 type CommissionPaymentBody = {
   comissao_ids?: Array<string | number>;
@@ -53,7 +56,7 @@ async function fetchBatched<T>(
   loader: (batch: string[]) => PromiseLike<{ data: T[] | null; error: unknown }>
 ) {
   const batchResults = await Promise.all(
-    chunkArray(values, SUPABASE_IN_BATCH_SIZE).map(async (batch) => {
+    chunkArray(values, QUERY_IN_BATCH_SIZE).map(async (batch) => {
       const { data, error } = await loader(batch);
       if (error) throw error;
       return data || [];
@@ -111,7 +114,12 @@ export async function handleFinanceiroComissoesPagamentoPost(event: RequestEvent
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['Comissionamento', 'financeiro'], 3, 'Sem permissão para registrar pagamentos.');
+      ensureModuloAccess(
+        scope,
+        ['Comissionamento', 'financeiro'],
+        3,
+        'Sem permissão para registrar pagamentos.'
+      );
     }
     if (!canManageCommissionPayments(scope)) {
       return json(
@@ -138,10 +146,7 @@ export async function handleFinanceiroComissoesPagamentoPost(event: RequestEvent
     const reciboIdSet = new Set(reciboIds);
 
     const recibosBase = await fetchBatched<ReciboBaseRow>(reciboIds, (batch) =>
-      client
-        .from('vendas_recibos')
-        .select('id, venda_id')
-        .in('id', batch)
+      client.from('vendas_recibos').select('id, venda_id').in('id', batch)
     );
 
     const vendaIds = uniqueIds(recibosBase.map((row) => row?.venda_id));
@@ -169,7 +174,11 @@ export async function handleFinanceiroComissoesPagamentoPost(event: RequestEvent
     const dataInicioContexto = periodos.length > 0 ? `${periodos[0]}-01` : undefined;
     const dataFimContexto =
       periodos.length > 0
-        ? new Date(Number(periodos[periodos.length - 1].slice(0, 4)), Number(periodos[periodos.length - 1].slice(5, 7)), 0)
+        ? new Date(
+            Number(periodos[periodos.length - 1].slice(0, 4)),
+            Number(periodos[periodos.length - 1].slice(5, 7)),
+            0
+          )
             .toISOString()
             .slice(0, 10)
         : undefined;
@@ -190,23 +199,30 @@ export async function handleFinanceiroComissoesPagamentoPost(event: RequestEvent
       rows: contextRowsForComissao
     });
 
-    const paymentRows: PersistReceiptPaymentRow[] = selectedRowsForComissao.flatMap((row) =>
-      (Array.isArray(row?.recibos) ? row.recibos : []).filter(isCommissionReceipt).map((recibo) => ({
-        venda_id: row.id,
-        recibo_id: String(recibo?.id || '').trim(),
-        vendedor_id: row.vendedor_id,
-        company_id: row.company_id,
-        data_venda: recibo?.data_venda || row.data_venda,
-        valor_recibo: getReciboValor(recibo)
-      }))
-    ).filter((row) => row.recibo_id);
+    const paymentRows: PersistReceiptPaymentRow[] = selectedRowsForComissao
+      .flatMap((row) =>
+        (Array.isArray(row?.recibos) ? row.recibos : [])
+          .filter(isCommissionReceipt)
+          .map((recibo) => ({
+            venda_id: row.id,
+            recibo_id: String(recibo?.id || '').trim(),
+            vendedor_id: row.vendedor_id,
+            company_id: row.company_id,
+            data_venda: recibo?.data_venda || row.data_venda,
+            valor_recibo: getReciboValor(recibo)
+          }))
+      )
+      .filter((row) => row.recibo_id);
 
     const resolvedByKey = new Map(
       paymentRows
         .map((row) => {
           const resolved = resolvedByReceiptId.get(row.recibo_id);
           return resolved
-            ? ([buildPersistedReciboComissaoKey(row.recibo_id, row.vendedor_id, row.venda_id), resolved] as const)
+            ? ([
+                buildPersistedReciboComissaoKey(row.recibo_id, row.vendedor_id, row.venda_id),
+                resolved
+              ] as const)
             : null;
         })
         .filter((entry): entry is readonly [string, ResolvedReceiptCommission] => Boolean(entry))
@@ -225,20 +241,26 @@ export async function handleFinanceiroComissoesPagamentoPost(event: RequestEvent
     });
 
     if (!existingSnapshot.available) {
-      return json({
-        success: false,
-        fallback: true,
-        pagas: 0,
-        data_pagamento,
-        message: 'Persistência de comissão indisponível neste ambiente. Nenhuma baixa foi salva.'
-      }, { headers: NO_STORE_HEADERS });
+      return json(
+        {
+          success: false,
+          fallback: true,
+          pagas: 0,
+          data_pagamento,
+          message: 'Persistência de comissão indisponível neste ambiente. Nenhuma baixa foi salva.'
+        },
+        { headers: NO_STORE_HEADERS }
+      );
     }
 
     const existingByKey = new Map(
-      existingSnapshot.rows.map((row) => [
-        buildPersistedReciboComissaoKey(row.recibo_id, row.vendedor_id, row.venda_id),
-        row
-      ] as const)
+      existingSnapshot.rows.map(
+        (row) =>
+          [
+            buildPersistedReciboComissaoKey(row.recibo_id, row.vendedor_id, row.venda_id),
+            row
+          ] as const
+      )
     );
 
     const result = await persistPaidReceiptComissoes({
@@ -252,33 +274,37 @@ export async function handleFinanceiroComissoesPagamentoPost(event: RequestEvent
     });
 
     if ((result as { fallback?: boolean }).fallback) {
-      return json({
-        success: false,
-        fallback: true,
-        pagas: 0,
-        data_pagamento,
-        message: 'Persistência de comissão indisponível neste ambiente. Nenhuma baixa foi salva.'
-      }, { headers: NO_STORE_HEADERS });
+      return json(
+        {
+          success: false,
+          fallback: true,
+          pagas: 0,
+          data_pagamento,
+          message: 'Persistência de comissão indisponível neste ambiente. Nenhuma baixa foi salva.'
+        },
+        { headers: NO_STORE_HEADERS }
+      );
     }
 
     if (result.pagas > 0) {
       const companyIdsForInvalidation =
-        companyIds.length > 0
-          ? companyIds
-          : uniqueIds(paymentRows.map((row) => row.company_id));
+        companyIds.length > 0 ? companyIds : uniqueIds(paymentRows.map((row) => row.company_id));
       invalidateCommissionReadModels({
         companyIds: companyIdsForInvalidation,
         vendedorIds: vendedoresSelecionados,
         userId: user.id
       });
     }
-    return json({
-      success: true,
-      message: `${result.pagas} comissão(ões) marcada(s) como paga(s)`,
-      pagas: result.pagas,
-      data_pagamento,
-      fallback: false
-    }, { headers: NO_STORE_HEADERS });
+    return json(
+      {
+        success: true,
+        message: `${result.pagas} comissão(ões) marcada(s) como paga(s)`,
+        pagas: result.pagas,
+        data_pagamento,
+        fallback: false
+      },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao registrar pagamento.');
   }
@@ -296,7 +322,12 @@ export async function handleFinanceiroComissoesPagamentoPut(event: RequestEvent)
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['Comissionamento', 'financeiro'], 3, 'Sem permissão para atualizar pagamentos.');
+      ensureModuloAccess(
+        scope,
+        ['Comissionamento', 'financeiro'],
+        3,
+        'Sem permissão para atualizar pagamentos.'
+      );
     }
     if (!canManageCommissionPayments(scope)) {
       return json(
@@ -322,11 +353,11 @@ export async function handleFinanceiroComissoesPagamentoPut(event: RequestEvent)
     const reciboIds = uniqueIds(comissao_ids);
     const updatedRows: MutationIdRow[] = [];
     const companyBatches =
-      companyIds.length > SUPABASE_IN_BATCH_SIZE
-        ? chunkArray(companyIds, SUPABASE_IN_BATCH_SIZE)
+      companyIds.length > QUERY_IN_BATCH_SIZE
+        ? chunkArray(companyIds, QUERY_IN_BATCH_SIZE)
         : [companyIds];
 
-    for (const batch of chunkArray(reciboIds, SUPABASE_IN_BATCH_SIZE)) {
+    for (const batch of chunkArray(reciboIds, QUERY_IN_BATCH_SIZE)) {
       for (const companyBatch of companyBatches) {
         let query = client
           .from('comissoes')
@@ -345,7 +376,14 @@ export async function handleFinanceiroComissoesPagamentoPut(event: RequestEvent)
         const { data, error } = await query;
         if (error) {
           if (isMissingComissoesSchema(error)) {
-            return json({ success: true, message: 'Persistência de comissão não disponível neste ambiente.', fallback: true }, { headers: NO_STORE_HEADERS });
+            return json(
+              {
+                success: true,
+                message: 'Persistência de comissão não disponível neste ambiente.',
+                fallback: true
+              },
+              { headers: NO_STORE_HEADERS }
+            );
           }
           throw error;
         }
@@ -356,11 +394,14 @@ export async function handleFinanceiroComissoesPagamentoPut(event: RequestEvent)
     if (updatedRows.length > 0) {
       invalidateCommissionReadModels({ companyIds, userId: user.id });
     }
-    return json({
-      success: true,
-      message: `${updatedRows.length} comissão(ões) atualizada(s).`,
-      atualizadas: updatedRows.length
-    }, { headers: NO_STORE_HEADERS });
+    return json(
+      {
+        success: true,
+        message: `${updatedRows.length} comissão(ões) atualizada(s).`,
+        atualizadas: updatedRows.length
+      },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao atualizar pagamento.');
   }
@@ -378,7 +419,12 @@ export async function handleFinanceiroComissoesPagamentoDelete(event: RequestEve
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['Comissionamento', 'financeiro'], 4, 'Sem permissão para cancelar comissão.');
+      ensureModuloAccess(
+        scope,
+        ['Comissionamento', 'financeiro'],
+        4,
+        'Sem permissão para cancelar comissão.'
+      );
     }
     if (!canManageCommissionPayments(scope)) {
       return json(
@@ -404,11 +450,11 @@ export async function handleFinanceiroComissoesPagamentoDelete(event: RequestEve
     const reciboIds = uniqueIds(comissao_ids);
     const cancelledRows: MutationIdRow[] = [];
     const companyBatches =
-      companyIds.length > SUPABASE_IN_BATCH_SIZE
-        ? chunkArray(companyIds, SUPABASE_IN_BATCH_SIZE)
+      companyIds.length > QUERY_IN_BATCH_SIZE
+        ? chunkArray(companyIds, QUERY_IN_BATCH_SIZE)
         : [companyIds];
 
-    for (const batch of chunkArray(reciboIds, SUPABASE_IN_BATCH_SIZE)) {
+    for (const batch of chunkArray(reciboIds, QUERY_IN_BATCH_SIZE)) {
       for (const companyBatch of companyBatches) {
         let query = client
           .from('comissoes')
@@ -428,7 +474,14 @@ export async function handleFinanceiroComissoesPagamentoDelete(event: RequestEve
         const { data, error } = await query;
         if (error) {
           if (isMissingComissoesSchema(error)) {
-            return json({ success: true, message: 'Persistência de comissão não disponível neste ambiente.', fallback: true }, { headers: NO_STORE_HEADERS });
+            return json(
+              {
+                success: true,
+                message: 'Persistência de comissão não disponível neste ambiente.',
+                fallback: true
+              },
+              { headers: NO_STORE_HEADERS }
+            );
           }
           throw error;
         }
@@ -439,11 +492,14 @@ export async function handleFinanceiroComissoesPagamentoDelete(event: RequestEve
     if (cancelledRows.length > 0) {
       invalidateCommissionReadModels({ companyIds, userId: user.id });
     }
-    return json({
-      success: true,
-      message: `${cancelledRows.length} comissão(ões) cancelada(s).`,
-      canceladas: cancelledRows.length
-    }, { headers: NO_STORE_HEADERS });
+    return json(
+      {
+        success: true,
+        message: `${cancelledRows.length} comissão(ões) cancelada(s).`,
+        canceladas: cancelledRows.length
+      },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao cancelar comissão.');
   }

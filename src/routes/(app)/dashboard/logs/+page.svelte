@@ -130,10 +130,7 @@
 <PageHeader
   title="Logs administrativos"
   subtitle="Auditoria técnica e trilha de eventos do sistema."
-  breadcrumbs={[
-    { label: 'Admin', href: '/admin' },
-    { label: 'Logs' }
-  ]}
+  breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Logs' }]}
   actions={[
     { label: 'Atualizar', onClick: () => loadLogs(page), variant: 'secondary', icon: RefreshCw }
   ]}
@@ -206,7 +203,7 @@
       <tbody>
         {#each logs as log}
           <tr>
-            <td class="whitespace-nowrap px-5 py-3">{formatDateTime(log.created_at)}</td>
+            <td class="px-5 py-3 whitespace-nowrap">{formatDateTime(log.created_at)}</td>
             <td class="px-5 py-3">
               <Badge color="yellow" size="sm">{log.modulo || '-'}</Badge>
             </td>

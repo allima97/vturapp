@@ -4,7 +4,7 @@
   import { buildVturInputClasses } from './inputContract';
 
   type IconComponent = Component<{ class?: string }>;
-  
+
   export let label: string | null = null;
   export let value: string = '';
   export let placeholder: string = '';
@@ -21,13 +21,13 @@
   );
 </script>
 
-<div class="{class_name}">
+<div class={class_name}>
   {#if label}
-    <Label class="mb-2 {required ? 'after:content-["*"] after:ml-0.5 after:text-red-500' : ''}">
+    <Label class="mb-2 {required ? 'after:ml-0.5 after:text-red-500 after:content-["*"]' : ''}">
       {label}
     </Label>
   {/if}
-  
+
   {#if icon}
     <Input
       {type}
@@ -39,7 +39,7 @@
       color={error ? 'red' : 'base'}
       class={inputClasses}
     >
-      <svelte:component this={icon} slot="left" class="w-5 h-5 text-gray-500" />
+      <svelte:component this={icon} slot="left" class="h-5 w-5 text-gray-500" />
     </Input>
   {:else}
     <Input
@@ -52,9 +52,9 @@
       class={inputClasses}
     />
   {/if}
-  
+
   {#if error}
-    <p class="mt-1 text-sm text-red-600">{error}</p>
+    <p role="alert" class="mt-1 text-sm text-red-600">{error}</p>
   {:else if helper}
     <p class="mt-1 text-sm text-gray-500">{helper}</p>
   {/if}

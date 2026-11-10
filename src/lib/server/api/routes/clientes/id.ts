@@ -24,8 +24,12 @@ import {
 } from '$lib/server/clientes';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateClientReadModels } from '$lib/server/readModelCache';
-import { readJsonBodyLimited, rejectCrossOriginRequest, rejectLargePayload } from '$lib/server/requestGuards';
-import { chunkArray, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import {
+  readJsonBodyLimited,
+  rejectCrossOriginRequest,
+  rejectLargePayload
+} from '$lib/server/requestGuards';
+import { chunkArray, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const MAX_CLIENTE_UPDATE_BODY_BYTES = 128 * 1024;
 const MAX_CLIENTE_DELETE_BODY_BYTES = 8 * 1024;
@@ -108,8 +112,10 @@ async function fetchResumoRelacionamentos(
   };
 
   let vendasData: VendaResumoRow[] = [];
-  const companyBatches = filters.companyIds.length > 0 ? chunkArray(filters.companyIds) : [undefined];
-  const vendedorBatches = filters.vendedorIds.length > 0 ? chunkArray(filters.vendedorIds) : [undefined];
+  const companyBatches =
+    filters.companyIds.length > 0 ? chunkArray(filters.companyIds) : [undefined];
+  const vendedorBatches =
+    filters.vendedorIds.length > 0 ? chunkArray(filters.vendedorIds) : [undefined];
   for (const companyBatch of companyBatches) {
     for (const vendedorBatch of vendedorBatches) {
       const { data, error: vendasError } = await buildVendasQuery(companyBatch, vendedorBatch);
@@ -124,10 +130,7 @@ async function fetchResumoRelacionamentos(
   vendasData = Array.from(vendasById.values());
 
   const buildQuotesQuery = (creatorIds?: string[]) => {
-    let quotesQuery = client
-      .from('quote')
-      .select('id, created_at')
-      .eq('client_id', clienteId);
+    let quotesQuery = client.from('quote').select('id, created_at').eq('client_id', clienteId);
 
     if (creatorIds && creatorIds.length > 0) {
       quotesQuery = quotesQuery.in('created_by', creatorIds);
@@ -137,7 +140,7 @@ async function fetchResumoRelacionamentos(
   };
 
   let quotesData: QuoteResumoRow[] = [];
-  if (filters.vendedorIds.length > SUPABASE_IN_BATCH_SIZE) {
+  if (filters.vendedorIds.length > QUERY_IN_BATCH_SIZE) {
     for (const batch of chunkArray(filters.vendedorIds)) {
       const { data, error: quotesError } = await buildQuotesQuery(batch);
       if (quotesError) throw quotesError;
@@ -160,10 +163,7 @@ async function fetchResumoRelacionamentos(
   if (acompanhantesError) throw acompanhantesError;
 
   const vendas = vendasData;
-  const totalGasto = vendas.reduce(
-    (acc, row) => acc + Number(row.valor_total || 0),
-    0
-  );
+  const totalGasto = vendas.reduce((acc, row) => acc + Number(row.valor_total || 0), 0);
   const ultimaCompra = vendas.reduce<string | null>((acc, row) => {
     const current = String(row.data_venda || '').trim() || null;
     if (!current) return acc;
@@ -196,18 +196,22 @@ export async function handleClientesIdGet(event: RequestEvent) {
     );
 
     const row = await fetchCliente(client, id);
-    if (!row) return json({ error: 'Cliente nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!row)
+      return json({ error: 'Cliente nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
 
     const resumo = await fetchResumoRelacionamentos(client, id, filters);
 
-    return json({
-      ...row,
-      data_nascimento: row.nascimento,
-      observacoes: row.notas,
-      documento_formatado: formatDocumentoDisplay(row.cpf),
-      status: deriveClienteStatus(row, resumo.ultima_compra),
-      ...resumo
-    }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      {
+        ...row,
+        data_nascimento: row.nascimento,
+        observacoes: row.notas,
+        documento_formatado: formatDocumentoDisplay(row.cpf),
+        status: deriveClienteStatus(row, resumo.ultima_compra),
+        ...resumo
+      },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar cliente.');
   }
@@ -235,7 +239,8 @@ export async function handleClientesIdPatch(event: RequestEvent) {
     );
 
     const existing = await fetchCliente(client, id);
-    if (!existing) return json({ error: 'Cliente nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!existing)
+      return json({ error: 'Cliente nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
 
     const body =
       bodyResult.data && typeof bodyResult.data === 'object'
@@ -293,14 +298,22 @@ export async function handleClientesIdPatch(event: RequestEvent) {
 
     if (updateError) throw updateError;
 
-    registrarLog(event, { userId: user.id, modulo: 'Clientes', acao: 'cliente_editado', detalhes: { id, payload } });
+    registrarLog(event, {
+      userId: user.id,
+      modulo: 'Clientes',
+      acao: 'cliente_editado',
+      detalhes: { id, payload }
+    });
 
     invalidateClientReadModels({
       companyIds: data?.company_id ? [String(data.company_id)] : [],
       userId: user.id
     });
 
-    return json({ cliente: data, message: 'Cliente atualizado com sucesso.' }, { headers: NO_STORE_HEADERS });
+    return json(
+      { cliente: data, message: 'Cliente atualizado com sucesso.' },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao atualizar cliente.');
   }
@@ -330,7 +343,12 @@ export async function handleClientesIdDelete(event: RequestEvent) {
     const { error: deleteError } = await client.from('clientes').delete().eq('id', id);
     if (deleteError) throw deleteError;
 
-    registrarLog(event, { userId: user.id, modulo: 'Clientes', acao: 'cliente_excluido', detalhes: { id } });
+    registrarLog(event, {
+      userId: user.id,
+      modulo: 'Clientes',
+      acao: 'cliente_excluido',
+      detalhes: { id }
+    });
 
     invalidateClientReadModels({
       companyIds: filters.companyIds,

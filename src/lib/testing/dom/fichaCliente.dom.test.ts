@@ -12,7 +12,13 @@ let app: ReturnType<typeof mount> | null = null;
 let target: HTMLElement | null = null;
 
 function responder(status: number, body: unknown) {
-  const f = vi.fn(async (_url: string) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } }));
+  const f = vi.fn(
+    async (_url: string) =>
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { 'content-type': 'application/json' }
+      })
+  );
   vi.stubGlobal('fetch', f);
   return f;
 }
@@ -34,10 +40,26 @@ afterEach(() => {
 
 describe('ficha do cliente: viagens', () => {
   it('lista as viagens da API do cliente com link e status', async () => {
-    const f = responder(200, { items: [
-      { id: 'v1', destino: 'Lisboa', origem: 'São Paulo', data_inicio: '2026-10-01', data_fim: '2026-10-10', status: 'confirmada' },
-      { id: 'v2', destino: 'Rio', origem: '', data_inicio: '2026-01-05', data_fim: null, status: 'concluida' },
-    ] });
+    const f = responder(200, {
+      items: [
+        {
+          id: 'v1',
+          destino: 'Lisboa',
+          origem: 'São Paulo',
+          data_inicio: '2026-10-01',
+          data_fim: '2026-10-10',
+          status: 'confirmada'
+        },
+        {
+          id: 'v2',
+          destino: 'Rio',
+          origem: '',
+          data_inicio: '2026-01-05',
+          data_fim: null,
+          status: 'concluida'
+        }
+      ]
+    });
     montar(ClienteViagensCard, { clienteId: 'c1' });
     await vi.waitFor(() => expect(document.querySelectorAll('li a')).toHaveLength(2));
     expect(String(f.mock.calls[0][0])).toContain('/api/v1/viagens/cliente/c1');
@@ -57,9 +79,19 @@ describe('ficha do cliente: viagens', () => {
 
 describe('ficha do cliente: contatos enviados', () => {
   it('mostra canal e assunto; recarrega quando um aviso é enviado', async () => {
-    const f = responder(200, { items: [
-      { id: 'a1', canal: 'whatsapp', assunto: 'Aniversário', mensagem: 'Parabéns!', status: 'enviado', destinatario: '5511999', created_at: '2026-09-20T13:00:00Z' },
-    ] });
+    const f = responder(200, {
+      items: [
+        {
+          id: 'a1',
+          canal: 'whatsapp',
+          assunto: 'Aniversário',
+          mensagem: 'Parabéns!',
+          status: 'enviado',
+          destinatario: '5511999',
+          created_at: '2026-09-20T13:00:00Z'
+        }
+      ]
+    });
     montar(ContatosHarness, {});
     await vi.waitFor(() => expect(document.body.textContent).toContain('WhatsApp · Aniversário'));
     expect(String(f.mock.calls[0][0])).toContain('/api/v1/clientes/avisos/history?cliente_id=c3');

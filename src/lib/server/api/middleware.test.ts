@@ -11,7 +11,9 @@ function fakeEvent(path: string, headers: Record<string, string> = {}) {
 describe('resolveRequestId', () => {
   it('reaproveita x-request-id seguro, depois cf-ray, senão gera', () => {
     expect(resolveRequestId(new Headers({ 'x-request-id': 'abc-123' }))).toBe('abc-123');
-    expect(resolveRequestId(new Headers({ 'x-request-id': 'com espaço', 'cf-ray': '8a1b-GRU' }))).toBe('8a1b-GRU');
+    expect(
+      resolveRequestId(new Headers({ 'x-request-id': 'com espaço', 'cf-ray': '8a1b-GRU' }))
+    ).toBe('8a1b-GRU');
     expect(resolveRequestId(new Headers())).toMatch(/[0-9a-f-]{8,}/);
   });
 });
@@ -24,7 +26,7 @@ describe('app Hono /api/v1', () => {
     expect(res.headers.get('x-request-id')).toBe('req-1');
     expect(res.headers.get('server-timing')).toMatch(/^app;dur=\d+$/);
     expect(res.headers.get('cache-control')).toBe('no-store');
-    expect((await res.json()).ok).toBe(true);
+    expect(((await res.json()) as { ok: boolean }).ok).toBe(true);
   });
 
   it('rota inexistente (via catch-all) → 404 JSON', async () => {

@@ -13,20 +13,37 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./aniversariantes', () => ({ handleDashboardAniversariantesGet: spy('handleDashboardAniversariantesGet') }));
+vi.mock('./aniversariantes', () => ({
+  handleDashboardAniversariantesGet: spy('handleDashboardAniversariantesGet')
+}));
 vi.mock('./base', () => ({ handleDashboardBaseGet: spy('handleDashboardBaseGet') }));
-vi.mock('./comparativo-empresas', () => ({ handleDashboardComparativoEmpresasGet: spy('handleDashboardComparativoEmpresasGet') }));
-vi.mock('./consultorias', () => ({ handleDashboardConsultoriasGet: spy('handleDashboardConsultoriasGet') }));
-vi.mock('./debug-aggregates', () => ({ handleDashboardDebugAggregatesGet: spy('handleDashboardDebugAggregatesGet') }));
-vi.mock('./evolucao-anual', () => ({ handleDashboardEvolucaoAnualGet: spy('handleDashboardEvolucaoAnualGet') }));
-vi.mock('./follow-ups', () => ({ handleDashboardFollowUpsGet: spy('handleDashboardFollowUpsGet') }));
+vi.mock('./comparativo-empresas', () => ({
+  handleDashboardComparativoEmpresasGet: spy('handleDashboardComparativoEmpresasGet')
+}));
+vi.mock('./consultorias', () => ({
+  handleDashboardConsultoriasGet: spy('handleDashboardConsultoriasGet')
+}));
+vi.mock('./debug-aggregates', () => ({
+  handleDashboardDebugAggregatesGet: spy('handleDashboardDebugAggregatesGet')
+}));
+vi.mock('./evolucao-anual', () => ({
+  handleDashboardEvolucaoAnualGet: spy('handleDashboardEvolucaoAnualGet')
+}));
+vi.mock('./follow-ups', () => ({
+  handleDashboardFollowUpsGet: spy('handleDashboardFollowUpsGet')
+}));
 vi.mock('./summary', () => ({ handleDashboardSummaryGet: spy('handleDashboardSummaryGet') }));
-vi.mock('./ultimas-compras', () => ({ handleDashboardUltimasComprasGet: spy('handleDashboardUltimasComprasGet') }));
+vi.mock('./ultimas-compras', () => ({
+  handleDashboardUltimasComprasGet: spy('handleDashboardUltimasComprasGet')
+}));
 vi.mock('./viagens', () => ({ handleDashboardViagensGet: spy('handleDashboardViagensGet') }));
-vi.mock('./widgets', () => ({ handleDashboardWidgetsGet: spy('handleDashboardWidgetsGet'), handleDashboardWidgetsPost: spy('handleDashboardWidgetsPost') }));
+vi.mock('./widgets', () => ({
+  handleDashboardWidgetsGet: spy('handleDashboardWidgetsGet'),
+  handleDashboardWidgetsPost: spy('handleDashboardWidgetsPost')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
@@ -43,7 +60,7 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/dashboard/ultimas-compras', 'handleDashboardUltimasComprasGet', {}],
   ['GET', '/api/v1/dashboard/viagens', 'handleDashboardViagensGet', {}],
   ['GET', '/api/v1/dashboard/widgets', 'handleDashboardWidgetsGet', {}],
-  ['POST', '/api/v1/dashboard/widgets', 'handleDashboardWidgetsPost', {}],
+  ['POST', '/api/v1/dashboard/widgets', 'handleDashboardWidgetsPost', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
@@ -57,7 +74,7 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/dashboard/summary'],
   ['PUT', '/api/v1/dashboard/ultimas-compras'],
   ['PUT', '/api/v1/dashboard/viagens'],
-  ['PUT', '/api/v1/dashboard/widgets'],
+  ['PUT', '/api/v1/dashboard/widgets']
 ];
 
 function ev(method: string, path: string) {

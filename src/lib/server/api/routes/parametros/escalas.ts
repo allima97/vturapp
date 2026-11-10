@@ -1,9 +1,9 @@
+import type { DataClient } from '$lib/server/data';
 // Migrado para Hono de src/routes/api/v1/parametros/escalas/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import { registrarLog } from '$lib/server/auditLog';
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   ensureModuloAccess,
   fetchVendedorIdsByCompanyIds,
@@ -25,7 +25,7 @@ import {
 import { fetchWithTimeout } from '$lib/server/fetchWithTimeout';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
-import { cleanStringSet, chunkArray, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { cleanStringSet, chunkArray, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const MAX_PARAMETROS_ESCALAS_BODY_BYTES = 512 * 1024;
 const PT_BR_COLLATOR = new Intl.Collator('pt-BR');
@@ -117,10 +117,14 @@ async function fetchFeriadosNacionais(ano: number, periodo: string) {
 
     const raw = await response.text();
     if (raw.length > 250_000) {
-      logServerError('[parametros/escalas] payload de feriados nacionais excedeu limite', new Error('BrasilAPI payload too large'), {
-        ano,
-        tamanho: raw.length
-      });
+      logServerError(
+        '[parametros/escalas] payload de feriados nacionais excedeu limite',
+        new Error('BrasilAPI payload too large'),
+        {
+          ano,
+          tamanho: raw.length
+        }
+      );
       return [];
     }
 
@@ -142,13 +146,13 @@ async function fetchFeriadosNacionais(ano: number, periodo: string) {
   }
 }
 
-async function resolveEquipeIds(client: SupabaseClient, scope: Awaited<ReturnType<typeof resolveUserScope>>) {
+async function resolveEquipeIds(
+  client: DataClient,
+  scope: Awaited<ReturnType<typeof resolveUserScope>>
+) {
   if (scope.isGestor) {
-    const companyIds = scope.companyIds.length > 0
-      ? scope.companyIds
-      : scope.companyId
-        ? [scope.companyId]
-        : [];
+    const companyIds =
+      scope.companyIds.length > 0 ? scope.companyIds : scope.companyId ? [scope.companyId] : [];
     return fetchVendedorIdsByCompanyIds(client, companyIds);
   }
 
@@ -169,7 +173,11 @@ async function resolveEquipeIds(client: SupabaseClient, scope: Awaited<ReturnTyp
   return [scope.userId];
 }
 
-async function ensureEscalaMes(client: SupabaseClient, scope: Awaited<ReturnType<typeof resolveUserScope>>, periodo: string) {
+async function ensureEscalaMes(
+  client: DataClient,
+  scope: Awaited<ReturnType<typeof resolveUserScope>>,
+  periodo: string
+) {
   const periodoFull = normalizePeriod(periodo);
   if (!periodoFull) throw new Error('Período inválido.');
 
@@ -198,7 +206,12 @@ async function ensureEscalaMes(client: SupabaseClient, scope: Awaited<ReturnType
 
   const { data: inserted, error: insertError } = await client
     .from('escala_mes')
-    .insert({ company_id: companyId, gestor_id: gestorId, periodo: periodoFull, status: 'rascunho' })
+    .insert({
+      company_id: companyId,
+      gestor_id: gestorId,
+      periodo: periodoFull,
+      status: 'rascunho'
+    })
     .select('id')
     .single();
   if (insertError) throw insertError;
@@ -214,7 +227,12 @@ export async function handleParametrosEscalasGet(event: RequestEvent) {
     // Vendedor pode visualizar escala (incluindo equipe) em modo leitura.
     // Edicao continua bloqueada no POST.
     if (!scope.isAdmin && !scope.isVendedor) {
-      ensureModuloAccess(scope, ['parametros_escalas', 'escalas', 'parametros'], 1, 'Sem acesso a Escalas.');
+      ensureModuloAccess(
+        scope,
+        ['parametros_escalas', 'escalas', 'parametros'],
+        1,
+        'Sem acesso a Escalas.'
+      );
     }
 
     const { searchParams } = event.url;
@@ -223,7 +241,8 @@ export async function handleParametrosEscalasGet(event: RequestEvent) {
 
     const equipeIds = await resolveEquipeIds(client, scope);
 
-    const companyIds = scope.companyIds.length > 0 ? scope.companyIds : scope.companyId ? [scope.companyId] : [];
+    const companyIds =
+      scope.companyIds.length > 0 ? scope.companyIds : scope.companyId ? [scope.companyId] : [];
 
     const result = await getCachedReadModel<{
       meses: EscalaMesRow[];
@@ -264,7 +283,7 @@ export async function handleParametrosEscalasGet(event: RequestEvent) {
 
         const fetchMeses = async () => {
           const companyIdsFilter = (scope.companyIds || []).filter(Boolean);
-          if (scope.isAdmin || companyIdsFilter.length <= SUPABASE_IN_BATCH_SIZE) {
+          if (scope.isAdmin || companyIdsFilter.length <= QUERY_IN_BATCH_SIZE) {
             return buildMesQuery(companyIdsFilter);
           }
 
@@ -277,7 +296,9 @@ export async function handleParametrosEscalasGet(event: RequestEvent) {
 
           return {
             data: rows
-              .sort((left, right) => String(right?.periodo || '').localeCompare(String(left?.periodo || '')))
+              .sort((left, right) =>
+                String(right?.periodo || '').localeCompare(String(left?.periodo || ''))
+              )
               .slice(0, 24),
             error: null
           };
@@ -286,21 +307,28 @@ export async function handleParametrosEscalasGet(event: RequestEvent) {
         const { data: meses, error: mesError } = await fetchMeses();
         if (mesError) {
           // Tabelas de escala podem não existir
-          if (String(mesError.code || '').includes('42P01') || String(mesError.message || '').includes('does not exist')) {
+          if (
+            String(mesError.code || '').includes('42P01') ||
+            String(mesError.message || '').includes('does not exist')
+          ) {
             return { meses: [], dias: [], usuarios: [], feriados: [], horariosUsuario: [] };
           }
           throw mesError;
         }
 
         // Busca dias da escala para o período selecionado
-        let dias: EscalaDiaRow[] = [];
+        const dias: EscalaDiaRow[] = [];
         if (periodo && meses && meses.length > 0) {
-          const mesIds = meses.map((m) => String(m.id || '')).filter(Boolean);
+          const mesIds = meses.map((m: any) => String(m.id || '')).filter(Boolean);
           for (const mesBatch of chunkArray(mesIds)) {
-            for (const equipeBatch of (equipeIds.length > SUPABASE_IN_BATCH_SIZE ? chunkArray(equipeIds) : [equipeIds])) {
+            for (const equipeBatch of equipeIds.length > QUERY_IN_BATCH_SIZE
+              ? chunkArray(equipeIds)
+              : [equipeIds]) {
               let diasQuery = client
                 .from('escala_dia')
-                .select('id, escala_mes_id, usuario_id, data, tipo, hora_inicio, hora_fim, observacao, usuario:users!usuario_id(id, nome_completo)')
+                .select(
+                  'id, escala_mes_id, usuario_id, data, tipo, hora_inicio, hora_fim, observacao, usuario:users!usuario_id(id, nome_completo)'
+                )
                 .in('escala_mes_id', mesBatch)
                 .order('data');
 
@@ -326,14 +354,19 @@ export async function handleParametrosEscalasGet(event: RequestEvent) {
           }
           usuarios = usuarios
             .sort((left, right) =>
-              PT_BR_COLLATOR.compare(String(left?.nome_completo || ''), String(right?.nome_completo || ''))
+              PT_BR_COLLATOR.compare(
+                String(left?.nome_completo || ''),
+                String(right?.nome_completo || '')
+              )
             )
             .slice(0, 100);
         }
 
         // Feriados nacionais + locais do mês
         const anoFeriados = Number(periodo.slice(0, 4));
-        const feriadosNacionais = periodoRange ? await fetchFeriadosNacionais(anoFeriados, periodo) : [];
+        const feriadosNacionais = periodoRange
+          ? await fetchFeriadosNacionais(anoFeriados, periodo)
+          : [];
         const fetchFeriadosLocais = async () => {
           const buildFeriadosQuery = (companyIdsFilter = scope.companyIds || []) => {
             let feriadosQuery = client
@@ -347,13 +380,15 @@ export async function handleParametrosEscalasGet(event: RequestEvent) {
                 .lte('data', periodoRange.fim);
             }
             if (!scope.isAdmin) {
-              if (companyIdsFilter.length > 0) feriadosQuery = feriadosQuery.in('company_id', companyIdsFilter);
-              else if (scope.companyId) feriadosQuery = feriadosQuery.eq('company_id', scope.companyId);
+              if (companyIdsFilter.length > 0)
+                feriadosQuery = feriadosQuery.in('company_id', companyIdsFilter);
+              else if (scope.companyId)
+                feriadosQuery = feriadosQuery.eq('company_id', scope.companyId);
             }
             return feriadosQuery;
           };
           const companyIdsFilter = (scope.companyIds || []).filter(Boolean);
-          if (scope.isAdmin || companyIdsFilter.length <= SUPABASE_IN_BATCH_SIZE) {
+          if (scope.isAdmin || companyIdsFilter.length <= QUERY_IN_BATCH_SIZE) {
             const { data } = await buildFeriadosQuery(companyIdsFilter);
             return data || [];
           }
@@ -369,7 +404,7 @@ export async function handleParametrosEscalasGet(event: RequestEvent) {
         const feriados = [...feriadosNacionais, ...(feriadosLocais || [])];
 
         // Busca horarios do usuario logado
-        let horariosUsuario: HorarioUsuarioRow[] = [];
+        const horariosUsuario: HorarioUsuarioRow[] = [];
         if (equipeIds.length > 0) {
           for (const batch of chunkArray(equipeIds)) {
             const { data: horariosData } = await client
@@ -399,7 +434,7 @@ export async function handleParametrosEscalasGet(event: RequestEvent) {
 
 // Auditoria (mesmo formato do histórico da tabela logs): empresa e gestor vêm do mês da escala.
 // Lidos em background, depois da resposta, para não atrasar o salvamento.
-async function escalaMesAuditInfo(client: SupabaseClient, escalaMesId: string) {
+async function escalaMesAuditInfo(client: DataClient, escalaMesId: string) {
   const { data } = await client
     .from('escala_mes')
     .select('company_id, gestor_id')
@@ -415,7 +450,7 @@ async function escalaMesAuditInfo(client: SupabaseClient, escalaMesId: string) {
 }
 
 async function escalaLoteAuditDetalhes(
-  client: SupabaseClient,
+  client: DataClient,
   scope: Awaited<ReturnType<typeof resolveUserScope>>,
   escalaMesId: string,
   usuarioId: string,
@@ -449,7 +484,12 @@ export async function handleParametrosEscalasPost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['parametros_escalas', 'escalas', 'parametros'], 2, 'Sem permissão para salvar escalas.');
+      ensureModuloAccess(
+        scope,
+        ['parametros_escalas', 'escalas', 'parametros'],
+        2,
+        'Sem permissão para salvar escalas.'
+      );
     }
 
     const body =
@@ -472,7 +512,10 @@ export async function handleParametrosEscalasPost(event: RequestEvent) {
       const equipeIds = await resolveEquipeIds(client, scope);
       const equipeIdSet = cleanStringSet(equipeIds);
       if (!scope.isAdmin && !equipeIdSet.has(usuarioId)) {
-        return json({ error: 'Usuário fora do seu escopo.' }, { status: 403, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Usuário fora do seu escopo.' },
+          { status: 403, headers: NO_STORE_HEADERS }
+        );
       }
 
       const payload = {
@@ -506,7 +549,11 @@ export async function handleParametrosEscalasPost(event: RequestEvent) {
           operacao = 'update';
         }
       } else if (tipo) {
-        const { data: inserted } = await client.from('escala_dia').insert(payload).select('id').maybeSingle();
+        const { data: inserted } = await client
+          .from('escala_dia')
+          .insert(payload)
+          .select('id')
+          .maybeSingle();
         escalaDiaId = inserted?.id || null;
         operacao = 'insert';
       }
@@ -551,14 +598,20 @@ export async function handleParametrosEscalasPost(event: RequestEvent) {
       const equipeIds = await resolveEquipeIds(client, scope);
       const equipeIdSet = cleanStringSet(equipeIds);
       if (!scope.isAdmin && !equipeIdSet.has(usuarioId)) {
-        return json({ error: 'Usuário fora do seu escopo.' }, { status: 403, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Usuário fora do seu escopo.' },
+          { status: 403, headers: NO_STORE_HEADERS }
+        );
       }
 
       const periodo = normalizePeriod(body.periodo || datas[0]?.slice(0, 7));
-      if (!periodo) return json({ error: 'Período inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+      if (!periodo)
+        return json({ error: 'Período inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
       const escalaMesId = String(body.escala_mes_id || '').trim();
-      const mesId = isUuid(escalaMesId) ? escalaMesId : await ensureEscalaMes(client, scope, periodo);
+      const mesId = isUuid(escalaMesId)
+        ? escalaMesId
+        : await ensureEscalaMes(client, scope, periodo);
 
       if (!tipo) {
         const { error: deleteError } = await client
@@ -573,7 +626,16 @@ export async function handleParametrosEscalasPost(event: RequestEvent) {
           modulo: 'Escalas',
           acao: 'escala_dia_lote_salvo',
           detalhes: async () =>
-            escalaLoteAuditDetalhes(client, scope, mesId, usuarioId, datas, tipo, horaInicio, horaFim)
+            escalaLoteAuditDetalhes(
+              client,
+              scope,
+              mesId,
+              usuarioId,
+              datas,
+              tipo,
+              horaInicio,
+              horaFim
+            )
         });
         invalidateReadModelCache({ keyPrefix: 'parametros:escalas:' });
         return json({ ok: true, removed: datas.length, id: mesId }, { headers: NO_STORE_HEADERS });
@@ -608,7 +670,8 @@ export async function handleParametrosEscalasPost(event: RequestEvent) {
 
     if (action === 'ensure_mes') {
       const periodo = String(body.periodo || '').trim(); // YYYY-MM
-      if (!periodo) return json({ error: 'Período inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+      if (!periodo)
+        return json({ error: 'Período inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
       const id = await ensureEscalaMes(client, scope, periodo);
       invalidateReadModelCache({ keyPrefix: 'parametros:escalas:' });

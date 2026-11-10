@@ -56,7 +56,10 @@ export async function handleAdminSummaryGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!canManageUsers(scope) && !canManageCompanies(scope)) {
-      return new Response('Sem acesso ao resumo administrativo.', { status: 403, headers: TEXT_NO_STORE_HEADERS });
+      return new Response('Sem acesso ao resumo administrativo.', {
+        status: 403,
+        headers: TEXT_NO_STORE_HEADERS
+      });
     }
 
     const loadPlanos = async () => {
@@ -133,16 +136,28 @@ export async function handleAdminSummaryGet(event: RequestEvent) {
         const empresasRows = empresas as CompanyRow[];
         const planosRows = planos as AtivoRow[];
 
-        const usuariosAtivos = usuariosRows.reduce((total, item) => total + (item.active !== false ? 1 : 0), 0);
+        const usuariosAtivos = usuariosRows.reduce(
+          (total, item) => total + (item.active !== false ? 1 : 0),
+          0
+        );
         const usuariosInativos = usuariosRows.length - usuariosAtivos;
-        const empresasAtivas = empresasRows.reduce((total, item) => total + (item.active !== false ? 1 : 0), 0);
+        const empresasAtivas = empresasRows.reduce(
+          (total, item) => total + (item.active !== false ? 1 : 0),
+          0
+        );
         const empresasInativas = empresasRows.length - empresasAtivas;
-        const planosAtivos = planosRows.reduce((total, item) => total + (item.ativo !== false ? 1 : 0), 0);
+        const planosAtivos = planosRows.reduce(
+          (total, item) => total + (item.ativo !== false ? 1 : 0),
+          0
+        );
         const planosInativos = planosRows.length - planosAtivos;
-        const templatesAtivos = (templates as AtivoRow[]).reduce((total, item) => total + (item.ativo !== false ? 1 : 0), 0);
+        const templatesAtivos = (templates as AtivoRow[]).reduce(
+          (total, item) => total + (item.ativo !== false ? 1 : 0),
+          0
+        );
         const emailConfigured = Boolean(
           emailSettings?.resend_api_key ||
-            (emailSettings?.smtp_host && emailSettings?.smtp_user && emailSettings?.smtp_pass)
+          (emailSettings?.smtp_host && emailSettings?.smtp_user && emailSettings?.smtp_pass)
         );
 
         const companyIds: string[] = [];
@@ -180,7 +195,12 @@ export async function handleAdminSummaryGet(event: RequestEvent) {
         for (const row of billingRows) {
           const companyId = String(row.company_id || '').trim();
           if (!companyId) continue;
-          billingStatusByCompany.set(companyId, String(row.status || 'trial').trim().toLowerCase() || 'trial');
+          billingStatusByCompany.set(
+            companyId,
+            String(row.status || 'trial')
+              .trim()
+              .toLowerCase() || 'trial'
+          );
         }
 
         const billingCounts = {
@@ -199,31 +219,31 @@ export async function handleAdminSummaryGet(event: RequestEvent) {
         }
 
         return {
-        counts: {
-          usuarios_total: usuariosRows.length,
-          usuarios_ativos: usuariosAtivos,
-          usuarios_inativos: usuariosInativos,
-          empresas_total: empresasRows.length,
-          empresas_ativas: empresasAtivas,
-          empresas_inativas: empresasInativas,
-          tipos_total: tipos.length,
-          planos_total: planosRows.length,
-          planos_ativos: planosAtivos,
-          planos_inativos: planosInativos,
-          cobrancas_ativas: billingCounts.active,
-          cobrancas_trial: billingCounts.trial,
-          cobrancas_atrasadas: billingCounts.past_due,
-          cobrancas_suspensas: billingCounts.suspended,
-          cobrancas_canceladas: billingCounts.canceled,
-          avisos_ativos: templatesAtivos,
-          vinculos_master_pendentes: pendingMasterLinks
-        },
-        indicators: {
-          email_configurado: emailConfigured,
-          escopo: scope.papel,
-          scope_company_ids: scope.companyIds
-        }
-      };
+          counts: {
+            usuarios_total: usuariosRows.length,
+            usuarios_ativos: usuariosAtivos,
+            usuarios_inativos: usuariosInativos,
+            empresas_total: empresasRows.length,
+            empresas_ativas: empresasAtivas,
+            empresas_inativas: empresasInativas,
+            tipos_total: tipos.length,
+            planos_total: planosRows.length,
+            planos_ativos: planosAtivos,
+            planos_inativos: planosInativos,
+            cobrancas_ativas: billingCounts.active,
+            cobrancas_trial: billingCounts.trial,
+            cobrancas_atrasadas: billingCounts.past_due,
+            cobrancas_suspensas: billingCounts.suspended,
+            cobrancas_canceladas: billingCounts.canceled,
+            avisos_ativos: templatesAtivos,
+            vinculos_master_pendentes: pendingMasterLinks
+          },
+          indicators: {
+            email_configurado: emailConfigured,
+            escopo: scope.papel,
+            scope_company_ids: scope.companyIds
+          }
+        };
       }
     });
 

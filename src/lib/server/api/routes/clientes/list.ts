@@ -36,7 +36,7 @@ import {
   chunkArray,
   dedupeById as dedupeRowsById,
   filterBatches,
-  SUPABASE_IN_BATCH_SIZE,
+  QUERY_IN_BATCH_SIZE,
   uniqueCleanStrings
 } from '$lib/utils/array';
 
@@ -96,8 +96,7 @@ type ClienteLookupRow = {
 
 const CLIENT_SELECT_FULL =
   'id, nome, cpf, nascimento, telefone, email, whatsapp, cidade, estado, classificacao, tipo_pessoa, tipo_cliente, tags, active, ativo, company_id, created_at';
-const CLIENT_SELECT_SUMMARY =
-  'id, cpf, nascimento, active, ativo, company_id, created_at';
+const CLIENT_SELECT_SUMMARY = 'id, cpf, nascimento, active, ativo, company_id, created_at';
 
 export async function handleClientesListGet(event: RequestEvent) {
   try {
@@ -112,28 +111,41 @@ export async function handleClientesListGet(event: RequestEvent) {
     const pageSize = Math.min(200, parseIntSafe(searchParams.get('pageSize'), 20));
     const all = String(searchParams.get('all') || '').trim() === '1';
     const busca = String(searchParams.get('busca') || searchParams.get('q') || '').trim();
-    const statusQuery = String(searchParams.get('status') || '').trim().toLowerCase();
-    const estadoQuery = String(searchParams.get('estado') || '').trim().toUpperCase();
-    const tipoPessoaQuery = String(searchParams.get('tipo_pessoa') || '').trim().toUpperCase();
-    const classificacaoQuery = String(searchParams.get('classificacao') || '').trim().toUpperCase();
-    const aniversarioHojeQuery = String(searchParams.get('aniversario_hoje') || '').trim().toLowerCase();
+    const statusQuery = String(searchParams.get('status') || '')
+      .trim()
+      .toLowerCase();
+    const estadoQuery = String(searchParams.get('estado') || '')
+      .trim()
+      .toUpperCase();
+    const tipoPessoaQuery = String(searchParams.get('tipo_pessoa') || '')
+      .trim()
+      .toUpperCase();
+    const classificacaoQuery = String(searchParams.get('classificacao') || '')
+      .trim()
+      .toUpperCase();
+    const aniversarioHojeQuery = String(searchParams.get('aniversario_hoje') || '')
+      .trim()
+      .toLowerCase();
     const includeSummary = String(searchParams.get('include_summary') || '').trim() === '1';
     const summaryOnly = String(searchParams.get('summary_only') || '').trim() === '1';
     const lookupOnly = String(searchParams.get('lookup') || '').trim() === '1';
     const summaryFastPath = summaryOnly && !busca;
     const dbSearchTerm = sanitizePostgrestSearchTerm(busca, 60);
     const dbSearchDigits = busca.replace(/\D/g, '').slice(0, 30);
-    const canPushBuscaToDb = Boolean(busca) && (dbSearchTerm.length >= 2 || dbSearchDigits.length >= 2);
+    const canPushBuscaToDb =
+      Boolean(busca) && (dbSearchTerm.length >= 2 || dbSearchDigits.length >= 2);
 
-    const requestedVendedorRaw = searchParams.get('vendedor_ids') || searchParams.get('vendedor_id');
+    const requestedVendedorRaw =
+      searchParams.get('vendedor_ids') || searchParams.get('vendedor_id');
     const companyIds = resolveScopedCompanyIds(scope, searchParams.get('empresa_id'));
     const companyIdSet = cleanStringSet(companyIds);
     const vendedorIds = await resolveScopedVendedorIds(client, scope, requestedVendedorRaw);
     const canUseCompanyScope = canUseCompanyClienteScope(scope, requestedVendedorRaw);
 
-    const companyClientIds = canUseCompanyScope && companyIds.length > 0
-      ? await resolveCompanyClienteIds(client, companyIds)
-      : null;
+    const companyClientIds =
+      canUseCompanyScope && companyIds.length > 0
+        ? await resolveCompanyClienteIds(client, companyIds)
+        : null;
     const accessibleClientIds = canUseCompanyScope
       ? null
       : await resolveAccessibleClientIds(client, { companyIds, vendedorIds });
@@ -188,7 +200,9 @@ export async function handleClientesListGet(event: RequestEvent) {
       const buildLookupQuery = (clientIds?: string[], companyIdsFilter = companyIds) => {
         let lookupQuery = client
           .from('clientes')
-          .select('id, nome, cpf, email, telefone, whatsapp, cidade, estado, company_id, active, ativo')
+          .select(
+            'id, nome, cpf, email, telefone, whatsapp, cidade, estado, company_id, active, ativo'
+          )
           .order('nome', { ascending: true })
           .limit(lookupLimit);
 
@@ -207,20 +221,22 @@ export async function handleClientesListGet(event: RequestEvent) {
 
       const fetchLookupRows = async () => {
         if (!scopedClientIds) {
-          if (companyIds.length > SUPABASE_IN_BATCH_SIZE) {
+          if (companyIds.length > QUERY_IN_BATCH_SIZE) {
             const rows: ClienteLookupRow[] = [];
             for (const batch of chunkArray(companyIds)) {
               const result = await buildLookupQuery(undefined, batch);
               if (result.error) {
                 return { data: null, error: result.error } as typeof result;
               }
-              rows.push(...(((result.data || []) as unknown) as ClienteLookupRow[]));
+              rows.push(...((result.data || []) as unknown as ClienteLookupRow[]));
               if (dedupeRowsById(rows).length >= lookupLimit) break;
             }
 
             return {
               data: dedupeRowsById(rows)
-                .sort((left, right) => PT_BR_COLLATOR.compare(String(left.nome || ''), String(right.nome || '')))
+                .sort((left, right) =>
+                  PT_BR_COLLATOR.compare(String(left.nome || ''), String(right.nome || ''))
+                )
                 .slice(0, lookupLimit),
               error: null
             };
@@ -229,7 +245,7 @@ export async function handleClientesListGet(event: RequestEvent) {
           return buildLookupQuery();
         }
 
-        if (scopedClientIds.length <= SUPABASE_IN_BATCH_SIZE) {
+        if (scopedClientIds.length <= QUERY_IN_BATCH_SIZE) {
           return buildLookupQuery(scopedClientIds);
         }
 
@@ -239,13 +255,15 @@ export async function handleClientesListGet(event: RequestEvent) {
           if (result.error) {
             return { data: null, error: result.error } as typeof result;
           }
-          rows.push(...(((result.data || []) as unknown) as ClienteLookupRow[]));
+          rows.push(...((result.data || []) as unknown as ClienteLookupRow[]));
           if (dedupeRowsById(rows).length >= lookupLimit) break;
         }
 
         return {
           data: dedupeRowsById(rows)
-            .sort((left, right) => PT_BR_COLLATOR.compare(String(left.nome || ''), String(right.nome || '')))
+            .sort((left, right) =>
+              PT_BR_COLLATOR.compare(String(left.nome || ''), String(right.nome || ''))
+            )
             .slice(0, lookupLimit),
           error: null
         };
@@ -293,8 +311,8 @@ export async function handleClientesListGet(event: RequestEvent) {
       (!busca || canPushBuscaToDb) &&
       !statusQuery &&
       !aniversarioHojeQuery &&
-      companyIds.length <= SUPABASE_IN_BATCH_SIZE &&
-      (!scopedClientIds || scopedClientIds.length <= SUPABASE_IN_BATCH_SIZE);
+      companyIds.length <= QUERY_IN_BATCH_SIZE &&
+      (!scopedClientIds || scopedClientIds.length <= QUERY_IN_BATCH_SIZE);
     const canUseScopeAggregateSummaries =
       summaryFastPath &&
       canUseCompanyScope &&
@@ -305,15 +323,23 @@ export async function handleClientesListGet(event: RequestEvent) {
       !statusQuery &&
       !aniversarioHojeQuery;
 
-    const buildClientsQuery = (clientIds?: string[], useRange = false, companyIdsFilter = companyIds) => {
+    const buildClientsQuery = (
+      clientIds?: string[],
+      useRange = false,
+      companyIdsFilter = companyIds
+    ) => {
       const selectFields = summaryFastPath ? CLIENT_SELECT_SUMMARY : CLIENT_SELECT_FULL;
-      let clientsQuery = (useRange
-        ? client.from('clientes').select(selectFields, { count: 'exact' })
-        : client.from('clientes').select(selectFields)
+      let clientsQuery = (
+        useRange
+          ? client.from('clientes').select(selectFields, { count: 'exact' })
+          : client.from('clientes').select(selectFields)
       ).order('created_at', { ascending: false });
 
       if (useRange) {
-        clientsQuery = clientsQuery.range((page - 1) * pageSize, (page - 1) * pageSize + pageSize - 1);
+        clientsQuery = clientsQuery.range(
+          (page - 1) * pageSize,
+          (page - 1) * pageSize + pageSize - 1
+        );
       } else {
         clientsQuery = clientsQuery.limit(5000);
       }
@@ -347,15 +373,15 @@ export async function handleClientesListGet(event: RequestEvent) {
         return buildClientsQuery(scopedClientIds || undefined, true);
       }
 
-      if (!scopedClientIds || scopedClientIds.length <= SUPABASE_IN_BATCH_SIZE) {
-        if (!scopedClientIds && companyIds.length > SUPABASE_IN_BATCH_SIZE) {
+      if (!scopedClientIds || scopedClientIds.length <= QUERY_IN_BATCH_SIZE) {
+        if (!scopedClientIds && companyIds.length > QUERY_IN_BATCH_SIZE) {
           const rows: ClienteBaseRow[] = [];
           for (const batch of chunkArray(companyIds)) {
             const result = await buildClientsQuery(undefined, false, batch);
             if (result.error) {
               return { data: null, error: result.error } as typeof result;
             }
-            rows.push(...(((result.data || []) as unknown) as ClienteBaseRow[]));
+            rows.push(...((result.data || []) as unknown as ClienteBaseRow[]));
           }
 
           return {
@@ -375,7 +401,7 @@ export async function handleClientesListGet(event: RequestEvent) {
         if (result.error) {
           return { data: null, error: result.error } as typeof result;
         }
-        rows.push(...(((result.data || []) as unknown) as ClienteBaseRow[]));
+        rows.push(...((result.data || []) as unknown as ClienteBaseRow[]));
       }
 
       return {
@@ -386,7 +412,10 @@ export async function handleClientesListGet(event: RequestEvent) {
       };
     };
 
-    const clientsResult = await getCachedReadModel<{ data: ClienteBaseRow[]; count: number | null }>({
+    const clientsResult = await getCachedReadModel<{
+      data: ClienteBaseRow[];
+      count: number | null;
+    }>({
       key: buildReadModelCacheKey('clientes-list:clients', {
         companyIds,
         vendedorIds,
@@ -409,7 +438,7 @@ export async function handleClientesListGet(event: RequestEvent) {
         const result = (await fetchClients()) as FetchClientsResult;
         if (result?.error) throw result.error;
         return {
-          data: ((result?.data || []) as ClienteBaseRow[]),
+          data: (result?.data || []) as ClienteBaseRow[],
           count: typeof result?.count === 'number' ? result.count : null
         };
       }
@@ -418,7 +447,7 @@ export async function handleClientesListGet(event: RequestEvent) {
     const clientsCount = clientsResult.count;
 
     const clientIds = ((clientsData || []) as ClienteBaseRow[]).map((row) => row.id);
-      const summaryClientIds = canUseScopeAggregateSummaries
+    const summaryClientIds = canUseScopeAggregateSummaries
       ? []
       : canUseDbPagination
         ? clientIds
@@ -465,7 +494,7 @@ export async function handleClientesListGet(event: RequestEvent) {
             if (result.error) {
               return { data: null, error: result.error } as typeof result;
             }
-            rows.push(...(((result.data || []) as unknown) as VendaResumoRow[]));
+            rows.push(...((result.data || []) as unknown as VendaResumoRow[]));
           }
         }
       }
@@ -499,7 +528,7 @@ export async function handleClientesListGet(event: RequestEvent) {
       loader: async () => {
         const result = await fetchSales();
         if (result.error) throw result.error;
-        return ((result.data || []) as VendaResumoRow[]);
+        return (result.data || []) as VendaResumoRow[];
       }
     });
 
@@ -530,7 +559,7 @@ export async function handleClientesListGet(event: RequestEvent) {
       const normalizedCreatorIds = uniqueCleanStrings(creatorIdsFilter);
       if (normalizedCreatorIds.length === 0) return { data: [], error: null };
 
-      if (normalizedCreatorIds.length <= SUPABASE_IN_BATCH_SIZE) {
+      if (normalizedCreatorIds.length <= QUERY_IN_BATCH_SIZE) {
         return buildQuotesQuery(undefined, normalizedCreatorIds);
       }
 
@@ -540,7 +569,7 @@ export async function handleClientesListGet(event: RequestEvent) {
         if (result.error) {
           return { data: null, error: result.error } as typeof result;
         }
-        rows.push(...(((result.data || []) as unknown) as QuoteResumoRow[]));
+        rows.push(...((result.data || []) as unknown as QuoteResumoRow[]));
       }
 
       return { data: rows, error: null };
@@ -552,9 +581,8 @@ export async function handleClientesListGet(event: RequestEvent) {
           return fetchQuotesByCreatorIds(vendedorIds);
         }
 
-        const creators = companyIds.length > 0
-          ? await fetchRankingVendedoresByCompanyIds(client, companyIds)
-          : [];
+        const creators =
+          companyIds.length > 0 ? await fetchRankingVendedoresByCompanyIds(client, companyIds) : [];
         const creatorIdsForScope = ((creators || []) as Array<{ id?: string | null }>)
           .map((row) => String(row?.id || '').trim())
           .filter(Boolean);
@@ -574,7 +602,7 @@ export async function handleClientesListGet(event: RequestEvent) {
           if (result.error) {
             return { data: null, error: result.error } as typeof result;
           }
-          rows.push(...(((result.data || []) as unknown) as QuoteResumoRow[]));
+          rows.push(...((result.data || []) as unknown as QuoteResumoRow[]));
         }
       }
 
@@ -609,7 +637,7 @@ export async function handleClientesListGet(event: RequestEvent) {
         loader: async () => {
           const result = await fetchQuotes();
           if (result.error) throw result.error;
-          return ((result.data || []) as QuoteResumoRow[]);
+          return (result.data || []) as QuoteResumoRow[];
         }
       });
     } catch (quotesError) {
@@ -647,7 +675,10 @@ export async function handleClientesListGet(event: RequestEvent) {
       );
     }
 
-    const salesByClient = new Map<string, { total: number; lastSale: string | null; count: number }>();
+    const salesByClient = new Map<
+      string,
+      { total: number; lastSale: string | null; count: number }
+    >();
     for (const row of (salesData || []) as VendaResumoRow[]) {
       const clientId = String(row.cliente_id || '').trim();
       if (!clientId) continue;
@@ -664,7 +695,10 @@ export async function handleClientesListGet(event: RequestEvent) {
       salesByClient.set(clientId, {
         total: current.total + total,
         count: current.count + 1,
-        lastSale: saleDate && (!current.lastSale || saleDate > current.lastSale) ? saleDate : current.lastSale
+        lastSale:
+          saleDate && (!current.lastSale || saleDate > current.lastSale)
+            ? saleDate
+            : current.lastSale
       });
     }
 
@@ -728,7 +762,8 @@ export async function handleClientesListGet(event: RequestEvent) {
           estado: row.estado,
           cidade_uf: cidadeUf,
           classificacao: row.classificacao,
-          tipo_pessoa: row.tipo_pessoa || (String(row.cpf || '').replace(/\D/g, '').length > 11 ? 'PJ' : 'PF'),
+          tipo_pessoa:
+            row.tipo_pessoa || (String(row.cpf || '').replace(/\D/g, '').length > 11 ? 'PJ' : 'PF'),
           tipo_cliente: row.tipo_cliente || 'passageiro',
           tags,
           tags_text: tags.join(', '),
@@ -743,19 +778,25 @@ export async function handleClientesListGet(event: RequestEvent) {
         };
       })
       .filter((item) =>
-        summaryFastPath ? true : matchesClienteBusca(item, busca, [item.documento, item.contato, item.cidade_uf])
+        summaryFastPath
+          ? true
+          : matchesClienteBusca(item, busca, [item.documento, item.contato, item.cidade_uf])
       )
       .filter((item) => (statusQuery ? item.status === statusQuery : true))
-      .filter((item) => (aniversarioHojeQuery ? String(item.aniversario_hoje) === aniversarioHojeQuery : true))
+      .filter((item) =>
+        aniversarioHojeQuery ? String(item.aniversario_hoje) === aniversarioHojeQuery : true
+      )
       .sort((left, right) =>
-        summaryFastPath ? 0 : PT_BR_COLLATOR.compare(String(left.nome || ''), String(right.nome || ''))
+        summaryFastPath
+          ? 0
+          : PT_BR_COLLATOR.compare(String(left.nome || ''), String(right.nome || ''))
       );
 
     const paginatedItems = all
       ? items
       : canUseDbPagination
         ? items
-      : items.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize);
+        : items.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize);
 
     const total = canUseDbPagination ? Number(clientsCount || 0) : items.length;
     let summaryBase:

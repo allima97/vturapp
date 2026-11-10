@@ -1,17 +1,18 @@
 import { browser, dev } from '$app/environment';
-import { auth } from '$lib/stores/auth';
+import { auth, type Session } from '$lib/stores/auth';
 import { permissoes } from '$lib/stores/permissoes';
-import { createSupabaseBrowserClient } from '$lib/db/supabase';
+import { createBrowserDataClient } from '$lib/db/browserData';
 import { toUserMessage } from '$lib/utils/errors';
-import type { Session } from '@supabase/supabase-js';
 
 let authListenerInitialized = false;
 
 export const load = async () => {
   if (browser) {
-    const supabase = createSupabaseBrowserClient();
+    const dados = createBrowserDataClient();
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session }
+    } = await dados.auth.getSession();
 
     if (session?.user) {
       auth.setAuth(session.user, session);
@@ -25,12 +26,15 @@ export const load = async () => {
     if (!authListenerInitialized) {
       authListenerInitialized = true;
 
-      supabase.auth.onAuthStateChange(async (event: string, session: Session | null) => {
-        if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') && session) {
+      dados.auth.onAuthStateChange(async (event: string, session) => {
+        if (
+          (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') &&
+          session
+        ) {
           auth.setAuth(session.user, session);
           // Reinicializa permissões quando auth muda
           try {
-            await permissoes.init(supabase);
+            await permissoes.init(dados);
           } catch (err) {
             if (dev) {
               console.error('[layout.ts] Erro ao reinicializar permissoes', {

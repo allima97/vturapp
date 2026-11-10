@@ -13,14 +13,25 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('../operacao/documentos-viagens', () => ({ handleOperacaoDocumentosViagensGet: spy('handleOperacaoDocumentosViagensGet'), handleOperacaoDocumentosViagensDelete: spy('handleOperacaoDocumentosViagensDelete') }));
-vi.mock('./create', () => ({ handleDocumentosViagensCreatePost: spy('handleDocumentosViagensCreatePost') }));
-vi.mock('./delete', () => ({ handleDocumentosViagensDeletePost: spy('handleDocumentosViagensDeletePost') }));
-vi.mock('./save-template', () => ({ handleDocumentosViagensSaveTemplatePost: spy('handleDocumentosViagensSaveTemplatePost') }));
-vi.mock('./update', () => ({ handleDocumentosViagensUpdatePost: spy('handleDocumentosViagensUpdatePost') }));
+vi.mock('../operacao/documentos-viagens', () => ({
+  handleOperacaoDocumentosViagensGet: spy('handleOperacaoDocumentosViagensGet'),
+  handleOperacaoDocumentosViagensDelete: spy('handleOperacaoDocumentosViagensDelete')
+}));
+vi.mock('./create', () => ({
+  handleDocumentosViagensCreatePost: spy('handleDocumentosViagensCreatePost')
+}));
+vi.mock('./delete', () => ({
+  handleDocumentosViagensDeletePost: spy('handleDocumentosViagensDeletePost')
+}));
+vi.mock('./save-template', () => ({
+  handleDocumentosViagensSaveTemplatePost: spy('handleDocumentosViagensSaveTemplatePost')
+}));
+vi.mock('./update', () => ({
+  handleDocumentosViagensUpdatePost: spy('handleDocumentosViagensUpdatePost')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
@@ -30,15 +41,20 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/documentos-viagens/list', 'handleOperacaoDocumentosViagensGet', {}],
   ['POST', '/api/v1/documentos-viagens/create', 'handleDocumentosViagensCreatePost', {}],
   ['POST', '/api/v1/documentos-viagens/delete', 'handleDocumentosViagensDeletePost', {}],
-  ['POST', '/api/v1/documentos-viagens/save-template', 'handleDocumentosViagensSaveTemplatePost', {}],
-  ['POST', '/api/v1/documentos-viagens/update', 'handleDocumentosViagensUpdatePost', {}],
+  [
+    'POST',
+    '/api/v1/documentos-viagens/save-template',
+    'handleDocumentosViagensSaveTemplatePost',
+    {}
+  ],
+  ['POST', '/api/v1/documentos-viagens/update', 'handleDocumentosViagensUpdatePost', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/documentos-viagens/create'],
   ['PUT', '/api/v1/documentos-viagens/delete'],
   ['PUT', '/api/v1/documentos-viagens/save-template'],
-  ['PUT', '/api/v1/documentos-viagens/update'],
+  ['PUT', '/api/v1/documentos-viagens/update']
 ];
 
 function ev(method: string, path: string) {

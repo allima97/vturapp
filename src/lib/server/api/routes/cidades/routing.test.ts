@@ -13,11 +13,19 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./root', () => ({ handleCidadesGet: spy('handleCidadesGet'), handleCidadesPost: spy('handleCidadesPost'), handleCidadesDelete: spy('handleCidadesDelete') }));
-vi.mock('./id', () => ({ handleCidadesIdGet: spy('handleCidadesIdGet'), handleCidadesIdPatch: spy('handleCidadesIdPatch'), handleCidadesIdDelete: spy('handleCidadesIdDelete') }));
+vi.mock('./root', () => ({
+  handleCidadesGet: spy('handleCidadesGet'),
+  handleCidadesPost: spy('handleCidadesPost'),
+  handleCidadesDelete: spy('handleCidadesDelete')
+}));
+vi.mock('./id', () => ({
+  handleCidadesIdGet: spy('handleCidadesIdGet'),
+  handleCidadesIdPatch: spy('handleCidadesIdPatch'),
+  handleCidadesIdDelete: spy('handleCidadesIdDelete')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
@@ -26,14 +34,14 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/cidades', 'handleCidadesGet', {}],
   ['POST', '/api/v1/cidades', 'handleCidadesPost', {}],
   ['DELETE', '/api/v1/cidades', 'handleCidadesDelete', {}],
-  ['GET', '/api/v1/cidades/id-123', 'handleCidadesIdGet', {"id": "id-123"}],
-  ['PATCH', '/api/v1/cidades/id-123', 'handleCidadesIdPatch', {"id": "id-123"}],
-  ['DELETE', '/api/v1/cidades/id-123', 'handleCidadesIdDelete', {"id": "id-123"}],
+  ['GET', '/api/v1/cidades/id-123', 'handleCidadesIdGet', { id: 'id-123' }],
+  ['PATCH', '/api/v1/cidades/id-123', 'handleCidadesIdPatch', { id: 'id-123' }],
+  ['DELETE', '/api/v1/cidades/id-123', 'handleCidadesIdDelete', { id: 'id-123' }]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/cidades'],
-  ['PUT', '/api/v1/cidades/id-123'],
+  ['PUT', '/api/v1/cidades/id-123']
 ];
 
 function ev(method: string, path: string) {

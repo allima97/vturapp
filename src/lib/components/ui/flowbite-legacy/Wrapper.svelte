@@ -1,8 +1,8 @@
-<script>// @ts-nocheck (cópia do Flowbite-Svelte 0.48.6, ver README.md)
-export let tag = "div";
-export let show;
-export let use = () => {
-};
+<script>
+  // @ts-nocheck (cópia do Flowbite-Svelte 0.48.6, ver README.md)
+  export let tag = 'div';
+  export let show;
+  export let use = () => {};
 </script>
 
 {#if show}

@@ -9,10 +9,19 @@ import {
   toErrorResponse
 } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
+import { revisaoRoteiroAtiva } from '$lib/config/destinosGeograficos';
 
-function applyRoteiroScope<T extends { eq: (column: string, value: string | null | undefined) => T }>(
+function applyRoteiroScope<
+  T extends { eq: (column: string, value: string | null | undefined) => T }
+>(
   query: T,
-  scope: { isAdmin?: boolean; isGestor?: boolean; isMaster?: boolean; userId?: string | null; companyId?: string | null }
+  scope: {
+    isAdmin?: boolean;
+    isGestor?: boolean;
+    isMaster?: boolean;
+    userId?: string | null;
+    companyId?: string | null;
+  }
 ) {
   if (!scope.isAdmin && !scope.isGestor && !scope.isMaster) {
     return query.eq('created_by', scope.userId);
@@ -35,10 +44,12 @@ export async function handleRoteirosListGet(event: RequestEvent) {
 
     const { data, error } = await applyRoteiroScope(
       client
-      .from('roteiro_personalizado')
-      .select('id, nome, duracao, inicio_cidade, fim_cidade, created_at, updated_at')
-      .order('updated_at', { ascending: false })
-      .limit(200),
+        .from('roteiro_personalizado')
+        .select(
+          `id, nome, duracao, inicio_cidade, fim_cidade, created_at, updated_at${revisaoRoteiroAtiva ? ', revisao' : ''}`
+        )
+        .order('updated_at', { ascending: false })
+        .limit(200),
       scope
     );
 

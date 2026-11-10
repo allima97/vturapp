@@ -13,7 +13,7 @@ import {
   resolveScopedCompanyIds,
   resolveUserScope,
   sanitizePostgrestSearchTerm,
-  toErrorResponse,
+  toErrorResponse
 } from '$lib/server/v1';
 import {
   buildReadModelCacheKey,
@@ -23,7 +23,7 @@ import {
   scopeCacheTags
 } from '$lib/server/readModelCache';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
-import { chunkArray, dedupeById, SUPABASE_IN_BATCH_SIZE } from '$lib/utils/array';
+import { chunkArray, dedupeById, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 const MAX_PAGAMENTO_BODY_BYTES = 64 * 1024;
 type PagamentoListRow = {
@@ -90,7 +90,10 @@ export async function handlePagamentosGet(event: RequestEvent) {
       return json({ error: 'venda_id inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
     }
     if (formaPagamentoId && !isUuid(formaPagamentoId)) {
-      return json({ error: 'forma_pagamento_id inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'forma_pagamento_id inválido.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const selectPagamentos = `
@@ -141,11 +144,15 @@ export async function handlePagamentosGet(event: RequestEvent) {
         page,
         pageSize
       }),
-      tags: [READ_MODEL_TAGS.payments, READ_MODEL_TAGS.sales, ...scopeCacheTags({ companyIds, userId: user.id })],
+      tags: [
+        READ_MODEL_TAGS.payments,
+        READ_MODEL_TAGS.sales,
+        ...scopeCacheTags({ companyIds, userId: user.id })
+      ],
       ttlMs: 120_000,
       staleTtlMs: 600_000,
       loader: async () => {
-        if (companyIds.length > SUPABASE_IN_BATCH_SIZE) {
+        if (companyIds.length > QUERY_IN_BATCH_SIZE) {
           const rows: PagamentoListRow[] = [];
           let total = 0;
           for (const batch of chunkArray(companyIds)) {
@@ -156,7 +163,9 @@ export async function handlePagamentosGet(event: RequestEvent) {
           }
 
           const items = dedupeById(rows)
-            .sort((left, right) => String(right?.created_at || '').localeCompare(String(left?.created_at || '')))
+            .sort((left, right) =>
+              String(right?.created_at || '').localeCompare(String(left?.created_at || ''))
+            )
             .slice(from, to + 1);
 
           return { items, total };
@@ -209,11 +218,17 @@ export async function handlePagamentosPost(event: RequestEvent) {
           : null;
 
     if (!isUuid(vendaId)) {
-      return json({ success: false, error: 'ID da venda invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'ID da venda invalido.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     if (formaPagamentoId && !isUuid(formaPagamentoId)) {
-      return json({ success: false, error: 'ID da forma de pagamento invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'ID da forma de pagamento invalido.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { data: venda, error: vendaErr } = await client
@@ -224,7 +239,10 @@ export async function handlePagamentosPost(event: RequestEvent) {
 
     if (vendaErr) throw vendaErr;
     if (!venda) {
-      return json({ success: false, error: 'Venda nao encontrada.' }, { status: 404, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'Venda nao encontrada.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
     }
 
     const vendaCompanyId = String(venda.company_id || '').trim();
@@ -238,29 +256,36 @@ export async function handlePagamentosPost(event: RequestEvent) {
     }
 
     if (!vendaCompanyId || vendaCompanyId !== targetCompanyId) {
-      return json({ success: false, error: 'Venda fora do escopo da empresa.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { success: false, error: 'Venda fora do escopo da empresa.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { data, error } = await client
       .from('vendas_pagamentos')
-      .insert([{
-        venda_id: vendaId,
-        company_id: targetCompanyId,
-        forma_pagamento_id: formaPagamentoId || null,
-        forma_nome: body.forma_nome || body.forma_pagamento || null,
-        operacao: body.operacao || null,
-        plano: body.plano || null,
-        valor_bruto: body.valor_bruto || body.valor || null,
-        desconto_valor: body.desconto_valor || null,
-        valor_total: body.valor_total || body.valor || null,
-        parcelas: body.parcelas || null,
-        parcelas_qtd: body.parcelas_qtd || null,
-        parcelas_valor: body.parcelas_valor || null,
-        vencimento_primeira: body.vencimento_primeira || null,
-        paga_comissao: body.paga_comissao ?? null,
-        observacoes: body.observacoes || null
-      }])
-      .select('id, company_id, venda_id, forma_pagamento_id, forma_nome, operacao, plano, valor_bruto, desconto_valor, valor_total, parcelas_qtd, parcelas_valor, vencimento_primeira, paga_comissao, observacoes, created_at, updated_at')
+      .insert([
+        {
+          venda_id: vendaId,
+          company_id: targetCompanyId,
+          forma_pagamento_id: formaPagamentoId || null,
+          forma_nome: body.forma_nome || body.forma_pagamento || null,
+          operacao: body.operacao || null,
+          plano: body.plano || null,
+          valor_bruto: body.valor_bruto || body.valor || null,
+          desconto_valor: body.desconto_valor || null,
+          valor_total: body.valor_total || body.valor || null,
+          parcelas: body.parcelas || null,
+          parcelas_qtd: body.parcelas_qtd || null,
+          parcelas_valor: body.parcelas_valor || null,
+          vencimento_primeira: body.vencimento_primeira || null,
+          paga_comissao: body.paga_comissao ?? null,
+          observacoes: body.observacoes || null
+        }
+      ])
+      .select(
+        'id, company_id, venda_id, forma_pagamento_id, forma_nome, operacao, plano, valor_bruto, desconto_valor, valor_total, parcelas_qtd, parcelas_valor, vencimento_primeira, paga_comissao, observacoes, created_at, updated_at'
+      )
       .single();
 
     if (error) throw error;

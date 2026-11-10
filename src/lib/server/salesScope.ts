@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient } from '$lib/server/data';
 import type { UserScope } from '$lib/server/v1';
 import { isUuid } from '$lib/server/v1';
 import { cleanStringSet } from '$lib/utils/array';
@@ -18,7 +18,7 @@ type SaleScopeParams = {
 };
 
 type FetchSaleForScopeParams = SaleScopeParams & {
-  client: SupabaseClient;
+  client: DataClient;
   saleId: string;
   extraSelect?: string;
 };
@@ -54,7 +54,8 @@ export function isSaleInScope(sale: unknown, params: SaleScopeParams) {
   const applySellerScopeValue = params.applySellerScope ?? shouldApplySellerScope(params.scope);
 
   if (companySet.size > 0 && !companySet.has(saleCompanyId)) return false;
-  if (applySellerScopeValue && vendedorSet.size > 0 && !vendedorSet.has(saleVendedorId)) return false;
+  if (applySellerScopeValue && vendedorSet.size > 0 && !vendedorSet.has(saleVendedorId))
+    return false;
 
   return true;
 }

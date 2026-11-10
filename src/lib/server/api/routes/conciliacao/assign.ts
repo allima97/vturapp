@@ -1,7 +1,7 @@
 // Migrado para Hono de src/routes/api/v1/conciliacao/assign/+server.ts — corpo IDÊNTICO ao original
 // (só o nome/assinatura do handler e caminhos de import relativos mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
-import { json } from "@sveltejs/kit";
+import { json } from '@sveltejs/kit';
 import {
   ensureModuloAccess,
   getAdminClient,
@@ -11,40 +11,37 @@ import {
   requireAuthenticatedUser,
   resolveScopedCompanyIds,
   resolveUserScope,
-  toErrorResponse,
-} from "$lib/server/v1";
-import { fetchWithTimeout } from "$lib/server/fetchWithTimeout";
-import { buildConciliacaoMetrics } from "$lib/conciliacao/business";
-import {
-  resolveResendApiKey,
-  resolveFromEmails,
-} from "$lib/server/emailSettings";
-import { findEquipeVturVendedor } from "$lib/conciliacao/baixaRac";
-import { NO_STORE_HEADERS } from "$lib/server/httpCache";
-import { readJsonBodyLimited, rejectCrossOriginRequest } from "$lib/server/requestGuards";
-import { invalidateSalesReadModels } from "$lib/server/readModelCache";
+  toErrorResponse
+} from '$lib/server/v1';
+import { fetchWithTimeout } from '$lib/server/fetchWithTimeout';
+import { buildConciliacaoMetrics } from '$lib/conciliacao/business';
+import { resolveResendApiKey, resolveFromEmails } from '$lib/server/emailSettings';
+import { findEquipeVturVendedor } from '$lib/conciliacao/baixaRac';
+import { NO_STORE_HEADERS } from '$lib/server/httpCache';
+import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
+import { invalidateSalesReadModels } from '$lib/server/readModelCache';
 
 const MAX_CONCILIACAO_ASSIGN_BODY_BYTES = 64 * 1024;
 const CONCILIACAO_VALOR_PAYLOAD_FIELDS = [
-  "valorLancamentos",
-  "valorTaxas",
-  "valorDescontos",
-  "valorAbatimentos",
-  "valorNaoComissionavel",
-  "valorCalculadaLoja",
-  "valorVisaoMaster",
-  "valorOpfax",
-  "valorSaldo",
-  "valorComissaoLoja",
+  'valorLancamentos',
+  'valorTaxas',
+  'valorDescontos',
+  'valorAbatimentos',
+  'valorNaoComissionavel',
+  'valorCalculadaLoja',
+  'valorVisaoMaster',
+  'valorOpfax',
+  'valorSaldo',
+  'valorComissaoLoja'
 ];
-const AUDIT_DATE_TIME_FORMATTER = new Intl.DateTimeFormat("pt-BR", {
-  timeZone: "America/Sao_Paulo",
-  year: "numeric",
-  month: "2-digit",
-  day: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-  second: "2-digit",
+const AUDIT_DATE_TIME_FORMATTER = new Intl.DateTimeFormat('pt-BR', {
+  timeZone: 'America/Sao_Paulo',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit'
 });
 
 type AssignClient = ReturnType<typeof getAdminClient>;
@@ -97,23 +94,23 @@ type ConciliacaoAssignUpdate = {
 };
 
 function readAssignRequestBody(value: unknown): AssignRequestBody {
-  if (!value || typeof value !== "object") return {};
+  if (!value || typeof value !== 'object') return {};
 
   const body = value as Record<string, unknown>;
   const parsed: AssignRequestBody = {};
 
-  if (typeof body.companyId === "string") parsed.companyId = body.companyId;
-  if (typeof body.conciliacaoId === "string") parsed.conciliacaoId = body.conciliacaoId;
-  if (typeof body.rankingVendedorId === "string") parsed.rankingVendedorId = body.rankingVendedorId;
-  if (typeof body.rankingProdutoId === "string") parsed.rankingProdutoId = body.rankingProdutoId;
-  if (typeof body.vendaId === "string") parsed.vendaId = body.vendaId;
-  if (typeof body.vendaReciboId === "string") parsed.vendaReciboId = body.vendaReciboId;
-  if (typeof body.isBaixaRac === "boolean") parsed.isBaixaRac = body.isBaixaRac;
-  if (typeof body.conciliado === "boolean") parsed.conciliado = body.conciliado;
+  if (typeof body.companyId === 'string') parsed.companyId = body.companyId;
+  if (typeof body.conciliacaoId === 'string') parsed.conciliacaoId = body.conciliacaoId;
+  if (typeof body.rankingVendedorId === 'string') parsed.rankingVendedorId = body.rankingVendedorId;
+  if (typeof body.rankingProdutoId === 'string') parsed.rankingProdutoId = body.rankingProdutoId;
+  if (typeof body.vendaId === 'string') parsed.vendaId = body.vendaId;
+  if (typeof body.vendaReciboId === 'string') parsed.vendaReciboId = body.vendaReciboId;
+  if (typeof body.isBaixaRac === 'boolean') parsed.isBaixaRac = body.isBaixaRac;
+  if (typeof body.conciliado === 'boolean') parsed.conciliado = body.conciliado;
 
   for (const field of CONCILIACAO_VALOR_PAYLOAD_FIELDS) {
     const raw = body[field];
-    if (raw === null || typeof raw === "number" || typeof raw === "string") {
+    if (raw === null || typeof raw === 'number' || typeof raw === 'string') {
       parsed[field] = raw;
     }
   }
@@ -132,29 +129,27 @@ function readAssignRequestBody(value: unknown): AssignRequestBody {
  */
 async function fetchGestoresMasters(
   client: AssignClient,
-  companyId: string,
+  companyId: string
 ): Promise<Array<{ email: string; nome: string }>> {
   try {
     // Busca usuários da empresa (GESTOR ou MASTER vinculados via company_id)
     const { data: usuarios } = await client
-      .from("users")
-      .select("id, email, nome_completo, user_types(name)")
-      .eq("company_id", companyId)
+      .from('users')
+      .select('id, email, nome_completo, user_types(name)')
+      .eq('company_id', companyId)
       .limit(100);
 
     const resultado: Array<{ email: string; nome: string }> = [];
     for (const u of (usuarios || []) as GestorMasterUserRow[]) {
       const tipoBruto = String(
-        Array.isArray(u.user_types)
-          ? u.user_types[0]?.name
-          : u.user_types?.name || "",
+        Array.isArray(u.user_types) ? u.user_types[0]?.name : u.user_types?.name || ''
       ).toUpperCase();
-      if (tipoBruto.includes("GESTOR") || tipoBruto.includes("MASTER")) {
-        const email = String(u.email || "").trim();
-        if (email && email.includes("@")) {
+      if (tipoBruto.includes('GESTOR') || tipoBruto.includes('MASTER')) {
+        const email = String(u.email || '').trim();
+        if (email && email.includes('@')) {
           resultado.push({
             email,
-            nome: String(u.nome_completo || "").trim() || email,
+            nome: String(u.nome_completo || '').trim() || email
           });
         }
       }
@@ -162,30 +157,26 @@ async function fetchGestoresMasters(
 
     // MASTERs podem estar vinculados via master_empresas sem ter company_id igual
     const { data: vinculos } = await client
-      .from("master_empresas")
-      .select("master_id")
-      .eq("company_id", companyId)
-      .neq("status", "rejected");
+      .from('master_empresas')
+      .select('master_id')
+      .eq('company_id', companyId)
+      .neq('status', 'rejected');
 
     const masterIds = ((vinculos || []) as MasterEmpresaRow[])
-      .map((v) => String(v.master_id || "").trim())
+      .map((v) => String(v.master_id || '').trim())
       .filter(Boolean);
     if (masterIds.length > 0) {
       const { data: masters } = await client
-        .from("users")
-        .select("id, email, nome_completo")
-        .in("id", masterIds);
+        .from('users')
+        .select('id, email, nome_completo')
+        .in('id', masterIds);
 
       for (const m of masters || []) {
-        const email = String(m?.email || "").trim();
-        if (
-          email &&
-          email.includes("@") &&
-          !resultado.find((r) => r.email === email)
-        ) {
+        const email = String(m?.email || '').trim();
+        if (email && email.includes('@') && !resultado.find((r) => r.email === email)) {
           resultado.push({
             email,
-            nome: String(m?.nome_completo || "").trim() || email,
+            nome: String(m?.nome_completo || '').trim() || email
           });
         }
       }
@@ -193,7 +184,7 @@ async function fetchGestoresMasters(
 
     return resultado;
   } catch (err) {
-    logServerError("CONCILIACAO_ASSIGN_FETCH_GESTORES_ERROR", err);
+    logServerError('CONCILIACAO_ASSIGN_FETCH_GESTORES_ERROR', err);
     return [];
   }
 }
@@ -217,7 +208,7 @@ async function notificarTrocaVendedor(params: {
     const [resendKey, fromEmails, destinatarios] = await Promise.all([
       resolveResendApiKey(),
       resolveFromEmails(),
-      fetchGestoresMasters(params.client, params.companyId),
+      fetchGestoresMasters(params.client, params.companyId)
     ]);
 
     if (!resendKey || destinatarios.length === 0) return;
@@ -233,7 +224,7 @@ async function notificarTrocaVendedor(params: {
         <tr><td><strong>Recibo / Documento</strong></td><td>${params.documento}</td></tr>
         <tr><td><strong>ID conciliação</strong></td><td>${params.conciliacaoId}</td></tr>
         <tr><td><strong>Vendedor anterior (ID)</strong></td><td>${params.oldVendedorId}</td></tr>
-        <tr><td><strong>Novo vendedor (ID)</strong></td><td>${params.newVendedorId ?? "(removido)"}</td></tr>
+        <tr><td><strong>Novo vendedor (ID)</strong></td><td>${params.newVendedorId ?? '(removido)'}</td></tr>
         <tr><td><strong>Alterado por</strong></td><td>${params.changedByNome} (${params.changedByUserId})</td></tr>
         <tr><td><strong>Data/hora</strong></td><td>${AUDIT_DATE_TIME_FORMATTER.format(new Date())}</td></tr>
       </table>
@@ -242,25 +233,29 @@ async function notificarTrocaVendedor(params: {
 
     await Promise.allSettled(
       destinatarios.map((dest) =>
-        fetchWithTimeout("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendKey}`,
-            "Content-Type": "application/json",
+        fetchWithTimeout(
+          'https://api.resend.com/emails',
+          {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${resendKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              from: fromEmail,
+              to: [dest.email],
+              subject: assunto,
+              html: bodyHtml
+            })
           },
-          body: JSON.stringify({
-            from: fromEmail,
-            to: [dest.email],
-            subject: assunto,
-            html: bodyHtml,
-          }),
-        }, 12_000).catch((err) => {
-          logServerError("CONCILIACAO_ASSIGN_EMAIL_ERROR", err);
-        }),
-      ),
+          12_000
+        ).catch((err) => {
+          logServerError('CONCILIACAO_ASSIGN_EMAIL_ERROR', err);
+        })
+      )
     );
   } catch (err) {
-    logServerError("CONCILIACAO_ASSIGN_NOTIFY_ERROR", err);
+    logServerError('CONCILIACAO_ASSIGN_NOTIFY_ERROR', err);
   }
 }
 
@@ -278,15 +273,15 @@ async function logVendedorChange(params: {
   documento: string;
 }): Promise<void> {
   try {
-    await params.client.from("conciliacao_recibo_changes").insert({
+    await params.client.from('conciliacao_recibo_changes').insert({
       company_id: params.companyId,
       conciliacao_recibo_id: params.conciliacaoReciboId,
       numero_recibo: params.documento,
-      field: "ranking_vendedor_id",
+      field: 'ranking_vendedor_id',
       old_value: null, // campo numérico no schema — não usado para este tipo de audit
       new_value: null,
-      actor: "user",
-      changed_by: params.changedByUserId,
+      actor: 'user',
+      changed_by: params.changedByUserId
       // Armazena os IDs de vendedor na nota — coluna "field" carrega o contexto
       // O valor real fica em old_vendor_id / new_vendor_id se a tabela tiver, senão
       // usamos uma convenção: armazenamos como texto no campo correto abaixo.
@@ -294,12 +289,12 @@ async function logVendedorChange(params: {
   } catch (err) {
     // A tabela pode não ter colunas para string UUIDs — tentamos uma abordagem alternativa:
     // A notificação por e-mail já garante rastreabilidade.
-    logServerError("CONCILIACAO_ASSIGN_LOG_VENDEDOR_CHANGE", err);
+    logServerError('CONCILIACAO_ASSIGN_LOG_VENDEDOR_CHANGE', err);
   }
 }
 
 function parseNullableNumber(value: unknown) {
-  if (value === null || value === undefined || value === "") return null;
+  if (value === null || value === undefined || value === '') return null;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : Number.NaN;
 }
@@ -318,34 +313,33 @@ export async function handleConciliacaoAssignPost(event: RequestEvent) {
     if (!scope.isAdmin && !scope.isMaster && !scope.isFinanceiro && !scope.isGestor) {
       ensureModuloAccess(
         scope,
-        ["operacao_conciliacao", "conciliacao"],
+        ['operacao_conciliacao', 'conciliacao'],
         3,
-        "Sem permissão para atribuir conciliação.",
+        'Sem permissão para atribuir conciliação.'
       );
     }
 
     const body = readAssignRequestBody(bodyResult.data);
     const companyIds = resolveScopedCompanyIds(scope, body?.companyId);
 
-    const conciliacaoId = String(body?.conciliacaoId || "").trim();
+    const conciliacaoId = String(body?.conciliacaoId || '').trim();
     if (!isUuid(conciliacaoId))
-      return json({ error: "ID de conciliação inválido." }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'ID de conciliação inválido.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
 
-    const rankingVendedorIdRaw =
-      String(body?.rankingVendedorId || "").trim() || null;
-    const rankingProdutoId =
-      String(body?.rankingProdutoId || "").trim() || null;
-    const vendaId = String(body?.vendaId || "").trim() || null;
-    const vendaReciboId = String(body?.vendaReciboId || "").trim() || null;
+    const rankingVendedorIdRaw = String(body?.rankingVendedorId || '').trim() || null;
+    const rankingProdutoId = String(body?.rankingProdutoId || '').trim() || null;
+    const vendaId = String(body?.vendaId || '').trim() || null;
+    const vendaReciboId = String(body?.vendaReciboId || '').trim() || null;
     const isBaixaRac = Boolean(body?.isBaixaRac);
 
     const valorLancamentos = parseNullableNumber(body?.valorLancamentos);
     const valorTaxas = parseNullableNumber(body?.valorTaxas);
     const valorDescontos = parseNullableNumber(body?.valorDescontos);
     const valorAbatimentos = parseNullableNumber(body?.valorAbatimentos);
-    const valorNaoComissionavel = parseNullableNumber(
-      body?.valorNaoComissionavel,
-    );
+    const valorNaoComissionavel = parseNullableNumber(body?.valorNaoComissionavel);
     const valorCalculadaLoja = parseNullableNumber(body?.valorCalculadaLoja);
     const valorVisaoMaster = parseNullableNumber(body?.valorVisaoMaster);
     const valorOpfax = parseNullableNumber(body?.valorOpfax);
@@ -365,24 +359,30 @@ export async function handleConciliacaoAssignPost(event: RequestEvent) {
       Number.isNaN(valorComissaoLoja)
     ) {
       return json(
-        { error: "Um ou mais campos de valor estão inválidos." },
-        { status: 400, headers: NO_STORE_HEADERS },
+        { error: 'Um ou mais campos de valor estão inválidos.' },
+        { status: 400, headers: NO_STORE_HEADERS }
       );
     }
 
     // Verifica se o registro pertence à empresa e lê o vendedor atual para auditoria
     const { data: registro, error: registroErr } = await client
-      .from("conciliacao_recibos")
-      .select("id, company_id, descricao, documento, ranking_vendedor_id")
-      .eq("id", conciliacaoId)
+      .from('conciliacao_recibos')
+      .select('id, company_id, descricao, documento, ranking_vendedor_id')
+      .eq('id', conciliacaoId)
       .maybeSingle();
 
     if (registroErr) throw registroErr;
     if (!registro)
-      return json({ error: "Registro não encontrado." }, { status: 404, headers: NO_STORE_HEADERS });
-    const registroCompanyId = String(registro.company_id || "").trim();
+      return json(
+        { error: 'Registro não encontrado.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
+    const registroCompanyId = String(registro.company_id || '').trim();
     if (!scope.isAdmin && !companyIds.includes(registroCompanyId)) {
-      return json({ error: "Registro fora do escopo." }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Registro fora do escopo.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     // Nunca permitir atribuição de "Equipe vtur" como vendedor de um recibo
@@ -396,36 +396,33 @@ export async function handleConciliacaoAssignPost(event: RequestEvent) {
 
     if (rankingVendedorId) {
       const { data: vendedorRow, error: vendedorErr } = await client
-        .from("users")
+        .from('users')
         .select(
-          "id, nome_completo, email, company_id, active, uso_individual, participa_ranking, user_types(name)",
+          'id, nome_completo, email, company_id, active, uso_individual, participa_ranking, user_types(name)'
         )
-        .eq("id", rankingVendedorId)
+        .eq('id', rankingVendedorId)
         .maybeSingle();
       if (vendedorErr) throw vendedorErr;
       if (
         !vendedorRow ||
-        String(vendedorRow.company_id || "") !==
-          String(registro.company_id || "") ||
+        String(vendedorRow.company_id || '') !== String(registro.company_id || '') ||
         !isRankingEligibleUser(vendedorRow)
       ) {
         return json(
           {
-            error:
-              "Vendedor fora do escopo da empresa ou inelegível para ranking.",
+            error: 'Vendedor fora do escopo da empresa ou inelegível para ranking.'
           },
-          { status: 422, headers: NO_STORE_HEADERS },
+          { status: 422, headers: NO_STORE_HEADERS }
         );
       }
     }
 
     // Captura o vendedor atualmente atribuído (antes da atualização) para detectar troca
-    const vendedorAnterior =
-      String(registro.ranking_vendedor_id || "").trim() || null;
-    const documentoRecibo = String(registro.documento || "").trim();
+    const vendedorAnterior = String(registro.ranking_vendedor_id || '').trim() || null;
+    const documentoRecibo = String(registro.documento || '').trim();
 
     const update: ConciliacaoAssignUpdate = {
-      ranking_assigned_at: new Date().toISOString(),
+      ranking_assigned_at: new Date().toISOString()
     };
 
     if (rankingVendedorId !== undefined) {
@@ -438,11 +435,12 @@ export async function handleConciliacaoAssignPost(event: RequestEvent) {
     }
     if (vendaId !== undefined) update.venda_id = vendaId;
     if (vendaReciboId !== undefined) update.venda_recibo_id = vendaReciboId;
-    if (body && "isBaixaRac" in body) update.is_baixa_rac = isBaixaRac;
-    if (body && "conciliado" in body)
-      update.conciliado = Boolean(body.conciliado);
+    if (body && 'isBaixaRac' in body) update.is_baixa_rac = isBaixaRac;
+    if (body && 'conciliado' in body) update.conciliado = Boolean(body.conciliado);
 
-    const payloadTemValores = CONCILIACAO_VALOR_PAYLOAD_FIELDS.some((field) => body && field in body);
+    const payloadTemValores = CONCILIACAO_VALOR_PAYLOAD_FIELDS.some(
+      (field) => body && field in body
+    );
 
     if (payloadTemValores) {
       const metrics = buildConciliacaoMetrics({
@@ -456,7 +454,7 @@ export async function handleConciliacaoAssignPost(event: RequestEvent) {
         valorVisaoMaster,
         valorOpfax,
         valorSaldo,
-        valorComissaoLoja,
+        valorComissaoLoja
       });
 
       update.valor_lancamentos = valorLancamentos;
@@ -477,9 +475,9 @@ export async function handleConciliacaoAssignPost(event: RequestEvent) {
     }
 
     const { error: updateError } = await client
-      .from("conciliacao_recibos")
+      .from('conciliacao_recibos')
       .update(update)
-      .eq("id", conciliacaoId);
+      .eq('id', conciliacaoId);
 
     if (updateError) throw updateError;
 
@@ -488,9 +486,9 @@ export async function handleConciliacaoAssignPost(event: RequestEvent) {
     const novoVendedor = rankingVendedorId;
     const houveTrocaDeVendedor =
       vendedorAnterior !== null &&
-      vendedorAnterior !== "" &&
+      vendedorAnterior !== '' &&
       novoVendedor !== vendedorAnterior &&
-      "rankingVendedorId" in (body ?? {});
+      'rankingVendedorId' in (body ?? {});
 
     if (houveTrocaDeVendedor) {
       // Log de auditoria (best-effort)
@@ -501,7 +499,7 @@ export async function handleConciliacaoAssignPost(event: RequestEvent) {
         oldValue: vendedorAnterior!,
         newValue: novoVendedor,
         changedByUserId: user.id,
-        documento: documentoRecibo,
+        documento: documentoRecibo
       });
 
       // Notificação por e-mail para gestores/masters (best-effort, não bloqueia)
@@ -513,20 +511,20 @@ export async function handleConciliacaoAssignPost(event: RequestEvent) {
         oldVendedorId: vendedorAnterior!,
         newVendedorId: novoVendedor,
         changedByUserId: user.id,
-        changedByNome: scope.nome || user.id,
+        changedByNome: scope.nome || user.id
       }).catch((err) => {
-        logServerError("CONCILIACAO_ASSIGN_NOTIFY_UNCAUGHT", err);
+        logServerError('CONCILIACAO_ASSIGN_NOTIFY_UNCAUGHT', err);
       });
     }
 
     invalidateSalesReadModels({
       companyIds: registro.company_id ? [registro.company_id] : [],
       vendedorIds: [vendedorAnterior, novoVendedor].filter(Boolean) as string[],
-      userId: user.id,
+      userId: user.id
     });
 
     return json({ ok: true }, { headers: NO_STORE_HEADERS });
   } catch (err) {
-    return toErrorResponse(err, "Erro ao atribuir conciliação.");
+    return toErrorResponse(err, 'Erro ao atribuir conciliação.');
   }
 }

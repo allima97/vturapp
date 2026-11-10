@@ -143,7 +143,13 @@
       width: '110px',
       formatter: (value: string) => getCategoriaBadge(value)
     },
-    { key: 'total_compras', label: 'Compras', sortable: true, align: 'center' as const, width: '90px' },
+    {
+      key: 'total_compras',
+      label: 'Compras',
+      sortable: true,
+      align: 'center' as const,
+      width: '90px'
+    },
     {
       key: 'total_gasto',
       label: 'Total Gasto',
@@ -184,16 +190,21 @@
     loading = true;
 
     try {
-      const data = await apiGet<ClientesRelatorioPayload>('/api/v1/relatorios/clientes', {
-        data_inicio: dataInicio,
-        data_fim: dataFim,
-        empresa_id: empresaSelecionada || undefined,
-        vendedor_id: vendedorSelecionado || undefined,
-        categoria: categoriaSelecionada || undefined,
-        ordenacao,
-        items_limit: RELATORIO_PAGE_SIZE,
-        items_offset: 0
-      }, controller.signal, 90_000);
+      const data = await apiGet<ClientesRelatorioPayload>(
+        '/api/v1/relatorios/clientes',
+        {
+          data_inicio: dataInicio,
+          data_fim: dataFim,
+          empresa_id: empresaSelecionada || undefined,
+          vendedor_id: vendedorSelecionado || undefined,
+          categoria: categoriaSelecionada || undefined,
+          ordenacao,
+          items_limit: RELATORIO_PAGE_SIZE,
+          items_offset: 0
+        },
+        controller.signal,
+        90_000
+      );
       if (requestSeq !== relatorioRequestSeq) return;
       clientes = data.items || [];
       totalRelatorioItems = Number(data.total || clientes.length || 0);
@@ -245,16 +256,21 @@
     loadingMore = true;
 
     try {
-      const data = await apiGet<ClientesRelatorioPayload>('/api/v1/relatorios/clientes', {
-        data_inicio: dataInicio,
-        data_fim: dataFim,
-        empresa_id: empresaSelecionada || undefined,
-        vendedor_id: vendedorSelecionado || undefined,
-        categoria: categoriaSelecionada || undefined,
-        ordenacao,
-        items_limit: RELATORIO_PAGE_SIZE,
-        items_offset: clientes.length
-      }, controller.signal, 90_000);
+      const data = await apiGet<ClientesRelatorioPayload>(
+        '/api/v1/relatorios/clientes',
+        {
+          data_inicio: dataInicio,
+          data_fim: dataFim,
+          empresa_id: empresaSelecionada || undefined,
+          vendedor_id: vendedorSelecionado || undefined,
+          categoria: categoriaSelecionada || undefined,
+          ordenacao,
+          items_limit: RELATORIO_PAGE_SIZE,
+          items_offset: clientes.length
+        },
+        controller.signal,
+        90_000
+      );
 
       clientes = [...clientes, ...(data.items || [])];
       totalRelatorioItems = Number(data.total || totalRelatorioItems || clientes.length);
@@ -319,7 +335,15 @@
       return;
     }
 
-    const headers = ['Cliente', 'Categoria', 'Compras', 'Total Gasto', 'Ticket Médio', 'Frequência', 'Última Compra'];
+    const headers = [
+      'Cliente',
+      'Categoria',
+      'Compras',
+      'Total Gasto',
+      'Ticket Médio',
+      'Frequência',
+      'Última Compra'
+    ];
     const rows = clientesFiltrados.map((cliente) => [
       cliente.cliente,
       cliente.categoria,
@@ -389,7 +413,8 @@
 
   // Regra de escopo: vendedor/uso individual não escolhe empresa ou vendedor global.
   $: showEmpresaFiltro = !$permissoes.ready || $permissoes.isSystemAdmin || $permissoes.isMaster;
-  $: showVendedorFiltro = !$permissoes.ready || (!$permissoes.isVendedor && !$permissoes.usoIndividual);
+  $: showVendedorFiltro =
+    !$permissoes.ready || (!$permissoes.isVendedor && !$permissoes.usoIndividual);
 
   $: if ($permissoes.ready && !showEmpresaFiltro && empresaSelecionada) empresaSelecionada = '';
   $: if ($permissoes.ready && !showVendedorFiltro && vendedorSelecionado) vendedorSelecionado = '';
@@ -405,7 +430,7 @@
     vendedorSelecionado,
     categoriaSelecionada,
     ordenacao
-    ].join('|');
+  ].join('|');
 
   $: if (autoReloadEnabled && autoReloadKey !== lastAutoReloadKey) {
     lastAutoReloadKey = autoReloadKey;
@@ -422,10 +447,7 @@
   subtitle="Analise de clientes e historico de compras"
   color="financeiro"
   actions={[{ label: 'Voltar', href: '/relatorios', variant: 'secondary', icon: ArrowLeft }]}
-  breadcrumbs={[
-    { label: 'Relatorios', href: '/relatorios' },
-    { label: 'Clientes' }
-  ]}
+  breadcrumbs={[{ label: 'Relatorios', href: '/relatorios' }, { label: 'Clientes' }]}
 />
 
 <!-- Mobile: botão de filtros -->
@@ -434,7 +456,7 @@
     <SlidersHorizontal size={16} class="mr-2" />
     Filtros
     {#if empresaSelecionada || vendedorSelecionado || categoriaSelecionada}
-      <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-financeiro-500"></span>
+      <span class="bg-financeiro-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
     {/if}
   </Button>
 </div>
@@ -481,7 +503,10 @@
       id="rel-clientes-empresa"
       label="Empresa"
       bind:value={empresaSelecionada}
-      options={[{ value: '', label: 'Todas' }, ...empresas.map((empresa) => ({ value: empresa.id, label: empresa.nome }))]}
+      options={[
+        { value: '', label: 'Todas' },
+        ...empresas.map((empresa) => ({ value: empresa.id, label: empresa.nome }))
+      ]}
       placeholder={null}
       class_name="w-full"
     />
@@ -491,7 +516,10 @@
       id="rel-clientes-vendedor"
       label="Vendedor"
       bind:value={vendedorSelecionado}
-      options={[{ value: '', label: 'Todos' }, ...vendedores.map((vendedor) => ({ value: vendedor.id, label: vendedor.nome }))]}
+      options={[
+        { value: '', label: 'Todos' },
+        ...vendedores.map((vendedor) => ({ value: vendedor.id, label: vendedor.nome }))
+      ]}
       placeholder={null}
       class_name="w-full"
     />
@@ -567,7 +595,10 @@
         id="rel-clientes-empresa-mobile"
         label="Empresa"
         bind:value={empresaSelecionada}
-        options={[{ value: '', label: 'Todas' }, ...empresas.map((empresa) => ({ value: empresa.id, label: empresa.nome }))]}
+        options={[
+          { value: '', label: 'Todas' },
+          ...empresas.map((empresa) => ({ value: empresa.id, label: empresa.nome }))
+        ]}
         placeholder={null}
         class_name="w-full"
       />
@@ -577,7 +608,10 @@
         id="rel-clientes-vendedor-mobile"
         label="Vendedor"
         bind:value={vendedorSelecionado}
-        options={[{ value: '', label: 'Todos' }, ...vendedores.map((vendedor) => ({ value: vendedor.id, label: vendedor.nome }))]}
+        options={[
+          { value: '', label: 'Todos' },
+          ...vendedores.map((vendedor) => ({ value: vendedor.id, label: vendedor.nome }))
+        ]}
         placeholder={null}
         class_name="w-full"
       />
@@ -616,24 +650,44 @@
 
 <div class="vtur-kpi-grid mb-6">
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500"><Users size={20} /></div>
-    <div><p class="text-sm font-medium text-slate-500">Total de Clientes</p><p class="text-2xl font-bold text-slate-900">{totalClientes}</p></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
+      <Users size={20} />
+    </div>
+    <div>
+      <p class="text-sm font-medium text-slate-500">Total de Clientes</p>
+      <p class="text-2xl font-bold text-slate-900">{totalClientes}</p>
+    </div>
   </div>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500"><Wallet size={20} /></div>
-    <div><p class="text-sm font-medium text-slate-500">Receita Total</p><p class="text-2xl font-bold text-slate-900">{formatCurrency(totalGasto)}</p></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
+      <Wallet size={20} />
+    </div>
+    <div>
+      <p class="text-sm font-medium text-slate-500">Receita Total</p>
+      <p class="text-2xl font-bold text-slate-900">{formatCurrency(totalGasto)}</p>
+    </div>
   </div>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500"><TrendingUp size={20} /></div>
-    <div><p class="text-sm font-medium text-slate-500">Ticket Médio</p><p class="text-2xl font-bold text-slate-900">{formatCurrency(ticketMedioGeral)}</p></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+      <TrendingUp size={20} />
+    </div>
+    <div>
+      <p class="text-sm font-medium text-slate-500">Ticket Médio</p>
+      <p class="text-2xl font-bold text-slate-900">{formatCurrency(ticketMedioGeral)}</p>
+    </div>
   </div>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-500"><Star size={20} /></div>
-    <div><p class="text-sm font-medium text-slate-500">Clientes VIP</p><p class="text-2xl font-bold text-slate-900">{clientesVIP}</p></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-500">
+      <Star size={20} />
+    </div>
+    <div>
+      <p class="text-sm font-medium text-slate-500">Clientes VIP</p>
+      <p class="text-2xl font-bold text-slate-900">{clientesVIP}</p>
+    </div>
   </div>
 </div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+<div class="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
   <Card header="Clientes por Categoria" color="financeiro">
     <ChartJS type="doughnut" data={categoriasData} height={250} />
   </Card>
@@ -643,8 +697,13 @@
 </div>
 
 {#if relatorioTruncado}
-  <div class="mb-4 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:flex-row sm:items-center sm:justify-between">
-    <span>Exibindo {clientes.length} de {totalRelatorioItems} clientes. Carregue mais somente quando precisar detalhar/exportar mais linhas.</span>
+  <div
+    class="mb-4 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:flex-row sm:items-center sm:justify-between"
+  >
+    <span
+      >Exibindo {clientes.length} de {totalRelatorioItems} clientes. Carregue mais somente quando precisar
+      detalhar/exportar mais linhas.</span
+    >
     <Button variant="secondary" size="sm" disabled={loadingMore} on:click={loadMoreRelatorio}>
       {loadingMore ? 'Carregando...' : 'Carregar mais'}
     </Button>

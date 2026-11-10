@@ -31,13 +31,17 @@ describe('relatórios legados → rota nova', () => {
     [handleRelatoriosRankingVendasGet, 'ranking'],
     [handleRelatoriosVendasPorClienteGet, 'clientes'],
     [handleRelatoriosVendasPorDestinoGet, 'destinos'],
-    [handleRelatoriosVendasPorProdutoGet, 'produtos'],
+    [handleRelatoriosVendasPorProdutoGet, 'produtos']
   ])('%#', async (handler, name) => {
     seen.length = 0;
     const res = await handler(ev('inicio=2026-09-01&fim=2026-09-30&company_id=c1'));
     expect(await res.text()).toBe(name);
     expect(seen).toEqual([
-      { name, search: '?inicio=2026-09-01&fim=2026-09-30&company_id=c1&data_inicio=2026-09-01&data_fim=2026-09-30&empresa_id=c1' },
+      {
+        name,
+        search:
+          '?inicio=2026-09-01&fim=2026-09-30&company_id=c1&data_inicio=2026-09-01&data_fim=2026-09-30&empresa_id=c1'
+      }
     ]);
   });
 

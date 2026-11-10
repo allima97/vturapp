@@ -27,16 +27,27 @@
   };
 
   const TIPO_LABEL: Record<string, string> = {
-    acesso: 'Acesso', portabilidade: 'Portabilidade', retificacao: 'Retificação',
-    eliminacao: 'Eliminação', revogacao: 'Revogação', oposicao: 'Oposição', informacao: 'Informação'
+    acesso: 'Acesso',
+    portabilidade: 'Portabilidade',
+    retificacao: 'Retificação',
+    eliminacao: 'Eliminação',
+    revogacao: 'Revogação',
+    oposicao: 'Oposição',
+    informacao: 'Informação'
   };
 
   const STATUS_LABEL: Record<string, string> = {
-    recebida: 'Recebida', em_analise: 'Em análise', concluida: 'Concluída', recusada: 'Recusada'
+    recebida: 'Recebida',
+    em_analise: 'Em análise',
+    concluida: 'Concluída',
+    recusada: 'Recusada'
   };
 
   const STATUS_COR: Record<string, string> = {
-    recebida: 'badge-warn', em_analise: 'badge-info', concluida: 'badge-ok', recusada: 'badge-err'
+    recebida: 'badge-warn',
+    em_analise: 'badge-info',
+    concluida: 'badge-ok',
+    recusada: 'badge-err'
   };
 
   let aba = $state<'solicitacoes' | 'atividades' | 'anonimizar'>('solicitacoes');
@@ -64,11 +75,14 @@
     erroGlobal = '';
     try {
       const r = await fetch('/api/v1/lgpd/admin/solicitacoes');
-      const d = await r.json();
+      const d: any = await r.json();
       if (r.ok) solicitacoes = d.items;
       else erroGlobal = d.error || 'Erro ao carregar.';
-    } catch { erroGlobal = 'Falha de conexão.'; }
-    finally { carregando = false; }
+    } catch {
+      erroGlobal = 'Falha de conexão.';
+    } finally {
+      carregando = false;
+    }
   }
 
   async function carregarAtividades() {
@@ -76,11 +90,14 @@
     erroGlobal = '';
     try {
       const r = await fetch('/api/v1/lgpd/admin/atividades');
-      const d = await r.json();
+      const d: any = await r.json();
       if (r.ok) atividades = d.atividades;
       else erroGlobal = d.error || 'Erro ao carregar.';
-    } catch { erroGlobal = 'Falha de conexão.'; }
-    finally { carregando = false; }
+    } catch {
+      erroGlobal = 'Falha de conexão.';
+    } finally {
+      carregando = false;
+    }
   }
 
   async function salvarResposta() {
@@ -93,7 +110,7 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: novoStatus, resposta })
       });
-      const d = await r.json();
+      const d: any = await r.json();
       if (r.ok) {
         msgResposta = '✅ Atualizado com sucesso.';
         await carregarSolicitacoes();
@@ -102,8 +119,11 @@
       } else {
         msgResposta = `❌ ${d.error || 'Erro.'}`;
       }
-    } catch { msgResposta = '❌ Falha de conexão.'; }
-    finally { salvando = false; }
+    } catch {
+      msgResposta = '❌ Falha de conexão.';
+    } finally {
+      salvando = false;
+    }
   }
 
   async function executarAnonimizacao() {
@@ -114,13 +134,23 @@
       const r = await fetch('/api/v1/lgpd/admin/anonimizar', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tipo: anonTipo, id: anonId.trim(), protocolo_solicitacao: anonProtocolo.trim() || undefined })
+        body: JSON.stringify({
+          tipo: anonTipo,
+          id: anonId.trim(),
+          protocolo_solicitacao: anonProtocolo.trim() || undefined
+        })
       });
-      const d = await r.json();
+      const d: any = await r.json();
       msgAnon = r.ok ? `✅ ${d.mensagem}` : `❌ ${d.error || 'Erro.'}`;
-      if (r.ok) { anonId = ''; anonProtocolo = ''; }
-    } catch { msgAnon = '❌ Falha de conexão.'; }
-    finally { anonizando = false; }
+      if (r.ok) {
+        anonId = '';
+        anonProtocolo = '';
+      }
+    } catch {
+      msgAnon = '❌ Falha de conexão.';
+    } finally {
+      anonizando = false;
+    }
   }
 
   $effect(() => {
@@ -129,7 +159,11 @@
   });
 
   function dataFormatada(iso: string) {
-    return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return new Date(iso).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
   }
 
   function abrirResponder(s: Solicitacao) {
@@ -152,13 +186,13 @@
 
   <!-- Abas -->
   <div class="abas">
-    <button class="aba" class:ativa={aba === 'solicitacoes'} onclick={() => aba = 'solicitacoes'}>
+    <button class="aba" class:ativa={aba === 'solicitacoes'} onclick={() => (aba = 'solicitacoes')}>
       Solicitações de Titulares
     </button>
-    <button class="aba" class:ativa={aba === 'atividades'} onclick={() => aba = 'atividades'}>
+    <button class="aba" class:ativa={aba === 'atividades'} onclick={() => (aba = 'atividades')}>
       Atividades de Tratamento (ROPA)
     </button>
-    <button class="aba" class:ativa={aba === 'anonimizar'} onclick={() => aba = 'anonimizar'}>
+    <button class="aba" class:ativa={aba === 'anonimizar'} onclick={() => (aba = 'anonimizar')}>
       Anonimizar Dados
     </button>
   </div>
@@ -172,7 +206,9 @@
     <div class="secao">
       <div class="secao-header">
         <h2>Solicitações — Art. 18 LGPD</h2>
-        <button class="btn-sec" onclick={carregarSolicitacoes} disabled={carregando}>↺ Atualizar</button>
+        <button class="btn-sec" onclick={carregarSolicitacoes} disabled={carregando}
+          >↺ Atualizar</button
+        >
       </div>
       {#if carregando}
         <p class="info-text">Carregando...</p>
@@ -183,7 +219,8 @@
           <table>
             <thead>
               <tr>
-                <th>Data</th><th>Titular</th><th>Tipo</th><th>Status</th><th>Prazo</th><th>Ações</th>
+                <th>Data</th><th>Titular</th><th>Tipo</th><th>Status</th><th>Prazo</th><th>Ações</th
+                >
               </tr>
             </thead>
             <tbody>
@@ -191,14 +228,18 @@
                 <tr class={s.prazo_vencido ? 'row-vencida' : ''}>
                   <td>{dataFormatada(s.created_at)}</td>
                   <td>
-                    <strong>{s.titular_nome}</strong><br/>
+                    <strong>{s.titular_nome}</strong><br />
                     <small>{s.titular_email}</small>
                   </td>
                   <td><span class="badge">{TIPO_LABEL[s.tipo] ?? s.tipo}</span></td>
-                  <td><span class="badge {STATUS_COR[s.status]}">{STATUS_LABEL[s.status] ?? s.status}</span></td>
+                  <td
+                    ><span class="badge {STATUS_COR[s.status]}"
+                      >{STATUS_LABEL[s.status] ?? s.status}</span
+                    ></td
+                  >
                   <td class={s.prazo_vencido ? 'prazo-vencido' : ''}>
                     {dataFormatada(s.prazo_legal)}
-                    {#if s.prazo_vencido}<br/><small>⚠️ VENCIDO</small>{/if}
+                    {#if s.prazo_vencido}<br /><small>⚠️ VENCIDO</small>{/if}
                   </td>
                   <td>
                     {#if s.status !== 'concluida' && s.status !== 'recusada'}
@@ -216,25 +257,34 @@
 
       <!-- Modal de resposta -->
       {#if respondendo}
-        <div class="modal-overlay" onclick={() => respondendo = null}>
-          <div class="modal" onclick={(e) => e.stopPropagation()}>
+        <div class="modal-overlay" role="presentation" onclick={() => (respondendo = null)}>
+          <div class="modal" role="presentation" onclick={(e) => e.stopPropagation()}>
             <h3>Responder Solicitação</h3>
             {#if msgResposta}<p class="msg-resultado">{msgResposta}</p>{/if}
             <div class="field">
-              <label>Novo Status</label>
-              <select bind:value={novoStatus}>
+              <label for="lgpd-novo-status">Novo Status</label>
+              <select id="lgpd-novo-status" bind:value={novoStatus}>
                 <option value="em_analise">Em Análise</option>
                 <option value="concluida">Concluída</option>
                 <option value="recusada">Recusada</option>
               </select>
             </div>
             <div class="field">
-              <label>Resposta ao titular *</label>
-              <textarea bind:value={resposta} rows={5} placeholder="Descreva a ação tomada..."></textarea>
+              <label for="lgpd-resposta">Resposta ao titular *</label>
+              <textarea
+                id="lgpd-resposta"
+                bind:value={resposta}
+                rows={5}
+                placeholder="Descreva a ação tomada..."
+              ></textarea>
             </div>
             <div class="modal-btns">
-              <button class="btn-ghost" onclick={() => respondendo = null}>Cancelar</button>
-              <button class="btn-primary" onclick={salvarResposta} disabled={salvando || !resposta.trim()}>
+              <button class="btn-ghost" onclick={() => (respondendo = null)}>Cancelar</button>
+              <button
+                class="btn-primary"
+                onclick={salvarResposta}
+                disabled={salvando || !resposta.trim()}
+              >
                 {salvando ? 'Salvando...' : 'Salvar Resposta'}
               </button>
             </div>
@@ -249,7 +299,9 @@
     <div class="secao">
       <div class="secao-header">
         <h2>Registro de Atividades de Tratamento — Art. 37</h2>
-        <button class="btn-sec" onclick={carregarAtividades} disabled={carregando}>↺ Atualizar</button>
+        <button class="btn-sec" onclick={carregarAtividades} disabled={carregando}
+          >↺ Atualizar</button
+        >
       </div>
       {#if carregando}
         <p class="info-text">Carregando...</p>
@@ -259,7 +311,11 @@
         <div class="tabela-wrap">
           <table>
             <thead>
-              <tr><th>Atividade</th><th>Finalidade</th><th>Base Legal</th><th>Dados</th><th>Retenção</th><th>Ativo</th></tr>
+              <tr
+                ><th>Atividade</th><th>Finalidade</th><th>Base Legal</th><th>Dados</th><th
+                  >Retenção</th
+                ><th>Ativo</th></tr
+              >
             </thead>
             <tbody>
               {#each atividades as a}
@@ -284,30 +340,47 @@
     <div class="secao">
       <h2>Anonimizar Dados — Art. 18, IV/VI</h2>
       <p class="info-text">
-        A anonimização substitui os dados pessoais por <code>[ANONIMIZADO-LGPD]</code>,
-        tornando o titular irreversivamente não identificável, sem excluir os registros de negócio.
+        A anonimização substitui os dados pessoais por <code>[ANONIMIZADO-LGPD]</code>, tornando o
+        titular irreversivamente não identificável, sem excluir os registros de negócio.
       </p>
-      {#if msgAnon}<div class="alert {msgAnon.startsWith('✅') ? 'alert-ok' : 'alert-error'}">{msgAnon}</div>{/if}
+      {#if msgAnon}<div class="alert {msgAnon.startsWith('✅') ? 'alert-ok' : 'alert-error'}">
+          {msgAnon}
+        </div>{/if}
       <div class="form-anon">
         <div class="field">
-          <label>Tipo de entidade</label>
-          <select bind:value={anonTipo}>
+          <label for="lgpd-anon-tipo">Tipo de entidade</label>
+          <select id="lgpd-anon-tipo" bind:value={anonTipo}>
             <option value="cliente">Cliente</option>
             <option value="acompanhante">Acompanhante</option>
           </select>
         </div>
         <div class="field">
-          <label>ID do {anonTipo} (UUID) *</label>
-          <input type="text" bind:value={anonId} placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+          <label for="lgpd-anon-id">ID do {anonTipo} (UUID) *</label>
+          <input
+            id="lgpd-anon-id"
+            type="text"
+            bind:value={anonId}
+            placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+          />
         </div>
         <div class="field">
-          <label>Protocolo da solicitação LGPD (opcional)</label>
-          <input type="text" bind:value={anonProtocolo} placeholder="UUID da solicitação para vincular" />
+          <label for="lgpd-anon-protocolo">Protocolo da solicitação LGPD (opcional)</label>
+          <input
+            id="lgpd-anon-protocolo"
+            type="text"
+            bind:value={anonProtocolo}
+            placeholder="UUID da solicitação para vincular"
+          />
         </div>
         <div class="confirm-warn">
-          ⚠️ <strong>Esta operação é irreversível.</strong> Confirme que obteve a solicitação formal do titular.
+          ⚠️ <strong>Esta operação é irreversível.</strong> Confirme que obteve a solicitação formal do
+          titular.
         </div>
-        <button class="btn-danger" onclick={executarAnonimizacao} disabled={anonizando || !anonId.trim()}>
+        <button
+          class="btn-danger"
+          onclick={executarAnonimizacao}
+          disabled={anonizando || !anonId.trim()}
+        >
           {anonizando ? 'Anonimizando...' : 'Anonimizar Dados'}
         </button>
       </div>
@@ -377,7 +450,8 @@
     margin-bottom: 1rem;
   }
 
-  .secao-header h2, .secao > h2 {
+  .secao-header h2,
+  .secao > h2 {
     font-size: 1rem;
     font-weight: 700;
     margin: 0 0 0.75rem;
@@ -426,10 +500,22 @@
     color: #374151;
   }
 
-  .badge-warn { background: #fef3c7; color: #92400e; }
-  .badge-info { background: #dbeafe; color: #1e40af; }
-  .badge-ok   { background: #d1fae5; color: #065f46; }
-  .badge-err  { background: #fee2e2; color: #991b1b; }
+  .badge-warn {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  .badge-info {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+  .badge-ok {
+    background: #d1fae5;
+    color: #065f46;
+  }
+  .badge-err {
+    background: #fee2e2;
+    color: #991b1b;
+  }
 
   .btn-sm {
     padding: 0.25rem 0.75rem;
@@ -441,7 +527,9 @@
     cursor: pointer;
   }
 
-  .btn-sm:hover { background: #eff6ff; }
+  .btn-sm:hover {
+    background: #eff6ff;
+  }
 
   .btn-sec {
     padding: 0.35rem 0.75rem;
@@ -452,7 +540,9 @@
     cursor: pointer;
   }
 
-  .btn-sec:hover { background: #f9fafb; }
+  .btn-sec:hover {
+    background: #f9fafb;
+  }
 
   .btn-primary {
     background: #2563eb;
@@ -465,8 +555,13 @@
     cursor: pointer;
   }
 
-  .btn-primary:hover:not(:disabled) { background: #1d4ed8; }
-  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-primary:hover:not(:disabled) {
+    background: #1d4ed8;
+  }
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 
   .btn-ghost {
     background: none;
@@ -488,14 +583,19 @@
     cursor: pointer;
   }
 
-  .btn-danger:hover:not(:disabled) { background: #b91c1c; }
-  .btn-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-danger:hover:not(:disabled) {
+    background: #b91c1c;
+  }
+  .btn-danger:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
 
   /* Modal */
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.4);
+    background: rgba(0, 0, 0, 0.4);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -567,12 +667,26 @@
     margin-bottom: 1rem;
   }
 
-  .alert-error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
-  .alert-ok    { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+  .alert-error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+  }
+  .alert-ok {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+  }
 
-  .info-text { color: #6b7280; font-size: 0.88rem; }
+  .info-text {
+    color: #6b7280;
+    font-size: 0.88rem;
+  }
 
-  .msg-resultado { font-size: 0.88rem; margin-bottom: 0.75rem; }
+  .msg-resultado {
+    font-size: 0.88rem;
+    margin-bottom: 0.75rem;
+  }
 
   code {
     background: #f1f5f9;

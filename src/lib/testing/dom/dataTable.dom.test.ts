@@ -9,7 +9,7 @@ let target: HTMLElement | null = null;
 const data = [
   { id: 'a', nome: 'Ana', cidade: 'Lisboa' },
   { id: 'b', nome: 'Bruno', cidade: 'Rio' },
-  { id: 'c', nome: 'Carla', cidade: 'Lisboa' },
+  { id: 'c', nome: 'Carla', cidade: 'Lisboa' }
 ];
 
 function montar(props: Record<string, unknown> = {}) {
@@ -22,11 +22,11 @@ function montar(props: Record<string, unknown> = {}) {
       data,
       columns: [
         { key: 'nome', label: 'Nome', sortable: true },
-        { key: 'cidade', label: 'Cidade' },
+        { key: 'cidade', label: 'Cidade' }
       ],
       filters: [{ key: 'cidade', label: 'Cidade', type: 'text' }],
-      ...props,
-    },
+      ...props
+    }
   });
   flushSync();
 }
@@ -48,7 +48,9 @@ describe('DataTable: acessibilidade', () => {
 
   it('botão Filtros diz se o painel está aberto e aponta para ele', async () => {
     montar();
-    const botao = [...document.querySelectorAll('button')].find((b) => b.textContent?.includes('Filtros') && b.hasAttribute('aria-controls'))!;
+    const botao = [...document.querySelectorAll('button')].find(
+      (b) => b.textContent?.includes('Filtros') && b.hasAttribute('aria-controls')
+    )!;
     expect(botao.getAttribute('aria-expanded')).toBe('false');
     botao.click();
     flushSync();
@@ -77,7 +79,9 @@ describe('DataTable: acessibilidade', () => {
     busca.dispatchEvent(new Event('input', { bubbles: true }));
     flushSync();
     await tick();
-    expect(document.querySelector('[role="status"]')?.textContent?.trim()).toBe('2 registros encontrados');
+    expect(document.querySelector('[role="status"]')?.textContent?.trim()).toBe(
+      '2 registros encontrados'
+    );
     expect(document.querySelectorAll('tbody tr')).toHaveLength(2);
 
     const th = document.querySelector('th[aria-sort]')!;

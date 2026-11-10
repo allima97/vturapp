@@ -13,11 +13,18 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./root', () => ({ handlePagamentosGet: spy('handlePagamentosGet'), handlePagamentosPost: spy('handlePagamentosPost') }));
-vi.mock('./id', () => ({ handlePagamentosIdGet: spy('handlePagamentosIdGet'), handlePagamentosIdPatch: spy('handlePagamentosIdPatch'), handlePagamentosIdDelete: spy('handlePagamentosIdDelete') }));
+vi.mock('./root', () => ({
+  handlePagamentosGet: spy('handlePagamentosGet'),
+  handlePagamentosPost: spy('handlePagamentosPost')
+}));
+vi.mock('./id', () => ({
+  handlePagamentosIdGet: spy('handlePagamentosIdGet'),
+  handlePagamentosIdPatch: spy('handlePagamentosIdPatch'),
+  handlePagamentosIdDelete: spy('handlePagamentosIdDelete')
+}));
 vi.mock('./upload', () => ({ handlePagamentosUploadPost: spy('handlePagamentosUploadPost') }));
 
 import { apiApp } from '../../app';
@@ -26,16 +33,16 @@ import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/pagamentos', 'handlePagamentosGet', {}],
   ['POST', '/api/v1/pagamentos', 'handlePagamentosPost', {}],
-  ['GET', '/api/v1/pagamentos/id-123', 'handlePagamentosIdGet', {"id": "id-123"}],
-  ['PATCH', '/api/v1/pagamentos/id-123', 'handlePagamentosIdPatch', {"id": "id-123"}],
-  ['DELETE', '/api/v1/pagamentos/id-123', 'handlePagamentosIdDelete', {"id": "id-123"}],
-  ['POST', '/api/v1/pagamentos/upload', 'handlePagamentosUploadPost', {}],
+  ['GET', '/api/v1/pagamentos/id-123', 'handlePagamentosIdGet', { id: 'id-123' }],
+  ['PATCH', '/api/v1/pagamentos/id-123', 'handlePagamentosIdPatch', { id: 'id-123' }],
+  ['DELETE', '/api/v1/pagamentos/id-123', 'handlePagamentosIdDelete', { id: 'id-123' }],
+  ['POST', '/api/v1/pagamentos/upload', 'handlePagamentosUploadPost', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/pagamentos'],
   ['PUT', '/api/v1/pagamentos/id-123'],
-  ['PUT', '/api/v1/pagamentos/upload'],
+  ['PUT', '/api/v1/pagamentos/upload']
 ];
 
 function ev(method: string, path: string) {

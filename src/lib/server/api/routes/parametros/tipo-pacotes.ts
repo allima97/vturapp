@@ -95,9 +95,13 @@ export async function handleParametrosTipoPacotesPost(event: RequestEvent) {
     const { id, nome, ativo } = body;
     const idRaw = String(id || '').trim();
 
-    const nomeTrimmed = String(nome || '').trim().slice(0, 120);
-    if (!nomeTrimmed) return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
-    if (idRaw && !isUuid(idRaw)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    const nomeTrimmed = String(nome || '')
+      .trim()
+      .slice(0, 120);
+    if (!nomeTrimmed)
+      return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (idRaw && !isUuid(idRaw))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
     const nomeBusca = sanitizePostgrestSearchTerm(nomeTrimmed, 120);
 
     // Verifica duplicata
@@ -108,7 +112,10 @@ export async function handleParametrosTipoPacotesPost(event: RequestEvent) {
       .limit(1);
 
     if (existing && existing.length > 0 && existing[0].id !== idRaw) {
-      return json({ error: 'Já existe um tipo de pacote com este nome.' }, { status: 409, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Já existe um tipo de pacote com este nome.' },
+        { status: 409, headers: NO_STORE_HEADERS }
+      );
     }
 
     const payload = {
@@ -118,11 +125,20 @@ export async function handleParametrosTipoPacotesPost(event: RequestEvent) {
 
     let result;
     if (idRaw && isUuid(idRaw)) {
-      const { data: updated, error: updateError } = await client.from('tipo_pacotes').update(payload).eq('id', idRaw).select('id').single();
+      const { data: updated, error: updateError } = await client
+        .from('tipo_pacotes')
+        .update(payload)
+        .eq('id', idRaw)
+        .select('id')
+        .single();
       if (updateError) throw updateError;
       result = updated;
     } else {
-      const { data: inserted, error: insertError } = await client.from('tipo_pacotes').insert(payload).select('id').single();
+      const { data: inserted, error: insertError } = await client
+        .from('tipo_pacotes')
+        .insert(payload)
+        .select('id')
+        .single();
       if (insertError) throw insertError;
       result = inserted;
     }
@@ -148,7 +164,8 @@ export async function handleParametrosTipoPacotesDelete(event: RequestEvent) {
     }
 
     const id = String(event.url.searchParams.get('id') || '').trim();
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const { error: deleteError } = await client.from('tipo_pacotes').delete().eq('id', id);
     if (deleteError) throw deleteError;

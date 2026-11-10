@@ -376,9 +376,7 @@ layer(base);
   --color-orcamentos-600: #2563eb;
   --color-orcamentos-700: #1d4ed8;
 
-  --font-sans:
-    'Source Sans 3', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
-    sans-serif;
+  --font-sans: 'Source Sans 3', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
 
   --shadow-vtur: 0 1px 3px rgba(0, 0, 0, 0.1);
   --shadow-vtur-lg: 0 14px 34px rgba(9, 17, 46, 0.06);
@@ -398,12 +396,10 @@ layer(base);
   color utility to any element that depends on these defaults.
 */
 
-
 /*
   Compatibilidade com o Tailwind 3: `ring`/`ring-1`/`ring-2` sem cor usavam azul 500 a 50%.
   No Tailwind 4 a cor padrão é `currentcolor`. Utilitários de cor de ring continuam valendo.
 */
-
 
 /*
   Compatibilidade com o preflight do Tailwind 3 (itens da migração que mudam o visual):
@@ -413,144 +409,149 @@ layer(base);
   - <dialog> centralizado (o v4 zera a margem).
 */
 
-
 /*
   Compatibilidade: campos de data/hora com a mesma altura do Tailwind 3
   (o preflight do v4 zera o padding interno desses campos no Chrome/Safari).
 */
 
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentcolor);
-  }
+*,
+::after,
+::before,
+::backdrop,
+::file-selector-button {
+  border-color: var(--color-gray-200, currentcolor);
+}
 
-  *,
-  ::after,
-  ::before,
-  ::backdrop {
-    --tw-ring-color: rgb(59 130 246 / 0.5);
-  }
+*,
+::after,
+::before,
+::backdrop {
+  --tw-ring-color: rgb(59 130 246 / 0.5);
+}
 
-  input::placeholder,
-  textarea::placeholder {
-    color: var(--color-gray-400);
-  }
-  button:not(:disabled),
-  [role='button']:not(:disabled) {
-    cursor: pointer;
-  }
-  input,
-  select,
-  textarea {
-    background-color: revert;
-  }
-  dialog {
-    margin: auto;
-  }
-  /* O preflight do v3 punha cursor padrão em elementos desabilitados. */
-  :disabled {
-    cursor: default;
-  }
-  /* O v4 zera margin/padding de todos os elementos; o v3 mantinha o padrão do navegador
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-gray-400);
+}
+button:not(:disabled),
+[role='button']:not(:disabled) {
+  cursor: pointer;
+}
+input,
+select,
+textarea {
+  background-color: revert;
+}
+dialog {
+  margin: auto;
+}
+/* O preflight do v3 punha cursor padrão em elementos desabilitados. */
+:disabled {
+  cursor: default;
+}
+/* O v4 zera margin/padding de todos os elementos; o v3 mantinha o padrão do navegador
      em células de tabela (1px) e opções de select. */
-  td,
-  th {
-    padding: 1px; /* padrão do navegador (dica de apresentação da tabela) */
-  }
-  option {
-    padding: revert;
-  }
-  /* O v4 força opacity: 1 nos campos; o v3 mantinha o padrão do navegador (select desabilitado a 70%). */
-  button,
-  input,
-  select,
-  optgroup,
-  textarea {
-    opacity: revert;
-  }
+td,
+th {
+  padding: 1px; /* padrão do navegador (dica de apresentação da tabela) */
+}
+option {
+  padding: revert;
+}
+/* O v4 força opacity: 1 nos campos; o v3 mantinha o padrão do navegador (select desabilitado a 70%). */
+button,
+input,
+select,
+optgroup,
+textarea {
+  opacity: revert;
+}
 
-  ::-webkit-date-and-time-value {
-    min-height: revert;
-  }
-  ::-webkit-datetime-edit {
-    display: revert;
-  }
-  ::-webkit-datetime-edit-fields-wrapper,
-  ::-webkit-datetime-edit,
-  ::-webkit-datetime-edit-year-field,
-  ::-webkit-datetime-edit-month-field,
-  ::-webkit-datetime-edit-day-field,
-  ::-webkit-datetime-edit-hour-field,
-  ::-webkit-datetime-edit-minute-field,
-  ::-webkit-datetime-edit-second-field,
-  ::-webkit-datetime-edit-millisecond-field,
-  ::-webkit-datetime-edit-meridiem-field {
-    padding: revert;
-  }
+::-webkit-date-and-time-value {
+  min-height: revert;
+}
+::-webkit-datetime-edit {
+  display: revert;
+}
+::-webkit-datetime-edit-fields-wrapper,
+::-webkit-datetime-edit,
+::-webkit-datetime-edit-year-field,
+::-webkit-datetime-edit-month-field,
+::-webkit-datetime-edit-day-field,
+::-webkit-datetime-edit-hour-field,
+::-webkit-datetime-edit-minute-field,
+::-webkit-datetime-edit-second-field,
+::-webkit-datetime-edit-millisecond-field,
+::-webkit-datetime-edit-meridiem-field {
+  padding: revert;
+}
 
 /* ===== base (era @layer base) ===== */
 
-  html {
-    font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 14px;
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-    /* Evita scroll horizontal em todo o app */
-    overflow-x: hidden;
-    max-width: 100vw;
-  }
+html {
+  font-family:
+    'Source Sans 3',
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  /* Evita scroll horizontal em todo o app */
+  overflow-x: hidden;
+  max-width: 100vw;
+}
 
-  body {
-    margin: 0;
-    background-color: var(--vtur-bg);
-    background-image:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.96)),
-      radial-gradient(circle at 14% 12%, rgba(86, 48, 255, 0.1), transparent 28%),
-      radial-gradient(circle at 84% 16%, rgba(56, 189, 248, 0.08), transparent 28%);
-    background-attachment: fixed;
-    color: var(--vtur-text);
-    overflow-x: hidden;
-    max-width: 100vw;
-  }
+body {
+  margin: 0;
+  background-color: var(--vtur-bg);
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.96)),
+    radial-gradient(circle at 14% 12%, rgba(86, 48, 255, 0.1), transparent 28%),
+    radial-gradient(circle at 84% 16%, rgba(56, 189, 248, 0.08), transparent 28%);
+  background-attachment: fixed;
+  color: var(--vtur-text);
+  overflow-x: hidden;
+  max-width: 100vw;
+}
 
-  .vtur-page-wrap {
-    font-size: inherit;
-    line-height: inherit;
-  }
+.vtur-page-wrap {
+  font-size: inherit;
+  line-height: inherit;
+}
 
-  .vtur-layout :where(label) {
-    font-size: 0.82rem !important;
-    line-height: 1.22 !important;
-  }
+.vtur-layout :where(label) {
+  font-size: 0.82rem !important;
+  line-height: 1.22 !important;
+}
 
-  .vtur-layout :where(.vtur-input, input.vtur-input, select.vtur-input, textarea.vtur-input) {
-    font-size: 0.92rem !important;
-    line-height: 1.4 !important;
-  }
+.vtur-layout :where(.vtur-input, input.vtur-input, select.vtur-input, textarea.vtur-input) {
+  font-size: 0.92rem !important;
+  line-height: 1.4 !important;
+}
 
-  .vtur-layout :where(option) {
-    font-size: 0.88rem;
-  }
+.vtur-layout :where(option) {
+  font-size: 0.88rem;
+}
 
-  .vtur-layout :where(p.text-sm, div.text-sm, span.text-sm, a.text-sm, td.text-sm, li.text-sm) {
-    font-size: var(--vtur-copy-sm) !important;
-    line-height: var(--vtur-copy-line-height) !important;
-  }
+.vtur-layout :where(p.text-sm, div.text-sm, span.text-sm, a.text-sm, td.text-sm, li.text-sm) {
+  font-size: var(--vtur-copy-sm) !important;
+  line-height: var(--vtur-copy-line-height) !important;
+}
 
-  .vtur-layout :where(p.text-xs, div.text-xs, span.text-xs, a.text-xs, td.text-xs, li.text-xs) {
-    font-size: var(--vtur-copy-xs) !important;
-    line-height: 1.5 !important;
-  }
+.vtur-layout :where(p.text-xs, div.text-xs, span.text-xs, a.text-xs, td.text-xs, li.text-xs) {
+  font-size: var(--vtur-copy-xs) !important;
+  line-height: 1.5 !important;
+}
 
-  .vtur-layout :where(p.text-base, div.text-base, span.text-base, a.text-base, td.text-base, li.text-base) {
-    font-size: 0.9rem !important;
-    line-height: 1.5 !important;
-  }
+.vtur-layout
+  :where(p.text-base, div.text-base, span.text-base, a.text-base, td.text-base, li.text-base) {
+  font-size: 0.9rem !important;
+  line-height: 1.5 !important;
+}
 
-  .vtur-layout :where(
+.vtur-layout
+  :where(
     p.uppercase,
     div.uppercase,
     span.uppercase,
@@ -561,18 +562,15 @@ layer(base);
     div.text-xs.font-medium.text-slate-500,
     span.text-xs.font-medium.text-slate-500
   ) {
-    line-height: 1.4;
-  }
+  line-height: 1.4;
+}
 
-  .vtur-layout :where(
-    p.uppercase.text-xs,
-    div.uppercase.text-xs,
-    span.uppercase.text-xs
-  ) {
-    font-size: 0.75rem;
-  }
+.vtur-layout :where(p.uppercase.text-xs, div.uppercase.text-xs, span.uppercase.text-xs) {
+  font-size: 0.75rem;
+}
 
-  .vtur-layout :where(
+.vtur-layout
+  :where(
     p.uppercase.text-sm,
     div.uppercase.text-sm,
     span.uppercase.text-sm,
@@ -580,2033 +578,2145 @@ layer(base);
     div.text-sm.font-medium.text-slate-500,
     span.text-sm.font-medium.text-slate-500
   ) {
-    font-size: 0.875rem;
-  }
+  font-size: 0.875rem;
+}
 
-  .vtur-layout :where(button, input, select, textarea) {
-    line-height: 1.5;
-  }
+.vtur-layout :where(button, input, select, textarea) {
+  line-height: 1.5;
+}
 
-  .vtur-layout :where(label.text-sm, label.text-xs, .sr-only) {
-    font-size: 0.82rem !important;
-  }
+.vtur-layout :where(label.text-sm, label.text-xs, .sr-only) {
+  font-size: 0.82rem !important;
+}
 
-  /* Previne zoom automático no iOS em inputs */
-  @media (max-width: 640px) {
-    input, select, textarea, button {
-      touch-action: manipulation;
-    }
+/* Previne zoom automático no iOS em inputs */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea,
+  button {
+    touch-action: manipulation;
   }
-
+}
 
 /* ===== componentes (era @layer components) ===== */
 
-  .vtur-app-shell {
-    min-height: 100vh;
-  }
+.vtur-app-shell {
+  min-height: 100vh;
+}
 
-  .vtur-auth-shell {
-    background:
-      radial-gradient(circle at top, rgba(99, 102, 241, 0.22), transparent 30%),
-      radial-gradient(circle at bottom, rgba(30, 41, 59, 0.28), transparent 36%),
-      var(--vtur-sidebar-bg);
-  }
+.vtur-auth-shell {
+  background:
+    radial-gradient(circle at top, rgba(99, 102, 241, 0.22), transparent 30%),
+    radial-gradient(circle at bottom, rgba(30, 41, 59, 0.28), transparent 36%),
+    var(--vtur-sidebar-bg);
+}
 
-  .vtur-auth-brand {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 2rem;
-  }
+.vtur-auth-brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
 
-  .vtur-auth-brand-lockup {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-  }
+.vtur-auth-brand-lockup {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
 
-  .vtur-auth-brand-row {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
+.vtur-auth-brand-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+}
 
-  .vtur-auth-brand-logo {
-    height: 6rem;
-    width: auto;
-  }
+.vtur-auth-brand-logo {
+  height: 6rem;
+  width: auto;
+}
 
-  .vtur-auth-brand-title {
-    color: #ffffff;
-    margin: 0;
-  }
+.vtur-auth-brand-title {
+  color: #ffffff;
+  margin: 0;
+}
 
-  .vtur-auth-brand-subtitle,
-  .vtur-auth-footer {
-    color: rgba(255, 255, 255, 0.9);
-  }
+.vtur-auth-brand-subtitle,
+.vtur-auth-footer {
+  color: rgba(255, 255, 255, 0.9);
+}
 
-  .vtur-auth-brand-subtitle {
-    margin: 0;
-    text-align: left;
-  }
+.vtur-auth-brand-subtitle {
+  margin: 0;
+  text-align: left;
+}
 
-  /* Layout Principal */
+/* Layout Principal */
+.vtur-layout {
+  margin-left: var(--vtur-sidebar-width);
+  padding: calc(var(--vtur-topbar-height) + 1rem) 1rem 1.25rem 1.25rem;
+  min-height: 100vh;
+  min-width: 0;
+}
+
+.vtur-sidebar--collapsed ~ .vtur-layout {
+  margin-left: 90px;
+}
+
+.vtur-page-wrap {
+  min-width: 0;
+}
+
+.vtur-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 997;
+  height: var(--vtur-topbar-height);
+  padding: 0 1.5rem;
+  background: var(--vtur-sidebar-bg);
+  border-bottom: 1px solid rgba(199, 210, 254, 0.16);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.28);
+}
+
+.vtur-topbar__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  height: 100%;
+}
+
+.vtur-topbar__left,
+.vtur-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.vtur-topbar__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: #ffffff;
+}
+
+.vtur-topbar__brand-image {
+  width: 3.64rem;
+  height: 2.8rem;
+  object-fit: contain;
+}
+
+.vtur-topbar__brand-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.vtur-topbar__brand-wordmark {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  color: #ffffff;
+}
+
+.vtur-topbar__brand-tagline {
+  font-size: 0.72rem;
+  line-height: 1;
+  color: rgba(224, 231, 255, 0.78);
+}
+
+.vtur-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(199, 210, 254, 0.14);
+  background: transparent;
+  color: var(--vtur-sidebar-text) !important;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.vtur-icon-button :global(svg) {
+  color: currentColor !important;
+  stroke: currentColor;
+}
+
+.vtur-icon-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(224, 231, 255, 0.24);
+  color: #ffffff !important;
+}
+
+.vtur-icon-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.vtur-icon-button--danger:hover:not(:disabled) {
+  background: #fef2f2;
+  color: #b91c1c;
+  border-color: #fecaca;
+}
+
+.vtur-user-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.7rem 0.4rem 0.45rem;
+  border: 1px solid rgba(199, 210, 254, 0.18);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+}
+
+.vtur-user-chip__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.vtur-user-chip__copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.vtur-user-chip__name {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.vtur-user-chip__email {
+  font-size: 0.72rem;
+  color: rgba(224, 231, 255, 0.72);
+  line-height: 1.1;
+}
+
+/* Link "Pular para o conteúdo": invisível até receber foco pelo teclado. */
+.vtur-skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 2000;
+  transform: translateY(-200%);
+  border-radius: 0.75rem;
+  background: #1e3a8a;
+  color: #fff;
+  padding: 0.6rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.25);
+  transition: transform 0.15s ease;
+}
+
+.vtur-skip-link:focus,
+.vtur-skip-link:focus-visible {
+  transform: translateY(0);
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+}
+
+#conteudo-principal:focus {
+  outline: none;
+}
+
+.vtur-sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.vtur-sidebar {
+  position: fixed;
+  top: var(--vtur-topbar-height);
+  left: 0;
+  z-index: 999;
+  width: var(--vtur-sidebar-width);
+  height: calc(100vh - var(--vtur-topbar-height));
+  display: flex;
+  flex-direction: column;
+  border-top: 0;
+  border-right: 1px solid rgba(79, 70, 229, 0.2);
+  border-bottom: 0;
+  border-left: 0;
+  border-radius: 0;
+  background: var(--vtur-sidebar-bg);
+  color: var(--vtur-sidebar-text);
+  box-shadow: 10px 0 26px rgba(30, 27, 75, 0.2);
+  transition: width 0.3s ease;
+}
+
+.vtur-sidebar--collapsed {
+  width: 90px;
+}
+
+.vtur-sidebar--mobile {
+  top: var(--vtur-topbar-height) !important;
+  left: 0 !important;
+  width: min(88vw, 280px) !important;
+  height: calc(100vh - var(--vtur-topbar-height)) !important;
+  height: calc(100svh - var(--vtur-topbar-height)) !important;
+  border-radius: 0;
+  border-inline: 0;
+  box-shadow: 0 20px 44px rgba(2, 6, 23, 0.34);
+}
+
+.vtur-sidebar__toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.vtur-sidebar__toggle-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #e2e8f0;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.vtur-sidebar__toggle-button:hover {
+  color: #f8fafc;
+  transform: scale(1.1);
+}
+
+.vtur-sidebar__header {
+  padding: 1rem 1rem 0.25rem;
+}
+
+.vtur-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.vtur-sidebar__brand-image {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+}
+
+.vtur-sidebar__brand-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.vtur-sidebar__brand-wordmark {
+  color: #f8fafc;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.vtur-sidebar__brand-tagline {
+  color: rgba(226, 232, 240, 0.82);
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.vtur-sidebar__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.35rem 0.7rem 0.9rem;
+}
+
+.vtur-sidebar__section + .vtur-sidebar__section {
+  margin-top: 0.55rem;
+}
+
+.vtur-sidebar__section-title {
+  margin: 0.9rem 0 0.3rem;
+  padding: 0 0.45rem;
+  color: rgba(199, 210, 254, 0.45);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.vtur-sidebar__section-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start !important;
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0 0.45rem;
+  margin: 0.9rem 0 0.3rem;
+  color: rgba(226, 232, 240, 0.72);
+  gap: 0.45rem;
+  text-align: left;
+}
+
+.vtur-sidebar__section-toggle-icon {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.vtur-sidebar__section-toggle:hover {
+  color: rgba(226, 232, 240, 0.95);
+}
+
+.vtur-sidebar__section-toggle.vtur-button,
+.vtur-sidebar__section-toggle.vtur-button:hover,
+.vtur-sidebar__section-toggle.vtur-button:focus,
+.vtur-sidebar__section-toggle.vtur-button:focus-visible,
+.vtur-sidebar__section-toggle.vtur-button:active {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.vtur-sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+}
+
+.vtur-sidebar__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.74rem 0.92rem;
+  border-radius: 12px;
+  color: var(--vtur-sidebar-text);
+  text-decoration: none;
+  font-size: 1.05rem;
+  border: 1px solid transparent;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.vtur-sidebar__item:hover {
+  background: rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.2);
+  color: #ffffff;
+}
+
+.vtur-sidebar__item--active {
+  background: var(--vtur-sidebar-active);
+  border-color: transparent;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+}
+
+.vtur-sidebar__item--active .vtur-sidebar__item-icon {
+  color: #ffffff;
+}
+
+.vtur-sidebar__item--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.vtur-sidebar__item-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.vtur-sidebar__item-icon {
+  color: rgba(199, 210, 254, 0.7);
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  display: block;
+  transition: color 0.2s ease;
+}
+
+.vtur-sidebar__item:hover .vtur-sidebar__item-icon {
+  color: #ffffff;
+}
+
+.vtur-sidebar__item-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vtur-sidebar--collapsed .vtur-sidebar__item-label {
+  display: none;
+}
+
+.vtur-sidebar--collapsed .vtur-sidebar__item {
+  justify-content: center;
+  padding-inline: 0.4rem;
+}
+
+.vtur-sidebar--collapsed .vtur-sidebar__item-main {
+  width: 100%;
+  justify-content: center;
+  gap: 0;
+}
+
+.vtur-sidebar--collapsed .vtur-sidebar__section-title {
+  display: none;
+}
+
+.vtur-sidebar--collapsed .vtur-sidebar__badge {
+  display: none;
+}
+
+.vtur-sidebar__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(99, 102, 241, 0.3);
+  color: #c7d2fe;
+  font-size: 0.68rem;
+  line-height: 1;
+}
+
+.vtur-sidebar__footer {
+  padding: 0.85rem 0.7rem 1rem;
+  border-top: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.vtur-sidebar__quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  margin-bottom: 0.9rem;
+}
+
+.vtur-sidebar__quick-actions .vtur-sidebar__item {
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.vtur-sidebar--collapsed .vtur-sidebar__quick-actions .vtur-sidebar__item {
+  justify-content: center;
+}
+
+.vtur-sidebar__quick-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.72rem 0.85rem;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--vtur-sidebar-text);
+  text-decoration: none;
+  font-size: 0.84rem;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.vtur-sidebar__quick-link:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.22);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #ffffff;
+}
+
+.vtur-sidebar__quick-link:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.vtur-sidebar__profile {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.75rem;
+  padding: 0.74rem 0.92rem;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.vtur-sidebar__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: #fff;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.vtur-sidebar__profile-copy {
+  min-width: 0;
+}
+
+.vtur-sidebar--collapsed .vtur-sidebar__profile-copy {
+  display: none;
+}
+
+.vtur-sidebar--collapsed .vtur-sidebar__profile {
+  justify-content: center;
+  padding-inline: 0.4rem;
+}
+
+.vtur-sidebar__profile-name {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #f8fafc;
+}
+
+.vtur-sidebar__profile-meta {
+  margin: 0.1rem 0 0;
+  font-size: 0.74rem;
+  color: rgba(226, 232, 240, 0.72);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 1023px) {
   .vtur-layout {
-    margin-left: var(--vtur-sidebar-width);
-    padding: calc(var(--vtur-topbar-height) + 1rem) 1rem 1.25rem 1.25rem;
-    min-height: 100vh;
-    min-width: 0;
-  }
-
-  .vtur-sidebar--collapsed ~ .vtur-layout {
-    margin-left: 90px;
-  }
-
-  .vtur-page-wrap {
-    min-width: 0;
+    margin-left: 0;
+    padding: calc(var(--vtur-topbar-height) + 1rem) 1rem 1.25rem;
   }
 
   .vtur-topbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 997;
-    height: var(--vtur-topbar-height);
-    padding: 0 1.5rem;
-    background: var(--vtur-sidebar-bg);
-    border-bottom: 1px solid rgba(199, 210, 254, 0.16);
-    box-shadow: 0 12px 30px rgba(15, 23, 42, 0.28);
+    padding: 0 1rem;
   }
 
-  .vtur-topbar__inner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    height: 100%;
-  }
-
-  .vtur-topbar__left,
-  .vtur-topbar__actions {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .vtur-topbar__brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    text-decoration: none;
-    color: #ffffff;
-  }
-
-  .vtur-topbar__brand-image {
-    width: 3.64rem;
-    height: 2.8rem;
-    object-fit: contain;
-  }
-
-  .vtur-topbar__brand-copy {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  .vtur-topbar__brand-wordmark {
-    font-size: 1rem;
-    font-weight: 700;
-    line-height: 1.05;
-    letter-spacing: 0.02em;
-    color: #ffffff;
-  }
-
-  .vtur-topbar__brand-tagline {
-    font-size: 0.72rem;
-    line-height: 1;
-    color: rgba(224, 231, 255, 0.78);
-  }
-
-  .vtur-icon-button {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 0.75rem;
-    border: 1px solid rgba(199, 210, 254, 0.14);
-    background: transparent;
-    color: var(--vtur-sidebar-text) !important;
-    cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-  }
-
-  .vtur-icon-button :global(svg) {
-    color: currentColor !important;
-    stroke: currentColor;
-  }
-
-  .vtur-icon-button:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(224, 231, 255, 0.24);
-    color: #ffffff !important;
-  }
-
-  .vtur-icon-button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .vtur-icon-button--danger:hover:not(:disabled) {
-    background: #fef2f2;
-    color: #b91c1c;
-    border-color: #fecaca;
+  .vtur-topbar__brand-tagline,
+  .vtur-user-chip__email {
+    display: none;
   }
 
   .vtur-user-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.4rem 0.7rem 0.4rem 0.45rem;
-    border: 1px solid rgba(199, 210, 254, 0.18);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
-  }
-
-  .vtur-user-chip__avatar {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 2rem;
-    height: 2rem;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
-    color: #fff;
-    font-size: 0.8rem;
-    font-weight: 700;
-  }
-
-  .vtur-user-chip__copy {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  .vtur-user-chip__name {
-    font-size: 0.84rem;
-    font-weight: 600;
-    color: #ffffff;
-    line-height: 1.1;
-  }
-
-  .vtur-user-chip__email {
-    font-size: 0.72rem;
-    color: rgba(224, 231, 255, 0.72);
-    line-height: 1.1;
-  }
-
-  /* Link "Pular para o conteúdo": invisível até receber foco pelo teclado. */
-  .vtur-skip-link {
-    position: fixed;
-    top: 0.5rem;
-    left: 0.5rem;
-    z-index: 2000;
-    transform: translateY(-200%);
-    border-radius: 0.75rem;
-    background: #1e3a8a;
-    color: #fff;
-    padding: 0.6rem 1rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.25);
-    transition: transform 0.15s ease;
-  }
-
-  .vtur-skip-link:focus,
-  .vtur-skip-link:focus-visible {
-    transform: translateY(0);
-    outline: 2px solid #93c5fd;
-    outline-offset: 2px;
-  }
-
-  #conteudo-principal:focus {
-    outline: none;
+    padding-right: 0.5rem;
   }
 
   .vtur-sidebar-overlay {
-    position: fixed;
-    inset: 0;
+    top: var(--vtur-topbar-height);
     z-index: 998;
-    background: rgba(15, 23, 42, 0.5);
   }
 
   .vtur-sidebar {
-    position: fixed;
-    top: var(--vtur-topbar-height);
-    left: 0;
-    z-index: 999;
-    width: var(--vtur-sidebar-width);
-    height: calc(100vh - var(--vtur-topbar-height));
-    display: flex;
-    flex-direction: column;
-    border-top: 0;
-    border-right: 1px solid rgba(79, 70, 229, 0.2);
-    border-bottom: 0;
-    border-left: 0;
-    border-radius: 0;
-    background: var(--vtur-sidebar-bg);
-    color: var(--vtur-sidebar-text);
-    box-shadow: 10px 0 26px rgba(30, 27, 75, 0.2);
-    transition: width 0.3s ease;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
   }
 
-  .vtur-sidebar--collapsed {
-    width: 90px;
+  .vtur-sidebar--open {
+    transform: translateX(0);
   }
 
-  .vtur-sidebar--mobile {
-    top: var(--vtur-topbar-height) !important;
-    left: 0 !important;
-    width: min(88vw, 280px) !important;
-    height: calc(100vh - var(--vtur-topbar-height)) !important;
-    height: calc(100svh - var(--vtur-topbar-height)) !important;
-    border-radius: 0;
-    border-inline: 0;
-    box-shadow: 0 20px 44px rgba(2, 6, 23, 0.34);
-  }
-
-  .vtur-sidebar__toggle {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.75rem;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.16);
-  }
-
-  .vtur-sidebar__toggle-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #e2e8f0;
-    cursor: pointer;
-    transition: color 0.2s ease, transform 0.2s ease;
-  }
-
-  .vtur-sidebar__toggle-button:hover {
-    color: #f8fafc;
-    transform: scale(1.1);
-  }
-
-  .vtur-sidebar__header {
-    padding: 1rem 1rem 0.25rem;
-  }
-
-  .vtur-sidebar__brand {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .vtur-sidebar__brand-image {
-    width: 2.5rem;
-    height: 2.5rem;
-    flex: 0 0 auto;
-  }
-
-  .vtur-sidebar__brand-copy {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  .vtur-sidebar__brand-wordmark {
-    color: #f8fafc;
-    font-size: 1.1rem;
-    font-weight: 700;
-    line-height: 1.05;
-  }
-
-  .vtur-sidebar__brand-tagline {
-    color: rgba(226, 232, 240, 0.82);
-    font-size: 0.72rem;
-    line-height: 1;
-  }
-
-  .vtur-sidebar__body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 0.35rem 0.7rem 0.9rem;
-  }
-
-  .vtur-sidebar__section + .vtur-sidebar__section {
-    margin-top: 0.55rem;
-  }
-
-  .vtur-sidebar__section-title {
-    margin: 0.9rem 0 0.3rem;
-    padding: 0 0.45rem;
-    color: rgba(199, 210, 254, 0.45);
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .vtur-sidebar__section-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start !important;
-    width: 100%;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 0 0.45rem;
-    margin: 0.9rem 0 0.3rem;
-    color: rgba(226, 232, 240, 0.72);
-    gap: 0.45rem;
-    text-align: left;
-  }
-
-  .vtur-sidebar__section-toggle-icon {
-    margin-left: auto;
-    flex: 0 0 auto;
-  }
-
-  .vtur-sidebar__section-toggle:hover {
-    color: rgba(226, 232, 240, 0.95);
-  }
-
-  .vtur-sidebar__section-toggle.vtur-button,
-  .vtur-sidebar__section-toggle.vtur-button:hover,
-  .vtur-sidebar__section-toggle.vtur-button:focus,
-  .vtur-sidebar__section-toggle.vtur-button:focus-visible,
-  .vtur-sidebar__section-toggle.vtur-button:active {
-    background: transparent !important;
-    border-color: transparent !important;
-    box-shadow: none !important;
-  }
-
-  .vtur-sidebar__nav {
-    display: flex;
-    flex-direction: column;
-    gap: 0.18rem;
-  }
-
-  .vtur-sidebar__item {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 0.74rem 0.92rem;
-    border-radius: 12px;
-    color: var(--vtur-sidebar-text);
-    text-decoration: none;
-    font-size: 1.05rem;
-    border: 1px solid transparent;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-  }
-
-  .vtur-sidebar__item:hover {
-    background: rgba(99, 102, 241, 0.15);
-    border-color: rgba(99, 102, 241, 0.2);
-    color: #ffffff;
-  }
-
-  .vtur-sidebar__item--active {
-    background: var(--vtur-sidebar-active);
-    border-color: transparent;
-    color: #ffffff;
-    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
-  }
-
-  .vtur-sidebar__item--active .vtur-sidebar__item-icon {
-    color: #ffffff;
-  }
-
-  .vtur-sidebar__item--disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
+  .vtur-sidebar__item,
+  .vtur-sidebar__item.vtur-button {
+    font-size: 1.24rem !important;
+    padding: 0.85rem 0.9rem !important;
+    gap: 0.85rem;
+    border-radius: 14px;
   }
 
   .vtur-sidebar__item-main {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.75rem;
-    min-width: 0;
-  }
-
-  .vtur-sidebar__item-icon {
-    color: rgba(199, 210, 254, 0.7);
-    flex: 0 0 auto;
-    width: 22px;
-    height: 22px;
-    display: block;
-    transition: color 0.2s ease;
-  }
-
-  .vtur-sidebar__item:hover .vtur-sidebar__item-icon {
-    color: #ffffff;
+    gap: 0.85rem;
   }
 
   .vtur-sidebar__item-label {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 1.24rem !important;
   }
 
-  .vtur-sidebar--collapsed .vtur-sidebar__item-label {
-    display: none;
+  .vtur-sidebar__item-icon,
+  .vtur-sidebar__item-icon svg {
+    width: 26px !important;
+    height: 26px !important;
   }
 
-  .vtur-sidebar--collapsed .vtur-sidebar__item {
-    justify-content: center;
-    padding-inline: 0.4rem;
+  .vtur-sidebar__body {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
   }
 
-  .vtur-sidebar--collapsed .vtur-sidebar__item-main {
-    width: 100%;
-    justify-content: center;
-    gap: 0;
-  }
-
-  .vtur-sidebar--collapsed .vtur-sidebar__section-title {
-    display: none;
-  }
-
-  .vtur-sidebar--collapsed .vtur-sidebar__badge {
-    display: none;
-  }
-
-  .vtur-sidebar__badge {
-    display: inline-flex;
+  .vtur-mobile-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 996;
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr) 16px;
     align-items: center;
-    padding: 0.18rem 0.45rem;
-    border-radius: 999px;
-    background: rgba(99, 102, 241, 0.3);
-    color: #c7d2fe;
-    font-size: 0.68rem;
-    line-height: 1;
-  }
-
-  .vtur-sidebar__footer {
-    padding: 0.85rem 0.7rem 1rem;
-    border-top: 1px solid rgba(148, 163, 184, 0.16);
-  }
-
-  .vtur-sidebar__quick-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 0.18rem;
-    margin-bottom: 0.9rem;
-  }
-
-  .vtur-sidebar__quick-actions .vtur-sidebar__item {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .vtur-sidebar--collapsed .vtur-sidebar__quick-actions .vtur-sidebar__item {
-    justify-content: center;
-  }
-
-  .vtur-sidebar__quick-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    width: 100%;
-    padding: 0.72rem 0.85rem;
-    border: 1px solid rgba(99, 102, 241, 0.2);
-    border-radius: 12px;
-    background: rgba(99, 102, 241, 0.1);
-    color: var(--vtur-sidebar-text);
-    text-decoration: none;
-    font-size: 0.84rem;
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
-  }
-
-  .vtur-sidebar__quick-link:hover:not(:disabled) {
-    background: rgba(99, 102, 241, 0.22);
-    border-color: rgba(99, 102, 241, 0.4);
-    color: #ffffff;
-  }
-
-  .vtur-sidebar__quick-link:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
-
-  .vtur-sidebar__profile {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    gap: 0.75rem;
-    padding: 0.74rem 0.92rem;
-    border-radius: 12px;
+    gap: 8px;
+    padding: 6px 8px;
+    padding-bottom: max(6px, env(safe-area-inset-bottom));
+    background: linear-gradient(180deg, #0f172a, #1e293b);
+    border-top: 1px solid rgba(148, 163, 184, 0.24);
     box-sizing: border-box;
   }
 
-  .vtur-sidebar__avatar {
-    display: inline-flex;
+  /* Botão hamburger: sem fundo, sem borda, apenas ícone branco */
+  .vtur-mobile-nav__menu,
+  .vtur-mobile-nav__menu.vtur-button,
+  .vtur-mobile-nav__menu:is(button, a) {
+    min-height: 44px;
+    color: rgba(226, 232, 240, 0.85) !important;
+    background: transparent !important;
+    background-image: none !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 6px 4px !important;
+  }
+
+  .vtur-mobile-nav__menu:hover,
+  .vtur-mobile-nav__menu.vtur-button:hover {
+    color: #ffffff !important;
+    background: transparent !important;
+    background-image: none !important;
+    box-shadow: none !important;
+  }
+
+  .vtur-mobile-nav__menu--open,
+  .vtur-mobile-nav__menu--open.vtur-button {
+    color: #ffffff !important;
+    background: transparent !important;
+    background-image: none !important;
+  }
+
+  .vtur-mobile-nav__current {
+    display: flex;
     align-items: center;
     justify-content: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 999px;
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
-    color: #fff;
-    font-size: 0.84rem;
-    font-weight: 700;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    color: #e2e8f0;
+    background: rgba(99, 102, 241, 0.22);
+    border: 1px solid rgba(99, 102, 241, 0.35);
+    text-decoration: none;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   }
 
-  .vtur-sidebar__profile-copy {
-    min-width: 0;
-  }
-
-  .vtur-sidebar--collapsed .vtur-sidebar__profile-copy {
-    display: none;
-  }
-
-  .vtur-sidebar--collapsed .vtur-sidebar__profile {
-    justify-content: center;
-    padding-inline: 0.4rem;
-  }
-
-  .vtur-sidebar__profile-name {
-    margin: 0;
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: #f8fafc;
-  }
-
-  .vtur-sidebar__profile-meta {
-    margin: 0.1rem 0 0;
-    font-size: 0.74rem;
-    color: rgba(226, 232, 240, 0.72);
+  .vtur-mobile-nav__label {
+    font-size: 0.875rem;
+    font-weight: 650;
+    line-height: 1.1;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  
-  @media (max-width: 1023px) {
-    .vtur-layout {
-      margin-left: 0;
-      padding: calc(var(--vtur-topbar-height) + 1rem) 1rem 1.25rem;
-    }
+}
 
-    .vtur-topbar {
-      padding: 0 1rem;
-    }
+/* Cards - usar Flowbite quando possível, essas são extensões */
+.vtur-card-header {
+  @apply mb-4 flex items-center justify-between border-b border-slate-100 pb-3;
+}
 
-    .vtur-topbar__brand-tagline,
-    .vtur-user-chip__email {
-      display: none;
-    }
+.vtur-card-title {
+  @apply text-lg font-bold tracking-tight text-slate-900;
+}
 
-    .vtur-user-chip {
-      padding-right: 0.5rem;
-    }
+/* Cores de módulo para bordas */
+.vtur-border-clientes {
+  border-top-color: var(--vtur-blue-500);
+}
+.vtur-border-vendas {
+  border-top-color: var(--vtur-green-500);
+}
+.vtur-border-financeiro {
+  border-top-color: var(--vtur-orange-500);
+}
+.vtur-border-operacao {
+  border-top-color: var(--vtur-teal-500);
+}
 
-    .vtur-sidebar-overlay {
-      top: var(--vtur-topbar-height);
-      z-index: 998;
-    }
+/* Status badges */
+.vtur-status {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+}
 
-    .vtur-sidebar {
-      transform: translateX(-100%);
-      transition: transform 0.25s ease;
-    }
+.vtur-status-success {
+  @apply bg-green-100 text-green-800;
+}
+.vtur-status-warning {
+  @apply bg-amber-100 text-amber-800;
+}
+.vtur-status-danger {
+  @apply bg-red-100 text-red-800;
+}
+.vtur-status-info {
+  @apply bg-blue-100 text-blue-800;
+}
 
-    .vtur-sidebar--open {
-      transform: translateX(0);
-    }
+/* Tabela - headers temáticos */
+.vtur-table-header-clientes {
+  @apply bg-gradient-to-b from-blue-50 to-blue-100/50 text-blue-700;
+}
+.vtur-table-header-vendas {
+  @apply bg-gradient-to-b from-green-50 to-green-100/50 text-green-700;
+}
+.vtur-table-header-financeiro {
+  @apply bg-gradient-to-b from-orange-50 to-orange-100/50 text-orange-700;
+}
+.vtur-table-header-operacao {
+  @apply bg-gradient-to-b from-teal-50 to-teal-100/50 text-teal-700;
+}
 
-    .vtur-sidebar__item,
-    .vtur-sidebar__item.vtur-button {
-      font-size: 1.24rem !important;
-      padding: 0.85rem 0.9rem !important;
-      gap: 0.85rem;
-      border-radius: 14px;
-    }
+/* Card padrão VTUR */
+.vtur-card {
+  @apply border bg-white;
+  border-radius: 14px;
+  border-color: rgba(226, 232, 240, 0.8);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 4px 16px rgba(15, 23, 42, 0.04);
+}
 
-    .vtur-sidebar__item-main {
-      gap: 0.85rem;
-    }
+/* Input padrão VTUR */
+.vtur-input {
+  @apply w-full border bg-white px-4 py-2.5 text-sm text-slate-900 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-hidden disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-500;
+  border-radius: 0.5rem;
+  border-color: rgba(148, 163, 184, 0.3);
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.02);
+}
 
-    .vtur-sidebar__item-label {
-      font-size: 1.24rem !important;
-    }
+/* Select estilizado */
+select.vtur-input {
+  @apply appearance-none bg-no-repeat pr-10;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-size: 1.5em 1.5em;
+  background-position: right 0.5rem center;
+}
 
-    .vtur-sidebar__item-icon,
-    .vtur-sidebar__item-icon svg {
-      width: 26px !important;
-      height: 26px !important;
-    }
+/* Input de busca com ícone */
+.vtur-input--search {
+  @apply pl-10;
+}
 
-    .vtur-sidebar__body {
-      padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
-    }
+/* Textarea estilizado */
+textarea.vtur-input {
+  @apply min-h-[80px] resize-y;
+}
 
-    .vtur-mobile-nav {
-      position: fixed;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      z-index: 996;
-      display: grid;
-      grid-template-columns: 56px minmax(0, 1fr) 16px;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 8px;
-      padding-bottom: max(6px, env(safe-area-inset-bottom));
-      background: linear-gradient(180deg, #0f172a, #1e293b);
-      border-top: 1px solid rgba(148, 163, 184, 0.24);
-      box-sizing: border-box;
-    }
+/* Filter panel */
+.vtur-filter-panel {
+  @apply border p-4;
+  border-radius: 18px;
+  border-color: rgba(148, 163, 184, 0.22);
+  background: linear-gradient(180deg, rgba(248, 250, 252, 0.88), rgba(255, 255, 255, 0.96));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
 
-    /* Botão hamburger: sem fundo, sem borda, apenas ícone branco */
-    .vtur-mobile-nav__menu,
-    .vtur-mobile-nav__menu.vtur-button,
-    .vtur-mobile-nav__menu:is(button, a) {
-      min-height: 44px;
-      color: rgba(226, 232, 240, 0.85) !important;
-      background: transparent !important;
-      background-image: none !important;
-      border: none !important;
-      box-shadow: none !important;
-      padding: 6px 4px !important;
-    }
-
-    .vtur-mobile-nav__menu:hover,
-    .vtur-mobile-nav__menu.vtur-button:hover {
-      color: #ffffff !important;
-      background: transparent !important;
-      background-image: none !important;
-      box-shadow: none !important;
-    }
-
-    .vtur-mobile-nav__menu--open,
-    .vtur-mobile-nav__menu--open.vtur-button {
-      color: #ffffff !important;
-      background: transparent !important;
-      background-image: none !important;
-    }
-
-    .vtur-mobile-nav__current {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      min-height: 44px;
-      padding: 8px 12px;
-      border-radius: 12px;
-      color: #e2e8f0;
-      background: rgba(99, 102, 241, 0.22);
-      border: 1px solid rgba(99, 102, 241, 0.35);
-      text-decoration: none;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    }
-
-    .vtur-mobile-nav__label {
-      font-size: 0.875rem;
-      font-weight: 650;
-      line-height: 1.1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
-  
-  /* Cards - usar Flowbite quando possível, essas são extensões */
-  .vtur-card-header {
-    @apply flex items-center justify-between pb-3 mb-4 border-b border-slate-100;
-  }
-  
-  .vtur-card-title {
-    @apply text-lg font-bold text-slate-900 tracking-tight;
-  }
-  
-  /* Cores de módulo para bordas */
-  .vtur-border-clientes { border-top-color: var(--vtur-blue-500); }
-  .vtur-border-vendas { border-top-color: var(--vtur-green-500); }
-  .vtur-border-financeiro { border-top-color: var(--vtur-orange-500); }
-  .vtur-border-operacao { border-top-color: var(--vtur-teal-500); }
-  
-  /* Status badges */
-  .vtur-status {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
-  }
-  
-  .vtur-status-success { @apply bg-green-100 text-green-800; }
-  .vtur-status-warning { @apply bg-amber-100 text-amber-800; }
-  .vtur-status-danger { @apply bg-red-100 text-red-800; }
-  .vtur-status-info { @apply bg-blue-100 text-blue-800; }
-  
-  /* Tabela - headers temáticos */
-  .vtur-table-header-clientes { @apply bg-gradient-to-b from-blue-50 to-blue-100/50 text-blue-700; }
-  .vtur-table-header-vendas { @apply bg-gradient-to-b from-green-50 to-green-100/50 text-green-700; }
-  .vtur-table-header-financeiro { @apply bg-gradient-to-b from-orange-50 to-orange-100/50 text-orange-700; }
-  .vtur-table-header-operacao { @apply bg-gradient-to-b from-teal-50 to-teal-100/50 text-teal-700; }
-
-
-  /* Card padrão VTUR */
-  .vtur-card {
-    @apply border bg-white;
-    border-radius: 14px;
-    border-color: rgba(226, 232, 240, 0.8);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.04);
-  }
-  
-  /* Input padrão VTUR */
-  .vtur-input {
-    @apply w-full px-4 py-2.5 border bg-white text-slate-900 text-sm
-           focus:border-blue-500 focus:ring-2 focus:ring-blue-100 focus:outline-hidden
-           disabled:bg-slate-100 disabled:text-slate-500 disabled:cursor-not-allowed
-           transition-all duration-200;
-    border-radius: 0.5rem;
-    border-color: rgba(148, 163, 184, 0.3);
-    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.02);
-  }
-  
-  /* Select estilizado */
-  select.vtur-input {
-    @apply appearance-none bg-no-repeat pr-10;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-    background-size: 1.5em 1.5em;
-    background-position: right 0.5rem center;
-  }
-  
-  /* Input de busca com ícone */
-  .vtur-input--search {
-    @apply pl-10;
-  }
-
-  /* Textarea estilizado */
-  textarea.vtur-input {
-    @apply resize-y min-h-[80px];
-  }
-
-  /* Filter panel */
-  .vtur-filter-panel {
-    @apply border p-4;
-    border-radius: 18px;
-    border-color: rgba(148, 163, 184, 0.22);
-    background: linear-gradient(180deg, rgba(248, 250, 252, 0.88), rgba(255, 255, 255, 0.96));
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
-  }
-
-  /* ── KPI Card padronizado ──
+/* ── KPI Card padronizado ──
      Todos os cards de KPI devem ter altura mínima igual,
      estrutura consistente: ícone → título → valor
   */
-  .vtur-kpi-card {
-    min-height: 90px;
-    width: 100%;
-    box-sizing: border-box;
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: flex-start !important;
-    justify-content: flex-start !important;
-    text-align: left !important;
-    gap: 0.75rem;
-    padding: 1rem !important;
-    border-radius: 14px !important;
-    /* Borda perimetral sempre visível — neutraliza border-transparent do Button unstyled
+.vtur-kpi-card {
+  min-height: 90px;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  gap: 0.75rem;
+  padding: 1rem !important;
+  border-radius: 14px !important;
+  /* Borda perimetral sempre visível — neutraliza border-transparent do Button unstyled
        e border-t-[3px] border-t-* aplicados inline nas páginas */
-    border: 1px solid rgba(226, 232, 240, 0.8) !important;
-    border-top-width: 1px !important;
-    border-top-color: rgba(226, 232, 240, 0.8) !important;
-    background: #ffffff !important;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 4px 16px rgba(15, 23, 42, 0.04) !important;
-    transition: box-shadow 0.15s ease, transform 0.15s ease;
-  }
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  border-top-width: 1px !important;
+  border-top-color: rgba(226, 232, 240, 0.8) !important;
+  background: #ffffff !important;
+  box-shadow:
+    0 1px 3px rgba(15, 23, 42, 0.06),
+    0 4px 16px rgba(15, 23, 42, 0.04) !important;
+  transition:
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
 
-  .vtur-kpi-card:hover {
-    box-shadow: 0 4px 20px rgba(15, 23, 42, 0.1) !important;
-    transform: translateY(-1px);
-  }
+.vtur-kpi-card:hover {
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.1) !important;
+  transform: translateY(-1px);
+}
 
-  /* Cards KPI inline — compatibilidade */
-  .vtur-card.vtur-kpi {
-    min-height: 110px !important;
-    display: flex !important;
-    flex-direction: row !important;
-    align-items: flex-start !important;
-    gap: 1rem !important;
-    padding: 1.25rem !important;
-  }
+/* Cards KPI inline — compatibilidade */
+.vtur-card.vtur-kpi {
+  min-height: 110px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  gap: 1rem !important;
+  padding: 1.25rem !important;
+}
 
-  /* Grid de KPIs: todos os filhos com mesma altura, preenchem 100% da linha */
+/* Grid de KPIs: todos os filhos com mesma altura, preenchem 100% da linha */
+.vtur-kpi-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+  align-items: stretch;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.vtur-kpi-grid > * {
+  min-width: 0;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
   .vtur-kpi-grid {
-    display: grid;
-    gap: 1rem;
-    grid-template-columns: repeat(1, minmax(0, 1fr));
-    align-items: stretch;
-    width: 100%;
-    margin-bottom: 1.5rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+@media (min-width: 1024px) {
+  .vtur-kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+/* Variantes para grids com número fixo de colunas */
 
-  .vtur-kpi-grid > * {
-    min-width: 0;
-    width: 100%;
-  }
+/* 1 coluna: sempre 1 */
+.vtur-kpi-grid-1 {
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
 
-  @media (min-width: 640px) {
-    .vtur-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* 2 colunas: mobile=1, sm+=2 */
+.vtur-kpi-grid-2 {
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
+@media (min-width: 640px) {
+  .vtur-kpi-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
-  @media (min-width: 1024px) {
-    .vtur-kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  }
-  /* Variantes para grids com número fixo de colunas */
+}
 
-  /* 1 coluna: sempre 1 */
-  .vtur-kpi-grid-1 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
+/* 3 colunas: mobile=1, sm=2, md+=3 */
+.vtur-kpi-grid-3 {
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
+@media (min-width: 640px) {
+  .vtur-kpi-grid-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+@media (min-width: 768px) {
+  .vtur-kpi-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
 
-  /* 2 colunas: mobile=1, sm+=2 */
-  .vtur-kpi-grid-2 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
-  @media (min-width: 640px) {
-    .vtur-kpi-grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+/* 4 colunas: mobile=1, sm=2, lg+=4 */
+.vtur-kpi-grid-4 {
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
+@media (min-width: 640px) {
+  .vtur-kpi-grid-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
+}
+@media (min-width: 1024px) {
+  .vtur-kpi-grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+}
 
-  /* 3 colunas: mobile=1, sm=2, md+=3 */
-  .vtur-kpi-grid-3 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
-  @media (min-width: 640px) {
-    .vtur-kpi-grid-3 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+/* 5 colunas: mobile=1, sm=3, lg=5 */
+.vtur-kpi-grid-5 {
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
+@media (min-width: 640px) {
+  .vtur-kpi-grid-5 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
-  @media (min-width: 768px) {
-    .vtur-kpi-grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+}
+@media (min-width: 1024px) {
+  .vtur-kpi-grid-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
   }
+}
 
-  /* 4 colunas: mobile=1, sm=2, lg+=4 */
-  .vtur-kpi-grid-4 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
-  @media (min-width: 640px) {
-    .vtur-kpi-grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+/* 6 colunas: mobile=1, sm=3, lg=4, xl=6 */
+.vtur-kpi-grid-6 {
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+}
+@media (min-width: 640px) {
+  .vtur-kpi-grid-6 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
-  @media (min-width: 1024px) {
-    .vtur-kpi-grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+}
+@media (min-width: 1024px) {
+  .vtur-kpi-grid-6 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
   }
+}
+@media (min-width: 1280px) {
+  .vtur-kpi-grid-6 {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
+}
 
-  /* 5 colunas: mobile=1, sm=3, lg=5 */
-  .vtur-kpi-grid-5 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
-  @media (min-width: 640px) {
-    .vtur-kpi-grid-5 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-  }
-  @media (min-width: 1024px) {
-    .vtur-kpi-grid-5 { grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
-  }
+/* Table shell (container da tabela com bordas e sombra) */
+.vtur-table-shell {
+  @apply overflow-hidden border bg-white;
+  border-radius: 14px;
+  border-color: rgba(226, 232, 240, 0.8);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 4px 16px rgba(15, 23, 42, 0.04);
+}
 
-  /* 6 colunas: mobile=1, sm=3, lg=4, xl=6 */
-  .vtur-kpi-grid-6 { grid-template-columns: repeat(1, minmax(0, 1fr)) !important; }
-  @media (min-width: 640px) {
-    .vtur-kpi-grid-6 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
-  }
-  @media (min-width: 1024px) {
-    .vtur-kpi-grid-6 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
-  }
-  @media (min-width: 1280px) {
-    .vtur-kpi-grid-6 { grid-template-columns: repeat(6, minmax(0, 1fr)) !important; }
-  }
+/* DataTable card wrapper: table-shell inside a card loses its own card border/shadow */
+.datatable-card > .vtur-table-shell {
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+/* Filter panel inside DataTable card */
+.datatable-card > .datatable-filter-panel {
+  margin: 0 1.25rem 1rem;
+}
 
-  /* Table shell (container da tabela com bordas e sombra) */
-  .vtur-table-shell {
-    @apply overflow-hidden border bg-white;
-    border-radius: 14px;
-    border-color: rgba(226, 232, 240, 0.8);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.04);
-  }
+/* Table pagination bar */
+.vtur-table-pagination {
+  @apply flex flex-col gap-3 border-t bg-slate-50/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between;
+  border-top-color: rgba(226, 232, 240, 0.82);
+}
 
-  /* DataTable card wrapper: table-shell inside a card loses its own card border/shadow */
-  .datatable-card > .vtur-table-shell {
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
-    border-radius: 0;
-    box-shadow: none;
-    background: transparent;
-  }
-  /* Filter panel inside DataTable card */
-  .datatable-card > .datatable-filter-panel {
-    margin: 0 1.25rem 1rem;
-  }
+/* Tabela padrão VTUR */
+.vtur-table {
+  @apply w-full text-left text-sm;
+}
 
-  /* Table pagination bar */
-  .vtur-table-pagination {
-    @apply flex flex-col gap-3 border-t bg-slate-50/70 px-4 py-3
-           sm:flex-row sm:items-center sm:justify-between;
-    border-top-color: rgba(226, 232, 240, 0.82);
-  }
+.vtur-table thead {
+  @apply bg-slate-50 text-xs font-semibold text-slate-700 uppercase;
+}
 
-  /* Tabela padrão VTUR */
-  .vtur-table {
-    @apply w-full text-sm text-left;
-  }
-  
-  .vtur-table thead {
-    @apply bg-slate-50 text-slate-700 uppercase text-xs font-semibold;
-  }
-  
-  .vtur-table th {
-    @apply px-6 py-3 tracking-wider;
-  }
-  
-  .vtur-table tbody {
-    @apply divide-y divide-slate-200 bg-white;
-  }
-  
-  .vtur-table td {
-    @apply px-6 py-4 whitespace-nowrap text-slate-900;
-  }
-  
-  .vtur-table tbody tr {
-    @apply hover:bg-slate-50 transition-colors;
-  }
+.vtur-table th {
+  @apply px-6 py-3 tracking-wider;
+}
 
-  .vtur-dialog-backdrop {
-    position: fixed !important;
-    inset: 0 !important;
-    z-index: 3000 !important;
-    background: rgba(15, 23, 42, 0.52);
-    backdrop-filter: blur(2px);
-  }
+.vtur-table tbody {
+  @apply divide-y divide-slate-200 bg-white;
+}
 
+.vtur-table td {
+  @apply px-6 py-4 whitespace-nowrap text-slate-900;
+}
+
+.vtur-table tbody tr {
+  @apply transition-colors hover:bg-slate-50;
+}
+
+.vtur-dialog-backdrop {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 3000 !important;
+  background: rgba(15, 23, 42, 0.52);
+  backdrop-filter: blur(2px);
+}
+
+.vtur-dialog-shell {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 3001 !important;
+  width: 100% !important;
+  padding: 1rem !important;
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  overflow-y: auto !important;
+}
+
+.vtur-dialog-shell--respect-app {
+  padding-top: calc(var(--vtur-topbar-height) + 1rem) !important;
+}
+
+.vtur-dialog__surface {
+  width: 100%;
+  max-height: calc(100dvh - 2rem);
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px !important;
+  border: 1px solid rgba(148, 163, 184, 0.18) !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  box-shadow: 0 28px 60px rgba(15, 23, 42, 0.18) !important;
+  overflow: hidden;
+}
+
+.vtur-dialog-shell--respect-app .vtur-dialog__surface {
+  max-height: calc(100dvh - var(--vtur-topbar-height) - 2rem);
+}
+
+.vtur-dialog__surface--full {
+  max-width: min(92vw, 1280px) !important;
+}
+
+.vtur-dialog__accent {
+  display: none;
+}
+
+.vtur-dialog--clientes,
+.vtur-dialog--orcamentos {
+  background: linear-gradient(90deg, #2563eb, #38bdf8);
+}
+
+.vtur-dialog--vendas {
+  background: linear-gradient(90deg, #16a34a, #22c55e);
+}
+
+.vtur-dialog--financeiro {
+  background: linear-gradient(90deg, #ea580c, #fb923c);
+}
+
+.vtur-dialog--operacao {
+  background: linear-gradient(90deg, #0d9488, #2dd4bf);
+}
+
+.vtur-dialog__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem 0.95rem;
+  border-bottom: none;
+  background: transparent;
+}
+
+.vtur-dialog__title {
+  margin: 0;
+  font-size: 1.06rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+
+.vtur-dialog__description {
+  margin: 0.25rem 0 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: #64748b;
+}
+
+.vtur-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.vtur-modal-header__lead {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.vtur-modal-header__icon {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  border-radius: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vtur-modal-header__copy {
+  min-width: 0;
+}
+
+.vtur-modal-header__title {
+  margin: 0;
+  font-size: 1.06rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.15;
+}
+
+.vtur-modal-header__subtitle {
+  margin: 0.2rem 0 0;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  color: #64748b;
+}
+
+.vtur-modal-header__close {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+}
+
+.vtur-modal-tabs {
+  padding: 1rem 1.5rem 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.vtur-modal-body-dense {
+  padding: 1.25rem;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.vtur-modal-section-compact {
+  border-radius: 0.9rem;
+  padding: 1rem;
+}
+
+.vtur-modal-notice {
+  border-radius: 0.85rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.vtur-modal-list-item {
+  border-radius: 0.85rem;
+  padding: 0.8rem 0.9rem;
+}
+
+.vtur-modal-grid-compact {
+  gap: 1rem;
+}
+
+.vtur-modal-accordion-header {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 0;
+}
+
+.vtur-modal-accordion-trigger {
+  gap: 0.75rem;
+}
+
+.vtur-modal-accordion-badge {
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+}
+
+.vtur-modal-accordion-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-inline: 1rem;
+}
+
+.vtur-modal-accordion-panel {
+  padding: 1rem;
+}
+
+.vtur-dialog__body {
+  padding: 1.25rem;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.vtur-dialog__footer {
+  background: transparent;
+  flex: 0 0 auto;
+}
+
+.vtur-dialog__footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.vtur-dialog__footer-actions .vtur-button {
+  min-width: 10.5rem;
+}
+
+.vtur-modal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: transparent;
+}
+
+.vtur-modal-footer--between {
+  justify-content: space-between;
+}
+
+.vtur-modal-footer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.vtur-modal-footer .vtur-button,
+.vtur-modal-footer__actions .vtur-button {
+  min-width: 10.5rem;
+}
+
+.vtur-confirm-dialog__actions {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.vtur-confirm-dialog__actions .vtur-button {
+  min-width: 10.5rem;
+}
+
+.vtur-upload-dropzone {
+  border: 1.5px dashed #cbd5e1 !important;
+  border-radius: 18px !important;
+  background: linear-gradient(180deg, #f8fafc, #ffffff) !important;
+  min-height: unset !important;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.vtur-upload-dropzone:hover {
+  border-color: #86efac !important;
+  background: linear-gradient(180deg, #f0fdf4, #ffffff) !important;
+  box-shadow: 0 16px 34px rgba(22, 163, 74, 0.08);
+}
+
+.vtur-upload-dropzone__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.vtur-upload-dropzone__title {
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.vtur-upload-dropzone__meta {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.vtur-upload-dropzone__file {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #15803d;
+}
+
+.vtur-upload-dropzone__hint {
+  font-size: 0.78rem;
+  color: #94a3b8;
+}
+
+.vtur-page-shell-full {
+  width: 100%;
+  max-width: none;
+}
+
+@media (max-width: 640px) {
   .vtur-dialog-shell {
-    position: fixed !important;
-    inset: 0 !important;
-    z-index: 3001 !important;
-    width: 100% !important;
-    padding: 1rem !important;
-    display: flex !important;
-    align-items: flex-start !important;
-    justify-content: center !important;
-    overflow-y: auto !important;
-  }
-
-  .vtur-dialog-shell--respect-app {
-    padding-top: calc(var(--vtur-topbar-height) + 1rem) !important;
+    align-items: flex-end;
+    padding: 0;
   }
 
   .vtur-dialog__surface {
     width: 100%;
-    max-height: calc(100dvh - 2rem);
-    display: flex;
-    flex-direction: column;
-    border-radius: 20px !important;
-    border: 1px solid rgba(148, 163, 184, 0.18) !important;
-    background: rgba(255, 255, 255, 0.98) !important;
-    box-shadow: 0 28px 60px rgba(15, 23, 42, 0.18) !important;
-    overflow: hidden;
-  }
-
-  .vtur-dialog-shell--respect-app .vtur-dialog__surface {
-    max-height: calc(100dvh - var(--vtur-topbar-height) - 2rem);
-  }
-
-  .vtur-dialog__surface--full {
-    max-width: min(92vw, 1280px) !important;
-  }
-
-  .vtur-dialog__accent {
-    display: none;
-  }
-
-  .vtur-dialog--clientes,
-  .vtur-dialog--orcamentos {
-    background: linear-gradient(90deg, #2563eb, #38bdf8);
-  }
-
-  .vtur-dialog--vendas {
-    background: linear-gradient(90deg, #16a34a, #22c55e);
-  }
-
-  .vtur-dialog--financeiro {
-    background: linear-gradient(90deg, #ea580c, #fb923c);
-  }
-
-  .vtur-dialog--operacao {
-    background: linear-gradient(90deg, #0d9488, #2dd4bf);
-  }
-
-  .vtur-dialog__header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1rem 1.25rem 0.95rem;
-    border-bottom: none;
-    background: transparent;
-  }
-
-  .vtur-dialog__title {
-    margin: 0;
-    font-size: 1.06rem;
-    font-weight: 700;
-    color: #0f172a;
-    letter-spacing: -0.01em;
-  }
-
-  .vtur-dialog__description {
-    margin: 0.25rem 0 0;
-    font-size: 0.84rem;
-    line-height: 1.45;
-    color: #64748b;
-  }
-
-  .vtur-modal-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    padding: 1rem;
-  }
-
-  .vtur-modal-header__lead {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    min-width: 0;
-  }
-
-  .vtur-modal-header__icon {
-    width: 2.5rem;
-    height: 2.5rem;
-    flex: 0 0 auto;
-    border-radius: 0.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .vtur-modal-header__copy {
-    min-width: 0;
-  }
-
-  .vtur-modal-header__title {
-    margin: 0;
-    font-size: 1.06rem;
-    font-weight: 700;
-    color: #0f172a;
-    line-height: 1.15;
-  }
-
-  .vtur-modal-header__subtitle {
-    margin: 0.2rem 0 0;
-    font-size: 0.82rem;
-    line-height: 1.35;
-    color: #64748b;
-  }
-
-  .vtur-modal-header__close {
-    width: 2.5rem;
-    height: 2.5rem;
-    flex: 0 0 auto;
-  }
-
-  .vtur-modal-tabs {
-    padding: 1rem 1.5rem 0;
-    border-bottom: 1px solid #e2e8f0;
-  }
-
-  .vtur-modal-body-dense {
-    padding: 1.25rem;
-    max-height: 60vh;
-    overflow-y: auto;
-  }
-
-  .vtur-modal-section-compact {
-    border-radius: 0.9rem;
-    padding: 1rem;
-  }
-
-  .vtur-modal-notice {
-    border-radius: 0.85rem;
-    padding: 0.75rem 0.9rem;
-  }
-
-  .vtur-modal-list-item {
-    border-radius: 0.85rem;
-    padding: 0.8rem 0.9rem;
-  }
-
-  .vtur-modal-grid-compact {
-    gap: 1rem;
-  }
-
-  .vtur-modal-accordion-header {
-    display: flex;
-    align-items: stretch;
-    justify-content: space-between;
-    gap: 0;
-  }
-
-  .vtur-modal-accordion-trigger {
-    gap: 0.75rem;
-  }
-
-  .vtur-modal-accordion-badge {
-    width: 2.5rem;
-    height: 2.5rem;
-    flex: 0 0 auto;
-  }
-
-  .vtur-modal-accordion-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding-inline: 1rem;
-  }
-
-  .vtur-modal-accordion-panel {
-    padding: 1rem;
+    max-height: 92dvh;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
   }
 
   .vtur-dialog__body {
-    padding: 1.25rem;
-    min-height: 0;
-    overflow-y: auto;
-  }
-
-  .vtur-dialog__footer {
-    background: transparent;
-    flex: 0 0 auto;
-  }
-
-  .vtur-dialog__footer-actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    padding: 1rem 1.25rem;
-  }
-
-  .vtur-dialog__footer-actions .vtur-button {
-    min-width: 10.5rem;
-  }
-
-  .vtur-modal-footer {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 0.75rem;
-    padding: 1rem 1.25rem;
-    background: transparent;
-  }
-
-  .vtur-modal-footer--between {
-    justify-content: space-between;
-  }
-
-  .vtur-modal-footer__actions {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-    gap: 0.75rem;
-  }
-
-  .vtur-modal-footer .vtur-button,
-  .vtur-modal-footer__actions .vtur-button {
-    min-width: 10.5rem;
-  }
-
-  .vtur-confirm-dialog__actions {
-    display: flex;
-    width: 100%;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-  }
-
-  .vtur-confirm-dialog__actions .vtur-button {
-    min-width: 10.5rem;
-  }
-
-  .vtur-upload-dropzone {
-    border: 1.5px dashed #cbd5e1 !important;
-    border-radius: 18px !important;
-    background: linear-gradient(180deg, #f8fafc, #ffffff) !important;
-    min-height: unset !important;
-    transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-  }
-
-  .vtur-upload-dropzone:hover {
-    border-color: #86efac !important;
-    background: linear-gradient(180deg, #f0fdf4, #ffffff) !important;
-    box-shadow: 0 16px 34px rgba(22, 163, 74, 0.08);
-  }
-
-  .vtur-upload-dropzone__icon {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    border-radius: 999px;
-    background: #dcfce7;
-    color: #16a34a;
-  }
-
-  .vtur-upload-dropzone__title {
-    font-size: 0.98rem;
-    font-weight: 700;
-    color: #0f172a;
-  }
-
-  .vtur-upload-dropzone__meta {
-    font-size: 0.85rem;
-    color: #64748b;
-  }
-
-  .vtur-upload-dropzone__file {
-    font-size: 0.84rem;
-    font-weight: 600;
-    color: #15803d;
-  }
-
-  .vtur-upload-dropzone__hint {
-    font-size: 0.78rem;
-    color: #94a3b8;
-  }
-
-  .vtur-page-shell-full {
-    width: 100%;
-    max-width: none;
-  }
-
-  @media (max-width: 640px) {
-    .vtur-dialog-shell {
-      align-items: flex-end;
-      padding: 0;
-    }
-
-    .vtur-dialog__surface {
-      width: 100%;
-      max-height: 92dvh;
-      max-width: 100% !important;
-      border-radius: 20px 20px 0 0 !important;
-    }
-
-    .vtur-dialog__body {
-      padding: 1rem;
-    }
-
-    .vtur-dialog__header {
-      gap: 0.75rem;
-      padding: 0.85rem 1rem 0.75rem;
-    }
-
-    .vtur-dialog__title {
-      font-size: 0.98rem;
-    }
-
-    .vtur-dialog__description {
-      margin-top: 0.18rem;
-      font-size: 0.76rem;
-      line-height: 1.35;
-    }
-
-    .vtur-modal-header {
-      gap: 0.75rem;
-      padding: 0.85rem 1rem;
-    }
-
-    .vtur-modal-header__lead {
-      gap: 0.65rem;
-    }
-
-    .vtur-modal-header__icon {
-      width: 2rem;
-      height: 2rem;
-      border-radius: 0.7rem;
-    }
-
-    .vtur-modal-header__title {
-      font-size: 0.95rem;
-    }
-
-    .vtur-modal-header__subtitle {
-      margin-top: 0.12rem;
-      font-size: 0.74rem;
-      line-height: 1.3;
-    }
-
-    .vtur-modal-header__close {
-      width: 2.125rem;
-      height: 2.125rem;
-    }
-
-    .vtur-modal-tabs {
-      padding: 0.75rem 1rem 0;
-    }
-
-    .vtur-modal-body-dense {
-      padding: 0.9rem;
-      max-height: 56vh;
-    }
-
-    .vtur-modal-section-compact {
-      padding: 0.8rem;
-      border-radius: 0.8rem;
-    }
-
-    .vtur-modal-notice {
-      padding: 0.65rem 0.75rem;
-      border-radius: 0.75rem;
-    }
-
-    .vtur-modal-list-item {
-      padding: 0.7rem 0.75rem;
-      border-radius: 0.75rem;
-    }
-
-    .vtur-modal-grid-compact {
-      gap: 0.75rem;
-    }
-
-    .vtur-modal-accordion-trigger {
-      gap: 0.6rem;
-    }
-
-    .vtur-modal-accordion-badge {
-      width: 2rem;
-      height: 2rem;
-      min-width: 2rem;
-    }
-
-    .vtur-modal-accordion-actions {
-      gap: 0.35rem;
-      padding-inline: 0.55rem;
-    }
-
-    .vtur-modal-accordion-panel {
-      padding: 0.75rem;
-    }
-
-    .vtur-dialog__footer-actions {
-      flex-direction: column;
-      flex-wrap: nowrap;
-      justify-content: stretch;
-      align-items: stretch;
-      gap: 0.75rem;
-      width: 100%;
-    }
-
-    .vtur-dialog__footer-actions .vtur-button,
-    .vtur-modal-footer .vtur-button,
-    .vtur-modal-footer__actions .vtur-button,
-    .vtur-confirm-dialog__actions .vtur-button {
-      width: 100% !important;
-      justify-content: center !important;
-      min-width: 0 !important;
-    }
-
-    .vtur-modal-footer,
-    .vtur-modal-footer--between {
-      flex-direction: column;
-      align-items: stretch;
-      justify-content: stretch;
-    }
-
-    .vtur-modal-footer__actions,
-    .vtur-confirm-dialog__actions {
-      width: 100%;
-      flex-direction: column;
-      flex-wrap: nowrap;
-      align-items: stretch;
-      justify-content: stretch;
-    }
-
-    .vtur-modal-footer--between > :first-child:empty {
-      display: none;
-    }
-  }
-
-
-  .mural-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .mural-topbar__copy {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-  }
-
-  .mural-topbar__title {
-    font-size: 1rem;
-    font-weight: 800;
-    color: #0f172a;
-  }
-
-  .mural-topbar__subtitle,
-  .mural-muted {
-    font-size: 0.82rem;
-    color: #64748b;
-  }
-
-  .mural-desktop-grid {
-    display: grid;
-    grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
-    gap: 1rem;
-    min-height: calc(100vh - 19rem);
-  }
-
-  .mural-whatsapp-sidebar,
-  .mural-whatsapp-chat,
-  .mural-wa-mobile-list {
-    padding: 0 !important;
-    overflow: hidden;
-  }
-
-  .mural-whatsapp-sidebar {
-    display: flex;
-    flex-direction: column;
-    background: #f8fafc;
-    border: 1px solid rgba(148, 163, 184, 0.22);
-  }
-
-  .mural-whatsapp-sidebar-head {
-    display: flex;
-    flex-direction: column;
-    gap: 0.9rem;
     padding: 1rem;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
   }
 
-  .mural-whatsapp-sidebar-head h4 {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 800;
-    color: #0f172a;
+  .vtur-dialog__header {
+    gap: 0.75rem;
+    padding: 0.85rem 1rem 0.75rem;
   }
 
-  .mural-sidebar-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.45rem 0.75rem;
-    border-radius: 999px;
-    background: rgba(13, 148, 136, 0.12);
-    color: #0f766e;
+  .vtur-dialog__title {
+    font-size: 0.98rem;
+  }
+
+  .vtur-dialog__description {
+    margin-top: 0.18rem;
     font-size: 0.76rem;
-    font-weight: 700;
+    line-height: 1.35;
   }
 
-  .mural-search-shell {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    border: 1px solid rgba(148, 163, 184, 0.35);
-    border-radius: 999px;
-    background: #ffffff;
-    padding: 0 0.85rem;
-    color: #64748b;
+  .vtur-modal-header {
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
   }
 
-  .mural-whatsapp-search {
-    width: 100%;
-    border: 0;
-    background: transparent;
-    color: #0f172a;
-    padding: 0.75rem 0;
-    font-size: 0.9rem;
-    outline: none;
+  .vtur-modal-header__lead {
+    gap: 0.65rem;
   }
 
-  .mural-whatsapp-thread-list {
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    gap: 0.4rem;
-    overflow-y: auto;
+  .vtur-modal-header__icon {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.7rem;
+  }
+
+  .vtur-modal-header__title {
+    font-size: 0.95rem;
+  }
+
+  .vtur-modal-header__subtitle {
+    margin-top: 0.12rem;
+    font-size: 0.74rem;
+    line-height: 1.3;
+  }
+
+  .vtur-modal-header__close {
+    width: 2.125rem;
+    height: 2.125rem;
+  }
+
+  .vtur-modal-tabs {
+    padding: 0.75rem 1rem 0;
+  }
+
+  .vtur-modal-body-dense {
+    padding: 0.9rem;
+    max-height: 56vh;
+  }
+
+  .vtur-modal-section-compact {
+    padding: 0.8rem;
+    border-radius: 0.8rem;
+  }
+
+  .vtur-modal-notice {
+    padding: 0.65rem 0.75rem;
+    border-radius: 0.75rem;
+  }
+
+  .vtur-modal-list-item {
+    padding: 0.7rem 0.75rem;
+    border-radius: 0.75rem;
+  }
+
+  .vtur-modal-grid-compact {
+    gap: 0.75rem;
+  }
+
+  .vtur-modal-accordion-trigger {
+    gap: 0.6rem;
+  }
+
+  .vtur-modal-accordion-badge {
+    width: 2rem;
+    height: 2rem;
+    min-width: 2rem;
+  }
+
+  .vtur-modal-accordion-actions {
+    gap: 0.35rem;
+    padding-inline: 0.55rem;
+  }
+
+  .vtur-modal-accordion-panel {
     padding: 0.75rem;
   }
 
-  .mural-whatsapp-thread {
+  .vtur-dialog__footer-actions {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: stretch;
+    align-items: stretch;
+    gap: 0.75rem;
     width: 100%;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    border: 1px solid transparent;
-    border-radius: 16px;
-    background: transparent;
-    padding: 0.8rem 0.9rem;
-    text-align: left;
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
   }
 
-  .mural-whatsapp-thread:hover {
-    background: rgba(255, 255, 255, 0.8);
-    border-color: rgba(148, 163, 184, 0.3);
+  .vtur-dialog__footer-actions .vtur-button,
+  .vtur-modal-footer .vtur-button,
+  .vtur-modal-footer__actions .vtur-button,
+  .vtur-confirm-dialog__actions .vtur-button {
+    width: 100% !important;
+    justify-content: center !important;
+    min-width: 0 !important;
   }
 
-  .mural-whatsapp-thread.active {
-    background: rgba(37, 99, 235, 0.08);
-    border-color: rgba(37, 99, 235, 0.2);
-  }
-
-  .mural-thread-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 999px;
-    background: rgba(37, 99, 235, 0.12);
-    color: #1d4ed8;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.88rem;
-    font-weight: 800;
-    flex-shrink: 0;
-  }
-
-  .mural-thread-avatar.company {
-    background: rgba(234, 88, 12, 0.12);
-    color: #c2410c;
-  }
-
-  .mural-chat-avatar {
-    width: 42px;
-    height: 42px;
-  }
-
-  .mural-thread-content {
-    display: flex;
-    flex: 1;
-    min-width: 0;
+  .vtur-modal-footer,
+  .vtur-modal-footer--between {
     flex-direction: column;
-    gap: 0.15rem;
+    align-items: stretch;
+    justify-content: stretch;
   }
 
-  .mural-whatsapp-thread-line {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
-  .mural-whatsapp-thread-name {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 0.92rem;
-    font-weight: 700;
-    color: #0f172a;
-  }
-
-  .mural-whatsapp-thread-time {
-    font-size: 0.75rem;
-    color: #64748b;
-    flex-shrink: 0;
-  }
-
-  .mural-whatsapp-thread-subtitle {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 0.78rem;
-    color: #64748b;
-  }
-
-  .mural-thread-unread {
-    flex-shrink: 0;
-    border-radius: 999px;
-    background: #2563eb;
-    color: #ffffff;
-    padding: 0.3rem 0.5rem;
-    font-size: 0.72rem;
-    font-weight: 800;
-    line-height: 1;
-  }
-
-  .mural-whatsapp-chat {
-    display: flex;
+  .vtur-modal-footer__actions,
+  .vtur-confirm-dialog__actions {
+    width: 100%;
     flex-direction: column;
-    background: #ffffff;
-    border: 1px solid rgba(148, 163, 184, 0.22);
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: stretch;
   }
 
-  .mural-whatsapp-chat-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 1rem 1.1rem;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  .vtur-modal-footer--between > :first-child:empty {
+    display: none;
   }
+}
 
-  .mural-chat-header-left,
-  .mural-chat-header-info {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    min-width: 0;
-  }
+.mural-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
 
-  .mural-chat-header-info {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.15rem;
-  }
+.mural-topbar__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
 
-  .mural-chat-title {
-    font-size: 1rem;
-    font-weight: 800;
-    color: #0f172a;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-  }
+.mural-topbar__title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
 
-  .mural-chat-subtitle {
-    font-size: 0.8rem;
-    color: #64748b;
-  }
+.mural-topbar__subtitle,
+.mural-muted {
+  font-size: 0.82rem;
+  color: #64748b;
+}
 
-  .mural-whatsapp-chat-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1rem;
-    background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
+.mural-desktop-grid {
+  display: grid;
+  grid-template-columns: minmax(300px, 360px) minmax(0, 1fr);
+  gap: 1rem;
+  min-height: calc(100vh - 19rem);
+}
 
-  .chat-empty {
-    padding: 3rem 1rem;
-    text-align: center;
-    color: #475569;
-  }
+.mural-whatsapp-sidebar,
+.mural-whatsapp-chat,
+.mural-wa-mobile-list {
+  padding: 0 !important;
+  overflow: hidden;
+}
 
-  .chat-bubble {
-    max-width: 78%;
-    min-width: 0;
-    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
-  }
+.mural-whatsapp-sidebar {
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
 
-  .chat-bubble.sent {
-    margin-left: auto;
-    border-radius: 18px 18px 4px 18px;
-    background: #2563eb;
-    color: #ffffff;
-  }
+.mural-whatsapp-sidebar-head {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
 
-  .chat-bubble.received {
-    border-radius: 18px 18px 18px 4px;
-    border: 1px solid rgba(148, 163, 184, 0.3);
-    background: #ffffff;
-    color: #0f172a;
-  }
+.mural-whatsapp-sidebar-head h4 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
 
-  .chat-bubble-body {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: 0.65rem;
-    padding: 0.9rem 1rem;
-  }
+.mural-sidebar-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(13, 148, 136, 0.12);
+  color: #0f766e;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
 
-  .chat-bubble-header,
-  .chat-bubble-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    min-width: 0;
-    font-size: 0.77rem;
-    color: rgba(15, 23, 42, 0.62);
-  }
+.mural-search-shell {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 0 0.85rem;
+  color: #64748b;
+}
 
-  .chat-bubble.sent .chat-bubble-meta {
-    color: rgba(255, 255, 255, 0.85);
-  }
+.mural-whatsapp-search {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #0f172a;
+  padding: 0.75rem 0;
+  font-size: 0.9rem;
+  outline: none;
+}
 
-  .chat-bubble-status {
-    font-weight: 600;
-    white-space: nowrap;
-  }
+.mural-whatsapp-thread-list {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.4rem;
+  overflow-y: auto;
+  padding: 0.75rem;
+}
 
-  .chat-bubble-text {
-    white-space: pre-wrap;
-    word-break: break-word;
-    overflow-wrap: anywhere;
-    font-size: 0.95rem;
-    line-height: 1.45;
-  }
+.mural-whatsapp-thread {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: transparent;
+  padding: 0.8rem 0.9rem;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
+}
 
-  .chat-bubble-actions,
-  .chat-attachments-files {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
+.mural-whatsapp-thread:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(148, 163, 184, 0.3);
+}
 
-  .chat-attachment-file {
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-    text-decoration: none;
-    padding: 0.65rem 0.8rem;
-    border-radius: 14px;
-    border: 1px solid rgba(148, 163, 184, 0.35);
-    background: rgba(15, 23, 42, 0.04);
-    color: inherit;
-  }
+.mural-whatsapp-thread.active {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.2);
+}
 
-  .chat-bubble.sent .chat-attachment-file {
-    border-color: rgba(255, 255, 255, 0.24);
-    background: rgba(255, 255, 255, 0.12);
-  }
+.mural-thread-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.88rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
 
-  .chat-attachment-file-icon {
-    display: inline-flex;
-    width: 22px;
-    justify-content: center;
-    opacity: 0.7;
-    font-weight: 700;
-  }
+.mural-thread-avatar.company {
+  background: rgba(234, 88, 12, 0.12);
+  color: #c2410c;
+}
 
-  .chat-attachment-file-info {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-  }
+.mural-chat-avatar {
+  width: 42px;
+  height: 42px;
+}
 
-  .chat-attachment-file-name {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 280px;
-    font-size: 0.82rem;
-    font-weight: 700;
-  }
+.mural-thread-content {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.15rem;
+}
 
-  .chat-inline-btn {
-    display: inline-flex;
-    align-items: center;
-    border: 0;
-    background: transparent;
-    color: inherit;
-    cursor: pointer;
-    padding: 0;
-    font-size: 0.76rem;
-    font-weight: 700;
-  }
+.mural-whatsapp-thread-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
 
-  .chat-inline-btn--danger {
-    color: #ef4444;
-  }
+.mural-whatsapp-thread-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #0f172a;
+}
 
-  .chat-bubble.sent .chat-inline-btn--danger {
-    color: #fee2e2;
-  }
+.mural-whatsapp-thread-time {
+  font-size: 0.75rem;
+  color: #64748b;
+  flex-shrink: 0;
+}
 
-  .mural-whatsapp-input {
-    border-top: 1px solid rgba(148, 163, 184, 0.2);
-    background: #ffffff;
-    padding: 1rem 1.1rem 1.1rem;
-  }
+.mural-whatsapp-thread-subtitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  color: #64748b;
+}
 
-  .mural-input-toolbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
-    flex-wrap: wrap;
-  }
+.mural-thread-unread {
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #2563eb;
+  color: #ffffff;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+}
 
-  .mural-inline-target,
-  .mural-inline-note {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.45rem;
-    font-size: 0.8rem;
-    color: #64748b;
-  }
+.mural-whatsapp-chat {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
 
-  .mural-input-row {
-    display: flex;
-    align-items: flex-end;
-    gap: 0.75rem;
-  }
+.mural-whatsapp-chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
 
-  .mural-input-row .vtur-input {
-    min-height: 100px;
-    resize: vertical;
-  }
+.mural-chat-header-left,
+.mural-chat-header-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
 
-  .mural-wa-mobile {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
+.mural-chat-header-info {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+}
 
-  .mural-wa-mobile-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-    padding: 1rem 1rem 0.75rem;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-  }
+.mural-chat-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
 
-  .mural-wa-mobile-title {
-    font-size: 1rem;
-    font-weight: 800;
-    color: #0f172a;
-  }
+.mural-chat-subtitle {
+  font-size: 0.8rem;
+  color: #64748b;
+}
 
-  .mural-wa-mobile-tabs {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.5rem;
-    padding: 0.85rem 1rem 0.25rem;
-  }
+.mural-whatsapp-chat-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+  background: linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
 
-  .mural-wa-tab {
-    border: 0;
-    border-radius: 999px;
-    background: rgba(148, 163, 184, 0.14);
-    color: #475569;
-    padding: 0.65rem 0.85rem;
-    font-size: 0.78rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    cursor: pointer;
-  }
+.chat-empty {
+  padding: 3rem 1rem;
+  text-align: center;
+  color: #475569;
+}
 
-  .mural-wa-tab.active {
-    background: rgba(37, 99, 235, 0.12);
-    color: #1d4ed8;
-  }
+.chat-bubble {
+  max-width: 78%;
+  min-width: 0;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+}
 
-  .mural-wa-mobile-list .mural-search-shell {
-    margin: 0 1rem 0.5rem;
-  }
+.chat-bubble.sent {
+  margin-left: auto;
+  border-radius: 18px 18px 4px 18px;
+  background: #2563eb;
+  color: #ffffff;
+}
 
-  .mural-wa-back {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 999px;
-    border: 1px solid rgba(148, 163, 184, 0.28);
-    background: #ffffff;
-    color: #0f172a;
-    cursor: pointer;
-  }
+.chat-bubble.received {
+  border-radius: 18px 18px 18px 4px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: #ffffff;
+  color: #0f172a;
+}
 
+.chat-bubble-body {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.9rem 1rem;
+}
+
+.chat-bubble-header,
+.chat-bubble-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+  font-size: 0.77rem;
+  color: rgba(15, 23, 42, 0.62);
+}
+
+.chat-bubble.sent .chat-bubble-meta {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.chat-bubble-status {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chat-bubble-text {
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.chat-bubble-actions,
+.chat-attachments-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chat-attachment-file {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
+  padding: 0.65rem 0.8rem;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.04);
+  color: inherit;
+}
+
+.chat-bubble.sent .chat-attachment-file {
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.chat-attachment-file-icon {
+  display: inline-flex;
+  width: 22px;
+  justify-content: center;
+  opacity: 0.7;
+  font-weight: 700;
+}
+
+.chat-attachment-file-info {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.chat-attachment-file-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.chat-inline-btn {
+  display: inline-flex;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.chat-inline-btn--danger {
+  color: #ef4444;
+}
+
+.chat-bubble.sent .chat-inline-btn--danger {
+  color: #fee2e2;
+}
+
+.mural-whatsapp-input {
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  background: #ffffff;
+  padding: 1rem 1.1rem 1.1rem;
+}
+
+.mural-input-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.mural-inline-target,
+.mural-inline-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.mural-input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+}
+
+.mural-input-row .vtur-input {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.mural-wa-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mural-wa-mobile-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.mural-wa-mobile-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.mural-wa-mobile-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0.85rem 1rem 0.25rem;
+}
+
+.mural-wa-tab {
+  border: 0;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.14);
+  color: #475569;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.mural-wa-tab.active {
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+}
+
+.mural-wa-mobile-list .mural-search-shell {
+  margin: 0 1rem 0.5rem;
+}
+
+.mural-wa-back {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: #ffffff;
+  color: #0f172a;
+  cursor: pointer;
+}
 
 /* ===== utilitários do Tailwind, na mesma posição do @tailwind utilities do v3 ===== */
 @tailwind utilities;
 
 /* Compatibilidade: degradês interpolados em sRGB, como no Tailwind 3 (o v4 usa oklab). */
-.bg-gradient-to-t { --tw-gradient-position: to top; }
-.bg-gradient-to-tr { --tw-gradient-position: to top right; }
-.bg-gradient-to-r { --tw-gradient-position: to right; }
-.bg-gradient-to-br { --tw-gradient-position: to bottom right; }
-.bg-gradient-to-b { --tw-gradient-position: to bottom; }
-.bg-gradient-to-bl { --tw-gradient-position: to bottom left; }
-.bg-gradient-to-l { --tw-gradient-position: to left; }
-.bg-gradient-to-tl { --tw-gradient-position: to top left; }
+.bg-gradient-to-t {
+  --tw-gradient-position: to top;
+}
+.bg-gradient-to-tr {
+  --tw-gradient-position: to top right;
+}
+.bg-gradient-to-r {
+  --tw-gradient-position: to right;
+}
+.bg-gradient-to-br {
+  --tw-gradient-position: to bottom right;
+}
+.bg-gradient-to-b {
+  --tw-gradient-position: to bottom;
+}
+.bg-gradient-to-bl {
+  --tw-gradient-position: to bottom left;
+}
+.bg-gradient-to-l {
+  --tw-gradient-position: to left;
+}
+.bg-gradient-to-tl {
+  --tw-gradient-position: to top left;
+}
 
 /* ===== utilitários próprios (era @layer utilities) ===== */
 
-  /* Helper: colapsa qualquer grid para 1 coluna no mobile */
-  @media (max-width: 640px) {
-    .vtur-mobile-stack {
-      grid-template-columns: 1fr !important;
-    }
+/* Helper: colapsa qualquer grid para 1 coluna no mobile */
+@media (max-width: 640px) {
+  .vtur-mobile-stack {
+    grid-template-columns: 1fr !important;
   }
+}
 
-  /* ── Scrollbar global — light ── */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+/* ── Scrollbar global — light ── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+/* Scrollbar para áreas escuras (sidebar, dialogs dark) */
+.scrollbar-dark {
+  scrollbar-width: thin;
+  scrollbar-color: #475569 transparent;
+}
+
+.scrollbar-dark::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-dark::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb {
+  background-color: #475569;
+  border-radius: 20px;
+}
+
+.scrollbar-dark::-webkit-scrollbar-thumb:hover {
+  background-color: #64748b;
+}
+
+/* ── Animações ── */
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.25s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
   }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
 
-  ::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1;
-    border-radius: 20px;
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
   }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background-color: #94a3b8;
+  to {
+    opacity: 1;
+    transform: translateX(0);
   }
+}
 
-  /* Scrollbar para áreas escuras (sidebar, dialogs dark) */
-  .scrollbar-dark {
-    scrollbar-width: thin;
-    scrollbar-color: #475569 transparent;
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
   }
-
-  .scrollbar-dark::-webkit-scrollbar {
-    width: 6px;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
-
-  .scrollbar-dark::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .scrollbar-dark::-webkit-scrollbar-thumb {
-    background-color: #475569;
-    border-radius: 20px;
-  }
-
-  .scrollbar-dark::-webkit-scrollbar-thumb:hover {
-    background-color: #64748b;
-  }
-
-  /* ── Animações ── */
-  .animate-fade-in {
-    animation: fadeIn 0.2s ease-out;
-  }
-
-  .animate-slide-in {
-    animation: slideIn 0.25s ease-out;
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.25s ease-out;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-4px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateX(-12px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
-
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
+}
 
 /* ===== demais regras (sem camada), na ordem original ===== */
-
 
 /* ========== VARIÁVEIS DE DESIGN ========== */
 :root {
@@ -2620,29 +2730,91 @@ layer(base);
 
   /* Cores dos Módulos — mantidas para compatibilidade de código,
      mas não usadas visualmente em KPIs e Cards (ver componentes) */
-  --vtur-blue-50: #eff6ff; --vtur-blue-100: #dbeafe; --vtur-blue-500: #3b82f6; --vtur-blue-600: #2563eb; --vtur-blue-700: #1d4ed8;
-  --vtur-teal-50: #f0fdfa; --vtur-teal-100: #ccfbf1; --vtur-teal-500: #14b8a6; --vtur-teal-600: #0d9488; --vtur-teal-700: #0f766e;
-  --vtur-green-50: #f0fdf4; --vtur-green-100: #dcfce7; --vtur-green-500: #22c55e; --vtur-green-600: #16a34a; --vtur-green-700: #15803d;
-  --vtur-orange-50: #fff7ed; --vtur-orange-100: #ffedd5; --vtur-orange-500: #f97316; --vtur-orange-600: #ea580c; --vtur-orange-700: #c2410c;
-  --vtur-red-50: #fef2f2; --vtur-red-100: #fee2e2; --vtur-red-500: #ef4444; --vtur-red-600: #dc2626; --vtur-red-700: #b91c1c;
+  --vtur-blue-50: #eff6ff;
+  --vtur-blue-100: #dbeafe;
+  --vtur-blue-500: #3b82f6;
+  --vtur-blue-600: #2563eb;
+  --vtur-blue-700: #1d4ed8;
+  --vtur-teal-50: #f0fdfa;
+  --vtur-teal-100: #ccfbf1;
+  --vtur-teal-500: #14b8a6;
+  --vtur-teal-600: #0d9488;
+  --vtur-teal-700: #0f766e;
+  --vtur-green-50: #f0fdf4;
+  --vtur-green-100: #dcfce7;
+  --vtur-green-500: #22c55e;
+  --vtur-green-600: #16a34a;
+  --vtur-green-700: #15803d;
+  --vtur-orange-50: #fff7ed;
+  --vtur-orange-100: #ffedd5;
+  --vtur-orange-500: #f97316;
+  --vtur-orange-600: #ea580c;
+  --vtur-orange-700: #c2410c;
+  --vtur-red-50: #fef2f2;
+  --vtur-red-100: #fee2e2;
+  --vtur-red-500: #ef4444;
+  --vtur-red-600: #dc2626;
+  --vtur-red-700: #b91c1c;
 
   /* Cores dos Módulos - Formato --color-* para compatibilidade */
-  --color-clientes-50: #eff6ff; --color-clientes-100: #dbeafe; --color-clientes-500: #3b82f6; --color-clientes-600: #2563eb; --color-clientes-700: #1d4ed8;
-  --color-orcamentos-50: #eff6ff; --color-orcamentos-100: #dbeafe; --color-orcamentos-500: #3b82f6; --color-orcamentos-600: #2563eb; --color-orcamentos-700: #1d4ed8;
-  --color-vendas-50: #f0fdf4; --color-vendas-100: #dcfce7; --color-vendas-500: #22c55e; --color-vendas-600: #16a34a; --color-vendas-700: #15803d;
-  --color-financeiro-50: #fff7ed; --color-financeiro-100: #ffedd5; --color-financeiro-500: #f97316; --color-financeiro-600: #ea580c; --color-financeiro-700: #c2410c;
-  --color-operacao-50: #f0fdfa; --color-operacao-100: #ccfbf1; --color-operacao-500: #14b8a6; --color-operacao-600: #0d9488; --color-operacao-700: #0f766e;
+  --color-clientes-50: #eff6ff;
+  --color-clientes-100: #dbeafe;
+  --color-clientes-500: #3b82f6;
+  --color-clientes-600: #2563eb;
+  --color-clientes-700: #1d4ed8;
+  --color-orcamentos-50: #eff6ff;
+  --color-orcamentos-100: #dbeafe;
+  --color-orcamentos-500: #3b82f6;
+  --color-orcamentos-600: #2563eb;
+  --color-orcamentos-700: #1d4ed8;
+  --color-vendas-50: #f0fdf4;
+  --color-vendas-100: #dcfce7;
+  --color-vendas-500: #22c55e;
+  --color-vendas-600: #16a34a;
+  --color-vendas-700: #15803d;
+  --color-financeiro-50: #fff7ed;
+  --color-financeiro-100: #ffedd5;
+  --color-financeiro-500: #f97316;
+  --color-financeiro-600: #ea580c;
+  --color-financeiro-700: #c2410c;
+  --color-operacao-50: #f0fdfa;
+  --color-operacao-100: #ccfbf1;
+  --color-operacao-500: #14b8a6;
+  --color-operacao-600: #0d9488;
+  --color-operacao-700: #0f766e;
 
   /* Cores Semânticas */
-  --color-success-50: #f0fdf4; --color-success-100: #dcfce7; --color-success-500: #22c55e; --color-success-600: #16a34a; --color-success-700: #15803d;
-  --color-warning-50: #fff7ed; --color-warning-100: #ffedd5; --color-warning-500: #f97316; --color-warning-600: #ea580c; --color-warning-700: #c2410c;
-  --color-danger-50: #fef2f2; --color-danger-100: #fee2e2; --color-danger-500: #ef4444; --color-danger-600: #dc2626; --color-danger-700: #b91c1c;
-  --color-info-50: #eef2ff; --color-info-100: #e0e7ff; --color-info-500: #6366f1; --color-info-600: #4f46e5; --color-info-700: #4338ca;
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-700: #15803d;
+  --color-warning-50: #fff7ed;
+  --color-warning-100: #ffedd5;
+  --color-warning-500: #f97316;
+  --color-warning-600: #ea580c;
+  --color-warning-700: #c2410c;
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-700: #b91c1c;
+  --color-info-50: #eef2ff;
+  --color-info-100: #e0e7ff;
+  --color-info-500: #6366f1;
+  --color-info-600: #4f46e5;
+  --color-info-700: #4338ca;
 
   /* Surface */
   --vtur-bg: #f1f5f9;
   --vtur-bg-card: #ffffff;
   --vtur-border: rgba(15, 23, 42, 0.08);
+  --vtur-surface: var(--vtur-bg-card);
+  --vtur-border-subtle: #e2e8f0;
+  --vtur-radius-card: 1rem;
+  --vtur-radius-control: 0.65rem;
+  --vtur-shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --vtur-focus-ring: rgba(79, 70, 229, 0.28);
 
   /* Texto */
   --vtur-text: #0f172a;
@@ -2668,15 +2840,11 @@ layer(base);
 
 /* ========== BASE ========== */
 
-
 /* ========== COMPONENTES ========== */
-
 
 /* ========== COMPONENTES UTILITÁRIOS VTUR ========== */
 
-
 /* ========== UTILITÁRIOS ========== */
-
 
 .vtur-dashboard-grid {
   display: grid;
@@ -2729,10 +2897,9 @@ thead.bg-slate-50 td {
 
 /* Modo compacto: anula o line-height global do vtur-layout */
 .vtur-table__body td.leading-tight,
-.vtur-table__body td.leading-tight *  {
+.vtur-table__body td.leading-tight * {
   line-height: 1.3 !important;
 }
-
 
 .vtur-table__body tr:hover {
   background: rgba(238, 242, 255, 0.45);
@@ -2847,7 +3014,6 @@ thead.bg-slate-50 td {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
 }
 
-
 /* =========================================================
    MOBILE (< 1024px) — topbar height override
    Feito via CSS mínimo; comportamento controlado via Svelte
@@ -2905,9 +3071,9 @@ thead.bg-slate-50 td {
    ========================================================= */
 
 @media (max-width: 640px) {
-
   /* Overflow global */
-  html, body {
+  html,
+  body {
     overflow-x: hidden !important;
     max-width: 100vw !important;
   }
@@ -2977,7 +3143,7 @@ thead.bg-slate-50 td {
 
   /* Todas as tabelas que NÃO são mobile-cards: wrapper com scroll horizontal */
   .overflow-x-auto,
-  [class*="overflow-x-auto"] {
+  [class*='overflow-x-auto'] {
     -webkit-overflow-scrolling: touch !important;
   }
 
@@ -2988,7 +3154,9 @@ thead.bg-slate-50 td {
   }
 
   /* Inputs: evita zoom iOS */
-  input, select, textarea {
+  input,
+  select,
+  textarea {
     font-size: 16px !important;
   }
 
@@ -3043,7 +3211,7 @@ thead.bg-slate-50 td {
     border: 1px solid #e2e8f0 !important;
     border-radius: 16px !important;
     background: #ffffff !important;
-    box-shadow: 0 4px 16px rgba(15,23,42,0.10) !important;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.1) !important;
     overflow: hidden !important;
     box-sizing: border-box !important;
   }
@@ -3092,12 +3260,12 @@ thead.bg-slate-50 td {
   }
 
   .table-mobile-cards tbody > tr > td:not([data-label]),
-  .table-mobile-cards tbody > tr > td[data-label=""] {
+  .table-mobile-cards tbody > tr > td[data-label=''] {
     grid-template-columns: 1fr !important;
   }
 
   .table-mobile-cards tbody > tr > td:not([data-label])::before,
-  .table-mobile-cards tbody > tr > td[data-label=""]::before {
+  .table-mobile-cards tbody > tr > td[data-label='']::before {
     display: none !important;
   }
 
@@ -3149,8 +3317,8 @@ thead.bg-slate-50 td {
 
   /* Badge inline (status, dot) — não virar block */
   .table-mobile-cards tbody > tr > td span.inline-flex,
-  .table-mobile-cards tbody > tr > td span[class*="rounded-full"],
-  .table-mobile-cards tbody > tr > td span[class*="w-2"] {
+  .table-mobile-cards tbody > tr > td span[class*='rounded-full'],
+  .table-mobile-cards tbody > tr > td span[class*='w-2'] {
     display: inline-flex !important;
   }
 
@@ -3224,7 +3392,9 @@ thead.bg-slate-50 td {
   }
 
   /* Células do calendário */
-  .fc .fc-daygrid-day { min-height: 52px !important; }
+  .fc .fc-daygrid-day {
+    min-height: 52px !important;
+  }
   .fc .fc-daygrid-day-number {
     font-size: 0.9rem !important;
     font-weight: 500 !important;
@@ -3242,7 +3412,9 @@ thead.bg-slate-50 td {
   }
 
   /* Eventos */
-  .fc .fc-event { border-radius: 6px !important; }
+  .fc .fc-event {
+    border-radius: 6px !important;
+  }
   .fc .fc-event-title {
     font-size: 0.78rem !important;
     font-weight: 600 !important;
@@ -3252,7 +3424,9 @@ thead.bg-slate-50 td {
   }
 
   /* Vista de dia — slots legíveis */
-  .fc .fc-timegrid-slot { height: 48px !important; }
+  .fc .fc-timegrid-slot {
+    height: 48px !important;
+  }
   .fc .fc-timegrid-slot-label-cushion {
     font-size: 0.78rem !important;
     color: #94a3b8 !important;
@@ -3284,7 +3458,9 @@ thead.bg-slate-50 td {
     background: transparent !important;
     color: #64748b !important;
     cursor: pointer !important;
-    transition: background 0.15s, color 0.15s !important;
+    transition:
+      background 0.15s,
+      color 0.15s !important;
     border-right: 1.5px solid #e2e8f0 !important;
   }
 
@@ -3296,13 +3472,11 @@ thead.bg-slate-50 td {
     background: #0f172a !important;
     color: #ffffff !important;
   }
-
 }
 
 /* =========================================================
    MURAL DE RECADOS
    ========================================================= */
-
 
 /* =========================================================
    UTILITÁRIO
@@ -3344,7 +3518,7 @@ thead.bg-slate-50 td {
    ========================================================= */
 @media (prefers-color-scheme: dark) {
   /* Inputs, selects, textareas — sempre fundo branco */
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
   select,
   textarea {
     background-color: #ffffff !important;
@@ -3359,24 +3533,24 @@ thead.bg-slate-50 td {
   .vtur-table-shell,
   .vtur-page-wrap,
   .bg-white,
-  [class*="bg-white"] {
+  [class*='bg-white'] {
     background-color: #ffffff !important;
     color: #0f172a !important;
   }
 
   /* Flowbite específico — neutraliza dark: classes */
-  [class*="dark:bg-gray"],
-  [class*="dark:bg-slate"],
-  [class*="dark:text-white"],
-  [class*="dark:border-gray"] {
+  [class*='dark:bg-gray'],
+  [class*='dark:bg-slate'],
+  [class*='dark:text-white'],
+  [class*='dark:border-gray'] {
     background-color: #ffffff !important;
     color: #0f172a !important;
   }
 
   /* Modal e overlays */
   .vtur-modal,
-  [role="dialog"],
-  [role="dialog"] > div {
+  [role='dialog'],
+  [role='dialog'] > div {
     background-color: #ffffff !important;
     color: #0f172a !important;
   }
@@ -3385,12 +3559,18 @@ thead.bg-slate-50 td {
   label,
   p,
   span,
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     color: inherit;
   }
 
   /* Body e html — fundo claro forçado */
-  html, body {
+  html,
+  body {
     background-color: #f8fafc !important;
     color: #0f172a !important;
     color-scheme: light !important;

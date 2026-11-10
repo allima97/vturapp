@@ -13,7 +13,7 @@ type CronConsultoriaBody = {
 };
 
 function secretMatches(expected: string, received: string | null) {
-  const actual = String(received || "");
+  const actual = String(received || '');
   if (!expected || actual.length !== expected.length) return false;
   let diff = 0;
   for (let i = 0; i < expected.length; i += 1) {
@@ -31,13 +31,13 @@ function readCronConsultoriaBody(value: unknown): CronConsultoriaBody {
 function disabledCronResponse(dryRun: boolean) {
   return json(
     {
-      status: "disabled",
+      status: 'disabled',
       implemented: false,
       dryRun,
-      action: "none",
+      action: 'none',
       pendentes: 0,
       message:
-        "Cron lembretes-consultoria esta desativado: endpoint reservado, sem execucao operacional."
+        'Cron lembretes-consultoria esta desativado: endpoint reservado, sem execucao operacional.'
     },
     { headers: NO_STORE_HEADERS }
   );
@@ -45,9 +45,9 @@ function disabledCronResponse(dryRun: boolean) {
 
 async function handleCronRequest(request: Request) {
   const CRON_SECRET = env.CRON_SECRET_CONSULTORIA || env.CRON_SECRET;
-  const secret = request.headers.get("x-cron-secret");
+  const secret = request.headers.get('x-cron-secret');
   if (!CRON_SECRET || !secretMatches(CRON_SECRET, secret)) {
-    return json({ error: "Unauthorized" }, { status: 401, headers: NO_STORE_HEADERS });
+    return json({ error: 'Unauthorized' }, { status: 401, headers: NO_STORE_HEADERS });
   }
 
   const bodyResult = await readJsonBodyLimited(request, MAX_CRON_BODY_BYTES);

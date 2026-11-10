@@ -6,6 +6,7 @@
 _Última atualização: 25/09/2026, 21:00._
 
 ## Onde paramos
+
 - **Fase 2 concluída para `/api/v1`:** as 252 rotas de `/api/v1` rodam no Hono (`docs/api-inventory.md`: 252 de 261 endpoints). Os 9 restantes são o catch-all e `src/routes/api/auth`.
 - **Fase 2.6, lote 3, gravado no Mac e sem commit:** 34 rotas dos domínios pequenos, mais as 3 rotas profundas que tinham ficado no SvelteKit.
 - **Decisão do usuário (24/09/2026):** as rotas de login e autenticação em `src/routes/api/auth` (login, convite, set-session, turnstile e passkeys) **não serão migradas**. Elas continuam no SvelteKit, sem alteração.
@@ -24,35 +25,39 @@ _Última atualização: 25/09/2026, 21:00._
   - depois, Fase 3.5 (dividir telas gigantes).
 
 ## Pendências do usuário
+
 1. No Mac: `npm test` (629 testes), depois commit/push da Fase 3.4.
 2. Publicar com `npm run cf:deploy`. Depois, conferir no DevTools (aba Rede, qualquer chamada `/api/v1/...`):
    - o header `cf-placement` deve mostrar algo como `remote-PDX` ou `remote-SEA`;
    - o `server-timing` deve cair.
-   Para desfazer: remover o bloco `[placement]` e publicar de novo.
-2. Em produção, conferir:
+     Para desfazer: remover o bloco `[placement]` e publicar de novo.
+3. Em produção, conferir:
    - Lote 3: cadastros de cidades, países, subdivisões, tipos de produto e circuitos; consultorias (inclusive o .ics); convites (enviar e aceitar); CRM (biblioteca e assinatura); perfil e assinatura; menu; CEP; equipe; QR; vouchers (assets); e-mail de boas-vindas; aniversariantes.
    - As 3 rotas profundas: permissões por tipo de usuário, regra de comissão por id e acompanhante de cliente.
    - Cron: nos logs do Worker, confirmar que o `scheduled` continua chamando `/api/v1/read-model/rebuild` com sucesso (200). `cron/alerta-comissao` e `cron/lembretes-consultoria` continuam exigindo o segredo.
-3. Pendências antigas:
+4. Pendências antigas:
    - Rodar `supabase/manual/2026-09-24_read_model_cleanup.sql` depois do deploy (pedir aprovação).
    - Confirmar o build do Cloudflare com `npm run cf:build` e os secrets `CRON_SECRET`/`WORKER_BASE_URL`.
 
 ## Fases
-| Fase | Status | Resumo |
-|---|---|---|
-| 0: read model v4 | ✅ commit | Triggers de dirty em produção, rebuild v4, correções. |
-| 1: paridade | ✅ commit | Inventário de APIs, testes de caracterização, auditoria em `logs`. |
-| 2: Hono | ✅ commit | 252 rotas de `/api/v1` no Hono. `api/auth` não migra (decisão do usuário). |
-| 3: telas, navegação, acessibilidade, velocidade | ✅ commit | 3.1 a 3.10. |
-| 4: design system | ✅ commit | Tailwind 4, Flowbite 1.33 (componentes do 0.48 copiados), ícones Flowbite. `!important`: fica como está (ver 4.4). |
-| 5: UX e navegação | ✅ commit | Ctrl+K, acessibilidade, placar, ficha do cliente, revisão do `/negado`. |
-| 6: tempo real | ✅ 6.1 com commit | Recados em tempo real. Próximos: vendas por empresa, placar ao vivo. |
-| Relatório de Performance por agência | ⏳ implementado, sem commit | Tela `/relatorios/performance` + PDF. Ver a seção abaixo. |
+
+| Fase                                            | Status                      | Resumo                                                                                                             |
+| ----------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| 0: read model v4                                | ✅ commit                   | Triggers de dirty em produção, rebuild v4, correções.                                                              |
+| 1: paridade                                     | ✅ commit                   | Inventário de APIs, testes de caracterização, auditoria em `logs`.                                                 |
+| 2: Hono                                         | ✅ commit                   | 252 rotas de `/api/v1` no Hono. `api/auth` não migra (decisão do usuário).                                         |
+| 3: telas, navegação, acessibilidade, velocidade | ✅ commit                   | 3.1 a 3.10.                                                                                                        |
+| 4: design system                                | ✅ commit                   | Tailwind 4, Flowbite 1.33 (componentes do 0.48 copiados), ícones Flowbite. `!important`: fica como está (ver 4.4). |
+| 5: UX e navegação                               | ✅ commit                   | Ctrl+K, acessibilidade, placar, ficha do cliente, revisão do `/negado`.                                            |
+| 6: tempo real                                   | ✅ 6.1 com commit           | Recados em tempo real. Próximos: vendas por empresa, placar ao vivo.                                               |
+| Relatório de Performance por agência            | ⏳ implementado, sem commit | Tela `/relatorios/performance` + PDF. Ver a seção abaixo.                                                          |
 
 ## API no Hono
+
 Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os routers em `src/lib/server/api/routes/<dominio>/index.ts` e o registro em `src/lib/server/api/app.ts`.
 
 **Detalhes que precisam ser lembrados:**
+
 - **Arquivos-apelido** (`export { GET } from '../outra/+server'`): o gerador não os migra. É preciso registrar o mesmo handler no caminho do apelido, antes das rotas `/:param`, e trocar o arquivo por uma ponte. Se isso não for feito, a ponte responde 404. Apelidos tratados: `orcamentos/interaction` → `interacao`, `viagens/list` → raiz, `documentos-viagens/list` → `operacao/documentos-viagens`.
 - **`cards`:** os módulos de `aniversario.svg`, `render.png` e `render.svg` usam `-` no nome do arquivo, para o Vite não tratá-los como asset. As URLs não mudam.
 - **Helpers que continuam em `routes/`:** `conciliacao/_legacy.ts`, `conciliacao/_types.ts`, `relatorios/_legacyForward.ts`, `preferencias/_shared.ts`, `mural/_shared.ts` e `cards/_render.ts`. Os módulos importam esses helpers por caminho relativo.
@@ -68,11 +73,13 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
 ## Fase 3: telas, navegação, acessibilidade e velocidade (sem mudar regra de negócio)
 
 **Situação encontrada:**
+
 - 126 páginas em `src/routes/(app)`.
 - Nenhuma página importa `flowbite-svelte` diretamente: todas usam o kit próprio `$lib/components/ui` (Button, Card, Dialog, DataTable, Tabs, Dropdown, campos de formulário etc.), e 19 desses componentes usam Flowbite por baixo.
 - **Consequência:** a melhoria de layout e acessibilidade é feita no kit, e vale para todas as telas de uma vez, sem reescrever página por página.
 
 **3.1 (feito):**
+
 - **"Dados atualizados há X" no dashboard:** nunca aparecia, porque a RPC `dashboard_vendas_summary_from_read_model` não devolve `rebuilt_at`. Agora a data vem de `ranking_read_model_status` (modelo v4), consultada em paralelo com a RPC. Mostra a reconstrução mais antiga entre os meses e empresas exibidos, em min, h ou dias, com a data completa ao passar o mouse. Se a consulta falhar, o dashboard continua funcionando, só sem a indicação. Nenhuma mudança no banco.
 - **`svelte-check`:**
   - a propriedade `rebuiltAt` entrou no tipo `VendasKpiDashboardSummary`;
@@ -80,6 +87,7 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
 - **Verificação:** 605 testes, build OK e `svelte-check` com 0 erros.
 
 **3.2 (feito):** só atributos `aria-*`, `tabindex` e foco. Nenhuma regra de negócio muda, e o visual continua o mesmo.
+
 - **Campos** (`FieldInput`, com e sem máscara, `FieldSelect`, `FieldTextarea`, `FieldCheckbox`, `FieldToggle`):
   - a mensagem de erro ou de ajuda ganhou `id` e passa a ser anunciada junto com o campo (`aria-describedby`);
   - com erro, o campo recebe `aria-invalid="true"`;
@@ -100,6 +108,7 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
   - build OK.
 
 **3.3 (feito):** os itens do menu, a ordem e as permissões (`canSeeItem`) continuam exatamente iguais.
+
 - **Pular para o conteúdo:** o primeiro Tab da página mostra o link "Pular para o conteúdo", que leva o foco para o `<main id="conteudo-principal">`. Foi criada a classe `.vtur-skip-link` em `app.css`.
 - **Menu lateral (`Sidebar.svelte`):**
   - O estado de cada seção recolhida passou a ser guardado **pelo nome da seção**. Antes era pela posição na lista, e quando as permissões terminavam de carregar a seção recolhida podia trocar.
@@ -131,6 +140,7 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
   - A cópia de build da nuvem estava sem 8 arquivos de rotas profundas (os editar de cadastros e as passkeys). Foi completada, e agora é idêntica ao Mac.
 
 **3.4 (feito): diagnóstico medido, sem mudar o banco (só consultas de leitura).**
+
 - **As estatísticas do Postgres enganam.** O `pg_stat_statements` conta desde 12/2025. A lista de cidades aparecia com 1,3 s de média, mas era do tempo em que a tabela tinha cerca de 160 mil linhas. Medida hoje (`EXPLAIN ANALYZE`, como usuário `authenticated`), leva **3 ms**. A RLS não pesa.
 - **Logs dos últimos dias (tempo de resposta do PostgREST):** até consultas triviais levam cerca de **200 a 500 ms**. Exemplo: `quote`, com média de 210 ms.
 - **Causa:** o banco fica em **us-west-2 (Oregon)** e o Worker roda perto do usuário, em São Paulo (`colo GRU`). Cada consulta atravessa o continente. Toda API também chama o Supabase Auth (`getUser`), que fica na mesma região.
@@ -153,11 +163,12 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
   - listas de viagens e orçamentos;
   - resumo admin;
   - `user/context`.
-  O front também guarda os GETs por 15 s, e o servidor manda `private, max-age=30`.
+    O front também guarda os GETs por 15 s, e o servidor manda `private, max-age=30`.
 - **Opcional (banco, precisa da sua aprovação):** a tabela `cidades` tem 102 kB de dados em 17 MB de disco, mais 22 MB de índices, sobra das cerca de 160 mil cidades antigas. Um `VACUUM FULL public.cidades` recuperaria esse espaço. O ganho hoje é pequeno (poucos ms), por isso não fiz.
 - **Verificação:** 629 testes passando, `svelte-check` com 0 erros e 0 avisos, build OK.
 
 **Dashboard: meses anteriores ficavam só no esqueleto (25/09).** O diagnóstico foi feito só com consultas de leitura no banco.
+
 - **Causa 1:** fev a mai/2026, na empresa 104037a0, estavam em `status='error'`. O erro era sempre o mesmo: `violates foreign key constraint ranking_recibo_contribuicoes_recibo_id_fkey`.
   - Recibo que existe só na conciliação, sem recibo de venda, usa o id da conciliação como `reciboId` (`buildConcRecibo`: `linked_recibo_id || item.id`).
   - O resumo do mês nunca era gravado. A cada abertura, o dashboard tentava reconstruir (cálculo do mês inteiro, que falhava) e depois **calculava tudo de novo**. Isso estourava o tempo.
@@ -199,12 +210,12 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
 
 **3.5 (25/09): dividir as telas gigantes, sem mudar o comportamento.** Começou com outro agente e foi revisada e concluída aqui.
 
-| Tela | Antes | Depois | O que saiu |
-|---|---|---|---|
-| `vendas/[id]/editar` | 1388 | 1065 | 5 componentes das etapas (`EtapasNavegacao`, `EtapaDadosVenda`, `EtapaRecibos`, `EtapaPagamentos`, `EtapaResumo`) e `types.ts` (feito pelo outro agente) |
-| `operacao/vouchers/novo` | 1605 | 1442 | `SelecaoFornecedor`, `WizardEtapas`, `ImportacaoVoucher`, `formatters.ts` e `types.ts` |
-| `orcamentos/roteiros/[id]` | 2764 | 2477 | tipos e funções de lista (`tipos.ts`), importação de dias (`importacao-dias.ts`) e `formatadores.ts` |
-| `financeiro/conciliacao` | 3113 | 2809 | 14 tipos (`types.ts`) e 18 formatadores (`formatters.ts`) |
+| Tela                       | Antes | Depois | O que saiu                                                                                                                                               |
+| -------------------------- | ----- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vendas/[id]/editar`       | 1388  | 1065   | 5 componentes das etapas (`EtapasNavegacao`, `EtapaDadosVenda`, `EtapaRecibos`, `EtapaPagamentos`, `EtapaResumo`) e `types.ts` (feito pelo outro agente) |
+| `operacao/vouchers/novo`   | 1605  | 1442   | `SelecaoFornecedor`, `WizardEtapas`, `ImportacaoVoucher`, `formatters.ts` e `types.ts`                                                                   |
+| `orcamentos/roteiros/[id]` | 2764  | 2477   | tipos e funções de lista (`tipos.ts`), importação de dias (`importacao-dias.ts`) e `formatadores.ts`                                                     |
+| `financeiro/conciliacao`   | 3113  | 2809   | 14 tipos (`types.ts`) e 18 formatadores (`formatters.ts`)                                                                                                |
 
 - **Como foi provado que nada mudou:**
   - **HTML:** com cada componente expandido de volta no lugar da tag, a tela fica **idêntica** à original, linha a linha, nas 4 telas. No `SelecaoFornecedor` só houve renomeação de variável (`provider` → `providerOption`, `form.provider` → prop `provider`).
@@ -223,33 +234,34 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
   - build OK.
 - **2ª rodada (25/09): abas e janelas.**
 
-| Tela | Antes | Depois | Componentes novos |
-|---|---|---|---|
-| `financeiro/conciliacao` | 2809 | 2526 | `AbaRegistros`, `AbaAlteracoes`, `AbaExecucoes` (tabelas só de leitura) e `JanelaAuditoriaVinculos` (só `bind:open`) |
-| `orcamentos/roteiros/[id]` | 2477 | 1550 | `AbaItinerario`, `AbaHoteis`, `AbaPasseios`, `AbaTransporte`, `AbaInvestimento`, `AbaPagamento` |
+| Tela                       | Antes | Depois | Componentes novos                                                                                                    |
+| -------------------------- | ----- | ------ | -------------------------------------------------------------------------------------------------------------------- |
+| `financeiro/conciliacao`   | 2809  | 2526   | `AbaRegistros`, `AbaAlteracoes`, `AbaExecucoes` (tabelas só de leitura) e `JanelaAuditoriaVinculos` (só `bind:open`) |
+| `orcamentos/roteiros/[id]` | 2477  | 1550   | `AbaItinerario`, `AbaHoteis`, `AbaPasseios`, `AbaTransporte`, `AbaInvestimento`, `AbaPagamento`                      |
 
-  - **O roteiro usa runas do Svelte 5.** As abas recebem as listas e as variáveis que alteram como `$bindable()`, e a página liga com `bind:`. Um script detectou quais variáveis cada aba altera, e o `svelte-check` validou os tipos.
-  - **Prova do HTML:** expandindo as tags, as duas telas ficam idênticas às originais. No script, só entraram os imports.
-  - **Prova de execução**, feita com `jsdom` instalado só na cópia da nuvem, sem mudar o `package.json`: montei a aba dentro de uma página de teste com `bind:`, cliquei nos botões e digitei nos campos.
-    - Adicionar, editar, trocar a opção, mover e remover alteram a lista da página.
-    - As variáveis simples também voltam para a página, por exemplo `showDiasImport` e as mensagens.
-    - **Contraprova:** sem o `bind:` o teste falha, então ele detecta o erro.
-  - **Deixados de propósito na página da conciliação:**
-    - a janela de **diferenças na importação**: os botões mudam duas variáveis e na mesma linha chamam `importPreviewRows()`, que lê uma delas. Separar arriscaria a ordem, numa tela de dinheiro;
-    - a janela de **detalhes**, com 18 `bind:` de valores financeiros;
-    - a aba **Visão geral**, com 8 filtros com `bind:`;
-    - a aba **Importação**.
-  - **Verificação:** 653 testes passando, `svelte-check` com 0 erros e 0 avisos, build OK.
+- **O roteiro usa runas do Svelte 5.** As abas recebem as listas e as variáveis que alteram como `$bindable()`, e a página liga com `bind:`. Um script detectou quais variáveis cada aba altera, e o `svelte-check` validou os tipos.
+- **Prova do HTML:** expandindo as tags, as duas telas ficam idênticas às originais. No script, só entraram os imports.
+- **Prova de execução**, feita com `jsdom` instalado só na cópia da nuvem, sem mudar o `package.json`: montei a aba dentro de uma página de teste com `bind:`, cliquei nos botões e digitei nos campos.
+  - Adicionar, editar, trocar a opção, mover e remover alteram a lista da página.
+  - As variáveis simples também voltam para a página, por exemplo `showDiasImport` e as mensagens.
+  - **Contraprova:** sem o `bind:` o teste falha, então ele detecta o erro.
+- **Deixados de propósito na página da conciliação:**
+  - a janela de **diferenças na importação**: os botões mudam duas variáveis e na mesma linha chamam `importPreviewRows()`, que lê uma delas. Separar arriscaria a ordem, numa tela de dinheiro;
+  - a janela de **detalhes**, com 18 `bind:` de valores financeiros;
+  - a aba **Visão geral**, com 8 filtros com `bind:`;
+  - a aba **Importação**.
+- **Verificação:** 653 testes passando, `svelte-check` com 0 erros e 0 avisos, build OK.
 - **Resultado da 3.5:**
 
-| Tela | Original | Agora |
-|---|---|---|
-| `financeiro/conciliacao` | 3113 | 2526 |
-| `orcamentos/roteiros/[id]` | 2764 | 1550 |
-| `operacao/vouchers/novo` | 1605 | 1442 |
-| `vendas/[id]/editar` | 1388 | 1065 |
+| Tela                       | Original | Agora |
+| -------------------------- | -------- | ----- |
+| `financeiro/conciliacao`   | 3113     | 2526  |
+| `orcamentos/roteiros/[id]` | 2764     | 1550  |
+| `operacao/vouchers/novo`   | 1605     | 1442  |
+| `vendas/[id]/editar`       | 1388     | 1065  |
 
 **Filtros que não recarregavam e dashboard de julho (25/09).**
+
 - **Sintoma:** em Relatórios de vendas, escolher fevereiro continuava mostrando setembro, tanto nos KPIs quanto na lista.
   - Nos logs do banco, o relatório só pediu setembro (`data_venda` entre 2026-09-01 e 2026-09-25): a busca de fevereiro nunca saiu da tela.
   - O endereço só é atualizado quando a busca termina com sucesso, e por isso continuava mostrando setembro.
@@ -273,6 +285,7 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
   - A tabela `companies` **não tem** a coluna `logo_url`, que é lida em `crm/library.ts`, `clientes/templates-send.ts` e `parametros/empresa.ts` e responde 400. É preciso conferir no vtur-app de onde vem o logo.
 
 **Plano (próximas etapas):**
+
 - ~~3.2 Kit `ui`~~ (feito). Pendentes do kit, para depois:
   - o `Dialog` (Flowbite `Modal`) não liga o título ao `role="dialog"`, porque o Flowbite não repassa atributos para esse elemento;
   - contraste no modo escuro;
@@ -282,21 +295,25 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
 - ~~3.5 Telas gigantes~~ (1ª rodada feita, ver acima). Plano original: dividir em componentes, sem mudar o comportamento. As maiores são `financeiro/conciliacao` (3113 linhas), `orcamentos/roteiros/[id]` (2764), `operacao/vouchers/novo` (1605) e `vendas/[id]/editar` (1388).
 
 ## Problemas conhecidos (não corrigidos, fora do escopo atual)
+
 - Tabela `push_subscriptions` não existe no banco (`push/subscribe` e `push/unsubscribe`).
 - Auditoria em `logs` só cobre Vendas. Faltam login, Clientes, Cadastros, Parâmetros, Escalas, Admin e perfil.
 
 ### Dashboard lento ao trocar de mês (25/09)
+
 - Causa: `syncUrl()` do `UnifiedDashboard.svelte` fazia `goto('/dashboard/geral?...')` fixo. Vendedor fica em `/dashboard/vendedor` (ou `/`), então cada troca de mês mudava de rota: o SvelteKit desmontava o dashboard, montava outro e o `onMount` refazia tudo (loadBase + summary + operacional + assinatura), além do `atualizar()` já disparado. Resultado: requisições em dobro, tela "piscando" e título trocando para "Dashboard geral".
-- Correção: `goto(\`${window.location.pathname}?...\`)` mantém a rota atual. Mesma regra, mesmos parâmetros de URL. `svelte-check` 0/0.
+- Correção: `goto(\`${window.location.pathname}?...\`)`mantém a rota atual. Mesma regra, mesmos parâmetros de URL.`svelte-check` 0/0.
 - Pendente usuário: commit/push/`cf:deploy`.
 
 ### Dashboard travado no skeleton ao trocar de mês (25/09, 2ª correção)
+
 - A correção anterior (goto na rota atual) piorou: sem remontagem, a tela ficava presa no skeleton.
 - Causa real: `syncUrl()` usava `goto()`. O `beforeNavigate` do `src/routes/+layout.svelte` chama `abortInFlightApiReads()`, e o SvelteKit só dispara o beforeNavigate depois de um `await` interno — ou seja, depois que `atualizar()` já tinha iniciado a busca do mês. Em `api.ts`, uma leitura abortada por navegação devolve `new Promise(() => {})` (nunca resolve), então `loading` ficava `true` para sempre. Os logs do banco mostravam o RPC respondendo em ~30 ms; era o navegador que descartava a resposta.
 - Correção: `replaceState()` de `$app/navigation` (roteamento raso: atualiza o endereço sem navegação, sem beforeNavigate, sem load). Aplicado no `UnifiedDashboard.svelte` e em `relatorios/ranking` (mesmo padrão: syncUrl() antes de loadRanking()).
 - Verificação: `svelte-check` 0/0, 657 testes, hash Mac = container.
 
 ### 3.6 (25/09, 12:10): robustez da URL, título dos diálogos e modo escuro. Gravado no Mac, falta o commit
+
 - **URL sem navegação (`replaceState`)**
   - **Relatórios de vendas:** a URL passou a ser atualizada sem navegar, como já foi feito no dashboard e no ranking.
   - **Bug latente evitado:** no `onMount`, `loadBase()` e `loadRelatorio()` rodam juntos. Se o relatório terminasse primeiro, o `goto()` cancelava a busca dos filtros. Essa leitura, cancelada por navegação, nunca resolvia, e empresas e vendedores ficavam "carregando" para sempre.
@@ -318,6 +335,7 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
   - medir `clientes/historico` e `vendas/complementares`.
 
 ### 3.7 (25/09, 12:25): velocidade de `clientes/historico` e `vendas/complementares`. Gravado no Mac, falta o commit
+
 - **Medição (logs do banco, 15:03 UTC):** o histórico do cliente fazia 6 idas ao banco **em fila** depois da autenticação: vendas, passageiros, viagens, vendas do passageiro, recibos e orçamentos, e por fim cidades. Somavam cerca de 400 ms.
 - **`clientes/historico`:**
   - os orçamentos começam junto com as vendas;
@@ -339,6 +357,7 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
 - **Arquivos auxiliares:** `tmp/container-src.md5` e `tmp/container-src.norm.md5` foram usados só na conferência. Podem ser apagados.
 
 ### 3.8 (25/09, 12:35): estados de carregando, vazio e erro (auditoria)
+
 - **Resultado da auditoria:** o kit já cobre estes estados.
   - **Carregando:** o `LoadingState` é usado em 49 telas, e o `DataTable` mostra skeleton e anuncia "Carregando registros" para o leitor de tela.
   - **Vazio:** o `emptyMessage` do `DataTable` cobre as listas.
@@ -350,6 +369,7 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
 ### 3.9 (25/09, 12:45): pedidos aprovados pelo usuário (testes de tela, rate limit, logo)
 
 **1. Testes de tela permanentes (jsdom)**
+
 - **O que foi criado:**
   - `vitest.workspace.ts` com dois grupos:
     - `unit`: os testes de sempre, em Node;
@@ -369,6 +389,7 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
   - Sem essa instalação, o grupo `dom` falha no `npm test`.
 
 **2. RPC `check_security_rate_limit`, aplicada no banco**
+
 - **Migração:** `supabase/migrations/20260925160000_security_rate_limit.sql`.
 - **Tabela `security_rate_limits`:**
   - chave primária `(scope, key_hash)`;
@@ -389,6 +410,7 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
 - **Efeito:** o `persistentRateLimit.ts` deixa de cair no fallback. Agora o limite vale para todas as instâncias do Worker. O contador em memória continua sendo checado primeiro.
 
 **3. Coluna `companies.logo_url`, aplicada no banco**
+
 - **Migração:** `supabase/migrations/20260925160100_companies_logo_url.sql`.
 - **Coluna:** `text`, opcional.
 - **Efeito:**
@@ -397,21 +419,22 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
 - **Pendente:** hoje nenhuma tela grava esse campo. A de parâmetros da empresa diz "entre em contato com o administrador". Criar um campo de edição seria função nova e depende de decisão.
 
 ### 3.10 (25/09, 13:00): auditoria na tabela `logs` além de Vendas (pendência da Fase 1). Gravado no Mac, falta o commit
+
 - **Referência:** o histórico da própria tabela `logs`, gravado pelo sistema antigo até mai/2026. Módulo, ação e as chaves de `detalhes` foram copiados de lá.
 
-| Módulo | Ação | Onde | `detalhes` |
-|---|---|---|---|
-| Clientes | `cliente_criado` | `clientes/create` | payload + `created_by` |
-| Clientes | `cliente_editado` | `PATCH clientes/:id` | `{ id, payload }` |
-| Clientes | `cliente_excluido` | `DELETE clientes/:id` | `{ id }` |
-| Cadastros | `cidade_criada` / `cidade_editada` / `cidade_excluida` | `cidades` (POST, PATCH /:id, DELETE e DELETE /:id) | payload / `{ id, payload }` / `{ id }` |
-| Parametros | `parametros_sistema_salvos` | `parametros/sistema` | payload sem `updated_at` |
-| Parametros | `quote_print_settings_salvos` | `parametros/orcamentos-pdf` | campos da configuração, sem dono e empresa |
-| Escalas | `escala_dia_salva` | `parametros/escalas` (`upsert_dia`) | as 13 chaves do histórico; empresa e gestor vêm do `escala_mes` |
-| Escalas | `escala_dia_lote_salvo` | `parametros/escalas` (`apply_batch`) | as 12 chaves do histórico |
-| Admin | `permissoes_atualizadas` | `admin/permissoes` e `admin/permissoes/:id` | `{ permissoes: { modulo: permissao }, usuario_alterado_id }` |
-| Admin | `modulos_globais_atualizados` | `admin/permissoes` (global), `admin/system-modules` e `admin/modulos-sistema` | `{ disabled_modules }` |
-| perfil | `perfil_atualizado` | `PATCH user/profile` | payload gravado em `users` |
+| Módulo     | Ação                                                   | Onde                                                                          | `detalhes`                                                      |
+| ---------- | ------------------------------------------------------ | ----------------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Clientes   | `cliente_criado`                                       | `clientes/create`                                                             | payload + `created_by`                                          |
+| Clientes   | `cliente_editado`                                      | `PATCH clientes/:id`                                                          | `{ id, payload }`                                               |
+| Clientes   | `cliente_excluido`                                     | `DELETE clientes/:id`                                                         | `{ id }`                                                        |
+| Cadastros  | `cidade_criada` / `cidade_editada` / `cidade_excluida` | `cidades` (POST, PATCH /:id, DELETE e DELETE /:id)                            | payload / `{ id, payload }` / `{ id }`                          |
+| Parametros | `parametros_sistema_salvos`                            | `parametros/sistema`                                                          | payload sem `updated_at`                                        |
+| Parametros | `quote_print_settings_salvos`                          | `parametros/orcamentos-pdf`                                                   | campos da configuração, sem dono e empresa                      |
+| Escalas    | `escala_dia_salva`                                     | `parametros/escalas` (`upsert_dia`)                                           | as 13 chaves do histórico; empresa e gestor vêm do `escala_mes` |
+| Escalas    | `escala_dia_lote_salvo`                                | `parametros/escalas` (`apply_batch`)                                          | as 12 chaves do histórico                                       |
+| Admin      | `permissoes_atualizadas`                               | `admin/permissoes` e `admin/permissoes/:id`                                   | `{ permissoes: { modulo: permissao }, usuario_alterado_id }`    |
+| Admin      | `modulos_globais_atualizados`                          | `admin/permissoes` (global), `admin/system-modules` e `admin/modulos-sistema` | `{ disabled_modules }`                                          |
+| perfil     | `perfil_atualizado`                                    | `PATCH user/profile`                                                          | payload gravado em `users`                                      |
 
 - **Como funciona:** o `registrarLog` passou a aceitar `detalhes` como função assíncrona. Ela é montada em background (`waitUntil`) quando precisa ler o banco, como no caso das escalas e dos módulos globais. Assim a resposta não fica mais lenta. Se a função falhar, nada é gravado e a operação não é afetada.
 - **Única mudança fora do log:** em `upsert_dia`, o insert de `escala_dia` passou a pedir `.select('id').maybeSingle()` para registrar o `escala_dia_id`. O tratamento de erro não mudou: o código já ignorava o retorno.
@@ -428,6 +451,7 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
 ## Fase 4: design system (Tailwind 4 + Flowbite)
 
 ### 4.1 (25/09, 15:50): Tailwind 3.4 → 4.3, com o mesmo visual. Com commit
+
 - **O que mudou:**
   - `@tailwindcss/vite` no `vite.config.ts`. O PostCSS ficou sem plugins e o `tailwind.config.js` foi removido.
   - O tema foi para o `@theme` do `app.css`: cores, fonte, sombras e raios do antigo config.
@@ -468,6 +492,7 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
 - **Próximo (4.2):** Flowbite-Svelte 0.48 → 1.x. A 1.x exige Tailwind 4, que já está no lugar, e o `Modal`/`Dropdown` mudaram de API. A troca fica isolada nos wrappers de `lib/components/ui/`.
 
 ### 4.2 (25/09, 18:10): Flowbite-Svelte 0.48 → 1.33, com o mesmo visual e o mesmo comportamento. Com commit ("flowbite 1.33")
+
 - **O que o 1.x muda (medido renderizando os wrappers de `ui/` nas duas versões, 142 casos):**
   - Select e Textarea ganham uma `div` em volta, e a classe `vtur-input` sai do campo;
   - Checkbox, Radio e Toggle mudam classes, cores (blue-700 no lugar de blue-600) e espaçamento;
@@ -486,6 +511,7 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
 - **No Mac:** rodar `npm install` (o `package-lock.json` já vem atualizado), depois `npm test` e `npm run build`.
 
 ### 4.3 (25/09, 18:40): ícones Lucide → flowbite-svelte-icons (aprovado pelo usuário). Com commit ("icones")
+
 - **Como foi feito:** pasta nova `src/lib/icons/`, com um arquivo por ícone e os **mesmos nomes do Lucide** (`Plus`, `Trash2`, `RefreshCw`...). Nas 150 telas mudou só a linha do import (`'lucide-svelte'` → `'$lib/icons'`); o resto do código é o mesmo.
 - **Mesmo tamanho e mesmo layout:** o `IconAdapter.svelte` faz o ícone do Flowbite aceitar as props do Lucide (`size` em px vira width/height, `class`, `strokeWidth`, `color`), desliga o tamanho próprio do Flowbite (w-5 h-5) e desfaz o `shrink-0` que ele acrescenta.
 - **124 ícones** passaram para o desenho do Flowbite (versão contorno, "Outline"). Mapa em `src/lib/icons/*.svelte` (ex.: `Trash2`→`TrashBin`, `Save`→`FloppyDisk`, `Users`→`UsersGroup`, `Settings`→`Cog`, `X`→`Close`).
@@ -501,10 +527,12 @@ Todas as rotas de `src/routes/api/v1/**` são pontes (`apiHandler`), com os rout
 ## Fase 5: UX e navegação (sem mudar regra de negócio)
 
 Plano (da revisão estrutural): Ctrl+K, dashboards por perfil, placar, cards no celular, menu inferior no celular, ficha 360° do cliente, acessibilidade.
+
 - Já existem no sistema: dashboards por perfil (`/dashboard/admin|master|gestor|financeiro|vendedor`), menu inferior no celular (Sidebar) e tabelas em cartões no celular (`table-mobile-cards`).
 - Placar e ficha completa do cliente: aprovados pelo usuário em 25/09 (5.3 e 5.4).
 
 ### 5.1 (25/09, 19:00): busca rápida no menu (Ctrl+K / ⌘K). Com commit ("fase11")
+
 - **O que é:** botão "Buscar" no topo (no celular, só a lupa) e o atalho Ctrl+K (⌘K no Mac). Abre uma janela com as telas do menu; digitar filtra (sem acento, por nome ou seção); ↑/↓ escolhem, Enter abre, Esc fecha.
 - **Sem regra nova:** mostra **exatamente o que o menu lateral mostra** para o usuário. O `Sidebar` publica os itens já filtrados (permissões, papel, "Personalizar Menu") no store `$lib/stores/navegacao.ts`; a busca só lê. Não chama API.
 - **Acessibilidade:** padrão combobox + listbox (`aria-activedescendant`, `aria-selected`), foco no campo ao abrir, foco devolvido ao fechar; com outra janela aberta o atalho não abre uma segunda por cima.
@@ -512,6 +540,7 @@ Plano (da revisão estrutural): Ctrl+K, dashboards por perfil, placar, cards no 
 - **Prova:** 704 testes (9 novos: filtro, atalho, abrir/filtrar/↓/Enter/Esc no jsdom), `svelte-check` 0/0, build OK. As 143 telas renderizadas no servidor só mudam no topo (o botão novo).
 
 ### 5.2 (25/09, 19:30): acessibilidade das tabelas (DataTable) e varredura de acessibilidade. Com commit ("fase14")
+
 - **DataTable** (usada em ~50 telas), sem mudar dados, ordem, filtros ou visual:
   - nome da tabela para leitor de tela (`<caption class="sr-only">` com o título) e `aria-busy` enquanto carrega;
   - campo de busca com rótulo ("Buscar em <título>", invisível);
@@ -525,6 +554,7 @@ Plano (da revisão estrutural): Ctrl+K, dashboards por perfil, placar, cards no 
 - **Comparação de pixels** (antes × depois, 147 telas): mudaram só as telas com as cores acima, o botão "Placar" no ranking e os esqueletos animados de carregamento (a animação varia entre fotos).
 
 ### 5.3 (25/09, 19:30): Placar de vendas da equipe (tela nova, aprovada). Com commit ("fase14")
+
 - **Onde:** `/relatorios/ranking/placar` (botão "Placar" no Ranking de vendas). Mesmo módulo de permissão do Ranking (a rota começa com `/relatorios/ranking`).
 - **Quem vê:** o mesmo público do pódio do Ranking (admin do sistema, master e gestor). Vendedor vê um aviso com link para o ranking.
 - **Sem regra nova:** usa a mesma API (`/api/v1/relatorios/ranking`), a mesma ordem (`posicao`), o mesmo percentual (`alcance_meta` e total/meta do resumo) e as mesmas cores de atingimento. As funções de cor/percentual saíram do Ranking para `$lib/features/ranking/atingimento.ts` sem alteração (com teste), e as duas telas usam o mesmo código.
@@ -532,6 +562,7 @@ Plano (da revisão estrutural): Ctrl+K, dashboards por perfil, placar, cards no 
 - **Uso em TV:** botão "Tela cheia" (só o placar), atualização sozinha a cada minuto enquanto a aba está visível, e "Atualizar" manual (busca sem cache).
 
 ### 5.4 (25/09, 19:30): ficha completa do cliente (aprovada). Com commit ("fase14")
+
 - A tela do cliente (`/clientes/[id]`) já reunia cadastro, vendas, orçamentos e acompanhantes. Entraram:
   - **Viagens** do cliente (API existente `/api/v1/viagens/cliente/:id`, mesmo escopo e mesmo status da tela de Viagens), com link para cada viagem. Quem não tem o módulo Viagens não vê o quadro (e a tela não vai para "acesso negado": `redirectOnForbidden: false`).
   - **Contatos enviados**: últimos avisos (API existente `/api/v1/clientes/avisos/history`), recarregados depois de enviar um aviso pela própria ficha.
@@ -539,14 +570,17 @@ Plano (da revisão estrutural): Ctrl+K, dashboards por perfil, placar, cards no 
 - Arquivos novos: `components/clientes/ClienteViagensCard.svelte` e `ClienteContatosCard.svelte`.
 
 ### Verificação 5.2–5.4
+
 - 719 testes (15 novos: DataTable, Placar, ficha do cliente, atingimento), `svelte-check` 0/0, build OK.
 - Achado durante os testes: qualquer resposta 403 de uma API manda a tela para "/negado" (regra existente do `apiFetch`); por isso os quadros novos da ficha pedem `redirectOnForbidden: false`.
 
 ### 4.4 (25/09, 20:00): `!important` — decisão: não remover agora
+
 - Medido: 319 `!important` no `app.css` e 504 classes com `!` nos `.svelte`. Cada um existe para vencer outra regra (Flowbite, utilitários ou o próprio CSS do sistema).
 - Remover exigiria reescrever a precedência do CSS tela a tela, com risco alto de mudança visual e nenhum ganho para o usuário. Fica como está; dá para limpar aos poucos quando cada tela for mexida por outro motivo.
 
 ### 5.5 (25/09, 20:00): revisão das consultas que mandavam para "/negado". Com commit ("fase15")
+
 - Regra existente (mantida): um 403 de qualquer API leva a tela para `/negado`, a não ser que a chamada peça `redirectOnForbidden: false`.
 - Revisadas todas as telas: chamadas de API de outro módulo que são **opcionais** na tela. Encontrados e corrigidos (agora só ficam vazios, sem mandar para `/negado`):
   - **Roteiro (`orcamentos/roteiros/[id]`)**: sugestões e dados do PDF (`/parametros/orcamentos-pdf`, que exige o módulo Parâmetros). Quem tinha acesso a Roteiros mas não a Parâmetros era mandado para `/negado` ao abrir um roteiro, mesmo com a tela já protegida.
@@ -558,6 +592,7 @@ Plano (da revisão estrutural): Ctrl+K, dashboards por perfil, placar, cards no 
 ## Fase 6: tempo real
 
 ### 6.1 (25/09, 20:00): recados em tempo real. Com commit ("fase15")
+
 - Recado novo, alterado ou apagado aparece na hora na tela de Recados, via Supabase Realtime (`mural_recados`, filtrado pela empresa). A tabela já estava publicada no Realtime; o RLS de leitura já limita cada usuário ao que ele pode ver.
 - O aviso do Realtime só dispara uma nova busca na mesma API do mural (`/api/v1/mural/recados`, sem o cache curto). Nenhuma regra nova.
 - A atualização a cada 15 s **continua igual** (reserva se o Realtime não conectar, e para as confirmações de leitura).
@@ -565,9 +600,11 @@ Plano (da revisão estrutural): Ctrl+K, dashboards por perfil, placar, cards no 
 - Como conferir: abrir Recados em dois navegadores com usuários da mesma empresa e enviar um recado; deve aparecer no outro em ~1 s.
 
 ### Verificação 5.5 e 6.1
+
 - 722 testes, `svelte-check` 0/0, build OK.
 
 ## Relatório de Performance por agência (pedido em 25/09). Gravado no Mac, falta o commit
+
 - **Onde:** `/relatorios/performance` (cartão "Performance da agência" em Relatórios). Botão **Baixar PDF**: abre a impressão do navegador já montada em 1 folha A4 (Salvar como PDF).
 - **Quem vê:** admin do sistema e master escolhem a empresa (só as do seu escopo); gestor vê a própria. Vendedor não vê (a API responde 403 e a tela nem chama).
 - **API:** `GET /api/v1/relatorios/performance?company_id=&mes=AAAA-MM`. Agregação em `src/lib/server/performance/performance.ts` (testada); busca em `src/lib/server/api/routes/relatorios/performance.ts` (teste de contrato com banco falso).

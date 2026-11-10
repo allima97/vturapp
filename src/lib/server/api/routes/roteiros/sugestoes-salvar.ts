@@ -50,9 +50,11 @@ export async function handleRoteirosSugestoesSalvarPost(event: RequestEvent) {
 
     const tipo = String(body.tipo).trim().slice(0, 60);
     const valor = String(body.valor).trim().slice(0, 160);
-    if (!tipo || !valor) return new Response('Dados invalidos.', { status: 400, headers: NO_STORE_HEADERS });
+    if (!tipo || !valor)
+      return new Response('Dados invalidos.', { status: 400, headers: NO_STORE_HEADERS });
     const valorBusca = sanitizePostgrestSearchTerm(valor, 160);
-    if (!valorBusca) return new Response('Dados invalidos.', { status: 400, headers: NO_STORE_HEADERS });
+    if (!valorBusca)
+      return new Response('Dados invalidos.', { status: 400, headers: NO_STORE_HEADERS });
 
     const companyId = scope.companyId;
 

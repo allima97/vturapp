@@ -9,10 +9,10 @@ vi.mock('$lib/server/v1', () => ({
       insert: async (row: Record<string, unknown>) => {
         inserts.push({ table, row });
         return failInsert ? { error: new Error('falhou') } : { error: null };
-      },
-    }),
+      }
+    })
   }),
-  logServerError: vi.fn(),
+  logServerError: vi.fn()
 }));
 
 import { registrarLog } from './auditLog';
@@ -23,7 +23,7 @@ function fakeEvent(headers: Record<string, string> = {}) {
     request: new Request('https://vturapp.test/api/v1/vendas/create', { headers }),
     getClientAddress: () => '10.0.0.1',
     platform: { ctx: { waitUntil: (p: Promise<unknown>) => tasks.push(p) } },
-    tasks,
+    tasks
   };
 }
 
@@ -39,7 +39,7 @@ describe('registrarLog', () => {
       userId: 'u1',
       modulo: 'Vendas',
       acao: 'venda_cancelada',
-      detalhes: { id: 'v1' },
+      detalhes: { id: 'v1' }
     });
     await Promise.all(ev.tasks);
     expect(inserts).toEqual([
@@ -51,9 +51,9 @@ describe('registrarLog', () => {
           acao: 'venda_cancelada',
           detalhes: { id: 'v1' },
           ip: '200.1.2.3',
-          user_agent: 'Mozilla/5.0 teste',
-        },
-      },
+          user_agent: 'Mozilla/5.0 teste'
+        }
+      }
     ]);
   });
 
@@ -69,7 +69,7 @@ describe('registrarLog', () => {
     failInsert = true;
     const ev = fakeEvent();
     expect(() =>
-      registrarLog(ev, { userId: 'u1', modulo: 'Vendas', acao: 'venda_criada', detalhes: {} }),
+      registrarLog(ev, { userId: 'u1', modulo: 'Vendas', acao: 'venda_criada', detalhes: {} })
     ).not.toThrow();
     await expect(Promise.all(ev.tasks)).resolves.toBeDefined();
   });
@@ -82,14 +82,14 @@ describe('registrarLog com detalhes montados em background (Fase 3.10)', () => {
       userId: 'u1',
       modulo: 'Admin',
       acao: 'modulos_globais_atualizados',
-      detalhes: async () => ({ disabled_modules: ['crm'] }),
+      detalhes: async () => ({ disabled_modules: ['crm'] })
     });
     await Promise.all(ev.tasks);
     expect(inserts).toHaveLength(1);
     expect(inserts[0].row).toMatchObject({
       modulo: 'Admin',
       acao: 'modulos_globais_atualizados',
-      detalhes: { disabled_modules: ['crm'] },
+      detalhes: { disabled_modules: ['crm'] }
     });
   });
 
@@ -102,7 +102,7 @@ describe('registrarLog com detalhes montados em background (Fase 3.10)', () => {
         acao: 'escala_dia_salva',
         detalhes: async () => {
           throw new Error('banco fora');
-        },
+        }
       })
     ).not.toThrow();
     await Promise.all(ev.tasks);

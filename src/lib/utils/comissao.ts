@@ -18,7 +18,7 @@
 
 const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
   style: 'currency',
-  currency: 'BRL',
+  currency: 'BRL'
 });
 const PT_BR_COLLATOR = new Intl.Collator('pt-BR');
 
@@ -50,11 +50,10 @@ export type RegraProduto = {
 export const LEGACY_CONCILIACAO_COMMISSION_BAND_KEYS = [
   'MENOR_10',
   'MAIOR_OU_IGUAL_10',
-  'SEGURO_32_35',
+  'SEGURO_32_35'
 ] as const;
 
-export type ConciliacaoCommissionBandKey =
-  (typeof LEGACY_CONCILIACAO_COMMISSION_BAND_KEYS)[number];
+export type ConciliacaoCommissionBandKey = (typeof LEGACY_CONCILIACAO_COMMISSION_BAND_KEYS)[number];
 
 export type ConciliacaoCommissionBandId = string;
 
@@ -147,7 +146,7 @@ const DEFAULT_BAND_DEFINITIONS: DefaultBandDefinition[] = [
     percentual_min: null,
     percentual_max: 9.9999,
     ordem: 10,
-    tipo_calculo: 'CONCILIACAO',
+    tipo_calculo: 'CONCILIACAO'
   },
   {
     faixa_loja: 'MAIOR_OU_IGUAL_10',
@@ -155,7 +154,7 @@ const DEFAULT_BAND_DEFINITIONS: DefaultBandDefinition[] = [
     percentual_min: 10,
     percentual_max: 31.9999,
     ordem: 20,
-    tipo_calculo: 'CONCILIACAO',
+    tipo_calculo: 'CONCILIACAO'
   },
   {
     faixa_loja: 'SEGURO_32_35',
@@ -163,8 +162,8 @@ const DEFAULT_BAND_DEFINITIONS: DefaultBandDefinition[] = [
     percentual_min: 32,
     percentual_max: null,
     ordem: 30,
-    tipo_calculo: 'PRODUTO_DIFERENCIADO',
-  },
+    tipo_calculo: 'PRODUTO_DIFERENCIADO'
+  }
 ];
 
 // ---------------------------------------------------------------------------
@@ -215,7 +214,9 @@ function getDefaultBandDefinition(key?: string | null): DefaultBandDefinition | 
 
 function sanitizeTier(tier: unknown): Tier | null {
   const t = tier as Record<string, unknown> | null;
-  const faixa = String(t?.faixa || '').trim().toUpperCase();
+  const faixa = String(t?.faixa || '')
+    .trim()
+    .toUpperCase();
   if (faixa !== 'PRE' && faixa !== 'POS') return null;
 
   const dePct = Number(t?.de_pct ?? 0);
@@ -229,7 +230,7 @@ function sanitizeTier(tier: unknown): Tier | null {
     de_pct: dePct,
     ate_pct: atePct,
     inc_pct_meta: incMeta,
-    inc_pct_comissao: incCom,
+    inc_pct_comissao: incCom
   };
 }
 
@@ -268,15 +269,14 @@ function buildRuleFromDefinition(params: {
     tipo,
     meta_nao_atingida: params.meta_nao_atingida ?? 0,
     meta_atingida: params.meta_atingida ?? params.meta_nao_atingida ?? 0,
-    super_meta:
-      params.super_meta ?? params.meta_atingida ?? params.meta_nao_atingida ?? 0,
-    commission_tier: tiers,
+    super_meta: params.super_meta ?? params.meta_atingida ?? params.meta_nao_atingida ?? 0,
+    commission_tier: tiers
   };
 }
 
 function isBandRangeMatch(
   rule: Pick<ConciliacaoCommissionBandRule, 'percentual_min' | 'percentual_max'>,
-  percentual?: number | null,
+  percentual?: number | null
 ): boolean {
   const pct = Number(percentual ?? 0);
   if (!Number.isFinite(pct) || pct <= 0) return false;
@@ -287,9 +287,7 @@ function isBandRangeMatch(
   return true;
 }
 
-function sortBandRules(
-  rules: ConciliacaoCommissionBandRule[],
-): ConciliacaoCommissionBandRule[] {
+function sortBandRules(rules: ConciliacaoCommissionBandRule[]): ConciliacaoCommissionBandRule[] {
   return [...rules].sort((left, right) => {
     if (left.ordem !== right.ordem) return left.ordem - right.ordem;
     const leftMin = left.percentual_min ?? Number.NEGATIVE_INFINITY;
@@ -307,9 +305,7 @@ function sortBandRules(
  * Constrói regra de comissão para conciliação a partir de parâmetros legados.
  * Retorna null se conciliacao_regra_ativa === false.
  */
-export function buildLegacyConciliacaoRule(
-  params?: ParametrosComissao | null,
-): Regra | null {
+export function buildLegacyConciliacaoRule(params?: ParametrosComissao | null): Regra | null {
   if (!params?.conciliacao_regra_ativa) return null;
   return buildRuleFromDefinition({
     id: 'conciliacao',
@@ -317,7 +313,7 @@ export function buildLegacyConciliacaoRule(
     meta_nao_atingida: params.conciliacao_meta_nao_atingida ?? null,
     meta_atingida: params.conciliacao_meta_atingida ?? null,
     super_meta: params.conciliacao_super_meta ?? null,
-    tiers: Array.isArray(params.conciliacao_tiers) ? params.conciliacao_tiers : [],
+    tiers: Array.isArray(params.conciliacao_tiers) ? params.conciliacao_tiers : []
   });
 }
 
@@ -331,10 +327,9 @@ export function buildConciliacaoRule(params?: ParametrosComissao | null): Regra 
  * SEGURO_32_35 é sempre PRODUTO_DIFERENCIADO (sem comissão standard).
  */
 export function createDefaultConciliacaoBandRules(
-  params?: ParametrosComissao | null,
+  params?: ParametrosComissao | null
 ): ConciliacaoCommissionBandRule[] {
-  const legacyTipo =
-    params?.conciliacao_tipo === 'ESCALONAVEL' ? 'ESCALONAVEL' : 'GERAL';
+  const legacyTipo = params?.conciliacao_tipo === 'ESCALONAVEL' ? 'ESCALONAVEL' : 'GERAL';
   const legacyRule = buildLegacyConciliacaoRule(params);
   const legacyTiers = Array.isArray(params?.conciliacao_tiers)
     ? params!.conciliacao_tiers!.map(sanitizeTier).filter((item): item is Tier => Boolean(item))
@@ -346,23 +341,22 @@ export function createDefaultConciliacaoBandRules(
     percentual_min: definition.percentual_min,
     percentual_max: definition.percentual_max,
     ordem: definition.ordem,
-    ativo:
-      definition.tipo_calculo === 'PRODUTO_DIFERENCIADO' ? true : Boolean(legacyRule),
+    ativo: definition.tipo_calculo === 'PRODUTO_DIFERENCIADO' ? true : Boolean(legacyRule),
     tipo_calculo: definition.tipo_calculo,
     tipo: definition.tipo_calculo === 'PRODUTO_DIFERENCIADO' ? 'GERAL' : legacyTipo,
     meta_nao_atingida:
       definition.tipo_calculo === 'PRODUTO_DIFERENCIADO'
         ? null
-        : params?.conciliacao_meta_nao_atingida ?? null,
+        : (params?.conciliacao_meta_nao_atingida ?? null),
     meta_atingida:
       definition.tipo_calculo === 'PRODUTO_DIFERENCIADO'
         ? null
-        : params?.conciliacao_meta_atingida ?? null,
+        : (params?.conciliacao_meta_atingida ?? null),
     super_meta:
       definition.tipo_calculo === 'PRODUTO_DIFERENCIADO'
         ? null
-        : params?.conciliacao_super_meta ?? null,
-    tiers: definition.tipo_calculo === 'PRODUTO_DIFERENCIADO' ? [] : legacyTiers,
+        : (params?.conciliacao_super_meta ?? null),
+    tiers: definition.tipo_calculo === 'PRODUTO_DIFERENCIADO' ? [] : legacyTiers
   }));
 }
 
@@ -372,7 +366,7 @@ export function createDefaultConciliacaoBandRules(
  */
 export function sanitizeConciliacaoBandRules(
   value: unknown,
-  params?: ParametrosComissao | null,
+  params?: ParametrosComissao | null
 ): ConciliacaoCommissionBandRule[] {
   const defaults = createDefaultConciliacaoBandRules(params);
   if (!Array.isArray(value) || value.length === 0) {
@@ -384,33 +378,31 @@ export function sanitizeConciliacaoBandRules(
       const i = item as Record<string, unknown> | null;
       const legacyDefinition = getDefaultBandDefinition(i?.faixa_loja as string);
       const normalizedId =
-        normalizeBandId(i?.faixa_loja) ||
-        normalizeBandId(i?.id) ||
-        `FAIXA_${index + 1}`;
+        normalizeBandId(i?.faixa_loja) || normalizeBandId(i?.id) || `FAIXA_${index + 1}`;
       const base =
         defaults.find((entry) => normalizeBandId(entry.faixa_loja) === normalizedId) ||
         (legacyDefinition
           ? defaults.find((entry) => entry.faixa_loja === legacyDefinition.faixa_loja)
           : null);
       const tipoCalculo =
-        String(i?.tipo_calculo || '').trim().toUpperCase() === 'PRODUTO_DIFERENCIADO'
+        String(i?.tipo_calculo || '')
+          .trim()
+          .toUpperCase() === 'PRODUTO_DIFERENCIADO'
           ? 'PRODUTO_DIFERENCIADO'
           : 'CONCILIACAO';
       const tipo =
-        String(i?.tipo || '').trim().toUpperCase() === 'ESCALONAVEL'
+        String(i?.tipo || '')
+          .trim()
+          .toUpperCase() === 'ESCALONAVEL'
           ? 'ESCALONAVEL'
           : 'GERAL';
       const tiers = Array.isArray(i?.tiers)
-        ? (i!.tiers as unknown[])
-            .map(sanitizeTier)
-            .filter((tier): tier is Tier => Boolean(tier))
+        ? (i!.tiers as unknown[]).map(sanitizeTier).filter((tier): tier is Tier => Boolean(tier))
         : base?.tiers || [];
 
       return {
         faixa_loja: normalizedId,
-        nome: normalizeBandName(
-          i?.nome ?? legacyDefinition?.nome ?? base?.nome ?? i?.faixa_loja,
-        ),
+        nome: normalizeBandName(i?.nome ?? legacyDefinition?.nome ?? base?.nome ?? i?.faixa_loja),
         percentual_min:
           parseNullableNumber(i?.percentual_min) ??
           legacyDefinition?.percentual_min ??
@@ -423,7 +415,7 @@ export function sanitizeConciliacaoBandRules(
           null,
         ordem: Number.isFinite(Number(i?.ordem))
           ? Number(i!.ordem)
-          : base?.ordem ?? (index + 1) * 10,
+          : (base?.ordem ?? (index + 1) * 10),
         ativo: i?.ativo == null ? (base?.ativo ?? true) : Boolean(i.ativo),
         tipo_calculo: tipoCalculo as ConciliacaoCommissionBandMode,
         tipo: tipo as 'GERAL' | 'ESCALONAVEL',
@@ -432,12 +424,9 @@ export function sanitizeConciliacaoBandRules(
             ? Number(i.meta_nao_atingida)
             : (base?.meta_nao_atingida ?? null),
         meta_atingida:
-          i?.meta_atingida != null
-            ? Number(i.meta_atingida)
-            : (base?.meta_atingida ?? null),
-        super_meta:
-          i?.super_meta != null ? Number(i.super_meta) : (base?.super_meta ?? null),
-        tiers,
+          i?.meta_atingida != null ? Number(i.meta_atingida) : (base?.meta_atingida ?? null),
+        super_meta: i?.super_meta != null ? Number(i.super_meta) : (base?.super_meta ?? null),
+        tiers
       } satisfies ConciliacaoCommissionBandRule;
     })
     .filter((item) => item.nome);
@@ -457,7 +446,7 @@ export function hasConciliacaoBandRules(params?: ParametrosComissao | null): boo
     return false;
   }
   return sanitizeConciliacaoBandRules(params.conciliacao_faixas_loja, params).some(
-    (item) => item.ativo,
+    (item) => item.ativo
   );
 }
 
@@ -484,16 +473,14 @@ export function resolveConciliacaoBandKey(params: {
 
   if (customRules.length > 0) {
     const matched = customRules.find(
-      (item) => item.ativo && isBandRangeMatch(item, params.percentual_comissao_loja),
+      (item) => item.ativo && isBandRangeMatch(item, params.percentual_comissao_loja)
     );
     if (matched) return matched.faixa_loja;
   }
 
   const explicitId = normalizeBandId(params.faixa_comissao);
   if (explicitId) {
-    const exact = customRules.find(
-      (item) => normalizeBandId(item.faixa_loja) === explicitId,
-    );
+    const exact = customRules.find((item) => normalizeBandId(item.faixa_loja) === explicitId);
     if (exact) return exact.faixa_loja;
 
     const legacy = normalizeBandKey(params.faixa_comissao);
@@ -520,7 +507,7 @@ export function resolveConciliacaoBandRule(
     faixa_comissao?: string | null;
     percentual_comissao_loja?: number | null;
     is_seguro_viagem?: boolean | null;
-  },
+  }
 ): ConciliacaoCommissionBandRule | null {
   if (!params) return null;
   const rules = sanitizeConciliacaoBandRules(params.conciliacao_faixas_loja, params);
@@ -530,13 +517,11 @@ export function resolveConciliacaoBandRule(
     conciliacao_faixas_loja: params.conciliacao_faixas_loja,
     faixa_comissao: options?.faixa_comissao ?? null,
     percentual_comissao_loja: options?.percentual_comissao_loja ?? null,
-    is_seguro_viagem: options?.is_seguro_viagem ?? null,
+    is_seguro_viagem: options?.is_seguro_viagem ?? null
   });
 
   return (
-    rules.find(
-      (item) => normalizeBandId(item.faixa_loja) === normalizeBandId(bandKey),
-    ) || null
+    rules.find((item) => normalizeBandId(item.faixa_loja) === normalizeBandId(bandKey)) || null
   );
 }
 
@@ -550,13 +535,13 @@ export function resolveConciliacaoCommissionSelection(
     faixa_comissao?: string | null;
     percentual_comissao_loja?: number | null;
     is_seguro_viagem?: boolean | null;
-  },
+  }
 ): ConciliacaoCommissionSelection {
   const bandKey = resolveConciliacaoBandKey({
     conciliacao_faixas_loja: params?.conciliacao_faixas_loja ?? null,
     faixa_comissao: options?.faixa_comissao ?? null,
     percentual_comissao_loja: options?.percentual_comissao_loja ?? null,
-    is_seguro_viagem: options?.is_seguro_viagem ?? null,
+    is_seguro_viagem: options?.is_seguro_viagem ?? null
   });
 
   if (!params?.conciliacao_regra_ativa) {
@@ -564,8 +549,7 @@ export function resolveConciliacaoCommissionSelection(
   }
 
   const hasCustomBands =
-    Array.isArray(params.conciliacao_faixas_loja) &&
-    params.conciliacao_faixas_loja.length > 0;
+    Array.isArray(params.conciliacao_faixas_loja) && params.conciliacao_faixas_loja.length > 0;
 
   if (hasCustomBands) {
     const band = resolveConciliacaoBandRule(params, options);
@@ -581,11 +565,9 @@ export function resolveConciliacaoCommissionSelection(
       meta_nao_atingida: band.meta_nao_atingida,
       meta_atingida: band.meta_atingida,
       super_meta: band.super_meta,
-      tiers: band.tiers,
+      tiers: band.tiers
     });
-    return rule
-      ? { kind: 'CONCILIACAO', bandKey, rule }
-      : { kind: 'NONE', bandKey, rule: null };
+    return rule ? { kind: 'CONCILIACAO', bandKey, rule } : { kind: 'NONE', bandKey, rule: null };
   }
 
   if (bandKey === 'SEGURO_32_35') {
@@ -617,7 +599,7 @@ export function calcularPctConciliacao(
     faixa_comissao?: string | null;
     percentual_comissao_loja?: number | null;
     is_seguro_viagem?: boolean | null;
-  },
+  }
 ): number {
   const selection = resolveConciliacaoCommissionSelection(params, options);
   if (selection.kind !== 'CONCILIACAO' || !selection.rule) return 0;
@@ -684,9 +666,7 @@ export function calcularPctPorRegra(regra: Regra, pctMeta: number): number {
 
   if (pctMeta < 100) return regra.meta_nao_atingida ?? 0;
   if (pctMeta >= 120) {
-    return (
-      regra.super_meta ?? regra.meta_atingida ?? regra.meta_nao_atingida ?? 0
-    );
+    return regra.super_meta ?? regra.meta_atingida ?? regra.meta_nao_atingida ?? 0;
   }
   return regra.meta_atingida ?? regra.meta_nao_atingida ?? 0;
 }
@@ -710,20 +690,10 @@ export function regraProdutoTemFixo(regra?: RegraProduto | null): boolean {
  */
 export function calcularPctFixoProduto(regra: RegraProduto, pctMeta: number): number {
   const fixNao =
-    regra.fix_meta_nao_atingida ??
-    regra.fix_meta_atingida ??
-    regra.fix_super_meta ??
-    0;
-  const fixAt =
-    regra.fix_meta_atingida ??
-    regra.fix_meta_nao_atingida ??
-    regra.fix_super_meta ??
-    0;
+    regra.fix_meta_nao_atingida ?? regra.fix_meta_atingida ?? regra.fix_super_meta ?? 0;
+  const fixAt = regra.fix_meta_atingida ?? regra.fix_meta_nao_atingida ?? regra.fix_super_meta ?? 0;
   const fixSup =
-    regra.fix_super_meta ??
-    regra.fix_meta_atingida ??
-    regra.fix_meta_nao_atingida ??
-    0;
+    regra.fix_super_meta ?? regra.fix_meta_atingida ?? regra.fix_meta_nao_atingida ?? 0;
 
   if (pctMeta < 100) return fixNao;
   if (pctMeta >= 120) return fixSup;
@@ -737,7 +707,7 @@ export function calcularPctFixoProduto(regra: RegraProduto, pctMeta: number): nu
 export function calcularDescontoAplicado(
   totalRecibos: number,
   valorTotalBruto?: number | null,
-  valorTotalPago?: number | null,
+  valorTotalPago?: number | null
 ): number {
   const bruto = Number(valorTotalBruto || 0);
   const pago = Number(valorTotalPago || 0);
@@ -758,19 +728,13 @@ export function calcularDescontoAplicado(
 // ---------------------------------------------------------------------------
 
 /** Calcula valor da comissão: (valorComissionavel × percentual) / 100 */
-export function calcularValorComissao(
-  valorComissionavel: number,
-  percentual: number,
-): number {
+export function calcularValorComissao(valorComissionavel: number, percentual: number): number {
   if (valorComissionavel <= 0 || percentual <= 0) return 0;
   return parseFloat(((valorComissionavel * percentual) / 100).toFixed(2));
 }
 
 /** Calcula valor comissionável: valorVenda − valorNaoComissionado */
-export function calcularValorComissionavel(
-  valorVenda: number,
-  valorNaoComissionado = 0,
-): number {
+export function calcularValorComissionavel(valorVenda: number, valorNaoComissionado = 0): number {
   return Math.max(0, valorVenda - valorNaoComissionado);
 }
 
@@ -781,7 +745,7 @@ export function calcularValorComissionavel(
  */
 export function determinarPercentualComissao(
   regra: RegraComissao,
-  percentualMetaAtingida = 100,
+  percentualMetaAtingida = 100
 ): number {
   if (!regra || !regra.ativo) return 0;
   return calcularPctPorRegra(regra, percentualMetaAtingida);
@@ -793,7 +757,7 @@ export function formatarStatusComissao(status: StatusComissao): string {
     PENDENTE: 'Pendente',
     PROCESSANDO: 'Processando',
     PAGA: 'Paga',
-    CANCELADA: 'Cancelada',
+    CANCELADA: 'Cancelada'
   };
   return labels[status] || status;
 }
@@ -804,7 +768,7 @@ export function getStatusComissaoClass(status: StatusComissao): string {
     PENDENTE: 'bg-amber-100 text-amber-700',
     PROCESSANDO: 'bg-blue-100 text-blue-700',
     PAGA: 'bg-green-100 text-green-700',
-    CANCELADA: 'bg-red-100 text-red-700',
+    CANCELADA: 'bg-red-100 text-red-700'
   };
   return classes[status] || 'bg-gray-100 text-gray-700';
 }
@@ -830,7 +794,7 @@ export function calcularResumoComissoes(comissoes: Comissao[]) {
       if (c.status === 'CANCELADA') acc.cancelado += c.valor_comissao;
       return acc;
     },
-    { total: 0, pendente: 0, pago: 0, cancelado: 0 },
+    { total: 0, pendente: 0, pago: 0, cancelado: 0 }
   );
 }
 
@@ -846,7 +810,7 @@ export function agruparComissoesPorVendedor(comissoes: Comissao[]) {
           comissoes: [],
           total: 0,
           pendente: 0,
-          pago: 0,
+          pago: 0
         };
       }
       acc[key].comissoes.push(c);
@@ -865,7 +829,7 @@ export function agruparComissoesPorVendedor(comissoes: Comissao[]) {
         pendente: number;
         pago: number;
       }
-    >,
+    >
   );
 }
 
@@ -909,15 +873,15 @@ export function createManualConciliacaoBandRule(params: {
     meta_nao_atingida: params.meta_nao_atingida ?? null,
     meta_atingida: params.meta_atingida ?? null,
     super_meta: params.super_meta ?? null,
-    tiers: params.tiers ?? [],
+    tiers: params.tiers ?? []
   };
 }
 
 /** Normaliza o tipo de conciliação */
-export function normalizeConciliacaoTipo(
-  value: unknown,
-): 'GERAL' | 'ESCALONAVEL' {
-  return String(value ?? '').trim().toUpperCase() === 'ESCALONAVEL'
+export function normalizeConciliacaoTipo(value: unknown): 'GERAL' | 'ESCALONAVEL' {
+  return String(value ?? '')
+    .trim()
+    .toUpperCase() === 'ESCALONAVEL'
     ? 'ESCALONAVEL'
     : 'GERAL';
 }

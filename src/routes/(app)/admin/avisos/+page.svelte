@@ -65,7 +65,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const payload = await apiGet<{ items?: Template[] }>('/api/v1/admin/avisos', undefined, request.signal);
+      const payload = await apiGet<{ items?: Template[] }>(
+        '/api/v1/admin/avisos',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       templates = payload.items || [];
       if (!form.id && templates.length > 0) {
@@ -126,10 +130,7 @@
 <PageHeader
   title="Avisos"
   subtitle="Templates administrativos usados em disparos auxiliares do modulo de usuarios."
-  breadcrumbs={[
-    { label: 'Administracao', href: '/admin' },
-    { label: 'Avisos' }
-  ]}
+  breadcrumbs={[{ label: 'Administracao', href: '/admin' }, { label: 'Avisos' }]}
   actions={[
     { label: 'Atualizar', onClick: loadPage, variant: 'secondary', icon: RefreshCw },
     { label: 'Novo template', onClick: startNewTemplate, variant: 'primary', icon: Plus }
@@ -163,17 +164,40 @@
         placeholder=""
         class_name="w-full"
       />
-      <FieldInput id="template-assunto" label="Assunto" bind:value={form.assunto} class_name="md:col-span-2 w-full" />
-      <FieldTextarea id="template-mensagem" label="Mensagem" bind:value={form.mensagem} rows={10} class_name="md:col-span-2 w-full" />
-      <p class="md:col-span-2 -mt-2 text-xs text-slate-500">Variaveis disponiveis: <code>{'{{nome}}'}</code>, <code>{'{{email}}'}</code>, <code>{'{{empresa}}'}</code>.</p>
-      <FieldCheckbox label="Template ativo" bind:checked={form.ativo} helper="Disponivel para disparo no detalhe de usuario." class_name="rounded-xl border border-slate-200 p-4" />
+      <FieldInput
+        id="template-assunto"
+        label="Assunto"
+        bind:value={form.assunto}
+        class_name="md:col-span-2 w-full"
+      />
+      <FieldTextarea
+        id="template-mensagem"
+        label="Mensagem"
+        bind:value={form.mensagem}
+        rows={10}
+        class_name="md:col-span-2 w-full"
+      />
+      <p class="-mt-2 text-xs text-slate-500 md:col-span-2">
+        Variaveis disponiveis: <code>{'{{nome}}'}</code>, <code>{'{{email}}'}</code>,
+        <code>{'{{empresa}}'}</code>.
+      </p>
+      <FieldCheckbox
+        label="Template ativo"
+        bind:checked={form.ativo}
+        helper="Disponivel para disparo no detalhe de usuario."
+        class_name="rounded-xl border border-slate-200 p-4"
+      />
     </div>
 
     <div class="mt-6 flex flex-wrap gap-3">
       {#if form.id}
-        <Button variant="danger" on:click={deleteTemplate} loading={deleting}>Excluir template</Button>
+        <Button variant="danger" on:click={deleteTemplate} loading={deleting}
+          >Excluir template</Button
+        >
       {/if}
-      <Button variant="primary" color="financeiro" on:click={saveTemplate} loading={saving}>Salvar template</Button>
+      <Button variant="primary" color="financeiro" on:click={saveTemplate} loading={saving}
+        >Salvar template</Button
+      >
     </div>
   </Card>
 </div>

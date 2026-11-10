@@ -2,7 +2,14 @@
 // (só o nome/assinatura do handler e caminhos de import relativos mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
-import { ensureModuloAccess, getAdminClient, requireAuthenticatedUser, resolveScopedCompanyIds, resolveUserScope, toErrorResponse } from '$lib/server/v1';
+import {
+  ensureModuloAccess,
+  getAdminClient,
+  requireAuthenticatedUser,
+  resolveScopedCompanyIds,
+  resolveUserScope,
+  toErrorResponse
+} from '$lib/server/v1';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import { cleanStringSet, chunkArray, uniqueCleanStrings } from '$lib/utils/array';
@@ -11,7 +18,9 @@ const MAX_CONCILIACAO_LOOKUP_BODY_BYTES = 256 * 1024;
 const MAX_LOOKUP_DOCUMENTOS = 500;
 
 function normalizeNumeroRecibo(value: string) {
-  return String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  return String(value || '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '');
 }
 
 function onlyDigits(value?: string | null) {
@@ -54,7 +63,11 @@ function numeroReciboMatches(left?: string | null, right?: string | null) {
 
   const leftSignificantCore = stripLeadingZeros(leftCore);
   const rightSignificantCore = stripLeadingZeros(rightCore);
-  if (!leftSignificantCore || !rightSignificantCore || leftSignificantCore !== rightSignificantCore) {
+  if (
+    !leftSignificantCore ||
+    !rightSignificantCore ||
+    leftSignificantCore !== rightSignificantCore
+  ) {
     return false;
   }
 
@@ -115,7 +128,8 @@ function readLookupRequestBody(value: unknown): LookupRequestBody {
       .filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
       .map((item) => ({
         documento: typeof item.documento === 'string' ? item.documento : null,
-        valor_lancamentos: typeof item.valor_lancamentos === 'number' ? item.valor_lancamentos : null,
+        valor_lancamentos:
+          typeof item.valor_lancamentos === 'number' ? item.valor_lancamentos : null,
         valor_taxas: typeof item.valor_taxas === 'number' ? item.valor_taxas : null
       }));
   }
@@ -159,7 +173,11 @@ async function fetchReciboCandidates(params: {
       : Promise.resolve({ data: [] as ReciboCandidateRow[] })
   ]);
 
-  for (const row of [...(normResp?.data || []), ...(exactResp?.data || []), ...(fuzzyResp?.data || [])]) {
+  for (const row of [
+    ...(normResp?.data || []),
+    ...(exactResp?.data || []),
+    ...(fuzzyResp?.data || [])
+  ]) {
     const id = String(row?.id || '').trim();
     const vendaId = String(row?.venda_id || '').trim();
     if (!id || !vendaId) continue;
@@ -246,8 +264,12 @@ async function findReciboByNumero(params: {
     return aTaxDiff - bTaxDiff;
   });
 
-  const porValor = ranked.filter((item) => (params.valorLancamento == null ? true : matches(Number(item.valor_total || 0), targetTotal)));
-  const porTaxas = porValor.filter((item) => (params.valorTaxas == null ? true : matches(Number(item.valor_taxas || 0), targetTaxas)));
+  const porValor = ranked.filter((item) =>
+    params.valorLancamento == null ? true : matches(Number(item.valor_total || 0), targetTotal)
+  );
+  const porTaxas = porValor.filter((item) =>
+    params.valorTaxas == null ? true : matches(Number(item.valor_taxas || 0), targetTaxas)
+  );
 
   const escolhido =
     (porTaxas.length === 1 ? porTaxas[0] : null) ||
@@ -269,14 +291,22 @@ export async function handleConciliacaoLookupPost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster && !scope.isFinanceiro && !scope.isGestor) {
-      ensureModuloAccess(scope, ['operacao_conciliacao', 'conciliacao'], 1, 'Sem acesso à Conciliação.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_conciliacao', 'conciliacao'],
+        1,
+        'Sem acesso à Conciliação.'
+      );
     }
 
     const body = readLookupRequestBody(bodyResult.data);
     const companyIds = resolveScopedCompanyIds(scope, body?.companyId || null);
-    if (companyIds.length === 0) return json({ error: 'Company invalida.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (companyIds.length === 0)
+      return json({ error: 'Company invalida.' }, { status: 400, headers: NO_STORE_HEADERS });
 
-    const documentos = Array.isArray(body?.documentos) ? body.documentos.slice(0, MAX_LOOKUP_DOCUMENTOS) : [];
+    const documentos = Array.isArray(body?.documentos)
+      ? body.documentos.slice(0, MAX_LOOKUP_DOCUMENTOS)
+      : [];
     if (documentos.length === 0) return json({ matches: {} }, { headers: NO_STORE_HEADERS });
 
     const matches: Record<
@@ -320,13 +350,22 @@ export async function handleConciliacaoLookupPost(event: RequestEvent) {
         venda_recibo_id: found.recibo.id,
         sistema_valor_total: found.recibo.valor_total,
         sistema_valor_taxas: found.recibo.valor_taxas,
-        diff_total: Math.abs(importTotal - sistemaTotal) > 0.01 ? Math.round((importTotal - sistemaTotal) * 100) / 100 : null,
-        diff_taxas: Math.abs(importTaxas - sistemaTaxas) > 0.01 ? Math.round((importTaxas - sistemaTaxas) * 100) / 100 : null
+        diff_total:
+          Math.abs(importTotal - sistemaTotal) > 0.01
+            ? Math.round((importTotal - sistemaTotal) * 100) / 100
+            : null,
+        diff_taxas:
+          Math.abs(importTaxas - sistemaTaxas) > 0.01
+            ? Math.round((importTaxas - sistemaTaxas) * 100) / 100
+            : null
       };
     }
 
     return json(
-      { matches, truncated: Array.isArray(body?.documentos) && body.documentos.length > MAX_LOOKUP_DOCUMENTOS },
+      {
+        matches,
+        truncated: Array.isArray(body?.documentos) && body.documentos.length > MAX_LOOKUP_DOCUMENTOS
+      },
       { headers: NO_STORE_HEADERS }
     );
   } catch (err) {

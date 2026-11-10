@@ -14,7 +14,7 @@ import {
 } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { fetchSaleForScope } from '$lib/server/salesScope';
-import { chunkArray, SUPABASE_IN_BATCH_SIZE, uniqueCleanStrings } from '$lib/utils/array';
+import { chunkArray, QUERY_IN_BATCH_SIZE, uniqueCleanStrings } from '$lib/utils/array';
 
 type MergeCandidateSaleRow = {
   id?: string | null;
@@ -79,13 +79,18 @@ export async function handleVendasMergeCandidatesGet(event: RequestEvent) {
       return new Response('Venda nao encontrada.', { status: 404, headers: NO_STORE_HEADERS });
     }
     const currentVendedorId = String(currentSale.vendedor_id || '').trim();
-    if (scope.isMaster && requestedVendedorIds.length > 0 && !requestedVendedorIds.includes(currentVendedorId)) {
+    if (
+      scope.isMaster &&
+      requestedVendedorIds.length > 0 &&
+      !requestedVendedorIds.includes(currentVendedorId)
+    ) {
       return json({ items: [] }, { headers: DYNAMIC_READ_HEADERS });
     }
 
     let query = client
       .from('vendas')
-      .select(`
+      .select(
+        `
         id,
         vendedor_id,
         cliente_id,
@@ -101,13 +106,14 @@ export async function handleVendasMergeCandidatesGet(event: RequestEvent) {
         destinos:produtos!destino_id (nome, cidade_id),
         destino_cidade:cidades!destino_cidade_id (id, nome),
         vendedor:users!vendedor_id (nome_completo)
-      `)
+      `
+      )
       .eq('cliente_id', String(currentSale.cliente_id || ''))
       .eq('vendedor_id', currentVendedorId)
       .neq('id', currentSale.id)
       .order('data_venda', { ascending: false });
 
-    if (companyIds.length > 0 && companyIds.length <= SUPABASE_IN_BATCH_SIZE) {
+    if (companyIds.length > 0 && companyIds.length <= QUERY_IN_BATCH_SIZE) {
       query = query.in('company_id', companyIds);
     }
 
@@ -115,13 +121,11 @@ export async function handleVendasMergeCandidatesGet(event: RequestEvent) {
     if (salesError) throw salesError;
 
     const scopedSalesData = ((salesData || []) as MergeCandidateSaleRow[]).filter((row) => {
-      if (companyIds.length === 0 || companyIds.length <= SUPABASE_IN_BATCH_SIZE) return true;
+      if (companyIds.length === 0 || companyIds.length <= QUERY_IN_BATCH_SIZE) return true;
       return companyScopeSet.has(String(row?.company_id || '').trim());
     });
 
-    const saleIds = scopedSalesData
-      .map((row) => String(row?.id || '').trim())
-      .filter(Boolean);
+    const saleIds = scopedSalesData.map((row) => String(row?.id || '').trim()).filter(Boolean);
 
     const receiptsBySale = new Map<string, string[]>();
     if (saleIds.length > 0) {

@@ -7,10 +7,10 @@
   export let setVoucherProvider: (provider: VoucherProvider) => void;
 </script>
 
-<section class="mb-6 rounded-xl border border-clientes-100 bg-white p-5 shadow-xs">
+<section class="border-clientes-100 mb-6 rounded-xl border bg-white p-5 shadow-xs">
   <div class="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
     <div>
-      <p class="text-sm font-medium text-clientes-600">Primeiro passo</p>
+      <p class="text-clientes-600 text-sm font-medium">Primeiro passo</p>
       <h2 class="text-xl font-bold text-slate-900">Escolha o fornecedor do voucher</h2>
       <p class="text-sm text-slate-500">
         A importação e os campos abaixo seguem o padrão do fornecedor selecionado.

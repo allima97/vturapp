@@ -1,7 +1,7 @@
 // Migrado para Hono de src/routes/api/v1/viagens/cliente/[id]/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
-import { json } from "@sveltejs/kit";
+import { json } from '@sveltejs/kit';
 import {
   ensureModuloAccess,
   getAdminClient,
@@ -9,19 +9,19 @@ import {
   requireAuthenticatedUser,
   resolveScopedCompanyIds,
   resolveUserScope,
-  toErrorResponse,
-} from "$lib/server/v1";
-import { normalizeViagemStatus } from "$lib/viagens/status";
-import { syncViagensStatus } from "$lib/server/viagensStatus";
-import { ensureClienteAccess } from "$lib/server/clientes";
+  toErrorResponse
+} from '$lib/server/v1';
+import { normalizeViagemStatus } from '$lib/viagens/status';
+import { syncViagensStatus } from '$lib/server/viagensStatus';
+import { ensureClienteAccess } from '$lib/server/clientes';
 import {
   buildReadModelCacheKey,
   getCachedReadModel,
   READ_MODEL_TAGS,
-  scopeCacheTags,
-} from "$lib/server/readModelCache";
-import { DYNAMIC_READ_HEADERS } from "$lib/server/httpCache";
-import { chunkArray, dedupeById as dedupeRowsById, SUPABASE_IN_BATCH_SIZE } from "$lib/utils/array";
+  scopeCacheTags
+} from '$lib/server/readModelCache';
+import { DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
+import { chunkArray, dedupeById as dedupeRowsById, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
 type ViagemClienteRow = {
   id: string | null;
@@ -56,9 +56,9 @@ export async function handleViagensClienteIdGet(event: RequestEvent) {
     if (!scope.isAdmin) {
       ensureModuloAccess(
         scope,
-        ["operacao_viagens", "viagens", "operacao"],
+        ['operacao_viagens', 'viagens', 'operacao'],
         1,
-        "Sem acesso a Viagens.",
+        'Sem acesso a Viagens.'
       );
     }
 
@@ -66,10 +66,7 @@ export async function handleViagensClienteIdGet(event: RequestEvent) {
     const clienteId = params.id;
 
     if (!clienteId) {
-      return json(
-        { success: false, error: "ID do cliente é obrigatório" },
-        { status: 400 },
-      );
+      return json({ success: false, error: 'ID do cliente é obrigatório' }, { status: 400 });
     }
 
     const { searchParams } = event.url;
@@ -77,21 +74,21 @@ export async function handleViagensClienteIdGet(event: RequestEvent) {
       client,
       scope,
       clienteId,
-      searchParams.get("empresa_id"),
-      searchParams.get("vendedor_ids") || searchParams.get("vendedor_id"),
-      1,
+      searchParams.get('empresa_id'),
+      searchParams.get('vendedor_ids') || searchParams.get('vendedor_id'),
+      1
     );
     const companyIds =
       filters.companyIds.length > 0
         ? filters.companyIds
-        : resolveScopedCompanyIds(scope, searchParams.get("empresa_id"));
+        : resolveScopedCompanyIds(scope, searchParams.get('empresa_id'));
 
-    const cacheKey = buildReadModelCacheKey("viagens:cliente", {
+    const cacheKey = buildReadModelCacheKey('viagens:cliente', {
       clienteId,
       companyIds,
       vendedorIds: filters.vendedorIds,
       userId: user.id,
-      isAdmin: scope.isAdmin,
+      isAdmin: scope.isAdmin
     });
     const payload = await getCachedReadModel({
       key: cacheKey,
@@ -102,8 +99,8 @@ export async function handleViagensClienteIdGet(event: RequestEvent) {
         ...scopeCacheTags({
           companyIds,
           vendedorIds: filters.vendedorIds,
-          userId: user.id,
-        }),
+          userId: user.id
+        })
       ],
       ttlMs: 120_000,
       staleTtlMs: 600_000,
@@ -111,7 +108,7 @@ export async function handleViagensClienteIdGet(event: RequestEvent) {
         // Busca viagens do cliente específico
         const fetchViagens = async (companyBatch?: string[]) => {
           let query = client
-            .from("viagens")
+            .from('viagens')
             .select(
               `
         id, 
@@ -131,14 +128,14 @@ export async function handleViagensClienteIdGet(event: RequestEvent) {
         created_at, 
         updated_at,
         recibo_id
-      `,
+      `
             )
-            .eq("cliente_id", clienteId)
-            .order("data_inicio", { ascending: false })
+            .eq('cliente_id', clienteId)
+            .order('data_inicio', { ascending: false })
             .limit(100);
 
           if (companyBatch && companyBatch.length > 0) {
-            query = query.in("company_id", companyBatch);
+            query = query.in('company_id', companyBatch);
           }
 
           const { data, error } = await query;
@@ -151,12 +148,12 @@ export async function handleViagensClienteIdGet(event: RequestEvent) {
         };
 
         let data: ViagemClienteRow[] = [];
-        if (companyIds.length > SUPABASE_IN_BATCH_SIZE) {
+        if (companyIds.length > QUERY_IN_BATCH_SIZE) {
           for (const batch of chunkArray(companyIds)) {
             data.push(...(await fetchViagens(batch)));
           }
           data = dedupeRowsById(data).sort((a, b) =>
-            String(b?.data_inicio || "").localeCompare(String(a?.data_inicio || "")),
+            String(b?.data_inicio || '').localeCompare(String(a?.data_inicio || ''))
           );
         } else {
           data = await fetchViagens(companyIds.length > 0 ? companyIds : undefined);
@@ -166,11 +163,7 @@ export async function handleViagensClienteIdGet(event: RequestEvent) {
         if (filters.vendedorIds.length > 0) {
           const vendedorIdSet = new Set(filters.vendedorIds);
           const vendaIds = Array.from(
-            new Set(
-              scopedRows
-                .map((row) => String(row?.venda_id || "").trim())
-                .filter(Boolean),
-            ),
+            new Set(scopedRows.map((row) => String(row?.venda_id || '').trim()).filter(Boolean))
           );
           let vendaIdsPermitidas = new Set<string>();
 
@@ -179,24 +172,22 @@ export async function handleViagensClienteIdGet(event: RequestEvent) {
             for (const vendaBatch of chunkArray(vendaIds)) {
               for (const vendedorBatch of chunkArray(filters.vendedorIds)) {
                 const { data: batchRows, error: vendasError } = await client
-                  .from("vendas")
-                  .select("id")
-                  .in("id", vendaBatch)
-                  .in("vendedor_id", vendedorBatch);
+                  .from('vendas')
+                  .select('id')
+                  .in('id', vendaBatch)
+                  .in('vendedor_id', vendedorBatch);
                 if (vendasError) throw vendasError;
                 vendasRows.push(...(batchRows || []));
               }
             }
             vendaIdsPermitidas = new Set(
-              (vendasRows || [])
-                .map((row) => String(row?.id || "").trim())
-                .filter(Boolean),
+              (vendasRows || []).map((row) => String(row?.id || '').trim()).filter(Boolean)
             );
           }
 
           scopedRows = scopedRows.filter((row) => {
-            const responsavelId = String(row?.responsavel_user_id || "").trim();
-            const vendaId = String(row?.venda_id || "").trim();
+            const responsavelId = String(row?.responsavel_user_id || '').trim();
+            const vendaId = String(row?.venda_id || '').trim();
             return (
               (responsavelId && vendedorIdSet.has(responsavelId)) ||
               (vendaId && vendaIdsPermitidas.has(vendaId))
@@ -208,9 +199,9 @@ export async function handleViagensClienteIdGet(event: RequestEvent) {
 
         // Busca dados do cliente
         const { data: clienteData } = await client
-          .from("clientes")
-          .select("id, nome")
-          .eq("id", clienteId)
+          .from('clientes')
+          .select('id, nome')
+          .eq('id', clienteId)
           .single();
 
         const items = scopedRows.map((row) => ({
@@ -218,30 +209,26 @@ export async function handleViagensClienteIdGet(event: RequestEvent) {
           venda_id: row.venda_id,
           orcamento_id: row.orcamento_id,
           cliente_id: row.cliente_id,
-          cliente_nome: clienteData?.nome || "Cliente não encontrado",
-          origem: row.origem || "",
-          destino: row.destino || "Destino não informado",
+          cliente_nome: clienteData?.nome || 'Cliente não encontrado',
+          origem: row.origem || '',
+          destino: row.destino || 'Destino não informado',
           data_inicio: row.data_inicio,
           data_fim: row.data_fim,
-          status:
-            resolvedStatuses.get(String(row.id || "")) || normalizeViagemStatus(row.status),
-          observacoes: row.observacoes || "",
-          follow_up_text: row.follow_up_text || "",
+          status: resolvedStatuses.get(String(row.id || '')) || normalizeViagemStatus(row.status),
+          observacoes: row.observacoes || '',
+          follow_up_text: row.follow_up_text || '',
           follow_up_fechado: row.follow_up_fechado || false,
           recibo_id: row.recibo_id,
-          created_at: row.created_at,
+          created_at: row.created_at
         }));
 
         return { success: true, items, total: items.length };
-      },
+      }
     });
 
     return json(payload, { headers: DYNAMIC_READ_HEADERS });
   } catch (err) {
-    logServerError(
-      "[viagens/cliente] falha ao carregar viagens do cliente",
-      err,
-    );
-    return toErrorResponse(err, "Erro ao carregar viagens do cliente.");
+    logServerError('[viagens/cliente] falha ao carregar viagens do cliente', err);
+    return toErrorResponse(err, 'Erro ao carregar viagens do cliente.');
   }
 }

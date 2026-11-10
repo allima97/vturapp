@@ -55,7 +55,10 @@ export async function handleRoteirosGerarOrcamentoPost(event: RequestEvent) {
   try {
     const originError = rejectCrossOriginRequest(event.request);
     if (originError) return originError;
-    const bodyResult = await readJsonBodyLimited(event.request, MAX_ROTEIRO_GERAR_ORCAMENTO_BODY_BYTES);
+    const bodyResult = await readJsonBodyLimited(
+      event.request,
+      MAX_ROTEIRO_GERAR_ORCAMENTO_BODY_BYTES
+    );
     if (!bodyResult.ok) return bodyResult.response;
 
     const client = getAdminClient();
@@ -68,10 +71,12 @@ export async function handleRoteirosGerarOrcamentoPost(event: RequestEvent) {
     if (!body) return new Response('Body invalido.', { status: 400, headers: NO_STORE_HEADERS });
 
     const roteiroId = String(body.roteiro_id || '').trim();
-    if (!isUuid(roteiroId)) return new Response('roteiro_id invalido.', { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(roteiroId))
+      return new Response('roteiro_id invalido.', { status: 400, headers: NO_STORE_HEADERS });
 
     const clientName = String(body.client_name || '').trim();
-    if (!clientName) return new Response('client_name obrigatorio.', { status: 400, headers: NO_STORE_HEADERS });
+    if (!clientName)
+      return new Response('client_name obrigatorio.', { status: 400, headers: NO_STORE_HEADERS });
 
     // Carregar roteiro
     const { data: roteiro, error: roteiroErr } = await client
@@ -81,7 +86,8 @@ export async function handleRoteirosGerarOrcamentoPost(event: RequestEvent) {
       .maybeSingle();
 
     if (roteiroErr) throw roteiroErr;
-    if (!roteiro) return new Response('Roteiro nao encontrado.', { status: 404, headers: NO_STORE_HEADERS });
+    if (!roteiro)
+      return new Response('Roteiro nao encontrado.', { status: 404, headers: NO_STORE_HEADERS });
 
     // Carregar pagamentos do roteiro
     const { data: pagamentos, error: pagErr } = await client
@@ -120,7 +126,10 @@ export async function handleRoteirosGerarOrcamentoPost(event: RequestEvent) {
         const clienteRow = cliente as ClienteResumoRow;
         const clienteCompanyId = String(clienteRow.company_id || '').trim();
         if (!scope.isAdmin && clienteCompanyId && !scope.companyIds.includes(clienteCompanyId)) {
-          return new Response('Cliente fora do seu escopo.', { status: 403, headers: NO_STORE_HEADERS });
+          return new Response('Cliente fora do seu escopo.', {
+            status: 403,
+            headers: NO_STORE_HEADERS
+          });
         }
         clientWhatsapp = clientWhatsapp || clienteRow.whatsapp || null;
         clientEmail = clientEmail || clienteRow.email || null;

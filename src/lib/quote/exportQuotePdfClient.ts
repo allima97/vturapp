@@ -1,4 +1,4 @@
-import { VTUR_LOGO_URL } from "$lib/brand";
+import { VTUR_LOGO_URL } from '$lib/brand';
 /**
  * exportQuotePdfClient.ts — vtur-svelte
  *
@@ -6,13 +6,12 @@ import { VTUR_LOGO_URL } from "$lib/brand";
  * Gera o HTML de preview do orçamento com: logo, QR Code WhatsApp,
  * itens, resumo financeiro e rodapé.
  *
- * Usa o cliente Supabase browser para resolver URLs assinadas.
+ * Usa o cliente Dados browser para resolver URLs assinadas.
  */
 
 import { construirLinkWhatsApp } from '$lib/whatsapp';
 import { safeOpenNewTab } from '$lib/security/url';
 import { formatISODateBR } from '$lib/date';
-import type { User } from '@supabase/supabase-js';
 
 // ---------------------------------------------------------------------------
 // TIPOS
@@ -74,24 +73,32 @@ type QuoteItemSegmentRow = {
   order_index?: number | null;
 };
 
-type SupabaseQueryResult = PromiseLike<{ data: unknown; error?: { message?: string } | null }> & {
-  eq: (column: string, value: unknown) => SupabaseQueryResult;
-  in: (column: string, values: readonly string[]) => SupabaseQueryResult;
-  order: (column: string, options: { ascending: boolean }) => SupabaseQueryResult;
-  maybeSingle: () => Promise<{ data: Record<string, unknown> | null; error?: { message?: string } | null }>;
+type DadosQueryResult = PromiseLike<{ data: unknown; error?: { message?: string } | null }> & {
+  eq: (column: string, value: unknown) => DadosQueryResult;
+  in: (column: string, values: readonly string[]) => DadosQueryResult;
+  order: (column: string, options: { ascending: boolean }) => DadosQueryResult;
+  maybeSingle: () => Promise<{
+    data: Record<string, unknown> | null;
+    error?: { message?: string } | null;
+  }>;
 };
 
-type SupabasePreviewStorage = {
+type DadosPreviewStorage = {
   from: (bucket: string) => {
     download: (path: string) => Promise<{ data: Blob | null; error?: { message?: string } | null }>;
-    createSignedUrl: (path: string, ttl: number) => Promise<{ data?: { signedUrl?: string } | null }>;
+    createSignedUrl: (
+      path: string,
+      ttl: number
+    ) => Promise<{ data?: { signedUrl?: string } | null }>;
   };
 };
 
-type SupabasePreviewClient = {
-  from: (table: string) => { select: (columns: string) => SupabaseQueryResult };
-  auth: { getUser: () => Promise<{ data: { user: User | null } }> };
-  storage: SupabasePreviewStorage;
+type PreviewUser = { id: string; email?: string | null };
+
+type DadosPreviewClient = {
+  from: (table: string) => any;
+  auth: { getUser: () => Promise<{ data: { user: PreviewUser | null } }> };
+  storage: DadosPreviewStorage;
 };
 
 // ---------------------------------------------------------------------------
@@ -192,7 +199,10 @@ function formatFlightCity(value?: string | null) {
 function formatFlightPlace(city?: string | null, airport?: string | null) {
   const cityLabel = formatFlightCity(city);
   const airportLabel = String(airport || '').trim();
-  if (airportLabel && (airportLabel.includes('(') || airportLabel.includes(' - ') || airportLabel.length > 3)) {
+  if (
+    airportLabel &&
+    (airportLabel.includes('(') || airportLabel.includes(' - ') || airportLabel.length > 3)
+  ) {
     return airportLabel;
   }
   const code = airportLabel.toUpperCase();
@@ -228,13 +238,15 @@ function getFlightDataList(item: QuoteItemForPdf): Record<string, unknown>[] {
         cia_aerea: asRecord(segment).cia_aerea || aereoImport.cia_aerea,
         classe_reserva: asRecord(segment).classe_reserva || aereoImport.classe_reserva,
         trecho: asRecord(segment).trecho || aereoImport.trecho,
-        data_inicio: asRecord(segment).data_inicio || asRecord(segment).data_voo || aereoImport.data_inicio,
+        data_inicio:
+          asRecord(segment).data_inicio || asRecord(segment).data_voo || aereoImport.data_inicio,
         data_fim: asRecord(segment).data_fim || asRecord(segment).data_voo || aereoImport.data_fim
       }))
     : [];
 
   if (segmentos.length > 0) return segmentos;
-  if (aereoImport.data_voo || aereoImport.hora_saida || aereoImport.aeroporto_saida) return [aereoImport];
+  if (aereoImport.data_voo || aereoImport.hora_saida || aereoImport.aeroporto_saida)
+    return [aereoImport];
   return [];
 }
 
@@ -278,8 +290,12 @@ function buildFlightRows(item: QuoteItemForPdf) {
 
 function isFlightQuoteItem(item: QuoteItemForPdf) {
   if (getFlightDataList(item).length > 0) return true;
-  const normalized = normalizeText(`${item.item_type || ''} ${item.title || ''} ${item.product_name || ''}`);
-  return normalized.includes('passagem') || normalized.includes('aereo') || normalized.includes('voo');
+  const normalized = normalizeText(
+    `${item.item_type || ''} ${item.title || ''} ${item.product_name || ''}`
+  );
+  return (
+    normalized.includes('passagem') || normalized.includes('aereo') || normalized.includes('voo')
+  );
 }
 
 function getCircuitDaySegments(item: QuoteItemForPdf) {
@@ -290,7 +306,9 @@ function getCircuitDaySegments(item: QuoteItemForPdf) {
 
 function isCircuitQuoteItem(item: QuoteItemForPdf) {
   if (getCircuitDaySegments(item).length > 0) return true;
-  const normalized = normalizeText(`${item.item_type || ''} ${item.title || ''} ${item.product_name || ''}`);
+  const normalized = normalizeText(
+    `${item.item_type || ''} ${item.title || ''} ${item.product_name || ''}`
+  );
   return normalized.includes('circuito');
 }
 
@@ -302,14 +320,23 @@ function extractStoragePath(url?: string | null): string | null {
 }
 
 async function resolveStorageUrl(
-  supabase: { storage: { from: (bucket: string) => { createSignedUrl: (path: string, ttl: number) => Promise<{ data?: { signedUrl?: string } | null }> } } },
+  dados: {
+    storage: {
+      from: (bucket: string) => {
+        createSignedUrl: (
+          path: string,
+          ttl: number
+        ) => Promise<{ data?: { signedUrl?: string } | null }>;
+      };
+    };
+  },
   url?: string | null,
   path?: string | null
 ): Promise<string | null> {
   const storagePath = path || extractStoragePath(url);
   if (storagePath) {
     try {
-      const { data } = await supabase.storage.from('quotes').createSignedUrl(storagePath, 3600);
+      const { data } = await dados.storage.from('quotes').createSignedUrl(storagePath, 3600);
       if (data?.signedUrl) return data.signedUrl;
     } catch {
       // fall through to publicUrl
@@ -344,19 +371,19 @@ function guessMimeFromPath(path: string): string {
 }
 
 /**
- * Baixa uma imagem do Supabase Storage via SDK (.download) e converte para data URL.
+ * Baixa uma imagem do Dados Storage via SDK (.download) e converte para data URL.
  * Usa o SDK em vez de fetch externo — evita problemas de CORS com URLs assinadas.
  * Fallback: tenta fetch direto com a URL pública/assinada.
  */
 async function storageImageToDataUrl(
-  supabase: Pick<SupabasePreviewClient, 'storage'>,
+  dados: Pick<DadosPreviewClient, 'storage'>,
   storagePath: string | null,
   fallbackUrl: string | null
 ): Promise<string | null> {
   // 1. Tenta download via SDK (sem CORS — usa as credenciais internas do cliente)
   if (storagePath) {
     try {
-      const { data: blob, error } = await supabase.storage.from('quotes').download(storagePath);
+      const { data: blob, error } = await dados.storage.from('quotes').download(storagePath);
       if (!error && blob) {
         const mime = guessMimeFromPath(storagePath);
         const dataUrl = await blobToDataUrl(blob, mime);
@@ -404,8 +431,8 @@ function renderGenericItemHtml(item: QuoteItemForPdf, showItemValues: boolean) {
   const city = textVal(item.city_name);
   const start = formatDateBR(item.start_date);
   const end = formatDateBR(item.end_date);
-  const period = start && end && start !== end ? `${start} – ${end}` : (start || '');
-  const meta = city && period ? `${city} · ${period}` : (city || period);
+  const period = start && end && start !== end ? `${start} – ${end}` : start || '';
+  const meta = city && period ? `${city} · ${period}` : city || period;
   const amount = Number(item.total_amount ?? 0);
   const currency = item.currency || 'BRL';
 
@@ -461,10 +488,14 @@ function renderFlightItemHtml(item: QuoteItemForPdf, showItemValues: boolean) {
       </table>
     </div>
     ${legendHtml}
-    ${showItemValues ? `<div class="orc-flight-values">
+    ${
+      showItemValues
+        ? `<div class="orc-flight-values">
       <span>Valor: ${escHtml(formatCurrency(amount, currency))}</span>
       ${taxes > 0 ? `<span>Taxas: ${escHtml(formatCurrency(taxes, currency))}</span>` : ''}
-    </div>` : ''}
+    </div>`
+        : ''
+    }
   </div>`;
 }
 
@@ -598,7 +629,7 @@ export function buildQuotePreviewHtmlSync(params: {
         'Valor da criança válido somente quando acompanhada de dois adultos pagantes no mesmo apartamento.',
         'Este orçamento é apenas uma tomada de preço.',
         'Os serviços citados não estão reservados; a compra somente poderá ser confirmada após a confirmação dos fornecedores.',
-        'Este orçamento foi feito com base na menor tarifa para os serviços solicitados, podendo sofrer alteração devido à disponibilidade de lugares no ato da compra.',
+        'Este orçamento foi feito com base na menor tarifa para os serviços solicitados, podendo sofrer alteração devido à disponibilidade de lugares no ato da compra.'
       ];
   let footerLinesHtml = '';
   for (const line of footerLines) {
@@ -805,7 +836,7 @@ export function buildQuotePreviewHtmlSync(params: {
 
 export async function openQuotePreview(params: {
   quoteId: string;
-  supabase: SupabasePreviewClient;
+  dados: DadosPreviewClient;
   showBudgetItems?: boolean;
   showBudgetDetails?: boolean;
   showItemValues?: boolean;
@@ -813,7 +844,7 @@ export async function openQuotePreview(params: {
 }): Promise<void> {
   const {
     quoteId,
-    supabase,
+    dados,
     showBudgetItems = false,
     showBudgetDetails = true,
     showItemValues = true,
@@ -821,23 +852,27 @@ export async function openQuotePreview(params: {
   } = params;
 
   // 1. Autenticação
-  const { data: authData } = await supabase.auth.getUser();
+  const { data: authData } = await dados.auth.getUser();
   const userId = authData?.user?.id;
   if (!userId) throw new Error('Usuário não autenticado.');
 
   // 2. Dados do orçamento
-  const { data: quote, error: quoteError } = await supabase
+  const { data: quote, error: quoteError } = await dados
     .from('quote')
-    .select('id, created_at, currency, total, status, client_name, raw_json, cliente:client_id (nome)')
+    .select(
+      'id, created_at, currency, total, status, client_name, raw_json, cliente:client_id (nome)'
+    )
     .eq('id', quoteId)
     .maybeSingle();
   const quoteRow = quote as QuotePreviewRow | null;
   if (quoteError || !quoteRow) throw new Error('Orçamento não encontrado.');
 
   // 3. Itens
-  const { data: items, error: itemsError } = await supabase
+  const { data: items, error: itemsError } = await dados
     .from('quote_item')
-    .select('id, item_type, title, product_name, city_name, quantity, unit_price, total_amount, taxes_amount, start_date, end_date, currency, order_index, raw')
+    .select(
+      'id, item_type, title, product_name, city_name, quantity, unit_price, total_amount, taxes_amount, start_date, end_date, currency, order_index, raw'
+    )
     .eq('quote_id', quoteId)
     .order('order_index', { ascending: true });
   if (itemsError) throw new Error('Erro ao carregar itens do orçamento.');
@@ -854,7 +889,7 @@ export async function openQuotePreview(params: {
     if (item.id) itemIds.push(item.id);
   }
   if (itemIds.length > 0) {
-    const { data: segments } = await supabase
+    const { data: segments } = await dados
       .from('quote_item_segment')
       .select('quote_item_id, segment_type, data, order_index')
       .in('quote_item_id', itemIds)
@@ -880,19 +915,28 @@ export async function openQuotePreview(params: {
   }
 
   // 4. Parâmetros PDF
-  const { data: settings } = await supabase
+  const { data: settings } = await dados
     .from('quote_print_settings')
-    .select('imagem_complementar_url, imagem_complementar_path, consultor_nome, filial_nome, endereco_linha1, endereco_linha2, endereco_linha3, telefone, whatsapp, whatsapp_codigo_pais, email, rodape_texto')
+    .select(
+      'imagem_complementar_url, imagem_complementar_path, consultor_nome, filial_nome, endereco_linha1, endereco_linha2, endereco_linha3, telefone, whatsapp, whatsapp_codigo_pais, email, rodape_texto'
+    )
     .eq('owner_user_id', userId)
     .maybeSingle();
 
   const pdfSettings: QuotePdfSettings = settings ?? {};
 
   // 5. Resolve URLs assinadas (token na query string — funciona sem cookie)
-  const complementSignedUrl = await resolveStorageUrl(supabase, pdfSettings.imagem_complementar_url, pdfSettings.imagem_complementar_path);
+  const complementSignedUrl = await resolveStorageUrl(
+    dados,
+    pdfSettings.imagem_complementar_url,
+    pdfSettings.imagem_complementar_path
+  );
 
   // 6. QR Code
-  const whatsappLink = construirLinkWhatsApp(pdfSettings.whatsapp, pdfSettings.whatsapp_codigo_pais);
+  const whatsappLink = construirLinkWhatsApp(
+    pdfSettings.whatsapp,
+    pdfSettings.whatsapp_codigo_pais
+  );
   const qrSignedUrl = whatsappLink
     ? `/api/v1/qr?size=200&margin=1&text=${encodeURIComponent(whatsappLink)}`
     : null;
@@ -901,8 +945,13 @@ export async function openQuotePreview(params: {
   // Necessário porque o blob: HTML abre em origem isolada (null) e imagens
   // externas com token na URL seriam bloqueadas pelo browser
   const [complementUrl, qrUrl] = await Promise.all([
-    storageImageToDataUrl(supabase, pdfSettings.imagem_complementar_path || extractStoragePath(pdfSettings.imagem_complementar_url), complementSignedUrl),
-    qrSignedUrl ? externalImageToDataUrl(qrSignedUrl) : Promise.resolve(null),
+    storageImageToDataUrl(
+      dados,
+      pdfSettings.imagem_complementar_path ||
+        extractStoragePath(pdfSettings.imagem_complementar_url),
+      complementSignedUrl
+    ),
+    qrSignedUrl ? externalImageToDataUrl(qrSignedUrl) : Promise.resolve(null)
   ]);
 
   // 8. Monta HTML
@@ -913,7 +962,7 @@ export async function openQuotePreview(params: {
       created_at: quoteRow.created_at ?? null,
       total: quoteRow.total ?? 0,
       currency: quoteRow.currency ?? 'BRL',
-      client_name: clientName || null,
+      client_name: clientName || null
     },
     items: itemRows,
     settings: pdfSettings,
@@ -922,12 +971,13 @@ export async function openQuotePreview(params: {
     showBudgetItems,
     showBudgetDetails,
     showItemValues,
-    discount,
+    discount
   });
 
   // 9. Abre em nova aba
   const previewUrl = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
   const opened = safeOpenNewTab(previewUrl, ['blob:']);
   setTimeout(() => URL.revokeObjectURL(previewUrl), 60_000);
-  if (!opened) throw new Error('Não foi possível abrir a prévia. Verifique o bloqueador de pop-up.');
+  if (!opened)
+    throw new Error('Não foi possível abrir a prévia. Verifique o bloqueador de pop-up.');
 }

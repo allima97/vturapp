@@ -1,7 +1,7 @@
 // Migrado para Hono de src/routes/api/v1/relatorios/vendas/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
-import { json } from "@sveltejs/kit";
+import { json } from '@sveltejs/kit';
 import {
   ensureModuloAccess,
   getAdminClient,
@@ -12,8 +12,8 @@ import {
   resolveScopedCompanyIds,
   resolveScopedVendedorIds,
   resolveUserScope,
-  toErrorResponse,
-} from "$lib/server/v1";
+  toErrorResponse
+} from '$lib/server/v1';
 import {
   fetchLatestPaymentForms,
   fetchSalesReportRows,
@@ -27,48 +27,48 @@ import {
   getVendaCodigo,
   getVendaDestino,
   getVendaStatus,
-  getVendaVendedorNome,
-} from "$lib/server/relatorios";
-import { DYNAMIC_READ_HEADERS } from "$lib/server/httpCache";
+  getVendaVendedorNome
+} from '$lib/server/relatorios';
+import { DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
 import {
   buildConciliacaoSyntheticVendas,
   fetchEffectiveConciliacaoReceipts,
   fetchSuppressedConciliacaoReceipts,
-  filterRecibosCanceladosMesmoMes,
-} from "$lib/conciliacao/source";
+  filterRecibosCanceladosMesmoMes
+} from '$lib/conciliacao/source';
 import {
   applyRateioToSalesForScopedVendedores,
   fetchRateioByReciboIds,
-  fetchSplitSaleIdsForDestinationVendedores,
-} from "$lib/vendas/rateio";
+  fetchSplitSaleIdsForDestinationVendedores
+} from '$lib/vendas/rateio';
 import {
   addMonthsISODate,
   monthRangeFromYearMonth,
   parseISODateParts,
-  todayISODateLocal,
-} from "$lib/date";
-import { resolveGroupedReceiptCommissions } from "$lib/server/comissoes";
-import { calcularRankingComissionavel } from "$lib/server/rankingComissionavel";
-import { isEquipeVturNome } from "$lib/conciliacao/baixaRac";
-import { normalizeReceiptNumber } from "$lib/conciliacao/receiptNumber";
+  todayISODateLocal
+} from '$lib/date';
+import { resolveGroupedReceiptCommissions } from '$lib/server/comissoes';
+import { calcularRankingComissionavel } from '$lib/server/rankingComissionavel';
+import { isEquipeVturNome } from '$lib/conciliacao/baixaRac';
+import { normalizeReceiptNumber } from '$lib/conciliacao/receiptNumber';
 import {
   buildReadModelCacheKey,
   getCachedReadModel,
   READ_MODEL_TAGS,
-  scopeCacheTags,
-} from "$lib/server/readModelCache";
+  scopeCacheTags
+} from '$lib/server/readModelCache';
 import {
   cleanStringSet,
   chunkArray,
   dedupeById as dedupeRowsById,
-  SUPABASE_IN_BATCH_SIZE,
-  uniqueCleanStrings,
-} from "$lib/utils/array";
-import { toCleanString as toStr, toFiniteNumber as toNum } from "$lib/utils/values";
+  QUERY_IN_BATCH_SIZE,
+  uniqueCleanStrings
+} from '$lib/utils/array';
+import { toCleanString as toStr, toFiniteNumber as toNum } from '$lib/utils/values';
 import { isFormaNaoComissionavel } from '$lib/naoComissionavel';
 import { carregarTermosNaoComissionaveis as carregarTermosNaoComissionaveisBase } from '$lib/server/naoComissionavelTermos';
 
-const PT_BR_COLLATOR = new Intl.Collator("pt-BR");
+const PT_BR_COLLATOR = new Intl.Collator('pt-BR');
 const DEFAULT_ITEMS_LIMIT = 1000;
 const MAX_ITEMS_LIMIT = 5000;
 
@@ -99,7 +99,6 @@ type VendedorLookupRow = {
   email?: string | null;
 };
 
-
 type ReportSalesRowLike = {
   id?: string | null;
   vendedor_id?: string | null;
@@ -117,9 +116,7 @@ type ReportReceiptItem = NonNullable<ReportReceiptRow> & {
   numero_recibo_normalizado?: string | null;
 };
 
-type ConciliacaoReceiptView = Awaited<
-  ReturnType<typeof fetchEffectiveConciliacaoReceipts>
->[number];
+type ConciliacaoReceiptView = Awaited<ReturnType<typeof fetchEffectiveConciliacaoReceipts>>[number];
 
 type SplitConciliacaoRow = {
   conciliacao_recibo_id?: string | null;
@@ -133,9 +130,7 @@ type ReportSalesViewRow = ReportVendaRow & {
   linked_recibo_id?: string | null;
 };
 
-type SyntheticConciliacaoVendaRow = ReturnType<
-  typeof buildConciliacaoSyntheticVendas
->[number];
+type SyntheticConciliacaoVendaRow = ReturnType<typeof buildConciliacaoSyntheticVendas>[number];
 
 type ConsultaReceiptRow = {
   id?: string | null;
@@ -150,7 +145,11 @@ type ConsultaReceiptRow = {
   data_inicio?: string | null;
   data_fim?: string | null;
   tipo_produtos?: { id?: string | null; nome?: string | null; tipo?: string | null } | null;
-  produto_resolvido?: { id?: string | null; nome?: string | null; cidade_id?: string | null } | null;
+  produto_resolvido?: {
+    id?: string | null;
+    nome?: string | null;
+    cidade_id?: string | null;
+  } | null;
   vendedor_id?: string | null;
   rateio_scope_vendor_id?: string | null;
 };
@@ -164,24 +163,15 @@ type ConsultaVendaRow = ReportVendaRow & {
   vendas_recibos?: ConsultaReceiptRow[] | null;
 };
 
-function clampIntParam(
-  value: string | null,
-  fallback: number,
-  min: number,
-  max: number,
-) {
+function clampIntParam(value: string | null, fallback: number, min: number, max: number) {
   const parsed = Number(value);
   if (!Number.isFinite(parsed)) return fallback;
   return Math.min(max, Math.max(min, Math.trunc(parsed)));
 }
 
-function isReportReceiptItem(
-  recibo: ReportReceiptRow,
-): recibo is ReportReceiptItem {
+function isReportReceiptItem(recibo: ReportReceiptRow): recibo is ReportReceiptItem {
   return Boolean(recibo);
 }
-
-
 
 function hasConciliacaoOverride(recibo?: ReportReceiptRow | null) {
   return (
@@ -209,7 +199,6 @@ function getReciboTaxasExibicao(recibo?: ReportReceiptRow | null) {
   return Math.max(0, toNum(recibo.valor_taxas) - toNum(recibo.valor_du));
 }
 
-
 function calcularValorPagamento(pagamento: PagamentoNaoComissionavelInput) {
   const total = toNum(pagamento.valor_total);
   if (total > 0) return total;
@@ -231,11 +220,8 @@ async function fetchVendedoresByIds(client: AdminClient, vendedorIds: string[]) 
   }
 
   return getCachedReadModel<Map<string, { nome_completo?: string | null; email?: string | null }>>({
-    key: buildReadModelCacheKey("relatorios:vendas:vendedores-map", { ids }),
-    tags: [
-      READ_MODEL_TAGS.users,
-      ...scopeCacheTags({ vendedorIds: ids }),
-    ],
+    key: buildReadModelCacheKey('relatorios:vendas:vendedores-map', { ids }),
+    tags: [READ_MODEL_TAGS.users, ...scopeCacheTags({ vendedorIds: ids })],
     ttlMs: 300_000,
     staleTtlMs: 1_800_000,
     loader: async () => {
@@ -246,12 +232,12 @@ async function fetchVendedoresByIds(client: AdminClient, vendedorIds: string[]) 
       const batchRows = await Promise.all(
         chunkArray(ids, 200).map(async (batch) => {
           const { data, error } = await client
-            .from("users")
-            .select("id, nome_completo, email")
-            .in("id", batch);
+            .from('users')
+            .select('id, nome_completo, email')
+            .in('id', batch);
           if (error) throw error;
           return data || [];
-        }),
+        })
       );
 
       for (const row of batchRows.flat()) {
@@ -259,12 +245,12 @@ async function fetchVendedoresByIds(client: AdminClient, vendedorIds: string[]) 
         if (!id) continue;
         vendedorMap.set(id, {
           nome_completo: row?.nome_completo ?? null,
-          email: row?.email ?? null,
+          email: row?.email ?? null
         });
       }
 
       return vendedorMap;
-    },
+    }
   });
 }
 
@@ -296,13 +282,13 @@ function collectDestinationCityIds(rows: ReportSalesViewRow[]) {
 
 async function fetchDestinationCityNames(
   client: AdminClient,
-  cityIds: string[],
+  cityIds: string[]
 ): Promise<DestinationCityNameMap> {
   const ids = uniqueCleanStrings(cityIds).sort();
   if (ids.length === 0) return new Map();
 
   return getCachedReadModel<Map<string, string>>({
-    key: buildReadModelCacheKey("relatorios:vendas:cidades-destino", { ids }),
+    key: buildReadModelCacheKey('relatorios:vendas:cidades-destino', { ids }),
     tags: [READ_MODEL_TAGS.catalog],
     ttlMs: 300_000,
     staleTtlMs: 1_800_000,
@@ -310,13 +296,10 @@ async function fetchDestinationCityNames(
       const map = new Map<string, string>();
       const batches = await Promise.all(
         chunkArray(ids, 200).map(async (batch) => {
-          const { data, error } = await client
-            .from("cidades")
-            .select("id, nome")
-            .in("id", batch);
+          const { data, error } = await client.from('cidades').select('id, nome').in('id', batch);
           if (error) throw error;
           return data || [];
-        }),
+        })
       );
 
       for (const row of batches.flat() as Array<{ id?: string | null; nome?: string | null }>) {
@@ -326,13 +309,13 @@ async function fetchDestinationCityNames(
       }
 
       return map;
-    },
+    }
   });
 }
 
 async function hydrateMissingVendedores<T extends ReportSalesRowLike>(
   client: AdminClient,
-  rows: T[],
+  rows: T[]
 ) {
   const vendedorIds = uniqueCleanStrings(rows.map((row) => row?.vendedor_id));
 
@@ -347,7 +330,7 @@ async function hydrateMissingVendedores<T extends ReportSalesRowLike>(
 
 function enrichSyntheticRowsFromBaseRows(
   baseRows: ReportSalesViewRow[],
-  syntheticRows: ReportSalesViewRow[],
+  syntheticRows: ReportSalesViewRow[]
 ) {
   if (!Array.isArray(syntheticRows) || syntheticRows.length === 0) return syntheticRows;
 
@@ -387,14 +370,14 @@ function enrichSyntheticRowsFromBaseRows(
       cliente_id: row?.cliente_id || source?.cliente_id || null,
       clientes: row?.clientes || source?.clientes || null,
       destino_cidade: row?.destino_cidade || source?.destino_cidade || null,
-      destinos: row?.destinos || source?.destinos || null,
+      destinos: row?.destinos || source?.destinos || null
     } as ReportSalesViewRow;
   });
 }
 
 async function hydrateSyntheticRowsFromLinkedVendas(
   client: AdminClient,
-  rows: ReportSalesViewRow[],
+  rows: ReportSalesViewRow[]
 ) {
   if (!Array.isArray(rows) || rows.length === 0) return rows;
 
@@ -405,7 +388,7 @@ async function hydrateSyntheticRowsFromLinkedVendas(
     const hasDestino = Boolean(
       toStr(row?.destino_cidade?.nome) ||
       toStr(row?.destino_cidade?.id) ||
-      toStr(row?.destinos?.cidade_id),
+      toStr(row?.destinos?.cidade_id)
     );
     return !hasCliente || !hasDestino;
   });
@@ -420,13 +403,18 @@ async function hydrateSyntheticRowsFromLinkedVendas(
       cliente_id: string | null;
       clientes: { nome?: string | null } | null;
       destino_cidade: { id?: string | null; nome?: string | null } | null;
-      destinos: { id?: string | null; nome?: string | null; cidade_id?: string | null; tipo_produto?: string | null } | null;
+      destinos: {
+        id?: string | null;
+        nome?: string | null;
+        cidade_id?: string | null;
+        tipo_produto?: string | null;
+      } | null;
     }
   >();
 
   for (const batch of chunkArray(linkedVendaIds, 200)) {
     const { data, error } = await client
-      .from("vendas")
+      .from('vendas')
       .select(
         `
           id,
@@ -434,14 +422,14 @@ async function hydrateSyntheticRowsFromLinkedVendas(
           clientes (nome),
           destino_cidade:cidades!destino_cidade_id (id, nome),
           destinos:produtos!destino_id (id, nome, cidade_id, tipo_produto)
-        `,
+        `
       )
-      .in("id", batch);
+      .in('id', batch);
 
     if (error) {
       logServerError(
-        "[relatorios/vendas] falha ao hidratar linhas sinteticas por venda vinculada",
-        error,
+        '[relatorios/vendas] falha ao hidratar linhas sinteticas por venda vinculada',
+        error
       );
       return rows;
     }
@@ -453,13 +441,18 @@ async function hydrateSyntheticRowsFromLinkedVendas(
         cliente_id?: string | null;
         clientes?: { nome?: string | null } | null;
         destino_cidade?: { id?: string | null; nome?: string | null } | null;
-        destinos?: { id?: string | null; nome?: string | null; cidade_id?: string | null; tipo_produto?: string | null } | null;
+        destinos?: {
+          id?: string | null;
+          nome?: string | null;
+          cidade_id?: string | null;
+          tipo_produto?: string | null;
+        } | null;
       };
       vendaMap.set(id, {
         cliente_id: toStr(item?.cliente_id) || null,
         clientes: item?.clientes || null,
         destino_cidade: item?.destino_cidade || null,
-        destinos: item?.destinos || null,
+        destinos: item?.destinos || null
       });
     }
   }
@@ -475,14 +468,14 @@ async function hydrateSyntheticRowsFromLinkedVendas(
       cliente_id: row?.cliente_id || source.cliente_id || null,
       clientes: row?.clientes || source.clientes || null,
       destino_cidade: row?.destino_cidade || source.destino_cidade || null,
-      destinos: row?.destinos || source.destinos || null,
+      destinos: row?.destinos || source.destinos || null
     } as ReportSalesViewRow;
   });
 }
 
 function calcularNaoComissionavelResumo(
   pagamentos: PagamentoNaoComissionavelInput[],
-  termos?: string[] | null,
+  termos?: string[] | null
 ): PagamentosNaoComissionaveisResumo {
   const porVenda = new Map<string, number>();
   const porVendaSemRecibo = new Map<string, number>();
@@ -496,15 +489,13 @@ function calcularNaoComissionavelResumo(
       pagamento.forma_nome,
       pagamento.forma?.nome,
       pagamento.operacao,
-      pagamento.plano,
+      pagamento.plano
     ]
       .filter(Boolean)
-      .join(" ");
-    const pagaComissaoResolvido =
-      pagamento.paga_comissao ?? pagamento.forma?.paga_comissao ?? null;
+      .join(' ');
+    const pagaComissaoResolvido = pagamento.paga_comissao ?? pagamento.forma?.paga_comissao ?? null;
     const naoComissiona =
-      pagaComissaoResolvido === false ||
-      isFormaNaoComissionavel(formaNomeResolvida, termos);
+      pagaComissaoResolvido === false || isFormaNaoComissionavel(formaNomeResolvida, termos);
     if (!naoComissiona) continue;
 
     const valorBase = calcularValorPagamento(pagamento);
@@ -526,22 +517,16 @@ function calcularNaoComissionavelResumo(
 function carregarTermosNaoComissionaveis(client: AdminClient) {
   return carregarTermosNaoComissionaveisBase(client, {
     onError: (error) =>
-      logServerError(
-        "[relatorios/vendas] falha ao carregar termos nao comissionaveis",
-        error,
-      ),
+      logServerError('[relatorios/vendas] falha ao carregar termos nao comissionaveis', error)
   });
 }
 
-async function fetchNaoComissionadoPorVenda(
-  client: AdminClient,
-  vendaIds: string[],
-) {
+async function fetchNaoComissionadoPorVenda(client: AdminClient, vendaIds: string[]) {
   if (vendaIds.length === 0) {
     return {
       porVenda: new Map<string, number>(),
       porVendaSemRecibo: new Map<string, number>(),
-      porRecibo: new Map<string, number>(),
+      porRecibo: new Map<string, number>()
     };
   }
 
@@ -549,17 +534,17 @@ async function fetchNaoComissionadoPorVenda(
     Promise.all(
       chunkArray(vendaIds, 200).map(async (chunk) => {
         const { data, error } = await client
-          .from("vendas_pagamentos")
+          .from('vendas_pagamentos')
           .select(
-            "venda_id, venda_recibo_id, forma_nome, operacao, plano, valor_total, valor_bruto, desconto_valor, paga_comissao, forma:formas_pagamento(nome, paga_comissao)",
+            'venda_id, venda_recibo_id, forma_nome, operacao, plano, valor_total, valor_bruto, desconto_valor, paga_comissao, forma:formas_pagamento(nome, paga_comissao)'
           )
-          .in("venda_id", chunk);
+          .in('venda_id', chunk);
 
         if (error) throw error;
         return (data || []) as PagamentoNaoComissionavelInput[];
-      }),
+      })
     ),
-    carregarTermosNaoComissionaveis(client),
+    carregarTermosNaoComissionaveis(client)
   ]);
   const pagamentos = pagamentoBatches.flat();
   return calcularNaoComissionavelResumo(pagamentos, termos);
@@ -573,7 +558,7 @@ function getRecibosAtivos(row: ReportSalesRowLike) {
       : [];
   return recibos.filter(
     (recibo): recibo is ReportReceiptItem =>
-      isReportReceiptItem(recibo) && !recibo.cancelado_por_conciliacao_em,
+      isReportReceiptItem(recibo) && !recibo.cancelado_por_conciliacao_em
   );
 }
 
@@ -582,12 +567,8 @@ function getVendaValorExibicao(row: ReportSalesRowLike) {
   if (recibos.length === 0) return 0;
   return Number(
     recibos
-      .reduce(
-        (sum: number, recibo: ReportReceiptRow) =>
-          sum + getReciboBrutoExibicao(recibo),
-        0,
-      )
-      .toFixed(2),
+      .reduce((sum: number, recibo: ReportReceiptRow) => sum + getReciboBrutoExibicao(recibo), 0)
+      .toFixed(2)
   );
 }
 
@@ -596,18 +577,14 @@ function getVendaTaxasExibicao(row: ReportSalesRowLike) {
   if (recibos.length === 0) return 0;
   return Number(
     recibos
-      .reduce(
-        (sum: number, recibo: ReportReceiptRow) =>
-          sum + getReciboTaxasExibicao(recibo),
-        0,
-      )
-      .toFixed(2),
+      .reduce((sum: number, recibo: ReportReceiptRow) => sum + getReciboTaxasExibicao(recibo), 0)
+      .toFixed(2)
   );
 }
 
 function computeReceiptRankingEntries(
   rowsInput: ReportSalesRowLike[],
-  naoComissionadoPorVenda: PagamentosNaoComissionaveisResumo,
+  naoComissionadoPorVenda: PagamentosNaoComissionaveisResumo
 ) {
   const entries: Array<{ date: string; value: number }> = [];
 
@@ -617,27 +594,22 @@ function computeReceiptRankingEntries(
 
     const vendaId = toStr(row?.id);
     const somaBrutoRecibos = receiptRows.reduce(
-      (sum: number, recibo: ReportReceiptRow) =>
-        sum + getReciboBrutoExibicao(recibo),
-      0,
+      (sum: number, recibo: ReportReceiptRow) => sum + getReciboBrutoExibicao(recibo),
+      0
     );
     const somaTaxasRecibos = receiptRows.reduce(
-      (sum: number, recibo: ReportReceiptRow) =>
-        sum + getReciboTaxasExibicao(recibo),
-      0,
+      (sum: number, recibo: ReportReceiptRow) => sum + getReciboTaxasExibicao(recibo),
+      0
     );
-    const linkedNaoComissionado = toNum(
-      naoComissionadoPorVenda.porVenda.get(vendaId) || 0,
-    );
+    const linkedNaoComissionado = toNum(naoComissionadoPorVenda.porVenda.get(vendaId) || 0);
     const naoComissionadoSemRecibo = toNum(
-      naoComissionadoPorVenda.porVendaSemRecibo.get(vendaId) || 0,
+      naoComissionadoPorVenda.porVendaSemRecibo.get(vendaId) || 0
     );
-    const usarModoPorRecibo =
-      linkedNaoComissionado > 0 && naoComissionadoSemRecibo <= 0;
+    const usarModoPorRecibo = linkedNaoComissionado > 0 && naoComissionadoSemRecibo <= 0;
     const rankingGrupo = calcularRankingComissionavel({
       valorBruto: somaBrutoRecibos,
       valorTaxas: somaTaxasRecibos,
-      valorNaoComissionado: usarModoPorRecibo ? 0 : linkedNaoComissionado,
+      valorNaoComissionado: usarModoPorRecibo ? 0 : linkedNaoComissionado
     });
 
     for (const recibo of receiptRows) {
@@ -653,7 +625,7 @@ function computeReceiptRankingEntries(
       const rankingRecibo = calcularRankingComissionavel({
         valorBruto: getReciboBrutoExibicao(recibo),
         valorTaxas: getReciboTaxasExibicao(recibo),
-        valorNaoComissionado: usarModoPorRecibo ? naoComissionadoRecibo : 0,
+        valorNaoComissionado: usarModoPorRecibo ? naoComissionadoRecibo : 0
       });
       const value = usarModoPorRecibo
         ? rankingRecibo.valorRanking
@@ -669,7 +641,7 @@ function computeReceiptRankingEntries(
 function sumRankingEntriesBetween(
   entries: Array<{ date: string; value: number }>,
   start: string,
-  end: string,
+  end: string
 ) {
   return entries.reduce((sum, entry) => {
     if (entry.date < start || entry.date > end) return sum;
@@ -678,10 +650,9 @@ function sumRankingEntriesBetween(
 }
 
 function getLastSixMonthBuckets(referenceIso: string) {
-  const reference =
-    parseISODateParts(referenceIso) || parseISODateParts(todayISODateLocal());
+  const reference = parseISODateParts(referenceIso) || parseISODateParts(todayISODateLocal());
   if (!reference) return [];
-  const referenceMonthStart = `${reference.year}-${String(reference.month).padStart(2, "0")}-01`;
+  const referenceMonthStart = `${reference.year}-${String(reference.month).padStart(2, '0')}-01`;
 
   return Array.from({ length: 6 }, (_, index) => {
     const monthStart = addMonthsISODate(referenceMonthStart, -(5 - index));
@@ -690,7 +661,7 @@ function getLastSixMonthBuckets(referenceIso: string) {
       return {
         key: monthStart.slice(0, 7),
         start: monthStart,
-        end: monthStart,
+        end: monthStart
       };
     const range = monthRangeFromYearMonth(current.year, current.month);
     const key = monthStart.slice(0, 7);
@@ -698,23 +669,22 @@ function getLastSixMonthBuckets(referenceIso: string) {
     return {
       key,
       start: range.inicio,
-      end: isReferenceMonth ? reference.iso : range.fim,
+      end: isReferenceMonth ? reference.iso : range.fim
     };
   });
 }
 
 function getCurrentMonthDayBuckets(referenceIso: string) {
-  const reference =
-    parseISODateParts(referenceIso) || parseISODateParts(todayISODateLocal());
+  const reference = parseISODateParts(referenceIso) || parseISODateParts(todayISODateLocal());
   if (!reference) return [];
   const range = monthRangeFromYearMonth(reference.year, reference.month);
   const daysInMonth = Number(range.fim.slice(8, 10));
 
   return Array.from({ length: daysInMonth }, (_, index) => {
-    const date = `${reference.year}-${String(reference.month).padStart(2, "0")}-${String(index + 1).padStart(2, "0")}`;
+    const date = `${reference.year}-${String(reference.month).padStart(2, '0')}-${String(index + 1).padStart(2, '0')}`;
     return {
       date,
-      day: index + 1,
+      day: index + 1
     };
   });
 }
@@ -728,91 +698,76 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
     if (!scope.isAdmin) {
       ensureModuloAccess(
         scope,
-        ["relatorios_vendas", "relatorios", "vendas"],
+        ['relatorios_vendas', 'relatorios', 'vendas'],
         1,
-        "Sem acesso ao relatorio de vendas.",
+        'Sem acesso ao relatorio de vendas.'
       );
     }
 
     const { searchParams } = event.url;
     const defaultRange = getCurrentYearRange();
-    const hasDataInicio = Boolean(searchParams.get("data_inicio"));
-    const hasDataFim = Boolean(searchParams.get("data_fim"));
+    const hasDataInicio = Boolean(searchParams.get('data_inicio'));
+    const hasDataFim = Boolean(searchParams.get('data_fim'));
     const monthEnd = todayISODateLocal();
     const monthStart = `${monthEnd.slice(0, 7)}-01`;
     const vendedorDefaultRange = scope.isVendedor || scope.usoIndividual;
 
     const dataInicio = String(
-      searchParams.get("data_inicio") ||
-        (vendedorDefaultRange ? monthStart : defaultRange.dataInicio),
+      searchParams.get('data_inicio') ||
+        (vendedorDefaultRange ? monthStart : defaultRange.dataInicio)
     ).trim();
     const dataFim = String(
-      searchParams.get("data_fim") ||
-        (vendedorDefaultRange ? monthEnd : defaultRange.dataFim),
+      searchParams.get('data_fim') || (vendedorDefaultRange ? monthEnd : defaultRange.dataFim)
     ).trim();
-    const companyIds = resolveScopedCompanyIds(
-      scope,
-      searchParams.get("empresa_id"),
-    );
+    const companyIds = resolveScopedCompanyIds(scope, searchParams.get('empresa_id'));
     const requestedVendedorRaw =
-      searchParams.get("vendedor_ids") || searchParams.get("vendedor_id");
-    const hasRequestedVendedorFilter = String(requestedVendedorRaw || "")
-      .trim()
-      .length > 0;
-    const scopedVendedorIds = await resolveScopedVendedorIds(
-      client,
-      scope,
-      requestedVendedorRaw,
-    );
+      searchParams.get('vendedor_ids') || searchParams.get('vendedor_id');
+    const hasRequestedVendedorFilter = String(requestedVendedorRaw || '').trim().length > 0;
+    const scopedVendedorIds = await resolveScopedVendedorIds(client, scope, requestedVendedorRaw);
     const vendedorIds =
       hasRequestedVendedorFilter && scopedVendedorIds.length === 0
         ? [NO_MATCH_COMPANY_ID]
         : scopedVendedorIds;
-    const statusFilter = String(searchParams.get("status") || "")
+    const statusFilter = String(searchParams.get('status') || '')
       .trim()
       .toLowerCase();
-    const clienteId = String(searchParams.get("cliente_id") || "").trim();
-    const destinoFilter = String(searchParams.get("destino") || "")
+    const clienteId = String(searchParams.get('cliente_id') || '').trim();
+    const destinoFilter = String(searchParams.get('destino') || '')
       .trim()
       .toLowerCase();
-    const produtoFilter = String(searchParams.get("produto") || "")
+    const produtoFilter = String(searchParams.get('produto') || '')
       .trim()
       .toLowerCase();
-    const tipoProdutoFilter = String(searchParams.get("tipo_produto") || "")
+    const tipoProdutoFilter = String(searchParams.get('tipo_produto') || '')
       .trim()
       .toLowerCase();
     const itemsLimit = clampIntParam(
-      searchParams.get("items_limit"),
+      searchParams.get('items_limit'),
       DEFAULT_ITEMS_LIMIT,
       0,
-      MAX_ITEMS_LIMIT,
+      MAX_ITEMS_LIMIT
     );
-    const itemsOffset = clampIntParam(
-      searchParams.get("items_offset"),
-      0,
-      0,
-      1_000_000,
-    );
-    const includeSummary = String(
-      searchParams.get("include_summary") ?? searchParams.get("summary") ?? "1",
-    ).trim() !== "0";
+    const itemsOffset = clampIntParam(searchParams.get('items_offset'), 0, 0, 1_000_000);
+    const includeSummary =
+      String(searchParams.get('include_summary') ?? searchParams.get('summary') ?? '1').trim() !==
+      '0';
     const accessibleClientIds =
       !scope.isAdmin &&
       !scope.isMaster &&
       !scope.isFinanceiro &&
       !scope.isGestor &&
       vendedorIds.length === 0
-      ? await resolveAccessibleClientIds(client, { companyIds, vendedorIds })
-      : [];
+        ? await resolveAccessibleClientIds(client, { companyIds, vendedorIds })
+        : [];
 
     let conciliacaoSobrepoeVendas = false;
     if (companyIds.length > 0) {
       const parametrosBatchRows = await Promise.all(
         chunkArray(companyIds).map(async (companyBatch) => {
           const { data, error: parametrosError } = await client
-            .from("parametros_comissao")
-            .select("company_id, conciliacao_sobrepoe_vendas")
-            .in("company_id", companyBatch)
+            .from('parametros_comissao')
+            .select('company_id, conciliacao_sobrepoe_vendas')
+            .in('company_id', companyBatch)
             .limit(1000);
           if (parametrosError) return [] as ParametrosComissaoRow[];
           return (data || []) as ParametrosComissaoRow[];
@@ -820,17 +775,14 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
       );
       const parametrosRows = parametrosBatchRows.flat();
       conciliacaoSobrepoeVendas = parametrosRows.some((row) =>
-        Boolean(row?.conciliacao_sobrepoe_vendas),
+        Boolean(row?.conciliacao_sobrepoe_vendas)
       );
     }
 
-    const mergeRowsById = <T extends { id?: string | null }>(
-      baseRows: T[],
-      extraRows: T[],
-    ) => {
+    const mergeRowsById = <T extends { id?: string | null }>(baseRows: T[], extraRows: T[]) => {
       const map = new Map<string, T>();
       for (const row of [...baseRows, ...extraRows]) {
-        const id = String(row?.id || "").trim();
+        const id = String(row?.id || '').trim();
         if (!id) continue;
         if (!map.has(id)) map.set(id, row);
       }
@@ -844,17 +796,15 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
           ? row.recibos.filter(Boolean)
           : Array.isArray(row?.vendas_recibos)
             ? row.vendas_recibos.filter(Boolean)
-            : [],
+            : []
       })) as unknown as ReportSalesViewRow[];
 
     const getConciliacaoIds = (item: { conciliacao_ids?: string[] | null; id?: string | null }) => {
       const ids = Array.isArray(item?.conciliacao_ids)
-        ? item.conciliacao_ids
-            .map((value) => String(value || "").trim())
-            .filter(Boolean)
+        ? item.conciliacao_ids.map((value) => String(value || '').trim()).filter(Boolean)
         : [];
       if (ids.length > 0) return ids;
-      const id = String(item?.id || "").trim();
+      const id = String(item?.id || '').trim();
       return id ? [id] : [];
     };
 
@@ -864,27 +814,24 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
       return [] as ReportReceiptItem[];
     };
 
-    const loadRowsViewForPeriod = async (
-      periodStart: string,
-      periodEnd: string,
-    ) => {
+    const loadRowsViewForPeriod = async (periodStart: string, periodEnd: string) => {
       const baseRowsPromise = fetchSalesReportRows(client, {
         dataInicio: periodStart,
         dataFim: periodEnd,
         companyIds,
         vendedorIds,
-        includeCancelled: true,
+        includeCancelled: true
       });
       const splitSaleIdsPromise =
         vendedorIds.length > 0
           ? fetchSplitSaleIdsForDestinationVendedores(client, {
               companyId: companyIds[0] || null,
               companyIds,
-              vendedorIds,
+              vendedorIds
             }).catch((error) => {
               logServerError(
-                "[relatorios/vendas] split sales indisponivel, seguindo sem rateio destino",
-                error,
+                '[relatorios/vendas] split sales indisponivel, seguindo sem rateio destino',
+                error
               );
               return [] as string[];
             })
@@ -896,11 +843,11 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
         inicio: periodStart,
         fim: periodEnd,
         vendedorIds,
-        excludeVendedorIds: undefined,
+        excludeVendedorIds: undefined
       }).catch((error) => {
         logServerError(
-          "[relatorios/vendas] conciliacao indisponivel, seguindo sem overrides",
-          error,
+          '[relatorios/vendas] conciliacao indisponivel, seguindo sem overrides',
+          error
         );
         return [] as ConciliacaoReceiptView[];
       });
@@ -908,7 +855,7 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
       const [baseRowsRaw, splitSaleIds, concReceiptsBase] = await Promise.all([
         baseRowsPromise,
         splitSaleIdsPromise,
-        concReceiptsPromise,
+        concReceiptsPromise
       ]);
       let rows = toRateioShape(baseRowsRaw);
 
@@ -919,8 +866,8 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
             dataFim: periodEnd,
             companyIds,
             vendaIds: splitSaleIds,
-            includeCancelled: true,
-          }),
+            includeCancelled: true
+          })
         );
         rows = mergeRowsById(rows, splitRows);
       }
@@ -937,49 +884,39 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
             inicio: periodStart,
             fim: periodEnd,
             vendedorIds: null,
-            excludeVendedorIds: undefined,
+            excludeVendedorIds: undefined
           });
         } catch (error) {
-          logServerError(
-            "[relatorios/vendas] conciliation all indisponivel",
-            error,
-          );
+          logServerError('[relatorios/vendas] conciliation all indisponivel', error);
           concReceiptsAllCache = [];
         }
         return concReceiptsAllCache;
       };
       const concReceiptsForOverrides =
         vendedorIds.length > 0 ? await loadConcReceiptsAll() : concReceipts;
-      const allowedVendedorSet =
-        vendedorIds.length > 0
-          ? cleanStringSet(vendedorIds)
-          : null;
+      const allowedVendedorSet = vendedorIds.length > 0 ? cleanStringSet(vendedorIds) : null;
 
       if (vendedorIds.length > 0) {
-        const splitConcCompanyBatches =
-          companyIds.length > 0 ? chunkArray(companyIds) : [null];
+        const splitConcCompanyBatches = companyIds.length > 0 ? chunkArray(companyIds) : [null];
         const splitConcVendedorBatches = chunkArray(vendedorIds);
         const splitConcBatchRows = await Promise.all(
           splitConcCompanyBatches.flatMap((companyBatch) =>
             splitConcVendedorBatches.map(async (vendedorBatch) => {
               let splitConcQuery = client
-                .from("vendas_recibos_rateio")
-                .select("conciliacao_recibo_id")
-                .eq("ativo", true)
-                .gt("percentual_destino", 0)
-                .in("vendedor_destino_id", vendedorBatch)
-                .not("conciliacao_recibo_id", "is", null);
+                .from('vendas_recibos_rateio')
+                .select('conciliacao_recibo_id')
+                .eq('ativo', true)
+                .gt('percentual_destino', 0)
+                .in('vendedor_destino_id', vendedorBatch)
+                .not('conciliacao_recibo_id', 'is', null);
 
               if (companyBatch && companyBatch.length > 0) {
-                splitConcQuery = splitConcQuery.in("company_id", companyBatch);
+                splitConcQuery = splitConcQuery.in('company_id', companyBatch);
               }
 
               const { data, error: splitConcErr } = await splitConcQuery;
               if (splitConcErr) {
-                logServerError(
-                  "[relatorios/vendas] split conciliation indisponivel",
-                  splitConcErr,
-                );
+                logServerError('[relatorios/vendas] split conciliation indisponivel', splitConcErr);
                 return [] as SplitConciliacaoRow[];
               }
               return (data || []) as SplitConciliacaoRow[];
@@ -989,21 +926,18 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
         const splitConcRows = splitConcBatchRows.flat();
 
         const splitConcIdSet = cleanStringSet(
-          (splitConcRows || []).map((row) => row?.conciliacao_recibo_id),
+          (splitConcRows || []).map((row) => row?.conciliacao_recibo_id)
         );
 
         if (splitConcIdSet.size > 0) {
           const concAll = await loadConcReceiptsAll();
           const seenConcIds = new Set(
-            (concReceipts || []).flatMap((item) =>
-              getConciliacaoIds(item),
-            ),
+            (concReceipts || []).flatMap((item) => getConciliacaoIds(item))
           );
           for (const item of concAll) {
             const candidateIds = getConciliacaoIds(item);
             if (candidateIds.length === 0) continue;
-            if (!candidateIds.some((id: string) => splitConcIdSet.has(id)))
-              continue;
+            if (!candidateIds.some((id: string) => splitConcIdSet.has(id))) continue;
             if (candidateIds.some((id: string) => seenConcIds.has(id))) continue;
             for (const id of candidateIds) {
               seenConcIds.add(id);
@@ -1014,7 +948,7 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
       }
 
       const overriddenReceiptIds = new Set(
-        uniqueCleanStrings(concReceiptsForOverrides.map((item) => item.linked_recibo_id)),
+        uniqueCleanStrings(concReceiptsForOverrides.map((item) => item.linked_recibo_id))
       );
       let suppressedConcReceipts: Array<{
         documento: string;
@@ -1027,54 +961,40 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
           companyId: companyIds[0] || null,
           companyIds,
           inicio: periodStart,
-          fim: periodEnd,
+          fim: periodEnd
         });
       } catch (error) {
-        logServerError(
-          "[relatorios/vendas] conciliacao suprimida indisponivel",
-          error,
-        );
+        logServerError('[relatorios/vendas] conciliacao suprimida indisponivel', error);
         suppressedConcReceipts = [];
       }
       const suppressedReceiptIds = new Set(
-        suppressedConcReceipts
-          .map((item) => toStr(item.linked_recibo_id))
-          .filter(Boolean),
+        suppressedConcReceipts.map((item) => toStr(item.linked_recibo_id)).filter(Boolean)
       );
       const suppressedReceiptNumbers = new Set(
         suppressedConcReceipts
           .filter(
             (item) =>
-              !(
-                toStr(item.documento).toUpperCase() === "REXTUR" &&
-                toStr(item.numero_reserva)
-              ),
+              !(toStr(item.documento).toUpperCase() === 'REXTUR' && toStr(item.numero_reserva))
           )
           .map((item) => normalizeReceiptNumber(item.documento))
-          .filter(Boolean),
+          .filter(Boolean)
       );
       const vendedorByConcReceiptId = new Map<string, string>(
         concReceiptsForOverrides
           .map((item) => [
-            String(item.linked_recibo_id || "").trim(),
-            String(item.vendedor_id || "").trim(),
+            String(item.linked_recibo_id || '').trim(),
+            String(item.vendedor_id || '').trim()
           ])
-          .filter(([reciboId, vendedorId]) =>
-            Boolean(reciboId && vendedorId),
-          ) as [string, string][],
+          .filter(([reciboId, vendedorId]) => Boolean(reciboId && vendedorId)) as [string, string][]
       );
 
       const baseRows: ReportSalesViewRow[] = rows
         .map((row) => {
-          const recibos = Array.isArray(row?.vendas_recibos)
-            ? row.vendas_recibos
-            : [];
+          const recibos = Array.isArray(row?.vendas_recibos) ? row.vendas_recibos : [];
           const withoutOverridden = conciliacaoSobrepoeVendas
             ? recibos.filter((recibo) => {
-                const reciboId = String(recibo?.id || "").trim();
-                const reciboNumero = normalizeReceiptNumber(
-                  recibo?.numero_recibo,
-                );
+                const reciboId = String(recibo?.id || '').trim();
+                const reciboNumero = normalizeReceiptNumber(recibo?.numero_recibo);
                 return (
                   !overriddenReceiptIds.has(reciboId) &&
                   !suppressedReceiptIds.has(reciboId) &&
@@ -1084,47 +1004,31 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
             : recibos;
           const withVendedorEfetivo = withoutOverridden
             .map((recibo) => {
-              const vendedorId = vendedorByConcReceiptId.get(
-                String(recibo?.id || "").trim(),
-              );
-              return vendedorId
-                ? { ...recibo, vendedor_id: vendedorId }
-                : recibo;
+              const vendedorId = vendedorByConcReceiptId.get(String(recibo?.id || '').trim());
+              return vendedorId ? { ...recibo, vendedor_id: vendedorId } : recibo;
             })
             .filter((recibo) => {
               if (!allowedVendedorSet) return true;
-              const vendedorId = vendedorByConcReceiptId.get(
-                String(recibo?.id || "").trim(),
-              );
+              const vendedorId = vendedorByConcReceiptId.get(String(recibo?.id || '').trim());
               return !vendedorId || allowedVendedorSet.has(vendedorId);
             });
-          const vendedorAtual = String(
-            row?.vendedor?.nome_completo || "",
-          ).trim();
+          const vendedorAtual = String(row?.vendedor?.nome_completo || '').trim();
           const vendedorEfetivo =
             !vendedorAtual || isEquipeVturNome(vendedorAtual)
               ? withVendedorEfetivo
-                  .map((recibo) =>
-                    vendedorByConcReceiptId.get(
-                      String(recibo?.id || "").trim(),
-                    ),
-                  )
+                  .map((recibo) => vendedorByConcReceiptId.get(String(recibo?.id || '').trim()))
                   .find(Boolean)
               : null;
 
           return {
             ...row,
-            ...(vendedorEfetivo
-              ? { vendedor_id: vendedorEfetivo, vendedor: null }
-              : {}),
-            vendas_recibos:
-              filterRecibosCanceladosMesmoMes(withVendedorEfetivo) as ReportReceiptItem[],
+            ...(vendedorEfetivo ? { vendedor_id: vendedorEfetivo, vendedor: null } : {}),
+            vendas_recibos: filterRecibosCanceladosMesmoMes(
+              withVendedorEfetivo
+            ) as ReportReceiptItem[]
           };
         })
-        .filter(
-          (row) =>
-            Array.isArray(row?.vendas_recibos) && row.vendas_recibos.length > 0,
-        );
+        .filter((row) => Array.isArray(row?.vendas_recibos) && row.vendas_recibos.length > 0);
 
       const mergedRowsBase: ReportSalesViewRow[] =
         concReceipts.length > 0
@@ -1132,16 +1036,11 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
               ...baseRows,
               ...enrichSyntheticRowsFromBaseRows(
                 baseRows,
-                buildConciliacaoSyntheticVendas(
-                  concReceipts,
-                ) as unknown as ReportSalesViewRow[],
-              ),
+                buildConciliacaoSyntheticVendas(concReceipts) as unknown as ReportSalesViewRow[]
+              )
             ]
           : baseRows;
-      const mergedRows = await hydrateSyntheticRowsFromLinkedVendas(
-        client,
-        mergedRowsBase,
-      );
+      const mergedRows = await hydrateSyntheticRowsFromLinkedVendas(client, mergedRowsBase);
 
       if (mergedRows.length === 0) {
         return [] as ReportSalesViewRow[];
@@ -1149,37 +1048,32 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
 
       try {
         const reciboIds = mergedRows
-          .flatMap((row) =>
-            Array.isArray(row?.vendas_recibos) ? row.vendas_recibos : [],
-          )
-          .map((recibo) => String(recibo?.id || "").trim())
+          .flatMap((row) => (Array.isArray(row?.vendas_recibos) ? row.vendas_recibos : []))
+          .map((recibo) => String(recibo?.id || '').trim())
           .filter(Boolean);
         const rateioMap = await fetchRateioByReciboIds(client, reciboIds);
-          rows = applyRateioToSalesForScopedVendedores(
-            mergedRows,
-            rateioMap,
-            vendedorIds,
+        rows = applyRateioToSalesForScopedVendedores(
+          mergedRows,
+          rateioMap,
+          vendedorIds
         ) as ReportSalesViewRow[];
       } catch (error) {
-        logServerError(
-          "[relatorios/vendas] rateio indisponivel, seguindo sem rateio",
-          error,
-        );
+        logServerError('[relatorios/vendas] rateio indisponivel, seguindo sem rateio', error);
         rows = mergedRows;
       }
 
       return rows.map((row) => ({
         ...row,
-        recibos: toRecibosView(row),
+        recibos: toRecibosView(row)
       }));
     };
 
     const filterRowsForReport = (
       rowsInput: ReportSalesViewRow[],
-      cityNames?: DestinationCityNameMap,
+      cityNames?: DestinationCityNameMap
     ) =>
       rowsInput.filter((row) => {
-        if (clienteId && String(row.cliente_id || "").trim() !== clienteId) {
+        if (clienteId && String(row.cliente_id || '').trim() !== clienteId) {
           return false;
         }
 
@@ -1190,17 +1084,13 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
 
         if (produtoFilter || tipoProdutoFilter) {
           const recibos =
-            Array.isArray(row.recibos) && row.recibos.length > 0
-              ? row.recibos
-              : [null];
+            Array.isArray(row.recibos) && row.recibos.length > 0 ? row.recibos : [null];
           const matches = recibos.some((recibo: ReportReceiptRow) => {
             const descriptor = getReceiptProductDescriptor(recibo, row);
             const produtoMatches =
-              !produtoFilter ||
-              descriptor.produto.toLowerCase().includes(produtoFilter);
+              !produtoFilter || descriptor.produto.toLowerCase().includes(produtoFilter);
             const tipoMatches =
-              !tipoProdutoFilter ||
-              descriptor.tipo.toLowerCase().includes(tipoProdutoFilter);
+              !tipoProdutoFilter || descriptor.tipo.toLowerCase().includes(tipoProdutoFilter);
             return produtoMatches && tipoMatches;
           });
 
@@ -1215,22 +1105,19 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
     const loadConsultaRowsBatch = async (
       periodStart: string,
       periodEnd: string,
-      clientIdsFilter?: string[],
+      clientIdsFilter?: string[]
     ) => {
       const companyBatches = companyIds.length > 0 ? chunkArray(companyIds) : [null];
-      const vendedorBatches =
-        vendedorIds.length > 0 ? chunkArray(vendedorIds) : [null];
+      const vendedorBatches = vendedorIds.length > 0 ? chunkArray(vendedorIds) : [null];
       const clientBatches =
-        clientIdsFilter && clientIdsFilter.length > 0
-          ? chunkArray(clientIdsFilter)
-          : [null];
+        clientIdsFilter && clientIdsFilter.length > 0 ? chunkArray(clientIdsFilter) : [null];
 
       const batchRows = await Promise.all(
         companyBatches.flatMap((companyBatch) =>
           vendedorBatches.flatMap((vendedorBatch) =>
             clientBatches.map(async (clientBatch) => {
               let query = client
-                .from("vendas")
+                .from('vendas')
                 .select(
                   `
           id,
@@ -1265,23 +1152,23 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
             tipo_produtos (id, nome, tipo),
             produto_resolvido:produtos!produto_resolvido_id (id, nome, cidade_id)
           )
-        `,
+        `
                 )
-                .order("data_venda", { ascending: false })
+                .order('data_venda', { ascending: false })
                 .limit(5000);
 
-              if (periodStart) query = query.gte("data_venda", periodStart);
-              if (periodEnd) query = query.lte("data_venda", periodEnd);
-              if (companyBatch) query = query.in("company_id", companyBatch);
-              if (vendedorBatch) query = query.in("vendedor_id", vendedorBatch);
-              if (clienteId) query = query.eq("cliente_id", clienteId);
+              if (periodStart) query = query.gte('data_venda', periodStart);
+              if (periodEnd) query = query.lte('data_venda', periodEnd);
+              if (companyBatch) query = query.in('company_id', companyBatch);
+              if (vendedorBatch) query = query.in('vendedor_id', vendedorBatch);
+              if (clienteId) query = query.eq('cliente_id', clienteId);
               else if (
                 !scope.isAdmin &&
                 vendedorIds.length === 0 &&
                 clientBatch &&
                 clientBatch.length > 0
               )
-                query = query.in("cliente_id", clientBatch);
+                query = query.in('cliente_id', clientBatch);
 
               const { data, error } = await query;
               if (error) throw error;
@@ -1294,19 +1181,16 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
 
       return dedupeRowsById(rows).map((row) => ({
         ...row,
-        recibos: Array.isArray(row?.recibos) ? row.recibos : [],
+        recibos: Array.isArray(row?.recibos) ? row.recibos : []
       })) as ConsultaVendaRow[];
     };
 
-    const loadConsultaRowsForPeriod = async (
-      periodStart: string,
-      periodEnd: string,
-    ) => {
+    const loadConsultaRowsForPeriod = async (periodStart: string, periodEnd: string) => {
       if (
         !clienteId &&
         !scope.isAdmin &&
         vendedorIds.length === 0 &&
-        accessibleClientIds.length > SUPABASE_IN_BATCH_SIZE
+        accessibleClientIds.length > QUERY_IN_BATCH_SIZE
       ) {
         const batchRows = await Promise.all(
           chunkArray(accessibleClientIds).map((batch) =>
@@ -1318,10 +1202,7 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
       }
 
       const clientIdsFilter =
-        !clienteId &&
-        !scope.isAdmin &&
-        vendedorIds.length === 0 &&
-        accessibleClientIds.length > 0
+        !clienteId && !scope.isAdmin && vendedorIds.length === 0 && accessibleClientIds.length > 0
           ? accessibleClientIds
           : undefined;
 
@@ -1341,9 +1222,8 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
         const recibos = Array.isArray(row?.recibos) ? row.recibos : [];
         if (recibos.length > 0) {
           total += recibos.reduce(
-            (sum: number, recibo) =>
-              sum + Number(recibo?.valor_total || 0),
-            0,
+            (sum: number, recibo) => sum + Number(recibo?.valor_total || 0),
+            0
           );
           continue;
         }
@@ -1355,44 +1235,37 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
     };
 
     const rowsViewRaw = (await getCachedReadModel({
-      key: buildReadModelCacheKey("relatorios:vendas:rows-view", {
+      key: buildReadModelCacheKey('relatorios:vendas:rows-view', {
         userId: user.id,
         dataInicio,
         dataFim,
         companyIds,
         vendedorIds,
-        conciliacaoSobrepoeVendas,
+        conciliacaoSobrepoeVendas
       }),
       tags: [
         READ_MODEL_TAGS.sales,
         READ_MODEL_TAGS.conciliacao,
         READ_MODEL_TAGS.payments,
         READ_MODEL_TAGS.users,
-        ...scopeCacheTags({ companyIds, vendedorIds, userId: user.id }),
+        ...scopeCacheTags({ companyIds, vendedorIds, userId: user.id })
       ],
       ttlMs: 300_000,
       staleTtlMs: 1_800_000,
-      loader: () => loadRowsViewForPeriod(dataInicio, dataFim),
+      loader: () => loadRowsViewForPeriod(dataInicio, dataFim)
     })) as ReportSalesViewRow[];
     const hydratedRowsView = await hydrateMissingVendedores(client, rowsViewRaw);
-    const getReciboRateioScopeVendorId = (
-      recibo: ReportReceiptItem | ConsultaReceiptRow,
-    ) =>
-      "rateio_scope_vendor_id" in recibo
-        ? toStr(recibo.rateio_scope_vendor_id)
-        : null;
+    const getReciboRateioScopeVendorId = (recibo: ReportReceiptItem | ConsultaReceiptRow) =>
+      'rateio_scope_vendor_id' in recibo ? toStr(recibo.rateio_scope_vendor_id) : null;
     const getReciboVendedorId = (
       row: ReportSalesViewRow | ConsultaVendaRow,
-      recibo: ReportReceiptItem | ConsultaReceiptRow,
+      recibo: ReportReceiptItem | ConsultaReceiptRow
     ) =>
       getReciboRateioScopeVendorId(recibo) ||
       toStr(recibo?.vendedor_id) ||
       toStr(row?.vendedor_id) ||
       null;
-    const reportVendedorSet =
-      vendedorIds.length > 0
-        ? cleanStringSet(vendedorIds)
-        : null;
+    const reportVendedorSet = vendedorIds.length > 0 ? cleanStringSet(vendedorIds) : null;
     const rowsView = reportVendedorSet
       ? hydratedRowsView
           .map((row) => {
@@ -1408,7 +1281,7 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
               return {
                 ...row,
                 recibos: recibosDoVendedor,
-                vendas_recibos: recibosDoVendedor,
+                vendas_recibos: recibosDoVendedor
               };
             }
 
@@ -1423,7 +1296,7 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
       : hydratedRowsView;
     const destinationCityNames = await fetchDestinationCityNames(
       client,
-      collectDestinationCityIds(rowsView),
+      collectDestinationCityIds(rowsView)
     );
     const rowIds: string[] = [];
     for (const row of rowsView) {
@@ -1448,29 +1321,26 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
       fetchNaoComissionadoPorVenda(client, naoComissionadoVendaIds),
       resolveGroupedReceiptCommissions(client, {
         companyIds,
-        rows: summaryRows,
-      }),
+        rows: summaryRows
+      })
     ]);
 
     const reciboVendedorIds = Array.from(
       new Set(
         detailRows
           .flatMap((row) =>
-            (Array.isArray(row?.recibos)
-              ? row.recibos.filter(isReportReceiptItem)
-              : []).map((recibo) => getReciboVendedorId(row, recibo)),
+            (Array.isArray(row?.recibos) ? row.recibos.filter(isReportReceiptItem) : []).map(
+              (recibo) => getReciboVendedorId(row, recibo)
+            )
           )
-          .filter(Boolean),
-      ),
+          .filter(Boolean)
+      )
     ) as string[];
     const [paymentForms, reciboVendedores] = await Promise.all([
       fetchLatestPaymentForms(client, detailRowIds),
-      fetchVendedoresByIds(client, reciboVendedorIds),
+      fetchVendedoresByIds(client, reciboVendedorIds)
     ]);
-    const getVendedorNomeById = (
-      vendedorId: string | null,
-      fallback: string,
-    ) => {
+    const getVendedorNomeById = (vendedorId: string | null, fallback: string) => {
       if (!vendedorId) return fallback;
       const vendedor = reciboVendedores.get(vendedorId);
       return vendedor ? getVendaVendedorNome({ vendedor }) : fallback;
@@ -1482,50 +1352,38 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
       const receiptRows = getRecibosAtivos(row);
       const vendaId = toStr(row?.id);
       const somaBrutoRecibos = receiptRows.reduce(
-        (sum: number, recibo: ReportReceiptRow) =>
-          sum + getReciboBrutoExibicao(recibo),
-        0,
+        (sum: number, recibo: ReportReceiptRow) => sum + getReciboBrutoExibicao(recibo),
+        0
       );
       const somaTaxasRecibos = receiptRows.reduce(
-        (sum: number, recibo: ReportReceiptRow) =>
-          sum + getReciboTaxasExibicao(recibo),
-        0,
+        (sum: number, recibo: ReportReceiptRow) => sum + getReciboTaxasExibicao(recibo),
+        0
       );
-      const linkedNaoComissionado = toNum(
-        naoComissionadoPorVenda.porVenda.get(vendaId) || 0,
-      );
+      const linkedNaoComissionado = toNum(naoComissionadoPorVenda.porVenda.get(vendaId) || 0);
       const naoComissionadoSemRecibo = toNum(
-        naoComissionadoPorVenda.porVendaSemRecibo.get(vendaId) || 0,
+        naoComissionadoPorVenda.porVendaSemRecibo.get(vendaId) || 0
       );
-      const usarModoPorRecibo =
-        linkedNaoComissionado > 0 && naoComissionadoSemRecibo <= 0;
+      const usarModoPorRecibo = linkedNaoComissionado > 0 && naoComissionadoSemRecibo <= 0;
       const rankingGrupo = calcularRankingComissionavel({
         valorBruto: somaBrutoRecibos,
         valorTaxas: somaTaxasRecibos,
-        valorNaoComissionado: usarModoPorRecibo ? 0 : linkedNaoComissionado,
+        valorNaoComissionado: usarModoPorRecibo ? 0 : linkedNaoComissionado
       });
 
       const recibos = receiptRows.map((recibo: ReportReceiptItem) => {
         const descriptor = getReceiptProductDescriptor(recibo, row);
         const reciboVendedorId = getReciboVendedorId(row, recibo);
-        const reciboVendedorNome = getVendedorNomeById(
-          reciboVendedorId,
-          vendaVendedorNome,
-        );
+        const reciboVendedorNome = getVendedorNomeById(reciboVendedorId, vendaVendedorNome);
         const brutoBase = getReciboBrutoExibicao(recibo);
         const reciboJaAjustadoPorConciliacao = hasConciliacaoOverride(recibo);
         const naoComissionadoRecibo =
-          usarModoPorRecibo &&
-          toStr(recibo?.id) &&
-          !reciboJaAjustadoPorConciliacao
-            ? toNum(
-                naoComissionadoPorVenda.porRecibo.get(toStr(recibo.id)) || 0,
-              )
+          usarModoPorRecibo && toStr(recibo?.id) && !reciboJaAjustadoPorConciliacao
+            ? toNum(naoComissionadoPorVenda.porRecibo.get(toStr(recibo.id)) || 0)
             : 0;
         const rankingRecibo = calcularRankingComissionavel({
           valorBruto: brutoBase,
           valorTaxas: getReciboTaxasExibicao(recibo),
-          valorNaoComissionado: usarModoPorRecibo ? naoComissionadoRecibo : 0,
+          valorNaoComissionado: usarModoPorRecibo ? naoComissionadoRecibo : 0
         });
         const valorComissionavel = usarModoPorRecibo
           ? rankingRecibo.valorRanking
@@ -1542,7 +1400,7 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
           numero_recibo: recibo?.numero_recibo || null,
           recibo_display: recibo?.numero_recibo || null,
           numero_recibo_normalizado: recibo?.numero_recibo_normalizado ?? null,
-          recibo_short: String(recibo?.numero_recibo ?? "").slice(0, 8),
+          recibo_short: String(recibo?.numero_recibo ?? '').slice(0, 8),
           data_venda: recibo?.data_venda || row.data_venda,
           vendedor_id: reciboVendedorId,
           vendedor_nome: reciboVendedorNome,
@@ -1555,9 +1413,7 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
           valor_taxas_ranking: valorTaxasRanking,
           valor_du: Number(recibo?.valor_du || 0),
           valor_rav: Number(recibo?.valor_rav || 0),
-          percentual_comissao_loja: Number(
-            recibo?.percentual_comissao_loja || 0,
-          ),
+          percentual_comissao_loja: Number(recibo?.percentual_comissao_loja || 0),
           faixa_comissao: recibo?.faixa_comissao || null,
           valor_comissao_loja: Number(recibo?.valor_comissao_loja || 0),
           valor_bruto_override: recibo?.valor_bruto_override ?? null,
@@ -1577,19 +1433,17 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
           percentual_comissao_calculado:
             Number(commissionByReceipt?.percentual || 0) > 0
               ? Number(commissionByReceipt?.percentual || 0)
-              : Number(recibo?.percentual_comissao_loja || 0),
+              : Number(recibo?.percentual_comissao_loja || 0)
         };
       });
       const commission = {
         valorComissao: roundToMoney(
           recibos.reduce(
-            (
-              sum: number,
-              recibo: { valor_comissao_calculada?: number | null },
-            ) => sum + toNum(recibo.valor_comissao_calculada),
-            0,
-          ),
-        ),
+            (sum: number, recibo: { valor_comissao_calculada?: number | null }) =>
+              sum + toNum(recibo.valor_comissao_calculada),
+            0
+          )
+        )
       };
 
       return {
@@ -1613,26 +1467,26 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
             .reduce(
               (sum: number, recibo: { valor_comissionavel?: number | null }) =>
                 sum + toNum(recibo.valor_comissionavel),
-              0,
+              0
             )
-            .toFixed(2),
+            .toFixed(2)
         ),
         valor_taxas: Number(
           recibos
             .reduce(
               (sum: number, recibo: { valor_taxas_ranking?: number | null }) =>
                 sum + toNum(recibo.valor_taxas_ranking),
-              0,
+              0
             )
-            .toFixed(2),
+            .toFixed(2)
         ),
         cancelada: row.cancelada || false,
         status,
-        forma_pagamento: paymentForms.get(row.id) || "Nao informado",
+        forma_pagamento: paymentForms.get(row.id) || 'Nao informado',
         recibos,
         // KPIs por venda
         comissao: commission.valorComissao,
-        vendas_recibos: row.recibos,
+        vendas_recibos: row.recibos
       };
     });
 
@@ -1643,7 +1497,7 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
             (recibo: { vendedor_id?: string | null }) => {
               const vendedorId = toStr(recibo?.vendedor_id);
               return Boolean(vendedorId && reportVendedorSet.has(vendedorId));
-            },
+            }
           );
 
           if (recibos.length === 0) return null;
@@ -1652,36 +1506,37 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
             recibos.reduce(
               (
                 sum: number,
-                recibo: { valor_comissionavel?: number | null; valor_total?: number | null },
+                recibo: { valor_comissionavel?: number | null; valor_total?: number | null }
               ) => sum + toNum(recibo.valor_comissionavel ?? recibo.valor_total),
-              0,
-            ),
+              0
+            )
           );
           const valorTaxas = roundToMoney(
             recibos.reduce(
               (
                 sum: number,
-                recibo: { valor_taxas_ranking?: number | null; valor_taxas?: number | null },
+                recibo: { valor_taxas_ranking?: number | null; valor_taxas?: number | null }
               ) => sum + toNum(recibo.valor_taxas_ranking ?? recibo.valor_taxas),
-              0,
-            ),
+              0
+            )
           );
           const comissao = roundToMoney(
             recibos.reduce(
               (
                 sum: number,
-                recibo: { valor_comissao_calculada?: number | null; comissao?: number | null },
+                recibo: { valor_comissao_calculada?: number | null; comissao?: number | null }
               ) => sum + toNum(recibo.valor_comissao_calculada ?? recibo.comissao),
-              0,
-            ),
+              0
+            )
           );
           const vendedorId =
             reportVendedorSet.size === 1
               ? Array.from(reportVendedorSet)[0]
               : toStr(recibos[0]?.vendedor_id) || item.vendedor_id;
           const vendedorNome =
-            recibos.find((recibo: { vendedor_id?: string | null; vendedor_nome?: string | null }) =>
-              toStr(recibo.vendedor_id) === vendedorId && toStr(recibo.vendedor_nome),
+            recibos.find(
+              (recibo: { vendedor_id?: string | null; vendedor_nome?: string | null }) =>
+                toStr(recibo.vendedor_id) === vendedorId && toStr(recibo.vendedor_nome)
             )?.vendedor_nome || item.vendedor_nome;
 
           return {
@@ -1692,7 +1547,7 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
             valor_taxas: valorTaxas,
             comissao,
             recibos,
-            vendas_recibos: recibos,
+            vendas_recibos: recibos
           };
         })
         .filter(Boolean) as typeof items;
@@ -1708,17 +1563,17 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
           total: totalItems,
           periodo: {
             data_inicio: dataInicio,
-            data_fim: dataFim,
+            data_fim: dataFim
           },
           pagination: {
             offset: itemsOffset,
             limit: itemsLimit,
             returned: pagedItems.length,
             total: totalItems,
-            truncated: itemsOffset + pagedItems.length < totalItems,
-          },
+            truncated: itemsOffset + pagedItems.length < totalItems
+          }
         },
-        { headers: DYNAMIC_READ_HEADERS },
+        { headers: DYNAMIC_READ_HEADERS }
       );
     }
 
@@ -1726,8 +1581,8 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
       new Map(
         statusFilteredRows
           .filter((row) => row.vendedor_id)
-          .map((row) => [row.vendedor_id as string, getVendaVendedorNome(row)]),
-      ).entries(),
+          .map((row) => [row.vendedor_id as string, getVendaVendedorNome(row)])
+      ).entries()
     )
       .map(([id, nome]) => ({ id, nome }))
       .sort((left, right) => PT_BR_COLLATOR.compare(left.nome, right.nome));
@@ -1738,27 +1593,19 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
     const seriesNaoComissionadoPorVenda = naoComissionadoPorVenda;
     const seriesRankingEntries = computeReceiptRankingEntries(
       seriesRowsRaw,
-      seriesNaoComissionadoPorVenda,
+      seriesNaoComissionadoPorVenda
     );
 
     const monthlySeries = historyBuckets.map((bucket) => ({
       key: bucket.key,
-      total_valor: sumRankingEntriesBetween(
-        seriesRankingEntries,
-        bucket.start,
-        bucket.end,
-      ),
+      total_valor: sumRankingEntriesBetween(seriesRankingEntries, bucket.start, bucket.end)
     }));
     const dailySeries = dayBuckets.map((bucket) => ({
       date: bucket.date,
       value:
         bucket.date > dataFim
           ? 0
-          : sumRankingEntriesBetween(
-              seriesRankingEntries,
-              bucket.date,
-              bucket.date,
-            ),
+          : sumRankingEntriesBetween(seriesRankingEntries, bucket.date, bucket.date)
     }));
 
     const totalComissao = roundToMoney(
@@ -1777,7 +1624,7 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
             return receiptSum + valorComissao;
           }, 0)
         );
-      }, 0),
+      }, 0)
     );
     const totalRecibosSet = new Set<string>();
     for (const row of statusFilteredRows) {
@@ -1788,8 +1635,8 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
             toStr(row?.id),
             toStr(recibo?.numero_recibo),
             toStr(recibo?.data_venda || row?.data_venda),
-            toNum(recibo?.valor_total),
-          ].join("|");
+            toNum(recibo?.valor_total)
+          ].join('|');
         if (key.trim()) totalRecibosSet.add(key);
       }
     }
@@ -1797,13 +1644,13 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
     // KPIs agregados
     const totalVendas = statusFilteredRows.length;
     const vendasConfirmadas = statusFilteredRows.filter(
-      (row) => getVendaStatus(row) === "confirmada",
+      (row) => getVendaStatus(row) === 'confirmada'
     ).length;
     const vendasCanceladas = statusFilteredRows.filter(
-      (row) => getVendaStatus(row) === "cancelada",
+      (row) => getVendaStatus(row) === 'cancelada'
     ).length;
     const totalValor = Number(
-      sumRankingEntriesBetween(seriesRankingEntries, dataInicio, dataFim).toFixed(2),
+      sumRankingEntriesBetween(seriesRankingEntries, dataInicio, dataFim).toFixed(2)
     );
     const ticketMedio = totalVendas > 0 ? totalValor / totalVendas : 0;
 
@@ -1819,37 +1666,37 @@ export async function handleRelatoriosVendasGet(event: RequestEvent) {
           total_valor: totalValor,
           total_comissao: totalComissao,
           ticket_medio: ticketMedio,
-          total_recibos: totalRecibosSet.size,
+          total_recibos: totalRecibosSet.size
         },
         series: {
           mensal: monthlySeries.map((item) => ({
             key: item.key,
-            total_valor: Number(item.total_valor.toFixed(2)),
+            total_valor: Number(item.total_valor.toFixed(2))
           })),
           diaria: dailySeries.map((item) => ({
             date: item.date,
-            value: Number(item.value.toFixed(2)),
-          })),
+            value: Number(item.value.toFixed(2))
+          }))
         },
         periodo: {
           data_inicio: dataInicio,
-          data_fim: dataFim,
+          data_fim: dataFim
         },
         pagination: {
           offset: itemsOffset,
           limit: itemsLimit,
           returned: pagedItems.length,
           total: totalItems,
-          truncated: itemsOffset + pagedItems.length < totalItems,
-        },
+          truncated: itemsOffset + pagedItems.length < totalItems
+        }
       },
-      { headers: DYNAMIC_READ_HEADERS },
+      { headers: DYNAMIC_READ_HEADERS }
     );
   } catch (err) {
-    return toErrorResponse(err, "Erro ao carregar relatorio de vendas.");
+    return toErrorResponse(err, 'Erro ao carregar relatorio de vendas.');
   }
 }
 
 function roundToMoney(value: number) {
   return Number(value.toFixed(2));
-}
+}

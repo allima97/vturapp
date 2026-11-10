@@ -1,10 +1,13 @@
 <script lang="ts">
-  import { VTUR_LOGO_URL } from "$lib/brand";
+  import { VTUR_LOGO_URL } from '$lib/brand';
+  import { explicitarIdentidadeCidade, VERSAO_ROTEIRO_IDENTIDADE } from '$lib/roteiroProtocolo';
+  import { revisaoRoteiroAtiva, roteiroGeograficoAtivo } from '$lib/config/destinosGeograficos';
+  import { salvarRoteiroComConfirmacao } from '$lib/features/roteiros/salvarComConfirmacao';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { browser } from '$app/environment';
   import { onDestroy, onMount } from 'svelte';
-  import { supabase } from '$lib/db/supabase';
+  import { browserData as dados } from '$lib/db/browserData';
   import { construirLinkWhatsApp } from '$lib/whatsapp';
   import { mergeImportedRoteiroAereo, parseImportedRoteiroAereo } from '$lib/roteiroAereoImport';
   import { parseImportedRoteiroHotels } from '$lib/roteiroHotelImport';
@@ -13,10 +16,28 @@
   import Dialog from '$lib/components/ui/Dialog.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import Tabs from '$lib/components/ui/Tabs.svelte';
-  import { FieldCheckbox, FieldDatalistInput, FieldInput, FieldSelect, FieldTextarea, LoadingState } from '$lib/components/ui';
+  import {
+    FieldCheckbox,
+    FieldDatalistInput,
+    FieldInput,
+    FieldSelect,
+    FieldTextarea,
+    LoadingState
+  } from '$lib/components/ui';
   import { toast } from '$lib/stores/ui';
   import { fetchImageAsDataUrl } from '$lib/utils/browser-images';
-  import { ArrowLeft, Plus, Trash2, Save, ChevronUp, ChevronDown, FileText, DollarSign, RefreshCw, Copy } from '$lib/icons';
+  import {
+    ArrowLeft,
+    Plus,
+    Trash2,
+    Save,
+    ChevronUp,
+    ChevronDown,
+    FileText,
+    DollarSign,
+    RefreshCw,
+    Copy
+  } from '$lib/icons';
   import { ApiError, apiFetch, apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { ensureServerSessionCookie } from '$lib/services/session';
   import { diffDaysISODate } from '$lib/date';
@@ -43,13 +64,24 @@
     type RotPasseio,
     type RotTransporte
   } from './_components/tipos';
-  import { isImportSectionHeader, normalizeImportLine, parseDiasImportText } from './_components/importacao-dias';
+  import {
+    isImportSectionHeader,
+    normalizeImportLine,
+    parseDiasImportText
+  } from './_components/importacao-dias';
   import { formatBRL } from './_components/formatadores';
   import AbaItinerario from './_components/AbaItinerario.svelte';
   import AbaTransporte from './_components/AbaTransporte.svelte';
   import AbaHoteis from './_components/AbaHoteis.svelte';
   import AbaOpcionais from './_components/AbaOpcionais.svelte';
-  import { buildOpcionaisHtml, parseRoteiroOpcionais, type RoteiroOpcionalCidade } from '$lib/roteiroOpcionais';
+  import {
+    atribuirIdsGruposOpcionais,
+    buildOpcionaisHtml,
+    parseRoteiroOpcionais,
+    removerPasseiosIncorporados,
+    type RoteiroOpcionalCidade
+  } from '$lib/roteiroOpcionais';
+  import { atribuirIdsRegistros, renovarIdsRegistros } from '$lib/roteiroRegistros';
   import AbaPasseios from './_components/AbaPasseios.svelte';
   import AbaPagamento from './_components/AbaPagamento.svelte';
   import AbaInvestimento from './_components/AbaInvestimento.svelte';
@@ -77,6 +109,7 @@
   };
 
   type RoteiroPayload = {
+    revisao?: string;
     nome?: string | null;
     duracao?: number | string | null;
     inicio_cidade?: string | null;
@@ -116,18 +149,47 @@
     { id: 'investimento', label: 'Investimento' },
     { id: 'pagamento', label: 'Pagamento' },
     { id: 'inclusoes', label: 'Inclusões' },
-    { id: 'informacoes', label: 'Informações' },
+    { id: 'informacoes', label: 'Informações' }
   ] as const;
 
   type AbaId = (typeof ABAS)[number]['id'];
 
-  const HOTEL_REGIME_OPTIONS = ['Café da manhã', 'Meia pensão', 'Pensão completa', 'All-inclusive', 'Apenas hospedagem'];
-  const HOTEL_CATEGORIA_OPTIONS = ['1 estrela', '2 estrelas', '3 estrelas', '4 estrelas', '5 estrelas', 'Boutique', 'Pousada', 'Resort'];
-  const PASSEIO_TIPO_OPTIONS = ['Passeio', 'Transfer', 'Seguro Viagem', 'Serviço', 'Ingresso', 'Outro'];
+  const HOTEL_REGIME_OPTIONS = [
+    'Café da manhã',
+    'Meia pensão',
+    'Pensão completa',
+    'All-inclusive',
+    'Apenas hospedagem'
+  ];
+  const HOTEL_CATEGORIA_OPTIONS = [
+    '1 estrela',
+    '2 estrelas',
+    '3 estrelas',
+    '4 estrelas',
+    '5 estrelas',
+    'Boutique',
+    'Pousada',
+    'Resort'
+  ];
+  const PASSEIO_TIPO_OPTIONS = [
+    'Passeio',
+    'Transfer',
+    'Seguro Viagem',
+    'Serviço',
+    'Ingresso',
+    'Outro'
+  ];
   const TRANSPORTE_TIPO_OPTIONS = ['Aéreo', 'Terrestre', 'Marítimo', 'Ferroviário'];
   const TRANSPORTE_TIPO_VOO_OPTIONS = ['Nacional', 'Internacional'];
   const INVESTIMENTO_TIPO_OPTIONS = ['Por pessoa', 'Por casal', 'Por família', 'Por apto'];
-  const PAGAMENTO_SERVICO_OPTIONS = ['Pacote Completo', 'Passagem Aérea', 'Hospedagem', 'Passeios e Serviços', 'Seguro Viagem', 'Demais Serviços'];
+  const PAGAMENTO_SERVICO_OPTIONS = [
+    'Pacote Completo',
+    'Passagem Aérea',
+    'Hospedagem',
+    'Passeios e Serviços',
+    'Seguro Viagem',
+    'Demais Serviços'
+  ];
 
   // ─── Page state ────────────────────────────────────────────────────────────
   const roteiroId = $page.params.id;
@@ -140,8 +202,14 @@
   let incluirCabecalhoRodapePdf = $state(false);
   let abaAtiva: AbaId = $state('itinerario');
 
+  function selecionarAba(key: string) {
+    const aba = ABAS.find((item) => item.id === key);
+    if (aba) abaAtiva = aba.id;
+  }
+
   // Form fields
   let nome = $state('');
+  let revisao = $state<string | undefined>();
   let duracao = $state('');
   let inicioCidade = $state('');
   let fimCidade = $state('');
@@ -174,11 +242,18 @@
   // Sugestões
   let sugestoes: Record<string, string[]> = $state({});
 
+  $effect(() => {
+    const restantes = removerPasseiosIncorporados(opcionais, passeios);
+    if (restantes !== opcionais) opcionais = restantes;
+  });
+
   // Modals
   let showGerarModal = $state(false);
   let gerarClienteQ = $state('');
-  let gerarClienteResults: { id: string; nome: string; email?: string; whatsapp?: string }[] = $state([]);
-  let gerarClienteSel: { id: string; nome: string; email?: string; whatsapp?: string } | null = $state(null);
+  let gerarClienteResults: { id: string; nome: string; email?: string; whatsapp?: string }[] =
+    $state([]);
+  let gerarClienteSel: { id: string; nome: string; email?: string; whatsapp?: string } | null =
+    $state(null);
   let gerarClienteNome = $state('');
   let gerarLoading = $state(false);
   let gerarClienteLoading = $state(false);
@@ -214,19 +289,30 @@
   // ─── Counts for tab badges ─────────────────────────────────────────────────
   let tabCounts = $derived({
     opcionais: opcionais.reduce((total, cidade) => total + cidade.passeios.length, 0),
-    itinerario: dias.filter(d => d.cidade || d.percurso || d.data || d.descricao).length,
-    hoteis: hoteis.filter(h => h.cidade || h.hotel || h.data_inicio || h.apto || h.categoria).length,
-    passeios: passeios.filter(p => p.cidade || p.passeio || p.data_inicio || p.tipo).length,
-    transporte: transportes.filter(t => t.trecho || t.cia_aerea || t.data_voo || t.tipo).length,
-    investimento: investimentos.filter(i => i.tipo || Number(i.valor_por_pessoa) > 0 || Number(i.valor_por_apto) > 0).length,
-    pagamento: pagamentos.filter(p => p.servico || p.forma_pagamento || Number(p.valor_total_com_taxas) > 0).length,
-    inclusoes: (incluiTexto.split('\n').filter(l => l.trim()).length) + (naoIncluiTexto.split('\n').filter(l => l.trim()).length),
-    informacoes: informacoesImportantes.split('\n').filter(l => l.trim()).length,
+    itinerario: dias.filter((d) => d.cidade || d.percurso || d.data || d.descricao).length,
+    hoteis: hoteis.filter((h) => h.cidade || h.hotel || h.data_inicio || h.apto || h.categoria)
+      .length,
+    passeios: passeios.filter((p) => p.cidade || p.passeio || p.data_inicio || p.tipo).length,
+    transporte: transportes.filter((t) => t.trecho || t.cia_aerea || t.data_voo || t.tipo).length,
+    investimento: investimentos.filter(
+      (i) => i.tipo || Number(i.valor_por_pessoa) > 0 || Number(i.valor_por_apto) > 0
+    ).length,
+    pagamento: pagamentos.filter(
+      (p) => p.servico || p.forma_pagamento || Number(p.valor_total_com_taxas) > 0
+    ).length,
+    inclusoes:
+      incluiTexto.split('\n').filter((l) => l.trim()).length +
+      naoIncluiTexto.split('\n').filter((l) => l.trim()).length,
+    informacoes: informacoesImportantes.split('\n').filter((l) => l.trim()).length
   });
 
   // ─── Totals ────────────────────────────────────────────────────────────────
-  let totalPagamento = $derived(pagamentos.reduce((s, p) => s + Number(p.valor_total_com_taxas || 0), 0));
-  let totalInvestimento = $derived(investimentos.reduce((s, i) => s + Number(i.valor_por_pessoa || 0), 0));
+  let totalPagamento = $derived(
+    pagamentos.reduce((s, p) => s + Number(p.valor_total_com_taxas || 0), 0)
+  );
+  let totalInvestimento = $derived(
+    investimentos.reduce((s, i) => s + Number(i.valor_por_pessoa || 0), 0)
+  );
 
   // ─── Factory functions ─────────────────────────────────────────────────────
 
@@ -268,7 +354,10 @@
       const vpp = field === 'valor_por_pessoa' ? (v ?? 0) : Number(inv.valor_por_pessoa ?? 0);
       const qa = field === 'qtd_apto' ? (v ?? 0) : Number(inv.qtd_apto ?? 0);
       const vpa = vpp * qa;
-      investimentos = updateItem(investimentos, index, { [field]: v, valor_por_apto: vpa > 0 ? vpa : null });
+      investimentos = updateItem(investimentos, index, {
+        [field]: v,
+        valor_por_apto: vpa > 0 ? vpa : null
+      });
     } else {
       investimentos = updateItem(investimentos, index, { [field]: v });
     }
@@ -285,7 +374,8 @@
 
     const imported = parseDiasImportText(diasImportText);
     if (imported.length === 0) {
-      diasImportError = 'Nenhum dia foi identificado. Use linhas como "Dia 1 - Chegada" ou blocos separados por linha em branco.';
+      diasImportError =
+        'Nenhum dia foi identificado. Use linhas como "Dia 1 - Chegada" ou blocos separados por linha em branco.';
       return;
     }
 
@@ -312,12 +402,19 @@
           signal: controller.signal
         }),
         // Opcionais (sugestões e dados do PDF): sem acesso, seguem vazios sem mandar para "/negado".
-        apiFetch<SugestoesBuscaResponse>('/api/v1/roteiros/sugestoes-busca', { signal: controller.signal, redirectOnForbidden: false }).catch(() => null),
-        apiFetch<OrcamentosPdfResponse>('/api/v1/parametros/orcamentos-pdf', { signal: controller.signal, redirectOnForbidden: false }).catch(() => null),
+        apiFetch<SugestoesBuscaResponse>('/api/v1/roteiros/sugestoes-busca', {
+          signal: controller.signal,
+          redirectOnForbidden: false
+        }).catch(() => null),
+        apiFetch<OrcamentosPdfResponse>('/api/v1/parametros/orcamentos-pdf', {
+          signal: controller.signal,
+          redirectOnForbidden: false
+        }).catch(() => null)
       ]);
       if (seq !== loadSeq || destroyed) return;
       const r = payload.roteiro;
 
+      revisao = r.revisao;
       nome = r.nome || '';
       duracao = r.duracao != null ? String(r.duracao) : '';
       inicioCidade = mergeCidadesVisitadas(r.inicio_cidade, r.fim_cidade);
@@ -334,13 +431,20 @@
         ...d,
         percurso: d.percurso || '',
         data: d.data || '',
-        descricao: d.descricao || '',
+        descricao: d.descricao || ''
       }));
       hoteis = (r.hoteis || []).map((h) => ({ ...newHotel(h.ordem ?? 0), ...h }));
       opcionais = r.opcionais || [];
-      passeios = (r.passeios || []).map((p) => ({ ...newPasseio(p.ordem ?? 0), ...p }));
+      passeios = (r.passeios || []).map((p) => ({
+        ...newPasseio(p.ordem ?? 0),
+        ...p,
+        ingressos: p.ingressos || 'Não incluído'
+      }));
       transportes = (r.transportes || []).map((t) => ({ ...newTransporte(t.ordem ?? 0), ...t }));
-      investimentos = (r.investimentos || []).map((i) => ({ ...newInvestimento(i.ordem ?? 0), ...i }));
+      investimentos = (r.investimentos || []).map((i) => ({
+        ...newInvestimento(i.ordem ?? 0),
+        ...i
+      }));
       pagamentos = (r.pagamentos || []).map((p) => ({ ...newPagamento(p.ordem ?? 0), ...p }));
 
       if (sugestoesData) {
@@ -379,11 +483,38 @@
   }
 
   // ─── Save ──────────────────────────────────────────────────────────────────
+  function cidadePendente() {
+    const campo = document.querySelector<HTMLInputElement>('[data-roteiro-cidade-pendente="true"]');
+    const pendente = [...dias, ...hoteis, ...passeios, ...opcionais].some(
+      (item) => item.cidade_pendente
+    );
+    if (!campo && !pendente) return false;
+    campo?.focus();
+    toast.error('Selecione ou confirme a cidade na lista de sugestões antes de continuar.');
+    return true;
+  }
+
   async function save() {
-    if (!nome.trim()) { toast.error('Nome obrigatório.'); return; }
+    if (!nome.trim()) {
+      toast.error('Nome obrigatório.');
+      return;
+    }
+    if (browser && cidadePendente()) return;
+    if (revisaoRoteiroAtiva && typeof revisao !== 'string') {
+      toast.error('Revisão indisponível. Recarregue o roteiro antes de salvar.');
+      return;
+    }
     saving = true;
     try {
-      await apiPost('/api/v1/roteiros/save', {
+      if (revisaoRoteiroAtiva) {
+        opcionais = atribuirIdsGruposOpcionais(opcionais);
+        dias = atribuirIdsRegistros(dias);
+        hoteis = atribuirIdsRegistros(hoteis);
+        passeios = atribuirIdsRegistros(passeios);
+      }
+      const payload = {
+        ...(roteiroGeograficoAtivo ? { versao_identidade: VERSAO_ROTEIRO_IDENTIDADE } : {}),
+        ...(revisaoRoteiroAtiva ? { revisao } : {}),
         id: roteiroId,
         nome: nome.trim(),
         duracao: duracao ? Number(duracao) : null,
@@ -395,14 +526,34 @@
         mostrar_pagamento_pdf: mostrarPagamentoPdf,
         mostrar_informacoes_pdf: mostrarInformacoesPdf,
         mostrar_rodape_pdf: mostrarRodapePdf,
-        dias: dias.map((d, i) => ({ ...d, ordem: i })),
-        hoteis: hoteis.map((h, i) => ({ ...h, ordem: i })),
-        opcionais: parseRoteiroOpcionais(opcionais),
-        passeios: passeios.map((p, i) => ({ ...p, ordem: i })),
+        dias: dias.map((d, i) => ({
+          ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(d) : d),
+          ordem: i
+        })),
+        hoteis: hoteis.map((h, i) => ({
+          ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(h) : h),
+          ordem: i
+        })),
+        opcionais: parseRoteiroOpcionais(removerPasseiosIncorporados(opcionais, passeios)).map(
+          (item) => (revisaoRoteiroAtiva ? explicitarIdentidadeCidade(item) : item)
+        ),
+        passeios: passeios.map((p, i) => ({
+          ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(p) : p),
+          ordem: i
+        })),
         transportes: transportes.map((t, i) => ({ ...t, ordem: i })),
         investimentos: investimentos.map((inv, i) => ({ ...inv, ordem: i })),
         pagamentos: pagamentos.map((p, i) => ({ ...p, ordem: i }))
-      });
+      };
+      const resultado = await salvarRoteiroComConfirmacao(payload, revisaoRoteiroAtiva);
+      if (!resultado) return;
+      if (revisaoRoteiroAtiva) {
+        if (typeof resultado.revisao !== 'string') {
+          revisao = undefined;
+          throw new Error('Revisão não recebida. Recarregue o roteiro antes de salvar novamente.');
+        }
+        revisao = resultado.revisao;
+      }
       toast.success('Roteiro salvo com sucesso!');
     } catch (err) {
       toast.error(toUserMessage(err, 'Erro ao salvar.'));
@@ -422,14 +573,23 @@
       toast.error('Preencha o nome do roteiro antes de duplicar.');
       return;
     }
+    if (browser && cidadePendente()) return;
 
-    if (browser && !window.confirm('Deseja duplicar este roteiro? Será criada uma nova cópia para edição.')) {
+    if (
+      browser &&
+      !window.confirm('Deseja duplicar este roteiro? Será criada uma nova cópia para edição.')
+    ) {
       return;
     }
 
     duplicating = true;
     try {
+      if (revisaoRoteiroAtiva) opcionais = atribuirIdsGruposOpcionais(opcionais);
+      const diasCopia = revisaoRoteiroAtiva ? renovarIdsRegistros(dias) : dias;
+      const hoteisCopia = revisaoRoteiroAtiva ? renovarIdsRegistros(hoteis) : hoteis;
+      const passeiosCopia = revisaoRoteiroAtiva ? renovarIdsRegistros(passeios) : passeios;
       const payload = await apiPost<{ id?: string }>('/api/v1/roteiros/save', {
+        ...(roteiroGeograficoAtivo ? { versao_identidade: VERSAO_ROTEIRO_IDENTIDADE } : {}),
         nome: buildDuplicateName(nome),
         duracao: duracao ? Number(duracao) : null,
         inicio_cidade: inicioCidade.trim() || null,
@@ -440,10 +600,21 @@
         mostrar_pagamento_pdf: mostrarPagamentoPdf,
         mostrar_informacoes_pdf: mostrarInformacoesPdf,
         mostrar_rodape_pdf: mostrarRodapePdf,
-        dias: dias.map((d, i) => ({ ...d, ordem: i })),
-        hoteis: hoteis.map((h, i) => ({ ...h, ordem: i })),
-        opcionais: parseRoteiroOpcionais(opcionais),
-        passeios: passeios.map((p, i) => ({ ...p, ordem: i })),
+        dias: diasCopia.map((d, i) => ({
+          ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(d) : d),
+          ordem: i
+        })),
+        hoteis: hoteisCopia.map((h, i) => ({
+          ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(h) : h),
+          ordem: i
+        })),
+        opcionais: parseRoteiroOpcionais(removerPasseiosIncorporados(opcionais, passeiosCopia)).map(
+          (item) => (revisaoRoteiroAtiva ? explicitarIdentidadeCidade(item) : item)
+        ),
+        passeios: passeiosCopia.map((p, i) => ({
+          ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(p) : p),
+          ordem: i
+        })),
         transportes: transportes.map((t, i) => ({ ...t, ordem: i })),
         investimentos: investimentos.map((inv, i) => ({ ...inv, ordem: i })),
         pagamentos: pagamentos.map((p, i) => ({ ...p, ordem: i }))
@@ -470,10 +641,14 @@
     const seq = ++diasBuscaSeq;
     diasBuscaLoading = true;
     try {
-      const data = await apiGet<{ dias?: DiaBuscaResult[] }>('/api/v1/roteiros/dias-busca', {
-        q: diasBuscaQ,
-        cidade: diasBuscaCidade
-      }, controller.signal);
+      const data = await apiGet<{ dias?: DiaBuscaResult[] }>(
+        '/api/v1/roteiros/dias-busca',
+        {
+          q: diasBuscaQ,
+          cidade: diasBuscaCidade
+        },
+        controller.signal
+      );
       if (seq !== diasBuscaSeq || destroyed) return;
       diasBuscaResults = data.dias || [];
     } catch (err) {
@@ -488,9 +663,10 @@
     const nextItem: RotDia = {
       percurso: String(dia.percurso || '').trim(),
       cidade: String(dia.cidade || '').trim(),
+      cidade_id: dia.cidade_id ?? null,
       data: String(dia.data || '').trim(),
       descricao: String(dia.descricao || '').trim(),
-      ordem: dias.length,
+      ordem: dias.length
     };
     dias = [...dias, nextItem];
     showDiasBusca = false;
@@ -537,12 +713,15 @@
       const seq = ++clienteBuscaSeq;
       gerarClienteLoading = true;
       try {
-        const data = await apiFetch<ClienteBuscaResponse | ClienteBuscaResult[]>('/api/v1/clientes', {
-          query: { search: gerarClienteQ },
-          signal: controller.signal,
-          // Busca opcional de cliente: sem acesso a Clientes, só não lista (não vai para "/negado").
-          redirectOnForbidden: false
-        });
+        const data = await apiFetch<ClienteBuscaResponse | ClienteBuscaResult[]>(
+          '/api/v1/clientes',
+          {
+            query: { search: gerarClienteQ },
+            signal: controller.signal,
+            // Busca opcional de cliente: sem acesso a Clientes, só não lista (não vai para "/negado").
+            redirectOnForbidden: false
+          }
+        );
         if (seq !== clienteBuscaSeq || destroyed) return;
         gerarClienteResults = normalizeClienteBuscaResults(data);
       } catch (err) {
@@ -560,7 +739,10 @@
 
   async function handleGerarOrcamento() {
     const clientName = gerarClienteSel?.nome || gerarClienteNome.trim();
-    if (!clientName) { toast.error('Informe o nome do cliente.'); return; }
+    if (!clientName) {
+      toast.error('Informe o nome do cliente.');
+      return;
+    }
     gerarLoading = true;
     try {
       const data = await apiPost<{ quote_id?: string }>('/api/v1/roteiros/gerar-orcamento', {
@@ -629,7 +811,7 @@
       return;
     }
     try {
-      const lines = passeioImportText.split('\n').filter(l => l.trim());
+      const lines = passeioImportText.split('\n').filter((l) => l.trim());
       const imported: RotPasseio[] = lines.map((line, idx) => {
         const p = newPasseio(idx);
         p.passeio = line.trim();
@@ -782,7 +964,10 @@
       </thead>
       <tbody>
         ${rows
-          .map((row) => `<tr>${row.map((cell) => `<td>${escapePreviewHtml(cell || '-')}</td>`).join('')}</tr>`)
+          .map(
+            (row) =>
+              `<tr>${row.map((cell) => `<td>${escapePreviewHtml(cell || '-')}</td>`).join('')}</tr>`
+          )
           .join('')}
       </tbody>
     </table></div>`;
@@ -795,12 +980,14 @@
       .filter(Boolean);
     return {
       origem: parts[0] || '',
-      destino: parts[1] || '',
+      destino: parts[1] || ''
     };
   }
 
   function resolvePreviewAirlineIata(value: string | null | undefined) {
-    const normalized = String(value || '').trim().toLowerCase();
+    const normalized = String(value || '')
+      .trim()
+      .toLowerCase();
     if (!normalized) return '';
     if (normalized.includes('lufthansa')) return 'LH';
     if (normalized.includes('latam')) return 'LA';
@@ -814,21 +1001,31 @@
     if (normalized.includes('emirates')) return 'EK';
     if (normalized.includes('qatar')) return 'QR';
     if (normalized.includes('turkish')) return 'TK';
-    return String(value || '').trim().slice(0, 3).toUpperCase();
+    return String(value || '')
+      .trim()
+      .slice(0, 3)
+      .toUpperCase();
   }
 
   function formatFlightCity(value: string | null | undefined) {
     const normalized = String(value || '').trim();
     if (!normalized) return '';
-    return normalized
-      .split(/\s*-\s*/)
-      .map((part) => part.trim())
-      .filter(Boolean)[0] || normalized;
+    return (
+      normalized
+        .split(/\s*-\s*/)
+        .map((part) => part.trim())
+        .filter(Boolean)[0] || normalized
+    );
   }
 
-  function formatFlightPlace(city: string | null | undefined, airportCode: string | null | undefined) {
+  function formatFlightPlace(
+    city: string | null | undefined,
+    airportCode: string | null | undefined
+  ) {
     const cityLabel = formatFlightCity(city);
-    const code = String(airportCode || '').trim().toUpperCase();
+    const code = String(airportCode || '')
+      .trim()
+      .toUpperCase();
     if (cityLabel && code) return `${cityLabel} (${code})`;
     if (cityLabel) return cityLabel;
     if (code) return code;
@@ -849,7 +1046,10 @@
         }
         const origem = formatFlightPlace(trecho.origem, item.aeroporto_saida) || '-';
         const destino = formatFlightPlace(trecho.destino, item.aeroporto_chegada) || '-';
-        const horarios = [String(item.hora_saida || '').trim(), String(item.hora_chegada || '').trim()].filter(Boolean).join(' / ') || '-';
+        const horarios =
+          [String(item.hora_saida || '').trim(), String(item.hora_chegada || '').trim()]
+            .filter(Boolean)
+            .join(' / ') || '-';
 
         return [
           cia,
@@ -857,14 +1057,20 @@
           formatPreviewDate(item.data_voo || item.data_inicio),
           destino,
           formatPreviewDate(item.data_fim || item.data_voo || item.data_inicio),
-          horarios,
+          horarios
         ];
       })
       .filter((row) => row.length > 0);
 
-    const legendHtml = airlineLegend.size > 0
-      ? `<div class="preview-legend">${Array.from(airlineLegend.entries()).map(([code, name]) => `<div><b>${escapePreviewHtml(code)}</b> = ${escapePreviewHtml(name)}</div>`).join('')}</div>`
-      : '';
+    const legendHtml =
+      airlineLegend.size > 0
+        ? `<div class="preview-legend">${Array.from(airlineLegend.entries())
+            .map(
+              ([code, name]) =>
+                `<div><b>${escapePreviewHtml(code)}</b> = ${escapePreviewHtml(name)}</div>`
+            )
+            .join('')}</div>`
+        : '';
 
     return `${buildPreviewTable(['Cia', 'Origem', 'Saída', 'Destino', 'Chegada', 'Horários'], rows, 'flight-preview-table')}${legendHtml}`;
   }
@@ -899,12 +1105,15 @@
     return 'image/png';
   }
 
-  async function storageImageToDataUrl(path?: string | null, url?: string | null): Promise<string | null> {
+  async function storageImageToDataUrl(
+    path?: string | null,
+    url?: string | null
+  ): Promise<string | null> {
     const storagePath = path || extractStoragePath(url);
     if (!storagePath) return null;
 
     try {
-      const { data: blob, error } = await supabase.storage.from('quotes').download(storagePath);
+      const { data: blob, error } = await dados.storage.from('quotes').download(storagePath);
       if (error || !blob) return null;
       const dataUrl = await blobToDataUrl(blob, guessMimeFromPath(storagePath));
       return dataUrl || null;
@@ -916,37 +1125,48 @@
   async function resolvePreviewPdfAssets(): Promise<PreviewPdfAssets> {
     if (!incluirCabecalhoRodapePdf) return { complementUrl: null, qrUrl: null };
 
-    const whatsappLink = construirLinkWhatsApp(pdfSettings.whatsapp, pdfSettings.whatsapp_codigo_pais);
+    const whatsappLink = construirLinkWhatsApp(
+      pdfSettings.whatsapp,
+      pdfSettings.whatsapp_codigo_pais
+    );
     const qrSource = whatsappLink
       ? `/api/v1/qr?size=200&margin=1&text=${encodeURIComponent(whatsappLink)}`
       : null;
 
     const [complementUrl, qrUrl] = await Promise.all([
-      storageImageToDataUrl(pdfSettings.imagem_complementar_path, pdfSettings.imagem_complementar_url),
-      qrSource ? fetchImageAsDataUrl(qrSource) : Promise.resolve(null),
+      storageImageToDataUrl(
+        pdfSettings.imagem_complementar_path,
+        pdfSettings.imagem_complementar_url
+      ),
+      qrSource ? fetchImageAsDataUrl(qrSource) : Promise.resolve(null)
     ]);
 
     return { complementUrl, qrUrl };
   }
 
-  function buildRoteiroPreviewHtml(assets: PreviewPdfAssets = { qrUrl: null, complementUrl: null }) {
+  function buildRoteiroPreviewHtml(
+    assets: PreviewPdfAssets = { qrUrl: null, complementUrl: null }
+  ) {
     const diasItems = dias.filter((dia) => dia.cidade || dia.percurso || dia.data || dia.descricao);
-    const diasHtml = diasItems.length > 0
-      ? buildPreviewCards(
-      diasItems,
-      (dia, index) => `
+    const diasHtml =
+      diasItems.length > 0
+        ? buildPreviewCards(
+            diasItems,
+            (dia, index) => `
         <article class="card">
           <h3>Dia ${index + 1} - ${escapePreviewHtml(dia.cidade || dia.percurso || 'Sem título')}</h3>
           ${dia.data ? `<p class="meta">${escapePreviewHtml(formatPreviewDate(dia.data))}</p>` : ''}
           ${dia.percurso && dia.percurso !== dia.cidade ? `<p class="meta">${escapePreviewHtml(dia.percurso)}</p>` : ''}
           ${dia.descricao ? `<p>${escapePreviewHtml(dia.descricao).replace(/\n/g, '<br>')}</p>` : '<p class="empty">Sem descrição.</p>'}
         </article>`
-    ) : '';
+          )
+        : '';
 
-    const transportesItems = transportes.filter((item) => item.trecho || item.cia_aerea || item.data_voo);
-    const transportesHtml = transportesItems.length > 0
-      ? buildPreviewFlightTable(transportesItems)
-      : '';
+    const transportesItems = transportes.filter(
+      (item) => item.trecho || item.cia_aerea || item.data_voo
+    );
+    const transportesHtml =
+      transportesItems.length > 0 ? buildPreviewFlightTable(transportesItems) : '';
 
     const hoteisItems = hoteis.filter((item) => item.hotel || item.cidade);
     const groupedHoteis = Array.from(
@@ -957,21 +1177,22 @@
         return map;
       }, new Map<string, RotHotel[]>())
     );
-    const hoteisHtml = groupedHoteis.length > 0
-      ? groupedHoteis
-          .map(([cidade, itens]) => {
-            const rows = itens.map((item) => [
-              String(item.hotel || '').trim() || '-',
-              formatPreviewDate(item.data_inicio) || '-',
-              formatPreviewDate(item.data_fim) || '-',
-              Number(item.noites || 0) > 0 ? String(Number(item.noites || 0)) : '-',
-              String(item.apto || '').trim() || '-',
-              String(item.regime || '').trim() || '-',
-            ]);
-            return `<div class="preview-group-block"><div class="preview-group-title">${escapePreviewHtml(cidade)}</div>${buildPreviewTable(['Nome hotel', 'Início', 'Fim', 'Noites', 'Acomodação', 'Regime'], rows, 'hotel-preview-table')}</div>`;
-          })
-          .join('')
-      : '';
+    const hoteisHtml =
+      groupedHoteis.length > 0
+        ? groupedHoteis
+            .map(([cidade, itens]) => {
+              const rows = itens.map((item) => [
+                String(item.hotel || '').trim() || '-',
+                formatPreviewDate(item.data_inicio) || '-',
+                formatPreviewDate(item.data_fim) || '-',
+                Number(item.noites || 0) > 0 ? String(Number(item.noites || 0)) : '-',
+                String(item.apto || '').trim() || '-',
+                String(item.regime || '').trim() || '-'
+              ]);
+              return `<div class="preview-group-block"><div class="preview-group-title">${escapePreviewHtml(cidade)}</div>${buildPreviewTable(['Nome hotel', 'Início', 'Fim', 'Noites', 'Acomodação', 'Regime'], rows, 'hotel-preview-table')}</div>`;
+            })
+            .join('')
+        : '';
 
     const passeiosItems = passeios.filter((item) => item.passeio || item.cidade);
     const groupedPasseios = Array.from(
@@ -982,42 +1203,73 @@
         return map;
       }, new Map<string, RotPasseio[]>())
     );
-    const passeiosHtml = groupedPasseios.length > 0
-      ? groupedPasseios
-          .map(([cidade, itens]) => {
-            const rows = itens.map((item) => {
-              const dataInicio = formatPreviewDate(item.data_inicio);
-              const dataFim = formatPreviewDate(item.data_fim);
-              const data = dataInicio && dataFim && dataInicio !== dataFim ? `${dataInicio} a ${dataFim}` : dataInicio || dataFim || '-';
-              return [data, String(item.passeio || '').trim() || '-', String(item.ingressos || '').trim() || '-'];
-            });
-            return `<div class="preview-group-block"><div class="preview-group-title">${escapePreviewHtml(cidade)}</div>${buildPreviewTable(['Data', 'Descrição', 'Ingressos'], rows, 'passeio-preview-table')}</div>`;
-          })
-          .join('')
-      : '';
+    const passeiosHtml =
+      groupedPasseios.length > 0
+        ? groupedPasseios
+            .map(([cidade, itens]) => {
+              const rows = itens.map((item) => {
+                const dataInicio = formatPreviewDate(item.data_inicio);
+                const dataFim = formatPreviewDate(item.data_fim);
+                const data =
+                  dataInicio && dataFim && dataInicio !== dataFim
+                    ? `${dataInicio} a ${dataFim}`
+                    : dataInicio || dataFim || '-';
+                return [
+                  data,
+                  String(item.passeio || '').trim() || '-',
+                  String(item.ingressos || '').trim() || '-'
+                ];
+              });
+              return `<div class="preview-group-block"><div class="preview-group-title">${escapePreviewHtml(cidade)}</div>${buildPreviewTable(['Data', 'Descrição', 'Ingressos'], rows, 'passeio-preview-table')}</div>`;
+            })
+            .join('')
+        : '';
 
     const investimentoRows = investimentos
-      .filter((item) => item.tipo || Number(item.valor_por_pessoa || 0) > 0 || Number(item.valor_por_apto || 0) > 0)
+      .filter(
+        (item) =>
+          item.tipo ||
+          Number(item.valor_por_pessoa || 0) > 0 ||
+          Number(item.valor_por_apto || 0) > 0
+      )
       .map((item) => [
         String(item.tipo || '').trim() || '-',
-        Number(item.valor_por_pessoa || 0) > 0 ? `R$ ${formatBRL(Number(item.valor_por_pessoa || 0))}` : '-',
+        Number(item.valor_por_pessoa || 0) > 0
+          ? `R$ ${formatBRL(Number(item.valor_por_pessoa || 0))}`
+          : '-',
         Number(item.qtd_apto || 0) > 0 ? String(Number(item.qtd_apto || 0)) : '-',
-        Number(item.valor_por_apto || 0) > 0 ? `R$ ${formatBRL(Number(item.valor_por_apto || 0))}` : '-',
+        Number(item.valor_por_apto || 0) > 0
+          ? `R$ ${formatBRL(Number(item.valor_por_apto || 0))}`
+          : '-'
       ]);
-    const investimentoHtml = investimentoRows.length > 0
-      ? buildPreviewTable(['Tipo', 'Valor por Pessoa', 'Qte Paxs', 'Valor total por Apto'], investimentoRows, 'investimento-preview-table')
-      : '';
+    const investimentoHtml =
+      investimentoRows.length > 0
+        ? buildPreviewTable(
+            ['Tipo', 'Valor por Pessoa', 'Qte Paxs', 'Valor total por Apto'],
+            investimentoRows,
+            'investimento-preview-table'
+          )
+        : '';
 
     const pagamentosItems = pagamentos.filter((item) => item.servico || item.valor_total_com_taxas);
-    const pagamentosHtml = pagamentosItems.length > 0
-      ? buildPreviewCards(
-      pagamentosItems,
-      (item) => `<article class="card compact"><h3>${escapePreviewHtml(item.servico || 'Pagamento')}</h3><p>${escapePreviewHtml([item.forma_pagamento, item.valor_total_com_taxas != null ? `R$ ${formatBRL(Number(item.valor_total_com_taxas || 0))}` : ''].filter(Boolean).join(' • '))}</p></article>`
-    ) : '';
+    const pagamentosHtml =
+      pagamentosItems.length > 0
+        ? buildPreviewCards(
+            pagamentosItems,
+            (item) =>
+              `<article class="card compact"><h3>${escapePreviewHtml(item.servico || 'Pagamento')}</h3><p>${escapePreviewHtml([item.forma_pagamento, item.valor_total_com_taxas != null ? `R$ ${formatBRL(Number(item.valor_total_com_taxas || 0))}` : ''].filter(Boolean).join(' • '))}</p></article>`
+          )
+        : '';
 
     const includesSection = buildPreviewListSection('O roteiro inclui', incluiTexto.split('\n'));
-    const excludesSection = buildPreviewListSection('O roteiro não inclui', naoIncluiTexto.split('\n'));
-    const infoSection = buildPreviewListSection('Informações importantes', informacoesImportantes.split('\n'));
+    const excludesSection = buildPreviewListSection(
+      'O roteiro não inclui',
+      naoIncluiTexto.split('\n')
+    );
+    const infoSection = buildPreviewListSection(
+      'Informações importantes',
+      informacoesImportantes.split('\n')
+    );
 
     const footerLines = String(pdfSettings.rodape_texto || '')
       .split(/\r?\n/)
@@ -1028,13 +1280,22 @@
       pdfSettings.consultor_nome ? `Consultor: ${pdfSettings.consultor_nome}` : '',
       pdfSettings.telefone ? `Telefone: ${pdfSettings.telefone}` : '',
       pdfSettings.whatsapp ? `WhatsApp: ${pdfSettings.whatsapp}` : '',
-      pdfSettings.email ? `E-mail: ${pdfSettings.email}` : '',
+      pdfSettings.email ? `E-mail: ${pdfSettings.email}` : ''
     ].filter(Boolean);
 
     const citiesLine = [inicioCidade, fimCidade].filter(Boolean).join(' • ');
     const periodText = (() => {
-      const firstDia = diasItems.find((item) => item.data)?.data || transportesItems.find((item) => item.data_voo || item.data_inicio)?.data_voo || transportesItems.find((item) => item.data_inicio)?.data_inicio || '';
-      const lastDia = [...diasItems].reverse().find((item) => item.data)?.data || [...transportesItems].reverse().find((item) => item.data_fim || item.data_voo || item.data_inicio)?.data_fim || '';
+      const firstDia =
+        diasItems.find((item) => item.data)?.data ||
+        transportesItems.find((item) => item.data_voo || item.data_inicio)?.data_voo ||
+        transportesItems.find((item) => item.data_inicio)?.data_inicio ||
+        '';
+      const lastDia =
+        [...diasItems].reverse().find((item) => item.data)?.data ||
+        [...transportesItems]
+          .reverse()
+          .find((item) => item.data_fim || item.data_voo || item.data_inicio)?.data_fim ||
+        '';
       const start = formatPreviewDate(firstDia);
       const end = formatPreviewDate(lastDia);
       if (start && end && start !== end) return `${start} a ${end}`;
@@ -1082,9 +1343,10 @@
         ${periodText ? `<div class="preview-title-meta"><b>Período:</b> ${escapePreviewHtml(periodText)}</div>` : ''}
       </section>`;
 
-    const footerHtml = footerLines.length > 0
-      ? `<section class="preview-footer-card"><div>${footerLines.map((line) => escapePreviewHtml(line)).join('<br/>')}</div>${assets.complementUrl ? `<div class="preview-complement-img"><img src="${escapePreviewHtml(assets.complementUrl)}" alt="Imagem complementar" /></div>` : ''}</section>`
-      : '';
+    const footerHtml =
+      footerLines.length > 0
+        ? `<section class="preview-footer-card"><div>${footerLines.map((line) => escapePreviewHtml(line)).join('<br/>')}</div>${assets.complementUrl ? `<div class="preview-complement-img"><img src="${escapePreviewHtml(assets.complementUrl)}" alt="Imagem complementar" /></div>` : ''}</section>`
+        : '';
 
     return `<!doctype html>
       <html lang="pt-BR">
@@ -1154,6 +1416,16 @@
             .hotel-preview-table.preview-table td:nth-child(5) { width: 18%; }
             .hotel-preview-table.preview-table th:nth-child(6),
             .hotel-preview-table.preview-table td:nth-child(6) { width: 24%; }
+            .passeio-preview-table.preview-table {
+              table-layout: fixed;
+              width: 100%;
+            }
+            .passeio-preview-table.preview-table th:nth-child(1),
+            .passeio-preview-table.preview-table td:nth-child(1) { width: 20%; }
+            .passeio-preview-table.preview-table th:nth-child(2),
+            .passeio-preview-table.preview-table td:nth-child(2) { width: 60%; }
+            .passeio-preview-table.preview-table th:nth-child(3),
+            .passeio-preview-table.preview-table td:nth-child(3) { width: 20%; }
             .flight-preview-table.preview-table { font-size: 13px; }
             .flight-preview-table.preview-table thead th { font-size: 12px; }
             .flight-preview-table.preview-table tbody td { font-size: 13px; }
@@ -1194,7 +1466,7 @@
             ${buildPreviewSection('Itinerário Detalhado', diasHtml)}
             ${buildPreviewRawSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
             ${buildPreviewRawSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
-            ${buildPreviewSection('Passeios Opcionais — sugestões sem data marcada, não incluídas no valor do roteiro', buildOpcionaisHtml(opcionais, escapePreviewHtml))}
+            ${buildPreviewSection('Passeios Opcionais — sugestões sem data marcada, não incluídas no valor do roteiro', buildOpcionaisHtml(removerPasseiosIncorporados(opcionais, passeios), escapePreviewHtml))}
             ${buildPreviewRawSection('Passagem Aérea', transportesHtml, 'preview-airfare-section')}
             ${buildPreviewRawSection('Investimento', investimentoHtml, 'preview-investimento-section')}
             ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
@@ -1216,7 +1488,9 @@
       const previewUrl = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
       const opened = safeOpenNewTab(previewUrl, ['blob:']);
       if (!opened) {
-        throw new Error('Não foi possível abrir a prévia do PDF. Verifique o bloqueador de pop-up.');
+        throw new Error(
+          'Não foi possível abrir a prévia do PDF. Verifique o bloqueador de pop-up.'
+        );
       }
       window.setTimeout(() => URL.revokeObjectURL(previewUrl), 60000);
     } catch (err) {
@@ -1279,10 +1553,23 @@
   <Card title="Dados do roteiro" color="clientes" class="mb-4">
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
       <div class="lg:col-span-2">
-        <FieldInput label="Nome" required bind:value={nome} placeholder="Nome do roteiro" id="rot-nome" />
+        <FieldInput
+          label="Nome"
+          required
+          bind:value={nome}
+          placeholder="Nome do roteiro"
+          id="rot-nome"
+        />
       </div>
       <div>
-        <FieldInput label="Duração (dias)" type="number" min="1" bind:value={duracao} placeholder="Ex: 7" id="rot-dur" />
+        <FieldInput
+          label="Duração (dias)"
+          type="number"
+          min="1"
+          bind:value={duracao}
+          placeholder="Ex: 7"
+          id="rot-dur"
+        />
       </div>
       <div class="lg:col-span-2">
         <FieldInput
@@ -1304,20 +1591,51 @@
     </div>
 
     <div class="mt-4 flex flex-wrap items-center gap-3">
-      <Button type="button" variant="secondary" size="sm" on:click={() => goto('/orcamentos/roteiros')}>Cancelar</Button>
-      <Button type="button" variant="secondary" size="sm" loading={previewingPdf} on:click={handlePreviewPdf}>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        on:click={() => goto('/orcamentos/roteiros')}>Cancelar</Button
+      >
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        loading={previewingPdf}
+        on:click={handlePreviewPdf}
+      >
         <FileText size={14} class="mr-1" />
         Visualizar PDF
       </Button>
-      <Button type="button" variant="secondary" size="sm" loading={duplicating} on:click={duplicateRoteiro}>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        loading={duplicating}
+        on:click={duplicateRoteiro}
+      >
         <Copy size={14} class="mr-1" />
         Duplicar roteiro
       </Button>
-      <Button type="button" variant="primary" color="clientes" size="sm" loading={saving} on:click={save}>
+      <Button
+        type="button"
+        variant="primary"
+        color="clientes"
+        size="sm"
+        loading={saving}
+        on:click={save}
+      >
         <Save size={14} class="mr-1" />
         Salvar roteiro
       </Button>
-      <Button type="button" variant="secondary" size="sm" on:click={() => { showGerarModal = true; }}>
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        on:click={() => {
+          showGerarModal = true;
+        }}
+      >
         <DollarSign size={14} class="mr-1" />
         Gerar Orçamento
       </Button>
@@ -1327,7 +1645,8 @@
   <!-- ─── Abas ──────────────────────────────────────────────────────────── -->
   <Tabs
     className="mb-4"
-    bind:activeKey={abaAtiva}
+    activeKey={abaAtiva}
+    onSelect={selecionarAba}
     items={ABAS.map((aba) => ({
       key: aba.id,
       label: aba.label,
@@ -1337,31 +1656,82 @@
 
   <!-- ──────────────────── ABA: ITINERÁRIO ───────────────────────────────── -->
   {#if abaAtiva === 'itinerario'}
-    <AbaItinerario bind:dias bind:diasImportError bind:diasImportMsg bind:showDiasBusca bind:showDiasImport {sugestoes} />
+    <AbaItinerario
+      bind:dias
+      bind:diasImportError
+      bind:diasImportMsg
+      bind:showDiasBusca
+      bind:showDiasImport
+      {sugestoes}
+    />
 
-  <!-- ──────────────────── ABA: HOTÉIS ──────────────────────────────────── -->
+    <!-- ──────────────────── ABA: HOTÉIS ──────────────────────────────────── -->
   {:else if abaAtiva === 'hoteis'}
-    <AbaHoteis {HOTEL_CATEGORIA_OPTIONS} {HOTEL_REGIME_OPTIONS} {handleImportHotelText} bind:hoteis {hotelImportError} {hotelImportMsg} bind:hotelImportText {onHotelDateChange} {sugestoes} />
+    <AbaHoteis
+      {HOTEL_CATEGORIA_OPTIONS}
+      {HOTEL_REGIME_OPTIONS}
+      {handleImportHotelText}
+      bind:hoteis
+      {hotelImportError}
+      {hotelImportMsg}
+      bind:hotelImportText
+      {onHotelDateChange}
+      {sugestoes}
+    />
 
-  <!-- ──────────────────── ABA: PASSEIOS ────────────────────────────────── -->
+    <!-- ──────────────────── ABA: PASSEIOS ────────────────────────────────── -->
   {:else if abaAtiva === 'opcionais'}
-    <AbaOpcionais bind:opcionais />
+    <AbaOpcionais
+      bind:opcionais
+      cidadesItinerario={dias.map((dia) => ({ cidade: dia.cidade, cidade_id: dia.cidade_id }))}
+      passeiosIncorporados={passeios}
+    />
   {:else if abaAtiva === 'passeios'}
-    <AbaPasseios {PASSEIO_TIPO_OPTIONS} {handleImportPasseioText} {passeioImportError} {passeioImportMsg} bind:passeioImportText bind:passeios {sugestoes} />
+    <AbaPasseios
+      {PASSEIO_TIPO_OPTIONS}
+      {handleImportPasseioText}
+      {passeioImportError}
+      {passeioImportMsg}
+      bind:passeioImportText
+      bind:passeios
+      {sugestoes}
+    />
 
-  <!-- ──────────────────── ABA: AÉREO ───────────────────────────────────── -->
+    <!-- ──────────────────── ABA: AÉREO ───────────────────────────────────── -->
   {:else if abaAtiva === 'transporte'}
-    <AbaTransporte {TRANSPORTE_TIPO_OPTIONS} {TRANSPORTE_TIPO_VOO_OPTIONS} {aereoImportError} {aereoImportMsg} bind:aereoImportText {handleImportAereoText} {onAereoValorChange} bind:transportes />
+    <AbaTransporte
+      {TRANSPORTE_TIPO_OPTIONS}
+      {TRANSPORTE_TIPO_VOO_OPTIONS}
+      {aereoImportError}
+      {aereoImportMsg}
+      bind:aereoImportText
+      {handleImportAereoText}
+      {onAereoValorChange}
+      bind:transportes
+    />
 
-  <!-- ──────────────────── ABA: INVESTIMENTO ────────────────────────────── -->
+    <!-- ──────────────────── ABA: INVESTIMENTO ────────────────────────────── -->
   {:else if abaAtiva === 'investimento'}
-    <AbaInvestimento {INVESTIMENTO_TIPO_OPTIONS} bind:investimentos {onInvestimentoChange} {totalInvestimento} />
+    <AbaInvestimento
+      {INVESTIMENTO_TIPO_OPTIONS}
+      bind:investimentos
+      {onInvestimentoChange}
+      {totalInvestimento}
+    />
 
-  <!-- ──────────────────── ABA: PAGAMENTO ───────────────────────────────── -->
+    <!-- ──────────────────── ABA: PAGAMENTO ───────────────────────────────── -->
   {:else if abaAtiva === 'pagamento'}
-    <AbaPagamento {PAGAMENTO_SERVICO_OPTIONS} bind:mostrarInformacoesPdf bind:mostrarPagamentoPdf bind:mostrarRodapePdf bind:pagamentos {sugestoes} {totalPagamento} />
+    <AbaPagamento
+      {PAGAMENTO_SERVICO_OPTIONS}
+      bind:mostrarInformacoesPdf
+      bind:mostrarPagamentoPdf
+      bind:mostrarRodapePdf
+      bind:pagamentos
+      {sugestoes}
+      {totalPagamento}
+    />
 
-  <!-- ──────────────────── ABA: INCLUSÕES ───────────────────────────────── -->
+    <!-- ──────────────────── ABA: INCLUSÕES ───────────────────────────────── -->
   {:else if abaAtiva === 'inclusoes'}
     <Card title="Inclusões / Não inclusões" color="clientes">
       <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -1375,7 +1745,9 @@
             monospace={true}
             placeholder="Uma inclusão por linha&#10;Ex: Passagem aérea&#10;Hotel com café da manhã&#10;Transfer aeroporto/hotel"
           />
-          <p class="mt-1 text-xs text-slate-400">{incluiTexto.split('\n').filter(l => l.trim()).length} linha(s)</p>
+          <p class="mt-1 text-xs text-slate-400">
+            {incluiTexto.split('\n').filter((l) => l.trim()).length} linha(s)
+          </p>
         </div>
         <div>
           <label class="vtur-label" for="nao-inclui">O roteiro NÃO inclui</label>
@@ -1387,12 +1759,14 @@
             monospace={true}
             placeholder="Uma exclusão por linha&#10;Ex: Despesas pessoais&#10;Passeios opcionais&#10;Vistos"
           />
-          <p class="mt-1 text-xs text-slate-400">{naoIncluiTexto.split('\n').filter(l => l.trim()).length} linha(s)</p>
+          <p class="mt-1 text-xs text-slate-400">
+            {naoIncluiTexto.split('\n').filter((l) => l.trim()).length} linha(s)
+          </p>
         </div>
       </div>
     </Card>
 
-  <!-- ──────────────────── ABA: INFORMAÇÕES ─────────────────────────────── -->
+    <!-- ──────────────────── ABA: INFORMAÇÕES ─────────────────────────────── -->
   {:else if abaAtiva === 'informacoes'}
     <Card title="Informações importantes" color="clientes">
       <label class="vtur-label" for="info-imp">Informações importantes</label>
@@ -1404,22 +1778,26 @@
         monospace={true}
         placeholder="Documentos necessários, dicas, políticas de cancelamento, informações de bagagem, etc."
       />
-      <p class="mt-1 text-xs text-slate-400">{informacoesImportantes.split('\n').filter(l => l.trim()).length} linha(s)</p>
+      <p class="mt-1 text-xs text-slate-400">
+        {informacoesImportantes.split('\n').filter((l) => l.trim()).length} linha(s)
+      </p>
     </Card>
   {/if}
 
   <div class="mt-6">
     <FieldCheckbox
-        label="Incluir cabeçalho e rodapé no PDF"
-        helper="Inclui logo, contatos, QR Code e condições de preços (se habilitadas na aba Pagamento). Por padrão, o PDF é gerado sem esses dados."
-        bind:checked={incluirCabecalhoRodapePdf}
-        color="clientes"
-      />
+      label="Incluir cabeçalho e rodapé no PDF"
+      helper="Inclui logo, contatos, QR Code e condições de preços (se habilitadas na aba Pagamento). Por padrão, o PDF é gerado sem esses dados."
+      bind:checked={incluirCabecalhoRodapePdf}
+      color="clientes"
+    />
   </div>
 
   <!-- ─── Botão salvar flutuante ─────────────────────────────────────────── -->
   <div class="mt-6 flex justify-end gap-3">
-    <Button type="button" variant="secondary" on:click={() => goto('/orcamentos/roteiros')}>Cancelar</Button>
+    <Button type="button" variant="secondary" on:click={() => goto('/orcamentos/roteiros')}
+      >Cancelar</Button
+    >
     <Button type="button" variant="secondary" loading={previewingPdf} on:click={handlePreviewPdf}>
       <FileText size={16} class="mr-2" />
       Visualizar PDF
@@ -1444,12 +1822,20 @@
   confirmText="Gerar Orçamento"
   showConfirm={true}
   loading={gerarLoading}
-  onCancel={() => { showGerarModal = false; gerarLoading = false; }}
+  onCancel={() => {
+    showGerarModal = false;
+    gerarLoading = false;
+  }}
   onConfirm={handleGerarOrcamento}
 >
   <div class="space-y-4">
     <div>
-      <FieldInput id="gerar-q" label="Buscar cliente" bind:value={gerarClienteQ} placeholder="Digite o nome..." />
+      <FieldInput
+        id="gerar-q"
+        label="Buscar cliente"
+        bind:value={gerarClienteQ}
+        placeholder="Digite o nome..."
+      />
       {#if gerarClienteLoading}
         <p class="mt-1 text-xs text-slate-400">Buscando...</p>
       {:else if gerarClienteResults.length > 0}
@@ -1460,10 +1846,15 @@
                 type="button"
                 variant="ghost"
                 class_name={`w-full justify-start rounded-none px-3 py-2 text-left text-sm hover:bg-slate-50! ${gerarClienteSel?.id === cliente.id ? 'bg-clientes-50 font-medium text-clientes-700 hover:bg-clientes-50!' : ''}`}
-                on:click={() => { gerarClienteSel = cliente; gerarClienteQ = cliente.nome; gerarClienteResults = []; }}
+                on:click={() => {
+                  gerarClienteSel = cliente;
+                  gerarClienteQ = cliente.nome;
+                  gerarClienteResults = [];
+                }}
               >
                 {cliente.nome}
-                {#if cliente.email}<span class="ml-2 text-xs text-slate-400">{cliente.email}</span>{/if}
+                {#if cliente.email}<span class="ml-2 text-xs text-slate-400">{cliente.email}</span
+                  >{/if}
               </Button>
             </li>
           {/each}
@@ -1472,16 +1863,24 @@
     </div>
 
     {#if !gerarClienteSel}
-      <FieldInput label="Ou informe o nome do cliente" bind:value={gerarClienteNome} placeholder="Nome do cliente" id="gerar-nome" />
+      <FieldInput
+        label="Ou informe o nome do cliente"
+        bind:value={gerarClienteNome}
+        placeholder="Nome do cliente"
+        id="gerar-nome"
+      />
     {:else}
-      <div class="rounded-lg bg-clientes-50 px-3 py-2 text-sm text-clientes-700">
+      <div class="bg-clientes-50 text-clientes-700 rounded-lg px-3 py-2 text-sm">
         Cliente selecionado: <strong>{gerarClienteSel.nome}</strong>
         <Button
           type="button"
           variant="ghost"
           size="xs"
           class_name="ml-2 px-0! py-0! text-xs text-slate-400 underline hover:bg-transparent! hover:text-slate-500!"
-          on:click={() => { gerarClienteSel = null; gerarClienteQ = ''; }}
+          on:click={() => {
+            gerarClienteSel = null;
+            gerarClienteQ = '';
+          }}
         >
           Remover
         </Button>
@@ -1497,7 +1896,9 @@
   color="orcamentos"
   size="lg"
   cancelText="Fechar"
-  onCancel={() => { showDiasBusca = false; }}
+  onCancel={() => {
+    showDiasBusca = false;
+  }}
 >
   <div class="space-y-3">
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1512,19 +1913,30 @@
       />
     </div>
 
-    <Button type="button" variant="primary" color="clientes" size="sm" loading={diasBuscaLoading} on:click={buscarDias}>
+    <Button
+      type="button"
+      variant="primary"
+      color="clientes"
+      size="sm"
+      loading={diasBuscaLoading}
+      on:click={buscarDias}
+    >
       Buscar
     </Button>
 
     {#if diasBuscaResults.length > 0}
       <div class="max-h-72 overflow-y-auto rounded-lg border border-slate-200">
         {#each diasBuscaResults as dia}
-          <div class="flex items-start justify-between gap-3 border-b border-slate-100 px-3 py-2 last:border-0">
+          <div
+            class="flex items-start justify-between gap-3 border-b border-slate-100 px-3 py-2 last:border-0"
+          >
             <div class="text-sm">
               <span class="font-medium text-slate-700">{dia.cidade || '-'}</span>
               {#if dia.data}<span class="ml-2 text-xs text-slate-400">{dia.data}</span>{/if}
               {#if dia.percurso}<p class="mt-0.5 text-xs text-slate-500">{dia.percurso}</p>{/if}
-              {#if dia.descricao}<p class="mt-0.5 line-clamp-2 text-xs text-slate-600">{dia.descricao}</p>{/if}
+              {#if dia.descricao}<p class="mt-0.5 line-clamp-2 text-xs text-slate-600">
+                  {dia.descricao}
+                </p>{/if}
             </div>
             <Button
               type="button"
@@ -1553,7 +1965,11 @@
   cancelText="Cancelar"
   confirmText="Importar dias"
   showConfirm={true}
-  onCancel={() => { showDiasImport = false; diasImportError = null; diasImportMsg = null; }}
+  onCancel={() => {
+    showDiasImport = false;
+    diasImportError = null;
+    diasImportMsg = null;
+  }}
   onConfirm={handleImportDiasText}
 >
   <div class="space-y-3">
@@ -1562,10 +1978,11 @@
       rows={12}
       class_name="w-full"
       monospace={true}
-      placeholder={"Dia 1 - Chegada em Lisboa\nRecepcao no aeroporto e traslado ao hotel.\n\nDia 2 - Lisboa\nCity tour e tarde livre."}
+      placeholder={'Dia 1 - Chegada em Lisboa\nRecepcao no aeroporto e traslado ao hotel.\n\nDia 2 - Lisboa\nCity tour e tarde livre.'}
     />
     <p class="text-xs text-slate-500">
-      Formatos aceitos: <strong>Dia 1 - Título</strong>, <strong>1º Dia - Título</strong> ou blocos separados por linha em branco.
+      Formatos aceitos: <strong>Dia 1 - Título</strong>, <strong>1º Dia - Título</strong> ou blocos separados
+      por linha em branco.
     </p>
     {#if diasImportMsg}<p class="text-xs text-green-600">{diasImportMsg}</p>{/if}
     {#if diasImportError}<p class="text-xs text-red-600">{diasImportError}</p>{/if}

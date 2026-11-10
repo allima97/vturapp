@@ -7,7 +7,14 @@
   import DataTable from '$lib/components/ui/DataTable.svelte';
   import { FieldInput, BottomSheet } from '$lib/components/ui';
   import KPIGrid from '$lib/components/kpis/KPIGrid.svelte';
-  import { ArrowLeft, Trophy, TrendingUp, TrendingDown, Minus, SlidersHorizontal } from '$lib/icons';
+  import {
+    ArrowLeft,
+    Trophy,
+    TrendingUp,
+    TrendingDown,
+    Minus,
+    SlidersHorizontal
+  } from '$lib/icons';
   import { formatYearMonthLabel } from '$lib/utils/formatters';
   import { toUserMessage } from '$lib/utils/errors';
   import { toast } from '$lib/stores/ui';
@@ -50,7 +57,8 @@
   function getMonthRange(monthValue: string) {
     const raw = String(monthValue || '').trim();
     const normalized = /^\d{4}-\d{2}$/.test(raw) ? raw : todayISODateLocal().slice(0, 7);
-    const range = monthRangeFromKey(normalized) || monthRangeFromKey(todayISODateLocal().slice(0, 7));
+    const range =
+      monthRangeFromKey(normalized) || monthRangeFromKey(todayISODateLocal().slice(0, 7));
 
     return {
       month: normalized,
@@ -225,16 +233,19 @@
     loading = true;
     errorMessage = null;
     try {
-      const data = await apiFetch<{ items: VendedorRanking[]; resumo: Resumo }>('/api/v1/relatorios/ranking', {
-        method: 'GET',
-        timeoutMs: 120_000,
-        cacheTtlMs: 30_000,
-        signal: controller.signal,
-        query: {
-          data_inicio: dataInicio,
-          data_fim: dataFim
+      const data = await apiFetch<{ items: VendedorRanking[]; resumo: Resumo }>(
+        '/api/v1/relatorios/ranking',
+        {
+          method: 'GET',
+          timeoutMs: 120_000,
+          cacheTtlMs: 30_000,
+          signal: controller.signal,
+          query: {
+            data_inicio: dataInicio,
+            data_fim: dataFim
+          }
         }
-      });
+      );
       if (requestSeq !== rankingRequestSeq) return;
 
       vendedores = data.items || [];
@@ -282,7 +293,10 @@
   }
 
   function handleExportVendas() {
-    if (vendedores.length === 0) { toast.info('Não há dados para exportar'); return; }
+    if (vendedores.length === 0) {
+      toast.info('Não há dados para exportar');
+      return;
+    }
     const headers = ['#', 'Vendedor', 'Vendas', 'Valor Bruto', 'Valor Líquido', 'Meta diária', '%'];
     const rows = vendedores.map((v) => [
       v.posicao,
@@ -303,12 +317,17 @@
   }
 
   function handleExportSeguro() {
-    if (vendedores.length === 0) { toast.info('Não há dados para exportar'); return; }
+    if (vendedores.length === 0) {
+      toast.info('Não há dados para exportar');
+      return;
+    }
     const headers = ['#', 'Vendedor', 'Meta seguro', 'Seguro Viagem', 'Meta diária', '%'];
     const rows = vendedores.map((v) => [
       v.posicao,
       v.vendedor_nome,
-      Number(v.meta_seguro || 0).toFixed(2).replace('.', ','),
+      Number(v.meta_seguro || 0)
+        .toFixed(2)
+        .replace('.', ','),
       v.total_seguro.toFixed(2).replace('.', ','),
       getMetaDiariaSeguro(v).toFixed(2).replace('.', ','),
       Number(v.alcance_meta_seguro || 0).toFixed(1) + '%'
@@ -346,18 +365,21 @@
     }));
 
   // Ranking: filtro somente por mês
-  $: showRankingPodio = !$permissoes.ready || $permissoes.isSystemAdmin || $permissoes.isMaster || $permissoes.isGestor;
+  $: showRankingPodio =
+    !$permissoes.ready || $permissoes.isSystemAdmin || $permissoes.isMaster || $permissoes.isGestor;
   $: showBuscaRanking = true;
   $: showExportRanking = !$permissoes.ready || !$permissoes.isVendedor;
   $: diasRestantesNoMes = getDiasRestantesNoMes();
   $: showPodioTop3 = showRankingPodio;
   $: mesSelecionadoLabel = formatMonthLabel(mesSelecionado);
 
-  $: atingimentoVendasPct = resumo.meta_mes > 0 ? (resumo.total_receita / resumo.meta_mes) * 100 : 0;
+  $: atingimentoVendasPct =
+    resumo.meta_mes > 0 ? (resumo.total_receita / resumo.meta_mes) * 100 : 0;
   $: atingimentoVendasPctClamped = clamp(atingimentoVendasPct, 0, 100);
   $: atingimentoVendasColor = getAtingimentoColor(atingimentoVendasPct);
 
-  $: atingimentoSeguroPct = resumo.meta_seguro > 0 ? (resumo.total_seguro / resumo.meta_seguro) * 100 : 0;
+  $: atingimentoSeguroPct =
+    resumo.meta_seguro > 0 ? (resumo.total_seguro / resumo.meta_seguro) * 100 : 0;
   $: atingimentoSeguroPctClamped = clamp(atingimentoSeguroPct, 0, 100);
   $: atingimentoSeguroColor = getAtingimentoColor(atingimentoSeguroPct);
 </script>
@@ -376,10 +398,7 @@
         { label: 'Voltar', href: '/relatorios', variant: 'secondary', icon: ArrowLeft }
       ]
     : [{ label: 'Voltar', href: '/relatorios', variant: 'secondary', icon: ArrowLeft }]}
-  breadcrumbs={[
-    { label: 'Relatórios', href: '/relatorios' },
-    { label: 'Ranking de Vendas' }
-  ]}
+  breadcrumbs={[{ label: 'Relatórios', href: '/relatorios' }, { label: 'Ranking de Vendas' }]}
 />
 
 <!-- Mobile: botão de filtros -->
@@ -388,7 +407,7 @@
     <SlidersHorizontal size={16} class="mr-2" />
     Filtros
     {#if mesSelecionado !== defaultRange.month}
-      <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-financeiro-500"></span>
+      <span class="bg-financeiro-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
     {/if}
   </Button>
 </div>
@@ -427,7 +446,10 @@
 </Card>
 
 {#if errorMessage}
-  <div role="alert" class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+  <div
+    role="alert"
+    class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+  >
     {errorMessage}
   </div>
 {/if}
@@ -435,7 +457,9 @@
 <!-- KPIs -->
 <KPIGrid className="mb-6" columns={5}>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500"><Trophy size={20} /></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+      <Trophy size={20} />
+    </div>
     <div>
       <p class="text-sm font-medium text-slate-500">Meta do mês</p>
       <p class="text-2xl font-bold text-slate-900">{formatCurrency(resumo.meta_mes)}</p>
@@ -443,7 +467,9 @@
   </div>
 
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500"><TrendingUp size={20} /></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
+      <TrendingUp size={20} />
+    </div>
     <div class="w-full">
       <p class="text-sm font-medium text-slate-500">Valor total de vendas</p>
       <p class="text-2xl font-bold text-slate-900">{formatCurrency(resumo.total_receita)}</p>
@@ -464,7 +490,9 @@
   </div>
 
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-500"><TrendingUp size={20} /></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-500">
+      <TrendingUp size={20} />
+    </div>
     <div class="w-full">
       <p class="text-sm font-medium text-slate-500">Total de seguro</p>
       <p class="text-2xl font-bold text-slate-900">{formatCurrency(resumo.total_seguro)}</p>
@@ -476,7 +504,9 @@
               style={`width:${atingimentoSeguroPctClamped.toFixed(1)}%;background:${atingimentoSeguroColor};`}
             ></div>
           </div>
-          <p class="mt-0.5 text-xs text-slate-500">{atingimentoSeguroPct.toFixed(1)}% da meta de seguro</p>
+          <p class="mt-0.5 text-xs text-slate-500">
+            {atingimentoSeguroPct.toFixed(1)}% da meta de seguro
+          </p>
         </div>
       {:else}
         <p class="mt-0.5 text-xs text-slate-500">Sem meta de seguro cadastrada</p>
@@ -485,7 +515,9 @@
   </div>
 
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500"><TrendingDown size={20} /></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
+      <TrendingDown size={20} />
+    </div>
     <div>
       <p class="text-sm font-medium text-slate-500">Total de vendas</p>
       <p class="text-2xl font-bold text-slate-900">{resumo.total_vendas}</p>
@@ -493,7 +525,9 @@
   </div>
 
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500"><Minus size={20} /></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
+      <Minus size={20} />
+    </div>
     <div>
       <p class="text-sm font-medium text-slate-500">Total de recibos</p>
       <p class="text-2xl font-bold text-slate-900">{resumo.total_recibos}</p>
@@ -503,18 +537,33 @@
 
 <!-- Pódio top 3 -->
 {#if showPodioTop3 && !loading && top3.length > 0}
-  <div class="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+  <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
     {#each top3 as v, i}
-      <div class="vtur-card p-5 text-center border-t-4
-        {i === 0 ? 'border-t-amber-400 bg-amber-50/40' : i === 1 ? 'border-t-slate-400 bg-slate-50/40' : 'border-t-orange-400 bg-orange-50/40'}">
+      <div
+        class="vtur-card border-t-4 p-5 text-center
+        {i === 0
+          ? 'border-t-amber-400 bg-amber-50/40'
+          : i === 1
+            ? 'border-t-slate-400 bg-slate-50/40'
+            : 'border-t-orange-400 bg-orange-50/40'}"
+      >
         <div class="mb-2 flex items-center justify-center gap-2">
-          <Trophy size={20} class="{i === 0 ? 'text-amber-500' : i === 1 ? 'text-slate-500' : 'text-orange-500'}" />
-          <span class="text-2xl font-black {i === 0 ? 'text-amber-600' : i === 1 ? 'text-slate-600' : 'text-orange-600'}">
+          <Trophy
+            size={20}
+            class={i === 0 ? 'text-amber-500' : i === 1 ? 'text-slate-500' : 'text-orange-500'}
+          />
+          <span
+            class="text-2xl font-black {i === 0
+              ? 'text-amber-600'
+              : i === 1
+                ? 'text-slate-600'
+                : 'text-orange-600'}"
+          >
             {v.posicao}º
           </span>
         </div>
-        <p class="font-semibold text-slate-900 truncate">{v.vendedor_nome}</p>
-        <p class="mt-1 text-lg font-bold text-financeiro-700">{formatCurrency(v.total_receita)}</p>
+        <p class="truncate font-semibold text-slate-900">{v.vendedor_nome}</p>
+        <p class="text-financeiro-700 mt-1 text-lg font-bold">{formatCurrency(v.total_receita)}</p>
         <div class="mt-2 flex justify-center gap-3 text-xs text-slate-500">
           <span>{v.total_vendas} venda(s)</span>
           <span>·</span>
@@ -524,7 +573,7 @@
           <div class="mt-3">
             <div class="h-1.5 w-full rounded-full bg-slate-200">
               <div
-                class="h-1.5 rounded-full bg-financeiro-500 transition-all"
+                class="bg-financeiro-500 h-1.5 rounded-full transition-all"
                 style="width: {Math.min(v.alcance_meta, 100).toFixed(1)}%"
               ></div>
             </div>
@@ -566,7 +615,12 @@
 />
 
 <!-- Tabela de meta de seguro -->
-<Card header="Ranking de meta de seguro viagem" color="financeiro" padding="none" class="mt-6 mb-3" />
+<Card
+  header="Ranking de meta de seguro viagem"
+  color="financeiro"
+  padding="none"
+  class="mt-6 mb-3"
+/>
 
 <DataTable
   columns={columnsSeguro}

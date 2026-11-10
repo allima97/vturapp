@@ -3,7 +3,7 @@ import {
   normalizeConciliacaoStatus,
   resolveConciliacaoStatus,
   isConciliacaoEfetivada,
-  buildConciliacaoMetrics,
+  buildConciliacaoMetrics
 } from '$lib/conciliacao/business';
 
 // Re-export para backward-compat com importadores desta função
@@ -12,7 +12,6 @@ export { normalizeConciliacaoStatus, resolveConciliacaoStatus, isConciliacaoEfet
 // ---------------------------------------------------------------------------
 // HELPERS LOCAIS (não fazem parte do business.ts mas são usados aqui)
 // ---------------------------------------------------------------------------
-
 
 type LegacyConciliacaoRow = {
   id?: string | null;
@@ -44,7 +43,11 @@ type LegacyOptionRow = {
 };
 
 export function normalizeStatus(value?: string | null) {
-  return String(value || '').trim().toUpperCase() || 'OUTRO';
+  return (
+    String(value || '')
+      .trim()
+      .toUpperCase() || 'OUTRO'
+  );
 }
 
 function buildCleanIdSet(rows: LegacyOptionRow[]) {

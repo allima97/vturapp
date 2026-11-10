@@ -77,11 +77,17 @@ export function moveItem<T extends string>(items: T[], id: T, direction: 'up' | 
   return next;
 }
 
-export function createVisibilityMap<T extends string>(ids: T[], visible = true): Record<T, boolean> {
-  return ids.reduce((acc, id) => {
-    acc[id] = visible;
-    return acc;
-  }, {} as Record<T, boolean>);
+export function createVisibilityMap<T extends string>(
+  ids: T[],
+  visible = true
+): Record<T, boolean> {
+  return ids.reduce(
+    (acc, id) => {
+      acc[id] = visible;
+      return acc;
+    },
+    {} as Record<T, boolean>
+  );
 }
 
 export const DEFAULT_WIDGET_VISIBILITY: Record<DashboardWidgetId, boolean> = {

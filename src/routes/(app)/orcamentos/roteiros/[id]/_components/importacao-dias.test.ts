@@ -16,10 +16,22 @@ describe('roteiro: importação de dias', () => {
   });
 
   it('texto colado vira dias na ordem (comportamento atual registrado)', () => {
-    const texto = ['Itinerário', 'Dia 1 - Chegada em Lisboa', 'Traslado ao hotel.', 'Dia 2 - Sintra', 'Passeio de dia inteiro.'].join('\n');
+    const texto = [
+      'Itinerário',
+      'Dia 1 - Chegada em Lisboa',
+      'Traslado ao hotel.',
+      'Dia 2 - Sintra',
+      'Passeio de dia inteiro.'
+    ].join('\n');
     expect(parseDiasImportText(texto)).toEqual([
-      { cidade: 'Chegada em Lisboa', data: '', descricao: 'Traslado ao hotel.', ordem: 0, percurso: '' },
-      { cidade: 'Sintra', data: '', descricao: 'Passeio de dia inteiro.', ordem: 1, percurso: '' },
+      {
+        cidade: 'Chegada em Lisboa',
+        data: '',
+        descricao: 'Traslado ao hotel.',
+        ordem: 0,
+        percurso: ''
+      },
+      { cidade: 'Sintra', data: '', descricao: 'Passeio de dia inteiro.', ordem: 1, percurso: '' }
     ]);
   });
 });

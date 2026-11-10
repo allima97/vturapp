@@ -1,16 +1,16 @@
 <script lang="ts">
-  import { browser } from "$app/environment";
-  import PageHeader from "$lib/components/ui/PageHeader.svelte";
-  import Card from "$lib/components/ui/Card.svelte";
-  import Button from "$lib/components/ui/Button.svelte";
-  import LoadingState from "$lib/components/ui/LoadingState.svelte";
-  import { supabase } from "$lib/db/supabase";
-  import { ApiError, apiFetch, isCanceledApiError } from "$lib/services/api";
-  import { toUserMessage } from "$lib/utils/errors";
-  import { createLoadGuard } from "$lib/utils/loadGuard";
+  import { browser } from '$app/environment';
+  import PageHeader from '$lib/components/ui/PageHeader.svelte';
+  import Card from '$lib/components/ui/Card.svelte';
+  import Button from '$lib/components/ui/Button.svelte';
+  import LoadingState from '$lib/components/ui/LoadingState.svelte';
+  import { browserData as dados } from '$lib/db/browserData';
+  import { ApiError, apiFetch, isCanceledApiError } from '$lib/services/api';
+  import { toUserMessage } from '$lib/utils/errors';
+  import { createLoadGuard } from '$lib/utils/loadGuard';
 
-  let sessionInfo = "";
-  let sessionDetails = "";
+  let sessionInfo = '';
+  let sessionDetails = '';
   let running = false;
   let hasRun = false;
   const diagnosticsGuard = createLoadGuard();
@@ -33,25 +33,24 @@
     apiTests = [];
 
     // Test session
-    const { data: sessionData, error: sessionError } =
-      await supabase.auth.getSession();
+    const { data: sessionData, error: sessionError } = await dados.auth.getSession();
 
     if (sessionError) {
       sessionInfo = `Erro: ${sessionError.message}`;
     } else if (sessionData.session) {
-      sessionInfo = `OK - Usuario: ${sessionData.session.user?.email || "desconhecido"}`;
+      sessionInfo = `OK - Usuario: ${sessionData.session.user?.email || 'desconhecido'}`;
     } else {
-      sessionInfo = "Nenhuma sessao encontrada";
+      sessionInfo = 'Nenhuma sessao encontrada';
     }
 
     // Test APIs
     const apis = [
-      "/api/v1/health",
-      "/api/v1/relatorios/base",
-      "/api/v1/relatorios/vendas",
-      "/api/v1/financeiro/comissoes/calcular",
-      "/api/v1/parametros/metas",
-      "/api/v1/roteiros",
+      '/api/v1/health',
+      '/api/v1/relatorios/base',
+      '/api/v1/relatorios/vendas',
+      '/api/v1/financeiro/comissoes/calcular',
+      '/api/v1/parametros/metas',
+      '/api/v1/roteiros'
     ];
 
     for (const api of apis) {
@@ -61,28 +60,28 @@
         const json = await apiFetch<DiagnosticApiResponse>(api, {
           redirectOnForbidden: false,
           redirectOnUnauthorized: false,
-          signal: request.signal,
+          signal: request.signal
         });
         if (!diagnosticsGuard.isCurrent(request.seq)) return;
         const time = Date.now() - start;
-        let detail = "";
+        let detail = '';
 
         if (json?.error) {
           detail = `Erro: ${json.error}`;
         } else if (json?.items !== undefined) {
           detail = `OK - ${json.items?.length || 0} itens`;
         } else {
-          detail = "OK";
+          detail = 'OK';
         }
 
         apiTests = [
           ...apiTests,
           {
             name: api,
-            status: "OK",
+            status: 'OK',
             detail,
-            time,
-          },
+            time
+          }
         ];
       } catch (err) {
         if (isCanceledApiError(err)) return;
@@ -91,10 +90,10 @@
           ...apiTests,
           {
             name: api,
-            status: isApiError ? `Erro ${err.status}` : "Falha",
-            detail: toUserMessage(err, "Falha ao executar diagnóstico."),
-            time: Date.now() - start,
-          },
+            status: isApiError ? `Erro ${err.status}` : 'Falha',
+            detail: toUserMessage(err, 'Falha ao executar diagnóstico.'),
+            time: Date.now() - start
+          }
         ];
       }
     }
@@ -115,12 +114,14 @@
 <div class="space-y-6">
   <Card header="Sessao do Usuario" color="financeiro">
     <div class="space-y-2">
-        {#if sessionInfo}
-          <p><strong>Status:</strong> {sessionInfo}</p>
+      {#if sessionInfo}
+        <p><strong>Status:</strong> {sessionInfo}</p>
       {:else if running}
         <LoadingState compact={true} />
       {:else}
-        <p class="text-sm text-slate-500">Clique em "Executar Diagnostico" para validar a sessão.</p>
+        <p class="text-sm text-slate-500">
+          Clique em "Executar Diagnostico" para validar a sessão.
+        </p>
       {/if}
       {#if sessionDetails}
         <p class="text-sm text-slate-600">{sessionDetails}</p>
@@ -129,9 +130,9 @@
   </Card>
 
   <Card header="Teste de APIs" color="financeiro">
-    <table class="w-full text-sm table-mobile-cards">
+    <table class="table-mobile-cards w-full text-sm">
       <thead>
-        <tr class="text-left border-b">
+        <tr class="border-b text-left">
           <th class="pb-2">API</th>
           <th class="pb-2">Status</th>
           <th class="pb-2">Detalhes</th>
@@ -143,7 +144,7 @@
           <tr class="border-b border-slate-100">
             <td class="py-2 font-mono text-xs">{test.name}</td>
             <td class="py-2">
-              <span class:text-green-600={test.status === "OK"}>
+              <span class:text-green-600={test.status === 'OK'}>
                 {test.status}
               </span>
             </td>
@@ -154,7 +155,9 @@
         {#if apiTests.length === 0}
           <tr>
             <td colspan="4" class="py-4 text-center text-slate-500">
-              {hasRun ? "Nenhum resultado disponível" : "Clique em \"Executar Diagnostico\" para testar"}
+              {hasRun
+                ? 'Nenhum resultado disponível'
+                : 'Clique em "Executar Diagnostico" para testar'}
             </td>
           </tr>
         {/if}
@@ -172,11 +175,11 @@
     <div class="space-y-2 text-sm">
       <p>
         <strong>User Agent:</strong>
-        <span class="font-mono">{browser ? navigator.userAgent : "Indisponivel no servidor"}</span>
+        <span class="font-mono">{browser ? navigator.userAgent : 'Indisponivel no servidor'}</span>
       </p>
       <p>
         <strong>Cookies Habilitados:</strong>
-        {browser && navigator.cookieEnabled ? "Sim" : "Nao"}
+        {browser && navigator.cookieEnabled ? 'Sim' : 'Nao'}
       </p>
     </div>
   </Card>

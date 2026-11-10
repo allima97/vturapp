@@ -1,17 +1,49 @@
 import { Hono } from 'hono';
 import type { ApiEnv } from '../../types';
-import { handleParametrosCambiosGet, handleParametrosCambiosPost, handleParametrosCambiosDelete } from './cambios';
-import { handleParametrosCommissionRulesGet, handleParametrosCommissionRulesPost, handleParametrosCommissionRulesPatch, handleParametrosCommissionRulesDelete } from './commission-rules';
+import {
+  handleParametrosCambiosGet,
+  handleParametrosCambiosPost,
+  handleParametrosCambiosDelete
+} from './cambios';
+import {
+  handleParametrosCommissionRulesGet,
+  handleParametrosCommissionRulesPost,
+  handleParametrosCommissionRulesPatch,
+  handleParametrosCommissionRulesDelete
+} from './commission-rules';
 import { handleParametrosEmpresaGet, handleParametrosEmpresaPatch } from './empresa';
 import { handleParametrosEquipeGet, handleParametrosEquipePost } from './equipe';
 import { handleParametrosEscalasGet, handleParametrosEscalasPost } from './escalas';
-import { handleParametrosMetasGet, handleParametrosMetasPost, handleParametrosMetasDelete } from './metas';
-import { handleParametrosNaoComissionaveisGet, handleParametrosNaoComissionaveisPost, handleParametrosNaoComissionaveisDelete } from './nao-comissionaveis';
-import { handleParametrosOrcamentosPdfGet, handleParametrosOrcamentosPdfPost } from './orcamentos-pdf';
-import { handleParametrosRegrasProdutoGet, handleParametrosRegrasProdutoPost, handleParametrosRegrasProdutoDelete } from './regras-produto';
-import { handleParametrosRegrasProdutoPacoteGet, handleParametrosRegrasProdutoPacotePost, handleParametrosRegrasProdutoPacoteDelete } from './regras-produto-pacote';
+import {
+  handleParametrosMetasGet,
+  handleParametrosMetasPost,
+  handleParametrosMetasDelete
+} from './metas';
+import {
+  handleParametrosNaoComissionaveisGet,
+  handleParametrosNaoComissionaveisPost,
+  handleParametrosNaoComissionaveisDelete
+} from './nao-comissionaveis';
+import {
+  handleParametrosOrcamentosPdfGet,
+  handleParametrosOrcamentosPdfPost
+} from './orcamentos-pdf';
+import {
+  handleParametrosRegrasProdutoGet,
+  handleParametrosRegrasProdutoPost,
+  handleParametrosRegrasProdutoDelete
+} from './regras-produto';
+import {
+  handleParametrosRegrasProdutoPacoteGet,
+  handleParametrosRegrasProdutoPacotePost,
+  handleParametrosRegrasProdutoPacoteDelete
+} from './regras-produto-pacote';
 import { handleParametrosSistemaGet, handleParametrosSistemaPost } from './sistema';
-import { handleParametrosTipoPacotesGet, handleParametrosTipoPacotesPost, handleParametrosTipoPacotesDelete } from './tipo-pacotes';
+import {
+  handleParametrosTipoPacotesGet,
+  handleParametrosTipoPacotesPost,
+  handleParametrosTipoPacotesDelete
+} from './tipo-pacotes';
 
 // /api/v1/parametros/* atendido pelo Hono (gerado por migrate_domain.py). Estáticas antes de '/:param'.
 export const parametrosRoutes = new Hono<ApiEnv>()

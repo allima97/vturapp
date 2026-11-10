@@ -10,17 +10,7 @@
     FieldTextarea,
     PageHeader
   } from '$lib/components/ui';
-  import {
-    ArrowLeft,
-    Calendar,
-    FileText,
-    Mail,
-    MapPin,
-    Phone,
-    Save,
-    Tag,
-    User
-  } from '$lib/icons';
+  import { ArrowLeft, Calendar, FileText, Mail, MapPin, Phone, Save, Tag, User } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { ApiError, apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { toUserMessage } from '$lib/utils/errors';
@@ -104,7 +94,11 @@
     const request = cepGuard.next();
     try {
       cepStatus = 'Buscando CEP...';
-      const data = await apiGet<CepResponse>('/api/v1/enderecos/cep', { cep: digits }, request.signal);
+      const data = await apiGet<CepResponse>(
+        '/api/v1/enderecos/cep',
+        { cep: digits },
+        request.signal
+      );
       if (!cepGuard.isCurrent(request.seq)) return;
       if (data?.erro) {
         throw new Error('CEP nao encontrado.');
@@ -136,7 +130,10 @@
     loading = true;
 
     try {
-      const payload = await apiPost<{ data?: { id?: string } }>('/api/v1/clientes/create', buildClientePayload(formData));
+      const payload = await apiPost<{ data?: { id?: string } }>(
+        '/api/v1/clientes/create',
+        buildClientePayload(formData)
+      );
 
       toast.success('Cliente cadastrado com sucesso.');
       const createdId = String(payload?.data?.id || '').trim();
@@ -166,10 +163,7 @@
 <PageHeader
   title="Novo Cliente"
   subtitle="Cadastro completo com dados pessoais, contato, endereco, classificacao e notas operacionais."
-  breadcrumbs={[
-    { label: 'Clientes', href: '/clientes' },
-    { label: 'Novo Cliente' }
-  ]}
+  breadcrumbs={[{ label: 'Clientes', href: '/clientes' }, { label: 'Novo Cliente' }]}
 />
 
 <form on:submit|preventDefault={handleSubmit} class="space-y-6">
@@ -180,7 +174,8 @@
         value={formData.tipo_pessoa}
         options={tipoPessoaOptions}
         class_name="lg:col-span-1"
-        on:change={(event) => setTipoPessoa((event.currentTarget as HTMLInputElement).value as 'PF' | 'PJ')}
+        on:change={(event) =>
+          setTipoPessoa((event.currentTarget as HTMLInputElement).value as 'PF' | 'PJ')}
       />
 
       <FieldInput
@@ -190,7 +185,9 @@
         icon={User}
         required={true}
         error={errors.nome}
-        placeholder={formData.tipo_pessoa === 'PJ' ? 'Razao social do cliente' : 'Nome completo do cliente'}
+        placeholder={formData.tipo_pessoa === 'PJ'
+          ? 'Razao social do cliente'
+          : 'Nome completo do cliente'}
         class_name="lg:col-span-2"
       />
 
@@ -209,11 +206,19 @@
         id="rg"
         label={formData.tipo_pessoa === 'PJ' ? 'Inscricao / IE' : 'RG'}
         bind:value={formData.rg}
-        placeholder={formData.tipo_pessoa === 'PJ' ? 'Documento complementar' : 'Documento de identidade'}
+        placeholder={formData.tipo_pessoa === 'PJ'
+          ? 'Documento complementar'
+          : 'Documento de identidade'}
       />
 
       {#if formData.tipo_pessoa === 'PF'}
-        <FieldInput id="nascimento" label="Data de nascimento" type="date" bind:value={formData.nascimento} icon={Calendar} />
+        <FieldInput
+          id="nascimento"
+          label="Data de nascimento"
+          type="date"
+          bind:value={formData.nascimento}
+          icon={Calendar}
+        />
 
         <FieldSelect
           id="genero"
@@ -325,7 +330,12 @@
 
       <FieldInput id="numero" label="Numero" bind:value={formData.numero} placeholder="123" />
 
-      <FieldInput id="complemento" label="Complemento" bind:value={formData.complemento} placeholder="Apto, sala, bloco" />
+      <FieldInput
+        id="complemento"
+        label="Complemento"
+        bind:value={formData.complemento}
+        placeholder="Apto, sala, bloco"
+      />
 
       <FieldInput id="cidade" label="Cidade" bind:value={formData.cidade} />
 
@@ -354,7 +364,7 @@
       <ArrowLeft size={16} class="mr-2" />
       Cancelar
     </Button>
-    <Button type="submit" variant="primary" color="clientes" loading={loading}>
+    <Button type="submit" variant="primary" color="clientes" {loading}>
       <Save size={16} class="mr-2" />
       Salvar cliente
     </Button>

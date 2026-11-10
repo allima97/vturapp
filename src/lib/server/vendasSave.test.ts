@@ -1,4 +1,4 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DataClient } from '$lib/server/data';
 import { describe, expect, it } from 'vitest';
 
 import { ensureReciboReservaUnicos } from '$lib/server/vendasSave';
@@ -38,7 +38,10 @@ class QueryMock {
     onfulfilled?: ((value: QueryResult) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
   ) {
-    return Promise.resolve(this.results[this.table] || { data: [], error: null }).then(onfulfilled, onrejected);
+    return Promise.resolve(this.results[this.table] || { data: [], error: null }).then(
+      onfulfilled,
+      onrejected
+    );
   }
 }
 
@@ -47,7 +50,7 @@ function createClientMock(results: Record<string, QueryResult>) {
     from(table: string) {
       return new QueryMock(table, results);
     }
-  } as unknown as Pick<SupabaseClient, 'from'>;
+  } as unknown as Pick<DataClient, 'from'>;
 }
 
 describe('ensureReciboReservaUnicos', () => {

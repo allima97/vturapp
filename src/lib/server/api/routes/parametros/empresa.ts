@@ -1,4 +1,4 @@
-import { VTUR_LOGO_PATH } from "$lib/brand";
+import { VTUR_LOGO_PATH } from '$lib/brand';
 // Migrado para Hono de src/routes/api/v1/parametros/empresa/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import type { RequestEvent } from '@sveltejs/kit';
@@ -15,7 +15,15 @@ import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 
 const MAX_PARAMETROS_EMPRESA_BODY_BYTES = 64 * 1024;
-const EMPRESA_ALLOWED_UPDATE_FIELDS = ['nome_empresa', 'nome_fantasia', 'cnpj', 'telefone', 'endereco', 'cidade', 'estado'];
+const EMPRESA_ALLOWED_UPDATE_FIELDS = [
+  'nome_empresa',
+  'nome_fantasia',
+  'cnpj',
+  'telefone',
+  'endereco',
+  'cidade',
+  'estado'
+];
 type EmpresaUpdateField = (typeof EMPRESA_ALLOWED_UPDATE_FIELDS)[number];
 type EmpresaRequestBody = Partial<Record<EmpresaUpdateField, unknown>>;
 type EmpresaUpdatePayload = Partial<Record<EmpresaUpdateField, unknown | null>>;
@@ -31,7 +39,11 @@ export async function handleParametrosEmpresaGet(event: RequestEvent) {
     }
 
     const companyId = scope.companyId;
-    if (!companyId) return json({ error: 'Usuário não vinculado a uma empresa.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!companyId)
+      return json(
+        { error: 'Usuário não vinculado a uma empresa.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
 
     // Identidade visual padronizada independentemente das configurações antigas.
     const { data, error: queryError } = await client
@@ -40,9 +52,9 @@ export async function handleParametrosEmpresaGet(event: RequestEvent) {
       .eq('id', companyId)
       .maybeSingle();
 
-
     if (queryError) throw queryError;
-    if (!data) return json({ error: 'Empresa não encontrada.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!data)
+      return json({ error: 'Empresa não encontrada.' }, { status: 404, headers: NO_STORE_HEADERS });
 
     return json({ ...data, logo_url: VTUR_LOGO_PATH }, { headers: DYNAMIC_READ_HEADERS });
   } catch (err) {
@@ -66,7 +78,11 @@ export async function handleParametrosEmpresaPatch(event: RequestEvent) {
     }
 
     const companyId = scope.companyId;
-    if (!companyId) return json({ error: 'Usuário não vinculado a uma empresa.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!companyId)
+      return json(
+        { error: 'Usuário não vinculado a uma empresa.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
 
     const body =
       bodyResult.data && typeof bodyResult.data === 'object'
@@ -81,10 +97,16 @@ export async function handleParametrosEmpresaPatch(event: RequestEvent) {
     }
 
     if (Object.keys(payload).length === 0) {
-      return json({ error: 'Nenhum campo para atualizar.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Nenhum campo para atualizar.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
-    const { error: updateError } = await client.from('companies').update(payload).eq('id', companyId);
+    const { error: updateError } = await client
+      .from('companies')
+      .update(payload)
+      .eq('id', companyId);
     if (updateError) throw updateError;
 
     invalidateUserReadModels({

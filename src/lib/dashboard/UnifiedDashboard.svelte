@@ -9,8 +9,16 @@
   import LoadingState from '$lib/components/ui/LoadingState.svelte';
   import KPIGrid from '$lib/components/kpis/KPIGrid.svelte';
   import ChartJS from '$lib/components/charts/ChartJS.svelte';
-  import { addDaysISODate, monthRangeFromKey, parseISODateParts, todayISODateLocal } from '$lib/date';
-  import { formatDate as formatDateValue, formatDateTime as formatDateTimeValue } from '$lib/utils/formatters';
+  import {
+    addDaysISODate,
+    monthRangeFromKey,
+    parseISODateParts,
+    todayISODateLocal
+  } from '$lib/date';
+  import {
+    formatDate as formatDateValue,
+    formatDateTime as formatDateTimeValue
+  } from '$lib/utils/formatters';
   import { toUserMessage } from '$lib/utils/errors';
   import {
     TrendingUp,
@@ -20,7 +28,6 @@
     FileText,
     Award,
     SlidersHorizontal,
-
     MapPin,
     Gift,
     Eye,
@@ -83,7 +90,11 @@
     status_negociacao?: string | null;
     total: number | null;
     cliente?: { id: string; nome?: string | null } | null;
-    quote_item?: Array<{ title?: string | null; product_name?: string | null; city_name?: string | null }> | null;
+    quote_item?: Array<{
+      title?: string | null;
+      product_name?: string | null;
+      city_name?: string | null;
+    }> | null;
   };
 
   type Aniversariante = {
@@ -136,7 +147,12 @@
     vendasAgg?: VendasAgg | null;
     metas?: Meta[] | null;
     orcamentos?: Orcamento[] | null;
-    userCtx?: { nome: string | null; papel: string; vendedorIds: string[]; vendedorCount?: number } | null;
+    userCtx?: {
+      nome: string | null;
+      papel: string;
+      vendedorIds: string[];
+      vendedorCount?: number;
+    } | null;
     podeVerOperacao?: boolean | null;
     podeVerConsultoria?: boolean | null;
     widgetPrefs?: WidgetPrefRow[] | null;
@@ -188,9 +204,10 @@
   let errorMessage: string | null = null;
   let showCustomize = false;
   let savingCustomize = false;
-  let DashboardCustomizeDialogComponent: typeof import('./DashboardCustomizeDialog.svelte').default | null = null;
+  let DashboardCustomizeDialogComponent:
+    | typeof import('./DashboardCustomizeDialog.svelte').default
+    | null = null;
   let customizeDialogLoadPromise: Promise<boolean> | null = null;
-
 
   function getDefaultPeriod() {
     const today = todayISODateLocal();
@@ -233,7 +250,12 @@
   };
   let metas: Meta[] = [];
   let orcamentos: Orcamento[] = [];
-  let userCtx: { nome: string | null; papel: string; vendedorIds: string[]; vendedorCount?: number } | null = null;
+  let userCtx: {
+    nome: string | null;
+    papel: string;
+    vendedorIds: string[];
+    vendedorCount?: number;
+  } | null = null;
   let podeVerOperacao = false;
   let podeVerConsultoria = false;
   let assinaturaUsuario = 'André Lima';
@@ -246,8 +268,16 @@
 
   // Modal aviso aniversariante
   let showAvisoAniversario = false;
-  let avisoAniv: { id: string; nome: string; telefone: string; email: string; nascimento: string | null } | null = null;
-  let ModalAvisoClienteComponent: typeof import('$lib/components/modais/ModalAvisoCliente.svelte').default | null = null;
+  let avisoAniv: {
+    id: string;
+    nome: string;
+    telefone: string;
+    email: string;
+    nascimento: string | null;
+  } | null = null;
+  let ModalAvisoClienteComponent:
+    | typeof import('$lib/components/modais/ModalAvisoCliente.svelte').default
+    | null = null;
   let modalAvisoLoadPromise: Promise<boolean> | null = null;
 
   async function ensureModalAvisoLoaded() {
@@ -461,7 +491,8 @@
   $: metaTotal = metas.reduce((sum, m) => sum + Number(m.meta_geral || 0), 0);
   $: metaSeguroTotal = metas.reduce((sum, m) => sum + Number(m.meta_diferenciada || 0), 0);
   $: atingimentoPct = metaTotal > 0 ? (vendasAgg.totalVendas / metaTotal) * 100 : 0;
-  $: atingimentoSeguroPct = metaSeguroTotal > 0 ? (vendasAgg.totalSeguro / metaSeguroTotal) * 100 : 0;
+  $: atingimentoSeguroPct =
+    metaSeguroTotal > 0 ? (vendasAgg.totalSeguro / metaSeguroTotal) * 100 : 0;
   $: atingimentoPctClamped = clamp(atingimentoPct, 0, 100);
   $: atingimentoSeguroPctClamped = clamp(atingimentoSeguroPct, 0, 100);
   $: metaAtingimentoColor = getMetaAtingimentoColor(atingimentoPctClamped);
@@ -485,37 +516,49 @@
   })();
 
   $: activityFeed = [
-    ...followUps.slice(0, 2).map((item) => ({
-      id: `fu-${item.id}`,
-      titulo: item.destino_nome ? `Follow-up ${item.destino_nome}` : 'Follow-up pendente',
-      subtitulo: item.cliente_nome || 'Cliente',
-      tempo: formatRelativeTime(item.updated_at || item.data_fim || item.data_embarque),
-      icon: 'followup'
-    }) as ActivityItem),
-    ...orcamentos.slice(0, 2).map((item) => ({
-      id: `orc-${item.id}`,
-      titulo: 'Orcamento enviado',
-      subtitulo: item.cliente?.nome || 'Cliente',
-      tempo: formatRelativeTime(item.created_at),
-      icon: 'orcamento'
-    }) as ActivityItem),
-    ...viagens.slice(0, 2).map((item) => ({
-      id: `v-${item.id}`,
-      titulo: 'Viagem confirmada',
-      subtitulo: item.cliente_nome || '-',
-      tempo: formatRelativeTime(item.data_embarque),
-      icon: 'viagem'
-    }) as ActivityItem),
+    ...followUps.slice(0, 2).map(
+      (item) =>
+        ({
+          id: `fu-${item.id}`,
+          titulo: item.destino_nome ? `Follow-up ${item.destino_nome}` : 'Follow-up pendente',
+          subtitulo: item.cliente_nome || 'Cliente',
+          tempo: formatRelativeTime(item.updated_at || item.data_fim || item.data_embarque),
+          icon: 'followup'
+        }) as ActivityItem
+    ),
+    ...orcamentos.slice(0, 2).map(
+      (item) =>
+        ({
+          id: `orc-${item.id}`,
+          titulo: 'Orcamento enviado',
+          subtitulo: item.cliente?.nome || 'Cliente',
+          tempo: formatRelativeTime(item.created_at),
+          icon: 'orcamento'
+        }) as ActivityItem
+    ),
+    ...viagens.slice(0, 2).map(
+      (item) =>
+        ({
+          id: `v-${item.id}`,
+          titulo: 'Viagem confirmada',
+          subtitulo: item.cliente_nome || '-',
+          tempo: formatRelativeTime(item.data_embarque),
+          icon: 'viagem'
+        }) as ActivityItem
+    ),
     ...aniversariantes
       .filter((item) => formatBirthdayContext(item.nascimento) === 'Hoje')
       .slice(0, 1)
-      .map((item) => ({
-        id: `aniv-${item.id}`,
-        titulo: 'Aniversario hoje',
-        subtitulo: item.nome,
-        tempo: 'Hoje',
-        icon: 'aniversario'
-      }) as ActivityItem)
+      .map(
+        (item) =>
+          ({
+            id: `aniv-${item.id}`,
+            titulo: 'Aniversario hoje',
+            subtitulo: item.nome,
+            tempo: 'Hoje',
+            icon: 'aniversario'
+          }) as ActivityItem
+      )
   ].slice(0, 6);
 
   $: timelineChartData = {
@@ -560,7 +603,9 @@
     return true;
   });
 
-  $: activeWidgetOrder = widgetOrder.filter((id) => availableWidgetIds.includes(id) && widgetVisible[id] !== false);
+  $: activeWidgetOrder = widgetOrder.filter(
+    (id) => availableWidgetIds.includes(id) && widgetVisible[id] !== false
+  );
   $: showViagensWidget = activeWidgetOrder.includes('viagens') && podeVerOperacao;
   $: showFollowupsWidget = activeWidgetOrder.includes('followups');
   $: showAniversariantesWidget = activeWidgetOrder.includes('aniversariantes');
@@ -568,8 +613,8 @@
   $: showOrcamentosWidget = activeWidgetOrder.includes('orcamentos');
   $: showVendedorFiltro = Boolean(
     userCtx &&
-      VENDEDOR_FILTER_ROLES.has(String(userCtx.papel || '').toUpperCase()) &&
-      vendedoresFiltro.length > 0
+    VENDEDOR_FILTER_ROLES.has(String(userCtx.papel || '').toUpperCase()) &&
+    vendedoresFiltro.length > 0
   );
 
   $: activeKpiOrder = kpiOrder.filter((id) => {
@@ -618,7 +663,10 @@
     const controller = new AbortController();
     baseAbortController = controller;
     try {
-      const data = await apiGet<{ empresas: { id: string; nome: string }[]; vendedores: { id: string; nome: string }[] }>(
+      const data = await apiGet<{
+        empresas: { id: string; nome: string }[];
+        vendedores: { id: string; nome: string }[];
+      }>(
         '/api/v1/dashboard/base',
         { empresa_id: empresaSelecionada || undefined },
         controller.signal,
@@ -627,7 +675,10 @@
       if (requestSeq !== baseRequestSeq) return;
       empresas = data.empresas || [];
       vendedoresFiltro = data.vendedores || [];
-      if (vendedorSelecionado && !vendedoresFiltro.some((item) => item.id === vendedorSelecionado)) {
+      if (
+        vendedorSelecionado &&
+        !vendedoresFiltro.some((item) => item.id === vendedorSelecionado)
+      ) {
         vendedorSelecionado = '';
       }
     } catch (err) {
@@ -653,7 +704,9 @@
         fallbackName?: string | null;
         nome_completo?: string | null;
       }>('/api/v1/profile/signature', undefined, undefined, 30_000);
-      const nome = String(payload?.signature || payload?.fallbackName || payload?.nome_completo || '').trim();
+      const nome = String(
+        payload?.signature || payload?.fallbackName || payload?.nome_completo || ''
+      ).trim();
       if (nome) assinaturaUsuario = nome;
     } catch {
       const fallback = String(userCtx?.nome || '').trim();
@@ -673,7 +726,11 @@
       return;
     }
 
-    const widgetStorage = readDashboardPrefsFromStorage('dashboard_widgets', DEFAULT_WIDGET_ORDER, DEFAULT_WIDGET_VISIBILITY);
+    const widgetStorage = readDashboardPrefsFromStorage(
+      'dashboard_widgets',
+      DEFAULT_WIDGET_ORDER,
+      DEFAULT_WIDGET_VISIBILITY
+    );
     const kpiStorage = readDashboardPrefsFromStorage('dashboard_kpis', DEFAULT_KPI_ORDER);
 
     if (widgetStorage) {
@@ -761,107 +818,138 @@
     const tasks: Array<Promise<void>> = [];
 
     if (shouldLoadWidget('aniversariantes') || shouldLoadActivityFeed()) {
-      tasks.push((async () => {
-        try {
-          const d = await apiGet<{ items: Aniversariante[] }>('/api/v1/dashboard/aniversariantes', {
-            ...params,
-            limit: 8
-          }, controller.signal, 60_000);
-          if (requestSeq !== operacionalRequestSeq) return;
-          aniversariantes = d.items || [];
-        } catch (err) {
-          if (isCanceledApiError(err) || requestSeq !== operacionalRequestSeq) return;
-          aniversariantes = [];
-        }
-      })());
+      tasks.push(
+        (async () => {
+          try {
+            const d = await apiGet<{ items: Aniversariante[] }>(
+              '/api/v1/dashboard/aniversariantes',
+              {
+                ...params,
+                limit: 8
+              },
+              controller.signal,
+              60_000
+            );
+            if (requestSeq !== operacionalRequestSeq) return;
+            aniversariantes = d.items || [];
+          } catch (err) {
+            if (isCanceledApiError(err) || requestSeq !== operacionalRequestSeq) return;
+            aniversariantes = [];
+          }
+        })()
+      );
     } else {
       aniversariantes = [];
     }
 
-    if ((shouldLoadWidget('viagens') || shouldLoadActivityFeed()) && (!userCtx || podeVerOperacao)) {
-      tasks.push((async () => {
-        try {
-          const d = await apiGet<{ items?: Viagem[]; proximas?: ViagemProximaRow[] }>('/api/v1/dashboard/viagens', {
-            ...params,
-            limit: 8,
-            em_andamento_limit: 8
-          }, controller.signal, 60_000);
-          if (requestSeq !== operacionalRequestSeq) return;
-          if (Array.isArray(d.items)) {
-            viagens = d.items;
-          } else {
-            viagens = (d.proximas || []).map((item) => ({
-              id: String(item.id || ''),
-              numero_venda: item.numero_venda ? String(item.numero_venda) : null,
-              data_embarque: item.data_embarque ? String(item.data_embarque) : null,
-              data_final: item.data_final ? String(item.data_final) : null,
-              cliente_nome: String(item.cliente_nome || 'Cliente'),
-              destino: item.destino ? String(item.destino) : null,
-              vendedor_nome: item.vendedor_nome ? String(item.vendedor_nome) : null,
-              status: 'confirmada'
-            }));
+    if (
+      (shouldLoadWidget('viagens') || shouldLoadActivityFeed()) &&
+      (!userCtx || podeVerOperacao)
+    ) {
+      tasks.push(
+        (async () => {
+          try {
+            const d = await apiGet<{ items?: Viagem[]; proximas?: ViagemProximaRow[] }>(
+              '/api/v1/dashboard/viagens',
+              {
+                ...params,
+                limit: 8,
+                em_andamento_limit: 8
+              },
+              controller.signal,
+              60_000
+            );
+            if (requestSeq !== operacionalRequestSeq) return;
+            if (Array.isArray(d.items)) {
+              viagens = d.items;
+            } else {
+              viagens = (d.proximas || []).map((item) => ({
+                id: String(item.id || ''),
+                numero_venda: item.numero_venda ? String(item.numero_venda) : null,
+                data_embarque: item.data_embarque ? String(item.data_embarque) : null,
+                data_final: item.data_final ? String(item.data_final) : null,
+                cliente_nome: String(item.cliente_nome || 'Cliente'),
+                destino: item.destino ? String(item.destino) : null,
+                vendedor_nome: item.vendedor_nome ? String(item.vendedor_nome) : null,
+                status: 'confirmada'
+              }));
+            }
+          } catch (err) {
+            if (isCanceledApiError(err) || requestSeq !== operacionalRequestSeq) return;
+            viagens = [];
           }
-        } catch (err) {
-          if (isCanceledApiError(err) || requestSeq !== operacionalRequestSeq) return;
-          viagens = [];
-        }
-      })());
+        })()
+      );
     } else {
       viagens = [];
     }
 
     if (shouldLoadWidget('followups') || shouldLoadActivityFeed()) {
-      tasks.push((async () => {
-        try {
-          const followUpRange = getFollowUpNotificationRange(periodoInicio, periodoFim);
-          if (!followUpRange) {
+      tasks.push(
+        (async () => {
+          try {
+            const followUpRange = getFollowUpNotificationRange(periodoInicio, periodoFim);
+            if (!followUpRange) {
+              followUps = [];
+              return;
+            }
+            const d = await apiGet<{ items: FollowUpRow[] }>(
+              '/api/v1/dashboard/follow-ups',
+              {
+                ...params,
+                ...followUpRange,
+                limit: 8
+              },
+              controller.signal,
+              60_000
+            );
+            if (requestSeq !== operacionalRequestSeq) return;
+            followUps = (d.items || []).map((item) => ({
+              id: String(item.id || ''),
+              venda_id: item.venda_id ? String(item.venda_id) : null,
+              cliente_id: item.cliente_id ? String(item.cliente_id) : null,
+              cliente_nome: String(item.cliente_nome || 'Cliente'),
+              cliente_whatsapp: item.cliente_whatsapp ? String(item.cliente_whatsapp) : null,
+              cliente_telefone: item.cliente_telefone ? String(item.cliente_telefone) : null,
+              destino_nome: item.destino_nome ? String(item.destino_nome) : null,
+              data_inicio: item.data_inicio ? String(item.data_inicio) : null,
+              data_fim: item.data_fim ? String(item.data_fim) : null,
+              data_embarque: item.data_embarque ? String(item.data_embarque) : null,
+              data_final: item.data_final ? String(item.data_final) : null,
+              follow_up_fechado: Boolean(item.follow_up_fechado),
+              updated_at: item.updated_at ? String(item.updated_at) : null
+            }));
+          } catch (err) {
+            if (isCanceledApiError(err) || requestSeq !== operacionalRequestSeq) return;
             followUps = [];
-            return;
           }
-          const d = await apiGet<{ items: FollowUpRow[] }>('/api/v1/dashboard/follow-ups', {
-            ...params,
-            ...followUpRange,
-            limit: 8
-          }, controller.signal, 60_000);
-          if (requestSeq !== operacionalRequestSeq) return;
-          followUps = (d.items || []).map((item) => ({
-            id: String(item.id || ''),
-            venda_id: item.venda_id ? String(item.venda_id) : null,
-            cliente_id: item.cliente_id ? String(item.cliente_id) : null,
-            cliente_nome: String(item.cliente_nome || 'Cliente'),
-            cliente_whatsapp: item.cliente_whatsapp ? String(item.cliente_whatsapp) : null,
-            cliente_telefone: item.cliente_telefone ? String(item.cliente_telefone) : null,
-            destino_nome: item.destino_nome ? String(item.destino_nome) : null,
-            data_inicio: item.data_inicio ? String(item.data_inicio) : null,
-            data_fim: item.data_fim ? String(item.data_fim) : null,
-            data_embarque: item.data_embarque ? String(item.data_embarque) : null,
-            data_final: item.data_final ? String(item.data_final) : null,
-            follow_up_fechado: Boolean(item.follow_up_fechado),
-            updated_at: item.updated_at ? String(item.updated_at) : null
-          }));
-        } catch (err) {
-          if (isCanceledApiError(err) || requestSeq !== operacionalRequestSeq) return;
-          followUps = [];
-        }
-      })());
+        })()
+      );
     } else {
       followUps = [];
     }
 
     if (shouldLoadWidget('consultorias') && (!userCtx || podeVerConsultoria)) {
-      tasks.push((async () => {
-        try {
-          const d = await apiGet<{ items: Consultoria[] }>('/api/v1/dashboard/consultorias', {
-            ...params,
-            limit: 8
-          }, controller.signal, 60_000);
-          if (requestSeq !== operacionalRequestSeq) return;
-          consultorias = d.items || [];
-        } catch (err) {
-          if (isCanceledApiError(err) || requestSeq !== operacionalRequestSeq) return;
-          consultorias = [];
-        }
-      })());
+      tasks.push(
+        (async () => {
+          try {
+            const d = await apiGet<{ items: Consultoria[] }>(
+              '/api/v1/dashboard/consultorias',
+              {
+                ...params,
+                limit: 8
+              },
+              controller.signal,
+              60_000
+            );
+            if (requestSeq !== operacionalRequestSeq) return;
+            consultorias = d.items || [];
+          } catch (err) {
+            if (isCanceledApiError(err) || requestSeq !== operacionalRequestSeq) return;
+            consultorias = [];
+          }
+        })()
+      );
     } else {
       consultorias = [];
     }
@@ -915,7 +1003,9 @@
 
   onMount(async () => {
     const params = new URLSearchParams(window.location.search);
-    const modoParam = String(params.get('modo') || '').trim().toLowerCase();
+    const modoParam = String(params.get('modo') || '')
+      .trim()
+      .toLowerCase();
     filtroPeriodoModo = modoParam === 'periodo' ? 'periodo' : 'mes';
 
     const inicioParam = params.get('inicio') || defaultPeriod.inicio;
@@ -935,7 +1025,11 @@
     empresaSelecionada = params.get('empresa_id') || '';
     vendedorSelecionado = params.get('vendedor_id') || '';
 
-    const widgetStorage = readDashboardPrefsFromStorage('dashboard_widgets', DEFAULT_WIDGET_ORDER, DEFAULT_WIDGET_VISIBILITY);
+    const widgetStorage = readDashboardPrefsFromStorage(
+      'dashboard_widgets',
+      DEFAULT_WIDGET_ORDER,
+      DEFAULT_WIDGET_VISIBILITY
+    );
     const kpiStorage = readDashboardPrefsFromStorage('dashboard_kpis', DEFAULT_KPI_ORDER);
     if (widgetStorage) {
       widgetOrder = widgetStorage.order;
@@ -950,12 +1044,7 @@
     // loadBase carrega apenas empresas/vendedores para os filtros de UI e
     // não é prerequisito dos dados principais — executar em série causava
     // um round-trip extra de rede antes de qualquer dado aparecer na tela.
-    await Promise.all([
-      loadBase(),
-      loadDashboard(),
-      loadOperacional(),
-      loadAssinaturaUsuario()
-    ]);
+    await Promise.all([loadBase(), loadDashboard(), loadOperacional(), loadAssinaturaUsuario()]);
     lastAppliedFilterKey = currentFilterKey;
     filtrosInicializados = true;
   });
@@ -988,13 +1077,21 @@
   color="financeiro"
   breadcrumbs={[{ label: 'Dashboard' }]}
   actions={[
-    { label: 'Personalizar', onClick: abrirPersonalizacaoDashboard, variant: 'secondary', icon: SlidersHorizontal },
+    {
+      label: 'Personalizar',
+      onClick: abrirPersonalizacaoDashboard,
+      variant: 'secondary',
+      icon: SlidersHorizontal
+    },
     { label: 'Ranking', onClick: goToRanking, variant: 'secondary', icon: BarChart2 }
   ]}
 />
 
 {#if !loading && readModelRebuiltAt}
-  {@const diffMin = Math.max(0, Math.round((Date.now() - new Date(readModelRebuiltAt).getTime()) / 60_000))}
+  {@const diffMin = Math.max(
+    0,
+    Math.round((Date.now() - new Date(readModelRebuiltAt).getTime()) / 60_000)
+  )}
   {@const quando =
     diffMin <= 1
       ? 'agora mesmo'
@@ -1004,7 +1101,10 @@
           ? `há ${Math.round(diffMin / 60)} h`
           : `há ${Math.round(diffMin / (60 * 24))} dias`}
   <p class="mb-2 text-right text-xs text-slate-500 dark:text-slate-400">
-    <time datetime={readModelRebuiltAt} title={new Date(readModelRebuiltAt).toLocaleString('pt-BR')}>
+    <time
+      datetime={readModelRebuiltAt}
+      title={new Date(readModelRebuiltAt).toLocaleString('pt-BR')}
+    >
       Dados atualizados {quando}
     </time>
   </p>
@@ -1025,10 +1125,28 @@
     />
 
     {#if filtroPeriodoModo === 'mes'}
-      <FieldInput id="dash-mes" label="Mês" type="month" bind:value={mesSelecionado} class_name="w-full" />
+      <FieldInput
+        id="dash-mes"
+        label="Mês"
+        type="month"
+        bind:value={mesSelecionado}
+        class_name="w-full"
+      />
     {:else}
-      <FieldInput id="dash-inicio" label="Data início" type="date" bind:value={periodoInicio} class_name="w-full" />
-      <FieldInput id="dash-fim" label="Data fim" type="date" bind:value={periodoFim} class_name="w-full" />
+      <FieldInput
+        id="dash-inicio"
+        label="Data início"
+        type="date"
+        bind:value={periodoInicio}
+        class_name="w-full"
+      />
+      <FieldInput
+        id="dash-fim"
+        label="Data fim"
+        type="date"
+        bind:value={periodoFim}
+        class_name="w-full"
+      />
     {/if}
 
     {#if (userCtx?.papel === 'MASTER' || userCtx?.papel === 'ADMIN') && empresas.length > 0}
@@ -1036,7 +1154,10 @@
         id="dash-empresa"
         label="Empresa"
         bind:value={empresaSelecionada}
-        options={[{ value: '', label: 'Todas' }, ...empresas.map((e) => ({ value: e.id, label: e.nome }))]}
+        options={[
+          { value: '', label: 'Todas' },
+          ...empresas.map((e) => ({ value: e.id, label: e.nome }))
+        ]}
         class_name="w-full"
       />
     {/if}
@@ -1045,7 +1166,10 @@
         id="dash-vendedor"
         label="Vendedor"
         bind:value={vendedorSelecionado}
-        options={[{ value: '', label: 'Todos' }, ...vendedoresFiltro.map((v) => ({ value: v.id, label: v.nome }))]}
+        options={[
+          { value: '', label: 'Todos' },
+          ...vendedoresFiltro.map((v) => ({ value: v.id, label: v.nome }))
+        ]}
         class_name="w-full"
       />
     {/if}
@@ -1053,58 +1177,88 @@
 </Card>
 
 {#if errorMessage}
-  <div class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{errorMessage}</div>
+  <div
+    role="alert"
+    class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"
+  >
+    {errorMessage}
+  </div>
 {/if}
 
 <!-- KPIs — intocáveis conforme instrução -->
 {#if activeWidgetOrder.includes('kpis')}
-  <KPIGrid
-    className="mb-6"
-    columns={kpiGridColumns}
-    {loading}
-  >
+  <KPIGrid className="mb-6" columns={kpiGridColumns} {loading}>
     {#each activeKpiOrder as kpiId}
       {#if kpiId === 'vendas_periodo'}
         <div class="vtur-kpi-card">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-500"><TrendingUp size={18} /></div>
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-orange-50 text-orange-500"
+          >
+            <TrendingUp size={18} />
+          </div>
           <div class="min-w-0 flex-1">
             <p class="text-xs font-medium text-slate-500 sm:text-sm">Vendas no período</p>
             {#if loading}<div class="mt-1 h-7 w-24 animate-pulse rounded-sm bg-slate-200"></div>
-            {:else}<p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">{formatCurrency(vendasAgg.totalVendas)}</p>
-              <p class="mt-0.5 truncate text-xs text-slate-400">Lucro: {formatCurrency(vendasAgg.totalLiquido)}</p>{/if}
+            {:else}<p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">
+                {formatCurrency(vendasAgg.totalVendas)}
+              </p>
+              <p class="mt-0.5 truncate text-xs text-slate-400">
+                Lucro: {formatCurrency(vendasAgg.totalLiquido)}
+              </p>{/if}
           </div>
         </div>
       {:else if kpiId === 'qtd_vendas'}
         <div class="vtur-kpi-card">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-500"><ShoppingCart size={18} /></div>
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-50 text-green-500"
+          >
+            <ShoppingCart size={18} />
+          </div>
           <div class="min-w-0 flex-1">
             <p class="text-xs font-medium text-slate-500 sm:text-sm">Qtd. vendas</p>
             {#if loading}<div class="mt-1 h-7 w-16 animate-pulse rounded-sm bg-slate-200"></div>
             {:else}<p class="text-lg font-bold text-slate-900 sm:text-2xl">{vendasAgg.qtdVendas}</p>
-              <p class="mt-0.5 truncate text-xs text-slate-400">Ticket: {formatCurrency(vendasAgg.ticketMedio)}</p>{/if}
+              <p class="mt-0.5 truncate text-xs text-slate-400">
+                Ticket: {formatCurrency(vendasAgg.ticketMedio)}
+              </p>{/if}
           </div>
         </div>
       {:else if kpiId === 'orcamentos'}
         <div class="vtur-kpi-card">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-500"><FileText size={18} /></div>
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-500"
+          >
+            <FileText size={18} />
+          </div>
           <div class="min-w-0 flex-1">
             <p class="text-xs font-medium text-slate-500 sm:text-sm">Orçamentos</p>
             {#if loading}<div class="mt-1 h-7 w-16 animate-pulse rounded-sm bg-slate-200"></div>
             {:else}<p class="text-lg font-bold text-slate-900 sm:text-2xl">{qtdOrcamentos}</p>
-              <p class="mt-0.5 truncate text-xs text-slate-400">Conversão: {conversaoPct.toFixed(1)}%</p>{/if}
+              <p class="mt-0.5 truncate text-xs text-slate-400">
+                Conversão: {conversaoPct.toFixed(1)}%
+              </p>{/if}
           </div>
         </div>
       {:else if kpiId === 'meta_mes'}
         <div class="vtur-kpi-card">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-500"><Target size={18} /></div>
-          <div class="min-w-0 w-full flex-1">
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-teal-500"
+          >
+            <Target size={18} />
+          </div>
+          <div class="w-full min-w-0 flex-1">
             <p class="text-xs font-medium text-slate-500 sm:text-sm">Meta do mês</p>
             {#if loading}<div class="mt-1 h-7 w-24 animate-pulse rounded-sm bg-slate-200"></div>
-            {:else}<p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">{formatCurrency(metaTotal)}</p>
+            {:else}<p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">
+                {formatCurrency(metaTotal)}
+              </p>
               {#if metaTotal > 0}
                 <div class="mt-1.5 w-full">
                   <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
-                    <div class="h-1.5 rounded-full transition-all duration-500" style={`width:${atingimentoPctClamped.toFixed(1)}%;background-color:${metaAtingimentoColor};`}></div>
+                    <div
+                      class="h-1.5 rounded-full transition-all duration-500"
+                      style={`width:${atingimentoPctClamped.toFixed(1)}%;background-color:${metaAtingimentoColor};`}
+                    ></div>
                   </div>
                   <p class="mt-0.5 text-xs text-slate-400">{atingimentoPct.toFixed(1)}% atingido</p>
                 </div>
@@ -1114,12 +1268,18 @@
         </div>
       {:else if kpiId === 'dias_mes'}
         <div class="vtur-kpi-card">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500"><Calendar size={18} /></div>
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500"
+          >
+            <Calendar size={18} />
+          </div>
           <div class="min-w-0 flex-1">
             <p class="text-xs font-medium text-slate-500 sm:text-sm">Dias no mês</p>
             {#if loading}<div class="mt-1 h-7 w-16 animate-pulse rounded-sm bg-slate-200"></div>
             {:else}<p class="text-lg font-bold text-slate-900 sm:text-2xl">{diasRestantes}d</p>
-              {#if metaDiaria > 0}<p class="mt-0.5 truncate text-xs text-slate-400">Meta/dia: {formatCurrency(metaDiaria)}</p>
+              {#if metaDiaria > 0}<p class="mt-0.5 truncate text-xs text-slate-400">
+                  Meta/dia: {formatCurrency(metaDiaria)}
+                </p>
               {:else if diasRestantes === 0}<p class="mt-0.5 text-xs text-slate-400">Fim do mês</p>
               {:else}<p class="mt-0.5 text-xs text-slate-400">Meta atingida ✓</p>{/if}
             {/if}
@@ -1127,17 +1287,28 @@
         </div>
       {:else if kpiId === 'seguro_viagem' && (loading || vendasAgg.totalSeguro > 0)}
         <div class="vtur-kpi-card">
-          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-500"><Award size={18} /></div>
-          <div class="min-w-0 w-full flex-1">
+          <div
+            class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50 text-amber-500"
+          >
+            <Award size={18} />
+          </div>
+          <div class="w-full min-w-0 flex-1">
             <p class="text-xs font-medium text-slate-500 sm:text-sm">Seguro viagem</p>
             {#if loading}<div class="mt-1 h-7 w-24 animate-pulse rounded-sm bg-slate-200"></div>
-            {:else}<p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">{formatCurrency(vendasAgg.totalSeguro)}</p>
+            {:else}<p class="truncate text-lg font-bold text-slate-900 sm:text-2xl">
+                {formatCurrency(vendasAgg.totalSeguro)}
+              </p>
               {#if metaSeguroTotal > 0}
                 <div class="mt-1.5 w-full">
                   <div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
-                    <div class="h-1.5 rounded-full transition-all duration-500" style={`width:${atingimentoSeguroPctClamped.toFixed(1)}%;background-color:${metaSeguroAtingimentoColor};`}></div>
+                    <div
+                      class="h-1.5 rounded-full transition-all duration-500"
+                      style={`width:${atingimentoSeguroPctClamped.toFixed(1)}%;background-color:${metaSeguroAtingimentoColor};`}
+                    ></div>
                   </div>
-                  <p class="mt-0.5 text-xs text-slate-400">{atingimentoSeguroPct.toFixed(1)}% meta</p>
+                  <p class="mt-0.5 text-xs text-slate-400">
+                    {atingimentoSeguroPct.toFixed(1)}% meta
+                  </p>
                 </div>
               {:else}<p class="mt-0.5 text-xs text-slate-400">Sem meta de seguro</p>{/if}
             {/if}
@@ -1155,9 +1326,16 @@
       <div class="mb-4 flex items-start justify-between gap-2">
         <div class="min-w-0 flex-1">
           <h3 class="text-base font-bold text-slate-900">Evolução das vendas</h3>
-          <p class="hidden text-sm text-slate-500 sm:block">Análise do desempenho de vendas no período selecionado</p>
+          <p class="hidden text-sm text-slate-500 sm:block">
+            Análise do desempenho de vendas no período selecionado
+          </p>
         </div>
-        <Button variant="secondary" size="sm" on:click={() => goto('/relatorios/vendas')} class_name="shrink-0">
+        <Button
+          variant="secondary"
+          size="sm"
+          on:click={() => goto('/relatorios/vendas')}
+          class_name="shrink-0"
+        >
           <BarChart2 size={14} class="mr-1.5" />Ver detalhes
         </Button>
       </div>
@@ -1190,12 +1368,17 @@
             <div class="divide-y divide-slate-100">
               {#each vendasAgg.topDestinos.slice(0, 5) as destino, i}
                 <div class="flex items-center gap-3 py-2.5">
-                  <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-xs font-bold text-indigo-600">{i + 1}</span>
+                  <span
+                    class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-indigo-50 text-xs font-bold text-indigo-600"
+                    >{i + 1}</span
+                  >
                   <div class="min-w-0 flex-1">
                     <p class="truncate text-sm font-semibold text-slate-900">{destino.name}</p>
                     <p class="text-xs text-slate-500">{destino.count || 0} vendas</p>
                   </div>
-                  <span class="whitespace-nowrap text-sm font-bold text-vendas-600">{formatCurrency(destino.value)}</span>
+                  <span class="text-vendas-600 text-sm font-bold whitespace-nowrap"
+                    >{formatCurrency(destino.value)}</span
+                  >
                 </div>
               {/each}
             </div>
@@ -1231,7 +1414,9 @@
       <div class="vtur-card p-6">
         <div class="mb-4 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+            <div
+              class="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600"
+            >
               <Plane size={18} />
             </div>
             <div>
@@ -1239,7 +1424,10 @@
               <p class="text-xs text-slate-500">Saídas nos próximos dias</p>
             </div>
           </div>
-          <a href="/operacao/viagens" class="flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+          <a
+            href="/operacao/viagens"
+            class="flex items-center gap-1 text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-800"
+          >
             Ver todas <span class="text-base">→</span>
           </a>
         </div>
@@ -1251,24 +1439,49 @@
           {:else}
             <div class="space-y-3">
               {#each viagens.slice(0, 5) as v}
-                {@const statusLabel = v.status === 'confirmada' ? 'Confirmado' : v.status === 'em_viagem' ? 'Em viagem' : v.status === 'pendente' ? 'Pendente' : v.status || 'Pendente'}
-                {@const statusClass = v.status === 'confirmada' ? 'bg-green-100 text-green-700' : v.status === 'em_viagem' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}
+                {@const statusLabel =
+                  v.status === 'confirmada'
+                    ? 'Confirmado'
+                    : v.status === 'em_viagem'
+                      ? 'Em viagem'
+                      : v.status === 'pendente'
+                        ? 'Pendente'
+                        : v.status || 'Pendente'}
+                {@const statusClass =
+                  v.status === 'confirmada'
+                    ? 'bg-green-100 text-green-700'
+                    : v.status === 'em_viagem'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-amber-100 text-amber-700'}
                 <a
                   href="/operacao/viagens/{v.id}"
-                  class="flex items-center gap-3 rounded-xl border border-slate-100 p-3 hover:bg-indigo-50 hover:border-indigo-200 transition-colors group"
+                  class="group flex items-center gap-3 rounded-xl border border-slate-100 p-3 transition-colors hover:border-indigo-200 hover:bg-indigo-50"
                 >
-                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 group-hover:bg-indigo-200 transition-colors">
+                  <div
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 transition-colors group-hover:bg-indigo-200"
+                  >
                     <MapPin size={18} />
                   </div>
                   <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">{v.destino || '-'}</p>
+                    <p
+                      class="truncate text-sm font-semibold text-slate-900 transition-colors group-hover:text-indigo-700"
+                    >
+                      {v.destino || '-'}
+                    </p>
                     <p class="truncate text-xs text-slate-500">{v.cliente_nome || '-'}</p>
-                    <p class="text-xs text-slate-400 mt-0.5">
-                      <span class="inline-flex items-center gap-1"><Calendar size={12} /> {formatDate(v.data_embarque)}</span>
-                      {#if v.numero_venda}<span class="ml-2 inline-flex items-center gap-1">#{v.numero_venda}</span>{/if}
+                    <p class="mt-0.5 text-xs text-slate-400">
+                      <span class="inline-flex items-center gap-1"
+                        ><Calendar size={12} /> {formatDate(v.data_embarque)}</span
+                      >
+                      {#if v.numero_venda}<span class="ml-2 inline-flex items-center gap-1"
+                          >#{v.numero_venda}</span
+                        >{/if}
                     </p>
                   </div>
-                  <span class="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold {statusClass}">{statusLabel}</span>
+                  <span
+                    class="shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold {statusClass}"
+                    >{statusLabel}</span
+                  >
                 </a>
               {/each}
             </div>
@@ -1281,7 +1494,9 @@
       <div class="vtur-card p-6">
         <div class="mb-4 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+            <div
+              class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600"
+            >
               <FileText size={18} />
             </div>
             <div>
@@ -1289,7 +1504,10 @@
               <p class="text-xs text-slate-500">Clientes que já retornaram e precisam de contato</p>
             </div>
           </div>
-          <a href="/operacao/acompanhamento" class="flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+          <a
+            href="/operacao/acompanhamento"
+            class="flex items-center gap-1 text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-800"
+          >
             Ver todas <span class="text-base">→</span>
           </a>
         </div>
@@ -1302,12 +1520,20 @@
             <div class="space-y-3">
               {#each followUps.slice(0, 5) as fu, i}
                 {@const whatsappLink = getFollowUpWhatsAppLink(fu)}
-                <div class="rounded-xl border border-slate-100 p-3 hover:bg-slate-50 transition-colors {i === 1 ? 'border-indigo-100 bg-indigo-50/40' : ''}">
+                <div
+                  class="rounded-xl border border-slate-100 p-3 transition-colors hover:bg-slate-50 {i ===
+                  1
+                    ? 'border-indigo-100 bg-indigo-50/40'
+                    : ''}"
+                >
                   <div class="flex items-start justify-between gap-3">
                     <div class="min-w-0">
-                      <p class="truncate text-sm font-semibold text-slate-900">{getFollowUpCliente(fu)}</p>
+                      <p class="truncate text-sm font-semibold text-slate-900">
+                        {getFollowUpCliente(fu)}
+                      </p>
                       <p class="mt-1 text-xs text-slate-500">
-                        {#if getFollowUpDestino(fu)}{getFollowUpDestino(fu)} · {/if}
+                        {#if getFollowUpDestino(fu)}{getFollowUpDestino(fu)} ·
+                        {/if}
                         Retorno: {formatDate(getFollowUpRetorno(fu))}
                       </p>
                     </div>
@@ -1365,7 +1591,9 @@
       <div class="vtur-card p-6">
         <div class="mb-4 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50 text-green-600">
+            <div
+              class="flex h-9 w-9 items-center justify-center rounded-xl bg-green-50 text-green-600"
+            >
               <Gift size={18} />
             </div>
             <div>
@@ -1382,7 +1610,12 @@
           {:else}
             <div class="space-y-1">
               {#each aniversariantes.slice(0, 5) as aniv}
-                {@const iniciais = aniv.nome.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase()}
+                {@const iniciais = aniv.nome
+                  .split(' ')
+                  .slice(0, 2)
+                  .map((n) => n[0])
+                  .join('')
+                  .toUpperCase()}
                 {@const idade = formatAgeFromBirthDate(aniv.nascimento)}
                 {@const contexto = formatBirthdayContext(aniv.nascimento)}
                 <Button
@@ -1392,12 +1625,27 @@
                   variant="unstyled"
                   class_name="w-full flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-green-50 transition-colors group text-left"
                 >
-                  <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-500 text-sm font-bold text-white group-hover:bg-green-600 transition-colors">{iniciais}</div>
-                  <div class="min-w-0 flex-1">
-                    <p class="text-sm font-semibold text-slate-900 group-hover:text-green-700 transition-colors">{aniv.nome}</p>
-                    <p class="text-xs text-slate-500">{#if idade !== null}{idade} anos{/if}{#if idade !== null} • {/if}{contexto}</p>
+                  <div
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-green-500 text-sm font-bold text-white transition-colors group-hover:bg-green-600"
+                  >
+                    {iniciais}
                   </div>
-                  <span class="shrink-0 text-slate-300 group-hover:text-green-500 transition-colors" title="Enviar aviso">
+                  <div class="min-w-0 flex-1">
+                    <p
+                      class="text-sm font-semibold text-slate-900 transition-colors group-hover:text-green-700"
+                    >
+                      {aniv.nome}
+                    </p>
+                    <p class="text-xs text-slate-500">
+                      {#if idade !== null}{idade} anos{/if}{#if idade !== null}
+                        •
+                      {/if}{contexto}
+                    </p>
+                  </div>
+                  <span
+                    class="shrink-0 text-slate-300 transition-colors group-hover:text-green-500"
+                    title="Enviar aviso"
+                  >
                     <Send size={15} />
                   </span>
                 </Button>
@@ -1417,7 +1665,9 @@
       <div class="vtur-card p-6">
         <div class="mb-4 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+            <div
+              class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600"
+            >
               <Clock size={18} />
             </div>
             <div>
@@ -1436,9 +1686,12 @@
               {#each activityFeed as item, idx}
                 <div class="relative flex items-start gap-4 py-3">
                   {#if idx < activityFeed.length - 1}
-                    <span class="absolute left-[19px] top-12 h-[calc(100%-12px)] w-px bg-slate-200"></span>
+                    <span class="absolute top-12 left-[19px] h-[calc(100%-12px)] w-px bg-slate-200"
+                    ></span>
                   {/if}
-                  <div class="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-600 shadow-xs">
+                  <div
+                    class="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-600 shadow-xs"
+                  >
                     {#if item.icon === 'orcamento'}<FileText size={18} class="text-amber-500" />
                     {:else if item.icon === 'aniversario'}<Gift size={18} class="text-green-500" />
                     {:else if item.icon === 'viagem'}<Plane size={18} class="text-indigo-500" />
@@ -1462,7 +1715,9 @@
       <div class="vtur-card p-6">
         <div class="mb-4 flex items-center justify-between">
           <div class="flex items-center gap-3">
-            <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
+            <div
+              class="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-600"
+            >
               <FileText size={18} />
             </div>
             <div>
@@ -1470,7 +1725,10 @@
               <p class="text-xs text-slate-500">Últimas propostas</p>
             </div>
           </div>
-          <a href="/orcamentos" class="flex items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+          <a
+            href="/orcamentos"
+            class="flex items-center gap-1 text-sm font-medium text-indigo-600 transition-colors hover:text-indigo-800"
+          >
             Ver todos <span class="text-base">→</span>
           </a>
         </div>
@@ -1482,8 +1740,20 @@
           {:else}
             <div class="space-y-2">
               {#each orcamentos.slice(0, 5) as orc}
-                {@const statusLabel = orc.status === 'aprovado' ? 'Aprovado' : orc.status === 'enviado' ? 'Enviado' : orc.status === 'aguardando' ? 'Aguardando' : orc.status || '-'}
-                {@const statusClass = orc.status === 'aprovado' ? 'bg-green-100 text-green-700' : orc.status === 'enviado' ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'}
+                {@const statusLabel =
+                  orc.status === 'aprovado'
+                    ? 'Aprovado'
+                    : orc.status === 'enviado'
+                      ? 'Enviado'
+                      : orc.status === 'aguardando'
+                        ? 'Aguardando'
+                        : orc.status || '-'}
+                {@const statusClass =
+                  orc.status === 'aprovado'
+                    ? 'bg-green-100 text-green-700'
+                    : orc.status === 'enviado'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-amber-100 text-amber-700'}
                 <Button
                   type="button"
                   variant="unstyled"
@@ -1493,15 +1763,21 @@
                   <div class="flex items-start justify-between gap-2">
                     <div class="min-w-0">
                       <div class="flex items-center gap-2">
-                        <p class="text-sm font-semibold text-slate-900">{orc.cliente?.nome || 'Cliente'}</p>
-                        <span class="rounded-full px-2 py-0.5 text-xs font-semibold {statusClass}">{statusLabel}</span>
+                        <p class="text-sm font-semibold text-slate-900">
+                          {orc.cliente?.nome || 'Cliente'}
+                        </p>
+                        <span class="rounded-full px-2 py-0.5 text-xs font-semibold {statusClass}"
+                          >{statusLabel}</span
+                        >
                       </div>
-                      <p class="text-xs text-slate-500 mt-0.5">
+                      <p class="mt-0.5 text-xs text-slate-500">
                         {orc.quote_item?.[0]?.city_name || orc.quote_item?.[0]?.title || '-'}
                       </p>
                       <p class="text-xs text-slate-400">{formatDate(orc.created_at)}</p>
                     </div>
-                    <span class="shrink-0 text-sm font-bold text-slate-900">{formatCurrency(orc.total || 0)}</span>
+                    <span class="shrink-0 text-sm font-bold text-slate-900"
+                      >{formatCurrency(orc.total || 0)}</span
+                    >
                   </div>
                 </Button>
               {/each}
@@ -1515,10 +1791,12 @@
 
 <!-- Linha 5: Consultorias (largura total, quando disponível) -->
 {#if activeWidgetOrder.includes('consultorias') && podeVerConsultoria}
-  <div class="mb-6 vtur-card p-6">
+  <div class="vtur-card mb-6 p-6">
     <div class="mb-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+        <div
+          class="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50 text-purple-600"
+        >
           <UserPlus size={18} />
         </div>
         <div>
@@ -1535,9 +1813,12 @@
       {:else}
         <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {#each consultorias.slice(0, 6) as c}
-            <div class="rounded-xl border border-slate-100 p-3 hover:bg-slate-50 transition-colors">
-              <p class="text-sm font-semibold text-slate-900 truncate">{c.cliente_nome}</p>
-              <p class="text-xs text-slate-500 mt-0.5">{formatDateTime(c.data_hora)}{#if c.destino} · {c.destino}{/if}</p>
+            <div class="rounded-xl border border-slate-100 p-3 transition-colors hover:bg-slate-50">
+              <p class="truncate text-sm font-semibold text-slate-900">{c.cliente_nome}</p>
+              <p class="mt-0.5 text-xs text-slate-500">
+                {formatDateTime(c.data_hora)}{#if c.destino}
+                  · {c.destino}{/if}
+              </p>
             </div>
           {/each}
         </div>
@@ -1575,7 +1856,10 @@
     clienteTelefone={avisoAniv.telefone}
     clienteEmail={avisoAniv.email}
     clienteNascimento={avisoAniv.nascimento}
-    onClose={() => { showAvisoAniversario = false; avisoAniv = null; }}
+    onClose={() => {
+      showAvisoAniversario = false;
+      avisoAniv = null;
+    }}
     onEnviar={() => toast.success('Aviso preparado com sucesso.')}
   />
 {/if}
