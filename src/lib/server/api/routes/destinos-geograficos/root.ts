@@ -9,9 +9,12 @@ import {
   referenciaAdministrativa
 } from '$lib/server/destinosBusca';
 import {
+  atualizarDestinoPersonalizado,
   criarDestinoPersonalizado,
   DestinoPersonalizadoDuplicado,
-  DestinoPersonalizadoInvalido
+  DestinoPersonalizadoEmUso,
+  DestinoPersonalizadoInvalido,
+  excluirDestinoPersonalizado
 } from '$lib/server/destinosPersonalizados';
 import { getGeoNamesPlace, labelGeoNamesPlace, normalizeGeoName } from '$lib/server/geonames';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
@@ -85,11 +88,20 @@ export async function handleDestinosBuscaGet(event: RequestEvent) {
     const locale = idioma(event);
     const limiteRaw = event.url.searchParams.get('limite') ?? '8';
     const limite = Number(limiteRaw);
+    const somente = event.url.searchParams.get('somente') ?? '';
     if (text.length > 200 || normalizeGeoName(text).length > 200)
       return erro('Nome de destino muito longo.');
     if (!locale) return erro('Idioma inválido.');
-    if (!/^[1-8]$/.test(limiteRaw)) return erro('Limite de busca inválido.');
-    const result = await buscarDestinos(data.db, data.geoDb, text, locale, limite);
+    if (!/^(?:[1-9]|1\d|20)$/.test(limiteRaw)) return erro('Limite de busca inválido.');
+    if (somente && somente !== 'geonames') return erro('Filtro de origem inválido.');
+    const result = await buscarDestinos(
+      data.db,
+      data.geoDb,
+      text,
+      locale,
+      limite,
+      somente === 'geonames'
+    );
     return json(result, { headers: NO_STORE_HEADERS });
   } catch (err) {
     logServerError('[destinos] falha ao buscar', err);
@@ -185,6 +197,83 @@ export async function handleDestinoPost(event: RequestEvent) {
     if (err instanceof DestinoPersonalizadoDuplicado) return erro(err.message, 409);
     logServerError('[destinos] falha ao cadastrar', err);
     return toErrorResponse(err, 'Erro ao cadastrar destino.');
+  }
+}
+
+function idPersonalizado(valor: unknown) {
+  if (typeof valor !== 'string' || !valor.toLowerCase().startsWith('personalizado:')) return null;
+  return valor.slice('personalizado:'.length);
+}
+
+function referenciaInformada(valor: unknown): valor is number {
+  return typeof valor === 'number' && Number.isSafeInteger(valor) && valor > 0;
+}
+
+async function permissaoCadastro(event: RequestEvent, nivel: number) {
+  const client = getAdminClient();
+  const user = await requireAuthenticatedUser(event);
+  const scope = await resolveUserScope(client, user.id);
+  ensureModuloAccess(
+    scope,
+    ['Cidades', 'Cadastros'],
+    nivel,
+    'Sem permissão para alterar destinos personalizados.'
+  );
+  const db = event.platform?.env?.DB;
+  const geoDb = event.platform?.env?.GEO_DB;
+  if (!db || !geoDb) return null;
+  return { db, geoDb };
+}
+
+export async function handleDestinoPatch(event: RequestEvent) {
+  try {
+    const originError = rejectCrossOriginRequest(event.request);
+    if (originError) return originError;
+    const data = await permissaoCadastro(event, 3);
+    if (!data) return erro('Cadastro geográfico ainda não está disponível.', 503);
+    const body = await readJsonBodyLimited(event.request, 16 * 1024);
+    if (!body.ok) return body.response;
+    if (!body.data || typeof body.data !== 'object' || Array.isArray(body.data))
+      return erro('Dados inválidos.');
+    const { id, nome, referenciaGeoNamesId } = body.data as Record<string, unknown>;
+    const destinoId = idPersonalizado(id);
+    const locale = idioma(event);
+    if (!destinoId) return erro('Só é possível editar destinos personalizados.');
+    if (!locale) return erro('Idioma inválido.');
+    if (typeof nome !== 'string' || !referenciaInformada(referenciaGeoNamesId))
+      return erro('Nome ou localidade de referência inválidos.');
+    const destino = await atualizarDestinoPersonalizado(
+      data.db,
+      data.geoDb,
+      destinoId,
+      nome,
+      referenciaGeoNamesId
+    );
+    const item = await obterDestino(data.db, data.geoDb, `personalizado:${destino.id}`, locale);
+    return json({ item }, { headers: NO_STORE_HEADERS });
+  } catch (err) {
+    if (err instanceof DestinoPersonalizadoInvalido) return erro(err.message, 404);
+    if (err instanceof DestinoPersonalizadoDuplicado) return erro(err.message, 409);
+    logServerError('[destinos] falha ao editar', err);
+    return toErrorResponse(err, 'Erro ao editar destino.');
+  }
+}
+
+export async function handleDestinoDelete(event: RequestEvent) {
+  try {
+    const originError = rejectCrossOriginRequest(event.request);
+    if (originError) return originError;
+    const data = await permissaoCadastro(event, 4);
+    if (!data) return erro('Cadastro geográfico ainda não está disponível.', 503);
+    const destinoId = idPersonalizado(event.url.searchParams.get('id') ?? '');
+    if (!destinoId) return erro('Só é possível excluir destinos personalizados.');
+    await excluirDestinoPersonalizado(data.db, destinoId);
+    return json({ ok: true }, { headers: NO_STORE_HEADERS });
+  } catch (err) {
+    if (err instanceof DestinoPersonalizadoInvalido) return erro(err.message, 404);
+    if (err instanceof DestinoPersonalizadoEmUso) return erro(err.message, 409);
+    logServerError('[destinos] falha ao excluir', err);
+    return toErrorResponse(err, 'Erro ao excluir destino.');
   }
 }
 

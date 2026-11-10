@@ -1888,7 +1888,7 @@
           "isAdmin"
         ],
         "rejectCrossOrigin": true,
-        "bodyLimit": true,
+        "bodyLimit": false,
         "cronSecret": false,
         "turnstile": false,
         "adminClient": true,
@@ -1897,8 +1897,7 @@
       "tables": {
         "cidades": [
           "delete",
-          "select",
-          "update"
+          "select"
         ]
       },
       "rpcs": [],
@@ -1914,7 +1913,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 237
+      "lines": 154
     },
     {
       "route": "/api/v1/cidades/[id]",

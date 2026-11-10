@@ -26,7 +26,9 @@ vi.mock('$lib/server/v1', async (importOriginal) => ({
 }));
 
 import {
+  handleDestinoDelete,
   handleDestinoGet,
+  handleDestinoPatch,
   handleDestinosBuscaGet,
   handleDestinosExatosGet,
   handleDestinoReferenciaPost,
@@ -93,7 +95,9 @@ describe('API experimental de destinos', () => {
     expect(await details.json()).toMatchObject({ item: { id: 'geonames:1' } });
     expect((await handleDestinoGet(event('GET', '?id=geonames%3A99'))).status).toBe(404);
     expect((await handleDestinoGet(event('GET', '?id=GEONAMES%3A1'))).status).toBe(400);
-    expect((await handleDestinosBuscaGet(event('GET', '?q=roma&limite=20'))).status).toBe(400);
+    expect((await handleDestinosBuscaGet(event('GET', '?q=roma&limite=21'))).status).toBe(400);
+    expect((await handleDestinosBuscaGet(event('GET', '?q=roma&limite=20'))).status).toBe(200);
+    expect((await handleDestinosBuscaGet(event('GET', '?q=roma&somente=outro'))).status).toBe(400);
     expect((await handleDestinosBuscaGet(event('GET', '?q=roma&idioma=!'))).status).toBe(400);
     expect(
       (await handleDestinosBuscaGet(event('GET', '?q=roma', undefined, { geo: false }))).status
@@ -139,6 +143,40 @@ describe('API experimental de destinos', () => {
       (await handleDestinoPost(event('POST', '', payload, { origin: 'https://other.example' })))
         .status
     ).toBe(403);
+    const criado = await handleDestinoPost(
+      event('POST', '', { nome: 'Porto de Galinhas', referenciaGeoNamesId: 1 })
+    );
+    const { item: personalizado } = await criado.json<{ item: { id: string; nome: string } }>();
+    const soGeo = await handleDestinosBuscaGet(event('GET', '?q=roma&somente=geonames'));
+    const geoItens = await soGeo.json<{ items: { id: string; origem: string }[] }>();
+    expect(geoItens.items.every((linha) => linha.origem === 'geonames')).toBe(true);
+    expect(geoItens.items).toEqual(
+      expect.arrayContaining([expect.objectContaining({ id: 'geonames:1' })])
+    );
+    const editado = await handleDestinoPatch(
+      event('PATCH', '', { id: personalizado.id, nome: 'Praia do Porto', referenciaGeoNamesId: 1 })
+    );
+    expect(editado.status).toBe(200);
+    expect(await editado.json()).toMatchObject({
+      item: { nome: 'Praia do Porto', origem: 'personalizado' }
+    });
+    await env.DB.prepare(
+      'INSERT INTO legado_cidades (id, nome, destino_geografico_id) VALUES (?, ?, ?)'
+    )
+      .bind(crypto.randomUUID(), 'Uso', personalizado.id)
+      .run();
+    const bloqueado = await handleDestinoDelete(
+      event('DELETE', `?id=${encodeURIComponent(personalizado.id)}`)
+    );
+    expect(bloqueado.status).toBe(409);
+    await env.DB.prepare('DELETE FROM legado_cidades WHERE destino_geografico_id = ?')
+      .bind(personalizado.id)
+      .run();
+    expect(
+      (await handleDestinoDelete(event('DELETE', `?id=${encodeURIComponent(personalizado.id)}`)))
+        .status
+    ).toBe(200);
+    expect((await handleDestinoDelete(event('DELETE', '?id=geonames%3A1'))).status).toBe(400);
   });
 
   it('enforces authentication and permissions', async () => {

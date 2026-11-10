@@ -11,7 +11,9 @@ vi.mock('./root', () => ({
   handleDestinosExatosGet: spy('exata'),
   handleDestinoGet: spy('detalhes'),
   handleDestinoReferenciaPost: spy('referencia'),
-  handleDestinoPost: spy('cadastro')
+  handleDestinoPost: spy('cadastro'),
+  handleDestinoPatch: spy('edicao'),
+  handleDestinoDelete: spy('exclusao')
 }));
 
 import { apiApp } from '../../app';
@@ -22,7 +24,9 @@ const cases = [
   ['GET', '/api/v1/destinos-geograficos/exata', 'exata'],
   ['GET', '/api/v1/destinos-geograficos/detalhes', 'detalhes'],
   ['POST', '/api/v1/destinos-geograficos/referencia', 'referencia'],
-  ['POST', '/api/v1/destinos-geograficos', 'cadastro']
+  ['POST', '/api/v1/destinos-geograficos', 'cadastro'],
+  ['PATCH', '/api/v1/destinos-geograficos', 'edicao'],
+  ['DELETE', '/api/v1/destinos-geograficos', 'exclusao']
 ] as const;
 
 function event(method: string, path: string) {
