@@ -36,9 +36,15 @@
       ) {
         try {
           const dados = createBrowserDataClient();
+          // Erro de permissão não é sessão inválida: só desloga se não houver sessão.
+          const {
+            data: { session }
+          } = await dados.auth.getSession();
+          if (session) return;
           await dados.auth.signOut();
         } catch {
-          // noop
+          // Sem confirmar a ausência de sessão, não desloga o usuário.
+          return;
         }
         const next = `${window.location.pathname}${window.location.search || ''}`;
         window.location.assign(`/auth/login?session_expired=1&next=${encodeURIComponent(next)}`);

@@ -7,16 +7,16 @@
 
 ## 1. Visão Rápida da Stack
 
-| Camada | Tecnologia | Config |
-|---|---|---|
-| Frontend | SvelteKit | `src/routes/` |
-| API | Hono em Cloudflare Workers | `src/lib/server/api/app-v2.ts` |
-| Banco | Cloudflare D1 (SQLite) | `wrangler.toml` → `[[d1_databases]]` |
-| Arquivos | Cloudflare R2 | `wrangler.toml` → `[[r2_buckets]]` |
-| Cache/KV | Cloudflare KV | `wrangler.toml` → `[[kv_namespaces]]` |
-| Auth | Better Auth | `src/lib/server/auth/` |
-| E-mail | Resend | `RESEND_API_KEY` secret |
-| Captcha | Cloudflare Turnstile | `TURNSTILE_SECRET_KEY` secret |
+| Camada   | Tecnologia                 | Config                                |
+| -------- | -------------------------- | ------------------------------------- |
+| Frontend | SvelteKit                  | `src/routes/`                         |
+| API      | Hono em Cloudflare Workers | `src/lib/server/api/app-v2.ts`        |
+| Banco    | Cloudflare D1 (SQLite)     | `wrangler.toml` → `[[d1_databases]]`  |
+| Arquivos | Cloudflare R2              | `wrangler.toml` → `[[r2_buckets]]`    |
+| Cache/KV | Cloudflare KV              | `wrangler.toml` → `[[kv_namespaces]]` |
+| Auth     | Better Auth                | `src/lib/server/auth/`                |
+| E-mail   | Resend                     | `RESEND_API_KEY` secret               |
+| Captcha  | Cloudflare Turnstile       | `TURNSTILE_SECRET_KEY` secret         |
 
 ---
 
@@ -62,6 +62,10 @@ wrangler deploy --env staging
 npm run d1:migrate:prod
 wrangler deploy --env production
 ```
+
+A migration `0017_preferencias_empresa_opcional.sql` deve ser aplicada antes do Worker
+para permitir preferências pessoais de usuários individuais ou administradores sem
+empresa. Os compartilhamentos continuam exigindo empresa.
 
 ### Primeiro administrador
 
@@ -163,16 +167,16 @@ npx drizzle-kit check
 
 ## 8. Próximo Backlog Priorizado
 
-| Prioridade | Item | Módulo | Dependência |
-|---|---|---|---|
-| 🔴 Alta | Mural/recados com polling cursor (ADR-008) | M09 | — |
-| 🔴 Alta | Produtos e tarifas (cadastro global) | M03 | — |
-| 🟡 Média | Orçamentos e roteiros | M07 | M03 |
-| 🟡 Média | Agenda de compromissos | M08 | — |
-| 🟡 Média | Destinos (cadastro de destinos de viagem) | M10 | — |
-| 🟢 Baixa | Relatórios v2 (substituir relatorios.ts) | — | M04 |
-| 🟢 Baixa | Conciliação (M06 — decisão pendente) | M06 | M04 |
-| 🟢 Baixa | Comissões (M05 — excluído; revisar se necessário) | M05 | M04 |
+| Prioridade | Item                                              | Módulo | Dependência |
+| ---------- | ------------------------------------------------- | ------ | ----------- |
+| 🔴 Alta    | Mural/recados com polling cursor (ADR-008)        | M09    | —           |
+| 🔴 Alta    | Produtos e tarifas (cadastro global)              | M03    | —           |
+| 🟡 Média   | Orçamentos e roteiros                             | M07    | M03         |
+| 🟡 Média   | Agenda de compromissos                            | M08    | —           |
+| 🟡 Média   | Destinos (cadastro de destinos de viagem)         | M10    | —           |
+| 🟢 Baixa   | Relatórios v2 (substituir relatorios.ts)          | —      | M04         |
+| 🟢 Baixa   | Conciliação (M06 — decisão pendente)              | M06    | M04         |
+| 🟢 Baixa   | Comissões (M05 — excluído; revisar se necessário) | M05    | M04         |
 
 **Módulos CONCLUÍDOS:** M01 (identidade/auth), M02 (clientes/anexos), M04 (vendas/recebimentos).  
 **Módulos EXCLUÍDOS:** M05 (comissões), M06 (conciliação) — ver ADR-009.  
@@ -182,17 +186,17 @@ npx drizzle-kit check
 
 ## 9. Documentos de Referência
 
-| Documento | Conteúdo |
-|---|---|
-| `docs/REESCRITA-REVISAO-E-ROTEIRO.md` | Roteiro completo F0–F8 com status |
-| `docs/adr/` | Todas as ADRs de decisão de arquitetura |
-| `docs/runbooks/F6-03-backup-restore.md` | Backup e restauração D1 + R2 |
-| `docs/f7/F7-02-release-checklist.md` | Checklist de release |
-| `docs/f7/F7-03-plano-reversao.md` | Plano de rollback |
-| `docs/f7/F7-04-go-live-evidencias.md` | Evidências de go-live |
-| `docs/f8/F8-02-retirada-legado.md` | Inventário e plano de retirada do Supabase |
-| `docs/f8/F8-03-supabase-destino.md` | Decisão sobre recursos Supabase |
+| Documento                               | Conteúdo                                   |
+| --------------------------------------- | ------------------------------------------ |
+| `docs/REESCRITA-REVISAO-E-ROTEIRO.md`   | Roteiro completo F0–F8 com status          |
+| `docs/adr/`                             | Todas as ADRs de decisão de arquitetura    |
+| `docs/runbooks/F6-03-backup-restore.md` | Backup e restauração D1 + R2               |
+| `docs/f7/F7-02-release-checklist.md`    | Checklist de release                       |
+| `docs/f7/F7-03-plano-reversao.md`       | Plano de rollback                          |
+| `docs/f7/F7-04-go-live-evidencias.md`   | Evidências de go-live                      |
+| `docs/f8/F8-02-retirada-legado.md`      | Inventário e plano de retirada do Supabase |
+| `docs/f8/F8-03-supabase-destino.md`     | Decisão sobre recursos Supabase            |
 
 ---
 
-*Guia gerado em F8-04. Manter atualizado conforme novos módulos forem entregues.*
+_Guia gerado em F8-04. Manter atualizado conforme novos módulos forem entregues._

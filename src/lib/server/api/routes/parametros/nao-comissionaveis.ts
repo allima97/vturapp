@@ -44,7 +44,7 @@ export async function handleParametrosNaoComissionaveisGet(event: RequestEvent) 
       ensureModuloAccess(scope, ['Admin'], 1, 'Sem acesso.');
     }
 
-    let query = client
+    const query = client
       .from('parametros_pagamentos_nao_comissionaveis')
       .select('id, termo, termo_normalizado, ativo, created_at')
       .order('termo');
@@ -83,18 +83,32 @@ export async function handleParametrosNaoComissionaveisPost(event: RequestEvent)
 
     const payload = {
       termo: String(termo).trim(),
-      termo_normalizado: String(termo).trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, ' '),
+      termo_normalizado: String(termo)
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' '),
       ativo: ativo !== false,
       created_by: scope.userId
     };
 
     let result;
     if (isUuid(itemId)) {
-      const { data, error: updateError } = await client.from('parametros_pagamentos_nao_comissionaveis').update(payload).eq('id', itemId).select('id').single();
+      const { data, error: updateError } = await client
+        .from('parametros_pagamentos_nao_comissionaveis')
+        .update(payload)
+        .eq('id', itemId)
+        .select('id')
+        .single();
       if (updateError) throw updateError;
       result = data;
     } else {
-      const { data, error: insertError } = await client.from('parametros_pagamentos_nao_comissionaveis').insert(payload).select('id').single();
+      const { data, error: insertError } = await client
+        .from('parametros_pagamentos_nao_comissionaveis')
+        .insert(payload)
+        .select('id')
+        .single();
       if (insertError) throw insertError;
       result = data;
     }
@@ -120,9 +134,13 @@ export async function handleParametrosNaoComissionaveisDelete(event: RequestEven
     }
 
     const id = String(event.url.searchParams.get('id') || '').trim();
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
-    const { error: deleteError } = await client.from('parametros_pagamentos_nao_comissionaveis').delete().eq('id', id);
+    const { error: deleteError } = await client
+      .from('parametros_pagamentos_nao_comissionaveis')
+      .delete()
+      .eq('id', id);
     if (deleteError) throw deleteError;
 
     invalidateSalesReadModels();

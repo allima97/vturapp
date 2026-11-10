@@ -30,7 +30,7 @@ import {
   type VendaStatus,
   type Produto,
   type FormaPagamento,
-  TIPOS_PRODUTO,
+  TIPOS_PRODUTO
 } from '$lib/server/db/schema';
 import type { VendaNormalizada } from './validation';
 
@@ -59,7 +59,9 @@ export class VendaError extends Error {
 // Status derivado (não persistido)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function derivarStatus(row: Pick<Venda, 'cancelada' | 'dataEmbarque' | 'dataFinal'>): VendaStatus {
+export function derivarStatus(
+  row: Pick<Venda, 'cancelada' | 'dataEmbarque' | 'dataFinal'>
+): VendaStatus {
   if (row.cancelada) return 'cancelada';
   const hoje = new Date().toISOString().slice(0, 10);
   if (row.dataFinal && row.dataFinal < hoje) return 'concluida';
@@ -148,7 +150,7 @@ export async function listarVendas(
       cancelada: vendas.cancelada,
       valorTotalCentavos: vendas.valorTotalCentavos,
       valorPagoCentavos: vendas.valorPagoCentavos,
-      criadoEm: vendas.criadoEm,
+      criadoEm: vendas.criadoEm
     })
     .from(vendas)
     .where(and(...conditions))
@@ -166,10 +168,14 @@ export async function listarVendas(
     data_embarque: r.dataEmbarque,
     data_final: r.dataFinal,
     cancelada: r.cancelada,
-    status: derivarStatus({ cancelada: r.cancelada, dataEmbarque: r.dataEmbarque, dataFinal: r.dataFinal }),
+    status: derivarStatus({
+      cancelada: r.cancelada,
+      dataEmbarque: r.dataEmbarque,
+      dataFinal: r.dataFinal
+    }),
     valor_total_centavos: r.valorTotalCentavos,
     valor_pago_centavos: r.valorPagoCentavos,
-    criado_em: r.criadoEm,
+    criado_em: r.criadoEm
   }));
 
   return { itens, proximo_cursor: temProximo ? itens[itens.length - 1].id : null };
@@ -241,7 +247,9 @@ export async function criarVenda(
     const [existente] = await db
       .select({ id: vendas.id })
       .from(vendas)
-      .where(and(eq(vendas.chaveIdempotencia, dados.chave_idempotencia), eq(vendas.empresaId, empresaId)));
+      .where(
+        and(eq(vendas.chaveIdempotencia, dados.chave_idempotencia), eq(vendas.empresaId, empresaId))
+      );
     if (existente) return obterVenda(db, empresaId, existente.id);
   }
 
@@ -282,7 +290,7 @@ export async function criarVenda(
       versao: 1,
       criadoPor: userId,
       criadoEm: agora,
-      atualizadoEm: agora,
+      atualizadoEm: agora
     })
     .returning({ id: vendas.id });
 
@@ -314,7 +322,7 @@ export async function criarVenda(
               valorTotalCentavos: it.valor_total_centavos,
               pagaComissao: it.paga_comissao,
               notas: it.notas,
-              criadoEm: agora,
+              criadoEm: agora
             })
             .toSQL();
           return d1.prepare(stmt.sql).bind(...stmt.params);
@@ -323,7 +331,8 @@ export async function criarVenda(
     } else {
       await db.insert(vendaItens).values(
         dados.itens.map((it) => ({
-          empresaId, vendaId,
+          empresaId,
+          vendaId,
           produtoId: it.produto_id,
           numeroRecibo: it.numero_recibo,
           numeroReserva: it.numero_reserva,
@@ -340,7 +349,7 @@ export async function criarVenda(
           valorTotalCentavos: it.valor_total_centavos,
           pagaComissao: it.paga_comissao,
           notas: it.notas,
-          criadoEm: agora,
+          criadoEm: agora
         }))
       );
     }
@@ -351,7 +360,8 @@ export async function criarVenda(
     const [novoPag] = await db
       .insert(vendaPagamentos)
       .values({
-        empresaId, vendaId,
+        empresaId,
+        vendaId,
         formaId: pag.forma_id,
         formaNome: pag.forma_nome,
         operacao: pag.operacao,
@@ -362,7 +372,7 @@ export async function criarVenda(
         parcelasQtd: pag.parcelas_qtd,
         parcelasValorCentavos: pag.parcelas_valor_centavos,
         pagaComissao: pag.paga_comissao,
-        criadoEm: agora,
+        criadoEm: agora
       })
       .returning({ id: vendaPagamentos.id });
 
@@ -378,7 +388,7 @@ export async function criarVenda(
                 numero: par.numero,
                 valorCentavos: par.valor_centavos,
                 vencimento: par.vencimento,
-                criadoEm: agora,
+                criadoEm: agora
               })
               .toSQL();
             return d1.prepare(stmt.sql).bind(...stmt.params);
@@ -392,7 +402,7 @@ export async function criarVenda(
             numero: par.numero,
             valorCentavos: par.valor_centavos,
             vencimento: par.vencimento,
-            criadoEm: agora,
+            criadoEm: agora
           }))
         );
       }
@@ -419,12 +429,15 @@ export async function cancelarVenda(
 
   if (!existente) throw new VendaError('Venda não encontrada.', 'NAO_ENCONTRADA');
   if (existente.cancelada) throw new VendaError('Venda já cancelada.', 'CANCELADA');
-  if (existente.versao !== versaoAtual) throw new VendaError('Conflito de versão.', 'CONFLITO_VERSAO');
+  if (existente.versao !== versaoAtual)
+    throw new VendaError('Conflito de versão.', 'CONFLITO_VERSAO');
 
   const resultado = await db
     .update(vendas)
     .set({ cancelada: true, versao: versaoAtual + 1, atualizadoEm: new Date().toISOString() })
-    .where(and(eq(vendas.id, vendaId), eq(vendas.empresaId, empresaId), eq(vendas.versao, versaoAtual)))
+    .where(
+      and(eq(vendas.id, vendaId), eq(vendas.empresaId, empresaId), eq(vendas.versao, versaoAtual))
+    )
     .returning({ id: vendas.id });
 
   if (resultado.length === 0) throw new VendaError('Conflito de versão.', 'CONFLITO_VERSAO');
@@ -443,10 +456,18 @@ export async function listarProdutos(
   if (options.tipo && options.tipo !== 'todos') conditions.push(eq(produtos.tipo, options.tipo));
   if (options.busca) conditions.push(like(produtos.nome, `%${options.busca}%`));
 
-  return db.select().from(produtos).where(and(...conditions)).orderBy(asc(produtos.nome)).limit(limite);
+  return db
+    .select()
+    .from(produtos)
+    .where(and(...conditions))
+    .orderBy(asc(produtos.nome))
+    .limit(limite);
 }
 
-export async function listarFormasPagamento(db: DrizzleDb, empresaId: number): Promise<FormaPagamento[]> {
+export async function listarFormasPagamento(
+  db: DrizzleDb,
+  empresaId: number
+): Promise<FormaPagamento[]> {
   return db
     .select()
     .from(formasPagamento)
@@ -493,24 +514,29 @@ export async function editarVenda(
       valorBrutoCentavos: vendas.valorBrutoCentavos,
       valorTaxasCentavos: vendas.valorTaxasCentavos,
       valorTotalCentavos: vendas.valorTotalCentavos,
-      valorPagoCentavos: vendas.valorPagoCentavos,
+      valorPagoCentavos: vendas.valorPagoCentavos
     })
     .from(vendas)
     .where(and(eq(vendas.id, vendaId), eq(vendas.empresaId, empresaId)));
 
   if (!existente) throw new VendaError('Venda não encontrada.', 'NAO_ENCONTRADA');
-  if (existente.cancelada) throw new VendaError('Venda cancelada não pode ser editada.', 'CANCELADA');
-  if (existente.versao !== versaoAtual) throw new VendaError('Conflito de versão.', 'CONFLITO_VERSAO');
+  if (existente.cancelada)
+    throw new VendaError('Venda cancelada não pode ser editada.', 'CANCELADA');
+  if (existente.versao !== versaoAtual)
+    throw new VendaError('Conflito de versão.', 'CONFLITO_VERSAO');
 
   // ── 2. Substituição de itens ──
   if (dados.itens !== undefined) {
     // DELETE itens antigos
-    await db.delete(vendaItens).where(and(eq(vendaItens.vendaId, vendaId), eq(vendaItens.empresaId, empresaId)));
+    await db
+      .delete(vendaItens)
+      .where(and(eq(vendaItens.vendaId, vendaId), eq(vendaItens.empresaId, empresaId)));
 
     // INSERT novos itens
     if (dados.itens.length > 0) {
       const novosItens = dados.itens.map((it) => ({
-        empresaId, vendaId,
+        empresaId,
+        vendaId,
         produtoId: it.produto_id,
         numeroRecibo: it.numero_recibo,
         numeroReserva: it.numero_reserva,
@@ -527,7 +553,7 @@ export async function editarVenda(
         valorTotalCentavos: it.valor_total_centavos,
         pagaComissao: it.paga_comissao,
         notas: it.notas,
-        criadoEm: agora,
+        criadoEm: agora
       }));
 
       if (d1) {
@@ -558,14 +584,17 @@ export async function editarVenda(
       }
     }
     // DELETE pagamentos antigos
-    await db.delete(vendaPagamentos).where(and(eq(vendaPagamentos.vendaId, vendaId), eq(vendaPagamentos.empresaId, empresaId)));
+    await db
+      .delete(vendaPagamentos)
+      .where(and(eq(vendaPagamentos.vendaId, vendaId), eq(vendaPagamentos.empresaId, empresaId)));
 
     // INSERT novos pagamentos + parcelas (sequencial — precisamos do id do pagamento)
     for (const pag of dados.pagamentos) {
       const [novoPag] = await db
         .insert(vendaPagamentos)
         .values({
-          empresaId, vendaId,
+          empresaId,
+          vendaId,
           formaId: pag.forma_id,
           formaNome: pag.forma_nome,
           operacao: pag.operacao,
@@ -576,7 +605,7 @@ export async function editarVenda(
           parcelasQtd: pag.parcelas_qtd,
           parcelasValorCentavos: pag.parcelas_valor_centavos,
           pagaComissao: pag.paga_comissao,
-          criadoEm: agora,
+          criadoEm: agora
         })
         .returning({ id: vendaPagamentos.id });
 
@@ -592,7 +621,7 @@ export async function editarVenda(
                   numero: par.numero,
                   valorCentavos: par.valor_centavos,
                   vencimento: par.vencimento,
-                  criadoEm: agora,
+                  criadoEm: agora
                 })
                 .toSQL();
               return d1.prepare(stmt.sql).bind(...stmt.params);
@@ -606,7 +635,7 @@ export async function editarVenda(
               numero: par.numero,
               valorCentavos: par.valor_centavos,
               vencimento: par.vencimento,
-              criadoEm: agora,
+              criadoEm: agora
             }))
           );
         }
@@ -644,7 +673,7 @@ export async function editarVenda(
     valorBrutoCentavos: novoValorBruto,
     valorTaxasCentavos: novoValorTaxas,
     valorTotalCentavos: novoValorTotal,
-    valorPagoCentavos: novoValorPago,
+    valorPagoCentavos: novoValorPago
   };
 
   // Campos opcionais do cabeçalho: só atualizar se enviados
@@ -655,16 +684,21 @@ export async function editarVenda(
   if ('data_lancamento' in dados) updateSet.dataLancamento = dados.data_lancamento;
   if ('data_embarque' in dados) updateSet.dataEmbarque = dados.data_embarque;
   if ('data_final' in dados) updateSet.dataFinal = dados.data_final;
-  if ('desconto_comercial_aplicado' in dados) updateSet.descontoComercialAplicado = dados.desconto_comercial_aplicado;
-  if ('desconto_comercial_centavos' in dados) updateSet.descontoComercialCentavos = dados.desconto_comercial_centavos;
-  if ('valor_nao_comissionado_centavos' in dados) updateSet.valorNaoComissionadoCentavos = dados.valor_nao_comissionado_centavos;
+  if ('desconto_comercial_aplicado' in dados)
+    updateSet.descontoComercialAplicado = dados.desconto_comercial_aplicado;
+  if ('desconto_comercial_centavos' in dados)
+    updateSet.descontoComercialCentavos = dados.desconto_comercial_centavos;
+  if ('valor_nao_comissionado_centavos' in dados)
+    updateSet.valorNaoComissionadoCentavos = dados.valor_nao_comissionado_centavos;
   if ('notas' in dados) updateSet.notas = dados.notas;
 
   const resultado = await db
     .update(vendas)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     .set(updateSet as any)
-    .where(and(eq(vendas.id, vendaId), eq(vendas.empresaId, empresaId), eq(vendas.versao, versaoAtual)))
+    .where(
+      and(eq(vendas.id, vendaId), eq(vendas.empresaId, empresaId), eq(vendas.versao, versaoAtual))
+    )
     .returning({ id: vendas.id });
 
   if (resultado.length === 0) {
@@ -770,7 +804,7 @@ export async function resumoVendas(
     .select({
       total: sql<number>`count(*)`,
       valorTotal: sql<number>`coalesce(sum(${vendas.valorTotalCentavos}), 0)`,
-      valorPago: sql<number>`coalesce(sum(${vendas.valorPagoCentavos}), 0)`,
+      valorPago: sql<number>`coalesce(sum(${vendas.valorPagoCentavos}), 0)`
     })
     .from(vendas)
     .where(and(...condicoesVenda));
@@ -778,7 +812,7 @@ export async function resumoVendas(
   // Soma de venda_itens para as mesmas vendas (JOIN)
   const [resumoItens] = await db
     .select({
-      somaTotal: sql<number>`coalesce(sum(${vendaItens.valorTotalCentavos}), 0)`,
+      somaTotal: sql<number>`coalesce(sum(${vendaItens.valorTotalCentavos}), 0)`
     })
     .from(vendaItens)
     .innerJoin(vendas, eq(vendaItens.vendaId, vendas.id))
@@ -787,7 +821,7 @@ export async function resumoVendas(
   // Soma de venda_pagamentos para as mesmas vendas (JOIN)
   const [resumoPagamentos] = await db
     .select({
-      somaTotal: sql<number>`coalesce(sum(${vendaPagamentos.valorTotalCentavos}), 0)`,
+      somaTotal: sql<number>`coalesce(sum(${vendaPagamentos.valorTotalCentavos}), 0)`
     })
     .from(vendaPagamentos)
     .innerJoin(vendas, eq(vendaPagamentos.vendaId, vendas.id))
@@ -806,7 +840,7 @@ export async function resumoVendas(
     somaItensTotalCentavos: somaItens,
     somaPagamentosTotalCentavos: somaPags,
     itensReconciliam: somaItens === valorTotal,
-    pagamentosReconciliam: somaPags === valorPago,
+    pagamentosReconciliam: somaPags === valorPago
   };
 }
 
@@ -830,7 +864,7 @@ export async function listarParcelas(
     vencimentoAte,
     vendedorId,
     clienteId,
-    somenteAtivas = true,
+    somenteAtivas = true
   } = opts;
 
   const limiteFetch = Math.min(limite + 1, 201);
@@ -855,7 +889,7 @@ export async function listarParcelas(
       formaNome: vendaPagamentos.formaNome,
       clienteId: vendas.clienteId,
       cancelada: vendas.cancelada,
-      dataVenda: vendas.dataVenda,
+      dataVenda: vendas.dataVenda
     })
     .from(vendaParcelas)
     .innerJoin(vendaPagamentos, eq(vendaParcelas.pagamentoId, vendaPagamentos.id))
@@ -876,7 +910,7 @@ export async function listarParcelas(
     formaNome: r.formaNome,
     clienteId: r.clienteId ?? null,
     cancelada: r.cancelada,
-    dataVenda: r.dataVenda,
+    dataVenda: r.dataVenda
   }));
 
   return { parcelas, temMais };
@@ -956,13 +990,13 @@ export function calcularComissao(
     .filter((it) => it.pagaComissao)
     .reduce((s, it) => s + it.valorTotalCentavos, 0);
 
-  const comissaoCentavos = roundHalfEven(baseComissionavelCentavos * taxaPct / 100);
+  const comissaoCentavos = roundHalfEven((baseComissionavelCentavos * taxaPct) / 100);
 
   return {
     baseComissionavelCentavos,
     taxaPct,
     comissaoCentavos,
-    valorNaoComissionadoCentavos: venda.valorNaoComissionadoCentavos,
+    valorNaoComissionadoCentavos: venda.valorNaoComissionadoCentavos
   };
 }
 
@@ -1020,7 +1054,7 @@ export async function estornarPagamento(
       id: vendas.id,
       cancelada: vendas.cancelada,
       versao: vendas.versao,
-      valorPagoCentavos: vendas.valorPagoCentavos,
+      valorPagoCentavos: vendas.valorPagoCentavos
     })
     .from(vendas)
     .where(and(eq(vendas.id, vendaId), eq(vendas.empresaId, empresaId)));
@@ -1048,7 +1082,7 @@ export async function estornarPagamento(
     parcelasQtd: 1,
     parcelasValorCentavos: -input.valorCentavos,
     pagaComissao: false,
-    criadoEm: agora,
+    criadoEm: agora
   });
 
   // Atualizar cabeçalho com concorrência otimista
@@ -1057,13 +1091,15 @@ export async function estornarPagamento(
     .set({
       valorPagoCentavos: novoValorPago,
       versao: novaVersao,
-      atualizadoEm: agora,
+      atualizadoEm: agora
     })
-    .where(and(
-      eq(vendas.id, vendaId),
-      eq(vendas.empresaId, empresaId),
-      eq(vendas.versao, input.versaoAtual)
-    ))
+    .where(
+      and(
+        eq(vendas.id, vendaId),
+        eq(vendas.empresaId, empresaId),
+        eq(vendas.versao, input.versaoAtual)
+      )
+    )
     .returning({ id: vendas.id });
 
   if (resultado.length === 0) throw new VendaError('Conflito de versão.', 'CONFLITO_VERSAO');
@@ -1103,20 +1139,32 @@ export class ProdutoError extends Error {
 function validarProdutoInput(dados: ProdutoInput, exigirNome = true): string[] {
   const erros: string[] = [];
   if (exigirNome && (!dados.nome || !dados.nome.trim())) erros.push('nome é obrigatório.');
-  if (dados.nome && dados.nome.trim().length > 200) erros.push('nome deve ter no máximo 200 caracteres.');
+  if (dados.nome && dados.nome.trim().length > 200)
+    erros.push('nome deve ter no máximo 200 caracteres.');
   const tiposValidos = TIPOS_PRODUTO as readonly string[];
   if (dados.tipo && !tiposValidos.includes(dados.tipo)) {
     erros.push(`tipo deve ser um de: ${TIPOS_PRODUTO.join(', ')}.`);
   }
-  if (dados.moeda && !/^[A-Z]{3}$/.test(dados.moeda)) erros.push('moeda deve ser código ISO de 3 letras maiúsculas (ex.: BRL, USD).');
-  if (dados.valorNetoCentavos !== undefined && (!Number.isInteger(dados.valorNetoCentavos) || dados.valorNetoCentavos < 0)) {
+  if (dados.moeda && !/^[A-Z]{3}$/.test(dados.moeda))
+    erros.push('moeda deve ser código ISO de 3 letras maiúsculas (ex.: BRL, USD).');
+  if (
+    dados.valorNetoCentavos !== undefined &&
+    (!Number.isInteger(dados.valorNetoCentavos) || dados.valorNetoCentavos < 0)
+  ) {
     erros.push('valorNetoCentavos deve ser inteiro ≥ 0.');
   }
-  if (dados.valorVendaCentavos !== undefined && (!Number.isInteger(dados.valorVendaCentavos) || dados.valorVendaCentavos < 0)) {
+  if (
+    dados.valorVendaCentavos !== undefined &&
+    (!Number.isInteger(dados.valorVendaCentavos) || dados.valorVendaCentavos < 0)
+  ) {
     erros.push('valorVendaCentavos deve ser inteiro ≥ 0.');
   }
   if (dados.descontoPadraoPct !== undefined && dados.descontoPadraoPct !== null) {
-    if (!Number.isInteger(dados.descontoPadraoPct) || dados.descontoPadraoPct < 0 || dados.descontoPadraoPct > 10000) {
+    if (
+      !Number.isInteger(dados.descontoPadraoPct) ||
+      dados.descontoPadraoPct < 0 ||
+      dados.descontoPadraoPct > 10000
+    ) {
       erros.push('descontoPadraoPct deve ser inteiro entre 0 e 10000 (representando 0%–100,00%).');
     }
   }
@@ -1144,7 +1192,7 @@ export async function criarProduto(db: DrizzleDb, dados: ProdutoInput): Promise<
       notas: dados.notas?.trim() || null,
       ativo: true,
       criadoEm: agora,
-      atualizadoEm: agora,
+      atualizadoEm: agora
     })
     .returning();
   return novo;
@@ -1156,25 +1204,32 @@ export async function obterProduto(db: DrizzleDb, id: number): Promise<Produto> 
   return produto;
 }
 
-export async function editarProduto(db: DrizzleDb, id: number, dados: Partial<ProdutoInput>): Promise<Produto> {
+export async function editarProduto(
+  db: DrizzleDb,
+  id: number,
+  dados: Partial<ProdutoInput>
+): Promise<Produto> {
   const erros = validarProdutoInput(dados as ProdutoInput, false);
   if (erros.length) throw new ProdutoError(erros.join(' '), 'VALIDACAO');
 
   const existente = await obterProduto(db, id);
 
-  const updateSet: Partial<typeof produtos.$inferInsert> = { atualizadoEm: new Date().toISOString() };
-  if (dados.nome !== undefined)               updateSet.nome = dados.nome.trim();
-  if (dados.tipo !== undefined)               updateSet.tipo = dados.tipo as Produto['tipo'];
-  if ('destino' in dados)                     updateSet.destino = dados.destino?.trim() || null;
-  if (dados.moeda !== undefined)              updateSet.moeda = dados.moeda.toUpperCase();
-  if (dados.valorNetoCentavos !== undefined)  updateSet.valorNetoCentavos = dados.valorNetoCentavos;
-  if (dados.valorVendaCentavos !== undefined) updateSet.valorVendaCentavos = dados.valorVendaCentavos;
-  if (dados.pagaComissao !== undefined)       updateSet.pagaComissao = dados.pagaComissao;
-  if (dados.permiteDesconto !== undefined)    updateSet.permiteDesconto = dados.permiteDesconto;
-  if ('descontoPadraoPct' in dados)           updateSet.descontoPadraoPct = dados.descontoPadraoPct ?? null;
-  if ('fornecedor' in dados)                  updateSet.fornecedor = dados.fornecedor?.trim() || null;
-  if ('notas' in dados)                       updateSet.notas = dados.notas?.trim() || null;
-  if (dados.ativo !== undefined)              updateSet.ativo = dados.ativo;
+  const updateSet: Partial<typeof produtos.$inferInsert> = {
+    atualizadoEm: new Date().toISOString()
+  };
+  if (dados.nome !== undefined) updateSet.nome = dados.nome.trim();
+  if (dados.tipo !== undefined) updateSet.tipo = dados.tipo as Produto['tipo'];
+  if ('destino' in dados) updateSet.destino = dados.destino?.trim() || null;
+  if (dados.moeda !== undefined) updateSet.moeda = dados.moeda.toUpperCase();
+  if (dados.valorNetoCentavos !== undefined) updateSet.valorNetoCentavos = dados.valorNetoCentavos;
+  if (dados.valorVendaCentavos !== undefined)
+    updateSet.valorVendaCentavos = dados.valorVendaCentavos;
+  if (dados.pagaComissao !== undefined) updateSet.pagaComissao = dados.pagaComissao;
+  if (dados.permiteDesconto !== undefined) updateSet.permiteDesconto = dados.permiteDesconto;
+  if ('descontoPadraoPct' in dados) updateSet.descontoPadraoPct = dados.descontoPadraoPct ?? null;
+  if ('fornecedor' in dados) updateSet.fornecedor = dados.fornecedor?.trim() || null;
+  if ('notas' in dados) updateSet.notas = dados.notas?.trim() || null;
+  if (dados.ativo !== undefined) updateSet.ativo = dados.ativo;
 
   await db.update(produtos).set(updateSet).where(eq(produtos.id, existente.id));
   return obterProduto(db, id);

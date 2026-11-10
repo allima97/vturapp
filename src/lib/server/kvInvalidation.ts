@@ -25,7 +25,12 @@
  *   id = "60fa423718914712bec4f489d41c3dd6"
  */
 
-import { getCachedReadModel, invalidateReadModelCache, READ_MODEL_TAGS, registerSalesInvalidationPublisher } from '$lib/server/readModelCache';
+import {
+  getCachedReadModel,
+  invalidateReadModelCache,
+  READ_MODEL_TAGS,
+  registerSalesInvalidationPublisher
+} from '$lib/server/readModelCache';
 import { logServerError } from '$lib/server/v1';
 
 const KV_EPOCH_KEY = 'invalidation:sales:epoch';
@@ -47,9 +52,9 @@ export type KVNamespace = {
 function isKVNamespace(value: unknown): value is KVNamespace {
   return Boolean(
     value &&
-      typeof value === 'object' &&
-      typeof (value as { get?: unknown }).get === 'function' &&
-      typeof (value as { put?: unknown }).put === 'function',
+    typeof value === 'object' &&
+    typeof (value as { get?: unknown }).get === 'function' &&
+    typeof (value as { put?: unknown }).put === 'function'
   );
 }
 
@@ -129,8 +134,8 @@ export function checkKvEpochAsync(): void {
             READ_MODEL_TAGS.vendasKpis,
             READ_MODEL_TAGS.ranking,
             READ_MODEL_TAGS.comissoes,
-            READ_MODEL_TAGS.conciliacao,
-          ],
+            READ_MODEL_TAGS.conciliacao
+          ]
         });
       }
     })
@@ -145,9 +150,7 @@ export function checkKvEpochAsync(): void {
  * Deve ser chamado após mutações de vendas/recibos.
  * Fire-and-forget — não bloqueia a response.
  */
-export function publishKvInvalidationAsync(scope?: {
-  companyIds?: string[] | null;
-}): void {
+export function publishKvInvalidationAsync(scope?: { companyIds?: string[] | null }): void {
   if (!kvNamespaceRef) return;
 
   const kv = kvNamespaceRef;
@@ -161,17 +164,13 @@ export function publishKvInvalidationAsync(scope?: {
   }
 
   const writes: Promise<void>[] = [
-    Promise.resolve(
-      kv.put(KV_EPOCH_KEY, String(newEpoch), { expirationTtl: KV_EPOCH_TTL_SECONDS })
-    ),
+    Promise.resolve(kv.put(KV_EPOCH_KEY, String(newEpoch), { expirationTtl: KV_EPOCH_TTL_SECONDS }))
   ];
 
   for (const companyId of companyIds) {
     const companyKey = `invalidation:sales:company:${companyId}`;
     writes.push(
-      Promise.resolve(
-        kv.put(companyKey, String(newEpoch), { expirationTtl: KV_EPOCH_TTL_SECONDS })
-      ),
+      Promise.resolve(kv.put(companyKey, String(newEpoch), { expirationTtl: KV_EPOCH_TTL_SECONDS }))
     );
   }
 
@@ -186,7 +185,6 @@ export function publishKvInvalidationAsync(scope?: {
 // instancias do Worker, sem depender de cada endpoint lembrar de chamar
 // publishKvInvalidationAsync() separadamente.
 registerSalesInvalidationPublisher(publishKvInvalidationAsync);
-
 
 // ---------------------------------------------------------------------------
 // Cache L2 (valor real) compartilhado entre instâncias via KV.
@@ -265,9 +263,7 @@ type KvReadModelEnvelope<T> = {
  * consistência. Uso: mesma assinatura de getCachedReadModel, só troca o nome
  * da chamada e opcionalmente passa `kvTtlSeconds`.
  */
-export async function getCachedReadModelWithKv<T>(
-  options: KvReadModelOptions<T>,
-): Promise<T> {
+export async function getCachedReadModelWithKv<T>(options: KvReadModelOptions<T>): Promise<T> {
   const kv = kvNamespaceRef;
   const kvTtlSeconds = Math.max(1, options.kvTtlSeconds ?? DEFAULT_KV_TTL_SECONDS);
   // Epoch capturado no momento da chamada -- ver nota sobre revalidação em
@@ -300,11 +296,9 @@ export async function getCachedReadModelWithKv<T>(
       try {
         const envelope: KvReadModelEnvelope<T> = { value: fresh, writtenAt: Date.now() };
         const serialized = JSON.stringify(envelope);
-        Promise.resolve(kv.put(kvKey, serialized, { expirationTtl: kvTtlSeconds })).catch(
-          (err) => {
-            logServerError('[kvInvalidation] falha ao escrever cache L2 no KV', err);
-          },
-        );
+        Promise.resolve(kv.put(kvKey, serialized, { expirationTtl: kvTtlSeconds })).catch((err) => {
+          logServerError('[kvInvalidation] falha ao escrever cache L2 no KV', err);
+        });
       } catch (err) {
         // Valor não serializável em JSON -- não usa o cache L2 para ele,
         // mas o cache local (getCachedReadModel) continua funcionando normal.
@@ -320,6 +314,6 @@ export async function getCachedReadModelWithKv<T>(
     tags: options.tags,
     ttlMs: options.ttlMs,
     staleTtlMs: options.staleTtlMs,
-    loader: loaderWithKv,
+    loader: loaderWithKv
   });
 }

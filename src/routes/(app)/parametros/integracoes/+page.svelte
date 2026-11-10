@@ -59,7 +59,12 @@
       campos: [
         { nome: 'Phone Number ID', valor: '', tipo: 'text' },
         { nome: 'Access Token', valor: '', tipo: 'password' },
-        { nome: 'Webhook URL', valor: 'https://api.vtur.com/webhooks/whatsapp', tipo: 'text', readonly: true }
+        {
+          nome: 'Webhook URL',
+          valor: 'https://api.vtur.com/webhooks/whatsapp',
+          tipo: 'text',
+          readonly: true
+        }
       ]
     },
     {
@@ -83,7 +88,12 @@
       campos: [
         { nome: 'Client ID', valor: '', tipo: 'text' },
         { nome: 'Client Secret', valor: '', tipo: 'password' },
-        { nome: 'Redirect URI', valor: 'https://vtur.com/auth/google/callback', tipo: 'text', readonly: true }
+        {
+          nome: 'Redirect URI',
+          valor: 'https://vtur.com/auth/google/callback',
+          tipo: 'text',
+          readonly: true
+        }
       ]
     }
   ];
@@ -129,35 +139,39 @@
   <title>Integrações | VTUR</title>
 </svelte:head>
 
-<PageHeader 
+<PageHeader
   title="Integrações"
   subtitle="APIs e serviços externos"
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Parâmetros', href: '/parametros' },
-    { label: 'Integrações' }
-  ]}
+  breadcrumbs={[{ label: 'Parâmetros', href: '/parametros' }, { label: 'Integrações' }]}
 />
 
 <div class="space-y-6">
   {#each integracoes as int}
     <Card color="financeiro">
-      <div class="flex items-start justify-between mb-4">
+      <div class="mb-4 flex items-start justify-between">
         <div class="flex items-center gap-4">
-          <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-2xl">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-2xl">
             {int.icone}
           </div>
           <div>
             <div class="flex items-center gap-2">
               <h3 class="text-lg font-semibold text-slate-900">{int.nome}</h3>
-              <Badge color={getStatusColor(int.status)} size="sm">{getStatusLabel(int.status)}</Badge>
+              <Badge color={getStatusColor(int.status)} size="sm"
+                >{getStatusLabel(int.status)}</Badge
+              >
             </div>
             <p class="text-sm text-slate-500">{int.descricao}</p>
           </div>
         </div>
         <div class="flex items-center gap-2">
           {#if int.status === 'conectado'}
-            <Button variant="secondary" size="sm" on:click={() => testarConexao(int.id)} disabled={testando}>
+            <Button
+              variant="secondary"
+              size="sm"
+              on:click={() => testarConexao(int.id)}
+              disabled={testando}
+            >
               <RefreshCw size={16} class="mr-1 {testando ? 'animate-spin' : ''}" />
               Testar
             </Button>
@@ -175,7 +189,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {#each int.campos as campo, campoIndex}
           <div>
             {#if campo.readonly}
@@ -195,7 +209,10 @@
                   class_name="mt-6 p-2"
                   title="Copiar valor"
                   ariaLabel={`Copiar ${campo.nome}`}
-                  on:click={() => { navigator.clipboard.writeText(campo.valor); toast.success('Copiado!'); }}
+                  on:click={() => {
+                    navigator.clipboard.writeText(campo.valor);
+                    toast.success('Copiado!');
+                  }}
                 >
                   📋
                 </Button>
@@ -214,10 +231,12 @@
       </div>
 
       {#if int.status === 'desconectado'}
-        <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+        <div class="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
           <div class="flex items-center gap-2">
             <AlertTriangle size={18} class="text-amber-600" />
-            <span class="text-sm text-amber-700">Esta integração não está configurada. Preencha os campos acima para ativar.</span>
+            <span class="text-sm text-amber-700"
+              >Esta integração não está configurada. Preencha os campos acima para ativar.</span
+            >
           </div>
         </div>
       {/if}
@@ -226,11 +245,11 @@
 </div>
 
 <!-- Botões -->
-<div class="flex items-center justify-end gap-3 mt-6">
+<div class="mt-6 flex items-center justify-end gap-3">
   <Button variant="secondary" on:click={() => history.back()}>Cancelar</Button>
   <Button variant="primary" color="financeiro" on:click={salvarConfiguracoes} disabled={saving}>
     {#if saving}
-      <span class="animate-spin mr-2">⟳</span>
+      <span class="mr-2 animate-spin">⟳</span>
       Salvando...
     {:else}
       <Save size={18} class="mr-2" />

@@ -61,7 +61,11 @@
       inativa: 'bg-slate-100 text-slate-600',
       cancelada: 'bg-red-100 text-red-700'
     };
-    const labels: Record<string, string> = { ativa: 'Ativa', inativa: 'Inativa', cancelada: 'Cancelada' };
+    const labels: Record<string, string> = {
+      ativa: 'Ativa',
+      inativa: 'Inativa',
+      cancelada: 'Cancelada'
+    };
     return `<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${styles[status] || 'bg-slate-100 text-slate-600'}">${escapeHtml(labels[status] || status || '-')}</span>`;
   }
 
@@ -113,7 +117,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const payload = await apiGet<{ items?: Campanha[]; can_write?: boolean }>('/api/v1/operacao/campanhas', undefined, request.signal);
+      const payload = await apiGet<{ items?: Campanha[]; can_write?: boolean }>(
+        '/api/v1/operacao/campanhas',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       campanhas = payload.items || [];
       canEdit = Boolean(payload.can_write);
@@ -153,9 +161,18 @@
   }
 
   async function save() {
-    if (!canEdit) { toast.error('Somente gestor/master podem gerenciar campanhas.'); return; }
-    if (!form.titulo.trim()) { toast.error('Título obrigatório.'); return; }
-    if (!form.data_campanha) { toast.error('Data obrigatória.'); return; }
+    if (!canEdit) {
+      toast.error('Somente gestor/master podem gerenciar campanhas.');
+      return;
+    }
+    if (!form.titulo.trim()) {
+      toast.error('Título obrigatório.');
+      return;
+    }
+    if (!form.data_campanha) {
+      toast.error('Data obrigatória.');
+      return;
+    }
 
     saving = true;
     try {
@@ -171,7 +188,10 @@
   }
 
   async function deleteCampanha(id: string) {
-    if (!canEdit) { toast.error('Somente gestor/master podem excluir campanhas.'); return; }
+    if (!canEdit) {
+      toast.error('Somente gestor/master podem excluir campanhas.');
+      return;
+    }
     if (!(await confirmAction('Deseja excluir esta campanha?'))) return;
     deletingId = id;
     try {
@@ -192,7 +212,8 @@
     return campanhas.reduce(
       (acc, campanha) => {
         if (campanha.status === 'ativa') acc.ativas += 1;
-        if (campanha.validade_ate && compareISODate(campanha.validade_ate, hoje) < 0) acc.vencidas += 1;
+        if (campanha.validade_ate && compareISODate(campanha.validade_ate, hoje) < 0)
+          acc.vencidas += 1;
         return acc;
       },
       { ativas: 0, vencidas: 0 }
@@ -211,12 +232,12 @@
     ? 'Gerencie campanhas promocionais com imagens, links e regras de validade.'
     : 'Visualize campanhas promocionais, links e regras de validade.'}
   color="operacao"
-  breadcrumbs={[
-    { label: 'Campanhas' }
-  ]}
+  breadcrumbs={[{ label: 'Campanhas' }]}
   actions={[
     { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw },
-    ...(canEdit ? [{ label: 'Nova Campanha', onClick: openNew, variant: 'primary' as const, icon: Plus }] : [])
+    ...(canEdit
+      ? [{ label: 'Nova Campanha', onClick: openNew, variant: 'primary' as const, icon: Plus }]
+      : [])
   ]}
 />
 

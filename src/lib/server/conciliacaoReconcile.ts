@@ -125,7 +125,10 @@ function extractReciboPrefix(value?: string | null) {
 }
 
 function compactNumero(value?: string | null) {
-  return String(value ?? '').trim().toUpperCase().replace(/[^A-Z0-9]+/g, '');
+  return String(value ?? '')
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '');
 }
 
 function numeroReciboMatches(left?: string | null, right?: string | null) {
@@ -144,7 +147,8 @@ function numeroReciboMatches(left?: string | null, right?: string | null) {
 
   const leftSignificantCore = stripLeadingZeros(leftCore);
   const rightSignificantCore = stripLeadingZeros(rightCore);
-  if (!leftSignificantCore || !rightSignificantCore || leftSignificantCore !== rightSignificantCore) return false;
+  if (!leftSignificantCore || !rightSignificantCore || leftSignificantCore !== rightSignificantCore)
+    return false;
 
   const leftPrefix = extractReciboPrefix(left);
   const rightPrefix = extractReciboPrefix(right);
@@ -188,7 +192,11 @@ function diff(a: number, b: number) {
 }
 
 function normalizeConciliacaoStatus(value?: string | null) {
-  return String(value || '').trim().toUpperCase() || 'OUTRO';
+  return (
+    String(value || '')
+      .trim()
+      .toUpperCase() || 'OUTRO'
+  );
 }
 
 function normalizeRexturLocalizador(value?: string | null) {
@@ -199,7 +207,11 @@ function normalizeRexturLocalizador(value?: string | null) {
 }
 
 function isRexturDocumento(value?: string | null) {
-  return String(value || '').trim().toUpperCase() === 'REXTUR';
+  return (
+    String(value || '')
+      .trim()
+      .toUpperCase() === 'REXTUR'
+  );
 }
 
 function rexturReservaMatches(left?: string | null, right?: string | null) {
@@ -258,7 +270,7 @@ function duplicateGroupKey(row: ConciliacaoDuplicateRow) {
     String(row?.documento || '').trim(),
     normalizeRexturLocalizador(row?.numero_reserva),
     normalizeConciliacaoStatus(row?.status),
-    Boolean(row?.is_baixa_rac) ? 'BAIXA_RAC' : 'NORMAL'
+    row?.is_baixa_rac ? 'BAIXA_RAC' : 'NORMAL'
   ].join('::');
 }
 
@@ -310,17 +322,21 @@ function firstPresent(rows: ConciliacaoDuplicateRow[], field: keyof ConciliacaoD
   return undefined;
 }
 
-function buildDuplicateWinnerPatch(winner: ConciliacaoDuplicateRow, losers: ConciliacaoDuplicateRow[]) {
+function buildDuplicateWinnerPatch(
+  winner: ConciliacaoDuplicateRow,
+  losers: ConciliacaoDuplicateRow[]
+) {
   const payload: Partial<ConciliacaoDuplicateRow> = {};
   const payloadRecord = payload as Record<string, unknown>;
   for (const field of duplicatePatchFields) {
     const winnerValue = winner?.[field];
-    if (winnerValue !== null && winnerValue !== undefined && String(winnerValue).trim() !== '') continue;
+    if (winnerValue !== null && winnerValue !== undefined && String(winnerValue).trim() !== '')
+      continue;
     const loserValue = firstPresent(losers, field);
     if (loserValue !== undefined) payloadRecord[field] = loserValue;
   }
 
-  if (!Boolean(winner?.conciliado) && losers.some((row) => Boolean(row?.conciliado))) {
+  if (!winner?.conciliado && losers.some((row) => Boolean(row?.conciliado))) {
     payload.conciliado = true;
   }
 
@@ -435,8 +451,12 @@ async function moveDuplicateRateioToWinner(params: {
     }
 
     const rows = Array.isArray(rateios) ? rateios : [];
-    const winnerHasRateio = rows.some((row) => String(row?.conciliacao_recibo_id || '') === params.winnerId);
-    const loserRateios = rows.filter((row) => loserIdSet.has(String(row?.conciliacao_recibo_id || '')));
+    const winnerHasRateio = rows.some(
+      (row) => String(row?.conciliacao_recibo_id || '') === params.winnerId
+    );
+    const loserRateios = rows.filter((row) =>
+      loserIdSet.has(String(row?.conciliacao_recibo_id || ''))
+    );
     const [firstLoserRateio, ...extraLoserRateios] = loserRateios;
 
     if (!winnerHasRateio && firstLoserRateio?.id) {
@@ -450,12 +470,16 @@ async function moveDuplicateRateioToWinner(params: {
     const idsToDelete = uniqueCleanStrings(rateiosToDelete.map((row) => row?.id));
     if (idsToDelete.length > 0) {
       for (const batch of chunkArray(idsToDelete, QUERY_IN_BATCH_SIZE)) {
-        const { error: deleteError } = await params.client.from('vendas_recibos_rateio').delete().in('id', batch);
+        const { error: deleteError } = await params.client
+          .from('vendas_recibos_rateio')
+          .delete()
+          .in('id', batch);
         if (deleteError) throw deleteError;
       }
     }
   } catch (error) {
-    const errorRecord = typeof error === 'object' && error !== null ? (error as Record<string, unknown>) : null;
+    const errorRecord =
+      typeof error === 'object' && error !== null ? (error as Record<string, unknown>) : null;
     const code = String(errorRecord?.code || '').trim();
     const message = String(errorRecord?.message || error || '').toLowerCase();
     if (code === '42P01' || message.includes('vendas_recibos_rateio')) return;
@@ -488,7 +512,9 @@ async function cleanupDuplicateConciliacaoRowsCompany(params: {
       .maybeSingle();
     if (error) throw error;
     if (!target?.documento) return { removed: 0, groups: 0 };
-    query = query.eq('documento', String(target.documento || '').trim()).eq('status', target.status || '');
+    query = query
+      .eq('documento', String(target.documento || '').trim())
+      .eq('status', target.status || '');
     query =
       target.movimento_data == null
         ? query.is('movimento_data', null)
@@ -496,7 +522,9 @@ async function cleanupDuplicateConciliacaoRowsCompany(params: {
   } else {
     const monthRange = resolveMonthDateRange(params.month);
     if (monthRange) {
-      query = query.gte('movimento_data', monthRange.start).lt('movimento_data', monthRange.endExclusive);
+      query = query
+        .gte('movimento_data', monthRange.start)
+        .lt('movimento_data', monthRange.endExclusive);
     } else if (params.onlyCurrentMonth) {
       const { start, end } = getCurrentMonthRange();
       query = query.gte('movimento_data', start).lte('movimento_data', end);
@@ -528,7 +556,10 @@ async function cleanupDuplicateConciliacaoRowsCompany(params: {
 
     const winnerPatch = buildDuplicateWinnerPatch(winner, losers);
     if (Object.keys(winnerPatch).length > 0) {
-      const { error: patchError } = await client.from('conciliacao_recibos').update(winnerPatch).eq('id', winner.id);
+      const { error: patchError } = await client
+        .from('conciliacao_recibos')
+        .update(winnerPatch)
+        .eq('id', winner.id);
       if (patchError) throw patchError;
     }
 
@@ -543,7 +574,10 @@ async function cleanupDuplicateConciliacaoRowsCompany(params: {
     }
 
     for (const batch of chunkArray(loserIds, QUERY_IN_BATCH_SIZE)) {
-      const { error: deleteError } = await client.from('conciliacao_recibos').delete().in('id', batch);
+      const { error: deleteError } = await client
+        .from('conciliacao_recibos')
+        .delete()
+        .in('id', batch);
       if (deleteError) throw deleteError;
     }
     removed += loserIds.length;
@@ -746,13 +780,17 @@ function selectBestReciboMatch(params: {
   if (compativeis.length === 0) return null;
 
   // Filtra por valor quando disponível — reduz ambiguidade
-  const porValor = valorLancamento != null
-    ? compativeis.filter((item) => matches(Number(item.valor_total || 0), Number(valorLancamento || 0)))
-    : compativeis;
+  const porValor =
+    valorLancamento != null
+      ? compativeis.filter((item) =>
+          matches(Number(item.valor_total || 0), Number(valorLancamento || 0))
+        )
+      : compativeis;
 
-  const porTaxa = valorTaxas != null
-    ? porValor.filter((item) => matches(Number(item.valor_taxas || 0), Number(valorTaxas || 0)))
-    : porValor;
+  const porTaxa =
+    valorTaxas != null
+      ? porValor.filter((item) => matches(Number(item.valor_taxas || 0), Number(valorTaxas || 0)))
+      : porValor;
 
   // Só retorna quando há exatamente 1 candidato — nunca escolhe arbitrariamente entre múltiplos.
   // Com múltiplos candidatos ambíguos, é mais seguro não linkar do que linkar ao vendedor errado.
@@ -808,7 +846,9 @@ async function findRexturReciboByReserva(params: {
   const valorTaxas = params.valorTaxas ?? null;
   const porValor =
     valorLancamento != null
-      ? candidates.filter((item) => matches(Number(item.valor_total || 0), Number(valorLancamento || 0)))
+      ? candidates.filter((item) =>
+          matches(Number(item.valor_total || 0), Number(valorLancamento || 0))
+        )
       : candidates;
   const porTaxa =
     valorTaxas != null
@@ -881,16 +921,31 @@ export async function diagnosticarLacunasCronologicas(params: {
   if (semMovimentoErr) {
     const msg = String(semMovimentoErr.message || semMovimentoErr || '').toLowerCase();
     const code = String((semMovimentoErr as { code?: string } | null)?.code || '').trim();
-    const isMissing = code === '42P01' || msg.includes('does not exist') || msg.includes('could not find') || msg.includes('conciliacao_dias_sem_movimento');
+    const isMissing =
+      code === '42P01' ||
+      msg.includes('does not exist') ||
+      msg.includes('could not find') ||
+      msg.includes('conciliacao_dias_sem_movimento');
     if (!isMissing) throw semMovimentoErr;
   }
 
-  const diasSemMovimento = uniqueCleanStrings(((semMovimentoRows || []) as ConciliacaoSemMovimentoRow[]).map((r) => r?.data)).sort();
+  const diasSemMovimento = uniqueCleanStrings(
+    ((semMovimentoRows || []) as ConciliacaoSemMovimentoRow[]).map((r) => r?.data)
+  ).sort();
 
-  const diasImportados = uniqueCleanStrings(((data || []) as ConciliacaoMovimentoDataRow[]).map((r) => r?.movimento_data)).sort();
+  const diasImportados = uniqueCleanStrings(
+    ((data || []) as ConciliacaoMovimentoDataRow[]).map((r) => r?.movimento_data)
+  ).sort();
 
   if (diasImportados.length === 0) {
-    return { fronteira: null, diasFaltantes: [], diasImportados: [], diasBloqueados: [], diasSemMovimento, registrosBloqueados: 0 };
+    return {
+      fronteira: null,
+      diasFaltantes: [],
+      diasImportados: [],
+      diasBloqueados: [],
+      diasSemMovimento,
+      registrosBloqueados: 0
+    };
   }
 
   // Une importados + sem movimento para verificar sequência contínua
@@ -910,7 +965,14 @@ export async function diagnosticarLacunasCronologicas(params: {
 
   // Se não há lacuna, tudo está ok
   if (gapIndex === -1) {
-    return { fronteira: frontier, diasFaltantes: [], diasImportados, diasBloqueados: [], diasSemMovimento, registrosBloqueados: 0 };
+    return {
+      fronteira: frontier,
+      diasFaltantes: [],
+      diasImportados,
+      diasBloqueados: [],
+      diasSemMovimento,
+      registrosBloqueados: 0
+    };
   }
 
   // Calcula os dias faltantes entre a fronteira e o próximo dia preenchido
@@ -937,7 +999,14 @@ export async function diagnosticarLacunasCronologicas(params: {
     registrosBloqueados = Number(count || 0);
   }
 
-  return { fronteira: frontier, diasFaltantes, diasImportados, diasBloqueados, diasSemMovimento, registrosBloqueados };
+  return {
+    fronteira: frontier,
+    diasFaltantes,
+    diasImportados,
+    diasBloqueados,
+    diasSemMovimento,
+    registrosBloqueados
+  };
 }
 
 /** Versão interna sem diagnóstico completo — usada no filtro da query de reconciliação. */
@@ -1042,7 +1111,7 @@ async function reconcilePendentesCompany(params: {
 
   let checked = 0;
   let reconciled = 0;
-  let updatedTaxes = 0;
+  const updatedTaxes = 0;
   let updateErrors = 0;
 
   for (const row of rows) {
@@ -1069,7 +1138,10 @@ async function reconcilePendentesCompany(params: {
     const valorComparacao = Number(metrics.valorVendaReal || 0);
 
     if (!documento) {
-      await client.from('conciliacao_recibos').update({ last_checked_at: new Date().toISOString() }).eq('id', id);
+      await client
+        .from('conciliacao_recibos')
+        .update({ last_checked_at: new Date().toISOString() })
+        .eq('id', id);
       continue;
     }
 
@@ -1087,7 +1159,8 @@ async function reconcilePendentesCompany(params: {
         // Valida que o número do recibo gravado realmente bate com o documento.
         // Se não bater, o vínculo foi feito por match errado — ignora e refaz a busca.
         const numeroConfere = documentoIsRextur
-          ? isRexturDocumento(reciboRow.numero_recibo) && (!numeroReserva || rexturReservaMatches(numeroReserva, reciboRow.numero_reserva))
+          ? isRexturDocumento(reciboRow.numero_recibo) &&
+            (!numeroReserva || rexturReservaMatches(numeroReserva, reciboRow.numero_reserva))
           : numeroReciboMatches(documento, reciboRow.numero_recibo);
         if (!numeroConfere) {
           logServerError(
@@ -1097,7 +1170,13 @@ async function reconcilePendentesCompany(params: {
           // Limpa o vínculo incorreto para que o reconcile refaça o match corretamente
           await client
             .from('conciliacao_recibos')
-            .update({ venda_recibo_id: null, venda_id: null, ranking_vendedor_id: null, conciliado: false, conciliado_em: null })
+            .update({
+              venda_recibo_id: null,
+              venda_id: null,
+              ranking_vendedor_id: null,
+              conciliado: false,
+              conciliado_em: null
+            })
             .eq('id', id);
         } else {
           const { data: vendaRow } = await client
@@ -1151,19 +1230,25 @@ async function reconcilePendentesCompany(params: {
       const rankingVendedorManualRaw = String(row.ranking_vendedor_id || '').trim() || null;
       const rankingVendedorManual = sanitizeRankingVendedorId(rankingVendedorManualRaw);
       if (rankingVendedorManual) {
-        await client.from('conciliacao_recibos').update({
-          conciliado: true,
-          conciliado_em: new Date().toISOString(),
-          last_checked_at: new Date().toISOString(),
-          valor_venda_real: metrics.valorVendaReal,
-          valor_comissao_loja: metrics.valorComissaoLoja,
-          percentual_comissao_loja: metrics.percentualComissaoLoja,
-          faixa_comissao: metrics.faixaComissao,
-          is_seguro_viagem: metrics.isSeguroViagem
-        }).eq('id', id);
+        await client
+          .from('conciliacao_recibos')
+          .update({
+            conciliado: true,
+            conciliado_em: new Date().toISOString(),
+            last_checked_at: new Date().toISOString(),
+            valor_venda_real: metrics.valorVendaReal,
+            valor_comissao_loja: metrics.valorComissaoLoja,
+            percentual_comissao_loja: metrics.percentualComissaoLoja,
+            faixa_comissao: metrics.faixaComissao,
+            is_seguro_viagem: metrics.isSeguroViagem
+          })
+          .eq('id', id);
         reconciled += 1;
       } else {
-        await client.from('conciliacao_recibos').update({ last_checked_at: new Date().toISOString() }).eq('id', id);
+        await client
+          .from('conciliacao_recibos')
+          .update({ last_checked_at: new Date().toISOString() })
+          .eq('id', id);
       }
       continue;
     }
@@ -1185,8 +1270,9 @@ async function reconcilePendentesCompany(params: {
     // Quando há correção/atribuição manual registrada por usuário, ela prevalece
     // também em recibos vinculados. Sem isso, uma reconciliação posterior desfaz
     // a correção administrativa e volta para o vendedor da venda.
-    const rankingVendedorResolvido =
-      temRankingManual ? rankingVendedorAtual : vendedorIdDaVendaValido || rankingVendedorAtual || null;
+    const rankingVendedorResolvido = temRankingManual
+      ? rankingVendedorAtual
+      : vendedorIdDaVendaValido || rankingVendedorAtual || null;
     const updatePayload: Record<string, unknown> = {
       venda_id: recibo.venda_id,
       venda_recibo_id: recibo.id,
@@ -1206,9 +1292,13 @@ async function reconcilePendentesCompany(params: {
       conciliado_em: new Date().toISOString(),
       last_checked_at: new Date().toISOString()
     };
-    if (!rankingVendedorAtual && rankingVendedorResolvido) updatePayload.ranking_assigned_at = new Date().toISOString();
+    if (!rankingVendedorAtual && rankingVendedorResolvido)
+      updatePayload.ranking_assigned_at = new Date().toISOString();
 
-    const { error: conciliadoErr } = await client.from('conciliacao_recibos').update(updatePayload).eq('id', id);
+    const { error: conciliadoErr } = await client
+      .from('conciliacao_recibos')
+      .update(updatePayload)
+      .eq('id', id);
     if (conciliadoErr) {
       updateErrors += 1;
       continue;
@@ -1299,7 +1389,10 @@ async function recalculateConciliacaoMetricsCompany(params: {
       .range(offset, offset + batchSize - 1);
 
     if (params.onlyConciliados) query = query.eq('conciliado', true);
-    if (monthRange) query = query.gte('movimento_data', monthRange.start).lt('movimento_data', monthRange.endExclusive);
+    if (monthRange)
+      query = query
+        .gte('movimento_data', monthRange.start)
+        .lt('movimento_data', monthRange.endExclusive);
 
     const { data, error } = await query;
     if (error) throw error;

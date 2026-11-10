@@ -29,7 +29,7 @@ export function apiHandler(event: RequestEvent): Promise<Response> {
       // e devem ser acessados com optional chaining nos handlers.
       DB: platformEnv?.DB,
       R2: platformEnv?.R2,
-      KV_BINDING: platformEnv?.KV_BINDING,
+      KV_BINDING: platformEnv?.KV_BINDING
     })
   );
 }

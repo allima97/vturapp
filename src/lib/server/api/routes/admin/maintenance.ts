@@ -39,7 +39,7 @@ export async function handleAdminMaintenanceGet(event: RequestEvent) {
       {
         maintenance_enabled: Boolean(data?.maintenance_enabled),
         maintenance_message: data?.maintenance_message ?? null,
-        updated_at: data?.updated_at ?? null,
+        updated_at: data?.updated_at ?? null
       },
       { headers: NO_STORE_HEADERS }
     );
@@ -66,7 +66,10 @@ export async function handleAdminMaintenancePost(event: RequestEvent) {
     if (!rl.allowed) {
       return json(
         { error: 'Muitas requisicoes. Aguarde e tente novamente.' },
-        { status: 429, headers: { ...NO_STORE_HEADERS, 'Retry-After': String(rl.retryAfterSeconds) } }
+        {
+          status: 429,
+          headers: { ...NO_STORE_HEADERS, 'Retry-After': String(rl.retryAfterSeconds) }
+        }
       );
     }
 
@@ -79,7 +82,7 @@ export async function handleAdminMaintenancePost(event: RequestEvent) {
       singleton: true,
       maintenance_enabled: Boolean(body?.maintenance_enabled),
       maintenance_message: body?.maintenance_message ?? null,
-      updated_by: user.id,
+      updated_by: user.id
     };
 
     const { error } = await client

@@ -39,7 +39,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const data = await apiGet<{ items?: Fornecedor[] }>('/api/v1/fornecedores', undefined, request.signal);
+      const data = await apiGet<{ items?: Fornecedor[] }>(
+        '/api/v1/fornecedores',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       fornecedores = data.items || [];
     } catch (err) {
@@ -93,21 +97,26 @@
     local_label: `${formatLocalizacao(item.localizacao)}${item.cidade ? ` - ${item.cidade}` : ''}${item.estado ? `/${item.estado}` : ''}`,
     faturamento_label: formatFaturamento(item.tipo_faturamento),
     contato_label: item.responsavel || '-',
-    servicos_label: item.principais_servicos && item.principais_servicos.length > 80 ? `${item.principais_servicos.slice(0, 80)}...` : item.principais_servicos || '-'
+    servicos_label:
+      item.principais_servicos && item.principais_servicos.length > 80
+        ? `${item.principais_servicos.slice(0, 80)}...`
+        : item.principais_servicos || '-'
   }));
 
   $: filteredRows = rows.filter((item) => {
     const termo = normalize(busca);
     if (termo) {
-      const haystack = normalize([
-        item.parceiro_nome,
-        item.nome_completo,
-        item.responsavel,
-        item.telefone,
-        item.whatsapp,
-        item.local_label,
-        item.servicos_label
-      ].join(' '));
+      const haystack = normalize(
+        [
+          item.parceiro_nome,
+          item.nome_completo,
+          item.responsavel,
+          item.telefone,
+          item.whatsapp,
+          item.local_label,
+          item.servicos_label
+        ].join(' ')
+      );
       if (!haystack.includes(termo)) return false;
     }
     if (filtroStatus === 'ativo' && item.ativo === false) return false;
@@ -136,7 +145,13 @@
     { key: 'whatsapp', label: 'WhatsApp', sortable: true, width: '150px' },
     { key: 'telefone_emergencia', label: 'Emergência', sortable: true, width: '150px' },
     { key: 'servicos_label', label: 'Serviços', sortable: false },
-    { key: 'ativo', label: 'Status', sortable: true, width: '110px', formatter: (value: boolean) => statusBadge(value) }
+    {
+      key: 'ativo',
+      label: 'Status',
+      sortable: true,
+      width: '110px',
+      formatter: (value: boolean) => statusBadge(value)
+    }
   ];
 </script>
 
@@ -148,31 +163,53 @@
   title="Fornecedores"
   subtitle="Cadastros de apoio operacional usados por produtos, operação e fluxo comercial"
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Cadastros', href: '/cadastros' },
-    { label: 'Fornecedores' }
-  ]}
+  breadcrumbs={[{ label: 'Cadastros', href: '/cadastros' }, { label: 'Fornecedores' }]}
   actions={[
-    { label: 'Novo fornecedor', onClick: () => goto('/cadastros/fornecedores/novo'), variant: 'primary', icon: Plus }
+    {
+      label: 'Novo fornecedor',
+      onClick: () => goto('/cadastros/fornecedores/novo'),
+      variant: 'primary',
+      icon: Plus
+    }
   ]}
 />
 
 <div class="vtur-kpi-grid mb-6">
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500"><Building2 size={20} /></div>
-    <div><p class="text-sm font-medium text-slate-500">Total</p><p class="text-2xl font-bold text-slate-900">{stats.total}</p></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500">
+      <Building2 size={20} />
+    </div>
+    <div>
+      <p class="text-sm font-medium text-slate-500">Total</p>
+      <p class="text-2xl font-bold text-slate-900">{stats.total}</p>
+    </div>
   </div>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500"><Phone size={20} /></div>
-    <div><p class="text-sm font-medium text-slate-500">Ativos</p><p class="text-2xl font-bold text-slate-900">{stats.ativos}</p></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
+      <Phone size={20} />
+    </div>
+    <div>
+      <p class="text-sm font-medium text-slate-500">Ativos</p>
+      <p class="text-2xl font-bold text-slate-900">{stats.ativos}</p>
+    </div>
   </div>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500"><MapPin size={20} /></div>
-    <div><p class="text-sm font-medium text-slate-500">Exterior</p><p class="text-2xl font-bold text-slate-900">{stats.exterior}</p></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+      <MapPin size={20} />
+    </div>
+    <div>
+      <p class="text-sm font-medium text-slate-500">Exterior</p>
+      <p class="text-2xl font-bold text-slate-900">{stats.exterior}</p>
+    </div>
   </div>
   <div class="vtur-kpi-card">
-    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-500"><Wallet size={20} /></div>
-    <div><p class="text-sm font-medium text-slate-500">Com produtos</p><p class="text-2xl font-bold text-slate-900">{stats.vinculados}</p></div>
+    <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-50 text-violet-500">
+      <Wallet size={20} />
+    </div>
+    <div>
+      <p class="text-sm font-medium text-slate-500">Com produtos</p>
+      <p class="text-2xl font-bold text-slate-900">{stats.vinculados}</p>
+    </div>
   </div>
 </div>
 

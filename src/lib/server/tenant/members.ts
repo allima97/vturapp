@@ -16,7 +16,10 @@ import { assertTenantOwnership, TenantError } from './guard';
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type MembrosResult =
-  | { ok: true; membro: { id: number; userId: string; empresaId: number; papel: string; ativo: boolean } }
+  | {
+      ok: true;
+      membro: { id: number; userId: string; empresaId: number; papel: string; ativo: boolean };
+    }
   | { ok: false; error: string; code: 'NAO_ENCONTRADO' | 'CROSS_TENANT' | 'ERRO_INTERNO' };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -27,10 +30,7 @@ export type MembrosResult =
  * Lista todos os membros ativos da empresa do usuário autenticado.
  * Sempre filtra por `empresaId` (sem possibilidade de cross-tenant).
  */
-export async function listarMembros(
-  d1: D1Database,
-  empresaId: number
-) {
+export async function listarMembros(d1: D1Database, empresaId: number) {
   const db = drizzle(d1);
   return db
     .select({
@@ -39,15 +39,10 @@ export async function listarMembros(
       empresaId: membrosEmpresa.empresaId,
       papel: membrosEmpresa.papel,
       ativo: membrosEmpresa.ativo,
-      criadoEm: membrosEmpresa.criadoEm,
+      criadoEm: membrosEmpresa.criadoEm
     })
     .from(membrosEmpresa)
-    .where(
-      and(
-        eq(membrosEmpresa.empresaId, empresaId),
-        eq(membrosEmpresa.ativo, true)
-      )
-    );
+    .where(and(eq(membrosEmpresa.empresaId, empresaId), eq(membrosEmpresa.ativo, true)));
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -95,7 +90,7 @@ export async function revogarMembro(
       .update(membrosEmpresa)
       .set({
         ativo: false,
-        atualizadoEm: new Date().toISOString(),
+        atualizadoEm: new Date().toISOString()
       })
       .where(eq(membrosEmpresa.id, membroId));
 
@@ -106,8 +101,8 @@ export async function revogarMembro(
         userId: membro.userId,
         empresaId: membro.empresaId,
         papel: membro.papel,
-        ativo: false,
-      },
+        ativo: false
+      }
     };
   } catch (err) {
     if (err instanceof TenantError) {
@@ -155,8 +150,8 @@ export async function getMembro(
         userId: membro.userId,
         empresaId: membro.empresaId,
         papel: membro.papel,
-        ativo: membro.ativo,
-      },
+        ativo: membro.ativo
+      }
     };
   } catch (err) {
     if (err instanceof TenantError) {

@@ -13,18 +13,26 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
 vi.mock('./root', () => ({ handleViagensGet: spy('handleViagensGet') }));
-vi.mock('./id', () => ({ handleViagensIdGet: spy('handleViagensIdGet'), handleViagensIdPatch: spy('handleViagensIdPatch'), handleViagensIdDelete: spy('handleViagensIdDelete') }));
-vi.mock('./cidades-busca', () => ({ handleViagensCidadesBuscaGet: spy('handleViagensCidadesBuscaGet') }));
+vi.mock('./id', () => ({
+  handleViagensIdGet: spy('handleViagensIdGet'),
+  handleViagensIdPatch: spy('handleViagensIdPatch'),
+  handleViagensIdDelete: spy('handleViagensIdDelete')
+}));
+vi.mock('./cidades-busca', () => ({
+  handleViagensCidadesBuscaGet: spy('handleViagensCidadesBuscaGet')
+}));
 vi.mock('./cliente-id', () => ({ handleViagensClienteIdGet: spy('handleViagensClienteIdGet') }));
 vi.mock('./clientes', () => ({ handleViagensClientesGet: spy('handleViagensClientesGet') }));
 vi.mock('./create', () => ({ handleViagensCreatePost: spy('handleViagensCreatePost') }));
 vi.mock('./delete', () => ({ handleViagensDeletePost: spy('handleViagensDeletePost') }));
 vi.mock('./dossie', () => ({ handleViagensDossieGet: spy('handleViagensDossieGet') }));
-vi.mock('./dossie-batch', () => ({ handleViagensDossieBatchPost: spy('handleViagensDossieBatchPost') }));
+vi.mock('./dossie-batch', () => ({
+  handleViagensDossieBatchPost: spy('handleViagensDossieBatchPost')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
@@ -33,16 +41,16 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/viagens', 'handleViagensGet', {}],
   // apelido (antes: viagens/list/+server.ts reexportava ../+server) — não pode cair em /:id
   ['GET', '/api/v1/viagens/list', 'handleViagensGet', {}],
-  ['GET', '/api/v1/viagens/id-123', 'handleViagensIdGet', {"id": "id-123"}],
-  ['PATCH', '/api/v1/viagens/id-123', 'handleViagensIdPatch', {"id": "id-123"}],
-  ['DELETE', '/api/v1/viagens/id-123', 'handleViagensIdDelete', {"id": "id-123"}],
+  ['GET', '/api/v1/viagens/id-123', 'handleViagensIdGet', { id: 'id-123' }],
+  ['PATCH', '/api/v1/viagens/id-123', 'handleViagensIdPatch', { id: 'id-123' }],
+  ['DELETE', '/api/v1/viagens/id-123', 'handleViagensIdDelete', { id: 'id-123' }],
   ['GET', '/api/v1/viagens/cidades-busca', 'handleViagensCidadesBuscaGet', {}],
-  ['GET', '/api/v1/viagens/cliente/id-123', 'handleViagensClienteIdGet', {"id": "id-123"}],
+  ['GET', '/api/v1/viagens/cliente/id-123', 'handleViagensClienteIdGet', { id: 'id-123' }],
   ['GET', '/api/v1/viagens/clientes', 'handleViagensClientesGet', {}],
   ['POST', '/api/v1/viagens/create', 'handleViagensCreatePost', {}],
   ['POST', '/api/v1/viagens/delete', 'handleViagensDeletePost', {}],
   ['GET', '/api/v1/viagens/dossie', 'handleViagensDossieGet', {}],
-  ['POST', '/api/v1/viagens/dossie-batch', 'handleViagensDossieBatchPost', {}],
+  ['POST', '/api/v1/viagens/dossie-batch', 'handleViagensDossieBatchPost', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
@@ -54,7 +62,7 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/viagens/create'],
   ['PUT', '/api/v1/viagens/delete'],
   ['PUT', '/api/v1/viagens/dossie'],
-  ['PUT', '/api/v1/viagens/dossie-batch'],
+  ['PUT', '/api/v1/viagens/dossie-batch']
 ];
 
 function ev(method: string, path: string) {

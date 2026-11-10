@@ -89,13 +89,16 @@ export async function handleVendasIdRankingRecibosGet(event: RequestEvent) {
 
     const { data: recibosData, error: recibosErr } = await client
       .from('vendas_recibos')
-      .select('id, numero_recibo, numero_recibo_normalizado, numero_reserva, valor_total, valor_taxas')
+      .select(
+        'id, numero_recibo, numero_recibo_normalizado, numero_reserva, valor_total, valor_taxas'
+      )
       .eq('venda_id', id);
 
     if (recibosErr) throw recibosErr;
 
     const recibos = Array.isArray(recibosData) ? (recibosData as RankingReciboRow[]) : [];
-    if (recibos.length === 0) return json({ recibos: [], totais: null }, { headers: DYNAMIC_READ_HEADERS });
+    if (recibos.length === 0)
+      return json({ recibos: [], totais: null }, { headers: DYNAMIC_READ_HEADERS });
 
     // Resolve companyId: usa o da venda; fallback para o do scope (ex: admin sem company_id na venda)
     const companyId = String(venda.company_id || scope.companyId || '');

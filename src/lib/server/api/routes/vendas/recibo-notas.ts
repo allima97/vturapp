@@ -38,7 +38,13 @@ export async function handleVendasReciboNotasGet(event: RequestEvent) {
       scope,
       event.url.searchParams.get('vendedor_ids') || event.url.searchParams.get('vendedor_id')
     );
-    const sale = await fetchSaleForScope({ client, scope, saleId: vendaId, companyIds, vendedorIds });
+    const sale = await fetchSaleForScope({
+      client,
+      scope,
+      saleId: vendaId,
+      companyIds,
+      vendedorIds
+    });
     if (!sale) {
       return new Response('Venda nao encontrada.', { status: 404, headers: NO_STORE_HEADERS });
     }

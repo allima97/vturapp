@@ -2,7 +2,7 @@
 
 **Estado:** PROPOSTA (pendente confirmação em F1-04)  
 **Data:** 2026-10-26  
-**Decisão revertida/nova:** substitui menção a Lucia v3 no plano anterior  
+**Decisão revertida/nova:** substitui menção a Lucia v3 no plano anterior
 
 ## Contexto
 
@@ -13,6 +13,7 @@ A autenticação atual usa Supabase Auth (email/senha, passkeys, TOTP/MFA, convi
 **Better Auth** como candidato principal, com **adapter Drizzle/D1**.
 
 **Plano B documentado:** se a prova em F1-04 falhar, implementar sessão própria sobre Drizzle:
+
 - Cookie HttpOnly com token gravado com hash no banco
 - Expiração absoluta e por inatividade
 - Revogação na aplicação (listagem de sessões, logout)

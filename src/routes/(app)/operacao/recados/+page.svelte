@@ -150,7 +150,11 @@
     loading = true;
     errorMessage = null;
     try {
-      const payload = await apiGet<BootstrapPayload>('/api/v1/mural/bootstrap', undefined, request.signal);
+      const payload = await apiGet<BootstrapPayload>(
+        '/api/v1/mural/bootstrap',
+        undefined,
+        request.signal
+      );
       if (!bootstrapGuard.isCurrent(request.seq)) return;
       userId = payload.userId ? String(payload.userId) : null;
       userCompanyId = payload.companyId ? String(payload.companyId) : null;
@@ -181,7 +185,11 @@
     const request = recadosGuard.next();
     recadosLoading = true;
     try {
-      const payload = await apiGet<CompanyPayload>('/api/v1/mural/company', { company_id: companyId }, request.signal);
+      const payload = await apiGet<CompanyPayload>(
+        '/api/v1/mural/company',
+        { company_id: companyId },
+        request.signal
+      );
       if (!recadosGuard.isCurrent(request.seq)) return;
       usuariosEmpresa = payload.usuariosEmpresa || [];
       supportsAttachments = payload.supportsAttachments !== false;
@@ -207,8 +215,16 @@
     try {
       // Aviso do Realtime: busca sem o cache curto das leituras, para o recado novo aparecer já.
       const payload = fresh
-        ? await apiFetch<RecadosPayload>('/api/v1/mural/recados', { query: { company_id: companyId }, signal: request.signal, noCache: true })
-        : await apiGet<RecadosPayload>('/api/v1/mural/recados', { company_id: companyId }, request.signal);
+        ? await apiFetch<RecadosPayload>('/api/v1/mural/recados', {
+            query: { company_id: companyId },
+            signal: request.signal,
+            noCache: true
+          })
+        : await apiGet<RecadosPayload>(
+            '/api/v1/mural/recados',
+            { company_id: companyId },
+            request.signal
+          );
       if (!recadosGuard.isCurrent(request.seq)) return;
       supportsAttachments = payload.supportsAttachments !== false;
       recados = getVisibleRecados(payload.recados || []);
@@ -333,7 +349,10 @@
     return filtered
       .slice()
       .sort((a, b) =>
-        PT_BR_BASE_COLLATOR.compare(normalizeSortKey(getNomeExibicao(a)), normalizeSortKey(getNomeExibicao(b)))
+        PT_BR_BASE_COLLATOR.compare(
+          normalizeSortKey(getNomeExibicao(a)),
+          normalizeSortKey(getNomeExibicao(b))
+        )
       );
   })();
 
@@ -341,7 +360,8 @@
     selectedThreadId = threads[0].id;
   }
 
-  $: currentThreadData = threads.find((thread) => thread.id === selectedThreadId) ?? threads[0] ?? null;
+  $: currentThreadData =
+    threads.find((thread) => thread.id === selectedThreadId) ?? threads[0] ?? null;
 
   $: conversation = recados
     .filter((recado) => {
@@ -366,7 +386,10 @@
         if (selectedThreadId === 'company') {
           return !recado.receiver_id && !recado.leituras?.some((entry) => entry.user_id === userId);
         }
-        return recado.receiver_id === userId && !recado.leituras?.some((entry) => entry.user_id === userId);
+        return (
+          recado.receiver_id === userId &&
+          !recado.leituras?.some((entry) => entry.user_id === userId)
+        );
       })
       .map((recado) => recado.id);
     const nextKey = `${selectedThreadId}:${unreadIds.join(',')}`;
@@ -410,14 +433,17 @@
   title="Mural de Recados"
   subtitle="Troca de mensagens internas com navegação no padrão do mural do VTUR."
   color="operacao"
-  breadcrumbs={[
-    { label: 'Recados' }
+  breadcrumbs={[{ label: 'Recados' }]}
+  actions={[
+    { label: 'Atualizar', onClick: () => loadRecados(), variant: 'secondary', icon: RefreshCw }
   ]}
-  actions={[{ label: 'Atualizar', onClick: () => loadRecados(), variant: 'secondary', icon: RefreshCw }]}
 />
 
 {#if errorMessage}
-  <div role="alert" class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+  <div
+    role="alert"
+    class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+  >
     {errorMessage}
   </div>
 {/if}
@@ -437,7 +463,9 @@
     <div class="mural-topbar">
       <div class="mural-topbar__copy">
         <div class="mural-topbar__title">Conversas internas</div>
-        <div class="mural-topbar__subtitle">Painel contínuo de comunicação entre equipe e empresa.</div>
+        <div class="mural-topbar__subtitle">
+          Painel contínuo de comunicação entre equipe e empresa.
+        </div>
       </div>
       {#if empresas.length > 1}
         <div class="mural-topbar__company">
@@ -470,7 +498,8 @@
               size="sm"
               on:click={() => {
                 mobileScreen = 'chat';
-                if (!selectedThreadId && filteredThreads[0]) selectedThreadId = filteredThreads[0].id;
+                if (!selectedThreadId && filteredThreads[0])
+                  selectedThreadId = filteredThreads[0].id;
               }}
             >
               <Plus size={15} class="mr-1.5" />
@@ -525,7 +554,9 @@
                     <span class="mural-whatsapp-thread-line">
                       <span class="mural-whatsapp-thread-name">{thread.name}</span>
                       {#if thread.lastAt}
-                        <span class="mural-whatsapp-thread-time">{formatThreadTime(thread.lastAt)}</span>
+                        <span class="mural-whatsapp-thread-time"
+                          >{formatThreadTime(thread.lastAt)}</span
+                        >
                       {/if}
                     </span>
                     <span class="mural-whatsapp-thread-subtitle">{thread.subtitle}</span>
@@ -572,13 +603,18 @@
               >
                 <ArrowLeft size={16} />
               </Button>
-              <span class:company={currentThreadData?.type === 'company'} class="mural-thread-avatar mural-chat-avatar">
+              <span
+                class:company={currentThreadData?.type === 'company'}
+                class="mural-thread-avatar mural-chat-avatar"
+              >
                 {getInitials(currentThreadData?.name)}
               </span>
               <div class="mural-chat-header-info">
                 <div class="mural-chat-title">{currentThreadData?.name || 'Conversa'}</div>
                 <div class="mural-chat-subtitle">
-                  {currentThreadData?.type === 'company' ? 'Canal geral da empresa' : 'Conversa privada'}
+                  {currentThreadData?.type === 'company'
+                    ? 'Canal geral da empresa'
+                    : 'Conversa privada'}
                 </div>
               </div>
             </div>
@@ -591,7 +627,11 @@
               <div class="chat-empty">Nenhuma mensagem nesta conversa.</div>
             {:else}
               {#each conversation as recado}
-                <div class:sent={recado.sender_id === userId} class:received={recado.sender_id !== userId} class="chat-bubble">
+                <div
+                  class:sent={recado.sender_id === userId}
+                  class:received={recado.sender_id !== userId}
+                  class="chat-bubble"
+                >
                   <div class="chat-bubble-body">
                     {#if recado.sender_id !== userId}
                       <div class="chat-bubble-header">
@@ -610,7 +650,7 @@
                             href={safeAttachmentHref(
                               arquivo.download_url,
                               arquivo.storage_bucket,
-                              arquivo.storage_path,
+                              arquivo.storage_path
                             )}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -650,7 +690,9 @@
             }}
           >
             {#if supportsAttachments === false}
-              <div class="mural-inline-note">Anexos ainda não estão disponíveis neste ambiente.</div>
+              <div class="mural-inline-note">
+                Anexos ainda não estão disponíveis neste ambiente.
+              </div>
             {/if}
             <div class="mural-input-row">
               <FieldTextarea
@@ -659,7 +701,13 @@
                 class_name="w-full"
                 placeholder="Digite sua mensagem..."
               />
-              <Button type="submit" color="operacao" variant="primary" loading={sending} class_name="min-w-[128px] justify-center">
+              <Button
+                type="submit"
+                color="operacao"
+                variant="primary"
+                loading={sending}
+                class_name="min-w-[128px] justify-center"
+              >
                 <Send size={15} class="mr-1.5" />
                 Enviar
               </Button>
@@ -707,7 +755,8 @@
                 <span class="mural-whatsapp-thread-line">
                   <span class="mural-whatsapp-thread-name">{thread.name}</span>
                   {#if thread.lastAt}
-                    <span class="mural-whatsapp-thread-time">{formatThreadTime(thread.lastAt)}</span>
+                    <span class="mural-whatsapp-thread-time">{formatThreadTime(thread.lastAt)}</span
+                    >
                   {/if}
                 </span>
                 <span class="mural-whatsapp-thread-subtitle">{thread.subtitle}</span>
@@ -723,13 +772,20 @@
       <section class="mural-whatsapp-chat vtur-card">
         <div class="mural-whatsapp-chat-header">
           <div class="mural-chat-header-left">
-            <span class:company={currentThreadData?.type === 'company'} class="mural-thread-avatar mural-chat-avatar">
+            <span
+              class:company={currentThreadData?.type === 'company'}
+              class="mural-thread-avatar mural-chat-avatar"
+            >
               {getInitials(currentThreadData?.name)}
             </span>
             <div class="mural-chat-header-info">
-              <div class="mural-chat-title">{currentThreadData?.name || 'Selecione uma conversa'}</div>
+              <div class="mural-chat-title">
+                {currentThreadData?.name || 'Selecione uma conversa'}
+              </div>
               <div class="mural-chat-subtitle">
-                {currentThreadData?.type === 'company' ? 'Canal geral da empresa' : 'Conversa privada entre colaboradores'}
+                {currentThreadData?.type === 'company'
+                  ? 'Canal geral da empresa'
+                  : 'Conversa privada entre colaboradores'}
               </div>
             </div>
           </div>
@@ -745,7 +801,11 @@
             </div>
           {:else}
             {#each conversation as recado}
-              <div class:sent={recado.sender_id === userId} class:received={recado.sender_id !== userId} class="chat-bubble">
+              <div
+                class:sent={recado.sender_id === userId}
+                class:received={recado.sender_id !== userId}
+                class="chat-bubble"
+              >
                 <div class="chat-bubble-body">
                   {#if recado.sender_id !== userId}
                     <div class="chat-bubble-header">
@@ -766,7 +826,7 @@
                           href={safeAttachmentHref(
                             arquivo.download_url,
                             arquivo.storage_bucket,
-                            arquivo.storage_path,
+                            arquivo.storage_path
                           )}
                           target="_blank"
                           rel="noopener noreferrer"
@@ -823,7 +883,9 @@
               </span>
             </div>
             {#if supportsAttachments === false}
-              <div class="mural-inline-note">Anexos ainda não estão disponíveis neste ambiente.</div>
+              <div class="mural-inline-note">
+                Anexos ainda não estão disponíveis neste ambiente.
+              </div>
             {/if}
           </div>
 
@@ -834,7 +896,13 @@
               class_name="w-full"
               placeholder="Digite sua mensagem..."
             />
-            <Button type="submit" color="operacao" variant="primary" loading={sending} class_name="min-w-[148px] justify-center">
+            <Button
+              type="submit"
+              color="operacao"
+              variant="primary"
+              loading={sending}
+              class_name="min-w-[148px] justify-center"
+            >
               <Send size={15} class="mr-1.5" />
               Enviar
             </Button>

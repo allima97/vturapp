@@ -13,22 +13,23 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./signature', () => ({ handleProfileSignatureGet: spy('handleProfileSignatureGet'), handleProfileSignaturePatch: spy('handleProfileSignaturePatch') }));
+vi.mock('./signature', () => ({
+  handleProfileSignatureGet: spy('handleProfileSignatureGet'),
+  handleProfileSignaturePatch: spy('handleProfileSignaturePatch')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 
 const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/profile/signature', 'handleProfileSignatureGet', {}],
-  ['PATCH', '/api/v1/profile/signature', 'handleProfileSignaturePatch', {}],
+  ['PATCH', '/api/v1/profile/signature', 'handleProfileSignaturePatch', {}]
 ];
 
-const SEM_HANDLER: Array<[string, string]> = [
-  ['PUT', '/api/v1/profile/signature'],
-];
+const SEM_HANDLER: Array<[string, string]> = [['PUT', '/api/v1/profile/signature']];
 
 function ev(method: string, path: string) {
   const request = new Request(`https://vturapp.test${path}`, { method });

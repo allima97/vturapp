@@ -48,19 +48,19 @@ npm run d1:migrate:prod
 
 Verificar via `wrangler secret list --env <env>` que os seguintes secrets estão configurados:
 
-| Secret | Staging | Produção |
-|---|---|---|
-| `BETTER_AUTH_SECRET` | [ ] | [ ] |
-| `RESEND_API_KEY` | [ ] | [ ] |
-| `TURNSTILE_SECRET_KEY` | [ ] | [ ] |
+| Secret                 | Staging | Produção |
+| ---------------------- | ------- | -------- |
+| `BETTER_AUTH_SECRET`   | [ ]     | [ ]      |
+| `RESEND_API_KEY`       | [ ]     | [ ]      |
+| `TURNSTILE_SECRET_KEY` | [ ]     | [ ]      |
 
 Verificar `wrangler.toml` para variáveis públicas:
 
-| Variável | Valor esperado | OK? |
-|---|---|---|
-| `PUBLIC_ENVIRONMENT` | `staging` / `production` | [ ] |
+| Variável                         | Valor esperado           | OK? |
+| -------------------------------- | ------------------------ | --- |
+| `PUBLIC_ENVIRONMENT`             | `staging` / `production` | [ ] |
 | `VITE_PUBLIC_TURNSTILE_SITE_KEY` | chave correta do domínio | [ ] |
-| `CF_PAGES_URL` | URL real do ambiente | [ ] |
+| `CF_PAGES_URL`                   | URL real do ambiente     | [ ] |
 
 ---
 
@@ -153,16 +153,16 @@ wrangler deploy --env production
 
 Executar manualmente em cada ambiente após o deploy:
 
-| Ação | Staging | Produção |
-|---|---|---|
-| Acessar `/` → redireciona para login | [ ] | [ ] |
-| Login com admin | [ ] | [ ] |
-| Verificar papel exibido no menu | [ ] | [ ] |
-| Criar cliente | [ ] | [ ] |
-| Criar venda | [ ] | [ ] |
-| Verificar e-mail de confirmação | [ ] | [ ] |
-| Upload de anexo | [ ] | [ ] |
-| GET `/api/v2/health` → 200 | [ ] | [ ] |
+| Ação                                 | Staging | Produção |
+| ------------------------------------ | ------- | -------- |
+| Acessar `/` → redireciona para login | [ ]     | [ ]      |
+| Login com admin                      | [ ]     | [ ]      |
+| Verificar papel exibido no menu      | [ ]     | [ ]      |
+| Criar cliente                        | [ ]     | [ ]      |
+| Criar venda                          | [ ]     | [ ]      |
+| Verificar e-mail de confirmação      | [ ]     | [ ]      |
+| Upload de anexo                      | [ ]     | [ ]      |
+| GET `/api/v2/health` → 200           | [ ]     | [ ]      |
 
 ---
 

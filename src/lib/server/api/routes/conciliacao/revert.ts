@@ -83,25 +83,32 @@ export async function handleConciliacaoRevertPost(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster && !scope.isFinanceiro && !scope.isGestor) {
-      ensureModuloAccess(scope, ['operacao_conciliacao', 'conciliacao'], 3, 'Sem acesso à Conciliação.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_conciliacao', 'conciliacao'],
+        3,
+        'Sem acesso à Conciliação.'
+      );
     }
 
     const body = readConciliacaoRevertBody(bodyResult.data);
     const requestedCompanyId = body.companyId || null;
     const companyIds = resolveScopedCompanyIds(scope, requestedCompanyId);
     const companyId = companyIds[0] || null;
-    if (!companyId) return json({ error: 'Company invalida.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!companyId)
+      return json({ error: 'Company invalida.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const revertAll = Boolean(body?.revertAll);
     const limit = Math.max(1, Math.min(500, Number(body?.limit || 200)));
     const ids = Array.isArray(body.changeIds)
-      ? body.changeIds
-          .map((v: unknown) => String(v || '').trim())
-          .filter((v: string) => isUuid(v))
+      ? body.changeIds.map((v: unknown) => String(v || '').trim()).filter((v: string) => isUuid(v))
       : [];
 
     if (!revertAll && ids.length === 0) {
-      return json({ error: 'Nenhuma alteracao selecionada.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Nenhuma alteracao selecionada.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     let targetReciboIds: string[] = [];
@@ -136,7 +143,10 @@ export async function handleConciliacaoRevertPost(event: RequestEvent) {
     }
 
     if (targetReciboIds.length === 0) {
-      return json({ ok: true, attempted: 0, reverted: 0, errored: 0, total: 0 }, { headers: NO_STORE_HEADERS });
+      return json(
+        { ok: true, attempted: 0, reverted: 0, errored: 0, total: 0 },
+        { headers: NO_STORE_HEADERS }
+      );
     }
 
     // Busca detalhes das alterações para agrupar os changeIds por recibo
@@ -205,7 +215,10 @@ export async function handleConciliacaoRevertPost(event: RequestEvent) {
     if (reverted > 0) {
       invalidateSalesReadModels({ companyIds: [companyId], userId: user.id });
     }
-    return json({ ok: true, attempted, reverted, errored, total: changesByRecibo.size }, { headers: NO_STORE_HEADERS });
+    return json(
+      { ok: true, attempted, reverted, errored, total: changesByRecibo.size },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao reverter alteracoes.');
   }

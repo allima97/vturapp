@@ -93,7 +93,7 @@ export async function handleAdminEmailTestPost(event: RequestEvent) {
       'admin-email-test',
       `${event.getClientAddress?.() || 'unknown'}:${user.id}`,
       { max: 10, windowMs: 60_000 },
-      event.platform?.env?.DB,
+      event.platform?.env?.DB
     );
     if (!rateLimit.allowed) {
       return new Response('Muitas tentativas de envio. Aguarde alguns segundos.', {
@@ -106,19 +106,29 @@ export async function handleAdminEmailTestPost(event: RequestEvent) {
     const body = readAdminEmailTestBody(bodyResult.data);
 
     if (!scope.isAdmin) {
-      return new Response('Somente ADMIN pode enviar teste de e-mail.', { status: 403, headers: NO_STORE_HEADERS });
+      return new Response('Somente ADMIN pode enviar teste de e-mail.', {
+        status: 403,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const to = String(body.to || '').trim();
     if (!to) {
-      return new Response('Informe o e-mail de destino.', { status: 400, headers: NO_STORE_HEADERS });
+      return new Response('Informe o e-mail de destino.', {
+        status: 400,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const savedSettings = await loadEmailSettings(client);
     const bodySettings = {
       smtp_host: cleanText(body.smtp_host) || savedSettings?.smtp_host || null,
-      smtp_port: body.smtp_port === '' || body.smtp_port == null ? savedSettings?.smtp_port : Number(body.smtp_port),
-      smtp_secure: typeof body.smtp_secure === 'boolean' ? body.smtp_secure : savedSettings?.smtp_secure,
+      smtp_port:
+        body.smtp_port === '' || body.smtp_port == null
+          ? savedSettings?.smtp_port
+          : Number(body.smtp_port),
+      smtp_secure:
+        typeof body.smtp_secure === 'boolean' ? body.smtp_secure : savedSettings?.smtp_secure,
       smtp_user: cleanText(body.smtp_user) || savedSettings?.smtp_user || null,
       smtp_pass:
         cleanText(body.smtp_pass) === MASKED
@@ -128,11 +138,15 @@ export async function handleAdminEmailTestPost(event: RequestEvent) {
         cleanText(body.resend_api_key) === MASKED
           ? savedSettings?.resend_api_key || null
           : cleanText(body.resend_api_key) || savedSettings?.resend_api_key || null,
-      alerta_from_email: cleanText(body.alerta_from_email) || savedSettings?.alerta_from_email || null,
+      alerta_from_email:
+        cleanText(body.alerta_from_email) || savedSettings?.alerta_from_email || null,
       admin_from_email: cleanText(body.admin_from_email) || savedSettings?.admin_from_email || null,
-      avisos_from_email: cleanText(body.avisos_from_email) || savedSettings?.avisos_from_email || null,
-      financeiro_from_email: cleanText(body.financeiro_from_email) || savedSettings?.financeiro_from_email || null,
-      suporte_from_email: cleanText(body.suporte_from_email) || savedSettings?.suporte_from_email || null
+      avisos_from_email:
+        cleanText(body.avisos_from_email) || savedSettings?.avisos_from_email || null,
+      financeiro_from_email:
+        cleanText(body.financeiro_from_email) || savedSettings?.financeiro_from_email || null,
+      suporte_from_email:
+        cleanText(body.suporte_from_email) || savedSettings?.suporte_from_email || null
     };
 
     const apiKey =
@@ -150,20 +164,24 @@ export async function handleAdminEmailTestPost(event: RequestEvent) {
 
     let response: Response;
     try {
-      response = await fetchWithTimeout('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json'
+      response = await fetchWithTimeout(
+        'https://api.resend.com/emails',
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: fromEmail,
+            to: [to],
+            subject: 'Teste de configuracao VTUR',
+            html: '<p>Configuracao de e-mail validada com sucesso.</p>',
+            text: 'Configuracao de e-mail validada com sucesso.'
+          })
         },
-        body: JSON.stringify({
-          from: fromEmail,
-          to: [to],
-          subject: 'Teste de configuracao VTUR',
-          html: '<p>Configuracao de e-mail validada com sucesso.</p>',
-          text: 'Configuracao de e-mail validada com sucesso.'
-        })
-      }, 45_000);
+        45_000
+      );
     } catch (err) {
       logServerError('[admin/email/test] timeout/excecao no Resend', err);
       const message =
@@ -175,22 +193,31 @@ export async function handleAdminEmailTestPost(event: RequestEvent) {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      logServerError('[admin/email/test] falha no provedor de e-mail', new Error('Resend provider error'), {
-        status: response.status,
-        message: providerPayloadMessage(payload)
-      });
+      logServerError(
+        '[admin/email/test] falha no provedor de e-mail',
+        new Error('Resend provider error'),
+        {
+          status: response.status,
+          message: providerPayloadMessage(payload)
+        }
+      );
       const detail = providerPayloadMessage(payload);
       return new Response(
-        detail ? `Falha no Resend (${response.status}): ${detail}` : `Falha no Resend (${response.status}).`,
+        detail
+          ? `Falha no Resend (${response.status}): ${detail}`
+          : `Falha no Resend (${response.status}).`,
         { status: 502, headers: NO_STORE_HEADERS }
       );
     }
 
-    return json({
-      ok: true,
-      provider: 'resend',
-      id: isRecord(payload) ? payload.id || null : null
-    }, { headers: NO_STORE_HEADERS });
+    return json(
+      {
+        ok: true,
+        provider: 'resend',
+        id: isRecord(payload) ? payload.id || null : null
+      },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao enviar teste de e-mail.');
   }

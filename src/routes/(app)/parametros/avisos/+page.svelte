@@ -33,9 +33,21 @@
   ];
 
   const OCASIOES = [
-    'Aniversário', 'Natal', 'Ano Novo', 'Páscoa', 'Dia das Mães', 'Dia dos Pais',
-    'Dia dos Namorados', 'Dia do Cliente', 'Cliente Premium', 'Promoção Exclusiva',
-    'Sugestão de Destino', 'Upgrade VIP', 'Boas-vindas', 'Pós-viagem', 'Outro'
+    'Aniversário',
+    'Natal',
+    'Ano Novo',
+    'Páscoa',
+    'Dia das Mães',
+    'Dia dos Pais',
+    'Dia dos Namorados',
+    'Dia do Cliente',
+    'Cliente Premium',
+    'Promoção Exclusiva',
+    'Sugestão de Destino',
+    'Upgrade VIP',
+    'Boas-vindas',
+    'Pós-viagem',
+    'Outro'
   ];
 
   let templates: MessageTemplate[] = [];
@@ -52,11 +64,17 @@
     return { nome: '', categoria: '', titulo: '', corpo: '', scope: 'user', ativo: true };
   }
 
-  $: canEdit = !$permissoes.ready || $permissoes.isSystemAdmin || permissoes.can('parametros', 'edit');
+  $: canEdit =
+    !$permissoes.ready || $permissoes.isSystemAdmin || permissoes.can('parametros', 'edit');
 
   const columns = [
     { key: 'nome', label: 'Nome', sortable: true },
-    { key: 'categoria', label: 'Ocasião', sortable: true, formatter: (v: string | null) => v || '-' },
+    {
+      key: 'categoria',
+      label: 'Ocasião',
+      sortable: true,
+      formatter: (v: string | null) => v || '-'
+    },
     {
       key: 'scope',
       label: 'Escopo',
@@ -85,7 +103,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const payload = await apiGet<{ templates?: MessageTemplate[] }>('/api/v1/admin/crm', undefined, request.signal);
+      const payload = await apiGet<{ templates?: MessageTemplate[] }>(
+        '/api/v1/admin/crm',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       templates = payload.templates || [];
     } catch (err) {
@@ -104,14 +126,30 @@
 
   function openEdit(t: MessageTemplate) {
     editingId = t.id;
-    form = { nome: t.nome, categoria: t.categoria || '', titulo: t.titulo, corpo: t.corpo, scope: t.scope, ativo: t.ativo };
+    form = {
+      nome: t.nome,
+      categoria: t.categoria || '',
+      titulo: t.titulo,
+      corpo: t.corpo,
+      scope: t.scope,
+      ativo: t.ativo
+    };
     modalOpen = true;
   }
 
   async function save() {
-    if (!form.nome.trim()) { toast.error('Nome obrigatório.'); return; }
-    if (!form.titulo.trim()) { toast.error('Título obrigatório.'); return; }
-    if (!form.corpo.trim()) { toast.error('Corpo obrigatório.'); return; }
+    if (!form.nome.trim()) {
+      toast.error('Nome obrigatório.');
+      return;
+    }
+    if (!form.titulo.trim()) {
+      toast.error('Título obrigatório.');
+      return;
+    }
+    if (!form.corpo.trim()) {
+      toast.error('Corpo obrigatório.');
+      return;
+    }
 
     saving = true;
     try {
@@ -119,7 +157,14 @@
         entity: 'template',
         action: 'upsert',
         id: editingId || undefined,
-        data: { nome: form.nome, categoria: form.categoria || null, titulo: form.titulo, corpo: form.corpo, scope: form.scope, ativo: form.ativo }
+        data: {
+          nome: form.nome,
+          categoria: form.categoria || null,
+          titulo: form.titulo,
+          corpo: form.corpo,
+          scope: form.scope,
+          ativo: form.ativo
+        }
       });
       toast.success(editingId ? 'Template atualizado.' : 'Template criado.');
       modalOpen = false;
@@ -156,13 +201,12 @@
   title="Avisos e Templates CRM"
   subtitle="Gerencie os templates de mensagens para envio aos clientes por ocasião."
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Parâmetros', href: '/parametros' },
-    { label: 'Avisos / CRM' }
-  ]}
+  breadcrumbs={[{ label: 'Parâmetros', href: '/parametros' }, { label: 'Avisos / CRM' }]}
   actions={[
     { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw },
-    ...(canEdit ? [{ label: 'Novo Template', onClick: openNew, variant: 'primary' as const, icon: Plus }] : [])
+    ...(canEdit
+      ? [{ label: 'Novo Template', onClick: openNew, variant: 'primary' as const, icon: Plus }]
+      : [])
   ]}
 />
 
@@ -210,12 +254,19 @@
 >
   <div class="space-y-4">
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-      <FieldInput id="tpl-nome" label="Nome" required bind:value={form.nome} placeholder="Nome do template" class_name="w-full" />
+      <FieldInput
+        id="tpl-nome"
+        label="Nome"
+        required
+        bind:value={form.nome}
+        placeholder="Nome do template"
+        class_name="w-full"
+      />
       <FieldSelect
         id="tpl-ocasiao"
         label="Ocasião"
         bind:value={form.categoria}
-        options={OCASIOES.map(oc => ({ value: oc, label: oc }))}
+        options={OCASIOES.map((oc) => ({ value: oc, label: oc }))}
         placeholder="Selecione uma opção"
         class_name="w-full"
       />
@@ -229,8 +280,25 @@
       />
       <FieldCheckbox label="Template ativo" bind:checked={form.ativo} class_name="flex items-end" />
     </div>
-    <FieldInput id="tpl-titulo" label="Título" required bind:value={form.titulo} placeholder="Título da mensagem" class_name="w-full" />
-    <FieldTextarea id="tpl-corpo" label="Corpo" required bind:value={form.corpo} rows={6} placeholder={'Texto da mensagem. Use {{nome_cliente}} para variáveis.'} class_name="w-full" />
-    <p class="text-xs text-slate-500">Variáveis disponíveis: {'{{nome_cliente}}'}, {'{{primeiro_nome}}'}, {'{{consultor}}'}</p>
+    <FieldInput
+      id="tpl-titulo"
+      label="Título"
+      required
+      bind:value={form.titulo}
+      placeholder="Título da mensagem"
+      class_name="w-full"
+    />
+    <FieldTextarea
+      id="tpl-corpo"
+      label="Corpo"
+      required
+      bind:value={form.corpo}
+      rows={6}
+      placeholder={'Texto da mensagem. Use {{nome_cliente}} para variáveis.'}
+      class_name="w-full"
+    />
+    <p class="text-xs text-slate-500">
+      Variáveis disponíveis: {'{{nome_cliente}}'}, {'{{primeiro_nome}}'}, {'{{consultor}}'}
+    </p>
   </div>
 </Dialog>

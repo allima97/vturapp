@@ -112,7 +112,11 @@ function normalizeLimit(value?: string | null, fallback = 5, max = 100) {
   return Math.min(max, Math.max(1, Math.trunc(parsed)));
 }
 
-async function resolveDashboardSalesScope(client: ReturnType<typeof getAdminClient>, scope: Awaited<ReturnType<typeof resolveUserScope>>, params: URLSearchParams) {
+async function resolveDashboardSalesScope(
+  client: ReturnType<typeof getAdminClient>,
+  scope: Awaited<ReturnType<typeof resolveUserScope>>,
+  params: URLSearchParams
+) {
   const requestedCompanyId = params.get('company_id') || params.get('empresa_id');
   const requestedVendedorRaw = params.get('vendedor_ids') || params.get('vendedor_id');
   const hasRequestedVendedorFilter = String(requestedVendedorRaw || '').trim().length > 0;
@@ -127,8 +131,7 @@ async function resolveDashboardSalesScope(client: ReturnType<typeof getAdminClie
   let companyIds = resolveScopedCompanyIds(scope, requestedCompanyId);
   if (isGestorByType && scope.companyId) companyIds = [scope.companyId];
 
-  const canExpandAllCompanies =
-    isAdminByType || (isMasterByType && !hasConfiguredCompanyScope);
+  const canExpandAllCompanies = isAdminByType || (isMasterByType && !hasConfiguredCompanyScope);
   if (companyIds.length === 0 && canExpandAllCompanies) {
     const requestedCompanyIdValue = String(requestedCompanyId || '').trim();
     if (isUuid(requestedCompanyIdValue)) {
@@ -235,7 +238,8 @@ async function fetchSaleDetailsByIds(client: ReturnType<typeof getAdminClient>, 
     if (batch.length === 0) continue;
     const { data, error } = await client
       .from('vendas')
-      .select(`
+      .select(
+        `
         id,
         numero_venda,
         cliente_id,
@@ -247,7 +251,8 @@ async function fetchSaleDetailsByIds(client: ReturnType<typeof getAdminClient>, 
         vendedor:users!vendedor_id (id, nome_completo, email),
         destino_cidade:cidades!destino_cidade_id (nome),
         destinos:produtos!destino_id (nome)
-      `)
+      `
+      )
       .in('id', batch);
     if (error) throw error;
     rows.push(...((data || []) as SaleDetailRow[]));
@@ -255,13 +260,21 @@ async function fetchSaleDetailsByIds(client: ReturnType<typeof getAdminClient>, 
   return new Map(rows.map((row) => [String(row.id), row]));
 }
 
-function resolveClienteNome(clienteId: string | null, clienteExtra: Map<string, ClienteExtraRow>, detail?: SaleDetailRow | null) {
+function resolveClienteNome(
+  clienteId: string | null,
+  clienteExtra: Map<string, ClienteExtraRow>,
+  detail?: SaleDetailRow | null
+) {
   const extra = clienteId ? clienteExtra.get(clienteId) : null;
   const cliente = one(detail?.clientes);
   return String(cliente?.nome || extra?.nome || 'Cliente sem nome');
 }
 
-function resolveVendedorNome(vendedorId: string | null, vendedores: Map<string, VendedorNameRow>, detail?: SaleDetailRow | null) {
+function resolveVendedorNome(
+  vendedorId: string | null,
+  vendedores: Map<string, VendedorNameRow>,
+  detail?: SaleDetailRow | null
+) {
   const vendedor = vendedorId ? vendedores.get(vendedorId) : null;
   const vendedorDetail = one(detail?.vendedor);
   return String(
@@ -276,7 +289,9 @@ function resolveVendedorNome(vendedorId: string | null, vendedores: Map<string, 
 function resolveDestino(item: SaleAggregate, detail?: SaleDetailRow | null) {
   const destinoCidade = one(detail?.destino_cidade);
   const destinoProduto = one(detail?.destinos);
-  return String(destinoCidade?.nome || destinoProduto?.nome || item.destino || 'Destino não informado');
+  return String(
+    destinoCidade?.nome || destinoProduto?.nome || item.destino || 'Destino não informado'
+  );
 }
 
 function resolveClienteExtraFromDetail(detail?: SaleDetailRow | null) {
@@ -290,10 +305,7 @@ async function fetchAllVisibleCompanyIds(client: ReturnType<typeof getAdminClien
     ttlMs: 300_000,
     staleTtlMs: 1_800_000,
     loader: async () => {
-      const { data, error } = await client
-        .from('companies')
-        .select('id, active')
-        .limit(1000);
+      const { data, error } = await client.from('companies').select('id, active').limit(1000);
 
       if (error) throw error;
 
@@ -321,8 +333,16 @@ export async function handleDashboardUltimasComprasGet(event: RequestEvent) {
     const user = await requireAuthenticatedUser(event);
     const scope = await resolveUserScope(client, user.id);
 
-    if (!scope.isAdmin && !scope.isMaster && !scope.isGestor && !hasModuloAccess(scope, ['dashboard'], 1)) {
-      return json({ error: 'Sem acesso às últimas compras.' }, { status: 403, headers: NO_STORE_HEADERS });
+    if (
+      !scope.isAdmin &&
+      !scope.isMaster &&
+      !scope.isGestor &&
+      !hasModuloAccess(scope, ['dashboard'], 1)
+    ) {
+      return json(
+        { error: 'Sem acesso às últimas compras.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { searchParams } = event.url;
@@ -330,13 +350,21 @@ export async function handleDashboardUltimasComprasGet(event: RequestEvent) {
     const inicio = String(searchParams.get('inicio') || range.inicio).trim();
     const fim = String(searchParams.get('fim') || range.fim).trim();
     const limit = normalizeLimit(searchParams.get('limit'), 5, 100);
-    const { companyIds, vendedorIds } = await resolveDashboardSalesScope(client, scope, searchParams);
+    const { companyIds, vendedorIds } = await resolveDashboardSalesScope(
+      client,
+      scope,
+      searchParams
+    );
     const tipoNome = String(scope.tipoNome || '').toUpperCase();
     const isAdminByType = tipoNome.includes('ADMIN');
     const isMasterByType = tipoNome.includes('MASTER');
-    const hasRequestedVendedorFilter = String(searchParams.get('vendedor_ids') || searchParams.get('vendedor_id') || '').trim().length > 0;
+    const hasRequestedVendedorFilter =
+      String(searchParams.get('vendedor_ids') || searchParams.get('vendedor_id') || '').trim()
+        .length > 0;
     const useNonBlockingReadModel =
-      (scope.isAdmin || isAdminByType || isMasterByType) && companyIds.length > 1 && !hasRequestedVendedorFilter;
+      (scope.isAdmin || isAdminByType || isMasterByType) &&
+      companyIds.length > 1 &&
+      !hasRequestedVendedorFilter;
 
     const payload = await getCachedReadModel({
       key: buildReadModelCacheKey('dashboard:ultimas-compras', {
@@ -447,10 +475,16 @@ export async function handleDashboardUltimasComprasGet(event: RequestEvent) {
         }
 
         const recentSales = [...sales]
-          .sort((left, right) => String(right.data_compra || '').localeCompare(String(left.data_compra || '')))
+          .sort((left, right) =>
+            String(right.data_compra || '').localeCompare(String(left.data_compra || ''))
+          )
           .slice(0, limit);
-        const topVendedorRows = Array.from(vendedorMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 3);
-        const topClienteRows = Array.from(clienteMap.values()).sort((a, b) => b.valor - a.valor).slice(0, 5);
+        const topVendedorRows = Array.from(vendedorMap.values())
+          .sort((a, b) => b.valor - a.valor)
+          .slice(0, 3);
+        const topClienteRows = Array.from(clienteMap.values())
+          .sort((a, b) => b.valor - a.valor)
+          .slice(0, 5);
 
         const saleIds = uniqueCleanStrings([
           ...recentSales.map((item) => item.venda_id),
@@ -512,11 +546,18 @@ export async function handleDashboardUltimasComprasGet(event: RequestEvent) {
             cliente_id: clienteId,
             cliente_nome: resolveClienteNome(clienteId, clienteExtra, detail),
             cliente_email: String(clienteDetail?.email || extra?.email || '').trim() || null,
-            cliente_telefone: String(
-              clienteDetail?.whatsapp || clienteDetail?.telefone || extra?.whatsapp || extra?.telefone || ''
-            ).trim() || null,
-            cliente_whatsapp: String(clienteDetail?.whatsapp || extra?.whatsapp || '').trim() || null,
-            cliente_nascimento: String(clienteDetail?.nascimento || extra?.nascimento || '').trim() || null,
+            cliente_telefone:
+              String(
+                clienteDetail?.whatsapp ||
+                  clienteDetail?.telefone ||
+                  extra?.whatsapp ||
+                  extra?.telefone ||
+                  ''
+              ).trim() || null,
+            cliente_whatsapp:
+              String(clienteDetail?.whatsapp || extra?.whatsapp || '').trim() || null,
+            cliente_nascimento:
+              String(clienteDetail?.nascimento || extra?.nascimento || '').trim() || null,
             vendedor_id: vendedorId,
             vendedor_nome: resolveVendedorNome(vendedorId, vendedorNames, detail),
             company_id: String(detail?.company_id || item.company_id || '').trim() || null,

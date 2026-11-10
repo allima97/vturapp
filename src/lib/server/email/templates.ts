@@ -37,7 +37,7 @@ export function templateBoasVindas(params: {
   </p>
 </body>
 </html>`,
-    text: `Bem-vindo, ${nome}!\n\nSua conta na agência ${empresa} foi criada.\n\nAcesse: ${loginUrl}`,
+    text: `Bem-vindo, ${nome}!\n\nSua conta na agência ${empresa} foi criada.\n\nAcesse: ${loginUrl}`
   };
 }
 
@@ -59,7 +59,7 @@ export function templateTesteStack(params: {
   <p style="font-size:12px;color:#6b7280">Prova de stack F1-07 — remover em F2+</p>
 </body>
 </html>`,
-    text: `E-mail transacional via Resend funcionando.\nEnvironment: ${params.environment}\nTimestamp: ${params.timestamp}`,
+    text: `E-mail transacional via Resend funcionando.\nEnvironment: ${params.environment}\nTimestamp: ${params.timestamp}`
   };
 }
 

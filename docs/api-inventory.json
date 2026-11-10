@@ -1,6 +1,6 @@
 {
   "generatedBy": "scripts/api-inventory.mjs",
-  "count": 270,
+  "count": 274,
   "endpoints": [
     {
       "route": "/api/arquivos",
@@ -55,7 +55,7 @@
         "$lib/server/data/storageApi"
       ],
       "mutates": false,
-      "lines": 22
+      "lines": 20
     },
     {
       "route": "/api/arquivos/assinatura",
@@ -82,7 +82,7 @@
         "$lib/server/data"
       ],
       "mutates": false,
-      "lines": 20
+      "lines": 19
     },
     {
       "route": "/api/arquivos/baixar",
@@ -138,7 +138,7 @@
         "$lib/server/data/storageApi"
       ],
       "mutates": false,
-      "lines": 15
+      "lines": 13
     },
     {
       "route": "/api/auth/[...auth]",
@@ -166,7 +166,7 @@
         "$lib/auth"
       ],
       "mutates": false,
-      "lines": 51
+      "lines": 50
     },
     {
       "route": "/api/auth/codigo",
@@ -193,7 +193,7 @@
         "$lib/server/data"
       ],
       "mutates": false,
-      "lines": 14
+      "lines": 11
     },
     {
       "route": "/api/auth/convite/activate",
@@ -231,7 +231,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 217
+      "lines": 235
     },
     {
       "route": "/api/auth/login",
@@ -263,7 +263,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 180
+      "lines": 164
     },
     {
       "route": "/api/auth/mfa/fatores",
@@ -292,7 +292,7 @@
         "$lib/server/data"
       ],
       "mutates": false,
-      "lines": 31
+      "lines": 30
     },
     {
       "route": "/api/auth/mfa/nivel",
@@ -319,7 +319,7 @@
         "$lib/server/data"
       ],
       "mutates": false,
-      "lines": 10
+      "lines": 9
     },
     {
       "route": "/api/auth/mfa/verificar",
@@ -346,7 +346,7 @@
         "$lib/server/data"
       ],
       "mutates": false,
-      "lines": 20
+      "lines": 19
     },
     {
       "route": "/api/auth/passkeys",
@@ -377,66 +377,6 @@
       ],
       "mutates": false,
       "lines": 68
-    },
-    {
-      "route": "/api/auth/passkeys/login/options",
-      "file": "src/routes/api/auth/passkeys/login/options/+server.ts",
-      "hono": null,
-      "methods": [
-        "POST"
-      ],
-      "guards": {
-        "requireAuthenticatedUser": false,
-        "resolveUserScope": false,
-        "roles": [],
-        "rejectCrossOrigin": true,
-        "bodyLimit": true,
-        "cronSecret": false,
-        "turnstile": false,
-        "adminClient": false,
-        "debugOnly": false
-      },
-      "tables": {},
-      "rpcs": [],
-      "invalidations": [],
-      "imports": [
-        "$lib/server/httpCache",
-        "$lib/server/passkeys",
-        "$lib/server/persistentRateLimit",
-        "$lib/server/requestGuards"
-      ],
-      "mutates": false,
-      "lines": 53
-    },
-    {
-      "route": "/api/auth/passkeys/login/verify",
-      "file": "src/routes/api/auth/passkeys/login/verify/+server.ts",
-      "hono": null,
-      "methods": [
-        "POST"
-      ],
-      "guards": {
-        "requireAuthenticatedUser": false,
-        "resolveUserScope": false,
-        "roles": [],
-        "rejectCrossOrigin": true,
-        "bodyLimit": true,
-        "cronSecret": false,
-        "turnstile": false,
-        "adminClient": false,
-        "debugOnly": false
-      },
-      "tables": {},
-      "rpcs": [],
-      "invalidations": [],
-      "imports": [
-        "$lib/server/httpCache",
-        "$lib/server/passkeys",
-        "$lib/server/persistentRateLimit",
-        "$lib/server/requestGuards"
-      ],
-      "mutates": false,
-      "lines": 65
     },
     {
       "route": "/api/auth/passkeys/register/options",
@@ -494,7 +434,7 @@
         "$lib/server/requestGuards"
       ],
       "mutates": false,
-      "lines": 60
+      "lines": 63
     },
     {
       "route": "/api/auth/senha",
@@ -521,7 +461,7 @@
         "$lib/server/data"
       ],
       "mutates": false,
-      "lines": 16
+      "lines": 15
     },
     {
       "route": "/api/auth/set-session",
@@ -549,7 +489,7 @@
         "$lib/server/requestGuards"
       ],
       "mutates": false,
-      "lines": 36
+      "lines": 24
     },
     {
       "route": "/api/auth/turnstile/verify",
@@ -580,7 +520,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 71
+      "lines": 82
     },
     {
       "route": "/api/dados/consulta",
@@ -607,7 +547,7 @@
         "$lib/server/data"
       ],
       "mutates": false,
-      "lines": 73
+      "lines": 63
     },
     {
       "route": "/api/v1/[...path]",
@@ -669,7 +609,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 81
+      "lines": 82
     },
     {
       "route": "/api/v1/admin/auth/reset-mfa",
@@ -701,7 +641,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 98
+      "lines": 109
     },
     {
       "route": "/api/v1/admin/auth/set-password",
@@ -733,7 +673,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 99
+      "lines": 105
     },
     {
       "route": "/api/v1/admin/avisos",
@@ -774,7 +714,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 127
+      "lines": 148
     },
     {
       "route": "/api/v1/admin/avisos/send",
@@ -812,7 +752,7 @@
         "$lib/utils/html"
       ],
       "mutates": false,
-      "lines": 151
+      "lines": 184
     },
     {
       "route": "/api/v1/admin/crm",
@@ -853,7 +793,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 149
+      "lines": 163
     },
     {
       "route": "/api/v1/admin/email",
@@ -927,7 +867,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 203
+      "lines": 230
     },
     {
       "route": "/api/v1/admin/empresas",
@@ -974,7 +914,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 280
+      "lines": 298
     },
     {
       "route": "/api/v1/admin/empresas/[id]",
@@ -1020,7 +960,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 198
+      "lines": 212
     },
     {
       "route": "/api/v1/admin/fix-recibos",
@@ -1073,7 +1013,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 848
+      "lines": 865
     },
     {
       "route": "/api/v1/admin/logs",
@@ -1108,7 +1048,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 55
+      "lines": 64
     },
     {
       "route": "/api/v1/admin/maintenance",
@@ -1147,7 +1087,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 101
+      "lines": 104
     },
     {
       "route": "/api/v1/admin/master-empresas",
@@ -1187,7 +1127,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 180
+      "lines": 197
     },
     {
       "route": "/api/v1/admin/modulos-sistema",
@@ -1226,7 +1166,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 174
+      "lines": 178
     },
     {
       "route": "/api/v1/admin/permissoes",
@@ -1273,7 +1213,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 204
+      "lines": 209
     },
     {
       "route": "/api/v1/admin/permissoes/[id]",
@@ -1310,7 +1250,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 149
+      "lines": 154
     },
     {
       "route": "/api/v1/admin/planos",
@@ -1350,7 +1290,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 139
+      "lines": 156
     },
     {
       "route": "/api/v1/admin/summary",
@@ -1394,7 +1334,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 240
+      "lines": 260
     },
     {
       "route": "/api/v1/admin/system-modules",
@@ -1433,7 +1373,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 243
+      "lines": 312
     },
     {
       "route": "/api/v1/admin/tipos-usuario",
@@ -1476,7 +1416,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 180
+      "lines": 201
     },
     {
       "route": "/api/v1/admin/tipos-usuario/[id]",
@@ -1510,7 +1450,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 67
+      "lines": 74
     },
     {
       "route": "/api/v1/admin/tipos-usuario/[id]/permissoes",
@@ -1543,7 +1483,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 102
+      "lines": 108
     },
     {
       "route": "/api/v1/admin/usuarios",
@@ -1589,7 +1529,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 326
+      "lines": 379
     },
     {
       "route": "/api/v1/admin/usuarios/[id]",
@@ -1630,7 +1570,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 254
+      "lines": 289
     },
     {
       "route": "/api/v1/agenda",
@@ -1664,7 +1604,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 53
+      "lines": 70
     },
     {
       "route": "/api/v1/agenda/create",
@@ -1701,7 +1641,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 108
+      "lines": 121
     },
     {
       "route": "/api/v1/agenda/delete",
@@ -1739,7 +1679,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 53
+      "lines": 62
     },
     {
       "route": "/api/v1/agenda/range",
@@ -1779,7 +1719,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 145
+      "lines": 154
     },
     {
       "route": "/api/v1/agenda/update",
@@ -1818,7 +1758,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 129
+      "lines": 138
     },
     {
       "route": "/api/v1/cards/aniversario.svg",
@@ -1930,7 +1870,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 102
+      "lines": 107
     },
     {
       "route": "/api/v1/cidades",
@@ -1974,7 +1914,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 201
+      "lines": 237
     },
     {
       "route": "/api/v1/cidades/[id]",
@@ -2018,7 +1958,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 158
+      "lines": 167
     },
     {
       "route": "/api/v1/circuitos",
@@ -2056,7 +1996,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 118
+      "lines": 124
     },
     {
       "route": "/api/v1/circuitos/[id]",
@@ -2096,7 +2036,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 132
+      "lines": 147
     },
     {
       "route": "/api/v1/client-error",
@@ -2127,7 +2067,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 83
+      "lines": 95
     },
     {
       "route": "/api/v1/clientes",
@@ -2164,7 +2104,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 135
+      "lines": 147
     },
     {
       "route": "/api/v1/clientes/[id]",
@@ -2218,7 +2158,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 352
+      "lines": 370
     },
     {
       "route": "/api/v1/clientes/[id]/acompanhantes",
@@ -2260,7 +2200,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 112
+      "lines": 122
     },
     {
       "route": "/api/v1/clientes/[id]/acompanhantes/[acompanhanteId]",
@@ -2300,7 +2240,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 120
+      "lines": 135
     },
     {
       "route": "/api/v1/clientes/avisos/history",
@@ -2336,7 +2276,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 55
+      "lines": 57
     },
     {
       "route": "/api/v1/clientes/avisos/send",
@@ -2382,7 +2322,7 @@
         "$lib/utils/html"
       ],
       "mutates": true,
-      "lines": 277
+      "lines": 317
     },
     {
       "route": "/api/v1/clientes/avisos/templates",
@@ -2422,7 +2362,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 165
+      "lines": 180
     },
     {
       "route": "/api/v1/clientes/create",
@@ -2465,7 +2405,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 143
+      "lines": 149
     },
     {
       "route": "/api/v1/clientes/delete",
@@ -2494,7 +2434,7 @@
         "$lib/server/requestGuards"
       ],
       "mutates": false,
-      "lines": 19
+      "lines": 22
     },
     {
       "route": "/api/v1/clientes/historico",
@@ -2545,7 +2485,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 411
+      "lines": 400
     },
     {
       "route": "/api/v1/clientes/list",
@@ -2592,7 +2532,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 819
+      "lines": 860
     },
     {
       "route": "/api/v1/clientes/resolve-import",
@@ -2636,7 +2576,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 215
+      "lines": 221
     },
     {
       "route": "/api/v1/clientes/template-dispatches",
@@ -2684,7 +2624,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 203
+      "lines": 224
     },
     {
       "route": "/api/v1/clientes/templates/send",
@@ -2731,7 +2671,7 @@
         "$lib/utils/html"
       ],
       "mutates": false,
-      "lines": 487
+      "lines": 495
     },
     {
       "route": "/api/v1/conciliacao",
@@ -2771,7 +2711,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 237
+      "lines": 261
     },
     {
       "route": "/api/v1/conciliacao/assign",
@@ -2827,7 +2767,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 538
+      "lines": 536
     },
     {
       "route": "/api/v1/conciliacao/changes",
@@ -2865,7 +2805,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 60
+      "lines": 74
     },
     {
       "route": "/api/v1/conciliacao/delete",
@@ -2908,7 +2848,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 65
+      "lines": 81
     },
     {
       "route": "/api/v1/conciliacao/executions",
@@ -2946,7 +2886,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 42
+      "lines": 56
     },
     {
       "route": "/api/v1/conciliacao/existing",
@@ -2986,7 +2926,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 155
+      "lines": 174
     },
     {
       "route": "/api/v1/conciliacao/fix-vinculos",
@@ -3044,7 +2984,7 @@
         "$lib/utils/values"
       ],
       "mutates": true,
-      "lines": 970
+      "lines": 1057
     },
     {
       "route": "/api/v1/conciliacao/import",
@@ -3102,7 +3042,7 @@
         "$lib/utils/errors"
       ],
       "mutates": true,
-      "lines": 1047
+      "lines": 978
     },
     {
       "route": "/api/v1/conciliacao/list",
@@ -3159,7 +3099,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 549
+      "lines": 479
     },
     {
       "route": "/api/v1/conciliacao/lookup",
@@ -3202,7 +3142,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 341
+      "lines": 380
     },
     {
       "route": "/api/v1/conciliacao/options",
@@ -3240,7 +3180,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 69
+      "lines": 78
     },
     {
       "route": "/api/v1/conciliacao/rateio-info",
@@ -3281,7 +3221,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 214
+      "lines": 236
     },
     {
       "route": "/api/v1/conciliacao/revert",
@@ -3325,7 +3265,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 218
+      "lines": 231
     },
     {
       "route": "/api/v1/conciliacao/run",
@@ -3364,7 +3304,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 140
+      "lines": 142
     },
     {
       "route": "/api/v1/conciliacao/sem-movimento",
@@ -3413,7 +3353,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 206
+      "lines": 236
     },
     {
       "route": "/api/v1/conciliacao/status-cronologico",
@@ -3448,7 +3388,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 82
+      "lines": 94
     },
     {
       "route": "/api/v1/conciliacao/summary",
@@ -3490,7 +3430,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 178
+      "lines": 200
     },
     {
       "route": "/api/v1/conciliacao/update-valores",
@@ -3531,7 +3471,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 190
+      "lines": 193
     },
     {
       "route": "/api/v1/consultorias",
@@ -3570,6 +3510,7 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
@@ -3610,7 +3551,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 115
+      "lines": 127
     },
     {
       "route": "/api/v1/convites/accept",
@@ -3650,7 +3591,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 213
+      "lines": 216
     },
     {
       "route": "/api/v1/convites/send",
@@ -3710,7 +3651,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 598
+      "lines": 658
     },
     {
       "route": "/api/v1/crm/library",
@@ -3759,7 +3700,7 @@
         "$lib/utils/errors"
       ],
       "mutates": false,
-      "lines": 345
+      "lines": 382
     },
     {
       "route": "/api/v1/crm/signature",
@@ -3823,7 +3764,7 @@
         "$lib/server/requestGuards"
       ],
       "mutates": false,
-      "lines": 73
+      "lines": 72
     },
     {
       "route": "/api/v1/cron/lembretes-consultoria",
@@ -3897,7 +3838,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 309
+      "lines": 327
     },
     {
       "route": "/api/v1/dashboard/base",
@@ -3940,7 +3881,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 210
+      "lines": 219
     },
     {
       "route": "/api/v1/dashboard/comparativo-empresas",
@@ -3988,7 +3929,7 @@
         "$lib/utils/values"
       ],
       "mutates": false,
-      "lines": 351
+      "lines": 357
     },
     {
       "route": "/api/v1/dashboard/consultorias",
@@ -4029,7 +3970,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 256
+      "lines": 226
     },
     {
       "route": "/api/v1/dashboard/debug-aggregates",
@@ -4068,7 +4009,7 @@
         "$lib/utils/values"
       ],
       "mutates": false,
-      "lines": 204
+      "lines": 213
     },
     {
       "route": "/api/v1/dashboard/evolucao-anual",
@@ -4108,7 +4049,7 @@
         "$lib/utils/values"
       ],
       "mutates": false,
-      "lines": 316
+      "lines": 326
     },
     {
       "route": "/api/v1/dashboard/follow-ups",
@@ -4149,7 +4090,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 635
+      "lines": 567
     },
     {
       "route": "/api/v1/dashboard/summary",
@@ -4201,7 +4142,7 @@
         "$lib/utils/values"
       ],
       "mutates": false,
-      "lines": 645
+      "lines": 627
     },
     {
       "route": "/api/v1/dashboard/ultimas-compras",
@@ -4254,7 +4195,7 @@
         "$lib/utils/values"
       ],
       "mutates": false,
-      "lines": 551
+      "lines": 592
     },
     {
       "route": "/api/v1/dashboard/viagens",
@@ -4303,7 +4244,7 @@
         "$lib/viagens/status"
       ],
       "mutates": false,
-      "lines": 458
+      "lines": 441
     },
     {
       "route": "/api/v1/dashboard/widgets",
@@ -4344,7 +4285,7 @@
         "$lib/utils/json"
       ],
       "mutates": true,
-      "lines": 178
+      "lines": 186
     },
     {
       "route": "/api/v1/debug-comissao",
@@ -4379,7 +4320,7 @@
         "$lib/utils/comissao"
       ],
       "mutates": false,
-      "lines": 213
+      "lines": 250
     },
     {
       "route": "/api/v1/debug/permissions",
@@ -4420,7 +4361,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 86
+      "lines": 85
     },
     {
       "route": "/api/v1/debug/vendas-recibos-diff",
@@ -4497,7 +4438,7 @@
         "$lib/utils/errors"
       ],
       "mutates": true,
-      "lines": 241
+      "lines": 271
     },
     {
       "route": "/api/v1/documentos-viagens/create",
@@ -4533,7 +4474,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 103
+      "lines": 114
     },
     {
       "route": "/api/v1/documentos-viagens/delete",
@@ -4571,7 +4512,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 80
+      "lines": 98
     },
     {
       "route": "/api/v1/documentos-viagens/list",
@@ -4636,7 +4577,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 143
+      "lines": 174
     },
     {
       "route": "/api/v1/documentos-viagens/update",
@@ -4674,7 +4615,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 88
+      "lines": 120
     },
     {
       "route": "/api/v1/enderecos/cep",
@@ -4705,7 +4646,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 92
+      "lines": 108
     },
     {
       "route": "/api/v1/equipe/relacao",
@@ -4745,7 +4686,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 100
+      "lines": 103
     },
     {
       "route": "/api/v1/financeiro/ajustes-vendas",
@@ -4800,7 +4741,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 520
+      "lines": 560
     },
     {
       "route": "/api/v1/financeiro/ajustes-vendas/list",
@@ -4845,7 +4786,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 472
+      "lines": 491
     },
     {
       "route": "/api/v1/financeiro/ajustes-vendas/save",
@@ -4901,7 +4842,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 354
+      "lines": 387
     },
     {
       "route": "/api/v1/financeiro/caixa",
@@ -4947,7 +4888,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 325
+      "lines": 344
     },
     {
       "route": "/api/v1/financeiro/comissoes",
@@ -4988,7 +4929,7 @@
         "$lib/utils/values"
       ],
       "mutates": false,
-      "lines": 361
+      "lines": 375
     },
     {
       "route": "/api/v1/financeiro/comissoes/calcular",
@@ -5031,7 +4972,7 @@
         "$lib/utils/values"
       ],
       "mutates": false,
-      "lines": 439
+      "lines": 495
     },
     {
       "route": "/api/v1/financeiro/comissoes/pagamento",
@@ -5082,7 +5023,7 @@
         "$lib/utils/values"
       ],
       "mutates": true,
-      "lines": 458
+      "lines": 514
     },
     {
       "route": "/api/v1/financeiro/comissoes/regras",
@@ -5132,7 +5073,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 355
+      "lines": 404
     },
     {
       "route": "/api/v1/financeiro/comissoes/regras/[id]",
@@ -5180,7 +5121,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 204
+      "lines": 233
     },
     {
       "route": "/api/v1/financeiro/comissoes/vendedores",
@@ -5217,7 +5158,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 131
+      "lines": 149
     },
     {
       "route": "/api/v1/financeiro/formas-pagamento",
@@ -5266,7 +5207,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 323
+      "lines": 360
     },
     {
       "route": "/api/v1/fornecedores",
@@ -5335,7 +5276,9 @@
         "invalidateCatalogReadModels"
       ],
       "imports": [
+        "$lib/config/destinosGeograficos",
         "$lib/server/api/sveltekit",
+        "$lib/server/fornecedorCidadeGeografica",
         "$lib/server/fornecedores",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
@@ -5344,7 +5287,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 196
+      "lines": 254
     },
     {
       "route": "/api/v1/fornecedores/create",
@@ -5377,6 +5320,7 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/fornecedorCidadeGeografica",
         "$lib/server/fornecedores",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
@@ -5384,7 +5328,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 96
+      "lines": 113
     },
     {
       "route": "/api/v1/health",
@@ -5451,7 +5395,7 @@
         "$lib/utils/json"
       ],
       "mutates": true,
-      "lines": 107
+      "lines": 113
     },
     {
       "route": "/api/v1/mural/bootstrap",
@@ -5462,7 +5406,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [
           "isAdmin"
         ],
@@ -5487,7 +5431,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 122
+      "lines": 120
     },
     {
       "route": "/api/v1/mural/company",
@@ -5498,7 +5442,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [],
         "rejectCrossOrigin": false,
         "bodyLimit": false,
@@ -5516,7 +5460,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 68
+      "lines": 66
     },
     {
       "route": "/api/v1/mural/read",
@@ -5527,7 +5471,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [],
         "rejectCrossOrigin": true,
         "bodyLimit": true,
@@ -5555,7 +5499,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 83
+      "lines": 79
     },
     {
       "route": "/api/v1/mural/recados",
@@ -5568,7 +5512,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [
           "isAdmin"
         ],
@@ -5600,7 +5544,118 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 231
+      "lines": 210
+    },
+    {
+      "route": "/api/v1/opcionais",
+      "file": "src/routes/api/v1/opcionais/+server.ts",
+      "hono": "src/lib/server/api/routes/opcionais/root.ts",
+      "methods": [
+        "DELETE",
+        "GET",
+        "POST"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": true,
+        "roles": [],
+        "rejectCrossOrigin": true,
+        "bodyLimit": true,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": true,
+        "debugOnly": false
+      },
+      "tables": {
+        "catalogo_opcionais": [
+          "delete",
+          "insert",
+          "select",
+          "update"
+        ]
+      },
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/catalogoOpcionais",
+        "$lib/destinoIdentidade",
+        "$lib/server/api/sveltekit",
+        "$lib/server/destinoPersistencia",
+        "$lib/server/httpCache",
+        "$lib/server/requestGuards",
+        "$lib/server/v1"
+      ],
+      "mutates": true,
+      "lines": 169
+    },
+    {
+      "route": "/api/v1/opcionais/cidades",
+      "file": "src/routes/api/v1/opcionais/cidades/+server.ts",
+      "hono": "src/lib/server/api/routes/opcionais/cidades.ts",
+      "methods": [
+        "GET"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": true,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/api/sveltekit",
+        "$lib/server/geocoding",
+        "$lib/server/httpCache",
+        "$lib/server/v1"
+      ],
+      "mutates": false,
+      "lines": 28
+    },
+    {
+      "route": "/api/v1/opcionais/importar",
+      "file": "src/routes/api/v1/opcionais/importar/+server.ts",
+      "hono": "src/lib/server/api/routes/opcionais/importar.ts",
+      "methods": [
+        "POST"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": true,
+        "roles": [],
+        "rejectCrossOrigin": true,
+        "bodyLimit": true,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": false,
+        "debugOnly": false
+      },
+      "tables": {
+        "catalogo_opcionais": [
+          "insert",
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/catalogoOpcionais",
+        "$lib/destinoIdentidade",
+        "$lib/importarOpcionais",
+        "$lib/server/api/sveltekit",
+        "$lib/server/destinoPersistencia",
+        "$lib/server/httpCache",
+        "$lib/server/requestGuards",
+        "$lib/server/v1"
+      ],
+      "mutates": true,
+      "lines": 147
     },
     {
       "route": "/api/v1/operacao/campanhas",
@@ -5644,7 +5699,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 257
+      "lines": 312
     },
     {
       "route": "/api/v1/operacao/documentos-viagens",
@@ -5683,7 +5738,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 147
+      "lines": 175
     },
     {
       "route": "/api/v1/operacao/preferencias",
@@ -5731,13 +5786,14 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 351
+      "lines": 370
     },
     {
       "route": "/api/v1/operacao/recados",
@@ -5781,7 +5837,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 262
+      "lines": 293
     },
     {
       "route": "/api/v1/operacao/sac",
@@ -5822,7 +5878,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 188
+      "lines": 240
     },
     {
       "route": "/api/v1/orcamentos/[id]",
@@ -5868,6 +5924,7 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/httpCache",
         "$lib/server/orcamentos",
         "$lib/server/readModelCache",
@@ -5875,7 +5932,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 336
+      "lines": 354
     },
     {
       "route": "/api/v1/orcamentos/[id]/resumo-venda",
@@ -5915,7 +5972,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 80
+      "lines": 94
     },
     {
       "route": "/api/v1/orcamentos/cidades-busca",
@@ -5988,7 +6045,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 100
+      "lines": 111
     },
     {
       "route": "/api/v1/orcamentos/clientes",
@@ -6026,7 +6083,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 157
+      "lines": 154
     },
     {
       "route": "/api/v1/orcamentos/create",
@@ -6065,13 +6122,14 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 200
+      "lines": 232
     },
     {
       "route": "/api/v1/orcamentos/delete",
@@ -6111,7 +6169,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 80
+      "lines": 84
     },
     {
       "route": "/api/v1/orcamentos/interacao",
@@ -6153,7 +6211,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 149
+      "lines": 157
     },
     {
       "route": "/api/v1/orcamentos/interaction",
@@ -6229,7 +6287,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 374
+      "lines": 443
     },
     {
       "route": "/api/v1/orcamentos/produtos",
@@ -6265,7 +6323,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 62
+      "lines": 57
     },
     {
       "route": "/api/v1/orcamentos/save",
@@ -6317,6 +6375,7 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/httpCache",
         "$lib/server/orcamentos",
         "$lib/server/readModelCache",
@@ -6325,7 +6384,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 370
+      "lines": 388
     },
     {
       "route": "/api/v1/orcamentos/status",
@@ -6366,7 +6425,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 106
+      "lines": 112
     },
     {
       "route": "/api/v1/orcamentos/tipos",
@@ -6449,7 +6508,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 281
+      "lines": 306
     },
     {
       "route": "/api/v1/pagamentos/[id]",
@@ -6494,7 +6553,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 185
+      "lines": 229
     },
     {
       "route": "/api/v1/pagamentos/upload",
@@ -6536,7 +6595,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 139
+      "lines": 164
     },
     {
       "route": "/api/v1/paises",
@@ -6553,8 +6612,8 @@
         "roles": [
           "isAdmin"
         ],
-        "rejectCrossOrigin": true,
-        "bodyLimit": true,
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
         "cronSecret": false,
         "turnstile": false,
         "adminClient": true,
@@ -6562,24 +6621,19 @@
       },
       "tables": {
         "paises": [
-          "delete",
-          "select",
-          "update"
+          "select"
         ]
       },
       "rpcs": [],
-      "invalidations": [
-        "invalidateCatalogReadModels"
-      ],
+      "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
-        "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
-      "mutates": true,
-      "lines": 175
+      "mutates": false,
+      "lines": 110
     },
     {
       "route": "/api/v1/parametros/cambios",
@@ -6622,7 +6676,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 139
+      "lines": 169
     },
     {
       "route": "/api/v1/parametros/commission-rules",
@@ -6672,7 +6726,7 @@
         "$lib/utils/json"
       ],
       "mutates": true,
-      "lines": 541
+      "lines": 562
     },
     {
       "route": "/api/v1/parametros/empresa",
@@ -6714,7 +6768,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 105
+      "lines": 127
     },
     {
       "route": "/api/v1/parametros/equipe",
@@ -6762,7 +6816,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 152
+      "lines": 171
     },
     {
       "route": "/api/v1/parametros/escalas",
@@ -6828,7 +6882,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 679
+      "lines": 742
     },
     {
       "route": "/api/v1/parametros/metas",
@@ -6885,7 +6939,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 723
+      "lines": 701
     },
     {
       "route": "/api/v1/parametros/nao-comissionaveis",
@@ -6928,7 +6982,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 141
+      "lines": 159
     },
     {
       "route": "/api/v1/parametros/orcamentos-pdf",
@@ -6954,6 +7008,9 @@
       "tables": {
         "quote_print_settings": [
           "select"
+        ],
+        "users": [
+          "select"
         ]
       },
       "rpcs": [],
@@ -6970,7 +7027,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 148
+      "lines": 186
     },
     {
       "route": "/api/v1/parametros/regras-produto-pacote",
@@ -7013,7 +7070,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 180
+      "lines": 204
     },
     {
       "route": "/api/v1/parametros/regras-produto",
@@ -7056,7 +7113,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 172
+      "lines": 188
     },
     {
       "route": "/api/v1/parametros/sistema",
@@ -7102,7 +7159,7 @@
         "$lib/utils/conciliacao"
       ],
       "mutates": true,
-      "lines": 472
+      "lines": 443
     },
     {
       "route": "/api/v1/parametros/tipo-pacotes",
@@ -7145,7 +7202,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 169
+      "lines": 186
     },
     {
       "route": "/api/v1/preferencias/base",
@@ -7156,7 +7213,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [],
         "rejectCrossOrigin": false,
         "bodyLimit": false,
@@ -7184,7 +7241,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [],
         "rejectCrossOrigin": false,
         "bodyLimit": false,
@@ -7212,7 +7269,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [
           "isAdmin"
         ],
@@ -7239,7 +7296,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 60
+      "lines": 57
     },
     {
       "route": "/api/v1/preferencias/list",
@@ -7250,7 +7307,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [],
         "rejectCrossOrigin": false,
         "bodyLimit": false,
@@ -7274,7 +7331,7 @@
         "$lib/server/readModelCache"
       ],
       "mutates": false,
-      "lines": 201
+      "lines": 199
     },
     {
       "route": "/api/v1/preferencias/save",
@@ -7285,7 +7342,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [
           "isAdmin"
         ],
@@ -7308,12 +7365,13 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 114
+      "lines": 117
     },
     {
       "route": "/api/v1/preferencias/share-accept",
@@ -7324,7 +7382,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [],
         "rejectCrossOrigin": true,
         "bodyLimit": true,
@@ -7349,7 +7407,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 76
+      "lines": 73
     },
     {
       "route": "/api/v1/preferencias/share-revoke",
@@ -7360,7 +7418,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [],
         "rejectCrossOrigin": true,
         "bodyLimit": true,
@@ -7385,7 +7443,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 76
+      "lines": 72
     },
     {
       "route": "/api/v1/preferencias/share",
@@ -7396,7 +7454,7 @@
       ],
       "guards": {
         "requireAuthenticatedUser": true,
-        "resolveUserScope": false,
+        "resolveUserScope": true,
         "roles": [
           "isAdmin"
         ],
@@ -7429,7 +7487,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 119
+      "lines": 102
     },
     {
       "route": "/api/v1/produtos",
@@ -7461,7 +7519,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 39
+      "lines": 45
     },
     {
       "route": "/api/v1/produtos/[id]",
@@ -7506,7 +7564,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 142
+      "lines": 163
     },
     {
       "route": "/api/v1/produtos/base",
@@ -7538,7 +7596,45 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 30
+      "lines": 36
+    },
+    {
+      "route": "/api/v1/produtos/cidades-geograficas",
+      "file": "src/routes/api/v1/produtos/cidades-geograficas/+server.ts",
+      "hono": "src/lib/server/api/routes/vendas/cidades-geograficas.ts",
+      "methods": [
+        "GET"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": true,
+        "roles": [
+          "isAdmin",
+          "isMaster"
+        ],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": true,
+        "debugOnly": false
+      },
+      "tables": {
+        "legado_cidades": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/api/sveltekit",
+        "$lib/server/destinosBusca",
+        "$lib/server/geonames",
+        "$lib/server/httpCache",
+        "$lib/server/v1"
+      ],
+      "mutates": false,
+      "lines": 171
     },
     {
       "route": "/api/v1/produtos/create",
@@ -7578,7 +7674,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 74
+      "lines": 92
     },
     {
       "route": "/api/v1/produtos/tarifas",
@@ -7619,7 +7715,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 79
+      "lines": 98
     },
     {
       "route": "/api/v1/profile/signature",
@@ -7641,6 +7737,9 @@
         "debugOnly": false
       },
       "tables": {
+        "quote_print_settings": [
+          "update"
+        ],
         "users": [
           "select"
         ]
@@ -7656,8 +7755,8 @@
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
-      "mutates": false,
-      "lines": 120
+      "mutates": true,
+      "lines": 129
     },
     {
       "route": "/api/v1/push/subscribe",
@@ -7691,7 +7790,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 132
+      "lines": 141
     },
     {
       "route": "/api/v1/push/unsubscribe",
@@ -7725,7 +7824,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 80
+      "lines": 86
     },
     {
       "route": "/api/v1/qr",
@@ -7756,7 +7855,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 100
+      "lines": 120
     },
     {
       "route": "/api/v1/read-model/rebuild",
@@ -7791,7 +7890,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 156
+      "lines": 166
     },
     {
       "route": "/api/v1/relatorios/base",
@@ -7832,7 +7931,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 242
+      "lines": 251
     },
     {
       "route": "/api/v1/relatorios/cidades-busca",
@@ -7906,7 +8005,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 391
+      "lines": 376
     },
     {
       "route": "/api/v1/relatorios/destinos",
@@ -7932,6 +8031,8 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
+        "$lib/config/destinosGeograficos",
+        "$lib/relatorioDestino",
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
@@ -7942,7 +8043,7 @@
         "$lib/server/vendas-kpis"
       ],
       "mutates": false,
-      "lines": 307
+      "lines": 293
     },
     {
       "route": "/api/v1/relatorios/produtos-recibos",
@@ -7975,7 +8076,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 184
+      "lines": 172
     },
     {
       "route": "/api/v1/relatorios/produtos",
@@ -8011,7 +8112,7 @@
         "$lib/server/vendas-kpis"
       ],
       "mutates": false,
-      "lines": 330
+      "lines": 314
     },
     {
       "route": "/api/v1/relatorios/ranking-debug",
@@ -8064,7 +8165,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 942
+      "lines": 1015
     },
     {
       "route": "/api/v1/relatorios/ranking-vendas",
@@ -8141,7 +8242,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 904
+      "lines": 858
     },
     {
       "route": "/api/v1/relatorios/vendas-por-cliente",
@@ -8289,7 +8390,7 @@
         "$lib/vendas/rateio"
       ],
       "mutates": false,
-      "lines": 1860
+      "lines": 1708
     },
     {
       "route": "/api/v1/roteiros",
@@ -8339,13 +8440,18 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
+        "$lib/config/destinosGeograficos",
+        "$lib/roteiroLimites",
+        "$lib/roteiroProtocolo",
+        "$lib/roteiroRevisaoExclusao",
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
+        "$lib/server/roteiroRegistrosLegados",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 379
+      "lines": 553
     },
     {
       "route": "/api/v1/roteiros/[id]",
@@ -8386,12 +8492,46 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
+        "$lib/config/destinosGeograficos",
+        "$lib/roteiroLimites",
         "$lib/server/api/sveltekit",
+        "$lib/server/httpCache",
+        "$lib/server/roteiroOpcionaisLegados",
+        "$lib/server/v1"
+      ],
+      "mutates": false,
+      "lines": 171
+    },
+    {
+      "route": "/api/v1/roteiros/cidades-busca",
+      "file": "src/routes/api/v1/roteiros/cidades-busca/+server.ts",
+      "hono": "src/lib/server/api/routes/roteiros/cidades-busca.ts",
+      "methods": [
+        "GET"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": true,
+        "roles": [],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": true,
+        "debugOnly": false
+      },
+      "tables": {},
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/destinoIdentidade",
+        "$lib/server/api/sveltekit",
+        "$lib/server/destinoPersistencia",
         "$lib/server/httpCache",
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 92
+      "lines": 210
     },
     {
       "route": "/api/v1/roteiros/delete",
@@ -8424,13 +8564,15 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
+        "$lib/config/destinosGeograficos",
+        "$lib/roteiroRevisaoExclusao",
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 59
+      "lines": 78
     },
     {
       "route": "/api/v1/roteiros/dias-busca",
@@ -8467,7 +8609,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 116
+      "lines": 117
     },
     {
       "route": "/api/v1/roteiros/gerar-orcamento",
@@ -8516,7 +8658,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 193
+      "lines": 202
     },
     {
       "route": "/api/v1/roteiros/list",
@@ -8548,12 +8690,13 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
+        "$lib/config/destinosGeograficos",
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 57
+      "lines": 68
     },
     {
       "route": "/api/v1/roteiros/save",
@@ -8583,6 +8726,7 @@
           "upsert"
         ],
         "roteiro_hotel": [
+          "delete",
           "insert"
         ],
         "roteiro_investimento": [
@@ -8607,14 +8751,18 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
+        "$lib/config/destinosGeograficos",
+        "$lib/roteiroLimites",
         "$lib/roteiroOpcionais",
+        "$lib/roteiroProtocolo",
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
+        "$lib/server/roteiroRegistrosLegados",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 741
+      "lines": 959
     },
     {
       "route": "/api/v1/roteiros/sugestoes-busca",
@@ -8647,7 +8795,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 58
+      "lines": 61
     },
     {
       "route": "/api/v1/roteiros/sugestoes-remover",
@@ -8716,7 +8864,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 101
+      "lines": 103
     },
     {
       "route": "/api/v1/subdivisoes",
@@ -8733,8 +8881,8 @@
         "roles": [
           "isAdmin"
         ],
-        "rejectCrossOrigin": true,
-        "bodyLimit": true,
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
         "cronSecret": false,
         "turnstile": false,
         "adminClient": true,
@@ -8742,24 +8890,19 @@
       },
       "tables": {
         "subdivisoes": [
-          "delete",
-          "select",
-          "update"
+          "select"
         ]
       },
       "rpcs": [],
-      "invalidations": [
-        "invalidateCatalogReadModels"
-      ],
+      "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
-        "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
-      "mutates": true,
-      "lines": 208
+      "mutates": false,
+      "lines": 153
     },
     {
       "route": "/api/v1/tarefas",
@@ -8798,7 +8941,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 119
+      "lines": 111
     },
     {
       "route": "/api/v1/tarefas/clientes",
@@ -8835,7 +8978,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 151
+      "lines": 145
     },
     {
       "route": "/api/v1/tarefas/usuarios",
@@ -8872,7 +9015,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 114
+      "lines": 108
     },
     {
       "route": "/api/v1/tipo-produtos",
@@ -8914,7 +9057,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 236
+      "lines": 237
     },
     {
       "route": "/api/v1/todo/batch",
@@ -8956,7 +9099,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 176
+      "lines": 169
     },
     {
       "route": "/api/v1/todo/board",
@@ -9036,7 +9179,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 179
+      "lines": 186
     },
     {
       "route": "/api/v1/todo/item",
@@ -9083,7 +9226,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 264
+      "lines": 272
     },
     {
       "route": "/api/v1/todo/item/[id]",
@@ -9164,7 +9307,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 115
+      "lines": 120
     },
     {
       "route": "/api/v1/user/profile",
@@ -9201,7 +9344,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 104
+      "lines": 124
     },
     {
       "route": "/api/v1/users/aniversariantes",
@@ -9236,7 +9379,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 105
+      "lines": 107
     },
     {
       "route": "/api/v1/vendas",
@@ -9277,7 +9420,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 199
+      "lines": 229
     },
     {
       "route": "/api/v1/vendas/[id]",
@@ -9342,7 +9485,7 @@
         "$lib/utils/errors"
       ],
       "mutates": true,
-      "lines": 845
+      "lines": 816
     },
     {
       "route": "/api/v1/vendas/[id]/ranking-recibos",
@@ -9384,7 +9527,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 128
+      "lines": 131
     },
     {
       "route": "/api/v1/vendas/cadastro-base",
@@ -9440,7 +9583,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 468
+      "lines": 526
     },
     {
       "route": "/api/v1/vendas/cadastro-save",
@@ -9495,7 +9638,7 @@
         "$lib/utils/errors"
       ],
       "mutates": true,
-      "lines": 294
+      "lines": 339
     },
     {
       "route": "/api/v1/vendas/cancel",
@@ -9542,7 +9685,7 @@
         "$lib/utils/json"
       ],
       "mutates": true,
-      "lines": 107
+      "lines": 123
     },
     {
       "route": "/api/v1/vendas/cidades-busca",
@@ -9580,7 +9723,45 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 172
+      "lines": 176
+    },
+    {
+      "route": "/api/v1/vendas/cidades-geograficas",
+      "file": "src/routes/api/v1/vendas/cidades-geograficas/+server.ts",
+      "hono": "src/lib/server/api/routes/vendas/cidades-geograficas.ts",
+      "methods": [
+        "GET"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": true,
+        "roles": [
+          "isAdmin",
+          "isMaster"
+        ],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": true,
+        "debugOnly": false
+      },
+      "tables": {
+        "legado_cidades": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/server/api/sveltekit",
+        "$lib/server/destinosBusca",
+        "$lib/server/geonames",
+        "$lib/server/httpCache",
+        "$lib/server/v1"
+      ],
+      "mutates": false,
+      "lines": 171
     },
     {
       "route": "/api/v1/vendas/complementares",
@@ -9626,7 +9807,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 455
+      "lines": 470
     },
     {
       "route": "/api/v1/vendas/create",
@@ -9672,7 +9853,7 @@
         "$lib/utils/errors"
       ],
       "mutates": true,
-      "lines": 261
+      "lines": 251
     },
     {
       "route": "/api/v1/vendas/gestor-equipe",
@@ -9709,7 +9890,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 75
+      "lines": 77
     },
     {
       "route": "/api/v1/vendas/kpis",
@@ -9743,7 +9924,7 @@
         "$lib/server/vendas-kpis"
       ],
       "mutates": false,
-      "lines": 123
+      "lines": 129
     },
     {
       "route": "/api/v1/vendas/list",
@@ -9797,7 +9978,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 1134
+      "lines": 1287
     },
     {
       "route": "/api/v1/vendas/merge-candidates",
@@ -9840,7 +10021,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 183
+      "lines": 187
     },
     {
       "route": "/api/v1/vendas/merge",
@@ -9899,7 +10080,7 @@
         "$lib/utils/json"
       ],
       "mutates": true,
-      "lines": 372
+      "lines": 401
     },
     {
       "route": "/api/v1/vendas/recibo-complementar-link",
@@ -9946,7 +10127,7 @@
         "$lib/utils/json"
       ],
       "mutates": true,
-      "lines": 198
+      "lines": 222
     },
     {
       "route": "/api/v1/vendas/recibo-complementar-remove",
@@ -9990,7 +10171,7 @@
         "$lib/utils/json"
       ],
       "mutates": true,
-      "lines": 110
+      "lines": 127
     },
     {
       "route": "/api/v1/vendas/recibo-delete",
@@ -10037,7 +10218,7 @@
         "$lib/utils/json"
       ],
       "mutates": true,
-      "lines": 99
+      "lines": 113
     },
     {
       "route": "/api/v1/vendas/recibo-edit",
@@ -10084,7 +10265,7 @@
         "$lib/utils/json"
       ],
       "mutates": true,
-      "lines": 175
+      "lines": 202
     },
     {
       "route": "/api/v1/vendas/recibo-notas",
@@ -10121,7 +10302,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 62
+      "lines": 68
     },
     {
       "route": "/api/v1/vendas/recibo-principal",
@@ -10167,7 +10348,7 @@
         "$lib/utils/json"
       ],
       "mutates": true,
-      "lines": 116
+      "lines": 138
     },
     {
       "route": "/api/v1/vendas/status",
@@ -10208,7 +10389,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 85
+      "lines": 97
     },
     {
       "route": "/api/v1/viagens",
@@ -10262,7 +10443,7 @@
         "$lib/viagens/status"
       ],
       "mutates": false,
-      "lines": 551
+      "lines": 512
     },
     {
       "route": "/api/v1/viagens/[id]",
@@ -10327,7 +10508,7 @@
         "$lib/viagens/status"
       ],
       "mutates": true,
-      "lines": 616
+      "lines": 605
     },
     {
       "route": "/api/v1/viagens/cidades-busca",
@@ -10359,7 +10540,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 50
+      "lines": 55
     },
     {
       "route": "/api/v1/viagens/cliente/[id]",
@@ -10405,7 +10586,7 @@
         "$lib/viagens/status"
       ],
       "mutates": false,
-      "lines": 253
+      "lines": 240
     },
     {
       "route": "/api/v1/viagens/clientes",
@@ -10443,7 +10624,7 @@
         "$lib/utils/array"
       ],
       "mutates": false,
-      "lines": 167
+      "lines": 164
     },
     {
       "route": "/api/v1/viagens/create",
@@ -10479,6 +10660,7 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
@@ -10486,7 +10668,7 @@
         "$lib/viagens/status"
       ],
       "mutates": true,
-      "lines": 166
+      "lines": 198
     },
     {
       "route": "/api/v1/viagens/delete",
@@ -10528,7 +10710,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 164
+      "lines": 158
     },
     {
       "route": "/api/v1/viagens/dossie-batch",
@@ -10584,7 +10766,7 @@
         "$lib/server/viagensStatus"
       ],
       "mutates": true,
-      "lines": 412
+      "lines": 403
     },
     {
       "route": "/api/v1/viagens/dossie",
@@ -10624,7 +10806,7 @@
         "$lib/server/viagensStatus"
       ],
       "mutates": false,
-      "lines": 120
+      "lines": 130
     },
     {
       "route": "/api/v1/viagens/list",
@@ -10697,7 +10879,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 448
+      "lines": 500
     },
     {
       "route": "/api/v1/vouchers",
@@ -10738,13 +10920,14 @@
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
         "$lib/server/v1",
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 233
+      "lines": 277
     },
     {
       "route": "/api/v1/vouchers/[id]",
@@ -10785,12 +10968,13 @@
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 219
+      "lines": 266
     },
     {
       "route": "/api/v1/vouchers/create",
@@ -10826,7 +11010,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 66
+      "lines": 81
     },
     {
       "route": "/api/v1/vouchers/delete",
@@ -10850,6 +11034,7 @@
       },
       "tables": {
         "vouchers": [
+          "delete",
           "select"
         ]
       },
@@ -10861,8 +11046,8 @@
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
-      "mutates": false,
-      "lines": 47
+      "mutates": true,
+      "lines": 53
     },
     {
       "route": "/api/v1/welcome-email",
@@ -10904,7 +11089,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 320
+      "lines": 344
     },
     {
       "route": "/api/v2/[...path]",

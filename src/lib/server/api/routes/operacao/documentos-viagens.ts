@@ -31,7 +31,12 @@ export async function handleOperacaoDocumentosViagensGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['operacao_documentos_viagens', 'documentos_viagens', 'operacao'], 1, 'Sem acesso a Documentos de Viagens.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_documentos_viagens', 'documentos_viagens', 'operacao'],
+        1,
+        'Sem acesso a Documentos de Viagens.'
+      );
     }
     const allowedCompanyIds = resolveScopedCompanyIds(scope);
 
@@ -41,10 +46,12 @@ export async function handleOperacaoDocumentosViagensGet(event: RequestEvent) {
     const buildQuery = (companyIdsFilter?: string[]) => {
       let query = client
         .from('documentos_viagens')
-        .select(`
+        .select(
+          `
           id, file_name, display_name, title, template_text, template_fields, storage_bucket, storage_path, mime_type, size_bytes, created_at,
           uploader:users!uploaded_by(id, nome_completo, email)
-        `)
+        `
+        )
         .order('created_at', { ascending: false })
         .limit(200);
 
@@ -69,7 +76,9 @@ export async function handleOperacaoDocumentosViagensGet(event: RequestEvent) {
 
       return {
         data: dedupeById(rows)
-          .sort((left, right) => String(right?.created_at || '').localeCompare(String(left?.created_at || '')))
+          .sort((left, right) =>
+            String(right?.created_at || '').localeCompare(String(left?.created_at || ''))
+          )
           .slice(0, 200),
         error: null
       };
@@ -102,11 +111,17 @@ export async function handleOperacaoDocumentosViagensDelete(event: RequestEvent)
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['operacao_documentos_viagens', 'documentos_viagens', 'operacao'], 4, 'Sem permissão para excluir documentos.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_documentos_viagens', 'documentos_viagens', 'operacao'],
+        4,
+        'Sem permissão para excluir documentos.'
+      );
     }
 
     const id = String(event.url.searchParams.get('id') || '').trim();
-    if (!isUuid(id)) return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(id))
+      return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     // Busca o documento para deletar do storage também
     const { data: doc, error: fetchErr } = await client
@@ -115,14 +130,27 @@ export async function handleOperacaoDocumentosViagensDelete(event: RequestEvent)
       .eq('id', id)
       .maybeSingle();
     if (fetchErr) throw fetchErr;
-    if (!doc) return json({ error: 'Documento não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!doc)
+      return json(
+        { error: 'Documento não encontrado.' },
+        { status: 404, headers: NO_STORE_HEADERS }
+      );
 
     if (!scope.isAdmin) {
-      const targetCompanyId = String((doc as { company_id?: string | null })?.company_id || '').trim();
+      const targetCompanyId = String(
+        (doc as { company_id?: string | null })?.company_id || ''
+      ).trim();
       const allowedCompanyIds = resolveScopedCompanyIds(scope, targetCompanyId);
       const allowedCompanySet = cleanStringSet(allowedCompanyIds);
-      if (!targetCompanyId || allowedCompanyIds[0] === NO_MATCH_COMPANY_ID || !allowedCompanySet.has(targetCompanyId)) {
-        return json({ error: 'Documento fora do escopo da empresa.' }, { status: 403, headers: NO_STORE_HEADERS });
+      if (
+        !targetCompanyId ||
+        allowedCompanyIds[0] === NO_MATCH_COMPANY_ID ||
+        !allowedCompanySet.has(targetCompanyId)
+      ) {
+        return json(
+          { error: 'Documento fora do escopo da empresa.' },
+          { status: 403, headers: NO_STORE_HEADERS }
+        );
       }
     }
 

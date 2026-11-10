@@ -100,8 +100,16 @@
         form = { ...emptyForm };
       } else {
         const [detailPayload, permsPayload] = await Promise.all([
-          apiGet<UserTypeDetailResponse>(`/api/v1/admin/tipos-usuario/${$page.params.id}`, undefined, request.signal),
-          apiGet<UserTypePermissionsResponse>(`/api/v1/admin/tipos-usuario/${$page.params.id}/permissoes`, undefined, request.signal)
+          apiGet<UserTypeDetailResponse>(
+            `/api/v1/admin/tipos-usuario/${$page.params.id}`,
+            undefined,
+            request.signal
+          ),
+          apiGet<UserTypePermissionsResponse>(
+            `/api/v1/admin/tipos-usuario/${$page.params.id}/permissoes`,
+            undefined,
+            request.signal
+          )
         ]);
         if (!pageGuard.isCurrent(request.seq)) return;
         form = {
@@ -191,7 +199,12 @@
   <Card color="financeiro" title="Dados do perfil">
     <div class="grid gap-4 md:grid-cols-2">
       <FieldInput id="tipo-nome" label="Nome" bind:value={form.name} class_name="w-full" />
-      <FieldInput id="tipo-descricao" label="Descricao" bind:value={form.description} class_name="w-full" />
+      <FieldInput
+        id="tipo-descricao"
+        label="Descricao"
+        bind:value={form.description}
+        class_name="w-full"
+      />
     </div>
   </Card>
 
@@ -199,7 +212,9 @@
     <Card color="financeiro" title={section.titulo}>
       <div class="space-y-3">
         {#each entriesForSection(section) as entry}
-          <div class="grid gap-3 rounded-xl border border-slate-200 p-4 lg:grid-cols-[minmax(0,1fr)_180px_100px]">
+          <div
+            class="grid gap-3 rounded-xl border border-slate-200 p-4 lg:grid-cols-[minmax(0,1fr)_180px_100px]"
+          >
             <div>
               <p class="font-medium text-slate-900">{entry.label}</p>
               <p class="text-xs text-slate-500">{entry.modulo}</p>
@@ -218,7 +233,9 @@
               }}
             />
 
-            <label class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 lg:self-end">
+            <label
+              class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 lg:self-end"
+            >
               <Checkbox
                 bind:checked={entry.ativo}
                 color="financeiro"
@@ -259,6 +276,8 @@
     {#if !isCreateMode}
       <Button variant="danger" on:click={deleteType} loading={deleting}>Excluir tipo</Button>
     {/if}
-    <Button variant="primary" color="financeiro" on:click={saveType} loading={saving}>Salvar tipo</Button>
+    <Button variant="primary" color="financeiro" on:click={saveType} loading={saving}
+      >Salvar tipo</Button
+    >
   </div>
 </div>

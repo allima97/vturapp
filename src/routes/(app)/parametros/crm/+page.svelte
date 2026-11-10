@@ -1,6 +1,15 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
-  import { PageHeader, Card, Button, Dialog, FieldInput, FieldSelect, FieldTextarea, LoadingState } from '$lib/components/ui';
+  import {
+    PageHeader,
+    Card,
+    Button,
+    Dialog,
+    FieldInput,
+    FieldSelect,
+    FieldTextarea,
+    LoadingState
+  } from '$lib/components/ui';
   import { apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
   import { toast } from '$lib/stores/ui';
@@ -125,12 +134,15 @@
    * Detecta saudação automática baseada no nome/categoria do tema.
    * Portabilizado fielmente de CrmIsland.tsx (resolveGreetingByTheme).
    */
-  function resolveGreetingByTheme(theme?: Pick<Theme, 'nome' | 'categoria' | 'greeting_text'> | null): string {
+  function resolveGreetingByTheme(
+    theme?: Pick<Theme, 'nome' | 'categoria' | 'greeting_text'> | null
+  ): string {
     const explicit = String(theme?.greeting_text || '').trim();
     if (explicit) return explicit;
     const source = `${theme?.nome || ''} ${theme?.categoria || ''}`;
     const normalized = normalizeText(source);
-    if (normalized.includes('anivers') || normalized.includes('birthday')) return 'Feliz Aniversário!';
+    if (normalized.includes('anivers') || normalized.includes('birthday'))
+      return 'Feliz Aniversário!';
     if (normalized.includes('pascoa') || normalized.includes('easter')) return 'Feliz Páscoa!';
     if (normalized.includes('natal') || normalized.includes('christmas')) return 'Feliz Natal!';
     if (
@@ -141,10 +153,14 @@
     ) {
       return 'Feliz Ano Novo!';
     }
-    if (normalized.includes('dia das maes') || normalized.includes('mother')) return 'Feliz Dia das Mães!';
-    if (normalized.includes('dia dos pais') || normalized.includes('father')) return 'Feliz Dia dos Pais!';
-    if (normalized.includes('dia da mulher') || normalized.includes('women')) return 'Feliz Dia da Mulher!';
-    if (normalized.includes('viajant') || normalized.includes('travel')) return 'Boas viagens e muitas conquistas!';
+    if (normalized.includes('dia das maes') || normalized.includes('mother'))
+      return 'Feliz Dia das Mães!';
+    if (normalized.includes('dia dos pais') || normalized.includes('father'))
+      return 'Feliz Dia dos Pais!';
+    if (normalized.includes('dia da mulher') || normalized.includes('women'))
+      return 'Feliz Dia da Mulher!';
+    if (normalized.includes('viajant') || normalized.includes('travel'))
+      return 'Boas viagens e muitas conquistas!';
     return '';
   }
 
@@ -169,7 +185,10 @@
   /**
    * Substitui variáveis {{nome_cliente}}, {{primeiro_nome}}, {{consultor}} no template.
    */
-  function interpolateTemplate(template: string, vars: { nome: string; primeiroNome: string; consultor: string }): string {
+  function interpolateTemplate(
+    template: string,
+    vars: { nome: string; primeiroNome: string; consultor: string }
+  ): string {
     return template
       .replace(/\{\{nome_cliente\}\}/g, vars.nome)
       .replace(/\{\{primeiro_nome\}\}/g, vars.primeiroNome)
@@ -197,7 +216,8 @@
     const safeNome = String(params.nomeCompleto || params.primeiroNome || 'Cliente').trim();
     q.set('nome', safeNome || 'Cliente');
     const clientName = String(params.primeiroNome || params.nomeCompleto || '').trim();
-    if (clientName) q.set('cliente_nome_literal', clientName.endsWith(',') ? clientName : `${clientName},`);
+    if (clientName)
+      q.set('cliente_nome_literal', clientName.endsWith(',') ? clientName : `${clientName},`);
     if (params.mensagem) q.set('corpo', params.mensagem);
     q.set('footer_lead', '');
     if (params.assinatura.linha2) q.set('assinatura', params.assinatura.linha2);
@@ -256,7 +276,7 @@
     linha2_italic: false,
     linha3: '',
     linha3_font_size: 24,
-    linha3_italic: false,
+    linha3_italic: false
   };
   let textColor = '';
   let previewUrl: string | null = null;
@@ -285,7 +305,7 @@
 
   // ── Derived ──────────────────────────────────────────────────────────────────
 
-  $: primeiroNome = (clienteNomeCustom.trim() || getPrimeiroNome(clienteNome));
+  $: primeiroNome = clienteNomeCustom.trim() || getPrimeiroNome(clienteNome);
   $: maxPalavras = selectedTheme?.mensagem_max_palavras ?? 50;
   $: maxLinhas = selectedTheme?.mensagem_max_linhas ?? 6;
   $: palavrasExcedido = countWords(mensagem) > maxPalavras;
@@ -296,9 +316,12 @@
 
   function resolveTemaBucket(normalizedThemeText: string): string | null {
     if (!normalizedThemeText) return null;
-    if (normalizedThemeText.includes('anivers') || normalizedThemeText.includes('birthday')) return 'aniversario';
-    if (normalizedThemeText.includes('natal') || normalizedThemeText.includes('christmas')) return 'natal';
-    if (normalizedThemeText.includes('pascoa') || normalizedThemeText.includes('easter')) return 'pascoa';
+    if (normalizedThemeText.includes('anivers') || normalizedThemeText.includes('birthday'))
+      return 'aniversario';
+    if (normalizedThemeText.includes('natal') || normalizedThemeText.includes('christmas'))
+      return 'natal';
+    if (normalizedThemeText.includes('pascoa') || normalizedThemeText.includes('easter'))
+      return 'pascoa';
     if (
       normalizedThemeText.includes('ano novo') ||
       normalizedThemeText.includes('ano_novo') ||
@@ -307,15 +330,24 @@
     ) {
       return 'ano_novo';
     }
-    if (normalizedThemeText.includes('dia das maes') || normalizedThemeText.includes('mother')) return 'dia_das_maes';
-    if (normalizedThemeText.includes('dia dos pais') || normalizedThemeText.includes('father')) return 'dia_dos_pais';
-    if (normalizedThemeText.includes('dia da mulher') || normalizedThemeText.includes('women')) return 'dia_da_mulher';
-    if (normalizedThemeText.includes('viajant') || normalizedThemeText.includes('travel')) return 'dia_do_viajante';
-    if (normalizedThemeText.includes('geral') || normalizedThemeText.includes('general')) return 'geral';
+    if (normalizedThemeText.includes('dia das maes') || normalizedThemeText.includes('mother'))
+      return 'dia_das_maes';
+    if (normalizedThemeText.includes('dia dos pais') || normalizedThemeText.includes('father'))
+      return 'dia_dos_pais';
+    if (normalizedThemeText.includes('dia da mulher') || normalizedThemeText.includes('women'))
+      return 'dia_da_mulher';
+    if (normalizedThemeText.includes('viajant') || normalizedThemeText.includes('travel'))
+      return 'dia_do_viajante';
+    if (normalizedThemeText.includes('geral') || normalizedThemeText.includes('general'))
+      return 'geral';
     return null;
   }
 
-  function matchesTemaFilter(tema: string, normalizedThemeText: string, categoryId?: string | null): boolean {
+  function matchesTemaFilter(
+    tema: string,
+    normalizedThemeText: string,
+    categoryId?: string | null
+  ): boolean {
     if (tema === 'all') return true;
     if (tema.startsWith('cat:')) {
       const selectedCategoryId = tema.slice(4);
@@ -370,7 +402,9 @@
   $: filteredThemes = (() => {
     if (!temaFilter) return [] as Theme[];
     return activeThemes.filter((theme) => {
-      const categoryName = categoryNameById.get(String(theme.categoria_id || '').trim()) || String(theme.categoria || '').trim();
+      const categoryName =
+        categoryNameById.get(String(theme.categoria_id || '').trim()) ||
+        String(theme.categoria || '').trim();
       const normalizedThemeText = normalizeText(`${theme.nome || ''} ${categoryName || ''}`);
       return matchesTemaFilter(temaFilter, normalizedThemeText, theme.categoria_id);
     });
@@ -386,7 +420,9 @@
     return [
       { label: placeholder, value: '' },
       ...filteredThemes.map((theme) => {
-        const categoryName = categoryNameById.get(String(theme.categoria_id || '').trim()) || String(theme.categoria || '').trim();
+        const categoryName =
+          categoryNameById.get(String(theme.categoria_id || '').trim()) ||
+          String(theme.categoria || '').trim();
         return {
           value: theme.id,
           label: `${theme.nome}${categoryName ? ` • ${categoryName}` : ''}`
@@ -403,7 +439,8 @@
     };
 
     const selectedCategoryRaw = selectedTheme
-      ? categoryNameById.get(String(selectedTheme.categoria_id || '').trim()) || String(selectedTheme.categoria || '')
+      ? categoryNameById.get(String(selectedTheme.categoria_id || '').trim()) ||
+        String(selectedTheme.categoria || '')
       : '';
     const selectedCategory = normalizeCategory(selectedCategoryRaw);
 
@@ -461,12 +498,12 @@
           linha1: '',
           linha1_font_size: 40,
           linha1_italic: false,
-          linha2: savedSignature.linha2 || (data.settings?.consultor_nome || ''),
+          linha2: savedSignature.linha2 || data.settings?.consultor_nome || '',
           linha2_font_size: savedSignature.linha2_font_size || 40,
           linha2_italic: Boolean(savedSignature.linha2_italic),
           linha3: savedSignature.linha3 || '',
           linha3_font_size: savedSignature.linha3_font_size || 24,
-          linha3_italic: Boolean(savedSignature.linha3_italic),
+          linha3_italic: Boolean(savedSignature.linha3_italic)
         };
       } else if (data.settings?.consultor_nome) {
         assinatura = { ...assinatura, linha2: data.settings.consultor_nome };
@@ -588,12 +625,20 @@
         nomeCompleto: clienteNome || primeiroNome,
         mensagem,
         assinatura,
-        textColor,
+        textColor
       });
     }, 600);
   }
 
-  $: if (selectedTheme || greeting || clienteNome || clienteNomeCustom || mensagem || assinatura || textColor) {
+  $: if (
+    selectedTheme ||
+    greeting ||
+    clienteNome ||
+    clienteNomeCustom ||
+    mensagem ||
+    assinatura ||
+    textColor
+  ) {
     schedulePreview();
   }
 
@@ -604,7 +649,10 @@
 
   $: if (filteredThemes.length === 0) {
     if (selectedTheme) clearThemeSelection();
-  } else if (selectedTheme && !filteredThemes.some((theme) => theme.id === (selectedTheme?.id || ''))) {
+  } else if (
+    selectedTheme &&
+    !filteredThemes.some((theme) => theme.id === (selectedTheme?.id || ''))
+  ) {
     clearThemeSelection();
   }
 
@@ -615,14 +663,20 @@
   $: if (selectedTheme) {
     if (!filteredMessages.length) {
       if (selectedMessageTemplateId) selectedMessageTemplateId = '';
-    } else if (!selectedMessageTemplateId || !filteredMessages.some((message) => message.id === selectedMessageTemplateId)) {
+    } else if (
+      !selectedMessageTemplateId ||
+      !filteredMessages.some((message) => message.id === selectedMessageTemplateId)
+    ) {
       const greetingByTheme = resolveGreetingByTheme(selectedTheme);
       const normalizedGreetingByTheme = normalizeText(greetingByTheme);
       const matched =
         filteredMessages.find((message) => {
           const messageTitle = normalizeText(String(message.titulo || message.nome || ''));
           if (!messageTitle || !normalizedGreetingByTheme) return false;
-          return messageTitle.includes(normalizedGreetingByTheme) || normalizedGreetingByTheme.includes(messageTitle);
+          return (
+            messageTitle.includes(normalizedGreetingByTheme) ||
+            normalizedGreetingByTheme.includes(messageTitle)
+          );
         }) || filteredMessages[0];
 
       if (matched) {
@@ -739,7 +793,6 @@
   onDestroy(() => {
     if (clienteSearchTimer) clearTimeout(clienteSearchTimer);
   });
-
 </script>
 
 <svelte:head>
@@ -749,13 +802,8 @@
 <PageHeader
   title="CRM — Cartões de Relacionamento"
   subtitle="Crie e personalize mensagens e cartões para seus clientes."
-  breadcrumbs={[
-    { label: 'Parâmetros', href: '/parametros' },
-    { label: 'CRM' }
-  ]}
-  actions={[
-    { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }
-  ]}
+  breadcrumbs={[{ label: 'Parâmetros', href: '/parametros' }, { label: 'CRM' }]}
+  actions={[{ label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }]}
 />
 
 {#if loading}
@@ -766,7 +814,9 @@
     <Card color="crm">
       <div class="mb-4">
         <h3 class="font-semibold text-slate-800">Escolha a arte</h3>
-        <p class="mt-1 text-sm text-slate-500">Selecione o tema, o template e o nome do cliente para montar a prévia.</p>
+        <p class="mt-1 text-sm text-slate-500">
+          Selecione o tema, o template e o nome do cliente para montar a prévia.
+        </p>
       </div>
 
       <div class="mb-4 grid grid-cols-1 gap-3 xl:grid-cols-[1fr_1fr_1fr_auto]">
@@ -800,16 +850,33 @@
         />
 
         <div class="flex items-end">
-          <Button variant="outline" color="crm" on:click={() => { temaFilter = ''; clearThemeSelection(); }}>Limpar</Button>
+          <Button
+            variant="outline"
+            color="crm"
+            on:click={() => {
+              temaFilter = '';
+              clearThemeSelection();
+            }}>Limpar</Button
+          >
         </div>
       </div>
 
       <div class="mb-2 flex justify-center">
-        <div class="w-full max-w-[420px] overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+        <div
+          class="w-full max-w-[420px] overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
+        >
           {#if previewDisplayUrl}
-            <img src={previewDisplayUrl} alt={selectedTheme ? `Prévia do template ${selectedTheme.nome}` : 'Prévia do template'} class="w-full object-cover" />
+            <img
+              src={previewDisplayUrl}
+              alt={selectedTheme
+                ? `Prévia do template ${selectedTheme.nome}`
+                : 'Prévia do template'}
+              class="w-full object-cover"
+            />
           {:else}
-            <div class="flex h-[420px] items-center justify-center text-center text-sm text-slate-500">
+            <div
+              class="flex h-[420px] items-center justify-center text-center text-sm text-slate-500"
+            >
               {!temaFilter
                 ? 'Selecione um tema para carregar a prévia.'
                 : filteredThemes.length === 0
@@ -823,7 +890,9 @@
       </div>
 
       <div class="mt-3 flex justify-center">
-        <div class="inline-flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-2">
+        <div
+          class="inline-flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-2"
+        >
           <Button
             variant="outline"
             color="crm"
@@ -835,11 +904,25 @@
             <Pencil size={15} />
           </Button>
 
-          <Button variant="secondary" color="crm" size="xs" title="Abrir SVG" disabled={!previewUrl} on:click={openPreviewSvg}>
+          <Button
+            variant="secondary"
+            color="crm"
+            size="xs"
+            title="Abrir SVG"
+            disabled={!previewUrl}
+            on:click={openPreviewSvg}
+          >
             <ExternalLink size={15} />
           </Button>
 
-          <Button variant="secondary" color="crm" size="xs" title="Baixar PNG" disabled={!previewUrl || previewLoading} on:click={openPreviewPng}>
+          <Button
+            variant="secondary"
+            color="crm"
+            size="xs"
+            title="Baixar PNG"
+            disabled={!previewUrl || previewLoading}
+            on:click={openPreviewPng}
+          >
             <Download size={15} />
           </Button>
 
@@ -854,7 +937,13 @@
             <MessageCircle size={15} />
           </Button>
 
-          <Button variant="outline" color="crm" size="xs" title="Limpar selecao" on:click={clearPreviewSelection}>
+          <Button
+            variant="outline"
+            color="crm"
+            size="xs"
+            title="Limpar selecao"
+            on:click={clearPreviewSelection}
+          >
             <X size={15} />
           </Button>
         </div>
@@ -876,7 +965,6 @@
           {/each}
         </div>
       </div>
-
     </Card>
 
     <Dialog
@@ -901,10 +989,20 @@
         />
 
         <div>
-          <label class="mb-1 flex items-center justify-between text-sm font-medium text-slate-700" for="crm-edit-mensagem">
+          <label
+            class="mb-1 flex items-center justify-between text-sm font-medium text-slate-700"
+            for="crm-edit-mensagem"
+          >
             Mensagem
-            <span class="text-xs font-normal {(countWords(editMensagem) > maxPalavras || countLines(editMensagem) > maxLinhas) ? 'text-red-500' : 'text-slate-400'}">
-              {countWords(editMensagem)}/{maxPalavras} palavras · {countLines(editMensagem)}/{maxLinhas} linhas
+            <span
+              class="text-xs font-normal {countWords(editMensagem) > maxPalavras ||
+              countLines(editMensagem) > maxLinhas
+                ? 'text-red-500'
+                : 'text-slate-400'}"
+            >
+              {countWords(editMensagem)}/{maxPalavras} palavras · {countLines(
+                editMensagem
+              )}/{maxLinhas} linhas
             </span>
           </label>
           <FieldTextarea
@@ -915,7 +1013,9 @@
             placeholder="Escreva sua mensagem..."
           />
           {#if countWords(editMensagem) > maxPalavras}
-            <p class="mt-1 text-xs text-red-500">Mensagem excede o limite de {maxPalavras} palavras.</p>
+            <p class="mt-1 text-xs text-red-500">
+              Mensagem excede o limite de {maxPalavras} palavras.
+            </p>
           {/if}
           {#if countLines(editMensagem) > maxLinhas}
             <p class="mt-1 text-xs text-red-500">Mensagem excede o limite de {maxLinhas} linhas.</p>
@@ -923,28 +1023,42 @@
         </div>
 
         <div class="flex justify-end">
-          <Button variant="outline" color="crm" size="sm" disabled={!selectedMessageTemplateId} on:click={reapplySelectedTemplate}>
+          <Button
+            variant="outline"
+            color="crm"
+            size="sm"
+            disabled={!selectedMessageTemplateId}
+            on:click={reapplySelectedTemplate}
+          >
             Restaurar texto do template
           </Button>
         </div>
       </div>
     </Dialog>
 
-  <!-- STEP 1: Personalização opcional -->
+    <!-- STEP 1: Personalização opcional -->
   {:else if wizardStep === 1}
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <!-- Coluna esquerda: formulário -->
       <Card color="crm">
         <div class="mb-4">
           <h3 class="font-semibold text-slate-800">Personalização opcional</h3>
-          <p class="mt-1 text-sm text-slate-500">Abra uma opção apenas se quiser ajustar o cartão. Você pode seguir direto para a prévia.</p>
+          <p class="mt-1 text-sm text-slate-500">
+            Abra uma opção apenas se quiser ajustar o cartão. Você pode seguir direto para a prévia.
+          </p>
         </div>
 
         <!-- Arte selecionada (mini preview) -->
         {#if selectedTheme}
-          <div class="mb-4 flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
+          <div
+            class="mb-4 flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-2"
+          >
             {#if selectedTheme.asset_url}
-              <img src={selectedTheme.asset_url} alt={selectedTheme.nome} class="h-12 w-12 rounded-lg object-cover" />
+              <img
+                src={selectedTheme.asset_url}
+                alt={selectedTheme.nome}
+                class="h-12 w-12 rounded-lg object-cover"
+              />
             {:else}
               <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-200">
                 <ImageIcon size={18} class="text-slate-400" />
@@ -953,9 +1067,7 @@
             <div class="flex-1">
               <p class="text-sm font-medium text-slate-700">{selectedTheme.nome}</p>
             </div>
-            <Button variant="ghost" size="xs" color="crm" on:click={prevStep}>
-              Trocar
-            </Button>
+            <Button variant="ghost" size="xs" color="crm" on:click={prevStep}>Trocar</Button>
           </div>
         {/if}
 
@@ -964,13 +1076,20 @@
             <Button
               variant="unstyled"
               class_name="flex w-full items-center justify-between rounded-xl px-4 py-3 text-left"
-              on:click={() => (activeCustomizationSection = activeCustomizationSection === 'cliente' ? null : 'cliente')}
+              on:click={() =>
+                (activeCustomizationSection =
+                  activeCustomizationSection === 'cliente' ? null : 'cliente')}
             >
               <span>
                 <span class="block text-sm font-medium text-slate-800">Cliente e saudação</span>
-                <span class="mt-0.5 block text-xs text-slate-500">Nome no cartão e saudação opcional</span>
+                <span class="mt-0.5 block text-xs text-slate-500"
+                  >Nome no cartão e saudação opcional</span
+                >
               </span>
-              <ChevronRight size={16} class={`transition-transform ${activeCustomizationSection === 'cliente' ? 'rotate-90' : ''}`.trim()} />
+              <ChevronRight
+                size={16}
+                class={`transition-transform ${activeCustomizationSection === 'cliente' ? 'rotate-90' : ''}`.trim()}
+              />
             </Button>
 
             {#if activeCustomizationSection === 'cliente'}
@@ -981,13 +1100,20 @@
                     id="crm-cliente"
                     bind:value={clienteBusca}
                     on:input={onClienteBuscaInput}
-                    on:focus={() => { if (clienteResults.length) showClienteDropdown = true; }}
-                    on:blur={() => setTimeout(() => { showClienteDropdown = false; }, 200)}
+                    on:focus={() => {
+                      if (clienteResults.length) showClienteDropdown = true;
+                    }}
+                    on:blur={() =>
+                      setTimeout(() => {
+                        showClienteDropdown = false;
+                      }, 200)}
                     placeholder="Buscar cliente..."
                     icon={Search}
                   />
                   {#if showClienteDropdown && clienteResults.length}
-                    <div class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+                    <div
+                      class="absolute z-20 mt-1 w-full overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg"
+                    >
                       {#each clienteResults as c}
                         <Button
                           type="button"
@@ -1028,13 +1154,20 @@
             <Button
               variant="unstyled"
               class_name="flex w-full items-center justify-between rounded-xl px-4 py-3 text-left"
-              on:click={() => (activeCustomizationSection = activeCustomizationSection === 'mensagem' ? null : 'mensagem')}
+              on:click={() =>
+                (activeCustomizationSection =
+                  activeCustomizationSection === 'mensagem' ? null : 'mensagem')}
             >
               <span>
                 <span class="block text-sm font-medium text-slate-800">Mensagem</span>
-                <span class="mt-0.5 block text-xs text-slate-500">Escolha um texto rápido ou edite manualmente</span>
+                <span class="mt-0.5 block text-xs text-slate-500"
+                  >Escolha um texto rápido ou edite manualmente</span
+                >
               </span>
-              <ChevronRight size={16} class={`transition-transform ${activeCustomizationSection === 'mensagem' ? 'rotate-90' : ''}`.trim()} />
+              <ChevronRight
+                size={16}
+                class={`transition-transform ${activeCustomizationSection === 'mensagem' ? 'rotate-90' : ''}`.trim()}
+              />
             </Button>
 
             {#if activeCustomizationSection === 'mensagem'}
@@ -1059,10 +1192,19 @@
                 {/if}
 
                 <div>
-                  <label class="mb-1 flex items-center justify-between text-sm font-medium text-slate-700" for="crm-mensagem">
+                  <label
+                    class="mb-1 flex items-center justify-between text-sm font-medium text-slate-700"
+                    for="crm-mensagem"
+                  >
                     Mensagem
-                    <span class="text-xs font-normal {palavrasExcedido || linhasExcedido ? 'text-red-500' : 'text-slate-400'}">
-                      {countWords(mensagem)}/{maxPalavras} palavras · {countLines(mensagem)}/{maxLinhas} linhas
+                    <span
+                      class="text-xs font-normal {palavrasExcedido || linhasExcedido
+                        ? 'text-red-500'
+                        : 'text-slate-400'}"
+                    >
+                      {countWords(mensagem)}/{maxPalavras} palavras · {countLines(
+                        mensagem
+                      )}/{maxLinhas} linhas
                     </span>
                   </label>
                   <FieldTextarea
@@ -1073,10 +1215,14 @@
                     placeholder={'Escreva sua mensagem... Use {{primeiro_nome}}, {{nome_cliente}}, {{consultor}}'}
                   />
                   {#if palavrasExcedido}
-                    <p class="mt-1 text-xs text-red-500">⚠️ Mensagem excede o limite de {maxPalavras} palavras.</p>
+                    <p class="mt-1 text-xs text-red-500">
+                      ⚠️ Mensagem excede o limite de {maxPalavras} palavras.
+                    </p>
                   {/if}
                   {#if linhasExcedido}
-                    <p class="mt-1 text-xs text-red-500">⚠️ Mensagem excede o limite de {maxLinhas} linhas.</p>
+                    <p class="mt-1 text-xs text-red-500">
+                      ⚠️ Mensagem excede o limite de {maxLinhas} linhas.
+                    </p>
                   {/if}
                 </div>
               </div>
@@ -1087,13 +1233,20 @@
             <Button
               variant="unstyled"
               class_name="flex w-full items-center justify-between rounded-xl px-4 py-3 text-left"
-              on:click={() => (activeCustomizationSection = activeCustomizationSection === 'assinatura' ? null : 'assinatura')}
+              on:click={() =>
+                (activeCustomizationSection =
+                  activeCustomizationSection === 'assinatura' ? null : 'assinatura')}
             >
               <span>
                 <span class="block text-sm font-medium text-slate-800">Assinatura</span>
-                <span class="mt-0.5 block text-xs text-slate-500">Ajuste nome, cargo e estilo da assinatura</span>
+                <span class="mt-0.5 block text-xs text-slate-500"
+                  >Ajuste nome, cargo e estilo da assinatura</span
+                >
               </span>
-              <ChevronRight size={16} class={`transition-transform ${activeCustomizationSection === 'assinatura' ? 'rotate-90' : ''}`.trim()} />
+              <ChevronRight
+                size={16}
+                class={`transition-transform ${activeCustomizationSection === 'assinatura' ? 'rotate-90' : ''}`.trim()}
+              />
             </Button>
 
             {#if activeCustomizationSection === 'assinatura'}
@@ -1111,24 +1264,27 @@
                   </Button>
                 </div>
                 <div class="space-y-2">
-                  {#each [
-                    { key: 'linha2' as const, sizeKey: 'linha2_font_size' as const, italicKey: 'linha2_italic' as const, placeholder: 'Seu nome (obrigatório)' },
-                    { key: 'linha3' as const, sizeKey: 'linha3_font_size' as const, italicKey: 'linha3_italic' as const, placeholder: 'Seu cargo (opcional)' },
-                  ] as line, i}
+                  {#each [{ key: 'linha2' as const, sizeKey: 'linha2_font_size' as const, italicKey: 'linha2_italic' as const, placeholder: 'Seu nome (obrigatório)' }, { key: 'linha3' as const, sizeKey: 'linha3_font_size' as const, italicKey: 'linha3_italic' as const, placeholder: 'Seu cargo (opcional)' }] as line, i}
                     <div class="flex items-center gap-2">
                       <span class="w-4 shrink-0 text-center text-xs text-slate-400">{i + 1}</span>
                       <FieldInput
                         value={assinatura[line.key]}
                         placeholder={line.placeholder}
                         class_name={`flex-1 ${assinatura[line.italicKey] ? 'italic' : ''}`.trim()}
-                        on:input={(event) => (assinatura[line.key] = (event.target as HTMLInputElement).value)}
+                        on:input={(event) =>
+                          (assinatura[line.key] = (event.target as HTMLInputElement).value)}
                       />
                       <FieldSelect
                         value={String(assinatura[line.sizeKey])}
-                        options={[12,14,16,18,20,22,24,28,32,36,40,44,48,52,56,60,64].map((s) => ({ value: String(s), label: `${s}px` }))}
+                        options={[
+                          12, 14, 16, 18, 20, 22, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64
+                        ].map((s) => ({ value: String(s), label: `${s}px` }))}
                         placeholder={null}
                         class_name="w-24"
-                        on:change={(event) => (assinatura[line.sizeKey] = Number((event.target as HTMLSelectElement).value))}
+                        on:change={(event) =>
+                          (assinatura[line.sizeKey] = Number(
+                            (event.target as HTMLSelectElement).value
+                          ))}
                       />
                       <Button
                         variant={assinatura[line.italicKey] ? 'primary' : 'outline'}
@@ -1170,7 +1326,9 @@
                 src={previewUrl}
                 alt="Prévia do cartão"
                 class="w-full"
-                on:error={() => { previewUrl = selectedTheme?.asset_url || null; }}
+                on:error={() => {
+                  previewUrl = selectedTheme?.asset_url || null;
+                }}
               />
             </div>
           {:else if selectedTheme}
@@ -1178,7 +1336,9 @@
               <img src={selectedTheme.asset_url} alt={selectedTheme.nome} class="w-full" />
             </div>
           {:else}
-            <div class="flex h-48 items-center justify-center rounded-xl border-2 border-dashed border-slate-200 text-slate-400">
+            <div
+              class="flex h-48 items-center justify-center rounded-xl border-2 border-dashed border-slate-200 text-slate-400"
+            >
               Nenhuma arte selecionada
             </div>
           {/if}
@@ -1186,7 +1346,7 @@
       </div>
     </div>
 
-  <!-- STEP 2: Prévia final e envio -->
+    <!-- STEP 2: Prévia final e envio -->
   {:else}
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <!-- Preview card -->
@@ -1198,7 +1358,9 @@
               src={previewUrl}
               alt="Prévia do cartão"
               class="w-full"
-              on:error={() => { previewUrl = selectedTheme?.asset_url || null; }}
+              on:error={() => {
+                previewUrl = selectedTheme?.asset_url || null;
+              }}
             />
           </div>
         {:else if selectedTheme}
@@ -1206,7 +1368,9 @@
             <img src={selectedTheme.asset_url} alt={selectedTheme.nome} class="w-full" />
           </div>
         {:else}
-          <div class="flex h-48 items-center justify-center rounded-xl border-2 border-dashed border-slate-200 text-slate-400">
+          <div
+            class="flex h-48 items-center justify-center rounded-xl border-2 border-dashed border-slate-200 text-slate-400"
+          >
             Nenhuma arte selecionada
           </div>
         {/if}
@@ -1218,7 +1382,7 @@
               href={previewUrl.replace('/render.svg', '/render.png')}
               target="_blank"
               rel="noopener noreferrer"
-              class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-center text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+              class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-center text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
             >
               Baixar PNG
             </a>
@@ -1226,7 +1390,7 @@
               href={previewUrl}
               target="_blank"
               rel="noopener noreferrer"
-              class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-center text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+              class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-center text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
             >
               Baixar SVG
             </a>
@@ -1253,11 +1417,15 @@
           </div>
           <div class="flex gap-2">
             <dt class="w-24 shrink-0 text-slate-500">Mensagem:</dt>
-            <dd class="whitespace-pre-line font-medium text-slate-800 text-xs">{mensagem || '—'}</dd>
+            <dd class="text-xs font-medium whitespace-pre-line text-slate-800">
+              {mensagem || '—'}
+            </dd>
           </div>
           <div class="flex gap-2">
             <dt class="w-24 shrink-0 text-slate-500">Assinatura:</dt>
-            <dd class="font-medium text-slate-800">{[assinatura.linha2, assinatura.linha3].filter(Boolean).join(' · ') || '—'}</dd>
+            <dd class="font-medium text-slate-800">
+              {[assinatura.linha2, assinatura.linha3].filter(Boolean).join(' · ') || '—'}
+            </dd>
           </div>
         </dl>
 

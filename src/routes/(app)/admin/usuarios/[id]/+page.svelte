@@ -81,7 +81,10 @@
   };
 
   type MfaStatusResponse = {
-    statuses?: Record<string, { enabled: boolean; verified_count: number; factor_count: number } | null> | null;
+    statuses?: Record<
+      string,
+      { enabled: boolean; verified_count: number; factor_count: number } | null
+    > | null;
   };
 
   const emptyForm = {
@@ -127,7 +130,11 @@
       ''
   ).toUpperCase();
   $: isFinanceiroUser = selectedUserTypeName.includes('FINANCEIRO');
-  $: if (isFinanceiroUser && userForm.company_id && !financeiroCompanyIds.includes(userForm.company_id)) {
+  $: if (
+    isFinanceiroUser &&
+    userForm.company_id &&
+    !financeiroCompanyIds.includes(userForm.company_id)
+  ) {
     financeiroCompanyIds = [...financeiroCompanyIds, userForm.company_id];
   }
 
@@ -164,7 +171,11 @@
 
   async function loadMfaStatus(userId: string, signal?: AbortSignal) {
     try {
-      const payload = await apiPost<MfaStatusResponse>('/api/v1/admin/auth/mfa-status', { user_ids: [userId] }, signal);
+      const payload = await apiPost<MfaStatusResponse>(
+        '/api/v1/admin/auth/mfa-status',
+        { user_ids: [userId] },
+        signal
+      );
       mfaStatus = payload?.statuses?.[userId] || null;
     } catch (err) {
       if (isCanceledApiError(err)) return;
@@ -192,20 +203,20 @@
           if (err instanceof ApiError) {
             const message = err.message || 'Nao foi possivel carregar o detalhe do usuario.';
             if (err.status === 401) {
-            toast.error('Sessão expirada. Faça login novamente para continuar.');
-            const next = `${$page.url.pathname}${$page.url.search}`;
-            await goto(`/auth/login?session_expired=1&next=${encodeURIComponent(next)}`);
-            return;
+              toast.error('Sessão expirada. Faça login novamente para continuar.');
+              const next = `${$page.url.pathname}${$page.url.search}`;
+              await goto(`/auth/login?session_expired=1&next=${encodeURIComponent(next)}`);
+              return;
             }
             if (err.status === 403) {
-            toast.error(message || 'Você não tem permissão para acessar este usuário.');
-            await goto('/admin/usuarios');
-            return;
+              toast.error(message || 'Você não tem permissão para acessar este usuário.');
+              await goto('/admin/usuarios');
+              return;
             }
             if (err.status === 404) {
-            toast.error(message || 'Usuário não encontrado.');
-            await goto('/admin/usuarios');
-            return;
+              toast.error(message || 'Usuário não encontrado.');
+              await goto('/admin/usuarios');
+              return;
             }
           }
           throw err;
@@ -288,7 +299,9 @@
         participa_ranking: isFinanceiroUser ? false : userForm.participa_ranking,
         financeiro_company_ids: isFinanceiroUser ? financeiroCompanyIds : []
       });
-      toast.success(isCreateMode ? 'Usuario criado com sucesso.' : 'Usuario atualizado com sucesso.');
+      toast.success(
+        isCreateMode ? 'Usuario criado com sucesso.' : 'Usuario atualizado com sucesso.'
+      );
 
       if (isCreateMode && payload.id) {
         await goto(`/admin/usuarios/${payload.id}`);
@@ -429,14 +442,17 @@
     { label: 'Usuarios', href: '/admin/usuarios' },
     { label: isCreateMode ? 'Novo' : userMeta?.nome || 'Detalhe' }
   ]}
-  actions={
-    isCreateMode
-      ? []
-      : [
-          { label: 'Atualizar', onClick: loadDetail, variant: 'secondary', icon: RefreshCw },
-          { label: 'Permissoes', href: `/admin/permissoes/${currentId}`, variant: 'secondary', icon: ShieldCheck }
-        ]
-  }
+  actions={isCreateMode
+    ? []
+    : [
+        { label: 'Atualizar', onClick: loadDetail, variant: 'secondary', icon: RefreshCw },
+        {
+          label: 'Permissoes',
+          href: `/admin/permissoes/${currentId}`,
+          variant: 'secondary',
+          icon: ShieldCheck
+        }
+      ]}
 />
 
 <div class="space-y-6">
@@ -448,7 +464,9 @@
       </Card>
       <Card color="financeiro">
         <p class="text-sm text-slate-500">Empresa</p>
-        <p class="mt-2 text-lg font-semibold text-slate-900">{userMeta?.empresa || 'Sem empresa'}</p>
+        <p class="mt-2 text-lg font-semibold text-slate-900">
+          {userMeta?.empresa || 'Sem empresa'}
+        </p>
       </Card>
       <Card color="financeiro">
         <p class="text-sm text-slate-500">Permissoes ativas</p>
@@ -471,10 +489,27 @@
 
   <Card color="financeiro" title="Cadastro administrativo">
     <div class="grid gap-4 lg:grid-cols-2">
-      <FieldInput id="usuario-nome" label="Nome completo" bind:value={userForm.nome_completo} class_name="w-full" />
-      <FieldInput id="usuario-email" label="E-mail" type="email" bind:value={userForm.email} class_name="w-full" />
+      <FieldInput
+        id="usuario-nome"
+        label="Nome completo"
+        bind:value={userForm.nome_completo}
+        class_name="w-full"
+      />
+      <FieldInput
+        id="usuario-email"
+        label="E-mail"
+        type="email"
+        bind:value={userForm.email}
+        class_name="w-full"
+      />
       {#if isCreateMode}
-        <FieldInput id="usuario-senha" label="Senha inicial" type="password" bind:value={userForm.password} class_name="w-full" />
+        <FieldInput
+          id="usuario-senha"
+          label="Senha inicial"
+          type="password"
+          bind:value={userForm.password}
+          class_name="w-full"
+        />
       {/if}
       <FieldSelect
         id="usuario-tipo"
@@ -488,7 +523,10 @@
         id="usuario-empresa"
         label="Empresa"
         bind:value={userForm.company_id}
-        options={companies.map((c) => ({ value: c.id, label: c.nome_fantasia || c.nome || c.name || '' }))}
+        options={companies.map((c) => ({
+          value: c.id,
+          label: c.nome_fantasia || c.nome || c.name || ''
+        }))}
         placeholder="Selecione uma opção"
         disabled={userForm.uso_individual}
         class_name="w-full"
@@ -519,7 +557,8 @@
         <div class="rounded-xl border border-blue-200 bg-blue-50 px-4 py-4">
           <p class="font-medium text-blue-950">Perfil financeiro</p>
           <p class="mt-1 text-sm text-blue-800">
-            Este usuario nao participa do ranking e acessa apenas o escopo financeiro das empresas vinculadas.
+            Este usuario nao participa do ranking e acessa apenas o escopo financeiro das empresas
+            vinculadas.
           </p>
         </div>
       {/if}
@@ -530,7 +569,8 @@
         <div class="mb-4">
           <p class="font-semibold text-slate-900">Empresas do financeiro</p>
           <p class="text-sm text-slate-500">
-            Vincule uma ou varias empresas. A empresa principal fica sempre selecionada quando existir.
+            Vincule uma ou varias empresas. A empresa principal fica sempre selecionada quando
+            existir.
           </p>
         </div>
         <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -543,7 +583,11 @@
               disabled={companyId === userForm.company_id}
               color="financeiro"
               class_name="rounded-xl border border-slate-200 bg-white px-4 py-3"
-              on:change={(event) => toggleFinanceiroCompany(companyId, Boolean((event.target as HTMLInputElement)?.checked))}
+              on:change={(event) =>
+                toggleFinanceiroCompany(
+                  companyId,
+                  Boolean((event.target as HTMLInputElement)?.checked)
+                )}
             />
           {/each}
         </div>
@@ -609,7 +653,9 @@
             <p class="text-sm text-slate-500">Nenhuma permissao ativa encontrada.</p>
           {/if}
 
-          <Button variant="secondary" href={`/admin/permissoes/${currentId}`}>Abrir editor completo</Button>
+          <Button variant="secondary" href={`/admin/permissoes/${currentId}`}
+            >Abrir editor completo</Button
+          >
         </div>
       </Card>
 
@@ -655,7 +701,9 @@
               <ShieldAlert size={18} class="text-orange-600" />
               <div>
                 <p class="font-medium text-slate-900">Resetar 2FA</p>
-                <p class="text-sm text-slate-500">Remove fatores ativos e obriga nova configuracao.</p>
+                <p class="text-sm text-slate-500">
+                  Remove fatores ativos e obriga nova configuracao.
+                </p>
               </div>
             </div>
             {#if mfaStatus?.enabled}
@@ -688,7 +736,8 @@
       class_name="w-full"
     />
     <p class="text-sm text-slate-500">
-      O envio usa as configuracoes globais de e-mail do sistema e aplica as variaveis do usuario atual.
+      O envio usa as configuracoes globais de e-mail do sistema e aplica as variaveis do usuario
+      atual.
     </p>
   </div>
 </Dialog>
@@ -702,8 +751,20 @@
   onConfirm={redefineSenha}
 >
   <div class="space-y-4">
-    <FieldInput id="nova-senha" label="Nova senha" type="password" bind:value={novaSenha} class_name="w-full" />
-    <FieldInput id="confirmar-senha" label="Confirmacao" type="password" bind:value={confirmarSenha} class_name="w-full" />
+    <FieldInput
+      id="nova-senha"
+      label="Nova senha"
+      type="password"
+      bind:value={novaSenha}
+      class_name="w-full"
+    />
+    <FieldInput
+      id="confirmar-senha"
+      label="Confirmacao"
+      type="password"
+      bind:value={confirmarSenha}
+      class_name="w-full"
+    />
   </div>
 </Dialog>
 
@@ -717,6 +778,7 @@
   onConfirm={resetarMfa}
 >
   <p class="text-sm text-slate-600">
-    Esta acao remove todos os fatores MFA do usuario e exige configuracao novamente no proximo acesso.
+    Esta acao remove todos os fatores MFA do usuario e exige configuracao novamente no proximo
+    acesso.
   </p>
 </Dialog>

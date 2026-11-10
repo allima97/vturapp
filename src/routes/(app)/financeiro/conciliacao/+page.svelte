@@ -16,7 +16,10 @@
   import { BottomSheet, FieldInput, FieldSelect, FieldTextarea } from '$lib/components/ui';
   import { toast } from '$lib/stores/ui';
   import { buildConciliacaoMetrics } from '$lib/conciliacao/business';
-  import { parseConciliacaoImportFile, parseConciliacaoImportText } from '$lib/conciliacao/importParser';
+  import {
+    parseConciliacaoImportFile,
+    parseConciliacaoImportText
+  } from '$lib/conciliacao/importParser';
   import { extractRexturFromText } from '$lib/conciliacao/facialRexturExtractor';
   import { todayISODateLocal } from '$lib/date';
   import {
@@ -35,7 +38,7 @@
     getDiffModalSeverity,
     getImportDiffSeverity,
     resolveMetaDifLabel,
-    statusImportLabel,
+    statusImportLabel
   } from './_components/formatters';
   import type {
     ConciliacaoChange,
@@ -49,7 +52,7 @@
     ImportPreviewRow,
     ProdutoOption,
     VendedorOption,
-    VinculoAuditResult,
+    VinculoAuditResult
   } from './_components/types';
   import { toUserMessage } from '$lib/utils/errors';
   import { apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
@@ -75,7 +78,13 @@
   } from '$lib/icons';
 
   let activeTab = 'visao_geral';
-  let activeKpiView: 'visao_geral' | 'conciliados' | 'pendentes' | 'pendentes_ranking' | 'baixa_rac' | 'execucoes' = 'visao_geral';
+  let activeKpiView:
+    | 'visao_geral'
+    | 'conciliados'
+    | 'pendentes'
+    | 'pendentes_ranking'
+    | 'baixa_rac'
+    | 'execucoes' = 'visao_geral';
   let loading = true;
   let running = false;
   let fixingVinculos = false;
@@ -169,7 +178,17 @@
   let importLookupSignature = '';
   let importLookupLoading = false;
   let importDiferencasModalOpen = false;
-  let importDiferencas: Array<{ documento: string; movimento_data: string; valor_importacao: number; valor_sistema: number; taxas_importacao: number; taxas_sistema: number; diff_total: number; diff_taxas: number; severidade: 'warning' | 'critical' }> = [];
+  let importDiferencas: Array<{
+    documento: string;
+    movimento_data: string;
+    valor_importacao: number;
+    valor_sistema: number;
+    taxas_importacao: number;
+    taxas_sistema: number;
+    diff_total: number;
+    diff_taxas: number;
+    severidade: 'warning' | 'critical';
+  }> = [];
   let importDiferencasConfirmadas = false;
   let importParseError = '';
   let importParseCacheKey = '';
@@ -258,7 +277,8 @@
       key: 'faixa_comissao',
       label: 'Faixa',
       width: '130px',
-      formatter: (value: string | null) => `<span class="text-xs font-semibold text-slate-700">${escapeHtml(value || 'SEM_COMISSAO')}</span>`
+      formatter: (value: string | null) =>
+        `<span class="text-xs font-semibold text-slate-700">${escapeHtml(value || 'SEM_COMISSAO')}</span>`
     },
     {
       key: 'conciliado',
@@ -271,9 +291,25 @@
   const changeColumns = [
     { key: 'numero_recibo', label: 'Recibo', sortable: true, width: '140px' },
     { key: 'field', label: 'Campo', sortable: true, width: '140px' },
-    { key: 'old_value', label: 'Antes', align: 'right' as const, formatter: (value: number | null) => formatCurrency(value) },
-    { key: 'new_value', label: 'Depois', align: 'right' as const, formatter: (value: number | null) => formatCurrency(value) },
-    { key: 'changed_at', label: 'Alterado em', sortable: true, width: '160px', formatter: (value: string) => formatDateTime(value) },
+    {
+      key: 'old_value',
+      label: 'Antes',
+      align: 'right' as const,
+      formatter: (value: number | null) => formatCurrency(value)
+    },
+    {
+      key: 'new_value',
+      label: 'Depois',
+      align: 'right' as const,
+      formatter: (value: number | null) => formatCurrency(value)
+    },
+    {
+      key: 'changed_at',
+      label: 'Alterado em',
+      sortable: true,
+      width: '160px',
+      formatter: (value: string) => formatDateTime(value)
+    },
     {
       key: 'reverted_at',
       label: 'Status',
@@ -286,7 +322,13 @@
   ];
 
   const executionColumns = [
-    { key: 'created_at', label: 'Data', sortable: true, width: '160px', formatter: (value: string) => formatDateTime(value) },
+    {
+      key: 'created_at',
+      label: 'Data',
+      sortable: true,
+      width: '160px',
+      formatter: (value: string) => formatDateTime(value)
+    },
     { key: 'actor', label: 'Origem', width: '100px' },
     { key: 'checked', label: 'Lidos', sortable: true, width: '90px' },
     { key: 'reconciled', label: 'Conciliados', sortable: true, width: '110px' },
@@ -307,7 +349,14 @@
     if (showPendingOnly && row.conciliado) return false;
     if (showBaixaRac && !row.is_baixa_rac) return false;
     if (searchQuery) {
-      const haystack = [row.documento, row.numero_reserva, row.descricao, row.status, row.ranking_vendedor?.nome_completo, row.ranking_produto?.nome]
+      const haystack = [
+        row.documento,
+        row.numero_reserva,
+        row.descricao,
+        row.status,
+        row.ranking_vendedor?.nome_completo,
+        row.ranking_produto?.nome
+      ]
         .join(' ')
         .toLowerCase();
       if (!haystack.includes(searchQuery.toLowerCase())) return false;
@@ -345,12 +394,22 @@
   });
 
   $: vgStatusOptions = Array.from(
-    new Set(visaoGeralRows.map((row) => row._status_label).filter((value): value is string => Boolean(value)))
+    new Set(
+      visaoGeralRows
+        .map((row) => row._status_label)
+        .filter((value): value is string => Boolean(value))
+    )
   ).sort();
   $: vgVendedorOptions = Array.from(
-    new Set(visaoGeralRows.map((row) => row._vendedor_nome).filter((value): value is string => Boolean(value)))
+    new Set(
+      visaoGeralRows
+        .map((row) => row._vendedor_nome)
+        .filter((value): value is string => Boolean(value))
+    )
   ).sort();
-  $: vgMesOptions = Array.from(new Set(visaoGeralRows.map((row) => row._mes).filter(Boolean))).sort().reverse();
+  $: vgMesOptions = Array.from(new Set(visaoGeralRows.map((row) => row._mes).filter(Boolean)))
+    .sort()
+    .reverse();
   $: vgDiaOptions = Array.from(
     new Set(
       visaoGeralRows
@@ -364,7 +423,9 @@
 
   $: vgStatusSelectOptions = [
     { value: 'all', label: 'Todos' },
-    ...vgStatusOptions.map((item) => ({ value: String(item || ''), label: String(item || '') })).filter((item) => item.value)
+    ...vgStatusOptions
+      .map((item) => ({ value: String(item || ''), label: String(item || '') }))
+      .filter((item) => item.value)
   ];
   $: vgVendedorSelectOptions = [
     { value: 'all', label: 'Todos' },
@@ -374,18 +435,26 @@
   ];
   $: vgMesSelectOptions = [
     { value: 'all', label: 'Todos' },
-    ...vgMesOptions.map((item) => ({ value: String(item || ''), label: String(item || '') })).filter((item) => item.value)
+    ...vgMesOptions
+      .map((item) => ({ value: String(item || ''), label: String(item || '') }))
+      .filter((item) => item.value)
   ];
   $: vgDiaSelectOptions = [
     { value: 'all', label: 'Todos do mês' },
-    ...vgDiaOptions.map((item) => ({ value: String(item || ''), label: formatDate(item) })).filter((item) => item.value)
+    ...vgDiaOptions
+      .map((item) => ({ value: String(item || ''), label: formatDate(item) }))
+      .filter((item) => item.value)
   ];
 
   $: visaoGeralFiltrados = visaoGeralRows.filter((row) => {
     if (
       vgFiltroDocumentoNormalizado &&
-      ![row.documento, row.numero_reserva].join(' ').toLowerCase().includes(vgFiltroDocumentoNormalizado)
-    ) return false;
+      ![row.documento, row.numero_reserva]
+        .join(' ')
+        .toLowerCase()
+        .includes(vgFiltroDocumentoNormalizado)
+    )
+      return false;
     if (vgFiltroVendedor !== 'all' && row._vendedor_nome !== vgFiltroVendedor) return false;
     if (vgFiltroStatus !== 'all' && row._status_label !== vgFiltroStatus) return false;
     if (vgFiltroMes !== 'all' && row._mes !== vgFiltroMes) return false;
@@ -448,8 +517,12 @@
     const result = extractRexturFromText(raw);
     const movimentoData = fallbackDate || todayISODateLocal();
     const linhas = result.contratos.map((contrato) => {
-      const localizador = normalizeRexturLocalizador(contrato.reserva_numero || contrato.contrato_numero);
-      const passageiro = String(contrato.contratante?.nome || contrato.passageiros?.[0]?.nome || '').trim();
+      const localizador = normalizeRexturLocalizador(
+        contrato.reserva_numero || contrato.contrato_numero
+      );
+      const passageiro = String(
+        contrato.contratante?.nome || contrato.passageiros?.[0]?.nome || ''
+      ).trim();
       const destino = String(contrato.destino || contrato.produto_principal || '').trim();
       const valorTotal = Number(contrato.total_pago ?? contrato.total_bruto ?? 0);
       const valorTaxas = Math.max(0, Number(contrato.taxas_embarque || 0));
@@ -460,7 +533,9 @@
         numero_reserva: localizador || null,
         movimento_data: movimentoData,
         status: 'BAIXA',
-        descricao: ['BAIXA REXTUR', localizador ? `LOC ${localizador}` : '', passageiro, destino].filter(Boolean).join(' - '),
+        descricao: ['BAIXA REXTUR', localizador ? `LOC ${localizador}` : '', passageiro, destino]
+          .filter(Boolean)
+          .join(' - '),
         valor_lancamentos: Number.isFinite(valorTotal) ? valorTotal : 0,
         valor_taxas: valorTaxas || null,
         valor_descontos: null,
@@ -489,7 +564,10 @@
     } else {
       try {
         importParseError = '';
-        result = parseRexturConciliacaoImportText(importText, importFallbackDate || todayISODateLocal());
+        result = parseRexturConciliacaoImportText(
+          importText,
+          importFallbackDate || todayISODateLocal()
+        );
       } catch (error: unknown) {
         importParseError = toUserMessage(error, 'Não foi possível ler a Reserva Fácil Rextur.');
         result = { linhas: [] as ConciliacaoLinhaInput[], ignored: 0 };
@@ -509,7 +587,10 @@
     importIgnored = parsed.ignored;
 
     const signature = parsed.linhas
-      .map((row) => `${String(row.documento || '').trim()}::${String(row.numero_reserva || '').trim()}::${String(row.descricao || '').trim()}::${Number(row.valor_lancamentos || 0)}::${Number(row.valor_taxas || 0)}`)
+      .map(
+        (row) =>
+          `${String(row.documento || '').trim()}::${String(row.numero_reserva || '').trim()}::${String(row.descricao || '').trim()}::${Number(row.valor_lancamentos || 0)}::${Number(row.valor_taxas || 0)}`
+      )
       .join('|');
 
     if (!signature) {
@@ -625,8 +706,8 @@
       ? 'Corrigindo vínculos'
       : importing
         ? 'Importando conciliação'
-          : importLookupLoading
-            ? 'Buscando usuários nas vendas'
+        : importLookupLoading
+          ? 'Buscando usuários nas vendas'
           : loading
             ? 'Carregando registros'
             : operationMessage
@@ -645,7 +726,10 @@
             ? 'Aguarde enquanto o sistema busca os dados da tabela.'
             : operationMessage;
 
-  $: showBusyNotice = Boolean(busyTitle && (loading || running || fixingVinculos || importing || importLookupLoading || operationMessage));
+  $: showBusyNotice = Boolean(
+    busyTitle &&
+    (loading || running || fixingVinculos || importing || importLookupLoading || operationMessage)
+  );
 
   async function loadAll() {
     const requestSeq = ++loadAllRequestSeq;
@@ -657,7 +741,12 @@
       }
       await Promise.all([loadSummary(), loadRegistros()]);
       if (requestSeq !== loadAllRequestSeq) return;
-      void Promise.allSettled([loadOptions(), loadChanges(), loadExecutions(), loadDiasSemMovimento()]);
+      void Promise.allSettled([
+        loadOptions(),
+        loadChanges(),
+        loadExecutions(),
+        loadDiasSemMovimento()
+      ]);
     } catch (err: unknown) {
       if (isCanceledApiError(err)) return;
       if (requestSeq !== loadAllRequestSeq) return;
@@ -685,10 +774,15 @@
         totalValor?: number | null;
         timeline?: Array<{ date: string; value: number }>;
         lacuna_cronologica?: ConciliacaoSummary['lacunaCronologica'];
-      }>('/api/v1/conciliacao/summary', {
-        mes: monthFilter || undefined,
-        company_id: empresaId || undefined
-      }, controller.signal, 60_000);
+      }>(
+        '/api/v1/conciliacao/summary',
+        {
+          mes: monthFilter || undefined,
+          company_id: empresaId || undefined
+        },
+        controller.signal,
+        60_000
+      );
       if (requestSeq !== summaryRequestSeq) return;
       summary = {
         total: Number(data.total || 0),
@@ -717,14 +811,19 @@
     registrosAbortController = controller;
     registrosLoading = true;
     try {
-      const data = await apiGet<ConciliacaoItem[]>('/api/v1/conciliacao/list', {
-        company_id: empresaId || undefined,
-        month: monthFilter || undefined,
-        day: dayFilter || undefined,
-        pending: showPendingOnly ? '1' : undefined,
-        baixa_rac: showBaixaRac ? '1' : undefined,
-        ranking_status: rankingStatus !== 'all' ? rankingStatus : undefined
-      }, controller.signal, 60_000);
+      const data = await apiGet<ConciliacaoItem[]>(
+        '/api/v1/conciliacao/list',
+        {
+          company_id: empresaId || undefined,
+          month: monthFilter || undefined,
+          day: dayFilter || undefined,
+          pending: showPendingOnly ? '1' : undefined,
+          baixa_rac: showBaixaRac ? '1' : undefined,
+          ranking_status: rankingStatus !== 'all' ? rankingStatus : undefined
+        },
+        controller.signal,
+        60_000
+      );
       if (requestSeq !== registrosRequestSeq) return;
       registros = Array.isArray(data) ? data : [];
     } catch (err) {
@@ -750,9 +849,14 @@
       const data = await apiGet<{
         vendedores?: VendedorOption[];
         produtosMeta?: ProdutoOption[];
-      }>('/api/v1/conciliacao/options', {
-        company_id: empresaId || undefined
-      }, controller.signal, 60_000);
+      }>(
+        '/api/v1/conciliacao/options',
+        {
+          company_id: empresaId || undefined
+        },
+        controller.signal,
+        60_000
+      );
       if (requestSeq !== optionsRequestSeq) return;
       vendedores = Array.isArray(data.vendedores) ? data.vendedores : [];
       produtosMeta = Array.isArray(data.produtosMeta) ? data.produtosMeta : [];
@@ -776,10 +880,15 @@
     changesAbortController = controller;
     changesLoading = true;
     try {
-      const data = await apiGet<ConciliacaoChange[]>('/api/v1/conciliacao/changes', {
-        company_id: empresaId || undefined,
-        month: monthFilter || undefined
-      }, controller.signal, 60_000);
+      const data = await apiGet<ConciliacaoChange[]>(
+        '/api/v1/conciliacao/changes',
+        {
+          company_id: empresaId || undefined,
+          month: monthFilter || undefined
+        },
+        controller.signal,
+        60_000
+      );
       if (requestSeq !== changesRequestSeq) return;
       changes = Array.isArray(data) ? data : [];
     } catch (err) {
@@ -802,10 +911,15 @@
     executionsAbortController = controller;
     executionsLoading = true;
     try {
-      const data = await apiGet<ConciliacaoExecution[]>('/api/v1/conciliacao/executions', {
-        company_id: empresaId || undefined,
-        limit: 20
-      }, controller.signal, 60_000);
+      const data = await apiGet<ConciliacaoExecution[]>(
+        '/api/v1/conciliacao/executions',
+        {
+          company_id: empresaId || undefined,
+          limit: 20
+        },
+        controller.signal,
+        60_000
+      );
       if (requestSeq !== executionsRequestSeq) return;
       executions = Array.isArray(data) ? data : [];
     } catch (err) {
@@ -876,7 +990,15 @@
     activeTab = 'importacao';
   }
 
-  async function aplicarKpiView(mode: 'visao_geral' | 'conciliados' | 'pendentes' | 'pendentes_ranking' | 'baixa_rac' | 'execucoes') {
+  async function aplicarKpiView(
+    mode:
+      | 'visao_geral'
+      | 'conciliados'
+      | 'pendentes'
+      | 'pendentes_ranking'
+      | 'baixa_rac'
+      | 'execucoes'
+  ) {
     activeKpiView = mode;
     operationMessage =
       mode === 'execucoes'
@@ -976,11 +1098,16 @@
           vendedor_destino_nome?: string | null;
           percentual_destino?: number | null;
         } | null;
-      }>('/api/v1/conciliacao/rateio-info', {
-        company_id: empresaId || undefined,
-        venda_recibo_id: vendaReciboId,
-        conciliacao_recibo_id: String(row.id || '')
-      }, controller.signal, 60_000);
+      }>(
+        '/api/v1/conciliacao/rateio-info',
+        {
+          company_id: empresaId || undefined,
+          venda_recibo_id: vendaReciboId,
+          conciliacao_recibo_id: String(row.id || '')
+        },
+        controller.signal,
+        60_000
+      );
       if (requestSeq !== detalheRateioRequestSeq) return;
       const rateio = data?.rateio;
 
@@ -1066,24 +1193,27 @@
         recalculated?: number | null;
         updatedTaxes?: number | null;
         duplicatesRemoved?: number | null;
-      }>('/api/v1/conciliacao/run', {
-        companyId: empresaId || undefined,
-        limit: reciboId ? 1 : 100,
-        conciliacaoReciboId: reciboId || null
-      }, undefined, 90_000);
+      }>(
+        '/api/v1/conciliacao/run',
+        {
+          companyId: empresaId || undefined,
+          limit: reciboId ? 1 : 100,
+          conciliacaoReciboId: reciboId || null
+        },
+        undefined,
+        90_000
+      );
       const erros = Number(data.updateErrors || 0);
       const reconciled = Number(data.reconciled || data.reconciliados || 0);
       const recalculated = Number(data.recalculated || 0);
       const updatedTaxes = Number(data.updatedTaxes || 0);
       const duplicatesRemoved = Number(data.duplicatesRemoved || 0);
-      const duplicateText = duplicatesRemoved > 0 ? `, ${duplicatesRemoved} duplicados removidos` : '';
+      const duplicateText =
+        duplicatesRemoved > 0 ? `, ${duplicatesRemoved} duplicados removidos` : '';
       addOperationLog({
         action: actionLabel,
         status: erros > 0 ? 'error' : 'success',
-        message:
-          erros > 0
-            ? `Concluído com falhas: ${erros} falha(s).`
-            : 'Executado com sucesso.',
+        message: erros > 0 ? `Concluído com falhas: ${erros} falha(s).` : 'Executado com sucesso.',
         data
       });
       toast[erros > 0 ? 'error' : 'success'](
@@ -1120,23 +1250,26 @@
         recalculatedChecked?: number | null;
         updateErrors?: number | null;
         duplicatesRemoved?: number | null;
-      }>('/api/v1/conciliacao/run', {
-        companyId: empresaId || undefined,
-        recalculateAllMonth: true,
-        recalculateMonth: monthFilter
-      }, undefined, 90_000);
+      }>(
+        '/api/v1/conciliacao/run',
+        {
+          companyId: empresaId || undefined,
+          recalculateAllMonth: true,
+          recalculateMonth: monthFilter
+        },
+        undefined,
+        90_000
+      );
       const recalculated = Number(data.recalculated || 0);
       const scanned = Number(data.recalculatedChecked || 0);
       const erros = Number(data.updateErrors || 0);
       const duplicatesRemoved = Number(data.duplicatesRemoved || 0);
-      const duplicateText = duplicatesRemoved > 0 ? `, ${duplicatesRemoved} duplicados removidos` : '';
+      const duplicateText =
+        duplicatesRemoved > 0 ? `, ${duplicatesRemoved} duplicados removidos` : '';
       addOperationLog({
         action: 'Recalcular mês',
         status: erros > 0 ? 'error' : 'success',
-        message:
-          erros > 0
-            ? `Concluído com falhas: ${erros} falha(s).`
-            : 'Executado com sucesso.',
+        message: erros > 0 ? `Concluído com falhas: ${erros} falha(s).` : 'Executado com sucesso.',
         data
       });
       toast[erros > 0 ? 'error' : 'success'](
@@ -1171,11 +1304,16 @@
       const data = await apiPost<{
         duplicatesRemoved?: number | null;
         duplicateGroups?: number | null;
-      }>('/api/v1/conciliacao/run', {
-        companyId: empresaId || undefined,
-        cleanupDuplicatesOnly: true,
-        recalculateMonth: monthFilter
-      }, undefined, 90_000);
+      }>(
+        '/api/v1/conciliacao/run',
+        {
+          companyId: empresaId || undefined,
+          cleanupDuplicatesOnly: true,
+          recalculateMonth: monthFilter
+        },
+        undefined,
+        90_000
+      );
       const duplicatesRemoved = Number(data.duplicatesRemoved || 0);
       const duplicateGroups = Number(data.duplicateGroups || 0);
       addOperationLog({
@@ -1184,7 +1322,9 @@
         message: `Saneamento concluído: ${duplicateGroups} grupo(s), ${duplicatesRemoved} duplicado(s) removido(s).`,
         data
       });
-      toast.success(`Saneamento concluído: ${duplicateGroups} grupo(s), ${duplicatesRemoved} duplicado(s) removido(s).`);
+      toast.success(
+        `Saneamento concluído: ${duplicateGroups} grupo(s), ${duplicatesRemoved} duplicado(s) removido(s).`
+      );
       await Promise.all([loadRegistros(), loadSummary(), loadChanges()]);
     } catch (error: unknown) {
       const message = toUserMessage(error, 'Erro ao sanear duplicados.');
@@ -1200,7 +1340,9 @@
     }
   }
 
-  async function runFixVinculosAudit(options: { conciliacaoId?: string | null; apply?: boolean } = {}) {
+  async function runFixVinculosAudit(
+    options: { conciliacaoId?: string | null; apply?: boolean } = {}
+  ) {
     if (running || fixingVinculos || vinculosAuditLoading || vinculosAuditApplying) return;
 
     const apply = Boolean(options.apply);
@@ -1222,9 +1364,11 @@
         : 'Auditando vínculos da conciliação no mês selecionado.';
 
     try {
-      const data = await apiPost<VinculoAuditResult & {
-        incorretos?: number | null;
-      }>('/api/v1/conciliacao/fix-vinculos', {
+      const data = await apiPost<
+        VinculoAuditResult & {
+          incorretos?: number | null;
+        }
+      >('/api/v1/conciliacao/fix-vinculos', {
         companyId: empresaId || undefined,
         dryRun: !apply,
         limit: conciliacaoId ? 1 : 2000,
@@ -1248,7 +1392,9 @@
       });
 
       if (apply) {
-        toast.success(`Corrigidos ${corrigidos} vínculo(s) crítico(s). Rode a conciliação para reprocessar.`);
+        toast.success(
+          `Corrigidos ${corrigidos} vínculo(s) crítico(s). Rode a conciliação para reprocessar.`
+        );
         await Promise.all([loadRegistros(), loadSummary(), loadChanges()]);
       } else if (critical === 0 && warnings === 0) {
         toast.success(`Auditoria concluída: ${checked} registro(s), nenhum problema encontrado.`);
@@ -1297,7 +1443,9 @@
       toast.error('Nenhuma linha válida para importar.');
       return;
     }
-    const missingMovimentoData = importPreparedRows.some((row) => !String(row.movimento_data || '').trim());
+    const missingMovimentoData = importPreparedRows.some(
+      (row) => !String(row.movimento_data || '').trim()
+    );
     if (missingMovimentoData) {
       toast.error('Informe a data do movimento antes de importar.');
       return;
@@ -1307,8 +1455,10 @@
     const diferencasPreview = importPreparedRows.filter((row) => row.tem_diferenca);
     if (diferencasPreview.length > 0 && !importDiferencasConfirmadas) {
       importDiferencas = diferencasPreview.map((row) => {
-        const valorSistema = row.sistema_valor_total ?? Number(row.valor_lancamentos || 0) - (row.diff_total || 0);
-        const taxasSistema = row.sistema_valor_taxas ?? Number(row.valor_taxas || 0) - (row.diff_taxas || 0);
+        const valorSistema =
+          row.sistema_valor_total ?? Number(row.valor_lancamentos || 0) - (row.diff_total || 0);
+        const taxasSistema =
+          row.sistema_valor_taxas ?? Number(row.valor_taxas || 0) - (row.diff_taxas || 0);
 
         return {
           documento: row.documento,
@@ -1369,7 +1519,13 @@
           ranking_produto_id: row.ranking_produto_id,
           venda_id: row.venda_id,
           venda_recibo_id: row.venda_recibo_id,
-          origem: row.origem || (importMode === 'rextur' ? 'rextur' : importFileName ? `arquivo:${importFileName}` : 'arquivo')
+          origem:
+            row.origem ||
+            (importMode === 'rextur'
+              ? 'rextur'
+              : importFileName
+                ? `arquivo:${importFileName}`
+                : 'arquivo')
         }))
       });
       const statusCronologico = data.status_cronologico || null;
@@ -1447,9 +1603,14 @@
     const controller = new AbortController();
     diasSemMovimentoAbortController = controller;
     try {
-      const data = await apiGet<{ dias?: Array<{ data?: string | null }> }>('/api/v1/conciliacao/sem-movimento', {
-        companyId: empresaId || undefined
-      }, controller.signal, 60_000);
+      const data = await apiGet<{ dias?: Array<{ data?: string | null }> }>(
+        '/api/v1/conciliacao/sem-movimento',
+        {
+          companyId: empresaId || undefined
+        },
+        controller.signal,
+        60_000
+      );
       if (requestSeq !== diasSemMovimentoRequestSeq) return;
       diasSemMovimento = (data.dias || []).map((d) => String(d.data || '')).filter(Boolean);
     } catch (err) {
@@ -1457,7 +1618,10 @@
       if (requestSeq !== diasSemMovimentoRequestSeq) return;
       diasSemMovimento = [];
     } finally {
-      if (requestSeq === diasSemMovimentoRequestSeq && diasSemMovimentoAbortController === controller) {
+      if (
+        requestSeq === diasSemMovimentoRequestSeq &&
+        diasSemMovimentoAbortController === controller
+      ) {
         diasSemMovimentoAbortController = null;
       }
     }
@@ -1504,10 +1668,13 @@
 
     importLookupLoading = true;
     try {
-      const data = await apiPost<{ matches?: Record<string, ImportLookupMatch | null> }>('/api/v1/conciliacao/lookup', {
-        companyId: empresaId || undefined,
-        documentos: docs
-      });
+      const data = await apiPost<{ matches?: Record<string, ImportLookupMatch | null> }>(
+        '/api/v1/conciliacao/lookup',
+        {
+          companyId: empresaId || undefined,
+          documentos: docs
+        }
+      );
       importLookupMatches = data?.matches && typeof data.matches === 'object' ? data.matches : {};
     } catch {
       importLookupMatches = {};
@@ -1516,7 +1683,10 @@
     }
   }
 
-  function buildImportPreviewRows(rows: ConciliacaoLinhaInput[], fallbackDate: string | null): ImportPreviewRow[] {
+  function buildImportPreviewRows(
+    rows: ConciliacaoLinhaInput[],
+    fallbackDate: string | null
+  ): ImportPreviewRow[] {
     return rows.map((row) => {
       const hydratedRow = row as ConciliacaoLinhaInput & {
         venda_id?: string | null;
@@ -1539,9 +1709,11 @@
 
       const documento = String(row.documento || '').trim();
       const lookup = documento ? importLookupMatches[documento] : null;
-      const rankingVendedorId = String(row.ranking_vendedor_id || lookup?.vendedor_id || '').trim() || null;
+      const rankingVendedorId =
+        String(row.ranking_vendedor_id || lookup?.vendedor_id || '').trim() || null;
       const vendaId = String(hydratedRow.venda_id || lookup?.venda_id || '').trim() || null;
-      const vendaReciboId = String(hydratedRow.venda_recibo_id || lookup?.venda_recibo_id || '').trim() || null;
+      const vendaReciboId =
+        String(hydratedRow.venda_recibo_id || lookup?.venda_recibo_id || '').trim() || null;
       const temDiferenca = Boolean(lookup?.diff_total != null || lookup?.diff_taxas != null);
 
       return {
@@ -1551,7 +1723,10 @@
         status: row.status || null,
         descricao: row.descricao || null,
         vendedor_ranking: resolveImportVendedorLabel(rankingVendedorId, row.status),
-        meta_dif: resolveMetaDifLabel(metrics.percentualComissaoLoja, row.ranking_produto_id ? 'Sim' : 'Não'),
+        meta_dif: resolveMetaDifLabel(
+          metrics.percentualComissaoLoja,
+          row.ranking_produto_id ? 'Sim' : 'Não'
+        ),
         valor_lancamentos: row.valor_lancamentos ?? null,
         valor_taxas: row.valor_taxas ?? null,
         valor_descontos: row.valor_descontos ?? null,
@@ -1701,7 +1876,10 @@
     const value = String(target?.value || '').trim();
     const row = importPreparedRows[index];
     const pct = row?.percentual_comissao_loja ?? 0;
-    updateImportRow(index, { ranking_produto_id: value || null, meta_dif: resolveMetaDifLabel(pct, value ? 'Sim' : 'Não') });
+    updateImportRow(index, {
+      ranking_produto_id: value || null,
+      meta_dif: resolveMetaDifLabel(pct, value ? 'Sim' : 'Não')
+    });
   }
 
   function handleImportMoneyChange(index: number, field: keyof ImportPreviewRow, event: Event) {
@@ -1714,7 +1892,17 @@
       toast.error('Nenhum registro para exportar.');
       return;
     }
-    const headers = ['Documento', 'Data', 'Status', 'Descricao', 'Valor Loja', 'Taxas', '% Loja', 'Faixa', 'Conciliado'];
+    const headers = [
+      'Documento',
+      'Data',
+      'Status',
+      'Descricao',
+      'Valor Loja',
+      'Taxas',
+      '% Loja',
+      'Faixa',
+      'Conciliado'
+    ];
     const rows = filteredRecords.map((row) => [
       row.documento,
       row.movimento_data || '',
@@ -1755,16 +1943,21 @@
         : '<span class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">Pendente</span>'
     );
     if (row.ranking_vendedor?.nome_completo) {
-      chips.push(`<span class="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">${escapeHtml(row.ranking_vendedor.nome_completo)}</span>`);
+      chips.push(
+        `<span class="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">${escapeHtml(row.ranking_vendedor.nome_completo)}</span>`
+      );
     } else if (!row.venda_id) {
-      chips.push('<span class="rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700">Sem ranking</span>');
+      chips.push(
+        '<span class="rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700">Sem ranking</span>'
+      );
     }
     if (row.is_baixa_rac) {
-      chips.push('<span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">Baixa RAC</span>');
+      chips.push(
+        '<span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">Baixa RAC</span>'
+      );
     }
     return `<div class="flex flex-wrap gap-1">${chips.join('')}</div>`;
   }
-
 </script>
 
 <svelte:head>
@@ -1780,29 +1973,149 @@
 
 <Card color="financeiro" class="mb-4">
   <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
-    <Button type="button" variant="unstyled" class_name="!flex min-h-[74px] flex-col! items-center! justify-center! gap-1 rounded-xl border p-3 text-center transition {activeKpiView === 'visao_geral' ? 'border-orange-300 bg-orange-50 ring-1 ring-orange-200' : 'border-slate-200 bg-slate-50 hover:border-orange-200 hover:bg-orange-50/50'}" on:click={() => aplicarKpiView('visao_geral')}>
-      <p class="text-xs {activeKpiView === 'visao_geral' ? 'font-semibold text-orange-700' : 'text-slate-500'}">Visão geral</p>
-      <p class="text-lg font-semibold {activeKpiView === 'visao_geral' ? 'text-orange-700' : 'text-slate-900'}">{registros.length}</p>
+    <Button
+      type="button"
+      variant="unstyled"
+      class_name="!flex min-h-[74px] flex-col! items-center! justify-center! gap-1 rounded-xl border p-3 text-center transition {activeKpiView ===
+      'visao_geral'
+        ? 'border-orange-300 bg-orange-50 ring-1 ring-orange-200'
+        : 'border-slate-200 bg-slate-50 hover:border-orange-200 hover:bg-orange-50/50'}"
+      on:click={() => aplicarKpiView('visao_geral')}
+    >
+      <p
+        class="text-xs {activeKpiView === 'visao_geral'
+          ? 'font-semibold text-orange-700'
+          : 'text-slate-500'}"
+      >
+        Visão geral
+      </p>
+      <p
+        class="text-lg font-semibold {activeKpiView === 'visao_geral'
+          ? 'text-orange-700'
+          : 'text-slate-900'}"
+      >
+        {registros.length}
+      </p>
     </Button>
-    <Button type="button" variant="unstyled" class_name="!flex min-h-[74px] flex-col! items-center! justify-center! gap-1 rounded-xl border p-3 text-center transition {activeKpiView === 'conciliados' ? 'border-orange-300 bg-orange-50 ring-1 ring-orange-200' : 'border-slate-200 bg-slate-50 hover:border-orange-200 hover:bg-orange-50/50'}" on:click={() => aplicarKpiView('conciliados')}>
-      <p class="text-xs {activeKpiView === 'conciliados' ? 'font-semibold text-orange-700' : 'text-slate-500'}">Conciliados</p>
-      <p class="text-lg font-semibold {activeKpiView === 'conciliados' ? 'text-orange-700' : 'text-slate-900'}">{summary.efetivados}</p>
+    <Button
+      type="button"
+      variant="unstyled"
+      class_name="!flex min-h-[74px] flex-col! items-center! justify-center! gap-1 rounded-xl border p-3 text-center transition {activeKpiView ===
+      'conciliados'
+        ? 'border-orange-300 bg-orange-50 ring-1 ring-orange-200'
+        : 'border-slate-200 bg-slate-50 hover:border-orange-200 hover:bg-orange-50/50'}"
+      on:click={() => aplicarKpiView('conciliados')}
+    >
+      <p
+        class="text-xs {activeKpiView === 'conciliados'
+          ? 'font-semibold text-orange-700'
+          : 'text-slate-500'}"
+      >
+        Conciliados
+      </p>
+      <p
+        class="text-lg font-semibold {activeKpiView === 'conciliados'
+          ? 'text-orange-700'
+          : 'text-slate-900'}"
+      >
+        {summary.efetivados}
+      </p>
     </Button>
-    <Button type="button" variant="unstyled" class_name="!flex min-h-[74px] flex-col! items-center! justify-center! gap-1 rounded-xl border p-3 text-center transition {activeKpiView === 'pendentes' ? 'border-orange-300 bg-orange-50 ring-1 ring-orange-200' : 'border-slate-200 bg-slate-50 hover:border-orange-200 hover:bg-orange-50/50'}" on:click={() => aplicarKpiView('pendentes')}>
-      <p class="text-xs {activeKpiView === 'pendentes' ? 'font-semibold text-orange-700' : 'text-slate-500'}">Pendentes conciliação</p>
-      <p class="text-lg font-semibold {activeKpiView === 'pendentes' ? 'text-orange-700' : 'text-slate-900'}">{summary.pendentes}</p>
+    <Button
+      type="button"
+      variant="unstyled"
+      class_name="!flex min-h-[74px] flex-col! items-center! justify-center! gap-1 rounded-xl border p-3 text-center transition {activeKpiView ===
+      'pendentes'
+        ? 'border-orange-300 bg-orange-50 ring-1 ring-orange-200'
+        : 'border-slate-200 bg-slate-50 hover:border-orange-200 hover:bg-orange-50/50'}"
+      on:click={() => aplicarKpiView('pendentes')}
+    >
+      <p
+        class="text-xs {activeKpiView === 'pendentes'
+          ? 'font-semibold text-orange-700'
+          : 'text-slate-500'}"
+      >
+        Pendentes conciliação
+      </p>
+      <p
+        class="text-lg font-semibold {activeKpiView === 'pendentes'
+          ? 'text-orange-700'
+          : 'text-slate-900'}"
+      >
+        {summary.pendentes}
+      </p>
     </Button>
-    <Button type="button" variant="unstyled" class_name="!flex min-h-[74px] flex-col! items-center! justify-center! gap-1 rounded-xl border p-3 text-center transition {activeKpiView === 'pendentes_ranking' ? 'border-orange-300 bg-orange-50 ring-1 ring-orange-200' : 'border-slate-200 bg-slate-50 hover:border-orange-200 hover:bg-orange-50/50'}" on:click={() => aplicarKpiView('pendentes_ranking')}>
-      <p class="text-xs {activeKpiView === 'pendentes_ranking' ? 'font-semibold text-orange-600' : 'text-slate-500'}">Pendentes ranking</p>
-      <p class="text-lg font-semibold {activeKpiView === 'pendentes_ranking' ? 'text-orange-700' : 'text-slate-900'}">{summary.semRanking}</p>
+    <Button
+      type="button"
+      variant="unstyled"
+      class_name="!flex min-h-[74px] flex-col! items-center! justify-center! gap-1 rounded-xl border p-3 text-center transition {activeKpiView ===
+      'pendentes_ranking'
+        ? 'border-orange-300 bg-orange-50 ring-1 ring-orange-200'
+        : 'border-slate-200 bg-slate-50 hover:border-orange-200 hover:bg-orange-50/50'}"
+      on:click={() => aplicarKpiView('pendentes_ranking')}
+    >
+      <p
+        class="text-xs {activeKpiView === 'pendentes_ranking'
+          ? 'font-semibold text-orange-600'
+          : 'text-slate-500'}"
+      >
+        Pendentes ranking
+      </p>
+      <p
+        class="text-lg font-semibold {activeKpiView === 'pendentes_ranking'
+          ? 'text-orange-700'
+          : 'text-slate-900'}"
+      >
+        {summary.semRanking}
+      </p>
     </Button>
-    <Button type="button" variant="unstyled" class_name="!flex min-h-[74px] flex-col! items-center! justify-center! gap-1 rounded-xl border p-3 text-center transition {activeKpiView === 'baixa_rac' ? 'border-orange-300 bg-orange-50 ring-1 ring-orange-200' : 'border-slate-200 bg-slate-50 hover:border-orange-200 hover:bg-orange-50/50'}" on:click={() => aplicarKpiView('baixa_rac')}>
-      <p class="text-xs {activeKpiView === 'baixa_rac' ? 'font-semibold text-orange-600' : 'text-slate-500'}">Baixa RAC</p>
-      <p class="text-lg font-semibold {activeKpiView === 'baixa_rac' ? 'text-orange-700' : 'text-slate-900'}">{summary.baixaRac}</p>
+    <Button
+      type="button"
+      variant="unstyled"
+      class_name="!flex min-h-[74px] flex-col! items-center! justify-center! gap-1 rounded-xl border p-3 text-center transition {activeKpiView ===
+      'baixa_rac'
+        ? 'border-orange-300 bg-orange-50 ring-1 ring-orange-200'
+        : 'border-slate-200 bg-slate-50 hover:border-orange-200 hover:bg-orange-50/50'}"
+      on:click={() => aplicarKpiView('baixa_rac')}
+    >
+      <p
+        class="text-xs {activeKpiView === 'baixa_rac'
+          ? 'font-semibold text-orange-600'
+          : 'text-slate-500'}"
+      >
+        Baixa RAC
+      </p>
+      <p
+        class="text-lg font-semibold {activeKpiView === 'baixa_rac'
+          ? 'text-orange-700'
+          : 'text-slate-900'}"
+      >
+        {summary.baixaRac}
+      </p>
     </Button>
-    <Button type="button" variant="unstyled" class_name="!flex min-h-[74px] flex-col! items-center! justify-center! gap-1 rounded-xl border p-3 text-center transition {activeKpiView === 'execucoes' ? 'border-orange-300 bg-orange-50 ring-1 ring-orange-200' : 'border-slate-200 bg-slate-50 hover:border-orange-200 hover:bg-orange-50/50'}" on:click={() => aplicarKpiView('execucoes')}>
-      <p class="text-xs {activeKpiView === 'execucoes' ? 'font-semibold text-orange-600' : 'text-slate-500'}">Execuções</p>
-      <p class="text-lg font-semibold {activeKpiView === 'execucoes' ? 'text-orange-700' : 'text-slate-900'}">{executions.length}</p>
+    <Button
+      type="button"
+      variant="unstyled"
+      class_name="!flex min-h-[74px] flex-col! items-center! justify-center! gap-1 rounded-xl border p-3 text-center transition {activeKpiView ===
+      'execucoes'
+        ? 'border-orange-300 bg-orange-50 ring-1 ring-orange-200'
+        : 'border-slate-200 bg-slate-50 hover:border-orange-200 hover:bg-orange-50/50'}"
+      on:click={() => aplicarKpiView('execucoes')}
+    >
+      <p
+        class="text-xs {activeKpiView === 'execucoes'
+          ? 'font-semibold text-orange-600'
+          : 'text-slate-500'}"
+      >
+        Execuções
+      </p>
+      <p
+        class="text-lg font-semibold {activeKpiView === 'execucoes'
+          ? 'text-orange-700'
+          : 'text-slate-900'}"
+      >
+        {executions.length}
+      </p>
     </Button>
   </div>
   <div class="mt-3 flex flex-wrap gap-2">
@@ -1817,7 +2130,12 @@
         on:change={handleEmpresaChange}
       />
     {/if}
-    <Button variant="secondary" size="sm" class_name="h-9 rounded-lg px-3!" on:click={abrirImportacao}>
+    <Button
+      variant="secondary"
+      size="sm"
+      class_name="h-9 rounded-lg px-3!"
+      on:click={abrirImportacao}
+    >
       <Upload size={14} class="mr-1.5" />
       Importar
     </Button>
@@ -1825,7 +2143,14 @@
       <Download size={14} class="mr-1.5" />
       Exportar
     </Button>
-    <Button color="financeiro" size="sm" class_name="h-9 rounded-lg px-3!" on:click={() => runAutoConciliacao()} disabled={running} loading={running}>
+    <Button
+      color="financeiro"
+      size="sm"
+      class_name="h-9 rounded-lg px-3!"
+      on:click={() => runAutoConciliacao()}
+      disabled={running}
+      loading={running}
+    >
       <RefreshCcw size={14} class="mr-1.5" />Conciliar pendentes
     </Button>
     <div class="flex items-center gap-1">
@@ -1838,19 +2163,48 @@
         class_name="w-[150px]"
       />
     </div>
-    <Button variant="secondary" size="sm" class_name="h-9 rounded-lg px-3!" on:click={cleanupDuplicateRows} disabled={running || !monthFilter} loading={running}>
+    <Button
+      variant="secondary"
+      size="sm"
+      class_name="h-9 rounded-lg px-3!"
+      on:click={cleanupDuplicateRows}
+      disabled={running || !monthFilter}
+      loading={running}
+    >
       <Database size={14} class="mr-1.5" />
       Sanear duplicados
     </Button>
-    <Button variant="secondary" size="sm" class_name="h-9 rounded-lg px-3!" on:click={forceRecalculateMonth} disabled={running || !monthFilter} loading={running}>
+    <Button
+      variant="secondary"
+      size="sm"
+      class_name="h-9 rounded-lg px-3!"
+      on:click={forceRecalculateMonth}
+      disabled={running || !monthFilter}
+      loading={running}
+    >
       <RefreshCcw size={14} class="mr-1.5" />
       Recalcular mês
     </Button>
-    <Button variant="secondary" size="sm" class_name="h-9 rounded-lg px-3!" on:click={() => runFixVinculosAudit()} disabled={running || fixingVinculos} loading={fixingVinculos} title="Audita vínculos entre registros de conciliação e recibos de venda">
+    <Button
+      variant="secondary"
+      size="sm"
+      class_name="h-9 rounded-lg px-3!"
+      on:click={() => runFixVinculosAudit()}
+      disabled={running || fixingVinculos}
+      loading={fixingVinculos}
+      title="Audita vínculos entre registros de conciliação e recibos de venda"
+    >
       <ShieldAlert size={14} class="mr-1.5" />
       Auditar vínculos
     </Button>
-    <Button variant="secondary" size="sm" class_name="h-9 rounded-lg px-3!" on:click={loadAll} disabled={loading} loading={loading}>
+    <Button
+      variant="secondary"
+      size="sm"
+      class_name="h-9 rounded-lg px-3!"
+      on:click={loadAll}
+      disabled={loading}
+      {loading}
+    >
       <RefreshCcw size={14} class="mr-1.5" />
       Atualizar
     </Button>
@@ -1865,7 +2219,9 @@
 
 {#if summary.lacunaCronologica}
   <Card color="financeiro" class="mb-4">
-    <div class="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900 md:flex-row md:items-start md:justify-between">
+    <div
+      class="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900 md:flex-row md:items-start md:justify-between"
+    >
       <div class="flex-1">
         <div class="flex items-center gap-2 text-sm font-semibold">
           <ShieldAlert size={18} />
@@ -1874,7 +2230,9 @@
         <p class="mt-1 text-sm">{summary.lacunaCronologica.aviso}</p>
         {#if summary.lacunaCronologica.dias_faltantes?.length}
           <p class="mt-2 text-xs font-semibold">
-            Dias faltantes: {summary.lacunaCronologica.dias_faltantes.map((dia) => formatDate(dia)).join(', ')}
+            Dias faltantes: {summary.lacunaCronologica.dias_faltantes
+              .map((dia) => formatDate(dia))
+              .join(', ')}
           </p>
         {/if}
         {#if diasSemMovimento.length > 0}
@@ -1888,7 +2246,14 @@
           <Upload size={14} class="mr-2" />
           Importar dias faltantes
         </Button>
-        <Button variant="outline" size="xs" color="orange" on:click={() => { semMovimentoModalOpen = true; }}>
+        <Button
+          variant="outline"
+          size="xs"
+          color="orange"
+          on:click={() => {
+            semMovimentoModalOpen = true;
+          }}
+        >
           <Calendar size={14} class="mr-2" />
           Marcar sem movimento
         </Button>
@@ -1900,9 +2265,15 @@
 <Card title="Log da conciliação" color="financeiro" class="mb-4">
   <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
     <p class="text-sm text-slate-600">
-      Registro local das ações executadas nesta tela. Use para conferir se o saneamento de duplicados rodou.
+      Registro local das ações executadas nesta tela. Use para conferir se o saneamento de
+      duplicados rodou.
     </p>
-    <Button variant="secondary" size="xs" on:click={clearOperationLogs} disabled={operationLogs.length === 0}>
+    <Button
+      variant="secondary"
+      size="xs"
+      on:click={clearOperationLogs}
+      disabled={operationLogs.length === 0}
+    >
       Limpar log
     </Button>
   </div>
@@ -1913,7 +2284,7 @@
     </div>
   {:else}
     <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-      <table class="table-mobile-cards min-w-[1120px] w-full text-sm">
+      <table class="table-mobile-cards w-full min-w-[1120px] text-sm">
         <thead class="bg-slate-50 text-slate-700">
           <tr>
             <th class="px-3 py-2 text-center">Quando</th>
@@ -1936,13 +2307,21 @@
               <td class="px-3 py-2">{item.action}</td>
               <td class="px-3 py-2">{item.month}</td>
               <td class="px-3 py-2 text-right">{item.duplicateGroups}</td>
-              <td class="px-3 py-2 text-right font-semibold {item.duplicatesRemoved > 0 ? 'text-orange-700' : 'text-slate-700'}">{item.duplicatesRemoved}</td>
+              <td
+                class="px-3 py-2 text-right font-semibold {item.duplicatesRemoved > 0
+                  ? 'text-orange-700'
+                  : 'text-slate-700'}">{item.duplicatesRemoved}</td
+              >
               <td class="px-3 py-2 text-right">{item.checked || item.recalculatedChecked}</td>
               <td class="px-3 py-2 text-right">{item.reconciled}</td>
               <td class="px-3 py-2 text-right">{item.recalculated}</td>
               <td class="px-3 py-2 text-right">{item.updatedTaxes}</td>
               <td class="px-3 py-2">
-                <span class="rounded-full px-2 py-1 text-xs font-semibold {item.status === 'success' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
+                <span
+                  class="rounded-full px-2 py-1 text-xs font-semibold {item.status === 'success'
+                    ? 'bg-green-100 text-green-700'
+                    : 'bg-red-100 text-red-700'}"
+                >
                   {item.status === 'success' ? 'OK' : 'Erro'}
                 </span>
               </td>
@@ -1986,8 +2365,12 @@
           on:change={() => void handleFileChange()}
         />
       {:else}
-        <div class="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-900">
-          Cole a Reserva Fácil Rextur abaixo. A conciliação será criada com recibo <strong>REXTUR</strong> e reserva igual ao localizador, sem cadastro de CPF.
+        <div
+          class="rounded-xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-900"
+        >
+          Cole a Reserva Fácil Rextur abaixo. A conciliação será criada com recibo <strong
+            >REXTUR</strong
+          > e reserva igual ao localizador, sem cadastro de CPF.
         </div>
       {/if}
       <div class="grid gap-3 md:grid-cols-[minmax(220px,280px)_1fr]">
@@ -1996,24 +2379,54 @@
           label="Data do movimento"
           type="date"
           bind:value={importFallbackDate}
-          helper={importMode === 'rextur' ? 'Data de baixa da reserva Rextur.' : 'Se o arquivo não trouxer a data, informe aqui antes de importar.'}
+          helper={importMode === 'rextur'
+            ? 'Data de baixa da reserva Rextur.'
+            : 'Se o arquivo não trouxer a data, informe aqui antes de importar.'}
           class_name="w-full"
           on:change={handleImportMovimentoDateChange}
         />
         {#if importPreparedRows.length > 0 && !importFallbackDate}
-          <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-            A data do movimento não foi reconhecida no arquivo. Informe a data acima para aplicar em todas as linhas do preview.
+          <div
+            class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+          >
+            A data do movimento não foi reconhecida no arquivo. Informe a data acima para aplicar em
+            todas as linhas do preview.
           </div>
         {/if}
       </div>
       <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-7">
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-xs text-slate-500">Linhas reconhecidas</p><p class="text-base font-semibold">{importRowsTotal}</p></div>
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-xs text-slate-500">Importáveis</p><p class="text-base font-semibold">{importPreparedRows.length}</p></div>
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-xs text-slate-500">Ignoradas</p><p class="text-base font-semibold">{importIgnored}</p></div>
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-xs text-slate-500">Atribuídas auto</p><p class="text-base font-semibold">{importAutoLinked}</p></div>
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-xs text-slate-500">Arquivo</p><p class="text-sm font-semibold">{importFileName || '-'}</p></div>
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-xs text-slate-500">Data movimento</p><p class="text-sm font-semibold">{formatDate(importFallbackDate)}</p></div>
-        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3"><p class="text-xs text-slate-500">Pendentes atribuição</p><p class="text-base font-semibold">{importPreparedRows.filter((row) => exigeRanking(row.status) && !row.ranking_vendedor_id).length}</p></div>
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <p class="text-xs text-slate-500">Linhas reconhecidas</p>
+          <p class="text-base font-semibold">{importRowsTotal}</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <p class="text-xs text-slate-500">Importáveis</p>
+          <p class="text-base font-semibold">{importPreparedRows.length}</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <p class="text-xs text-slate-500">Ignoradas</p>
+          <p class="text-base font-semibold">{importIgnored}</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <p class="text-xs text-slate-500">Atribuídas auto</p>
+          <p class="text-base font-semibold">{importAutoLinked}</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <p class="text-xs text-slate-500">Arquivo</p>
+          <p class="text-sm font-semibold">{importFileName || '-'}</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <p class="text-xs text-slate-500">Data movimento</p>
+          <p class="text-sm font-semibold">{formatDate(importFallbackDate)}</p>
+        </div>
+        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+          <p class="text-xs text-slate-500">Pendentes atribuição</p>
+          <p class="text-base font-semibold">
+            {importPreparedRows.filter(
+              (row) => exigeRanking(row.status) && !row.ranking_vendedor_id
+            ).length}
+          </p>
+        </div>
       </div>
 
       {#if importLookupLoading}
@@ -2039,12 +2452,16 @@
       {/if}
 
       {#if importPreparedRows.length === 0}
-        <div class="rounded-xl border border-dashed border-slate-200 px-4 py-10 text-sm text-slate-500">
-          {importMode === 'rextur' ? 'Cole o conteúdo da Reserva Fácil Rextur para carregar o preview.' : 'Selecione um arquivo para carregar o preview de importação.'}
+        <div
+          class="rounded-xl border border-dashed border-slate-200 px-4 py-10 text-sm text-slate-500"
+        >
+          {importMode === 'rextur'
+            ? 'Cole o conteúdo da Reserva Fácil Rextur para carregar o preview.'
+            : 'Selecione um arquivo para carregar o preview de importação.'}
         </div>
       {:else}
         <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-          <table class="table-mobile-cards min-w-[2100px] w-full text-sm">
+          <table class="table-mobile-cards w-full min-w-[2100px] text-sm">
             <thead class="bg-slate-50 text-slate-700">
               <tr>
                 <th class="px-3 py-2 text-center">Data</th>
@@ -2066,15 +2483,26 @@
             <tbody>
               {#each importPreparedRows as row, index}
                 {@const diffSeverity = getImportDiffSeverity(row)}
-                <tr class="border-t border-slate-100 {diffSeverity === 'critical' ? 'bg-red-50' : diffSeverity === 'warning' ? 'bg-orange-50' : ''}">
+                <tr
+                  class="border-t border-slate-100 {diffSeverity === 'critical'
+                    ? 'bg-red-50'
+                    : diffSeverity === 'warning'
+                      ? 'bg-orange-50'
+                      : ''}"
+                >
                   <td class="px-3 py-2">{formatDate(row.movimento_data)}</td>
                   <td class="px-3 py-2">
                     {formatDocumentoConciliacao(row)}
                     {#if row.tem_diferenca}
                       <span
-                        class="ml-1 inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs font-semibold {diffSeverity === 'critical' ? 'bg-red-200 text-red-800' : 'bg-orange-200 text-orange-800'}"
-                        title={diffSeverity === 'critical' ? 'Diferença de 10% ou mais entre importação e venda cadastrada' : 'Diferença menor que 10% entre importação e venda cadastrada'}
-                      >!</span>
+                        class="ml-1 inline-flex items-center rounded-sm px-1.5 py-0.5 text-xs font-semibold {diffSeverity ===
+                        'critical'
+                          ? 'bg-red-200 text-red-800'
+                          : 'bg-orange-200 text-orange-800'}"
+                        title={diffSeverity === 'critical'
+                          ? 'Diferença de 10% ou mais entre importação e venda cadastrada'
+                          : 'Diferença menor que 10% entre importação e venda cadastrada'}>!</span
+                      >
                     {/if}
                   </td>
                   <td class="px-3 py-2">{statusImportLabel(row.status)}</td>
@@ -2086,7 +2514,10 @@
                         label="Vendedor"
                         srLabel
                         value={row.ranking_vendedor_id || ''}
-                        options={vendedores.map((vendedor) => ({ value: vendedor.id, label: vendedor.nome_completo }))}
+                        options={vendedores.map((vendedor) => ({
+                          value: vendedor.id,
+                          label: vendedor.nome_completo
+                        }))}
                         placeholder="Selecione..."
                         class_name="w-[210px]"
                         on:change={(event) => handleImportVendedorChange(index, event)}
@@ -2104,7 +2535,10 @@
                         value={row.ranking_produto_id || ''}
                         options={[
                           { value: '', label: 'Não' },
-                          ...produtosMeta.map((produto) => ({ value: produto.id, label: produto.nome }))
+                          ...produtosMeta.map((produto) => ({
+                            value: produto.id,
+                            label: produto.nome
+                          }))
                         ]}
                         placeholder={null}
                         class_name="w-[170px]"
@@ -2114,14 +2548,68 @@
                       <span>{row.meta_dif || '-'}</span>
                     {/if}
                   </td>
-                  <td class="px-3 py-2"><FieldInput label="Lançamentos" srLabel class_name="w-[130px]" value={String(row.valor_lancamentos ?? 0).replace('.', ',')} on:change={(event) => handleImportMoneyChange(index, 'valor_lancamentos', event)} /></td>
-                  <td class="px-3 py-2"><FieldInput label="Taxas" srLabel class_name="w-[130px]" value={String(row.valor_taxas ?? 0).replace('.', ',')} on:change={(event) => handleImportMoneyChange(index, 'valor_taxas', event)} /></td>
-                  <td class="px-3 py-2"><FieldInput label="Descontos" srLabel class_name="w-[130px]" value={String(row.valor_descontos ?? 0).replace('.', ',')} on:change={(event) => handleImportMoneyChange(index, 'valor_descontos', event)} /></td>
-                  <td class="px-3 py-2"><FieldInput label="Abatimentos" srLabel class_name="w-[130px]" value={String(row.valor_abatimentos ?? 0).replace('.', ',')} on:change={(event) => handleImportMoneyChange(index, 'valor_abatimentos', event)} /></td>
-                  <td class="px-3 py-2"><FieldInput label="Não comissionável" srLabel class_name="w-[150px]" value={String(row.valor_nao_comissionavel ?? 0).replace('.', ',')} on:change={(event) => handleImportMoneyChange(index, 'valor_nao_comissionavel', event)} /></td>
+                  <td class="px-3 py-2"
+                    ><FieldInput
+                      label="Lançamentos"
+                      srLabel
+                      class_name="w-[130px]"
+                      value={String(row.valor_lancamentos ?? 0).replace('.', ',')}
+                      on:change={(event) =>
+                        handleImportMoneyChange(index, 'valor_lancamentos', event)}
+                    /></td
+                  >
+                  <td class="px-3 py-2"
+                    ><FieldInput
+                      label="Taxas"
+                      srLabel
+                      class_name="w-[130px]"
+                      value={String(row.valor_taxas ?? 0).replace('.', ',')}
+                      on:change={(event) => handleImportMoneyChange(index, 'valor_taxas', event)}
+                    /></td
+                  >
+                  <td class="px-3 py-2"
+                    ><FieldInput
+                      label="Descontos"
+                      srLabel
+                      class_name="w-[130px]"
+                      value={String(row.valor_descontos ?? 0).replace('.', ',')}
+                      on:change={(event) =>
+                        handleImportMoneyChange(index, 'valor_descontos', event)}
+                    /></td
+                  >
+                  <td class="px-3 py-2"
+                    ><FieldInput
+                      label="Abatimentos"
+                      srLabel
+                      class_name="w-[130px]"
+                      value={String(row.valor_abatimentos ?? 0).replace('.', ',')}
+                      on:change={(event) =>
+                        handleImportMoneyChange(index, 'valor_abatimentos', event)}
+                    /></td
+                  >
+                  <td class="px-3 py-2"
+                    ><FieldInput
+                      label="Não comissionável"
+                      srLabel
+                      class_name="w-[150px]"
+                      value={String(row.valor_nao_comissionavel ?? 0).replace('.', ',')}
+                      on:change={(event) =>
+                        handleImportMoneyChange(index, 'valor_nao_comissionavel', event)}
+                    /></td
+                  >
                   <td class="px-3 py-2 text-right">{formatMoney(row.valor_venda_real)}</td>
-                  <td class="px-3 py-2"><FieldInput label="Comissão loja" srLabel class_name="w-[130px]" value={String(row.valor_comissao_loja ?? 0).replace('.', ',')} on:change={(event) => handleImportMoneyChange(index, 'valor_comissao_loja', event)} /></td>
-                  <td class="px-3 py-2 text-right">{formatPercent(row.percentual_comissao_loja)}</td>
+                  <td class="px-3 py-2"
+                    ><FieldInput
+                      label="Comissão loja"
+                      srLabel
+                      class_name="w-[130px]"
+                      value={String(row.valor_comissao_loja ?? 0).replace('.', ',')}
+                      on:change={(event) =>
+                        handleImportMoneyChange(index, 'valor_comissao_loja', event)}
+                    /></td
+                  >
+                  <td class="px-3 py-2 text-right">{formatPercent(row.percentual_comissao_loja)}</td
+                  >
                 </tr>
               {/each}
             </tbody>
@@ -2130,7 +2618,12 @@
       {/if}
 
       <div class="flex flex-wrap gap-2">
-        <Button color="financeiro" on:click={importPreviewRows} disabled={importPreparedRows.length === 0} loading={importing}><Upload size={16} class="mr-2" />Importar</Button>
+        <Button
+          color="financeiro"
+          on:click={importPreviewRows}
+          disabled={importPreparedRows.length === 0}
+          loading={importing}><Upload size={16} class="mr-2" />Importar</Button
+        >
         <Button variant="secondary" on:click={clearImportState}>Limpar</Button>
       </div>
     </div>
@@ -2142,25 +2635,88 @@
       <SlidersHorizontal size={16} class="mr-2" />
       Filtros
       {#if vgFiltroDocumento || vgFiltroVendedor !== 'all' || vgFiltroStatus !== 'all' || vgFiltroMes !== 'all' || vgFiltroDia !== 'all' || vgFiltroReciboEncontrado !== 'all' || vgFiltroRanking !== 'all' || vgFiltroConciliado !== 'all'}
-        <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-financeiro-500"></span>
+        <span class="bg-financeiro-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
       {/if}
     </Button>
   </div>
 
   <Card title="Visão geral" color="financeiro" class="mb-6">
-    <div class="hidden sm:grid mb-3 grid gap-3 md:grid-cols-2 xl:grid-cols-8">
-      <FieldInput id="vg-documento" label="Recibo" type="text" bind:value={vgFiltroDocumento} placeholder="Buscar..." class_name="w-full" />
-      <FieldSelect id="vg-status" label="Status" bind:value={vgFiltroStatus} options={vgStatusSelectOptions} class_name="w-full" />
-      <FieldSelect id="vg-vendedor" label="Vendedor ranking" bind:value={vgFiltroVendedor} options={vgVendedorSelectOptions} class_name="w-full" />
-      <FieldSelect id="vg-mes" label="Mês" bind:value={vgFiltroMes} options={vgMesSelectOptions} class_name="w-full" />
-      <FieldSelect id="vg-dia" label="Dia" bind:value={vgFiltroDia} options={vgDiaSelectOptions} class_name="w-full" />
-      <FieldSelect id="vg-recibo-encontrado" label="Recibo encontrado" bind:value={vgFiltroReciboEncontrado} options={[{ value: 'all', label: 'Todos' }, { value: 'sim', label: 'Sim' }, { value: 'nao', label: 'Não' }]} class_name="w-full" />
-      <FieldSelect id="vg-ranking" label="Ranking" bind:value={vgFiltroRanking} options={[{ value: 'all', label: 'Todos' }, { value: 'sim', label: 'Sim' }, { value: 'nao', label: 'Não' }]} class_name="w-full" />
-      <FieldSelect id="vg-conciliado" label="Conciliado" bind:value={vgFiltroConciliado} options={[{ value: 'all', label: 'Todos' }, { value: 'sim', label: 'Sim' }, { value: 'nao', label: 'Não' }]} class_name="w-full" />
+    <div class="mb-3 grid hidden gap-3 sm:grid md:grid-cols-2 xl:grid-cols-8">
+      <FieldInput
+        id="vg-documento"
+        label="Recibo"
+        type="text"
+        bind:value={vgFiltroDocumento}
+        placeholder="Buscar..."
+        class_name="w-full"
+      />
+      <FieldSelect
+        id="vg-status"
+        label="Status"
+        bind:value={vgFiltroStatus}
+        options={vgStatusSelectOptions}
+        class_name="w-full"
+      />
+      <FieldSelect
+        id="vg-vendedor"
+        label="Vendedor ranking"
+        bind:value={vgFiltroVendedor}
+        options={vgVendedorSelectOptions}
+        class_name="w-full"
+      />
+      <FieldSelect
+        id="vg-mes"
+        label="Mês"
+        bind:value={vgFiltroMes}
+        options={vgMesSelectOptions}
+        class_name="w-full"
+      />
+      <FieldSelect
+        id="vg-dia"
+        label="Dia"
+        bind:value={vgFiltroDia}
+        options={vgDiaSelectOptions}
+        class_name="w-full"
+      />
+      <FieldSelect
+        id="vg-recibo-encontrado"
+        label="Recibo encontrado"
+        bind:value={vgFiltroReciboEncontrado}
+        options={[
+          { value: 'all', label: 'Todos' },
+          { value: 'sim', label: 'Sim' },
+          { value: 'nao', label: 'Não' }
+        ]}
+        class_name="w-full"
+      />
+      <FieldSelect
+        id="vg-ranking"
+        label="Ranking"
+        bind:value={vgFiltroRanking}
+        options={[
+          { value: 'all', label: 'Todos' },
+          { value: 'sim', label: 'Sim' },
+          { value: 'nao', label: 'Não' }
+        ]}
+        class_name="w-full"
+      />
+      <FieldSelect
+        id="vg-conciliado"
+        label="Conciliado"
+        bind:value={vgFiltroConciliado}
+        options={[
+          { value: 'all', label: 'Todos' },
+          { value: 'sim', label: 'Sim' },
+          { value: 'nao', label: 'Não' }
+        ]}
+        class_name="w-full"
+      />
     </div>
 
-    <div class="hidden sm:flex mb-3 flex-wrap items-center gap-2 text-sm text-slate-600">
-      <span><strong>{visaoGeralFiltrados.length}</strong> de <strong>{visaoGeralRows.length}</strong> registro(s)</span>
+    <div class="mb-3 hidden flex-wrap items-center gap-2 text-sm text-slate-600 sm:flex">
+      <span
+        ><strong>{visaoGeralFiltrados.length}</strong> de <strong>{visaoGeralRows.length}</strong> registro(s)</span
+      >
       <Button
         variant="secondary"
         size="xs"
@@ -2181,14 +2737,75 @@
 
     <BottomSheet bind:open={showFilterSheet} title="Filtrar Visão Geral">
       <div class="space-y-4">
-        <FieldInput id="vg-documento-mobile" label="Recibo" type="text" bind:value={vgFiltroDocumento} placeholder="Buscar..." class_name="w-full" />
-        <FieldSelect id="vg-status-mobile" label="Status" bind:value={vgFiltroStatus} options={vgStatusSelectOptions} class_name="w-full" />
-        <FieldSelect id="vg-vendedor-mobile" label="Vendedor ranking" bind:value={vgFiltroVendedor} options={vgVendedorSelectOptions} class_name="w-full" />
-        <FieldSelect id="vg-mes-mobile" label="Mês" bind:value={vgFiltroMes} options={vgMesSelectOptions} class_name="w-full" />
-        <FieldSelect id="vg-dia-mobile" label="Dia" bind:value={vgFiltroDia} options={vgDiaSelectOptions} class_name="w-full" />
-        <FieldSelect id="vg-recibo-encontrado-mobile" label="Recibo encontrado" bind:value={vgFiltroReciboEncontrado} options={[{ value: 'all', label: 'Todos' }, { value: 'sim', label: 'Sim' }, { value: 'nao', label: 'Não' }]} class_name="w-full" />
-        <FieldSelect id="vg-ranking-mobile" label="Ranking" bind:value={vgFiltroRanking} options={[{ value: 'all', label: 'Todos' }, { value: 'sim', label: 'Sim' }, { value: 'nao', label: 'Não' }]} class_name="w-full" />
-        <FieldSelect id="vg-conciliado-mobile" label="Conciliado" bind:value={vgFiltroConciliado} options={[{ value: 'all', label: 'Todos' }, { value: 'sim', label: 'Sim' }, { value: 'nao', label: 'Não' }]} class_name="w-full" />
+        <FieldInput
+          id="vg-documento-mobile"
+          label="Recibo"
+          type="text"
+          bind:value={vgFiltroDocumento}
+          placeholder="Buscar..."
+          class_name="w-full"
+        />
+        <FieldSelect
+          id="vg-status-mobile"
+          label="Status"
+          bind:value={vgFiltroStatus}
+          options={vgStatusSelectOptions}
+          class_name="w-full"
+        />
+        <FieldSelect
+          id="vg-vendedor-mobile"
+          label="Vendedor ranking"
+          bind:value={vgFiltroVendedor}
+          options={vgVendedorSelectOptions}
+          class_name="w-full"
+        />
+        <FieldSelect
+          id="vg-mes-mobile"
+          label="Mês"
+          bind:value={vgFiltroMes}
+          options={vgMesSelectOptions}
+          class_name="w-full"
+        />
+        <FieldSelect
+          id="vg-dia-mobile"
+          label="Dia"
+          bind:value={vgFiltroDia}
+          options={vgDiaSelectOptions}
+          class_name="w-full"
+        />
+        <FieldSelect
+          id="vg-recibo-encontrado-mobile"
+          label="Recibo encontrado"
+          bind:value={vgFiltroReciboEncontrado}
+          options={[
+            { value: 'all', label: 'Todos' },
+            { value: 'sim', label: 'Sim' },
+            { value: 'nao', label: 'Não' }
+          ]}
+          class_name="w-full"
+        />
+        <FieldSelect
+          id="vg-ranking-mobile"
+          label="Ranking"
+          bind:value={vgFiltroRanking}
+          options={[
+            { value: 'all', label: 'Todos' },
+            { value: 'sim', label: 'Sim' },
+            { value: 'nao', label: 'Não' }
+          ]}
+          class_name="w-full"
+        />
+        <FieldSelect
+          id="vg-conciliado-mobile"
+          label="Conciliado"
+          bind:value={vgFiltroConciliado}
+          options={[
+            { value: 'all', label: 'Todos' },
+            { value: 'sim', label: 'Sim' },
+            { value: 'nao', label: 'Não' }
+          ]}
+          class_name="w-full"
+        />
       </div>
       <Button variant="primary" class_name="w-full mt-2" on:click={() => (showFilterSheet = false)}>
         Aplicar filtros
@@ -2198,66 +2815,87 @@
     {#if registrosLoading || loading}
       <LoadingState />
     {:else}
-    <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-      <table class="table-mobile-cards min-w-[2050px] w-full text-sm">
-        <thead class="bg-slate-50 text-slate-700">
-          <tr>
-            <th class="px-3 py-2 text-center">Data</th>
-            <th class="px-3 py-2 text-center">Documento</th>
-            <th class="px-3 py-2 text-center">Status</th>
-            <th class="px-3 py-2 text-center">Recibo encontrado</th>
-            <th class="px-3 py-2 text-center">Vendedor ranking</th>
-            <th class="px-3 py-2 text-center">Ranking</th>
-            <th class="px-3 py-2 text-center">Meta dif.</th>
-            <th class="px-3 py-2 text-right">Lançamentos</th>
-            <th class="px-3 py-2 text-right">Taxas (arq)</th>
-            <th class="px-3 py-2 text-right">Descontos</th>
-            <th class="px-3 py-2 text-right">Abatimentos</th>
-            <th class="px-3 py-2 text-right">Não comissionável</th>
-            <th class="px-3 py-2 text-right">Venda real</th>
-            <th class="px-3 py-2 text-right">Comissão loja</th>
-            <th class="px-3 py-2 text-right">% loja</th>
-            <th class="px-3 py-2 text-right">Total (sist)</th>
-            <th class="px-3 py-2 text-right">Taxas (sist)</th>
-            <th class="px-3 py-2 text-right">Diff total</th>
-            <th class="px-3 py-2 text-right">Diff taxas</th>
-            <th class="px-3 py-2 text-center">Conciliado</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each visaoGeralFiltrados as row}
-            <tr class="cursor-pointer border-t border-slate-100 hover:bg-slate-50" on:click={() => openDetails(row)}>
-              <td class="px-3 py-2">{formatDate(row.movimento_data)}</td>
-              <td class="px-3 py-2">{formatDocumentoConciliacao(row)}</td>
-              <td class="px-3 py-2">{statusImportLabel(row.status)}</td>
-              <td class="px-3 py-2">{row.venda_recibo_id ? 'Sim' : 'Não'}</td>
-              <td class="px-3 py-2">{row.ranking_vendedor?.nome_completo || 'Não atribuído'}</td>
-              <td class="px-3 py-2">{exigeRanking(row.status) ? (row.ranking_vendedor_id ? 'OK' : 'Pendente') : '-'}</td>
-              <td class="px-3 py-2">{resolveMetaDifLabel(row.percentual_comissao_loja, row.ranking_produto?.nome)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.valor_lancamentos)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.valor_taxas)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.valor_descontos)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.valor_abatimentos)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.valor_nao_comissionavel)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.valor_venda_real)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.valor_comissao_loja)}</td>
-              <td class="px-3 py-2 text-right">{formatPercent(row.percentual_comissao_loja)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.sistema_valor_total)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.sistema_valor_taxas)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.diff_total)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.diff_taxas)}</td>
-              <td class="px-3 py-2">{row.conciliado ? 'Sim' : 'Não'}</td>
+      <div class="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+        <table class="table-mobile-cards w-full min-w-[2050px] text-sm">
+          <thead class="bg-slate-50 text-slate-700">
+            <tr>
+              <th class="px-3 py-2 text-center">Data</th>
+              <th class="px-3 py-2 text-center">Documento</th>
+              <th class="px-3 py-2 text-center">Status</th>
+              <th class="px-3 py-2 text-center">Recibo encontrado</th>
+              <th class="px-3 py-2 text-center">Vendedor ranking</th>
+              <th class="px-3 py-2 text-center">Ranking</th>
+              <th class="px-3 py-2 text-center">Meta dif.</th>
+              <th class="px-3 py-2 text-right">Lançamentos</th>
+              <th class="px-3 py-2 text-right">Taxas (arq)</th>
+              <th class="px-3 py-2 text-right">Descontos</th>
+              <th class="px-3 py-2 text-right">Abatimentos</th>
+              <th class="px-3 py-2 text-right">Não comissionável</th>
+              <th class="px-3 py-2 text-right">Venda real</th>
+              <th class="px-3 py-2 text-right">Comissão loja</th>
+              <th class="px-3 py-2 text-right">% loja</th>
+              <th class="px-3 py-2 text-right">Total (sist)</th>
+              <th class="px-3 py-2 text-right">Taxas (sist)</th>
+              <th class="px-3 py-2 text-right">Diff total</th>
+              <th class="px-3 py-2 text-right">Diff taxas</th>
+              <th class="px-3 py-2 text-center">Conciliado</th>
             </tr>
-          {/each}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {#each visaoGeralFiltrados as row}
+              <tr
+                class="cursor-pointer border-t border-slate-100 hover:bg-slate-50"
+                on:click={() => openDetails(row)}
+              >
+                <td class="px-3 py-2">{formatDate(row.movimento_data)}</td>
+                <td class="px-3 py-2">{formatDocumentoConciliacao(row)}</td>
+                <td class="px-3 py-2">{statusImportLabel(row.status)}</td>
+                <td class="px-3 py-2">{row.venda_recibo_id ? 'Sim' : 'Não'}</td>
+                <td class="px-3 py-2">{row.ranking_vendedor?.nome_completo || 'Não atribuído'}</td>
+                <td class="px-3 py-2"
+                  >{exigeRanking(row.status)
+                    ? row.ranking_vendedor_id
+                      ? 'OK'
+                      : 'Pendente'
+                    : '-'}</td
+                >
+                <td class="px-3 py-2"
+                  >{resolveMetaDifLabel(
+                    row.percentual_comissao_loja,
+                    row.ranking_produto?.nome
+                  )}</td
+                >
+                <td class="px-3 py-2 text-right">{formatMoney(row.valor_lancamentos)}</td>
+                <td class="px-3 py-2 text-right">{formatMoney(row.valor_taxas)}</td>
+                <td class="px-3 py-2 text-right">{formatMoney(row.valor_descontos)}</td>
+                <td class="px-3 py-2 text-right">{formatMoney(row.valor_abatimentos)}</td>
+                <td class="px-3 py-2 text-right">{formatMoney(row.valor_nao_comissionavel)}</td>
+                <td class="px-3 py-2 text-right">{formatMoney(row.valor_venda_real)}</td>
+                <td class="px-3 py-2 text-right">{formatMoney(row.valor_comissao_loja)}</td>
+                <td class="px-3 py-2 text-right">{formatPercent(row.percentual_comissao_loja)}</td>
+                <td class="px-3 py-2 text-right">{formatMoney(row.sistema_valor_total)}</td>
+                <td class="px-3 py-2 text-right">{formatMoney(row.sistema_valor_taxas)}</td>
+                <td class="px-3 py-2 text-right">{formatMoney(row.diff_total)}</td>
+                <td class="px-3 py-2 text-right">{formatMoney(row.diff_taxas)}</td>
+                <td class="px-3 py-2">{row.conciliado ? 'Sim' : 'Não'}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </div>
     {/if}
   </Card>
 {:else if activeTab === 'registros'}
   <AbaRegistros {filteredRecords} {registrosLoading} {loading} {openDetails} />
 {:else if activeTab === 'alteracoes'}
-  <AbaAlteracoes {changes} {alteracoesPendentes} {changesLoading} {reverting} {loadChanges} {revertPendingChanges} />
+  <AbaAlteracoes
+    {changes}
+    {alteracoesPendentes}
+    {changesLoading}
+    {reverting}
+    {loadChanges}
+    {revertPendingChanges}
+  />
 {:else if activeTab === 'execucoes'}
   <AbaExecucoes {executions} {executionsLoading} {loadExecutions} />
 {/if}
@@ -2275,7 +2913,9 @@
   {#if selectedRow}
     <div class="space-y-5">
       <div class="rounded-2xl border border-slate-200 bg-white px-4 py-4">
-        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Resumo da conciliação</p>
+        <p class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase">
+          Resumo da conciliação
+        </p>
         <div class="mt-3 grid grid-cols-2 gap-3 text-sm md:grid-cols-3">
           <div>
             <p class="text-slate-500">Documento</p>
@@ -2321,23 +2961,33 @@
           </div>
           <div>
             <p class="text-slate-500">Status</p>
-            <p class="font-medium text-slate-900">{selectedRow.status_label || selectedRow.status}</p>
+            <p class="font-medium text-slate-900">
+              {selectedRow.status_label || selectedRow.status}
+            </p>
           </div>
           <div>
             <p class="text-slate-500">Valor loja</p>
-            <p class="font-medium text-slate-900">{formatCurrency(selectedRow.valor_calculada_loja)}</p>
+            <p class="font-medium text-slate-900">
+              {formatCurrency(selectedRow.valor_calculada_loja)}
+            </p>
           </div>
           <div>
             <p class="text-slate-500">% loja</p>
-            <p class="font-medium text-slate-900">{formatPercent(selectedRow.percentual_comissao_loja)}</p>
+            <p class="font-medium text-slate-900">
+              {formatPercent(selectedRow.percentual_comissao_loja)}
+            </p>
           </div>
           <div>
             <p class="text-slate-500">Match total</p>
-            <p class="font-medium text-slate-900">{selectedRow.match_total == null ? '-' : selectedRow.match_total ? 'Sim' : 'Não'}</p>
+            <p class="font-medium text-slate-900">
+              {selectedRow.match_total == null ? '-' : selectedRow.match_total ? 'Sim' : 'Não'}
+            </p>
           </div>
           <div>
             <p class="text-slate-500">Match taxas</p>
-            <p class="font-medium text-slate-900">{selectedRow.match_taxas == null ? '-' : selectedRow.match_taxas ? 'Sim' : 'Não'}</p>
+            <p class="font-medium text-slate-900">
+              {selectedRow.match_taxas == null ? '-' : selectedRow.match_taxas ? 'Sim' : 'Não'}
+            </p>
           </div>
           <div>
             <p class="text-slate-500">Dif. total</p>
@@ -2357,29 +3007,110 @@
       <div class="grid gap-4 md:grid-cols-2">
         <div class="rounded-2xl border border-slate-200 bg-white px-4 py-4 md:col-span-2">
           <div class="mb-3 flex items-center justify-between gap-2">
-            <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Campos da importação</p>
+            <p class="text-xs font-semibold tracking-[0.14em] text-slate-500 uppercase">
+              Campos da importação
+            </p>
             {#if detailsReadOnly}
-              <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600">Modo visual</span>
+              <span class="rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-600"
+                >Modo visual</span
+              >
             {:else}
-              <span class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">Modo edição</span>
+              <span class="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700"
+                >Modo edição</span
+              >
             {/if}
           </div>
           <div class="grid gap-3 md:grid-cols-3">
-            <FieldInput id="conciliacao-valor-lancamentos" label="Valor lançamentos" bind:value={detalheValorLancamentos} disabled={detailsReadOnly} on:input={recalculateDetailMetrics} />
-            <FieldInput id="conciliacao-valor-taxas" label="Valor taxas" bind:value={detalheValorTaxas} disabled={detailsReadOnly} on:input={recalculateDetailMetrics} />
-            <FieldInput id="conciliacao-valor-descontos" label="Valor descontos" bind:value={detalheValorDescontos} disabled={detailsReadOnly} on:input={recalculateDetailMetrics} />
-            <FieldInput id="conciliacao-valor-abatimentos" label="Valor abatimentos" bind:value={detalheValorAbatimentos} disabled={detailsReadOnly} on:input={recalculateDetailMetrics} />
-            <FieldInput id="conciliacao-valor-nao-comissionavel" label="Valor não comissionável" bind:value={detalheValorNaoComissionavel} disabled={detailsReadOnly} on:input={recalculateDetailMetrics} />
-            <FieldInput id="conciliacao-valor-saldo" label="Valor saldo" bind:value={detalheValorSaldo} disabled={detailsReadOnly} on:input={recalculateDetailMetrics} />
-            <FieldInput id="conciliacao-valor-calculada-loja" label="Valor calculada loja" bind:value={detalheValorCalculadaLoja} disabled={detailsReadOnly} on:input={recalculateDetailMetrics} />
-            <FieldInput id="conciliacao-valor-visao-master" label="Valor visão master" bind:value={detalheValorVisaoMaster} disabled={detailsReadOnly} on:input={recalculateDetailMetrics} />
-            <FieldInput id="conciliacao-valor-opfax" label="Valor OPFAX" bind:value={detalheValorOpfax} disabled={detailsReadOnly} on:input={recalculateDetailMetrics} />
-            <FieldInput id="conciliacao-valor-venda-real" label="Valor venda real" bind:value={detalheValorVendaReal} disabled={true} />
-            <FieldInput id="conciliacao-valor-comissao-loja" label="Valor comissão loja" bind:value={detalheValorComissaoLoja} disabled={detailsReadOnly} on:input={recalculateDetailMetrics} />
-            <FieldInput id="conciliacao-percentual-comissao-loja" label="% comissão loja" bind:value={detalhePercentualComissaoLoja} disabled={true} />
+            <FieldInput
+              id="conciliacao-valor-lancamentos"
+              label="Valor lançamentos"
+              bind:value={detalheValorLancamentos}
+              disabled={detailsReadOnly}
+              on:input={recalculateDetailMetrics}
+            />
+            <FieldInput
+              id="conciliacao-valor-taxas"
+              label="Valor taxas"
+              bind:value={detalheValorTaxas}
+              disabled={detailsReadOnly}
+              on:input={recalculateDetailMetrics}
+            />
+            <FieldInput
+              id="conciliacao-valor-descontos"
+              label="Valor descontos"
+              bind:value={detalheValorDescontos}
+              disabled={detailsReadOnly}
+              on:input={recalculateDetailMetrics}
+            />
+            <FieldInput
+              id="conciliacao-valor-abatimentos"
+              label="Valor abatimentos"
+              bind:value={detalheValorAbatimentos}
+              disabled={detailsReadOnly}
+              on:input={recalculateDetailMetrics}
+            />
+            <FieldInput
+              id="conciliacao-valor-nao-comissionavel"
+              label="Valor não comissionável"
+              bind:value={detalheValorNaoComissionavel}
+              disabled={detailsReadOnly}
+              on:input={recalculateDetailMetrics}
+            />
+            <FieldInput
+              id="conciliacao-valor-saldo"
+              label="Valor saldo"
+              bind:value={detalheValorSaldo}
+              disabled={detailsReadOnly}
+              on:input={recalculateDetailMetrics}
+            />
+            <FieldInput
+              id="conciliacao-valor-calculada-loja"
+              label="Valor calculada loja"
+              bind:value={detalheValorCalculadaLoja}
+              disabled={detailsReadOnly}
+              on:input={recalculateDetailMetrics}
+            />
+            <FieldInput
+              id="conciliacao-valor-visao-master"
+              label="Valor visão master"
+              bind:value={detalheValorVisaoMaster}
+              disabled={detailsReadOnly}
+              on:input={recalculateDetailMetrics}
+            />
+            <FieldInput
+              id="conciliacao-valor-opfax"
+              label="Valor OPFAX"
+              bind:value={detalheValorOpfax}
+              disabled={detailsReadOnly}
+              on:input={recalculateDetailMetrics}
+            />
+            <FieldInput
+              id="conciliacao-valor-venda-real"
+              label="Valor venda real"
+              bind:value={detalheValorVendaReal}
+              disabled={true}
+            />
+            <FieldInput
+              id="conciliacao-valor-comissao-loja"
+              label="Valor comissão loja"
+              bind:value={detalheValorComissaoLoja}
+              disabled={detailsReadOnly}
+              on:input={recalculateDetailMetrics}
+            />
+            <FieldInput
+              id="conciliacao-percentual-comissao-loja"
+              label="% comissão loja"
+              bind:value={detalhePercentualComissaoLoja}
+              disabled={true}
+            />
           </div>
           <div class="mt-3">
-            <FieldInput id="conciliacao-faixa-comissao" label="Faixa de comissão" bind:value={detalheFaixaComissao} disabled={true} />
+            <FieldInput
+              id="conciliacao-faixa-comissao"
+              label="Faixa de comissão"
+              bind:value={detalheFaixaComissao}
+              disabled={true}
+            />
           </div>
         </div>
 
@@ -2402,19 +3133,45 @@
       </div>
 
       <div class="grid gap-3 md:grid-cols-2">
-        <FieldCheckbox label="Marcar como conciliado" bind:checked={marcadoConciliado} color="financeiro" align="center" class_name="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3" disabled={detailsReadOnly} />
-        <FieldCheckbox label="Marcar como Baixa RAC" bind:checked={isBaixaRac} color="financeiro" align="center" class_name="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3" disabled={detailsReadOnly} />
+        <FieldCheckbox
+          label="Marcar como conciliado"
+          bind:checked={marcadoConciliado}
+          color="financeiro"
+          align="center"
+          class_name="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3"
+          disabled={detailsReadOnly}
+        />
+        <FieldCheckbox
+          label="Marcar como Baixa RAC"
+          bind:checked={isBaixaRac}
+          color="financeiro"
+          align="center"
+          class_name="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3"
+          disabled={detailsReadOnly}
+        />
       </div>
 
       <div class="flex flex-wrap gap-2 border-t border-slate-200 pt-4">
-        <Button variant="secondary" on:click={() => selectedRow && runAutoConciliacao(selectedRow.id)} disabled={running} loading={running}>
+        <Button
+          variant="secondary"
+          on:click={() => selectedRow && runAutoConciliacao(selectedRow.id)}
+          disabled={running}
+          loading={running}
+        >
           Forçar recálculo do recibo
         </Button>
-        <Button variant="secondary" on:click={() => selectedRow && runFixVinculosAudit({ conciliacaoId: selectedRow.id })} disabled={running || fixingVinculos} loading={vinculosAuditLoading && vinculosAuditScope === 'recibo'}>
+        <Button
+          variant="secondary"
+          on:click={() => selectedRow && runFixVinculosAudit({ conciliacaoId: selectedRow.id })}
+          disabled={running || fixingVinculos}
+          loading={vinculosAuditLoading && vinculosAuditScope === 'recibo'}
+        >
           <ShieldAlert size={16} class="mr-2" />
           Auditar vínculo
         </Button>
-        <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+        <div
+          class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600"
+        >
           Última checagem: {formatDateTime(selectedRow.last_checked_at)}
         </div>
       </div>
@@ -2442,14 +3199,18 @@
 />
 
 <!-- Modal: Confirmação de diferenças na importação -->
-<Dialog bind:open={importDiferencasModalOpen} title="Diferenças detectadas na importação" maxWidth="lg">
+<Dialog
+  bind:open={importDiferencasModalOpen}
+  title="Diferenças detectadas na importação"
+  maxWidth="lg"
+>
   <div class="space-y-4">
     <p class="text-sm text-slate-600">
-      Foram detectadas diferenças entre os valores do arquivo importado e as vendas já cadastradas no sistema.
-      Isso pode indicar erro na leitura do arquivo ou divergência real. Confira abaixo:
+      Foram detectadas diferenças entre os valores do arquivo importado e as vendas já cadastradas
+      no sistema. Isso pode indicar erro na leitura do arquivo ou divergência real. Confira abaixo:
     </p>
     <div class="overflow-x-auto rounded-xl border border-slate-200">
-      <table class="w-full text-sm table-mobile-cards">
+      <table class="table-mobile-cards w-full text-sm">
         <thead class="bg-slate-50 text-slate-700">
           <tr>
             <th class="px-3 py-2 text-left">Documento</th>
@@ -2464,26 +3225,56 @@
         <tbody>
           {#each importDiferencas as diff}
             {@const diffSeverity = diff.severidade || getDiffModalSeverity(diff)}
-            <tr class="border-t border-slate-100 {diffSeverity === 'critical' ? 'bg-red-50' : 'bg-orange-50'}">
+            <tr
+              class="border-t border-slate-100 {diffSeverity === 'critical'
+                ? 'bg-red-50'
+                : 'bg-orange-50'}"
+            >
               <td class="px-3 py-2 font-medium">{diff.documento}</td>
               <td class="px-3 py-2 text-right">{formatCurrency(diff.valor_importacao)}</td>
               <td class="px-3 py-2 text-right">{formatCurrency(diff.valor_sistema)}</td>
-              <td class="px-3 py-2 text-right font-semibold {diff.diff_total > 0 ? 'text-green-700' : diff.diff_total < 0 ? 'text-red-700' : ''}">{diff.diff_total > 0 ? '+' : ''}{formatCurrency(diff.diff_total)}</td>
+              <td
+                class="px-3 py-2 text-right font-semibold {diff.diff_total > 0
+                  ? 'text-green-700'
+                  : diff.diff_total < 0
+                    ? 'text-red-700'
+                    : ''}">{diff.diff_total > 0 ? '+' : ''}{formatCurrency(diff.diff_total)}</td
+              >
               <td class="px-3 py-2 text-right">{formatCurrency(diff.taxas_importacao)}</td>
               <td class="px-3 py-2 text-right">{formatCurrency(diff.taxas_sistema)}</td>
-              <td class="px-3 py-2 text-right font-semibold {diff.diff_taxas > 0 ? 'text-green-700' : diff.diff_taxas < 0 ? 'text-red-700' : ''}">{diff.diff_taxas > 0 ? '+' : ''}{formatCurrency(diff.diff_taxas)}</td>
+              <td
+                class="px-3 py-2 text-right font-semibold {diff.diff_taxas > 0
+                  ? 'text-green-700'
+                  : diff.diff_taxas < 0
+                    ? 'text-red-700'
+                    : ''}">{diff.diff_taxas > 0 ? '+' : ''}{formatCurrency(diff.diff_taxas)}</td
+              >
             </tr>
           {/each}
         </tbody>
       </table>
     </div>
     <p class="text-xs text-slate-500">
-      Se confirmar, o sistema usará os valores do arquivo importado e sobrescreverá os valores da venda cadastrada.
+      Se confirmar, o sistema usará os valores do arquivo importado e sobrescreverá os valores da
+      venda cadastrada.
     </p>
   </div>
   <svelte:fragment slot="actions">
-    <Button variant="secondary" on:click={() => { importDiferencasModalOpen = false; importDiferencasConfirmadas = false; }}>Corrigir / Cancelar</Button>
-    <Button color="financeiro" on:click={() => { importDiferencasModalOpen = false; importDiferencasConfirmadas = true; importPreviewRows(); }}>
+    <Button
+      variant="secondary"
+      on:click={() => {
+        importDiferencasModalOpen = false;
+        importDiferencasConfirmadas = false;
+      }}>Corrigir / Cancelar</Button
+    >
+    <Button
+      color="financeiro"
+      on:click={() => {
+        importDiferencasModalOpen = false;
+        importDiferencasConfirmadas = true;
+        importPreviewRows();
+      }}
+    >
       Confirmar importação
     </Button>
   </svelte:fragment>
@@ -2493,8 +3284,8 @@
 <Dialog bind:open={semMovimentoModalOpen} title="Marcar dia sem movimento" maxWidth="sm">
   <div class="space-y-4">
     <p class="text-sm text-slate-600">
-      Use esta opção quando não houve movimento de caixa em um dia específico.
-      Uma vez marcado, não será possível importar arquivo para esta data.
+      Use esta opção quando não houve movimento de caixa em um dia específico. Uma vez marcado, não
+      será possível importar arquivo para esta data.
     </p>
     <FieldInput
       id="sem-movimento-data"
@@ -2512,14 +3303,28 @@
     />
     {#if diasSemMovimento.length > 0}
       <div class="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2">
-        <p class="text-xs font-semibold text-slate-600 mb-1">Dias já marcados:</p>
-        <p class="text-xs text-slate-500">{diasSemMovimento.map((d) => formatDate(d)).join(', ')}</p>
+        <p class="mb-1 text-xs font-semibold text-slate-600">Dias já marcados:</p>
+        <p class="text-xs text-slate-500">
+          {diasSemMovimento.map((d) => formatDate(d)).join(', ')}
+        </p>
       </div>
     {/if}
   </div>
   <svelte:fragment slot="actions">
-    <Button variant="secondary" on:click={() => { semMovimentoModalOpen = false; semMovimentoData = ''; semMovimentoObservacao = ''; }}>Cancelar</Button>
-    <Button color="financeiro" on:click={marcarSemMovimento} disabled={semMovimentoLoading} loading={semMovimentoLoading}>
+    <Button
+      variant="secondary"
+      on:click={() => {
+        semMovimentoModalOpen = false;
+        semMovimentoData = '';
+        semMovimentoObservacao = '';
+      }}>Cancelar</Button
+    >
+    <Button
+      color="financeiro"
+      on:click={marcarSemMovimento}
+      disabled={semMovimentoLoading}
+      loading={semMovimentoLoading}
+    >
       Marcar sem movimento
     </Button>
   </svelte:fragment>

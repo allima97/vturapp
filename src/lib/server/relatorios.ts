@@ -168,11 +168,9 @@ function buildSalesSelect(
         'produto_resolvido:produtos!produto_resolvido_id (id, nome, cidade_id, tipo_produto, valor_neto, valor_em_reais)'
       ];
 
-  const reciboCols = [
-    ...reciboBaseCols,
-    ...reciboConciliacaoCols,
-    ...reciboProdutoCols
-  ].join(',\n        ');
+  const reciboCols = [...reciboBaseCols, ...reciboConciliacaoCols, ...reciboProdutoCols].join(
+    ',\n        '
+  );
 
   const vendaCols = includeAdvancedFields
     ? `
@@ -241,7 +239,9 @@ export async function fetchSalesReportRows(
   const includeCancelled = Boolean(params.includeCancelled);
   const filterByReceiptDate = Boolean(params.filterByReceiptDate);
   const selectMode = params.selectMode === 'basic' ? 'basic' : 'full';
-  const receiptRelation = params.filterByReceiptDate ? 'recibos:vendas_recibos!inner' : 'recibos:vendas_recibos';
+  const receiptRelation = params.filterByReceiptDate
+    ? 'recibos:vendas_recibos!inner'
+    : 'recibos:vendas_recibos';
 
   return getCachedReadModel({
     key: buildReadModelCacheKey('sales-report-rows', {
@@ -274,7 +274,7 @@ export async function fetchSalesReportRows(
         const queryBatch = async (
           companyIdBatch: string[],
           vendedorIdBatch: string[],
-          vendaIdBatch: string[],
+          vendaIdBatch: string[]
         ) => {
           const batchRows: ReportVendaRow[] = [];
           for (let offset = 0; offset < SALES_REPORT_MAX_ROWS; offset += SALES_REPORT_PAGE_SIZE) {
@@ -289,7 +289,10 @@ export async function fetchSalesReportRows(
             }
 
             if (dataInicio) {
-              query = query.gte(filterByReceiptDate ? 'recibos.data_venda' : 'data_venda', dataInicio);
+              query = query.gte(
+                filterByReceiptDate ? 'recibos.data_venda' : 'data_venda',
+                dataInicio
+              );
             }
 
             if (dataFim) {
@@ -311,7 +314,7 @@ export async function fetchSalesReportRows(
             const { data, error } = await query;
             if (error) return { data: null, error };
 
-            const batch = ((data || []) as unknown) as ReportVendaRow[];
+            const batch = (data || []) as unknown as ReportVendaRow[];
             batchRows.push(...batch);
             if (batch.length < SALES_REPORT_PAGE_SIZE) break;
           }
@@ -332,10 +335,10 @@ export async function fetchSalesReportRows(
         if (failed) return { data: null, error: failed.error };
 
         for (const batchResult of batchResults) {
-          for (const row of ((batchResult.data || []) as unknown) as ReportVendaRow[]) {
+          for (const row of (batchResult.data || []) as unknown as ReportVendaRow[]) {
             if (row?.id) rowsById.set(row.id, row);
-            }
           }
+        }
 
         const rows = Array.from(rowsById.values()).sort((left, right) =>
           String(right?.data_venda || '').localeCompare(String(left?.data_venda || ''))
@@ -344,21 +347,22 @@ export async function fetchSalesReportRows(
       };
 
       const basicSelect = buildSalesSelect(false, false, false, receiptRelation);
-      const selectVariants = selectMode === 'basic'
-        ? [basicSelect]
-        : [
-            buildSalesSelect(true, true, true, receiptRelation),
-            buildSalesSelect(true, false, true, receiptRelation),
-            buildSalesSelect(true, false, false, receiptRelation),
-            basicSelect
-          ];
+      const selectVariants =
+        selectMode === 'basic'
+          ? [basicSelect]
+          : [
+              buildSalesSelect(true, true, true, receiptRelation),
+              buildSalesSelect(true, false, true, receiptRelation),
+              buildSalesSelect(true, false, false, receiptRelation),
+              basicSelect
+            ];
 
       let lastError: unknown = null;
 
       for (const selectClause of selectVariants) {
         const { data, error } = await executeQuery(selectClause);
         if (!error) {
-          return ((data || []) as unknown) as ReportVendaRow[];
+          return (data || []) as unknown as ReportVendaRow[];
         }
         lastError = error;
         if (!isMissingColumnError(error)) {
@@ -397,7 +401,10 @@ export async function fetchLatestPaymentForms(client: DataClient, vendaIds: stri
   }
 
   for (const result of batchResults) {
-    for (const row of (result.data || []) as Array<{ venda_id?: string | null; forma_nome?: string | null }>) {
+    for (const row of (result.data || []) as Array<{
+      venda_id?: string | null;
+      forma_nome?: string | null;
+    }>) {
       const vendaId = String(row?.venda_id || '').trim();
       if (!vendaId || forms.has(vendaId)) continue;
       forms.set(vendaId, normalizeFormaPagamento(row?.forma_nome));
@@ -446,10 +453,7 @@ export function getVendaVendedorNome(row: Pick<ReportVendaRow, 'vendedor'>) {
   return String(row.vendedor?.email || 'Vendedor nao informado');
 }
 
-function getMappedCityName(
-  cityNames?: DestinationCityNameMap | null,
-  cityId?: string | null
-) {
+function getMappedCityName(cityNames?: DestinationCityNameMap | null, cityId?: string | null) {
   const id = String(cityId || '').trim();
   if (!id || !cityNames) return '';
   return String(cityNames.get(id) || '').trim();
@@ -461,11 +465,7 @@ export function getVendaDestino(
 ) {
   const recibos = Array.isArray(row.recibos) ? row.recibos : [];
   const cidades = Array.from(
-    new Set(
-      recibos
-        .map((recibo) => getReceiptCidadeNome(recibo, row, cityNames))
-        .filter(Boolean)
-    )
+    new Set(recibos.map((recibo) => getReceiptCidadeNome(recibo, row, cityNames)).filter(Boolean))
   );
 
   if (cidades.length > 0) {
@@ -501,7 +501,8 @@ export function getVendaCommission(row: Pick<ReportVendaRow, 'recibos'>) {
   if (recibos.length === 0) return 0;
 
   const hasCommissionSignal = recibos.some(
-    (recibo) => recibo?.valor_comissao_loja != null || Number(recibo?.percentual_comissao_loja || 0) > 0
+    (recibo) =>
+      recibo?.valor_comissao_loja != null || Number(recibo?.percentual_comissao_loja || 0) > 0
   );
 
   if (!hasCommissionSignal) return 0;
@@ -546,7 +547,9 @@ export function getReceiptProductDescriptor(
 }
 
 export function normalizeFormaPagamento(value?: string | null) {
-  const normalized = String(value || '').trim().toLowerCase();
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase();
 
   switch (normalized) {
     case 'avista':

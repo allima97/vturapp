@@ -35,13 +35,22 @@ export async function handleConciliacaoStatusCronologicoGet(event: RequestEvent)
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster && !scope.isFinanceiro && !scope.isGestor) {
-      ensureModuloAccess(scope, ['operacao_conciliacao', 'conciliacao'], 1, 'Sem acesso à Conciliação.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_conciliacao', 'conciliacao'],
+        1,
+        'Sem acesso à Conciliação.'
+      );
     }
 
     const { searchParams } = event.url;
     const companyId = resolveScopedCompanyId(scope, searchParams.get('company_id'));
 
-    if (!companyId) return json({ error: 'Selecione uma empresa para verificar a conciliação.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!companyId)
+      return json(
+        { error: 'Selecione uma empresa para verificar a conciliação.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
 
     const diagnostico = await diagnosticarLacunasCronologicas({ client, companyId });
 
@@ -60,16 +69,19 @@ export async function handleConciliacaoStatusCronologicoGet(event: RequestEvent)
         ? `Sequência de importação OK até ${fmt(diagnostico.fronteira)}. Nenhuma lacuna detectada.`
         : 'Nenhum arquivo importado ainda.';
 
-    return json({
-      ok: !temLacuna,
-      fronteira: diagnostico.fronteira,
-      dias_importados: diagnostico.diasImportados,
-      dias_faltantes: diagnostico.diasFaltantes,
-      dias_bloqueados: diagnostico.diasBloqueados,
-      dias_sem_movimento: diagnostico.diasSemMovimento,
-      registros_bloqueados: diagnostico.registrosBloqueados,
-      aviso
-    }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      {
+        ok: !temLacuna,
+        fronteira: diagnostico.fronteira,
+        dias_importados: diagnostico.diasImportados,
+        dias_faltantes: diagnostico.diasFaltantes,
+        dias_bloqueados: diagnostico.diasBloqueados,
+        dias_sem_movimento: diagnostico.diasSemMovimento,
+        registros_bloqueados: diagnostico.registrosBloqueados,
+        aviso
+      },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao verificar status cronológico da conciliação.');
   }

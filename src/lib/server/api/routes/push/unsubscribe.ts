@@ -35,40 +35,46 @@ export const handlePushUnsubscribePost = async (event: RequestEvent) => {
     const client = locals.dados;
 
     const body = readPushUnsubscribeBody(bodyResult.data);
-    const endpoint = String(body?.endpoint || "").trim();
+    const endpoint = String(body?.endpoint || '').trim();
 
     if (!endpoint) {
-      return json({ error: "Endpoint invalido." }, { status: 400, headers: NO_STORE_HEADERS });
+      return json({ error: 'Endpoint invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
     }
     if (endpoint.length > 2048) {
-      return json({ error: "Endpoint muito grande." }, { status: 413, headers: NO_STORE_HEADERS });
+      return json({ error: 'Endpoint muito grande.' }, { status: 413, headers: NO_STORE_HEADERS });
     }
     try {
       const parsedEndpoint = new URL(endpoint);
-      if (parsedEndpoint.protocol !== "https:") {
-        return json({ error: "Endpoint invalido." }, { status: 400, headers: NO_STORE_HEADERS });
+      if (parsedEndpoint.protocol !== 'https:') {
+        return json({ error: 'Endpoint invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
       }
     } catch {
-      return json({ error: "Endpoint invalido." }, { status: 400, headers: NO_STORE_HEADERS });
+      return json({ error: 'Endpoint invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
     }
 
     const { error } = await client
-      .from("push_subscriptions")
+      .from('push_subscriptions')
       .update({
         active: false,
         updated_at: new Date().toISOString()
       } satisfies PushSubscriptionUpdate)
-      .eq("endpoint", endpoint)
-      .eq("user_id", user.id);
+      .eq('endpoint', endpoint)
+      .eq('user_id', user.id);
 
     if (error) {
-      logServerError("[push/unsubscribe] falha ao desativar subscription", error);
-      return json({ error: "Erro ao desativar subscription." }, { status: 500, headers: NO_STORE_HEADERS });
+      logServerError('[push/unsubscribe] falha ao desativar subscription', error);
+      return json(
+        { error: 'Erro ao desativar subscription.' },
+        { status: 500, headers: NO_STORE_HEADERS }
+      );
     }
 
     return json({ ok: true }, { headers: NO_STORE_HEADERS });
   } catch (error: unknown) {
-    logServerError("[push/unsubscribe] falha interna", error);
-    return json({ error: "Erro interno ao desativar subscription." }, { status: 500, headers: NO_STORE_HEADERS });
+    logServerError('[push/unsubscribe] falha interna', error);
+    return json(
+      { error: 'Erro interno ao desativar subscription.' },
+      { status: 500, headers: NO_STORE_HEADERS }
+    );
   }
 };

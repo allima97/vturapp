@@ -23,9 +23,7 @@ export function hasVerifiedTotpFactor(factors?: MfaFactorsLike | null) {
 
 export function getPendingTotpFactors(factors?: MfaFactorsLike | null) {
   const all = Array.isArray(factors?.all) ? factors.all : [];
-  return all.filter(
-    (factor) => factor?.factor_type === 'totp' && factor?.status === 'unverified'
-  );
+  return all.filter((factor) => factor?.factor_type === 'totp' && factor?.status === 'unverified');
 }
 
 export function normalizeMfaCode(value?: string | null) {

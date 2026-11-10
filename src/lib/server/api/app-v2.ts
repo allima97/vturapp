@@ -46,7 +46,7 @@ export function createApiAppV2() {
     rateLimitMiddleware({
       windowMs: 60_000,
       maxRequests: 120,
-      excludePaths: ['/api/v2/health'],
+      excludePaths: ['/api/v2/health']
     })
   );
   app.use('*', csrfProtection());
@@ -74,7 +74,7 @@ export function createApiAppV2() {
   app.route('/destinos', destinosV2Routes);
   app.route('/dashboard', dashboardV2Routes);
   app.route('/agenda', agendaV2Routes);
-app.route('/mural', muralV2Routes);
+  app.route('/mural', muralV2Routes);
   app.route('/equipe', equipeV2Routes);
   app.route('/auditoria', auditoriaV2Routes);
 

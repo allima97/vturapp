@@ -16,31 +16,86 @@ import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/reque
 const MAX_SYSTEM_MODULES_BODY_BYTES = 64 * 1024;
 
 const SYSTEM_MODULES_CATALOG = [
-  'dashboard', 'vendas', 'vendas_consulta', 'orcamentos',
-  'clientes', 'consultoria_online', 'cadastros', 'cadastros_paises',
-  'cadastros_estados', 'cadastros_cidades', 'cadastros_destinos',
-  'cadastros_produtos', 'circuitos', 'cadastros_lote', 'cadastros_fornecedores',
-  'relatorios', 'relatorios_vendas', 'relatorios_destinos', 'relatorios_produtos',
-  'relatorios_clientes', 'parametros', 'parametros_tipo_produtos',
-  'parametros_tipo_pacotes', 'parametros_metas', 'parametros_regras_comissao',
-  'parametros_equipe', 'parametros_escalas', 'parametros_cambios',
-  'parametros_orcamentos', 'parametros_formas_pagamento', 'operacao',
-  'operacao_agenda', 'operacao_todo', 'operacao_chat', 'operacao_documentos_viagens',
-  'operacao_vouchers', 'operacao_viagens', 'operacao_controle_sac',
-  'operacao_campanhas', 'operacao_conciliacao', 'comissionamento',
-  'agenda', 'todo', 'chat', 'vouchers', 'viagens', 'controle de sac',
-  'campanhas', 'conciliacao', 'ranking de vendas',
-  'relatoriovendas', 'relatoriodestinos', 'relatorioprodutos', 'relatorioclientes',
-  'vendas', 'orcamentos', 'consultoria online', 'paises', 'subdivisoes',
-  'cidades', 'destinos', 'produtos', 'produtoslote', 'fornecedores',
-  'tipoprodutos', 'tipopacotes', 'metas', 'regrascomissao', 'equipe',
-  'escalas', 'cambios', 'orcamentos (pdf)', 'formas de pagamento'
+  'dashboard',
+  'vendas',
+  'vendas_consulta',
+  'orcamentos',
+  'clientes',
+  'consultoria_online',
+  'cadastros',
+  'cadastros_cidades',
+  'cadastros_destinos',
+  'cadastros_produtos',
+  'circuitos',
+  'cadastros_lote',
+  'cadastros_fornecedores',
+  'relatorios',
+  'relatorios_vendas',
+  'relatorios_destinos',
+  'relatorios_produtos',
+  'relatorios_clientes',
+  'parametros',
+  'parametros_tipo_produtos',
+  'parametros_tipo_pacotes',
+  'parametros_metas',
+  'parametros_regras_comissao',
+  'parametros_equipe',
+  'parametros_escalas',
+  'parametros_cambios',
+  'parametros_orcamentos',
+  'parametros_formas_pagamento',
+  'operacao',
+  'operacao_agenda',
+  'operacao_todo',
+  'operacao_chat',
+  'operacao_documentos_viagens',
+  'operacao_vouchers',
+  'operacao_viagens',
+  'operacao_controle_sac',
+  'operacao_campanhas',
+  'operacao_conciliacao',
+  'comissionamento',
+  'agenda',
+  'todo',
+  'chat',
+  'vouchers',
+  'viagens',
+  'controle de sac',
+  'campanhas',
+  'conciliacao',
+  'ranking de vendas',
+  'relatoriovendas',
+  'relatoriodestinos',
+  'relatorioprodutos',
+  'relatorioclientes',
+  'vendas',
+  'orcamentos',
+  'consultoria online',
+  'cidades',
+  'destinos',
+  'produtos',
+  'produtoslote',
+  'fornecedores',
+  'tipoprodutos',
+  'tipopacotes',
+  'metas',
+  'regrascomissao',
+  'equipe',
+  'escalas',
+  'cambios',
+  'orcamentos (pdf)',
+  'formas de pagamento'
 ];
 
 function normalizeModuleKey(key?: string | null) {
-  const raw = String(key || '').trim().toLowerCase();
+  const raw = String(key || '')
+    .trim()
+    .toLowerCase();
   if (!raw) return '';
-  return raw.replace(/\s+/g, '_').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return raw
+    .replace(/\s+/g, '_')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
 }
 
 type SystemModuleSettingRow = {
@@ -78,7 +133,10 @@ export const handleAdminSystemModulesGet = async (event: RequestEvent) => {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      return json({ error: 'Sem acesso aos modulos do sistema.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Sem acesso aos modulos do sistema.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { data, error } = await client
@@ -89,17 +147,21 @@ export const handleAdminSystemModulesGet = async (event: RequestEvent) => {
     if (error) {
       const code = String(error.code || '').toLowerCase();
       const message = String(error.message || '').toLowerCase();
-      const tableMissing = code === '42P01' || message.includes('does not exist') || code === '42501';
+      const tableMissing =
+        code === '42P01' || message.includes('does not exist') || code === '42501';
 
       if (tableMissing) {
         logServerError('[admin/system-modules] tabela ausente ou sem permissao', error);
-        return json({
-          table_missing: true,
-          disabled: [],
-          rows: [],
-          catalog: SYSTEM_MODULES_CATALOG,
-          setup_error: 'Tabela system_module_settings nao disponivel.'
-        }, { headers: DYNAMIC_READ_HEADERS });
+        return json(
+          {
+            table_missing: true,
+            disabled: [],
+            rows: [],
+            catalog: SYSTEM_MODULES_CATALOG,
+            setup_error: 'Tabela system_module_settings nao disponivel.'
+          },
+          { headers: DYNAMIC_READ_HEADERS }
+        );
       }
       throw error;
     }
@@ -138,7 +200,10 @@ export const handleAdminSystemModulesPost = async (event: RequestEvent) => {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      return json({ error: 'Sem acesso aos modulos do sistema.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Sem acesso aos modulos do sistema.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const body =
@@ -171,15 +236,16 @@ export const handleAdminSystemModulesPost = async (event: RequestEvent) => {
     // — deduplificamos via Set para evitar duplicate key no upsert
     const enabledKeys = Array.from(
       new Set(
-        SYSTEM_MODULES_CATALOG
-          .map(normalizeModuleKey)
-          .filter((k) => k && !disabledKeys.has(k))
+        SYSTEM_MODULES_CATALOG.map(normalizeModuleKey).filter((k) => k && !disabledKeys.has(k))
       )
     );
 
     // Monta payload completo: desabilitados + habilitados (sem duplicatas)
     // Usa Map para garantir unicidade por module_key antes de enviar ao banco
-    const payloadMap = new Map<string, { module_key: string; enabled: boolean; reason: string | null; updated_by: string }>();
+    const payloadMap = new Map<
+      string,
+      { module_key: string; enabled: boolean; reason: string | null; updated_by: string }
+    >();
 
     for (const item of disabledNormalized) {
       payloadMap.set(item.module_key, {
@@ -228,7 +294,10 @@ export const handleAdminSystemModulesPost = async (event: RequestEvent) => {
       detalhes: { disabled_modules: disabledNormalized.map((item) => item.module_key) }
     });
 
-    return json({ ok: true, disabled: disabledNormalized.map((item) => item.module_key) }, { headers: NO_STORE_HEADERS });
+    return json(
+      { ok: true, disabled: disabledNormalized.map((item) => item.module_key) },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     logServerError('[admin/system-modules] falha ao salvar modulos globais', err);
     return toErrorResponse(err, 'Erro ao salvar modulos globais.');

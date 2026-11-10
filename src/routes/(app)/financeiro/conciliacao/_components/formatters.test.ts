@@ -9,10 +9,10 @@ import {
   getDiffRatio,
   isCriticalDiff,
   resolveMetaDifLabel,
-  statusImportLabel,
+  statusImportLabel
 } from './formatters';
 
-const nbsp = (s: string) => s.replace(/ /g, ' ');
+const nbsp = (s: string) => s.replace(/\u00A0/g, ' ');
 
 describe('conciliação: formatadores', () => {
   it('status da importação', () => {
@@ -30,7 +30,9 @@ describe('conciliação: formatadores', () => {
   });
 
   it('documento com e sem reserva', () => {
-    expect(formatDocumentoConciliacao({ documento: 'REXTUR', numero_reserva: '123' })).toBe('REXTUR / 123');
+    expect(formatDocumentoConciliacao({ documento: 'REXTUR', numero_reserva: '123' })).toBe(
+      'REXTUR / 123'
+    );
     expect(formatDocumentoConciliacao({ documento: ' 456 ' })).toBe('456');
     expect(formatDocumentoConciliacao({})).toBe('-');
   });

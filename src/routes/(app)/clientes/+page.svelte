@@ -128,11 +128,12 @@
           inativo: 'Inativo',
           prospect: 'Prospect'
         };
-        const extra = row.total_viagens > 0
-          ? ` · ${row.total_viagens} viagens`
-          : row.total_orcamentos > 0
-            ? ` · ${row.total_orcamentos} orc.`
-            : '';
+        const extra =
+          row.total_viagens > 0
+            ? ` · ${row.total_viagens} viagens`
+            : row.total_orcamentos > 0
+              ? ` · ${row.total_orcamentos} orc.`
+              : '';
         return `<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${styles[value as keyof typeof styles]}">${labels[value as keyof typeof labels]}${extra}</span>`;
       }
     },
@@ -177,8 +178,35 @@
       key: 'estado',
       label: 'Estado',
       type: 'select' as const,
-      options: ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO']
-        .map((uf) => ({ value: uf, label: uf }))
+      options: [
+        'AC',
+        'AL',
+        'AP',
+        'AM',
+        'BA',
+        'CE',
+        'DF',
+        'ES',
+        'GO',
+        'MA',
+        'MT',
+        'MS',
+        'MG',
+        'PA',
+        'PB',
+        'PR',
+        'PE',
+        'PI',
+        'RJ',
+        'RN',
+        'RS',
+        'RO',
+        'RR',
+        'SC',
+        'SP',
+        'SE',
+        'TO'
+      ].map((uf) => ({ value: uf, label: uf }))
     },
     {
       key: 'tipo_pessoa',
@@ -229,17 +257,26 @@
     try {
       // Uma única chamada com include_summary=1 elimina o segundo round-trip
       // que antes era disparado separadamente por loadClientesResumo().
-      const payload = await apiGet<{ items?: Cliente[]; total?: number; summary?: Partial<typeof summary> }>('/api/v1/clientes/list', {
-        page: String(listPage),
-        pageSize: String(listPageSize),
-        busca: searchTerm,
-        status: filterValues.status || '',
-        estado: filterValues.estado || '',
-        tipo_pessoa: filterValues.tipo_pessoa || '',
-        classificacao: filterValues.classificacao || '',
-        aniversario_hoje: filterValues.aniversario_hoje || '',
-        include_summary: '1'
-      }, controller.signal, 60_000);
+      const payload = await apiGet<{
+        items?: Cliente[];
+        total?: number;
+        summary?: Partial<typeof summary>;
+      }>(
+        '/api/v1/clientes/list',
+        {
+          page: String(listPage),
+          pageSize: String(listPageSize),
+          busca: searchTerm,
+          status: filterValues.status || '',
+          estado: filterValues.estado || '',
+          tipo_pessoa: filterValues.tipo_pessoa || '',
+          classificacao: filterValues.classificacao || '',
+          aniversario_hoje: filterValues.aniversario_hoje || '',
+          include_summary: '1'
+        },
+        controller.signal,
+        60_000
+      );
 
       if (seq !== requestSeq) return;
 
@@ -358,27 +395,66 @@
 
 <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
   <div>
-    <p class="text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">Painel executivo</p>
-    <p class="text-sm text-slate-500">Resumo da carteira com foco em relacionamento, negociacao e reativacao.</p>
+    <p class="text-xs font-semibold tracking-[0.14em] text-slate-400 uppercase">Painel executivo</p>
+    <p class="text-sm text-slate-500">
+      Resumo da carteira com foco em relacionamento, negociacao e reativacao.
+    </p>
   </div>
 </div>
 
 {#if errorMessage}
-  <div role="alert" class="mb-6 rounded-vtur-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+  <div
+    role="alert"
+    class="rounded-vtur-lg mb-6 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+  >
     {errorMessage}
   </div>
 {/if}
 
 <KPIGrid className="mb-6" columns={5}>
-  <KPICard title="Clientes na carteira" value={summary.total || totalClientes} color="clientes" icon={Users} loading={loadingSummary} />
-  <KPICard title="Clientes ativos" value={statusAtivos} color="operacao" icon={Users} loading={loadingSummary} />
-  <KPICard title="Em negociação" value={clientesEmNegociacao} color="financeiro" icon={Clock} loading={loadingSummary} />
-  <KPICard title="Aniversariantes hoje" value={aniversariantesHoje} color="clientes" icon={CalendarDays} loading={loadingSummary} />
-  <KPICard title="Total gasto" value={BRL_CURRENCY_FORMATTER.format(totalCarteira)} color="slate" icon={Wallet} loading={loadingSummary} />
+  <KPICard
+    title="Clientes na carteira"
+    value={summary.total || totalClientes}
+    color="clientes"
+    icon={Users}
+    loading={loadingSummary}
+  />
+  <KPICard
+    title="Clientes ativos"
+    value={statusAtivos}
+    color="operacao"
+    icon={Users}
+    loading={loadingSummary}
+  />
+  <KPICard
+    title="Em negociação"
+    value={clientesEmNegociacao}
+    color="financeiro"
+    icon={Clock}
+    loading={loadingSummary}
+  />
+  <KPICard
+    title="Aniversariantes hoje"
+    value={aniversariantesHoje}
+    color="clientes"
+    icon={CalendarDays}
+    loading={loadingSummary}
+  />
+  <KPICard
+    title="Total gasto"
+    value={BRL_CURRENCY_FORMATTER.format(totalCarteira)}
+    color="slate"
+    icon={Wallet}
+    loading={loadingSummary}
+  />
 </KPIGrid>
 
-<div class="mb-6 rounded-vtur-xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600 shadow-vtur-lg">
-  A carteira consolida <strong class="text-slate-900">{clientesComViagem}</strong> clientes com histórico de viagens e <strong class="text-slate-900">{clientesEmNegociacao}</strong> em negociação com orçamentos em aberto.
+<div
+  class="rounded-vtur-xl shadow-vtur-lg mb-6 border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600"
+>
+  A carteira consolida <strong class="text-slate-900">{clientesComViagem}</strong> clientes com
+  histórico de viagens e <strong class="text-slate-900">{clientesEmNegociacao}</strong> em negociação
+  com orçamentos em aberto.
 </div>
 
 <DataTable

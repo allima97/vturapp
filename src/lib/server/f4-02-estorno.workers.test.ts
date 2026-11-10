@@ -20,7 +20,7 @@ import { vi } from 'vitest';
 vi.mock('$lib/brand', () => ({
   VTUR_LOGO_URL: 'https://example.com/logo.png',
   VTUR_NOME: 'VTUR',
-  VTUR_CNPJ: '00.000.000/0001-00',
+  VTUR_CNPJ: '00.000.000/0001-00'
 }));
 
 import { env } from 'cloudflare:test';
@@ -90,8 +90,8 @@ const vendaBase: VendaNormalizada = {
       valor_taxas_centavos: 0,
       valor_total_centavos: 10_000,
       paga_comissao: true,
-      notas: null,
-    },
+      notas: null
+    }
   ],
   pagamentos: [
     {
@@ -105,9 +105,9 @@ const vendaBase: VendaNormalizada = {
       parcelas_qtd: 1,
       parcelas_valor_centavos: 10_000,
       paga_comissao: true,
-      parcelas: [{ numero: 1, valor_centavos: 10_000, vencimento: '2026-12-01' }],
-    },
-  ],
+      parcelas: [{ numero: 1, valor_centavos: 10_000, vencimento: '2026-12-01' }]
+    }
+  ]
 };
 
 // ── setup ─────────────────────────────────────────────────────────────────────
@@ -123,7 +123,6 @@ beforeAll(async () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('O. estornarPagamento — estorno financeiro', () => {
-
   // O1. Cria uma venda com pagamento e registra estorno parcial
   it('O1. estorno parcial: valor_pago reduz e nova linha de pagamento é inserida', async () => {
     const venda = await criarVenda(db(), EMPRESA_O, 'user-o1', vendaBase);
@@ -134,7 +133,7 @@ describe('O. estornarPagamento — estorno financeiro', () => {
       formaNome: 'Cartão',
       valorCentavos: 3_000,
       motivo: 'devolução parcial',
-      versaoAtual: 1,
+      versaoAtual: 1
     });
 
     // valor_pago cai do estorno
@@ -154,13 +153,13 @@ describe('O. estornarPagamento — estorno financeiro', () => {
   it('O2. estorno total: valor_pago = 0', async () => {
     const venda = await criarVenda(db(), EMPRESA_O, 'user-o1', {
       ...vendaBase,
-      chave_idempotencia: 'o2-' + Date.now(),
+      chave_idempotencia: 'o2-' + Date.now()
     });
 
     const resultado = await estornarPagamento(db(), EMPRESA_O, venda.id, {
       formaNome: 'Pix',
       valorCentavos: 10_000,
-      versaoAtual: venda.versao,
+      versaoAtual: venda.versao
     });
 
     expect(resultado.valorPagoCentavos).toBe(0);
@@ -171,14 +170,14 @@ describe('O. estornarPagamento — estorno financeiro', () => {
   it('O3. versaoAtual errada → VendaError CONFLITO_VERSAO', async () => {
     const venda = await criarVenda(db(), EMPRESA_O, 'user-o1', {
       ...vendaBase,
-      chave_idempotencia: 'o3-' + Date.now(),
+      chave_idempotencia: 'o3-' + Date.now()
     });
 
     await expect(
       estornarPagamento(db(), EMPRESA_O, venda.id, {
         formaNome: 'Cartão',
         valorCentavos: 1_000,
-        versaoAtual: 99, // errado
+        versaoAtual: 99 // errado
       })
     ).rejects.toSatisfy((e: unknown) => (e as VendaError).code === 'CONFLITO_VERSAO');
   });
@@ -189,7 +188,7 @@ describe('O. estornarPagamento — estorno financeiro', () => {
       estornarPagamento(db(), EMPRESA_O, 999_999, {
         formaNome: 'Cartão',
         valorCentavos: 1_000,
-        versaoAtual: 1,
+        versaoAtual: 1
       })
     ).rejects.toSatisfy((e: unknown) => (e as VendaError).code === 'NAO_ENCONTRADA');
   });
@@ -199,7 +198,7 @@ describe('O. estornarPagamento — estorno financeiro', () => {
     const { cancelarVenda } = await import('$lib/server/vendas/service');
     const venda = await criarVenda(db(), EMPRESA_O, 'user-o1', {
       ...vendaBase,
-      chave_idempotencia: 'o5-' + Date.now(),
+      chave_idempotencia: 'o5-' + Date.now()
     });
     await cancelarVenda(db(), EMPRESA_O, venda.id, venda.versao);
 
@@ -207,7 +206,7 @@ describe('O. estornarPagamento — estorno financeiro', () => {
       estornarPagamento(db(), EMPRESA_O, venda.id, {
         formaNome: 'Cartão',
         valorCentavos: 1_000,
-        versaoAtual: venda.versao + 1,
+        versaoAtual: venda.versao + 1
       })
     ).rejects.toSatisfy((e: unknown) => (e as VendaError).code === 'CANCELADA');
   });
@@ -216,14 +215,14 @@ describe('O. estornarPagamento — estorno financeiro', () => {
   it('O6. valor_centavos = 0 → VendaError VALIDACAO', async () => {
     const venda = await criarVenda(db(), EMPRESA_O, 'user-o1', {
       ...vendaBase,
-      chave_idempotencia: 'o6-' + Date.now(),
+      chave_idempotencia: 'o6-' + Date.now()
     });
 
     await expect(
       estornarPagamento(db(), EMPRESA_O, venda.id, {
         formaNome: 'Cartão',
         valorCentavos: 0,
-        versaoAtual: venda.versao,
+        versaoAtual: venda.versao
       })
     ).rejects.toSatisfy((e: unknown) => (e as VendaError).code === 'VALIDACAO');
   });
@@ -232,14 +231,14 @@ describe('O. estornarPagamento — estorno financeiro', () => {
   it('O7. empresa errada → VendaError NAO_ENCONTRADA', async () => {
     const venda = await criarVenda(db(), EMPRESA_O, 'user-o1', {
       ...vendaBase,
-      chave_idempotencia: 'o7-' + Date.now(),
+      chave_idempotencia: 'o7-' + Date.now()
     });
 
     await expect(
       estornarPagamento(db(), EMPRESA_O + 99, venda.id, {
         formaNome: 'Cartão',
         valorCentavos: 1_000,
-        versaoAtual: venda.versao,
+        versaoAtual: venda.versao
       })
     ).rejects.toSatisfy((e: unknown) => (e as VendaError).code === 'NAO_ENCONTRADA');
   });
@@ -248,21 +247,21 @@ describe('O. estornarPagamento — estorno financeiro', () => {
   it('O8. dois estornos sequenciais incrementam versão corretamente', async () => {
     const venda = await criarVenda(db(), EMPRESA_O, 'user-o1', {
       ...vendaBase,
-      chave_idempotencia: 'o8-' + Date.now(),
+      chave_idempotencia: 'o8-' + Date.now()
     });
     const v1 = venda.versao;
 
     const ap1 = await estornarPagamento(db(), EMPRESA_O, venda.id, {
       formaNome: 'Dinheiro',
       valorCentavos: 2_000,
-      versaoAtual: v1,
+      versaoAtual: v1
     });
     expect(ap1.versao).toBe(v1 + 1);
 
     const ap2 = await estornarPagamento(db(), EMPRESA_O, venda.id, {
       formaNome: 'Dinheiro',
       valorCentavos: 3_000,
-      versaoAtual: v1 + 1,
+      versaoAtual: v1 + 1
     });
     expect(ap2.versao).toBe(v1 + 2);
     expect(ap2.valorPagoCentavos).toBe(10_000 - 2_000 - 3_000);

@@ -5,7 +5,13 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { ensureAgendaAccess } from '$lib/server/agenda';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
-import { getAdminClient, isUuid, requireAuthenticatedUser, resolveUserScope, toErrorResponse } from '$lib/server/v1';
+import {
+  getAdminClient,
+  isUuid,
+  requireAuthenticatedUser,
+  resolveUserScope,
+  toErrorResponse
+} from '$lib/server/v1';
 
 function normalizeUpdate(body: Record<string, unknown>) {
   const payload: Record<string, unknown> = {};
@@ -90,7 +96,10 @@ async function handleUpdate(event: RequestEvent) {
     }
 
     if (!scope.isAdmin && String(existing.user_id || '') !== user.id) {
-      return json({ error: 'Sem acesso a este evento.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Sem acesso a este evento.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const payload = normalizeUpdate(body);

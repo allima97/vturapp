@@ -17,7 +17,10 @@ export async function handleAdminLogsGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      return json({ error: 'Somente administradores podem acessar logs.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Somente administradores podem acessar logs.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const { searchParams } = event.url;
@@ -30,9 +33,12 @@ export async function handleAdminLogsGet(event: RequestEvent) {
 
     let query = client
       .from('logs')
-      .select('id, modulo, acao, detalhes, user_id, ip, created_at, usuario:users!user_id(nome_completo, email)', {
-        count: 'exact'
-      })
+      .select(
+        'id, modulo, acao, detalhes, user_id, ip, created_at, usuario:users!user_id(nome_completo, email)',
+        {
+          count: 'exact'
+        }
+      )
       .order('created_at', { ascending: false })
       .range(from, to);
 
@@ -42,7 +48,10 @@ export async function handleAdminLogsGet(event: RequestEvent) {
     const { data, count, error: queryError } = await query;
     if (queryError) throw queryError;
 
-    return json({ items: data || [], total: Number(count || 0), page, pageSize }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      { items: data || [], total: Number(count || 0), page, pageSize },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar logs.');
   }

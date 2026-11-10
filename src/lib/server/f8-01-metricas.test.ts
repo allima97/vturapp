@@ -4,7 +4,7 @@
  * Não mede métricas em tempo real (impossível em teste unitário),
  * mas garante que os instrumentos de observabilidade estão no lugar:
  *
- *   U1.  Health endpoint presente e retorna JSON com campo "status"
+ *   U1.  Health endpoint presente e retorna JSON com "ok: true"
  *   U2.  Request ID propagado em todas as respostas (x-request-id)
  *   U3.  Server-Timing header declarado no middleware
  *   U4.  safeLogger não loga dados sensíveis (SENSITIVE_KEYS)
@@ -27,12 +27,12 @@ function readSrc(rel: string): string {
 }
 
 describe('Suíte U — F8-01: observabilidade e custo', () => {
-
   // U1 ───────────────────────────────────────────────────────────────────────
-  it('U1. health endpoint presente em /api/v2/health e retorna status', () => {
+  it('U1. health endpoint presente em /health e responde ok (contrato v1 migrado)', () => {
     const health = readSrc('src/lib/server/api/routes/health.ts');
-    expect(health).toContain('status');
-    expect(health).toContain('ok');
+    expect(health).toContain('ok: true');
+    const app = readSrc('src/lib/server/api/app-v2.ts');
+    expect(app).toContain("'/health'");
   });
 
   // U2 ───────────────────────────────────────────────────────────────────────
@@ -81,7 +81,9 @@ describe('Suíte U — F8-01: observabilidade e custo', () => {
     // (PLACEHOLDER_STAGING é aceitável nesta fase)
     const prodPlaceholders = (prodSection.match(/PLACEHOLDER_PROD/g) || []).length;
     if (prodPlaceholders > 0) {
-      console.warn(`[U7] ${prodPlaceholders} PLACEHOLDER_PROD ainda no wrangler.toml — substituir antes do deploy`);
+      console.warn(
+        `[U7] ${prodPlaceholders} PLACEHOLDER_PROD ainda no wrangler.toml — substituir antes do deploy`
+      );
     }
     // Não falha hard: é um aviso de configuração, não um bug de código
     expect(prodPlaceholders).toBeGreaterThanOrEqual(0);
@@ -92,7 +94,7 @@ describe('Suíte U — F8-01: observabilidade e custo', () => {
     const rotasV2 = [
       'src/lib/server/api/routes/vendas-v2/index.ts',
       'src/lib/server/api/routes/clientes-v2/index.ts',
-      'src/lib/server/api/routes/invites-v2/index.ts',
+      'src/lib/server/api/routes/invites-v2/index.ts'
     ];
     for (const rota of rotasV2) {
       const src = readSrc(rota);
@@ -107,13 +109,12 @@ describe('Suíte U — F8-01: observabilidade e custo', () => {
     const cronSrc = readSrc('src/lib/server/cron/index.ts');
     const wrangler = readSrc('wrangler.toml');
 
-    // Cron de 5 min
-    expect(cronSrc).toContain('*/5 * * * *');
-    expect(wrangler).toContain('*/5 * * * *');
-
-    // Cron nightly (3h)
-    expect(cronSrc).toContain('0 3 * * *');
-    expect(wrangler).toContain('0 3 * * *');
+    // Toda constante CRON_* exportada pelo código precisa estar no wrangler.toml
+    const extraidas = [...cronSrc.matchAll(/export const CRON_\w+ = '([^']+)'/g)].map((m) => m[1]);
+    expect(extraidas.length).toBeGreaterThanOrEqual(2);
+    for (const cron of extraidas) {
+      expect(wrangler, `wrangler.toml deve conter o cron "${cron}"`).toContain(`"${cron}"`);
+    }
   });
 
   // U10 ──────────────────────────────────────────────────────────────────────

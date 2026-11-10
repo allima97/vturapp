@@ -2,6 +2,15 @@
 /// <reference types="@cloudflare/workers-types" />
 
 declare global {
+  interface ImportMetaEnv {
+    readonly PUBLIC_DEPLOY_ENV?: string;
+    readonly PUBLIC_GEONAMES_ATIVO?: string;
+  }
+
+  interface ImportMeta {
+    readonly env: ImportMetaEnv;
+  }
+
   namespace App {
     interface Error {
       message: string;
@@ -84,6 +93,7 @@ declare global {
       env?: {
         // ── Novos bindings (D1 + R2) ────────────────────────────────────
         DB: D1Database;
+        GEO_DB?: D1Database;
         R2: R2Bucket;
         KV_BINDING: KVNamespace;
         ASSETS: Fetcher;

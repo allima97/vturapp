@@ -32,7 +32,8 @@
     aria-required={required ? 'true' : undefined}
     aria-invalid={error ? 'true' : undefined}
     aria-describedby={describedById}
-    class={`rounded-vtur-lg border px-4 py-3 ${error ? 'border-red-300 bg-red-50/40' : 'border-slate-200 bg-slate-50'} ${orientation === 'column' ? 'space-y-3' : 'flex flex-wrap gap-4'}`}>
+    class={`rounded-vtur-lg border px-4 py-3 ${error ? 'border-red-300 bg-red-50/40' : 'border-slate-200 bg-slate-50'} ${orientation === 'column' ? 'space-y-3' : 'flex flex-wrap gap-4'}`}
+  >
     {#each options as option, index}
       <label class="flex items-center gap-2 text-sm text-slate-700">
         <Radio

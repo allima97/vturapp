@@ -11,6 +11,7 @@ import {
 } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
+import { complementarListaOperacional } from '$lib/server/destinoOperacional';
 
 const MAX_VOUCHER_UPDATE_BODY_BYTES = 512 * 1024;
 const errorResponse = (message: string, status: number, success = false) =>
@@ -22,10 +23,12 @@ type VoucherDiaDraft = {
   descricao?: string | null;
   data_referencia?: string | null;
   cidade?: string | null;
+  destino_geografico_id?: string | null;
 };
 
 type VoucherHotelDraft = {
   cidade?: string | null;
+  destino_geografico_id?: string | null;
   hotel?: string | null;
   endereco?: string | null;
   data_inicio?: string | null;
@@ -62,18 +65,25 @@ export async function handleVouchersIdGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['operacao_vouchers', 'vouchers', 'operacao'], 1, 'Sem acesso a Vouchers.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_vouchers', 'vouchers', 'operacao'],
+        1,
+        'Sem acesso a Vouchers.'
+      );
     }
 
     const { data, error } = await client
       .from('vouchers')
-      .select(`
+      .select(
+        `
         id, company_id, provider, nome, codigo_sistema, codigo_fornecedor,
         reserva_online, passageiros, tipo_acomodacao, operador, resumo,
         data_inicio, data_fim, ativo, extra_data, created_at, updated_at,
         voucher_dias(id, dia_numero, titulo, descricao, data_referencia, cidade, ordem),
         voucher_hoteis(id, cidade, hotel, endereco, data_inicio, data_fim, noites, telefone, contato, status, observacao, ordem)
-      `)
+      `
+      )
       .eq('id', event.params.id)
       .maybeSingle();
 
@@ -98,7 +108,12 @@ export async function handleVouchersIdPatch(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['operacao_vouchers', 'vouchers', 'operacao'], 3, 'Sem permissão para editar vouchers.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_vouchers', 'vouchers', 'operacao'],
+        3,
+        'Sem permissão para editar vouchers.'
+      );
     }
 
     const body: VoucherUpdateBody =
@@ -108,7 +123,11 @@ export async function handleVouchersIdPatch(event: RequestEvent) {
     const id = event.params.id;
 
     // Verifica escopo
-    const { data: existing } = await client.from('vouchers').select('id, company_id').eq('id', id).maybeSingle();
+    const { data: existing } = await client
+      .from('vouchers')
+      .select('id, company_id')
+      .eq('id', id)
+      .maybeSingle();
     if (!existing) return errorResponse('Voucher não encontrado.', 404);
     if (!scope.isAdmin && existing.company_id !== scope.companyId) {
       return errorResponse('Voucher fora do escopo.', 403);
@@ -139,13 +158,21 @@ export async function handleVouchersIdPatch(event: RequestEvent) {
     // Rebuild dias
     await client.from('voucher_dias').delete().eq('voucher_id', id);
     if (Array.isArray(body.dias) && body.dias.length > 0) {
-      const diasPayload = body.dias.map((dia, index) => ({
+      const diasPreparados = await complementarListaOperacional(
+        body.dias,
+        event.platform?.env?.DB,
+        event.platform?.env?.GEO_DB,
+        'cidade'
+      );
+      if (!diasPreparados.ok) return errorResponse(diasPreparados.error, diasPreparados.status);
+      const diasPayload = diasPreparados.itens.map((dia, index) => ({
         voucher_id: id,
         dia_numero: dia.dia_numero || index + 1,
         titulo: dia.titulo || null,
         descricao: String(dia.descricao || ''),
         data_referencia: dia.data_referencia || null,
         cidade: dia.cidade || null,
+        ...(dia.destino_geografico_id ? { destino_geografico_id: dia.destino_geografico_id } : {}),
         ordem: index
       }));
       await client.from('voucher_dias').insert(diasPayload);
@@ -154,9 +181,20 @@ export async function handleVouchersIdPatch(event: RequestEvent) {
     // Rebuild hoteis
     await client.from('voucher_hoteis').delete().eq('voucher_id', id);
     if (Array.isArray(body.hoteis) && body.hoteis.length > 0) {
-      const hoteisPayload = body.hoteis.map((hotel, index) => ({
+      const hoteisPreparados = await complementarListaOperacional(
+        body.hoteis,
+        event.platform?.env?.DB,
+        event.platform?.env?.GEO_DB,
+        'cidade'
+      );
+      if (!hoteisPreparados.ok)
+        return errorResponse(hoteisPreparados.error, hoteisPreparados.status);
+      const hoteisPayload = hoteisPreparados.itens.map((hotel, index) => ({
         voucher_id: id,
         cidade: String(hotel.cidade || ''),
+        ...(hotel.destino_geografico_id
+          ? { destino_geografico_id: hotel.destino_geografico_id }
+          : {}),
         hotel: String(hotel.hotel || ''),
         endereco: hotel.endereco || null,
         data_inicio: hotel.data_inicio || null,
@@ -187,12 +225,21 @@ export async function handleVouchersIdDelete(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['operacao_vouchers', 'vouchers', 'operacao'], 4, 'Sem permissão para excluir vouchers.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_vouchers', 'vouchers', 'operacao'],
+        4,
+        'Sem permissão para excluir vouchers.'
+      );
     }
 
     const id = event.params.id;
 
-    const { data: existing } = await client.from('vouchers').select('id, company_id').eq('id', id).maybeSingle();
+    const { data: existing } = await client
+      .from('vouchers')
+      .select('id, company_id')
+      .eq('id', id)
+      .maybeSingle();
     if (!existing) return errorResponse('Voucher não encontrado.', 404);
     if (!scope.isAdmin && existing.company_id !== scope.companyId) {
       return errorResponse('Voucher fora do escopo.', 403);

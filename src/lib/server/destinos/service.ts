@@ -29,7 +29,7 @@ export interface DestinoInput {
 
 export interface ListarDestinosOpts {
   busca?: string;
-  pais?: string;   // filtra por pais_cod (ISO alpha-2)
+  pais?: string; // filtra por pais_cod (ISO alpha-2)
   limite?: number;
   incluirInativos?: boolean;
 }
@@ -100,7 +100,7 @@ export async function criarDestino(db: DrizzleDb, dados: DestinoInput): Promise<
       notas: dados.notas ?? null,
       ativo: dados.ativo ?? true,
       criadoEm: agora,
-      atualizadoEm: agora,
+      atualizadoEm: agora
     })
     .returning();
 
@@ -128,16 +128,16 @@ export async function editarDestino(
   const patch: Record<string, unknown> = { atualizadoEm: new Date().toISOString() };
 
   if (dados.nome !== undefined) patch['nome'] = dados.nome.trim();
-  if ('cidade'     in dados) patch['cidade']     = dados.cidade     ?? null;
-  if ('estado'     in dados) patch['estado']     = dados.estado     ?? null;
-  if ('estadoCod'  in dados) patch['estadoCod']  = dados.estadoCod  ?? null;
-  if ('pais'       in dados) patch['pais']       = dados.pais       ?? null;
-  if ('paisCod'    in dados) patch['paisCod']    = dados.paisCod    ?? null;
+  if ('cidade' in dados) patch['cidade'] = dados.cidade ?? null;
+  if ('estado' in dados) patch['estado'] = dados.estado ?? null;
+  if ('estadoCod' in dados) patch['estadoCod'] = dados.estadoCod ?? null;
+  if ('pais' in dados) patch['pais'] = dados.pais ?? null;
+  if ('paisCod' in dados) patch['paisCod'] = dados.paisCod ?? null;
   if ('continente' in dados) patch['continente'] = dados.continente ?? null;
-  if ('lat'        in dados) patch['lat']        = dados.lat        ?? null;
-  if ('lng'        in dados) patch['lng']        = dados.lng        ?? null;
-  if ('notas'      in dados) patch['notas']      = dados.notas      ?? null;
-  if (dados.ativo  !== undefined) patch['ativo'] = dados.ativo;
+  if ('lat' in dados) patch['lat'] = dados.lat ?? null;
+  if ('lng' in dados) patch['lng'] = dados.lng ?? null;
+  if ('notas' in dados) patch['notas'] = dados.notas ?? null;
+  if (dados.ativo !== undefined) patch['ativo'] = dados.ativo;
 
   await db.update(destinos).set(patch).where(eq(destinos.id, id));
   return obterDestino(db, id);

@@ -13,36 +13,84 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./id-acompanhantes-acompanhanteId', () => ({ handleClientesIdAcompanhantesAcompanhanteIdPatch: spy('handleClientesIdAcompanhantesAcompanhanteIdPatch'), handleClientesIdAcompanhantesAcompanhanteIdDelete: spy('handleClientesIdAcompanhantesAcompanhanteIdDelete') }));
+vi.mock('./id-acompanhantes-acompanhanteId', () => ({
+  handleClientesIdAcompanhantesAcompanhanteIdPatch: spy(
+    'handleClientesIdAcompanhantesAcompanhanteIdPatch'
+  ),
+  handleClientesIdAcompanhantesAcompanhanteIdDelete: spy(
+    'handleClientesIdAcompanhantesAcompanhanteIdDelete'
+  )
+}));
 vi.mock('./root', () => ({ handleClientesGet: spy('handleClientesGet') }));
-vi.mock('./id', () => ({ handleClientesIdGet: spy('handleClientesIdGet'), handleClientesIdPatch: spy('handleClientesIdPatch'), handleClientesIdDelete: spy('handleClientesIdDelete') }));
-vi.mock('./id-acompanhantes', () => ({ handleClientesIdAcompanhantesGet: spy('handleClientesIdAcompanhantesGet'), handleClientesIdAcompanhantesPost: spy('handleClientesIdAcompanhantesPost') }));
-vi.mock('./avisos-history', () => ({ handleClientesAvisosHistoryGet: spy('handleClientesAvisosHistoryGet') }));
-vi.mock('./avisos-send', () => ({ handleClientesAvisosSendGet: spy('handleClientesAvisosSendGet'), handleClientesAvisosSendPost: spy('handleClientesAvisosSendPost') }));
-vi.mock('./avisos-templates', () => ({ handleClientesAvisosTemplatesGet: spy('handleClientesAvisosTemplatesGet') }));
+vi.mock('./id', () => ({
+  handleClientesIdGet: spy('handleClientesIdGet'),
+  handleClientesIdPatch: spy('handleClientesIdPatch'),
+  handleClientesIdDelete: spy('handleClientesIdDelete')
+}));
+vi.mock('./id-acompanhantes', () => ({
+  handleClientesIdAcompanhantesGet: spy('handleClientesIdAcompanhantesGet'),
+  handleClientesIdAcompanhantesPost: spy('handleClientesIdAcompanhantesPost')
+}));
+vi.mock('./avisos-history', () => ({
+  handleClientesAvisosHistoryGet: spy('handleClientesAvisosHistoryGet')
+}));
+vi.mock('./avisos-send', () => ({
+  handleClientesAvisosSendGet: spy('handleClientesAvisosSendGet'),
+  handleClientesAvisosSendPost: spy('handleClientesAvisosSendPost')
+}));
+vi.mock('./avisos-templates', () => ({
+  handleClientesAvisosTemplatesGet: spy('handleClientesAvisosTemplatesGet')
+}));
 vi.mock('./create', () => ({ handleClientesCreatePost: spy('handleClientesCreatePost') }));
 vi.mock('./delete', () => ({ handleClientesDeleteDelete: spy('handleClientesDeleteDelete') }));
 vi.mock('./historico', () => ({ handleClientesHistoricoGet: spy('handleClientesHistoricoGet') }));
 vi.mock('./list', () => ({ handleClientesListGet: spy('handleClientesListGet') }));
-vi.mock('./resolve-import', () => ({ handleClientesResolveImportPost: spy('handleClientesResolveImportPost') }));
-vi.mock('./template-dispatches', () => ({ handleClientesTemplateDispatchesGet: spy('handleClientesTemplateDispatchesGet'), handleClientesTemplateDispatchesPost: spy('handleClientesTemplateDispatchesPost') }));
-vi.mock('./templates-send', () => ({ handleClientesTemplatesSendPost: spy('handleClientesTemplatesSendPost') }));
+vi.mock('./resolve-import', () => ({
+  handleClientesResolveImportPost: spy('handleClientesResolveImportPost')
+}));
+vi.mock('./template-dispatches', () => ({
+  handleClientesTemplateDispatchesGet: spy('handleClientesTemplateDispatchesGet'),
+  handleClientesTemplateDispatchesPost: spy('handleClientesTemplateDispatchesPost')
+}));
+vi.mock('./templates-send', () => ({
+  handleClientesTemplatesSendPost: spy('handleClientesTemplatesSendPost')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 
 const CASES: Array<[string, string, string, Record<string, string>]> = [
-  ['PATCH', '/api/v1/clientes/id-123/acompanhantes/ac-9', 'handleClientesIdAcompanhantesAcompanhanteIdPatch', {"id": "id-123", "acompanhanteId": "ac-9"}],
-  ['DELETE', '/api/v1/clientes/id-123/acompanhantes/ac-9', 'handleClientesIdAcompanhantesAcompanhanteIdDelete', {"id": "id-123", "acompanhanteId": "ac-9"}],
+  [
+    'PATCH',
+    '/api/v1/clientes/id-123/acompanhantes/ac-9',
+    'handleClientesIdAcompanhantesAcompanhanteIdPatch',
+    { id: 'id-123', acompanhanteId: 'ac-9' }
+  ],
+  [
+    'DELETE',
+    '/api/v1/clientes/id-123/acompanhantes/ac-9',
+    'handleClientesIdAcompanhantesAcompanhanteIdDelete',
+    { id: 'id-123', acompanhanteId: 'ac-9' }
+  ],
   ['GET', '/api/v1/clientes', 'handleClientesGet', {}],
-  ['GET', '/api/v1/clientes/id-123', 'handleClientesIdGet', {"id": "id-123"}],
-  ['PATCH', '/api/v1/clientes/id-123', 'handleClientesIdPatch', {"id": "id-123"}],
-  ['DELETE', '/api/v1/clientes/id-123', 'handleClientesIdDelete', {"id": "id-123"}],
-  ['GET', '/api/v1/clientes/id-123/acompanhantes', 'handleClientesIdAcompanhantesGet', {"id": "id-123"}],
-  ['POST', '/api/v1/clientes/id-123/acompanhantes', 'handleClientesIdAcompanhantesPost', {"id": "id-123"}],
+  ['GET', '/api/v1/clientes/id-123', 'handleClientesIdGet', { id: 'id-123' }],
+  ['PATCH', '/api/v1/clientes/id-123', 'handleClientesIdPatch', { id: 'id-123' }],
+  ['DELETE', '/api/v1/clientes/id-123', 'handleClientesIdDelete', { id: 'id-123' }],
+  [
+    'GET',
+    '/api/v1/clientes/id-123/acompanhantes',
+    'handleClientesIdAcompanhantesGet',
+    { id: 'id-123' }
+  ],
+  [
+    'POST',
+    '/api/v1/clientes/id-123/acompanhantes',
+    'handleClientesIdAcompanhantesPost',
+    { id: 'id-123' }
+  ],
   ['GET', '/api/v1/clientes/avisos/history', 'handleClientesAvisosHistoryGet', {}],
   ['GET', '/api/v1/clientes/avisos/send', 'handleClientesAvisosSendGet', {}],
   ['POST', '/api/v1/clientes/avisos/send', 'handleClientesAvisosSendPost', {}],
@@ -54,7 +102,7 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['POST', '/api/v1/clientes/resolve-import', 'handleClientesResolveImportPost', {}],
   ['GET', '/api/v1/clientes/template-dispatches', 'handleClientesTemplateDispatchesGet', {}],
   ['POST', '/api/v1/clientes/template-dispatches', 'handleClientesTemplateDispatchesPost', {}],
-  ['POST', '/api/v1/clientes/templates/send', 'handleClientesTemplatesSendPost', {}],
+  ['POST', '/api/v1/clientes/templates/send', 'handleClientesTemplatesSendPost', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
@@ -70,7 +118,7 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/clientes/list'],
   ['PUT', '/api/v1/clientes/resolve-import'],
   ['PUT', '/api/v1/clientes/template-dispatches'],
-  ['PUT', '/api/v1/clientes/templates/send'],
+  ['PUT', '/api/v1/clientes/templates/send']
 ];
 
 function ev(method: string, path: string) {

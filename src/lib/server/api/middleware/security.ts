@@ -47,24 +47,15 @@ export const securityHeaders: MiddlewareHandler<ApiEnv> = async (c, next) => {
   res.headers.set('referrer-policy', 'strict-origin-when-cross-origin');
 
   // Permissions-Policy — desabilita câmera, microfone, geolocalização
-  res.headers.set(
-    'permissions-policy',
-    'camera=(), microphone=(), geolocation=(), payment=()'
-  );
+  res.headers.set('permissions-policy', 'camera=(), microphone=(), geolocation=(), payment=()');
 
   // HSTS — só em produção (dev não usa HTTPS obrigatoriamente)
   if (isProd) {
-    res.headers.set(
-      'strict-transport-security',
-      'max-age=63072000; includeSubDomains; preload'
-    );
+    res.headers.set('strict-transport-security', 'max-age=63072000; includeSubDomains; preload');
   }
 
   // Content-Security-Policy — API JSON: sem scripts ou frames
-  res.headers.set(
-    'content-security-policy',
-    "default-src 'none'; frame-ancestors 'none'"
-  );
+  res.headers.set('content-security-policy', "default-src 'none'; frame-ancestors 'none'");
 
   // Cache-Control — dados da API não devem ser cacheados
   if (!res.headers.has('cache-control')) {
@@ -113,26 +104,21 @@ export function csrfProtection(allowedOrigins?: string[]): MiddlewareHandler<Api
     const allowed = allowedOrigins ?? [
       appUrl.replace(/\/$/, ''),
       'http://localhost:5173',
-      'http://localhost:4173',
+      'http://localhost:4173'
     ];
 
     // Origin null pode ser de redirecionamentos ou tools de dev
     if (origin === 'null' || !origin) {
       // Em produção, rejeita sem Origin
       if (env.PUBLIC_ENVIRONMENT === 'production') {
-        return c.json(
-          { error: 'CSRF: Origin header ausente.', code: 'CSRF_MISSING_ORIGIN' },
-          403
-        );
+        return c.json({ error: 'CSRF: Origin header ausente.', code: 'CSRF_MISSING_ORIGIN' }, 403);
       }
       // Em dev, aceita (facilita curl e testes)
       return next();
     }
 
     // Verifica se Origin está na lista de permitidos
-    const originAllowed = allowed.some(
-      (a) => origin === a || origin.startsWith(a + '/')
-    );
+    const originAllowed = allowed.some((a) => origin === a || origin.startsWith(a + '/'));
 
     if (!originAllowed) {
       // Tenta Referer como fallback
@@ -141,7 +127,7 @@ export function csrfProtection(allowedOrigins?: string[]): MiddlewareHandler<Api
         return c.json(
           {
             error: `CSRF: Origin '${origin}' não permitido.`,
-            code: 'CSRF_INVALID_ORIGIN',
+            code: 'CSRF_INVALID_ORIGIN'
           },
           403
         );

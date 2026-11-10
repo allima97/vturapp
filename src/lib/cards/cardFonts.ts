@@ -1,4 +1,4 @@
-const CARD_FONT_BASE_URL = "/assets/cards/fonts";
+const CARD_FONT_BASE_URL = '/assets/cards/fonts';
 const alegreyaSansRegularUrl = `${CARD_FONT_BASE_URL}/AlegreyaSans-Regular.ttf`;
 const alegreyaSansMediumUrl = `${CARD_FONT_BASE_URL}/AlegreyaSans-Medium.ttf`;
 const alegreyaSansBoldUrl = `${CARD_FONT_BASE_URL}/AlegreyaSans-Bold.ttf`;

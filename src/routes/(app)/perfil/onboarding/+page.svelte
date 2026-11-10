@@ -51,13 +51,45 @@
     uso_individual: null as boolean | null
   };
 
-  const ESTADOS = ['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'];
+  const ESTADOS = [
+    'AC',
+    'AL',
+    'AP',
+    'AM',
+    'BA',
+    'CE',
+    'DF',
+    'ES',
+    'GO',
+    'MA',
+    'MT',
+    'MS',
+    'MG',
+    'PA',
+    'PB',
+    'PR',
+    'PE',
+    'PI',
+    'RJ',
+    'RN',
+    'RS',
+    'RO',
+    'RR',
+    'SC',
+    'SP',
+    'SE',
+    'TO'
+  ];
 
   async function load() {
     const request = loadGuard.next();
     loading = true;
     try {
-      const perfil = await apiGet<PerfilOnboarding>('/api/v1/user/profile', undefined, request.signal);
+      const perfil = await apiGet<PerfilOnboarding>(
+        '/api/v1/user/profile',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       form = {
         nome_completo: perfil.nome_completo || '',
@@ -90,9 +122,18 @@
     const request = cepGuard.next();
     cepStatus = 'Buscando CEP...';
     try {
-      const data = await apiGet<CepResponse>('/api/v1/enderecos/cep', { cep: digits }, request.signal);
+      const data = await apiGet<CepResponse>(
+        '/api/v1/enderecos/cep',
+        { cep: digits },
+        request.signal
+      );
       if (!cepGuard.isCurrent(request.seq)) return;
-      form = { ...form, endereco: data.logradouro || form.endereco, cidade: data.localidade || form.cidade, estado: data.uf || form.estado };
+      form = {
+        ...form,
+        endereco: data.logradouro || form.endereco,
+        cidade: data.localidade || form.cidade,
+        estado: data.uf || form.estado
+      };
       cepStatus = 'Endereço carregado.';
     } catch (err) {
       if (isCanceledApiError(err)) return;
@@ -101,9 +142,18 @@
   }
 
   async function save() {
-    if (!form.nome_completo.trim()) { toast.error('Nome completo obrigatório.'); return; }
-    if (!form.telefone.trim()) { toast.error('Telefone obrigatório.'); return; }
-    if (form.uso_individual === null) { toast.error('Informe o tipo de uso do sistema.'); return; }
+    if (!form.nome_completo.trim()) {
+      toast.error('Nome completo obrigatório.');
+      return;
+    }
+    if (!form.telefone.trim()) {
+      toast.error('Telefone obrigatório.');
+      return;
+    }
+    if (form.uso_individual === null) {
+      toast.error('Informe o tipo de uso do sistema.');
+      return;
+    }
 
     saving = true;
     try {
@@ -148,14 +198,18 @@
 />
 
 {#if camposFaltando.length > 0}
-  <div class="mb-6 rounded-vtur-lg border border-amber-200 bg-amber-50 px-4 py-3">
+  <div class="rounded-vtur-lg mb-6 border border-amber-200 bg-amber-50 px-4 py-3">
     <p class="text-sm font-medium text-amber-800">Campos obrigatórios pendentes:</p>
     <p class="mt-1 text-sm text-amber-700">{camposFaltando.join(', ')}</p>
   </div>
 {:else}
-  <div class="mb-6 rounded-vtur-lg border border-green-200 bg-green-50 px-4 py-3 flex items-center gap-2">
+  <div
+    class="rounded-vtur-lg mb-6 flex items-center gap-2 border border-green-200 bg-green-50 px-4 py-3"
+  >
     <CheckCircle size={18} class="text-green-600" />
-    <p class="text-sm font-medium text-green-800">Todos os campos obrigatórios estão preenchidos!</p>
+    <p class="text-sm font-medium text-green-800">
+      Todos os campos obrigatórios estão preenchidos!
+    </p>
   </div>
 {/if}
 
@@ -165,11 +219,48 @@
   <form on:submit|preventDefault={save} class="space-y-6">
     <Card title="Dados pessoais">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <FieldInput id="ob-nome" label="Nome completo" required bind:value={form.nome_completo} placeholder="Seu nome completo" icon={User} class_name="lg:col-span-2 w-full" />
-        <FieldInput id="ob-cpf" label="CPF" required bind:value={form.cpf} placeholder="000.000.000-00" maxlength={14} class_name="w-full" />
-        <FieldInput id="ob-nascimento" label="Data de nascimento" required type="date" bind:value={form.data_nascimento} class_name="w-full" />
-        <FieldInput id="ob-telefone" label="Telefone" required bind:value={form.telefone} placeholder="(00) 00000-0000" icon={Phone} class_name="w-full" />
-        <FieldInput id="ob-whatsapp" label="WhatsApp" bind:value={form.whatsapp} placeholder="(00) 00000-0000" class_name="w-full" />
+        <FieldInput
+          id="ob-nome"
+          label="Nome completo"
+          required
+          bind:value={form.nome_completo}
+          placeholder="Seu nome completo"
+          icon={User}
+          class_name="lg:col-span-2 w-full"
+        />
+        <FieldInput
+          id="ob-cpf"
+          label="CPF"
+          required
+          bind:value={form.cpf}
+          placeholder="000.000.000-00"
+          maxlength={14}
+          class_name="w-full"
+        />
+        <FieldInput
+          id="ob-nascimento"
+          label="Data de nascimento"
+          required
+          type="date"
+          bind:value={form.data_nascimento}
+          class_name="w-full"
+        />
+        <FieldInput
+          id="ob-telefone"
+          label="Telefone"
+          required
+          bind:value={form.telefone}
+          placeholder="(00) 00000-0000"
+          icon={Phone}
+          class_name="w-full"
+        />
+        <FieldInput
+          id="ob-whatsapp"
+          label="WhatsApp"
+          bind:value={form.whatsapp}
+          placeholder="(00) 00000-0000"
+          class_name="w-full"
+        />
       </div>
     </Card>
 
@@ -195,17 +286,45 @@
 
     <Card title="Endereço">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <FieldInput id="ob-cep" label="CEP" required bind:value={form.cep} placeholder="00000-000" maxlength={9} icon={MapPin} on:blur={buscarCep} class_name="w-full" />
+        <FieldInput
+          id="ob-cep"
+          label="CEP"
+          required
+          bind:value={form.cep}
+          placeholder="00000-000"
+          maxlength={9}
+          icon={MapPin}
+          on:blur={buscarCep}
+          class_name="w-full"
+        />
         {#if cepStatus}<p class="text-xs text-slate-500">{cepStatus}</p>{/if}
-        <FieldInput id="ob-endereco" label="Endereço" bind:value={form.endereco} class_name="lg:col-span-2 w-full" />
-        <FieldInput id="ob-numero" label="Número" required bind:value={form.numero} placeholder="123" class_name="w-full" />
-        <FieldInput id="ob-cidade" label="Cidade" required bind:value={form.cidade} class_name="w-full" />
+        <FieldInput
+          id="ob-endereco"
+          label="Endereço"
+          bind:value={form.endereco}
+          class_name="lg:col-span-2 w-full"
+        />
+        <FieldInput
+          id="ob-numero"
+          label="Número"
+          required
+          bind:value={form.numero}
+          placeholder="123"
+          class_name="w-full"
+        />
+        <FieldInput
+          id="ob-cidade"
+          label="Cidade"
+          required
+          bind:value={form.cidade}
+          class_name="w-full"
+        />
         <FieldSelect
           id="ob-estado"
           label="Estado"
           required
           bind:value={form.estado}
-          options={ESTADOS.map(uf => ({ value: uf, label: uf }))}
+          options={ESTADOS.map((uf) => ({ value: uf, label: uf }))}
           placeholder="Selecione uma opção"
           class_name="w-full"
         />

@@ -51,7 +51,10 @@ type MasterCompanyLinkCountRow = {
   company_id?: string | null;
 };
 
-async function loadCompaniesWithBilling(client: ReturnType<typeof getAdminClient>, companyIds: string[] | null) {
+async function loadCompaniesWithBilling(
+  client: ReturnType<typeof getAdminClient>,
+  companyIds: string[] | null
+) {
   // companies schema: id, nome_fantasia, nome_empresa, cnpj, telefone, endereco, cidade, estado, active
   const buildBillingQuery = (idsFilter: string[] | null) => {
     const queryWithBilling = client
@@ -79,7 +82,9 @@ async function loadCompaniesWithBilling(client: ReturnType<typeof getAdminClient
       )
       .order('nome_fantasia', { ascending: true });
 
-    return idsFilter && idsFilter.length > 0 ? queryWithBilling.in('id', idsFilter) : queryWithBilling;
+    return idsFilter && idsFilter.length > 0
+      ? queryWithBilling.in('id', idsFilter)
+      : queryWithBilling;
   };
 
   const loadWithBilling = async () => {
@@ -103,7 +108,9 @@ async function loadCompaniesWithBilling(client: ReturnType<typeof getAdminClient
   try {
     return await loadWithBilling();
   } catch (withBillingError: unknown) {
-    const message = String((withBillingError as { message?: unknown })?.message || '').toLowerCase();
+    const message = String(
+      (withBillingError as { message?: unknown })?.message || ''
+    ).toLowerCase();
     if (!message.includes('company_billing') && !message.includes('plans')) {
       throw withBillingError;
     }
@@ -212,13 +219,22 @@ export async function handleAdminEmpresasPost(event: RequestEvent) {
     if (companyId) {
       const accessibleCompanySet = cleanStringSet(getAccessibleCompanyIds(scope));
       if (!scope.isAdmin && !accessibleCompanySet.has(companyId)) {
-        return new Response('Empresa fora do escopo permitido.', { status: 403, headers: NO_STORE_HEADERS });
+        return new Response('Empresa fora do escopo permitido.', {
+          status: 403,
+          headers: NO_STORE_HEADERS
+        });
       }
-      const { error: updateError } = await client.from('companies').update(payload).eq('id', companyId);
+      const { error: updateError } = await client
+        .from('companies')
+        .update(payload)
+        .eq('id', companyId);
       if (updateError) throw updateError;
     } else {
       if (!scope.isAdmin) {
-        return new Response('Somente ADMIN pode criar empresas.', { status: 403, headers: NO_STORE_HEADERS });
+        return new Response('Somente ADMIN pode criar empresas.', {
+          status: 403,
+          headers: NO_STORE_HEADERS
+        });
       }
       const { data, error: insertError } = await client
         .from('companies')
@@ -258,7 +274,9 @@ export async function handleAdminEmpresasPost(event: RequestEvent) {
             .eq('id', existingBilling.data.id);
           if (billingUpdateError) throw billingUpdateError;
         } else {
-          const { error: billingInsertError } = await client.from('company_billing').insert(billingPayload);
+          const { error: billingInsertError } = await client
+            .from('company_billing')
+            .insert(billingPayload);
           if (billingInsertError) throw billingInsertError;
         }
       } catch {

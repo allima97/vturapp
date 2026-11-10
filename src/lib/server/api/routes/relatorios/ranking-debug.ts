@@ -30,7 +30,7 @@ import {
   resolveScopedCompanyIds,
   resolveUserScope,
   sanitizePostgrestSearchTerm,
-  toErrorResponse,
+  toErrorResponse
 } from '$lib/server/v1';
 import { findEquipeVturVendedor } from '$lib/conciliacao/baixaRac';
 import { monthRangeFromKey } from '$lib/date';
@@ -168,7 +168,10 @@ function canMutateRankingDebug(scope: Awaited<ReturnType<typeof resolveUserScope
   return scope.isAdmin || scope.isMaster;
 }
 
-function canAccessCompany(scope: Awaited<ReturnType<typeof resolveUserScope>>, companyId: string | null | undefined) {
+function canAccessCompany(
+  scope: Awaited<ReturnType<typeof resolveUserScope>>,
+  companyId: string | null | undefined
+) {
   const normalizedCompanyId = String(companyId || '').trim();
   if (scope.isAdmin) return true;
   return Boolean(normalizedCompanyId && scope.companyIds.includes(normalizedCompanyId));
@@ -217,7 +220,10 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
         return debugJson({ error: 'Mes invalido.' }, { status: 400 });
       }
       const { inicio, fim } = range;
-      const requestedLimit = parseIntSafe(event.url.searchParams.get('limit'), MAX_DEBUG_CONTRIBUICOES);
+      const requestedLimit = parseIntSafe(
+        event.url.searchParams.get('limit'),
+        MAX_DEBUG_CONTRIBUICOES
+      );
       const maxContribuicoes = Math.max(1, Math.min(requestedLimit, MAX_DEBUG_CONTRIBUICOES));
       const companyIds = resolveDebugCompanyIds(scope, event.url.searchParams.get('empresa_id'));
       const requestedVendedorRaw =
@@ -263,7 +269,17 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
         vendedorIds
       });
 
-      const porVendedor = new Map<string, { vendedor_id: string; vendedor_nome: string; total: number; taxas: number; seguro: number; recibos: number }>();
+      const porVendedor = new Map<
+        string,
+        {
+          vendedor_id: string;
+          vendedor_nome: string;
+          total: number;
+          taxas: number;
+          seguro: number;
+          recibos: number;
+        }
+      >();
       for (const item of canonical.contributions) {
         const vendedorId = String(item.vendedorId || '').trim();
         if (!vendedorId) continue;
@@ -323,19 +339,20 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
       usersQuery = applyCompanyScope(usersQuery, scope, event.url.searchParams.get('empresa_id'));
       const { data: usersData } = await usersQuery;
       const users = (usersData || []) as DebugUserRow[];
-      const userIds = users
-        .map((u) => String(u.id || '').trim())
-        .filter(Boolean);
+      const userIds = users.map((u) => String(u.id || '').trim()).filter(Boolean);
       const userNomes: Record<string, string> = Object.fromEntries(
-        users.map((u) => [String(u.id || ''), String(u.nome_completo || '')]),
+        users.map((u) => [String(u.id || ''), String(u.nome_completo || '')])
       );
 
-      if (userIds.length === 0) return debugJson({ erro: `Nenhum usuário encontrado com nome "${vendedorBusca}"` });
+      if (userIds.length === 0)
+        return debugJson({ erro: `Nenhum usuário encontrado com nome "${vendedorBusca}"` });
 
       // 2. Buscar todos os registros de conciliação atribuídos a esse(s) vendedor(es)
       const { data: concRows, error: concErr } = await client
         .from('conciliacao_recibos')
-        .select('id, documento, status, descricao, movimento_data, valor_lancamentos, valor_venda_real, valor_taxas, valor_descontos, valor_abatimentos, valor_nao_comissionavel, is_seguro_viagem, faixa_comissao, ranking_vendedor_id, company_id')
+        .select(
+          'id, documento, status, descricao, movimento_data, valor_lancamentos, valor_venda_real, valor_taxas, valor_descontos, valor_abatimentos, valor_nao_comissionavel, is_seguro_viagem, faixa_comissao, ranking_vendedor_id, company_id'
+        )
         .in('ranking_vendedor_id', userIds)
         .gte('movimento_data', inicio)
         .lte('movimento_data', fim)
@@ -365,12 +382,16 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
         return Math.max(0, lanc - desc - abat - naoC);
       };
       const isSeguro = (r: RankingDebugConcEntry) =>
-        Boolean(r.is_seguro_viagem) ||
-        SEGURO_FAIXAS_COMISSAO.has(String(r.faixa_comissao || ''));
+        Boolean(r.is_seguro_viagem) || SEGURO_FAIXAS_COMISSAO.has(String(r.faixa_comissao || ''));
 
       const totalBruto = recibosVendedor.reduce((s: number, r) => s + calcBruto(r), 0);
-      const totalSeguro = recibosVendedor.filter(isSeguro).reduce((s: number, r) => s + calcBruto(r), 0);
-      const totalReal = recibosVendedor.reduce((s: number, r) => s + Number(r.valor_venda_real || 0), 0);
+      const totalSeguro = recibosVendedor
+        .filter(isSeguro)
+        .reduce((s: number, r) => s + calcBruto(r), 0);
+      const totalReal = recibosVendedor.reduce(
+        (s: number, r) => s + Number(r.valor_venda_real || 0),
+        0
+      );
 
       // 3. Buscar também registros onde o documento aparece mas está atribuído a OUTRO vendedor
       // — para detectar se recibos que deveriam ser do Leonardo foram para o Márcio
@@ -388,23 +409,23 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
       }
 
       const docsDasVendas: string[] = [];
-      for (const v of (vendasRows || [])) {
+      for (const v of vendasRows || []) {
         for (const r of v.vendas_recibos || []) {
           if (r.numero_recibo) docsDasVendas.push(String(r.numero_recibo));
         }
       }
 
       // 4. Para esses documentos, ver quem está atribuído na conciliação
-      let concAtribuicaoOutros: Array<
-        RankingDebugConcRow & { ranking_vendedor_nome: string }
-      > = [];
+      let concAtribuicaoOutros: Array<RankingDebugConcRow & { ranking_vendedor_nome: string }> = [];
       if (docsDasVendas.length > 0) {
         const outrosRawRows: RankingDebugConcRow[] = [];
         const userIdSet = new Set(userIds);
         for (const docsBatch of chunkArray(docsDasVendas)) {
           const { data } = await client
             .from('conciliacao_recibos')
-            .select('id, documento, status, descricao, movimento_data, valor_lancamentos, valor_venda_real, ranking_vendedor_id')
+            .select(
+              'id, documento, status, descricao, movimento_data, valor_lancamentos, valor_venda_real, ranking_vendedor_id'
+            )
             .in('documento', docsBatch)
             .gte('movimento_data', inicio)
             .lte('movimento_data', fim)
@@ -422,18 +443,21 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
         const outrosIds = Array.from(outrosIdSet);
         const outrosUsers: DebugUserRow[] = [];
         for (const outrosBatch of chunkArray(outrosIds)) {
-          const { data } = await client.from('users').select('id, nome_completo').in('id', outrosBatch);
+          const { data } = await client
+            .from('users')
+            .select('id, nome_completo')
+            .in('id', outrosBatch);
           outrosUsers.push(...((data || []) as DebugUserRow[]));
         }
         const outrosNomes: Record<string, string> = Object.fromEntries(
-          outrosUsers.map((u) => [String(u.id || ''), String(u.nome_completo || '')]),
+          outrosUsers.map((u) => [String(u.id || ''), String(u.nome_completo || '')])
         );
         concAtribuicaoOutros = (outrosRows || []).map((r) => ({
           ...r,
           ranking_vendedor_nome:
             outrosNomes[String(r.ranking_vendedor_id || '')] ||
             String(r.ranking_vendedor_id || '') ||
-            '(sem vendedor)',
+            '(sem vendedor)'
         }));
       }
 
@@ -459,12 +483,12 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
           ranking_vendedor_id: r.ranking_vendedor_id,
           ranking_vendedor_nome:
             userNomes[String(r.ranking_vendedor_id || '')] || r.ranking_vendedor_id,
-          company_id: r.company_id,
+          company_id: r.company_id
         })),
         possiveis_recibos_desviados: concAtribuicaoOutros,
         resumo: {
           atribuidos_unicos: recibosVendedor.length,
-          possiveis_desvios: concAtribuicaoOutros.length,
+          possiveis_desvios: concAtribuicaoOutros.length
         }
       });
     }
@@ -472,16 +496,13 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
     // Modo listagem de descrições distintas no banco: ?descricoes=1
     const listarDescricoes = event.url.searchParams.get('descricoes');
     if (listarDescricoes) {
-      let q = client
-        .from('conciliacao_recibos')
-        .select('descricao, status')
-        .limit(2000);
+      let q = client.from('conciliacao_recibos').select('descricao, status').limit(2000);
       q = applyCompanyScope(q, scope, event.url.searchParams.get('empresa_id'));
       const { data: descRows, error: descErr } = await q;
       if (descErr) throw descErr;
       // Agrupa por (descricao, status) com contagem
       const counts = new Map<string, number>();
-      for (const r of (descRows || [])) {
+      for (const r of descRows || []) {
         const key = `${r.status}||${r.descricao || ''}`;
         counts.set(key, (counts.get(key) || 0) + 1);
       }
@@ -495,14 +516,21 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
     }
 
     // Modo busca de usuário: ?busca_usuario=Sandra
-    const buscaUsuario = sanitizePostgrestSearchTerm(event.url.searchParams.get('busca_usuario'), 80);
+    const buscaUsuario = sanitizePostgrestSearchTerm(
+      event.url.searchParams.get('busca_usuario'),
+      80
+    );
     if (buscaUsuario.length >= 2) {
       let usuariosQuery = client
         .from('users')
         .select('id, nome_completo')
         .ilike('nome_completo', `%${buscaUsuario}%`)
         .limit(10);
-      usuariosQuery = applyCompanyScope(usuariosQuery, scope, event.url.searchParams.get('empresa_id'));
+      usuariosQuery = applyCompanyScope(
+        usuariosQuery,
+        scope,
+        event.url.searchParams.get('empresa_id')
+      );
       const { data: usuarios, error: userErr } = await usuariosQuery;
       if (userErr) throw userErr;
       return debugJson({ usuarios: usuarios || [] });
@@ -521,19 +549,21 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
 
       // Metas informadas (valores de fechamento externos)
       const metasExternas: Record<string, number> = {
-        'LAZARO':    430121.61,
-        'MARCIO':    367805.28,
-        'LEONARDO':  326281.57,
-        'ANDERSON':  235824.53,
-        'ANDRE':     209151.28,
-        'TATIANA':   117471.10,
-        'SANDRA':    117639.55,
+        LAZARO: 430121.61,
+        MARCIO: 367805.28,
+        LEONARDO: 326281.57,
+        ANDERSON: 235824.53,
+        ANDRE: 209151.28,
+        TATIANA: 117471.1,
+        SANDRA: 117639.55
       };
 
       // 1. Buscar todos os recibos de conciliação do período
       let concQ = client
         .from('conciliacao_recibos')
-        .select('id, documento, movimento_data, valor_lancamentos, valor_venda_real, valor_taxas, valor_descontos, valor_abatimentos, valor_nao_comissionavel, ranking_vendedor_id, is_seguro_viagem, faixa_comissao, is_baixa_rac, status')
+        .select(
+          'id, documento, movimento_data, valor_lancamentos, valor_venda_real, valor_taxas, valor_descontos, valor_abatimentos, valor_nao_comissionavel, ranking_vendedor_id, is_seguro_viagem, faixa_comissao, is_baixa_rac, status'
+        )
         .gte('movimento_data', inicio)
         .lte('movimento_data', fim)
         .neq('is_baixa_rac', true)
@@ -569,7 +599,8 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
         recibosAtivos.push({
           ...r,
           _bruto: bruto,
-          _isSeguro: Boolean(r.is_seguro_viagem) ||
+          _isSeguro:
+            Boolean(r.is_seguro_viagem) ||
             SEGURO_FAIXAS_COMISSAO.has(String(r.faixa_comissao || ''))
         });
       }
@@ -588,7 +619,7 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
             .from('users')
             .select('id, nome_completo, company_id, active, uso_individual')
             .in('id', vendedorBatch);
-          for (const u of (usersData || [])) {
+          for (const u of usersData || []) {
             nomesMap[u.id] = u.nome_completo || u.id;
             companyMap[u.id] = u.company_id || '';
             if (u.uso_individual || !u.active) usoIndividualSet.add(u.id);
@@ -597,7 +628,16 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
       }
 
       // 3. Agregar por vendedor
-      const porVendedor: Record<string, { nome: string; total_bruto: number; total_seguro: number; qtd: number; recibos_sem_vendedor_bruto: number }> = {};
+      const porVendedor: Record<
+        string,
+        {
+          nome: string;
+          total_bruto: number;
+          total_seguro: number;
+          qtd: number;
+          recibos_sem_vendedor_bruto: number;
+        }
+      > = {};
       let semVendedorBruto = 0;
       let semVendedorQtd = 0;
       let invalidVendedorBruto = 0;
@@ -628,7 +668,13 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
           continue;
         }
         if (!porVendedor[vid]) {
-          porVendedor[vid] = { nome: nomesMap[vid] || vid, total_bruto: 0, total_seguro: 0, qtd: 0, recibos_sem_vendedor_bruto: 0 };
+          porVendedor[vid] = {
+            nome: nomesMap[vid] || vid,
+            total_bruto: 0,
+            total_seguro: 0,
+            qtd: 0,
+            recibos_sem_vendedor_bruto: 0
+          };
         }
         porVendedor[vid].total_bruto += r._bruto;
         porVendedor[vid].qtd++;
@@ -640,13 +686,16 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
         .map(([vid, dados]) => {
           const primeiroNome = dados.nome.split(' ')[0].toUpperCase();
           // Tenta casar pelo primeiro nome
-          let metaKey = Object.keys(metasExternas).find(k => primeiroNome.startsWith(k) || k.startsWith(primeiroNome));
+          let metaKey = Object.keys(metasExternas).find(
+            (k) => primeiroNome.startsWith(k) || k.startsWith(primeiroNome)
+          );
           // Casos especiais
           if (primeiroNome === 'LAZARO' || primeiroNome === 'LÁZARO') metaKey = 'LAZARO';
           if (primeiroNome === 'MARCIO' || primeiroNome === 'MÁRCIO') metaKey = 'MARCIO';
           if (primeiroNome === 'ANDRE' || primeiroNome === 'ANDRÉ') metaKey = 'ANDRE';
           const metaExterna = metaKey ? metasExternas[metaKey] : null;
-          const diferenca = metaExterna != null ? Math.round((dados.total_bruto - metaExterna) * 100) / 100 : null;
+          const diferenca =
+            metaExterna != null ? Math.round((dados.total_bruto - metaExterna) * 100) / 100 : null;
           return {
             vendedor_id: vid,
             nome: dados.nome,
@@ -655,12 +704,13 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
             total_seguro_conciliacao: Math.round(dados.total_seguro * 100) / 100,
             meta_fechamento_externo: metaExterna,
             diferenca_bruta: diferenca,
-            pct_diferenca: metaExterna != null && metaExterna > 0
-              ? Math.round((diferenca! / metaExterna) * 10000) / 100
-              : null
+            pct_diferenca:
+              metaExterna != null && metaExterna > 0
+                ? Math.round((diferenca! / metaExterna) * 10000) / 100
+                : null
           };
         })
-        .sort((a, b) => (b.total_bruto_conciliacao - a.total_bruto_conciliacao));
+        .sort((a, b) => b.total_bruto_conciliacao - a.total_bruto_conciliacao);
 
       return debugJson({
         periodo: `${inicio} a ${fim}`,
@@ -669,7 +719,7 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
         total_bruto_sem_vendedor: Math.round(semVendedorBruto * 100) / 100,
         total_bruto_invalido_uso_individual: Math.round(invalidVendedorBruto * 100) / 100,
         por_vendedor: comparacao,
-        recibos_sem_vendedor: semVendedorRecibos.slice(0, 100),
+        recibos_sem_vendedor: semVendedorRecibos.slice(0, 100)
       });
     }
 
@@ -677,7 +727,10 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
     // Lista TODOS os documentos que o sistema atribui a um vendedor via conciliação
     // (fetchEffectiveConciliacaoReceipts logic), para comparar com relatório externo.
     // Inclui: documento, movimento_data, ranking_vendedor_id, linked_venda_id, linked_recibo_id
-    const docsPorVendedor = sanitizePostgrestSearchTerm(event.url.searchParams.get('docs_por_vendedor'), 80);
+    const docsPorVendedor = sanitizePostgrestSearchTerm(
+      event.url.searchParams.get('docs_por_vendedor'),
+      80
+    );
     if (docsPorVendedor.length >= 2) {
       const mesBusca2 = event.url.searchParams.get('mes') || '2026-04';
       const range2 = monthRangeFromKey(mesBusca2);
@@ -696,15 +749,16 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
       usersQuery2 = applyCompanyScope(usersQuery2, scope, event.url.searchParams.get('empresa_id'));
       const { data: usersData2 } = await usersQuery2;
       const users2 = (usersData2 || []) as DebugUserRow[];
-      const userIds2 = users2
-        .map((u) => String(u.id || '').trim())
-        .filter(Boolean);
-      if (userIds2.length === 0) return debugJson({ erro: `Nenhum usuário encontrado com nome "${docsPorVendedor}"` });
+      const userIds2 = users2.map((u) => String(u.id || '').trim()).filter(Boolean);
+      if (userIds2.length === 0)
+        return debugJson({ erro: `Nenhum usuário encontrado com nome "${docsPorVendedor}"` });
 
       // Buscar TODOS os registros de conciliação do período com ranking_vendedor_id desse usuário
       const { data: concRows2, error: concErr2 } = await client
         .from('conciliacao_recibos')
-        .select('id, documento, status, movimento_data, valor_lancamentos, valor_venda_real, valor_taxas, valor_descontos, valor_abatimentos, valor_nao_comissionavel, ranking_vendedor_id, venda_id, venda_recibo_id')
+        .select(
+          'id, documento, status, movimento_data, valor_lancamentos, valor_venda_real, valor_taxas, valor_descontos, valor_abatimentos, valor_nao_comissionavel, ranking_vendedor_id, venda_id, venda_recibo_id'
+        )
         .in('ranking_vendedor_id', userIds2)
         .gte('movimento_data', inicio2)
         .lte('movimento_data', fim2)
@@ -731,8 +785,10 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
       const resultado: RankingDebugDocumentoResumo[] = recibosAtivos2.map((r) => {
         const doc = String(r.documento || '').trim();
         const digits = doc.replace(/\D/g, '');
-        const core = digits.length >= 10 ? digits.slice(-10).replace(/^0+/, '') || digits.slice(-10)
-                   : digits.replace(/^0+/, '') || digits;
+        const core =
+          digits.length >= 10
+            ? digits.slice(-10).replace(/^0+/, '') || digits.slice(-10)
+            : digits.replace(/^0+/, '') || digits;
         const lanc = Number(r.valor_lancamentos || 0);
         const desc = Number(r.valor_descontos || 0);
         const abat = Number(r.valor_abatimentos || 0);
@@ -747,7 +803,7 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
           valor_bruto_calculado: Math.round(bruto * 100) / 100,
           valor_taxas: r.valor_taxas,
           linked_venda_id: r.venda_id,
-          linked_recibo_id: r.venda_recibo_id,
+          linked_recibo_id: r.venda_recibo_id
         };
       });
 
@@ -759,7 +815,7 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
         periodo: `${inicio2} a ${fim2}`,
         total_documentos_atribuidos: resultado.length,
         total_bruto: Math.round(totalBruto2 * 100) / 100,
-        documentos: resultado,
+        documentos: resultado
       });
     }
 
@@ -780,10 +836,16 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
     // 1. Buscar linhas de conciliacao_recibos
     let concRowsQuery = client
       .from('conciliacao_recibos')
-      .select('id, documento, status, descricao, movimento_data, valor_lancamentos, valor_venda_real, venda_id, venda_recibo_id, ranking_vendedor_id, company_id')
+      .select(
+        'id, documento, status, descricao, movimento_data, valor_lancamentos, valor_venda_real, venda_id, venda_recibo_id, ranking_vendedor_id, company_id'
+      )
       .in('documento', docVariants)
       .order('movimento_data', { ascending: true });
-    concRowsQuery = applyCompanyScope(concRowsQuery, scope, event.url.searchParams.get('empresa_id'));
+    concRowsQuery = applyCompanyScope(
+      concRowsQuery,
+      scope,
+      event.url.searchParams.get('empresa_id')
+    );
     const { data: concRows, error: concErr } = await concRowsQuery;
     if (concErr) throw concErr;
 
@@ -810,7 +872,7 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
       ranking_vendedor_nome:
         vendedorNomes[String(r.ranking_vendedor_id || '')] ||
         r.ranking_vendedor_id ||
-        '(sem vendedor)',
+        '(sem vendedor)'
     }));
 
     return debugJson(
@@ -818,7 +880,7 @@ export async function handleRelatoriosRankingDebugGet(event: RequestEvent) {
         docs_pesquisados: docVariants,
         conciliacao_rows: enrichedRows,
         resumo: {
-          linhas_encontradas: enrichedRows.length,
+          linhas_encontradas: enrichedRows.length
         }
       },
       { headers: DEBUG_HEADERS }
@@ -878,16 +940,28 @@ export async function handleRelatoriosRankingDebugPost(event: RequestEvent) {
       // Nunca permitir atribuição de "Equipe vtur" como vendedor de um recibo
       const equipeVturVendedor = await findEquipeVturVendedor(client, companyIdRec);
       if (equipeVturVendedor?.id && vendedor_id === equipeVturVendedor.id) {
-        return debugJson({ error: 'Não é permitido atribuir "Equipe vtur" como vendedor de um recibo.' }, { status: 422 });
+        return debugJson(
+          { error: 'Não é permitido atribuir "Equipe vtur" como vendedor de um recibo.' },
+          { status: 422 }
+        );
       }
       const { data: vendedorRow, error: vendedorError } = await client
         .from('users')
-        .select('id, nome_completo, email, company_id, active, uso_individual, participa_ranking, user_types(name)')
+        .select(
+          'id, nome_completo, email, company_id, active, uso_individual, participa_ranking, user_types(name)'
+        )
         .eq('id', vendedor_id)
         .maybeSingle();
       if (vendedorError) throw vendedorError;
-      if (!vendedorRow || vendedorRow.company_id !== companyIdRec || !isRankingEligibleUser(vendedorRow)) {
-        return debugJson({ error: 'Vendedor fora do escopo da empresa ou inelegível para ranking.' }, { status: 422 });
+      if (
+        !vendedorRow ||
+        vendedorRow.company_id !== companyIdRec ||
+        !isRankingEligibleUser(vendedorRow)
+      ) {
+        return debugJson(
+          { error: 'Vendedor fora do escopo da empresa ou inelegível para ranking.' },
+          { status: 422 }
+        );
       }
 
       const { data, error } = await client
@@ -905,10 +979,10 @@ export async function handleRelatoriosRankingDebugPost(event: RequestEvent) {
       // (o read model persistido ja e marcado dirty pelo trigger do banco).
       invalidateSalesReadModels({ companyIds: companyIdRec ? [companyIdRec] : [] });
       return debugJson({ ok: true, updated: data });
-
     } else if (action === 'fix_valor') {
       const updates: RankingDebugValorUpdate = {};
-      if (body.valor_lancamentos != null) updates.valor_lancamentos = Number(body.valor_lancamentos);
+      if (body.valor_lancamentos != null)
+        updates.valor_lancamentos = Number(body.valor_lancamentos);
       if (body.valor_venda_real != null) updates.valor_venda_real = Number(body.valor_venda_real);
       if (Object.keys(updates).length === 0) {
         return debugJson({ error: 'Nenhum valor fornecido para atualizar' }, { status: 400 });
@@ -922,7 +996,6 @@ export async function handleRelatoriosRankingDebugPost(event: RequestEvent) {
       if (error) throw error;
       invalidateSalesReadModels({ companyIds: companyIdRec ? [companyIdRec] : [] });
       return debugJson({ ok: true, updated: data });
-
     } else {
       return debugJson({ error: `Ação desconhecida: ${action}` }, { status: 400 });
     }

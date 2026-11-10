@@ -16,7 +16,7 @@ const RESEND_API_URL = 'https://api.resend.com/emails';
 export type EmailAddress = string | { email: string; name?: string };
 
 export type ResendEmailPayload = {
-  from: string;           // ex: 'Vtur App <noreply@vturapp.com.br>'
+  from: string; // ex: 'Vtur App <noreply@vturapp.com.br>'
   to: EmailAddress | EmailAddress[];
   subject: string;
   html?: string;
@@ -28,7 +28,7 @@ export type ResendEmailPayload = {
 };
 
 export type ResendEmailResult = {
-  id: string;             // ID do e-mail na API Resend
+  id: string; // ID do e-mail na API Resend
 };
 
 export type ResendErrorResult = {
@@ -66,12 +66,12 @@ export async function sendEmail(
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json'
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(payload)
   });
 
-  const data = await response.json() as ResendEmailResult | ResendErrorResult;
+  const data = (await response.json()) as ResendEmailResult | ResendErrorResult;
 
   if (!response.ok) {
     const err = data as ResendErrorResult;

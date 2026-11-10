@@ -186,7 +186,7 @@ export const MODULO_HERANCA: Record<string, string[]> = {
   CRM: ['Parametros'],
   ParametrosAvisos: ['Parametros'],
   Avisos: ['Parametros'],
-  'Ranking de vendas': ['Relatorios'],
+  'Ranking de vendas': ['Relatorios']
 };
 
 export type ModuloSecaoPermissoes = {
@@ -238,7 +238,13 @@ export const SECOES_PERMISSOES: ModuloSecaoPermissoes[] = [
   {
     id: 'relatorios',
     titulo: 'Relatorios',
-    modulos: ['Relatorios', 'RelatorioVendas', 'RelatorioDestinos', 'RelatorioProdutos', 'RelatorioClientes']
+    modulos: [
+      'Relatorios',
+      'RelatorioVendas',
+      'RelatorioDestinos',
+      'RelatorioProdutos',
+      'RelatorioClientes'
+    ]
   },
   {
     id: 'financeiro',
@@ -265,7 +271,7 @@ export const SECOES_PERMISSOES: ModuloSecaoPermissoes[] = [
   {
     id: 'cadastro',
     titulo: 'Cadastro',
-    modulos: ['Cadastros', 'Paises', 'Subdivisoes', 'Cidades', 'Destinos', 'Produtos', 'ProdutosLote', 'Fornecedores']
+    modulos: ['Cadastros', 'Cidades', 'Destinos', 'Produtos', 'ProdutosLote', 'Fornecedores']
   },
   {
     id: 'parametros',
@@ -308,8 +314,14 @@ const GLOBAL_MODULE_GROUPS: Record<string, string[]> = {
     'Formas de Pagamento',
     'RegrasComissao'
   ],
-  Cadastros: ['Paises', 'Subdivisoes', 'Cidades', 'Destinos', 'Produtos', 'Circuitos', 'ProdutosLote', 'Fornecedores'],
-  Relatorios: ['RelatorioVendas', 'RelatorioDestinos', 'RelatorioProdutos', 'RelatorioClientes', 'Ranking de vendas'],
+  Cadastros: ['Cidades', 'Destinos', 'Produtos', 'Circuitos', 'ProdutosLote', 'Fornecedores'],
+  Relatorios: [
+    'RelatorioVendas',
+    'RelatorioDestinos',
+    'RelatorioProdutos',
+    'RelatorioClientes',
+    'Ranking de vendas'
+  ],
   Parametros: [
     'TipoProdutos',
     'TipoPacotes',
@@ -363,7 +375,9 @@ const GLOBAL_MODULE_PARENTS = Object.entries(GLOBAL_MODULE_GROUPS).reduce(
 );
 
 function normalizeSecaoKey(value: string) {
-  return String(value || '').trim().toLowerCase();
+  return String(value || '')
+    .trim()
+    .toLowerCase();
 }
 
 function buildBaseModuloMap(modulosBase: string[]) {
@@ -417,7 +431,9 @@ function resolveSecaoApplyModulos(
 }
 
 export function normalizeModuloKey(value?: string | null) {
-  const raw = String(value || '').trim().toLowerCase();
+  const raw = String(value || '')
+    .trim()
+    .toLowerCase();
   if (!raw) return '';
   return MODULO_ALIASES[raw] || raw.replace(/\s+/g, '_');
 }
@@ -471,6 +487,7 @@ export const MODULOS_ADMIN_PERMISSOES: string[] = (() => {
   };
 
   for (const label of Object.keys(MAPA_MODULOS)) {
+    if (label === 'Paises' || label === 'Subdivisoes') continue;
     addLabel(label);
   }
   return list;

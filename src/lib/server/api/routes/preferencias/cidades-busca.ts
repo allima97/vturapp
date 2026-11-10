@@ -6,7 +6,7 @@ import {
   buildNoStoreJsonResponse,
   buildNoStoreTextResponse,
   logServerError,
-  requirePreferenciasScope,
+  requirePreferenciasScope
 } from '../../../../../routes/api/v1/preferencias/_shared';
 import { buscarCidadesGeo } from '$lib/server/geocoding';
 

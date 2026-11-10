@@ -17,6 +17,7 @@ type SearchDayRow = {
   id: string;
   percurso?: string | null;
   cidade?: string | null;
+  cidade_id?: string | null;
   descricao?: string | null;
   data?: string | null;
   roteiro_id?: string | null;
@@ -59,8 +60,8 @@ export async function handleRoteirosDiasBuscaGet(event: RequestEvent) {
         .from('roteiro_dia')
         .select(
           withPercurso
-            ? 'id, percurso, cidade, descricao, data, roteiro_id'
-            : 'id, cidade, descricao, data, roteiro_id'
+            ? 'id, percurso, cidade, cidade_id, descricao, data, roteiro_id'
+            : 'id, cidade, cidade_id, descricao, data, roteiro_id'
         )
         .order('created_at', { ascending: false })
         .limit(20);

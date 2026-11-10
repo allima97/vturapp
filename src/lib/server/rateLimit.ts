@@ -23,7 +23,10 @@ function hashKey(value: string) {
 }
 
 function normalizeRateLimitKey(key: string) {
-  const normalized = String(key || 'unknown').replace(/\s+/g, ' ').trim() || 'unknown';
+  const normalized =
+    String(key || 'unknown')
+      .replace(/\s+/g, ' ')
+      .trim() || 'unknown';
   if (normalized.length <= MAX_KEY_LENGTH) return normalized;
   return `${normalized.slice(0, MAX_KEY_LENGTH)}:${hashKey(normalized)}`;
 }

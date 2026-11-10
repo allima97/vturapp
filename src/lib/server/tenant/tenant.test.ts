@@ -23,7 +23,7 @@ import {
   validateTenantWrite,
   assertHasEmpresaId,
   isTenantMismatch,
-  TenantError,
+  TenantError
 } from './guard';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -34,14 +34,26 @@ const EMPRESA_BETA = 2;
 
 // Membros de test (sem D1)
 const membrosAlfa = [
-  { id: 1, empresaId: EMPRESA_ALFA, userId: 'usr-alfa-admin-001', papel: 'admin',        ativo: true },
-  { id: 2, empresaId: EMPRESA_ALFA, userId: 'usr-alfa-oper-001',  papel: 'operador',     ativo: true },
-  { id: 3, empresaId: EMPRESA_ALFA, userId: 'usr-alfa-view-001',  papel: 'visualizador', ativo: true },
+  { id: 1, empresaId: EMPRESA_ALFA, userId: 'usr-alfa-admin-001', papel: 'admin', ativo: true },
+  { id: 2, empresaId: EMPRESA_ALFA, userId: 'usr-alfa-oper-001', papel: 'operador', ativo: true },
+  {
+    id: 3,
+    empresaId: EMPRESA_ALFA,
+    userId: 'usr-alfa-view-001',
+    papel: 'visualizador',
+    ativo: true
+  }
 ];
 const membrosBeta = [
-  { id: 4, empresaId: EMPRESA_BETA, userId: 'usr-beta-admin-001', papel: 'admin',        ativo: true },
-  { id: 5, empresaId: EMPRESA_BETA, userId: 'usr-beta-oper-001',  papel: 'operador',     ativo: true },
-  { id: 6, empresaId: EMPRESA_BETA, userId: 'usr-beta-view-001',  papel: 'visualizador', ativo: true },
+  { id: 4, empresaId: EMPRESA_BETA, userId: 'usr-beta-admin-001', papel: 'admin', ativo: true },
+  { id: 5, empresaId: EMPRESA_BETA, userId: 'usr-beta-oper-001', papel: 'operador', ativo: true },
+  {
+    id: 6,
+    empresaId: EMPRESA_BETA,
+    userId: 'usr-beta-view-001',
+    papel: 'visualizador',
+    ativo: true
+  }
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -50,7 +62,7 @@ const membrosBeta = [
 
 type Membro = { id: number; empresaId: number; userId: string; papel: string; ativo: boolean };
 type MembroResult =
-  | { ok: true;  membro: Membro }
+  | { ok: true; membro: Membro }
   | { ok: false; code: 'NAO_ENCONTRADO' | 'CROSS_TENANT' | 'ERRO_INTERNO'; error: string };
 
 /**
@@ -59,7 +71,7 @@ type MembroResult =
  * sem D1/Drizzle, para provar o padrão de isolamento de leitura.
  */
 function simulateGetMembro(db: Membro[], id: number, authEmpresaId: number): MembroResult {
-  const row = db.find(m => m.id === id) ?? null;
+  const row = db.find((m) => m.id === id) ?? null;
   if (!row) return { ok: false, code: 'NAO_ENCONTRADO', error: 'Membro não encontrado.' };
   try {
     assertTenantOwnership(authEmpresaId, row.empresaId);
@@ -75,7 +87,7 @@ function simulateGetMembro(db: Membro[], id: number, authEmpresaId: number): Mem
  * Replica a lógica de members.ts sem D1/Drizzle.
  */
 function simulateRevogarMembro(db: Membro[], id: number, authEmpresaId: number): MembroResult {
-  const row = db.find(m => m.id === id) ?? null;
+  const row = db.find((m) => m.id === id) ?? null;
   if (!row) return { ok: false, code: 'NAO_ENCONTRADO', error: 'Membro não encontrado.' };
   try {
     assertTenantOwnership(authEmpresaId, row.empresaId);
@@ -244,7 +256,7 @@ describe('isTenantMismatch()', () => {
 
 describe('[F2-04] Isolamento de leitura — padrão getMembro', () => {
   // Cópia mutável para não afetar outros testes
-  const db = [...membrosAlfa, ...membrosBeta].map(m => ({ ...m }));
+  const db = [...membrosAlfa, ...membrosBeta].map((m) => ({ ...m }));
 
   it('usuário Alfa lê membro de Alfa com sucesso', () => {
     const r = simulateGetMembro(db, 1, EMPRESA_ALFA);
@@ -284,7 +296,7 @@ describe('[F2-04] Isolamento de leitura — padrão getMembro', () => {
 describe('[F2-04] Revogação de membro', () => {
   // Cópia mutável por test para isolamento
   function makeFreshDb() {
-    return [...membrosAlfa, ...membrosBeta].map(m => ({ ...m }));
+    return [...membrosAlfa, ...membrosBeta].map((m) => ({ ...m }));
   }
 
   it('admin Alfa revoga membro de Alfa — ativo torna-se false', () => {
@@ -326,7 +338,7 @@ describe('[F2-04] Revogação de membro', () => {
     const db = makeFreshDb();
     simulateRevogarMembro(db, 2, EMPRESA_ALFA); // revoga membro 2 (Alfa)
     // O registro ainda existe no banco (soft-delete)
-    const membroAinda = db.find(m => m.id === 2);
+    const membroAinda = db.find((m) => m.id === 2);
     expect(membroAinda).toBeDefined();
     expect(membroAinda!.ativo).toBe(false);
   });
@@ -357,7 +369,7 @@ describe('[F2-04] Invariantes de isolamento de tenant', () => {
   });
 
   it('E. Revogação: membro revogado tem ativo=false (sem acesso futuro)', () => {
-    const db = [...membrosAlfa].map(m => ({ ...m }));
+    const db = [...membrosAlfa].map((m) => ({ ...m }));
     const r = simulateRevogarMembro(db, 2, EMPRESA_ALFA);
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.membro.ativo).toBe(false);

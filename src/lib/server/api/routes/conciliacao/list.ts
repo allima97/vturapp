@@ -8,25 +8,24 @@ import {
   requireAuthenticatedUser,
   resolveScopedCompanyIds,
   resolveUserScope,
-  toErrorResponse,
+  toErrorResponse
 } from '$lib/server/v1';
 import {
   dedupeConciliacaoRows,
   isFormaNaoComissionavel,
   isRankingEligibleStatus,
-  normalizeComputedFields,
+  normalizeComputedFields
 } from '../../../../../routes/api/v1/conciliacao/_legacy';
 import { monthRangeFromKey } from '$lib/date';
 import {
   buildReadModelCacheKey,
   getCachedReadModel,
   READ_MODEL_TAGS,
-  scopeCacheTags,
+  scopeCacheTags
 } from '$lib/server/readModelCache';
 import { DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
 import { chunkArray } from '$lib/utils/array';
 import { carregarTermosNaoComissionaveis } from '$lib/server/naoComissionavelTermos';
-
 
 const QUERY_IN_BATCH_SIZE = 150;
 
@@ -72,8 +71,7 @@ type ConciliacaoListRow = {
   updated_at?: string | null;
 };
 
-type NormalizedConciliacaoListRow = ConciliacaoListRow &
-  ReturnType<typeof normalizeComputedFields>;
+type NormalizedConciliacaoListRow = ConciliacaoListRow & ReturnType<typeof normalizeComputedFields>;
 
 type PagamentoLookupRow = {
   venda_id?: string | null;
@@ -130,9 +128,7 @@ type EnrichedConciliacaoListRow = NormalizedConciliacaoListRow & {
 
 async function fetchBatched<T>(
   values: string[],
-  loader: (
-    batch: string[],
-  ) => PromiseLike<{ data: T[] | null; error: unknown }>,
+  loader: (batch: string[]) => PromiseLike<{ data: T[] | null; error: unknown }>
 ) {
   const batchResults = await Promise.all(
     chunkArray(values, QUERY_IN_BATCH_SIZE).map(async (batch) => {
@@ -150,25 +146,17 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
     const user = await requireAuthenticatedUser(event);
     const scope = await resolveUserScope(client, user.id);
 
-    if (
-      !scope.isAdmin &&
-      !scope.isMaster &&
-      !scope.isFinanceiro &&
-      !scope.isGestor
-    ) {
+    if (!scope.isAdmin && !scope.isMaster && !scope.isFinanceiro && !scope.isGestor) {
       ensureModuloAccess(
         scope,
         ['operacao_conciliacao', 'conciliacao'],
         1,
-        'Sem acesso à Conciliação.',
+        'Sem acesso à Conciliação.'
       );
     }
 
     const { searchParams } = event.url;
-    const companyIds = resolveScopedCompanyIds(
-      scope,
-      searchParams.get('company_id'),
-    );
+    const companyIds = resolveScopedCompanyIds(scope, searchParams.get('company_id'));
     const companyId = companyIds[0] || null;
     if (!companyId) return json([], { headers: DYNAMIC_READ_HEADERS });
 
@@ -177,9 +165,7 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
     const rankingPending = searchParams.get('ranking_pending') === '1';
     const month = String(searchParams.get('month') || '').trim();
     const day = String(searchParams.get('day') || '').trim();
-    const rankingStatus = String(
-      searchParams.get('ranking_status') || 'all',
-    ).trim();
+    const rankingStatus = String(searchParams.get('ranking_status') || 'all').trim();
     const baixaRac = searchParams.get('baixa_rac') === '1';
 
     const rows = await getCachedReadModel<ConciliacaoListRow[]>({
@@ -191,7 +177,7 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
         month,
         day,
         rankingStatus,
-        baixaRac,
+        baixaRac
       }),
       tags: [
         READ_MODEL_TAGS.conciliacao,
@@ -200,7 +186,7 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
         READ_MODEL_TAGS.ranking,
         READ_MODEL_TAGS.users,
         READ_MODEL_TAGS.clients,
-        ...scopeCacheTags({ companyIds: [companyId], userId: user.id }),
+        ...scopeCacheTags({ companyIds: [companyId], userId: user.id })
       ],
       ttlMs: 120_000,
       staleTtlMs: 600_000,
@@ -208,7 +194,7 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
         let query = client
           .from('conciliacao_recibos')
           .select(
-            `id, company_id, documento, numero_reserva, movimento_data, status, descricao, valor_lancamentos, valor_taxas, valor_descontos, valor_abatimentos, valor_calculada_loja, valor_visao_master, valor_opfax, valor_saldo, valor_venda_real, valor_nao_comissionavel, valor_comissao_loja, percentual_comissao_loja, faixa_comissao, is_seguro_viagem, origem, conciliado, match_total, match_taxas, sistema_valor_total, sistema_valor_taxas, diff_total, diff_taxas, venda_id, venda_recibo_id, ranking_vendedor_id, ranking_produto_id, ranking_assigned_at, is_baixa_rac, ranking_vendedor:users!ranking_vendedor_id(id, nome_completo), ranking_produto:tipo_produtos!ranking_produto_id(id, nome), last_checked_at, conciliado_em, created_at, updated_at`,
+            `id, company_id, documento, numero_reserva, movimento_data, status, descricao, valor_lancamentos, valor_taxas, valor_descontos, valor_abatimentos, valor_calculada_loja, valor_visao_master, valor_opfax, valor_saldo, valor_venda_real, valor_nao_comissionavel, valor_comissao_loja, percentual_comissao_loja, faixa_comissao, is_seguro_viagem, origem, conciliado, match_total, match_taxas, sistema_valor_total, sistema_valor_taxas, diff_total, diff_taxas, venda_id, venda_recibo_id, ranking_vendedor_id, ranking_produto_id, ranking_assigned_at, is_baixa_rac, ranking_vendedor:users!ranking_vendedor_id(id, nome_completo), ranking_produto:tipo_produtos!ranking_produto_id(id, nome), last_checked_at, conciliado_em, created_at, updated_at`
           )
           .eq('company_id', companyId)
           .order('movimento_data', { ascending: false })
@@ -220,9 +206,7 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
         if (/^\d{4}-\d{2}$/.test(month)) {
           const range = monthRangeFromKey(month);
           if (range)
-            query = query
-              .gte('movimento_data', range.inicio)
-              .lte('movimento_data', range.fim);
+            query = query.gte('movimento_data', range.inicio).lte('movimento_data', range.fim);
         }
         if (/^\d{4}-\d{2}-\d{2}$/.test(day)) {
           query = query.eq('movimento_data', day);
@@ -232,7 +216,7 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
         if (error) throw error;
 
         let rows: NormalizedConciliacaoListRow[] = dedupeConciliacaoRows(
-          Array.isArray(data) ? (data as ConciliacaoListRow[]) : [],
+          Array.isArray(data) ? (data as ConciliacaoListRow[]) : []
         ).map((row) => normalizeComputedFields(row) as NormalizedConciliacaoListRow);
 
         if (rankingPending) {
@@ -271,38 +255,26 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
         if (rankingStatus === 'pending') {
           rows = rows.filter((row) => {
             const vendaId = String(row?.venda_id || '').trim();
-            const rankingVendedorId = String(
-              row?.ranking_vendedor_id || '',
-            ).trim();
-            return (
-              isRankingEligibleStatus(row) && !vendaId && !rankingVendedorId
-            );
+            const rankingVendedorId = String(row?.ranking_vendedor_id || '').trim();
+            return isRankingEligibleStatus(row) && !vendaId && !rankingVendedorId;
           });
         } else if (rankingStatus === 'assigned') {
           rows = rows.filter((row) => {
             if (!isRankingEligibleStatus(row)) return false;
             const vendaId = String(row?.venda_id || '').trim();
-            const rankingVendedorId = String(
-              row?.ranking_vendedor_id || '',
-            ).trim();
+            const rankingVendedorId = String(row?.ranking_vendedor_id || '').trim();
             const isBaixaRac = Boolean(row?.is_baixa_rac);
             if (isBaixaRac) return false;
             return !vendaId && Boolean(rankingVendedorId);
           });
         } else if (rankingStatus === 'system') {
           rows = rows.filter(
-            (row) =>
-              isRankingEligibleStatus(row) &&
-              Boolean(String(row?.venda_id || '').trim()),
+            (row) => isRankingEligibleStatus(row) && Boolean(String(row?.venda_id || '').trim())
           );
         }
 
         const vendaIds = Array.from(
-          new Set(
-            rows
-              .map((row) => String(row?.venda_id || '').trim())
-              .filter(Boolean),
-          ),
+          new Set(rows.map((row) => String(row?.venda_id || '').trim()).filter(Boolean))
         );
         const flaggedVendas = new Set<string>();
 
@@ -310,14 +282,12 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
           // Termos ativos da tabela; sem termos/erro → lista padrão (Fase 2.3).
           const termosNaoComissionaveis = await carregarTermosNaoComissionaveis(client);
 
-          const pagamentos = await fetchBatched<PagamentoLookupRow>(
-            vendaIds,
-            (batch) =>
+          const pagamentos = await fetchBatched<PagamentoLookupRow>(vendaIds, (batch) =>
             client
               .from('vendas_pagamentos')
               .select('venda_id, forma_nome, paga_comissao')
               .eq('company_id', companyId)
-              .in('venda_id', batch),
+              .in('venda_id', batch)
           );
 
           for (const pagamento of pagamentos) {
@@ -325,10 +295,7 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
             if (!vendaId) continue;
             const naoComissiona =
               pagamento?.paga_comissao === false ||
-              isFormaNaoComissionavel(
-                pagamento?.forma_nome,
-                termosNaoComissionaveis,
-              );
+              isFormaNaoComissionavel(pagamento?.forma_nome, termosNaoComissionaveis);
             if (naoComissiona) flaggedVendas.add(vendaId);
           }
         }
@@ -338,21 +305,12 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
           { valor_total: number | null; valor_taxas: number | null }
         >();
         const reciboIdsForAudit = Array.from(
-          new Set(
-            rows
-              .map((row) => String(row?.venda_recibo_id || '').trim())
-              .filter(Boolean),
-          ),
+          new Set(rows.map((row) => String(row?.venda_recibo_id || '').trim()).filter(Boolean))
         );
 
         if (reciboIdsForAudit.length > 0) {
-          const recibosAudit = await fetchBatched<ReciboAuditRow>(
-            reciboIdsForAudit,
-            (batch) =>
-              client
-                .from('vendas_recibos')
-                .select('id, valor_total, valor_taxas')
-                .in('id', batch),
+          const recibosAudit = await fetchBatched<ReciboAuditRow>(reciboIdsForAudit, (batch) =>
+            client.from('vendas_recibos').select('id, valor_total, valor_taxas').in('id', batch)
           );
 
           for (const recibo of recibosAudit) {
@@ -360,7 +318,7 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
             if (!reciboId) continue;
             recibosByIdForAudit.set(reciboId, {
               valor_total: Number(recibo?.valor_total || 0),
-              valor_taxas: Number(recibo?.valor_taxas || 0),
+              valor_taxas: Number(recibo?.valor_taxas || 0)
             });
           }
         }
@@ -368,9 +326,7 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
         let enrichedRows: EnrichedConciliacaoListRow[] = rows.map((row) => {
           const vendaId = String(row?.venda_id || '').trim();
           const reciboId = String(row?.venda_recibo_id || '').trim();
-          const reciboData = reciboId
-            ? recibosByIdForAudit.get(reciboId)
-            : null;
+          const reciboData = reciboId ? recibosByIdForAudit.get(reciboId) : null;
 
           let auditUpdate: AuditUpdate = {};
           if (reciboData) {
@@ -379,8 +335,7 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
             const valorVendaReal = Number(row?.valor_venda_real || 0);
             const valorTaxas = Number(row?.valor_taxas || 0);
             const matches = (a: number, b: number) => Math.abs(a - b) <= 0.01;
-            const diff = (a: number, b: number) =>
-              Math.round((a - b) * 100) / 100;
+            const diff = (a: number, b: number) => Math.round((a - b) * 100) / 100;
 
             auditUpdate = {
               sistema_valor_total: sistemaTotal,
@@ -388,7 +343,7 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
               match_total: matches(valorVendaReal, sistemaTotal),
               match_taxas: matches(valorTaxas, sistemaTaxas),
               diff_total: diff(valorVendaReal, sistemaTotal),
-              diff_taxas: diff(valorTaxas, sistemaTaxas),
+              diff_taxas: diff(valorTaxas, sistemaTaxas)
             };
           }
 
@@ -397,23 +352,17 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
             ...auditUpdate,
             is_nao_comissionavel:
               (vendaId ? flaggedVendas.has(vendaId) : false) ||
-              Number(row?.valor_nao_comissionavel || 0) > 0,
+              Number(row?.valor_nao_comissionavel || 0) > 0
           };
         });
 
         const vendaIdsLinked = Array.from(
-          new Set(
-            enrichedRows
-              .map((row) => String(row?.venda_id || '').trim())
-              .filter(Boolean),
-          ),
+          new Set(enrichedRows.map((row) => String(row?.venda_id || '').trim()).filter(Boolean))
         );
         const reciboIdsLinked = Array.from(
           new Set(
-            enrichedRows
-              .map((row) => String(row?.venda_recibo_id || '').trim())
-              .filter(Boolean),
-          ),
+            enrichedRows.map((row) => String(row?.venda_recibo_id || '').trim()).filter(Boolean)
+          )
         );
 
         const vendasById = new Map<string, VendaLinkedRow>();
@@ -422,14 +371,12 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
         const recibosById = new Map<string, ReciboLinkedRow>();
 
         if (vendaIdsLinked.length > 0) {
-          const vendasData = await fetchBatched<VendaLinkedRow>(
-            vendaIdsLinked,
-            (batch) =>
-              client
-                .from('vendas')
-                .select('id, numero_venda, cliente_id, vendedor_id')
-                .eq('company_id', companyId)
-                .in('id', batch),
+          const vendasData = await fetchBatched<VendaLinkedRow>(vendaIdsLinked, (batch) =>
+            client
+              .from('vendas')
+              .select('id, numero_venda, cliente_id, vendedor_id')
+              .eq('company_id', companyId)
+              .in('id', batch)
           );
 
           for (const item of vendasData) {
@@ -438,25 +385,17 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
           }
 
           const clienteIds = Array.from(
-            new Set(
-              vendasData
-                .map((item) => String(item?.cliente_id || '').trim())
-                .filter(Boolean),
-            ),
+            new Set(vendasData.map((item) => String(item?.cliente_id || '').trim()).filter(Boolean))
           );
           const vendedorIds = Array.from(
             new Set(
-              vendasData
-                .map((item) => String(item?.vendedor_id || '').trim())
-                .filter(Boolean),
-            ),
+              vendasData.map((item) => String(item?.vendedor_id || '').trim()).filter(Boolean)
+            )
           );
 
           if (clienteIds.length > 0) {
-            const clientesData = await fetchBatched<ClienteLinkedRow>(
-              clienteIds,
-              (batch) =>
-                client.from('clientes').select('id, nome').in('id', batch),
+            const clientesData = await fetchBatched<ClienteLinkedRow>(clienteIds, (batch) =>
+              client.from('clientes').select('id, nome').in('id', batch)
             );
             for (const cliente of clientesData) {
               const id = String(cliente?.id || '').trim();
@@ -466,13 +405,8 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
           }
 
           if (vendedorIds.length > 0) {
-            const vendedoresData = await fetchBatched<VendedorLinkedRow>(
-              vendedorIds,
-              (batch) =>
-                client
-                  .from('users')
-                  .select('id, nome_completo')
-                  .in('id', batch),
+            const vendedoresData = await fetchBatched<VendedorLinkedRow>(vendedorIds, (batch) =>
+              client.from('users').select('id, nome_completo').in('id', batch)
             );
             for (const vendedor of vendedoresData) {
               const id = String(vendedor?.id || '').trim();
@@ -483,13 +417,11 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
         }
 
         if (reciboIdsLinked.length > 0) {
-          const recibosData = await fetchBatched<ReciboLinkedRow>(
-            reciboIdsLinked,
-            (batch) =>
-              client
-                .from('vendas_recibos')
-                .select('id, venda_id, numero_recibo, numero_reserva')
-                .in('id', batch),
+          const recibosData = await fetchBatched<ReciboLinkedRow>(reciboIdsLinked, (batch) =>
+            client
+              .from('vendas_recibos')
+              .select('id, venda_id, numero_recibo, numero_reserva')
+              .in('id', batch)
           );
           for (const item of recibosData) {
             const id = String(item?.id || '').trim();
@@ -509,9 +441,7 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
           const vendedorNome = venda?.vendedor_id
             ? vendedoresById.get(String(venda.vendedor_id)) || null
             : null;
-          const numeroVenda = venda?.numero_venda
-            ? String(venda.numero_venda).trim()
-            : null;
+          const numeroVenda = venda?.numero_venda ? String(venda.numero_venda).trim() : null;
           const numeroRecibo = recibo?.numero_recibo
             ? String(recibo.numero_recibo).trim()
             : recibo?.numero_reserva
@@ -523,19 +453,19 @@ export async function handleConciliacaoListGet(event: RequestEvent) {
             venda_numero: numeroVenda,
             venda_cliente_nome: clienteNome,
             venda_vendedor_nome: vendedorNome,
-            recibo_numero: numeroRecibo,
+            recibo_numero: numeroRecibo
           };
         });
 
         return enrichedRows;
-      },
+      }
     });
 
     return json(rows, {
       headers: {
         'Cache-Control': 'private, max-age=5',
-        Vary: 'Cookie',
-      },
+        Vary: 'Cookie'
+      }
     });
   } catch (err) {
     return toErrorResponse(err, 'Erro ao listar conciliacao.');

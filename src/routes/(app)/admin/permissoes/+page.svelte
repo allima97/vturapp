@@ -128,26 +128,40 @@
 <PageHeader
   title="Permissoes"
   subtitle="Controle por usuario e configuracao global dos modulos administrativos."
-  breadcrumbs={[
-    { label: 'Administracao', href: '/admin' },
-    { label: 'Permissoes' }
-  ]}
+  breadcrumbs={[{ label: 'Administracao', href: '/admin' }, { label: 'Permissoes' }]}
   actions={[{ label: 'Atualizar', onClick: loadPage, variant: 'secondary', icon: RefreshCw }]}
 />
 
 <div class="space-y-6">
   <div class="vtur-kpi-grid vtur-kpi-grid-3">
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500"><Users size={20} /></div>
-      <div><p class="text-sm font-medium text-slate-500">Usuários no painel</p><p class="text-2xl font-bold text-slate-900">{rows.length}</p></div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+        <Users size={20} />
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Usuários no painel</p>
+        <p class="text-2xl font-bold text-slate-900">{rows.length}</p>
+      </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500"><LayoutGrid size={20} /></div>
-      <div><p class="text-sm font-medium text-slate-500">Módulos globais</p><p class="text-2xl font-bold text-slate-900">{systemModuleCatalog.length}</p></div>
+      <div
+        class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500"
+      >
+        <LayoutGrid size={20} />
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Módulos globais</p>
+        <p class="text-2xl font-bold text-slate-900">{systemModuleCatalog.length}</p>
+      </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500"><XCircle size={20} /></div>
-      <div><p class="text-sm font-medium text-slate-500">Módulos desabilitados</p><p class="text-2xl font-bold text-slate-900">{disabledGlobalModulesCount}</p></div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500">
+        <XCircle size={20} />
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Módulos desabilitados</p>
+        <p class="text-2xl font-bold text-slate-900">{disabledGlobalModulesCount}</p>
+      </div>
     </div>
   </div>
 
@@ -179,7 +193,12 @@
     </div>
 
     <div class="mt-4">
-      <Button variant="primary" color="financeiro" on:click={saveGlobalModules} loading={savingGlobal}>
+      <Button
+        variant="primary"
+        color="financeiro"
+        on:click={saveGlobalModules}
+        loading={savingGlobal}
+      >
         Salvar disponibilidade global
       </Button>
     </div>

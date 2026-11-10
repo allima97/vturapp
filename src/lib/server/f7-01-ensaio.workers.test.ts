@@ -24,7 +24,7 @@ declare module 'cloudflare:test' {
 import { vi } from 'vitest';
 vi.mock('$lib/brand', () => ({
   VTUR_LOGO_URL: 'data:image/png;base64,stub',
-  VTUR_LOGO_PATH: '/brand/vtur-symbol.png',
+  VTUR_LOGO_PATH: '/brand/vtur-symbol.png'
 }));
 
 import { env } from 'cloudflare:test';
@@ -40,9 +40,9 @@ const MIGRATIONS = (env as unknown as Record<string, unknown>).TEST_MIGRATIONS a
 
 // ── IDs do ensaio ─────────────────────────────────────────────────────────────
 const EMPRESA_ID = 1;
-const ADMIN_ID    = 'usr-ensaio-admin';
-const OPER_ID     = 'usr-ensaio-oper';
-const VIEW_ID     = 'usr-ensaio-view';
+const ADMIN_ID = 'usr-ensaio-admin';
+const OPER_ID = 'usr-ensaio-oper';
+const VIEW_ID = 'usr-ensaio-view';
 
 function vendaEnsaio(usuarioId: string): VendaNormalizada {
   return {
@@ -78,8 +78,8 @@ function vendaEnsaio(usuarioId: string): VendaNormalizada {
         valor_taxas_centavos: 0,
         valor_total_centavos: 100000,
         paga_comissao: false,
-        notas: null,
-      },
+        notas: null
+      }
     ],
     pagamentos: [
       {
@@ -93,9 +93,9 @@ function vendaEnsaio(usuarioId: string): VendaNormalizada {
         parcelas_qtd: 1,
         parcelas_valor_centavos: 100000,
         paga_comissao: false,
-        parcelas: [{ numero: 1, valor_centavos: 100000, vencimento: '2024-12-01' }],
-      },
-    ],
+        parcelas: [{ numero: 1, valor_centavos: 100000, vencimento: '2024-12-01' }]
+      }
+    ]
   };
 }
 
@@ -118,8 +118,8 @@ beforeAll(async () => {
   // Usuários (admin, operador, visualizador)
   for (const [uid, name] of [
     [ADMIN_ID, 'Admin Ensaio'],
-    [OPER_ID,  'Operador Ensaio'],
-    [VIEW_ID,  'Visualizador Ensaio'],
+    [OPER_ID, 'Operador Ensaio'],
+    [VIEW_ID, 'Visualizador Ensaio']
   ] as [string, string][]) {
     await db
       .prepare(
@@ -131,9 +131,9 @@ beforeAll(async () => {
 
   // Papéis
   for (const [uid, papel] of [
-    [ADMIN_ID,  'admin'],
-    [OPER_ID,   'operador'],
-    [VIEW_ID,   'visualizador'],
+    [ADMIN_ID, 'admin'],
+    [OPER_ID, 'operador'],
+    [VIEW_ID, 'visualizador']
   ] as [string, string][]) {
     await db
       .prepare(
@@ -146,17 +146,15 @@ beforeAll(async () => {
   // Seed das vendas: 1 por admin e 1 por operador — base para T5
   const drizzleDb = getDb(env.DB);
   await criarVenda(drizzleDb, EMPRESA_ID, ADMIN_ID, vendaEnsaio(ADMIN_ID), env.DB);
-  await criarVenda(drizzleDb, EMPRESA_ID, OPER_ID,  vendaEnsaio(OPER_ID),  env.DB);
+  await criarVenda(drizzleDb, EMPRESA_ID, OPER_ID, vendaEnsaio(OPER_ID), env.DB);
 }, 60_000);
 
 // ── Suíte T ───────────────────────────────────────────────────────────────────
 
 describe('Suíte T — F7-01: ensaio banco zerado e bootstrap', () => {
-
   // T1 ──────────────────────────────────────────────────────────────────────
   it('T1. migrations do zero: tabelas existem e empresa de ensaio está presente', async () => {
-    const r = await env.DB
-      .prepare('SELECT id, nome FROM empresas WHERE id = ?')
+    const r = await env.DB.prepare('SELECT id, nome FROM empresas WHERE id = ?')
       .bind(EMPRESA_ID)
       .first<{ id: number; nome: string }>();
     expect(r).not.toBeNull();
@@ -165,8 +163,9 @@ describe('Suíte T — F7-01: ensaio banco zerado e bootstrap', () => {
 
   // T2 ──────────────────────────────────────────────────────────────────────
   it('T2. seed mínimo: 3 usuários criados com papéis corretos', async () => {
-    const membros = await env.DB
-      .prepare('SELECT user_id, papel FROM membros_empresa WHERE empresa_id = ? ORDER BY user_id')
+    const membros = await env.DB.prepare(
+      'SELECT user_id, papel FROM membros_empresa WHERE empresa_id = ? ORDER BY user_id'
+    )
       .bind(EMPRESA_ID)
       .all<{ user_id: string; papel: string }>();
 
@@ -202,8 +201,9 @@ describe('Suíte T — F7-01: ensaio banco zerado e bootstrap', () => {
 
   // T6 ──────────────────────────────────────────────────────────────────────
   it('T6. visualizador: papel registrado como "visualizador" (RBAC)', async () => {
-    const membro = await env.DB
-      .prepare('SELECT papel FROM membros_empresa WHERE empresa_id = ? AND user_id = ?')
+    const membro = await env.DB.prepare(
+      'SELECT papel FROM membros_empresa WHERE empresa_id = ? AND user_id = ?'
+    )
       .bind(EMPRESA_ID, VIEW_ID)
       .first<{ papel: string }>();
     expect(membro?.papel).toBe('visualizador');
@@ -215,9 +215,7 @@ describe('Suíte T — F7-01: ensaio banco zerado e bootstrap', () => {
   it('T7. banco parte do zero: nenhum dado de empresa de outras suítes vazou', async () => {
     // O banco efêmero do Workers test é isolado por suíte — não deve ter
     // dados de outras suítes (IDs de outras empresas de testes de F6-01 etc.)
-    const empresas = await env.DB
-      .prepare('SELECT id FROM empresas')
-      .all<{ id: number }>();
+    const empresas = await env.DB.prepare('SELECT id FROM empresas').all<{ id: number }>();
     // Apenas a empresa de ensaio (id=1)
     const ids = empresas.results.map((e) => e.id);
     expect(ids).toContain(EMPRESA_ID);

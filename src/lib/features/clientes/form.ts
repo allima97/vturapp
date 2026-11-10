@@ -111,7 +111,9 @@ export function onlyDigits(value?: string | null) {
 import { titleCaseNome } from '$lib/normalizeText';
 
 export function sanitizeImportedClienteNome(value?: string | null) {
-  const raw = String(value || '').replace(/\s+/g, ' ').trim();
+  const raw = String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim();
   if (!raw) return '';
 
   const dividerPattern = /(?:\/\s*){2,}/g;
@@ -124,9 +126,9 @@ export function sanitizeImportedClienteNome(value?: string | null) {
 
   return relevant
     .replace(/\s+/g, ' ')
-    .replace(/^[\s\-–—_:;,.\/\\|]+/, '')
+    .replace(/^[\s\-–—_:;,./\\|]+/, '')
     .replace(/^ssp\s*\([^)]*\)\s*/i, '')
-    .replace(/^[\s\-–—_:;,.\/\\|]+/, '')
+    .replace(/^[\s\-–—_:;,./\\|]+/, '')
     .trim();
 }
 
@@ -171,9 +173,7 @@ export function isValidCnpj(value: string) {
   if (REPEATED_DIGITS_PATTERN.test(digits)) return false;
 
   const calc = (base: string, factors: number[]) => {
-    const sum = base
-      .split('')
-      .reduce((acc, num, index) => acc + Number(num) * factors[index], 0);
+    const sum = base.split('').reduce((acc, num, index) => acc + Number(num) * factors[index], 0);
     const mod = sum % 11;
     return mod < 2 ? 0 : 11 - mod;
   };
@@ -235,7 +235,9 @@ export function buildClientePayload(form: ClienteFormData) {
   };
 }
 
-export function fillClienteFormFromApi(data: Record<string, unknown> | null | undefined): ClienteFormData {
+export function fillClienteFormFromApi(
+  data: Record<string, unknown> | null | undefined
+): ClienteFormData {
   const initial = createInitialClienteForm();
   if (!data) return initial;
 
@@ -281,9 +283,7 @@ export function validateClienteForm(form: ClienteFormData): ClienteValidationRes
 
   if (!documentoDigits) {
     errors.cpf =
-      form.tipo_pessoa === 'PJ'
-        ? 'Informe o CNPJ do cliente.'
-        : 'Informe o CPF do cliente.';
+      form.tipo_pessoa === 'PJ' ? 'Informe o CNPJ do cliente.' : 'Informe o CPF do cliente.';
   } else if (form.tipo_pessoa === 'PJ') {
     if (!isValidCnpj(documentoDigits)) {
       errors.cpf = 'CNPJ invalido. Informe os 14 digitos corretamente.';

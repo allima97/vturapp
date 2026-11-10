@@ -61,8 +61,16 @@
     };
   }
 
-  $: canEdit = !$permissoes.ready || $permissoes.isSystemAdmin || permissoes.can('controle_sac', 'edit') || permissoes.can('operacao', 'edit');
-  $: canDelete = !$permissoes.ready || $permissoes.isSystemAdmin || permissoes.can('controle_sac', 'delete') || permissoes.can('operacao', 'delete');
+  $: canEdit =
+    !$permissoes.ready ||
+    $permissoes.isSystemAdmin ||
+    permissoes.can('controle_sac', 'edit') ||
+    permissoes.can('operacao', 'edit');
+  $: canDelete =
+    !$permissoes.ready ||
+    $permissoes.isSystemAdmin ||
+    permissoes.can('controle_sac', 'delete') ||
+    permissoes.can('operacao', 'delete');
 
   function getStatusBadge(status: string | null) {
     const styles: Record<string, string> = {
@@ -148,7 +156,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const payload = await apiGet<{ items?: SacRegistro[] }>('/api/v1/operacao/sac', undefined, request.signal);
+      const payload = await apiGet<{ items?: SacRegistro[] }>(
+        '/api/v1/operacao/sac',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       registros = payload.items || [];
     } catch (err) {
@@ -230,12 +242,12 @@
   title="Controle SAC"
   subtitle="Gerencie solicitações de atendimento ao cliente e acompanhe o status de cada caso."
   color="operacao"
-  breadcrumbs={[
-    { label: 'Controle SAC' }
-  ]}
+  breadcrumbs={[{ label: 'Controle SAC' }]}
   actions={[
     { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw },
-    ...(canEdit ? [{ label: 'Novo Registro', onClick: openNew, variant: 'primary' as const, icon: Plus }] : [])
+    ...(canEdit
+      ? [{ label: 'Novo Registro', onClick: openNew, variant: 'primary' as const, icon: Plus }]
+      : [])
   ]}
 />
 
@@ -278,7 +290,14 @@
   searchable={true}
   extraSearchKeys={['motivo', 'recibo', 'tour', 'contratante_pax', 'responsavel']}
   filterable={true}
-  filters={[{ key: 'status', label: 'Status', type: 'select', options: [{ value: '', label: 'Todos' }, ...STATUS_OPCOES] }]}
+  filters={[
+    {
+      key: 'status',
+      label: 'Status',
+      type: 'select',
+      options: [{ value: '', label: 'Todos' }, ...STATUS_OPCOES]
+    }
+  ]}
   emptyMessage="Nenhum registro SAC encontrado"
   onRowClick={canEdit ? (row) => openEdit(row) : undefined}
 >
@@ -313,14 +332,63 @@
   onCancel={() => (modalOpen = false)}
 >
   <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-    <FieldInput id="sac-recibo" label="Recibo" bind:value={form.recibo} placeholder="Número do recibo" class_name="w-full" />
-    <FieldInput id="sac-tour" label="Tour" bind:value={form.tour} placeholder="Nome do tour" class_name="w-full" />
-    <FieldInput id="sac-contratante" label="Contratante/Pax" bind:value={form.contratante_pax} placeholder="Nome do contratante ou passageiro" class_name="w-full" />
-    <FieldInput id="sac-data" label="Data da Solicitação" type="date" bind:value={form.data_solicitacao} class_name="w-full" />
-    <FieldTextarea id="sac-motivo" label="Motivo" bind:value={form.motivo} rows={3} placeholder="Descreva o motivo da solicitação" class_name="md:col-span-2 w-full" />
-    <FieldInput id="sac-ok-quando" label="OK quando" bind:value={form.ok_quando} placeholder="Condição para encerramento" class_name="md:col-span-2 w-full" />
-    <FieldInput id="sac-responsavel" label="Responsável" bind:value={form.responsavel} placeholder="Nome do responsável" class_name="w-full" />
-    <FieldInput id="sac-prazo" label="Prazo" type="date" bind:value={form.prazo} class_name="w-full" />
+    <FieldInput
+      id="sac-recibo"
+      label="Recibo"
+      bind:value={form.recibo}
+      placeholder="Número do recibo"
+      class_name="w-full"
+    />
+    <FieldInput
+      id="sac-tour"
+      label="Tour"
+      bind:value={form.tour}
+      placeholder="Nome do tour"
+      class_name="w-full"
+    />
+    <FieldInput
+      id="sac-contratante"
+      label="Contratante/Pax"
+      bind:value={form.contratante_pax}
+      placeholder="Nome do contratante ou passageiro"
+      class_name="w-full"
+    />
+    <FieldInput
+      id="sac-data"
+      label="Data da Solicitação"
+      type="date"
+      bind:value={form.data_solicitacao}
+      class_name="w-full"
+    />
+    <FieldTextarea
+      id="sac-motivo"
+      label="Motivo"
+      bind:value={form.motivo}
+      rows={3}
+      placeholder="Descreva o motivo da solicitação"
+      class_name="md:col-span-2 w-full"
+    />
+    <FieldInput
+      id="sac-ok-quando"
+      label="OK quando"
+      bind:value={form.ok_quando}
+      placeholder="Condição para encerramento"
+      class_name="md:col-span-2 w-full"
+    />
+    <FieldInput
+      id="sac-responsavel"
+      label="Responsável"
+      bind:value={form.responsavel}
+      placeholder="Nome do responsável"
+      class_name="w-full"
+    />
+    <FieldInput
+      id="sac-prazo"
+      label="Prazo"
+      type="date"
+      bind:value={form.prazo}
+      class_name="w-full"
+    />
     <FieldSelect
       id="sac-status-form"
       label="Status"

@@ -26,7 +26,6 @@ type TermoNaoComissionavelRow = {
   termo_normalizado?: string | null;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ClientLike = Pick<DataClient, 'from'>;
 
 export function normalizarTermoNaoComissionavel(value?: string | null) {
@@ -39,7 +38,7 @@ export function termosNaoComissionaveisPadrao(): string[] {
 
 export async function carregarTermosNaoComissionaveis(
   client: ClientLike,
-  options: { onError?: (error: unknown) => void } = {},
+  options: { onError?: (error: unknown) => void } = {}
 ): Promise<string[]> {
   try {
     const { data, error } = await client
@@ -52,7 +51,7 @@ export async function carregarTermosNaoComissionaveis(
     const termos = uniqueCleanStrings(
       ((data || []) as TermoNaoComissionavelRow[])
         .map((row) => normalizarTermoNaoComissionavel(row?.termo_normalizado || row?.termo))
-        .filter(Boolean),
+        .filter(Boolean)
     );
     if (termos.length > 0) return termos;
   } catch (error) {

@@ -7,55 +7,68 @@ export type SeguroPasseioLike = {
   data_fim?: string | null;
 };
 
-const MONTH_SHORT_PT_BR = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"] as const;
+const MONTH_SHORT_PT_BR = [
+  'jan',
+  'fev',
+  'mar',
+  'abr',
+  'mai',
+  'jun',
+  'jul',
+  'ago',
+  'set',
+  'out',
+  'nov',
+  'dez'
+] as const;
 const BUDGET_ITEM_SEPARATOR_RE = /^(\s+|\/|-|\(|\)|,|\+)$/;
 const BUDGET_ITEM_ACRONYM_RE = /^[A-Z0-9]{2,4}$/;
 const NUMERIC_TEXT_RE = /^\d+$/;
 const LOWER_CASE_BUDGET_ITEM_WORDS = new Set([
-  "a",
-  "à",
-  "ao",
-  "aos",
-  "as",
-  "às",
-  "com",
-  "da",
-  "das",
-  "de",
-  "do",
-  "dos",
-  "e",
-  "em",
-  "na",
-  "nas",
-  "no",
-  "nos",
-  "o",
-  "os",
-  "ou",
-  "para",
-  "por",
-  "sem",
-  "um",
-  "uma",
-  "uns",
-  "umas",
+  'a',
+  'à',
+  'ao',
+  'aos',
+  'as',
+  'às',
+  'com',
+  'da',
+  'das',
+  'de',
+  'do',
+  'dos',
+  'e',
+  'em',
+  'na',
+  'nas',
+  'no',
+  'nos',
+  'o',
+  'os',
+  'ou',
+  'para',
+  'por',
+  'sem',
+  'um',
+  'uma',
+  'uns',
+  'umas'
 ]);
 
 function textValue(value?: string | null) {
-  return String(value || "").trim();
+  return String(value || '').trim();
 }
 
 function normalizeText(value?: string | null) {
   return textValue(value)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLocaleLowerCase();
 }
 
 function formatBudgetItemText(value?: string | null) {
   const raw = textValue(value);
-  if (!raw) return "";
+  if (!raw) return '';
   let seenWord = false;
   return raw
     .split(/(\s+|\/|-|\(|\)|,|\+)/)
@@ -69,7 +82,7 @@ function formatBudgetItemText(value?: string | null) {
       if (shouldLower) return lower;
       return lower.charAt(0).toUpperCase() + lower.slice(1);
     })
-    .join("");
+    .join('');
 }
 
 function toDateOrNull(value?: string | null) {
@@ -82,10 +95,10 @@ function toDateOrNull(value?: string | null) {
 
 function formatShortDatePtBr(value?: string | null) {
   const date = toDateOrNull(value);
-  if (!date) return "";
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = MONTH_SHORT_PT_BR[date.getMonth()] || "";
-  return month ? `${day} de ${month}` : "";
+  if (!date) return '';
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = MONTH_SHORT_PT_BR[date.getMonth()] || '';
+  return month ? `${day} de ${month}` : '';
 }
 
 function calcDiarias(dataInicio?: string | null, dataFim?: string | null) {
@@ -101,33 +114,34 @@ function calcDiarias(dataInicio?: string | null, dataFim?: string | null) {
 
 export function isSeguroPasseioLike(item?: SeguroPasseioLike | null) {
   const tipo = normalizeText(item?.tipo);
-  if (tipo.includes("seguro")) return true;
+  if (tipo.includes('seguro')) return true;
 
   const passeio = normalizeText(item?.passeio);
   const cidade = normalizeText(item?.cidade);
   const fornecedor = normalizeText(item?.fornecedor);
 
-  if (passeio.includes("seguro") && (passeio.includes("viagem") || passeio.includes("travel"))) return true;
+  if (passeio.includes('seguro') && (passeio.includes('viagem') || passeio.includes('travel')))
+    return true;
 
   const providerHint =
-    fornecedor.includes("assist card") ||
-    fornecedor.includes("assistcard") ||
-    fornecedor.includes("intermac") ||
-    fornecedor.includes("segur");
+    fornecedor.includes('assist card') ||
+    fornecedor.includes('assistcard') ||
+    fornecedor.includes('intermac') ||
+    fornecedor.includes('segur');
 
   if (!cidade && providerHint) return true;
-  if (!cidade && passeio.includes("inter plus")) return true;
+  if (!cidade && passeio.includes('inter plus')) return true;
   return false;
 }
 
 export function buildSeguroViagemIncludeText(item?: SeguroPasseioLike | null) {
   const rawPasseio = textValue(item?.passeio);
   const normalizedPasseio = normalizeText(rawPasseio);
-  const passeioSemPrefixo = normalizedPasseio.startsWith("seguro viagem")
-    ? rawPasseio.replace(/^seguro\s+viagem\s*/i, "").trim()
+  const passeioSemPrefixo = normalizedPasseio.startsWith('seguro viagem')
+    ? rawPasseio.replace(/^seguro\s+viagem\s*/i, '').trim()
     : rawPasseio;
   const passeioNome = formatBudgetItemText(passeioSemPrefixo);
-  const seguroNome = passeioNome ? `Seguro viagem ${passeioNome}` : "Seguro viagem";
+  const seguroNome = passeioNome ? `Seguro viagem ${passeioNome}` : 'Seguro viagem';
 
   const dataInicio = textValue(item?.data_inicio);
   const dataFim = textValue(item?.data_fim || item?.data_inicio);
@@ -136,12 +150,12 @@ export function buildSeguroViagemIncludeText(item?: SeguroPasseioLike | null) {
   const diarias = calcDiarias(dataInicio, dataFim);
 
   if (inicioLabel && fimLabel) {
-    const diariasLabel = diarias > 0 ? ` (${diarias} ${diarias === 1 ? "diária" : "diárias"})` : "";
+    const diariasLabel = diarias > 0 ? ` (${diarias} ${diarias === 1 ? 'diária' : 'diárias'})` : '';
     return `${seguroNome} válido de ${inicioLabel} - ${fimLabel}${diariasLabel}.`;
   }
 
   if (inicioLabel) {
-    const diariasLabel = diarias > 0 ? ` (${diarias} ${diarias === 1 ? "diária" : "diárias"})` : "";
+    const diariasLabel = diarias > 0 ? ` (${diarias} ${diarias === 1 ? 'diária' : 'diárias'})` : '';
     return `${seguroNome} válido em ${inicioLabel}${diariasLabel}.`;
   }
 
@@ -167,7 +181,9 @@ export function extractSeguroViagemIncludeLinesFromPasseios(items: SeguroPasseio
 export function mergeUniqueTextLines(baseText: string, newLines: string[]) {
   const existing: string[] = [];
   const seen = new Set<string>();
-  for (const rawLine of String(baseText || "").replace(/\r/g, "\n").split("\n")) {
+  for (const rawLine of String(baseText || '')
+    .replace(/\r/g, '\n')
+    .split('\n')) {
     const line = rawLine.trim();
     if (!line) continue;
     existing.push(line);
@@ -178,7 +194,7 @@ export function mergeUniqueTextLines(baseText: string, newLines: string[]) {
   const merged = [...existing];
 
   for (const rawLine of newLines || []) {
-    const line = String(rawLine || "").trim();
+    const line = String(rawLine || '').trim();
     if (!line) continue;
     const key = normalizeText(line);
     if (!key || seen.has(key)) continue;
@@ -186,5 +202,5 @@ export function mergeUniqueTextLines(baseText: string, newLines: string[]) {
     merged.push(line);
   }
 
-  return merged.join("\n");
+  return merged.join('\n');
 }

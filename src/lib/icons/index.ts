@@ -131,7 +131,6 @@ export { default as Wrench } from './Wrench.svelte';
 export { default as X } from './X.svelte';
 export { default as XCircle } from './XCircle.svelte';
 
-
 // Sem equivalente no flowbite-svelte-icons: continuam com o desenho do Lucide.
 export { default as AlertTriangle } from './AlertTriangle.svelte';
 export { default as ArrowDownRight } from './ArrowDownRight.svelte';

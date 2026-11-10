@@ -1,4 +1,4 @@
-import { isSeguroPasseioLike } from "./roteiroSeguro";
+import { isSeguroPasseioLike } from './roteiroSeguro';
 import { toISODateUTC } from '$lib/date';
 
 export type ImportedRoteiroPasseio = {
@@ -23,7 +23,7 @@ const MONTH_INDEX: Record<string, number> = {
   fevereiro: 1,
   mar: 2,
   marco: 2,
-  "março": 2,
+  março: 2,
   abr: 3,
   abril: 3,
   mai: 4,
@@ -41,7 +41,7 @@ const MONTH_INDEX: Record<string, number> = {
   nov: 10,
   novembro: 10,
   dez: 11,
-  dezembro: 11,
+  dezembro: 11
 };
 
 const SINGLE_DATE_RE = /^(\d{1,2})\s+de\s+([a-zA-ZçÇãÃáÁàÀéÉêÊíÍóÓôÔõÕúÚ]+)(?:\s*\([^)]*\))?$/i;
@@ -52,29 +52,31 @@ const OCCUPANCY_LINE_RE = /^total\s*\(/i;
 const DISCOUNT_META_LINE_RE = /^-\d+%$/;
 
 function normalizeText(value?: string | null) {
-  return String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ")
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase();
 }
 
 function normalizeLine(value?: string | null) {
-  return String(value || "").replace(/\s+/g, " ").trim();
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 function parseMoney(value?: string | null): number {
-  const numeric = String(value || "")
-    .replace(/[^\d,.-]/g, "")
-    .replace(/\./g, "")
-    .replace(",", ".");
+  const numeric = String(value || '')
+    .replace(/[^\d,.-]/g, '')
+    .replace(/\./g, '')
+    .replace(',', '.');
   const parsed = Number(numeric);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function extractMoneyValues(line?: string | null): number[] {
-  return Array.from(String(line || "").matchAll(/R\$\s*([0-9]{1,3}(?:\.[0-9]{3})*,\d{2})/gi))
+  return Array.from(String(line || '').matchAll(/R\$\s*([0-9]{1,3}(?:\.[0-9]{3})*,\d{2})/gi))
     .map((match) => parseMoney(match[1]))
     .filter((value) => value > 0);
 }
@@ -99,7 +101,7 @@ function isServiceCodeLine(line: string) {
 }
 
 function isRefundLine(line: string) {
-  return normalizeText(line).includes("reembols");
+  return normalizeText(line).includes('reembols');
 }
 
 function isOccupancyLine(line: string) {
@@ -109,10 +111,10 @@ function isOccupancyLine(line: string) {
 function isIgnoredMetaLine(line: string) {
   const normalized = normalizeText(line);
   if (!normalized) return true;
-  if (normalized === "selecionado") return true;
-  if (normalized === "excluir") return true;
-  if (normalized === "detalhes") return true;
-  if (normalized === "recomendado") return true;
+  if (normalized === 'selecionado') return true;
+  if (normalized === 'excluir') return true;
+  if (normalized === 'detalhes') return true;
+  if (normalized === 'recomendado') return true;
   if (DISCOUNT_META_LINE_RE.test(normalized)) return true;
   return false;
 }
@@ -125,14 +127,16 @@ function looksLikeCityLine(line: string) {
   if (isOccupancyLine(normalized)) return false;
   if (extractMoneyValues(normalized).length > 0) return false;
   if (isIgnoredMetaLine(normalized)) return false;
-  return normalized.includes(" - ");
+  return normalized.includes(' - ');
 }
 
 function buildBlocks(text: string) {
   const blocks: string[][] = [];
   let current: string[] = [];
 
-  for (const rawLine of String(text || "").replace(/\r/g, "\n").split("\n")) {
+  for (const rawLine of String(text || '')
+    .replace(/\r/g, '\n')
+    .split('\n')) {
     const line = normalizeLine(rawLine);
     if (!line) continue;
     if (isDateLine(line) && current.length > 0) {
@@ -153,7 +157,7 @@ function parseOccupancy(line: string) {
   const childrenMatch = normalized.match(/(\d+)\s*crianc/);
   return {
     qtd_adultos: adultsMatch?.[1] ? Number(adultsMatch[1]) : 0,
-    qtd_criancas: childrenMatch?.[1] ? Number(childrenMatch[1]) : 0,
+    qtd_criancas: childrenMatch?.[1] ? Number(childrenMatch[1]) : 0
   };
 }
 
@@ -180,7 +184,7 @@ function parseBlockDates(line: string, referenceYear: number) {
 
 function normalizeCity(line: string) {
   const raw = normalizeLine(line);
-  for (const part of raw.split("-")) {
+  for (const part of raw.split('-')) {
     const city = normalizeLine(part);
     if (city) return city;
   }
@@ -191,14 +195,18 @@ function sortPasseios(list: ImportedRoteiroPasseio[]) {
   return list
     .slice()
     .sort((a, b) => {
-      const dateCompare = String(a.data_inicio || "").localeCompare(String(b.data_inicio || ""));
+      const dateCompare = String(a.data_inicio || '').localeCompare(String(b.data_inicio || ''));
       if (dateCompare !== 0) return dateCompare;
-      return String(a.passeio || "").localeCompare(String(b.passeio || ""));
+      return String(a.passeio || '').localeCompare(String(b.passeio || ''));
     })
     .map((item, index) => ({ ...item, ordem: index }));
 }
 
-function parsePasseioBlock(block: string[], index: number, referenceYear: number): ImportedRoteiroPasseio | null {
+function parsePasseioBlock(
+  block: string[],
+  index: number,
+  referenceYear: number
+): ImportedRoteiroPasseio | null {
   const [dateLine, ...restLines] = block;
   const dates = parseBlockDates(dateLine, referenceYear);
   if (!dates) return null;
@@ -206,13 +214,13 @@ function parsePasseioBlock(block: string[], index: number, referenceYear: number
   const usefulLines = restLines.filter((line) => line && !isIgnoredMetaLine(line));
   if (usefulLines.length === 0) return null;
 
-  const hasCityLine = looksLikeCityLine(usefulLines[0] || "");
-  const cidade = hasCityLine ? normalizeCity(usefulLines[0] || "") : "";
-  const passeioRaw = normalizeLine(usefulLines[hasCityLine ? 1 : 0] || "");
+  const hasCityLine = looksLikeCityLine(usefulLines[0] || '');
+  const cidade = hasCityLine ? normalizeCity(usefulLines[0] || '') : '';
+  const passeioRaw = normalizeLine(usefulLines[hasCityLine ? 1 : 0] || '');
   if (!passeioRaw) return null;
 
   let cursor = hasCityLine ? 2 : 1;
-  let fornecedor = "";
+  let fornecedor = '';
   let qtd_adultos = 0;
   let qtd_criancas = 0;
   let valor_original = 0;
@@ -226,7 +234,13 @@ function parsePasseioBlock(block: string[], index: number, referenceYear: number
       continue;
     }
 
-    if (!fornecedor && !isServiceCodeLine(line) && !isRefundLine(line) && !isOccupancyLine(line) && extractMoneyValues(line).length === 0) {
+    if (
+      !fornecedor &&
+      !isServiceCodeLine(line) &&
+      !isRefundLine(line) &&
+      !isOccupancyLine(line) &&
+      extractMoneyValues(line).length === 0
+    ) {
       fornecedor = line;
       cursor += 1;
       continue;
@@ -248,7 +262,7 @@ function parsePasseioBlock(block: string[], index: number, referenceYear: number
     const values = extractMoneyValues(line);
     if (values.length > 0) {
       const normalized = normalizeText(line);
-      if (normalized.includes("de r$") && normalized.includes(" por")) {
+      if (normalized.includes('de r$') && normalized.includes(' por')) {
         sawDiscountLine = true;
         valor_original = values[0] || 0;
         if (values.length > 1) valor_final = values[values.length - 1] || valor_final;
@@ -267,11 +281,12 @@ function parsePasseioBlock(block: string[], index: number, referenceYear: number
     isSeguroPasseioLike({
       passeio: passeioRaw,
       fornecedor,
-      cidade,
+      cidade
     }) || !cidade;
-  const passeio = isSeguro && !normalizeText(passeioRaw).includes("seguro")
-    ? `Seguro viagem ${passeioRaw}`
-    : passeioRaw;
+  const passeio =
+    isSeguro && !normalizeText(passeioRaw).includes('seguro')
+      ? `Seguro viagem ${passeioRaw}`
+      : passeioRaw;
 
   return {
     cidade,
@@ -279,13 +294,13 @@ function parsePasseioBlock(block: string[], index: number, referenceYear: number
     fornecedor,
     data_inicio: dates.data_inicio,
     data_fim: dates.data_fim,
-    tipo: isSeguro ? "Seguro Viagem" : "Serviço",
-    ingressos: "",
+    tipo: isSeguro ? 'Seguro Viagem' : 'Serviço',
+    ingressos: 'Não incluído',
     qtd_adultos,
     qtd_criancas,
     valor_original,
     valor_final,
-    ordem: index,
+    ordem: index
   };
 }
 
@@ -304,15 +319,15 @@ export function mergeImportedRoteiroPasseios(
 ) {
   const meaningfulExisting = (existing || []).filter((item) =>
     Boolean(
-      String(item.cidade || "").trim() ||
-        String(item.passeio || "").trim() ||
-        String(item.fornecedor || "").trim() ||
-        String(item.data_inicio || "").trim() ||
-        String(item.data_fim || "").trim() ||
-        Number(item.qtd_adultos || 0) > 0 ||
-        Number(item.qtd_criancas || 0) > 0 ||
-        Number(item.valor_original || 0) > 0 ||
-        Number(item.valor_final || 0) > 0
+      String(item.cidade || '').trim() ||
+      String(item.passeio || '').trim() ||
+      String(item.fornecedor || '').trim() ||
+      String(item.data_inicio || '').trim() ||
+      String(item.data_fim || '').trim() ||
+      Number(item.qtd_adultos || 0) > 0 ||
+      Number(item.qtd_criancas || 0) > 0 ||
+      Number(item.valor_original || 0) > 0 ||
+      Number(item.valor_final || 0) > 0
     )
   );
 

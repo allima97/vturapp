@@ -5,6 +5,7 @@ const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
 function safeDownloadFilename(value: string) {
   const cleaned = String(value || 'arquivo')
+    // eslint-disable-next-line no-control-regex -- intencional: remove caracteres de controle de nomes de arquivo
     .replace(/[\\/:*?"<>|\u0000-\u001f]/g, '-')
     .replace(/\s+/g, ' ')
     .trim();
@@ -59,7 +60,9 @@ export async function renderSvgToPngBlob(svgText: string): Promise<Blob> {
     if (!ctx) throw new Error('Falha ao inicializar canvas para conversão PNG.');
 
     ctx.drawImage(image, 0, 0, width, height);
-    const pngBlob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/png'));
+    const pngBlob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/png')
+    );
     if (!pngBlob) throw new Error('Falha ao gerar blob PNG da prévia.');
     return pngBlob;
   } finally {
@@ -81,7 +84,9 @@ export async function fetchPreviewPngBlob(previewUrl: string) {
     }
   }
 
-  const svgResponse = await fetchWithTimeout(previewUrl, { headers: { Accept: 'image/svg+xml,text/plain,*/*' } });
+  const svgResponse = await fetchWithTimeout(previewUrl, {
+    headers: { Accept: 'image/svg+xml,text/plain,*/*' }
+  });
   if (!svgResponse.ok) throw new Error('Falha ao carregar SVG para gerar PNG local.');
   const svgText = await svgResponse.text();
   return {
@@ -90,7 +95,10 @@ export async function fetchPreviewPngBlob(previewUrl: string) {
   };
 }
 
-export async function fetchImageAsDataUrl(url: string, mimeType = 'image/png'): Promise<string | null> {
+export async function fetchImageAsDataUrl(
+  url: string,
+  mimeType = 'image/png'
+): Promise<string | null> {
   try {
     const response = await fetchWithTimeout(url);
     if (!response.ok) return null;

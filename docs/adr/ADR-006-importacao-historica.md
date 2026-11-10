@@ -2,7 +2,7 @@
 
 **Estado:** CONFIRMADA  
 **Data:** 2026-10-26  
-**Decisão:** DISPENSADA por decisão do usuário  
+**Decisão:** DISPENSADA por decisão do usuário
 
 ## Contexto
 

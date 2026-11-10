@@ -30,7 +30,10 @@ export async function handleRoteirosSugestoesRemoverPost(event: RequestEvent) {
   try {
     const originError = rejectCrossOriginRequest(event.request);
     if (originError) return originError;
-    const bodyResult = await readJsonBodyLimited(event.request, MAX_ROTEIRO_SUGESTAO_REMOVE_BODY_BYTES);
+    const bodyResult = await readJsonBodyLimited(
+      event.request,
+      MAX_ROTEIRO_SUGESTAO_REMOVE_BODY_BYTES
+    );
     if (!bodyResult.ok) return bodyResult.response;
 
     const client = getAdminClient();
@@ -44,15 +47,12 @@ export async function handleRoteirosSugestoesRemoverPost(event: RequestEvent) {
 
     const tipo = String(body.tipo).trim().slice(0, 60);
     const valor = String(body.valor).trim().slice(0, 160);
-    if (!tipo || !valor) return new Response('Dados invalidos.', { status: 400, headers: NO_STORE_HEADERS });
+    if (!tipo || !valor)
+      return new Response('Dados invalidos.', { status: 400, headers: NO_STORE_HEADERS });
 
     const companyId = scope.companyId;
 
-    let query = client
-      .from('roteiro_sugestoes')
-      .delete()
-      .eq('tipo', tipo)
-      .eq('valor', valor);
+    let query = client.from('roteiro_sugestoes').delete().eq('tipo', tipo).eq('valor', valor);
 
     if (companyId) {
       query = query.eq('company_id', companyId);

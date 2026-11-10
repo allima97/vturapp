@@ -6,12 +6,7 @@
 
 import { and, eq, like } from 'drizzle-orm';
 import { getDb, type DrizzleDb } from '$lib/server/db/client';
-import {
-  moduloAcesso,
-  userProfiles,
-  userTypes,
-  type Papel,
-} from '$lib/server/db/schema';
+import { moduloAcesso, userProfiles, userTypes, type Papel } from '$lib/server/db/schema';
 import { MATRIZ_RBAC } from '$lib/server/policy/matrix';
 
 const OUTRO_TYPE_ID = 'vtur-builtin-outro';
@@ -21,7 +16,7 @@ const ACTION_LEVEL: Record<string, { level: number; permission: string }> = {
   criar: { level: 2, permission: 'create' },
   editar: { level: 3, permission: 'edit' },
   excluir: { level: 4, permission: 'delete' },
-  gerenciar: { level: 5, permission: 'admin' },
+  gerenciar: { level: 5, permission: 'admin' }
 };
 
 /**
@@ -32,7 +27,7 @@ export async function buildTenantAccessProfileStatements(
   db: DrizzleDb,
   userId: string,
   papel: Papel,
-  updatedAt = new Date().toISOString(),
+  updatedAt = new Date().toISOString()
 ) {
   await db
     .insert(userTypes)
@@ -40,7 +35,7 @@ export async function buildTenantAccessProfileStatements(
       id: OUTRO_TYPE_ID,
       name: 'OUTRO',
       description: 'Perfil de empresa com capacidades explícitas por módulo.',
-      createdAt: updatedAt,
+      createdAt: updatedAt
     })
     .onConflictDoNothing();
 
@@ -76,7 +71,7 @@ export async function buildTenantAccessProfileStatements(
     permissao,
     ativo: true,
     createdAt: updatedAt,
-    updatedAt,
+    updatedAt
   }));
 
   return [
@@ -88,7 +83,7 @@ export async function buildTenantAccessProfileStatements(
         usoIndividual: false,
         ativo: true,
         participaRanking: false,
-        updatedAt,
+        updatedAt
       })
       .onConflictDoUpdate({
         target: userProfiles.userId,
@@ -97,13 +92,15 @@ export async function buildTenantAccessProfileStatements(
           usoIndividual: false,
           ativo: true,
           participaRanking: false,
-          updatedAt,
-        },
+          updatedAt
+        }
       }),
     db
       .delete(moduloAcesso)
-      .where(and(eq(moduloAcesso.usuarioId, userId), like(moduloAcesso.modulo, `${V2_MODULE_PREFIX}%`))),
-    ...permissionRows.map((row) => db.insert(moduloAcesso).values(row)),
+      .where(
+        and(eq(moduloAcesso.usuarioId, userId), like(moduloAcesso.modulo, `${V2_MODULE_PREFIX}%`))
+      ),
+    ...permissionRows.map((row) => db.insert(moduloAcesso).values(row))
   ] as const;
 }
 
@@ -113,7 +110,7 @@ const ACTION_LEVEL_BY_PERMISSION: Record<string, number> = {
   create: 2,
   edit: 3,
   delete: 4,
-  admin: 5,
+  admin: 5
 };
 
 /** Atualiza o perfil de autorização v2 após uma mudança de papel de membro. */
@@ -121,9 +118,11 @@ export async function syncTenantAccessProfile(
   d1: D1Database,
   userId: string,
   papel: Papel,
-  updatedAt?: string,
+  updatedAt?: string
 ): Promise<void> {
   const db = getDb(d1);
   const statements = await buildTenantAccessProfileStatements(db, userId, papel, updatedAt);
-  await db.batch(statements as unknown as [typeof statements[number], ...typeof statements[number][]]);
+  await db.batch(
+    statements as unknown as [(typeof statements)[number], ...(typeof statements)[number][]]
+  );
 }

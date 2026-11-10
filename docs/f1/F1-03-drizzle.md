@@ -20,25 +20,25 @@ Provar que Drizzle ORM + D1 funciona no runtime Cloudflare Workers com:
 
 ## Versões instaladas
 
-| Pacote | Versão |
-|--------|--------|
-| `drizzle-orm` | `^0.45.4` |
+| Pacote        | Versão     |
+| ------------- | ---------- |
+| `drizzle-orm` | `^0.45.4`  |
 | `drizzle-kit` | `^0.31.11` |
 
 ---
 
 ## Arquivos criados
 
-| Arquivo | Descrição |
-|---------|-----------|
-| `drizzle.config.ts` | Configuração do Drizzle Kit |
-| `src/lib/server/db/schema.ts` | Schema Drizzle: tabela `empresas` |
-| `src/lib/server/db/client.ts` | Factory `getDb(d1)` e `getDbFromPlatform()` |
-| `src/lib/server/db/index.ts` | Re-exporta schema + client |
-| `src/lib/server/db/__tests__/schema.test.ts` | Testes de tipos Vitest |
-| `drizzle/0000_initial_schema.sql` | Migration SQL inicial |
-| `drizzle/meta/_journal.json` | Journal de migrations Drizzle |
-| `drizzle/meta/0000_snapshot.json` | Snapshot do schema |
+| Arquivo                                      | Descrição                                   |
+| -------------------------------------------- | ------------------------------------------- |
+| `drizzle.config.ts`                          | Configuração do Drizzle Kit                 |
+| `src/lib/server/db/schema.ts`                | Schema Drizzle: tabela `empresas`           |
+| `src/lib/server/db/client.ts`                | Factory `getDb(d1)` e `getDbFromPlatform()` |
+| `src/lib/server/db/index.ts`                 | Re-exporta schema + client                  |
+| `src/lib/server/db/__tests__/schema.test.ts` | Testes de tipos Vitest                      |
+| `drizzle/0000_initial_schema.sql`            | Migration SQL inicial                       |
+| `drizzle/meta/_journal.json`                 | Journal de migrations Drizzle               |
+| `drizzle/meta/0000_snapshot.json`            | Snapshot do schema                          |
 
 ---
 
@@ -46,16 +46,16 @@ Provar que Drizzle ORM + D1 funciona no runtime Cloudflare Workers com:
 
 ```typescript
 // ✅ Correto — centavos como integer
-valorBruto: integer('valor_bruto', { mode: 'number' })  // ex.: R$10,50 → 1050
+valorBruto: integer('valor_bruto', { mode: 'number' }); // ex.: R$10,50 → 1050
 
 // ✅ Correto — datas como text ISO 8601
-criadoEm: text('criado_em')  // ex.: "2026-10-26T17:00:00.000Z"
+criadoEm: text('criado_em'); // ex.: "2026-10-26T17:00:00.000Z"
 
 // ✅ Correto — boolean como integer mode boolean
-ativo: integer('ativo', { mode: 'boolean' })  // → true/false em TS, 0/1 no SQLite
+ativo: integer('ativo', { mode: 'boolean' }); // → true/false em TS, 0/1 no SQLite
 
 // ✅ Correto — percentual × 100
-pctComissao: integer('pct_comissao', { mode: 'number' })  // ex.: 12,5% → 1250
+pctComissao: integer('pct_comissao', { mode: 'number' }); // ex.: 12,5% → 1250
 ```
 
 ---
@@ -70,7 +70,7 @@ import { empresas } from '$lib/server/db/schema';
 
 export const GET: RequestHandler = async ({ platform }) => {
   const db = getDbFromPlatform(platform);
-  
+
   // SELECT com Drizzle
   const rows = await db.select().from(empresas).all();
   return json(rows);

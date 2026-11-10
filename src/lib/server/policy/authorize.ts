@@ -40,11 +40,7 @@ import { hasLegacyModuleAccess } from '$lib/server/auth/legacy-scope';
  * can('visualizador', 'vendas', 'ler')    // true
  * can(null, 'vendas', 'ler')             // false (não autenticado)
  */
-export function can(
-  papel: Papel | null | undefined,
-  recurso: Recurso,
-  acao: Acao
-): boolean {
+export function can(papel: Papel | null | undefined, recurso: Recurso, acao: Acao): boolean {
   if (!papel) return false;
   const capSet = MATRIZ_RBAC[papel];
   if (!capSet) return false;
@@ -57,7 +53,7 @@ const LEGACY_ACTION_LEVEL: Record<Acao, number> = {
   criar: 2,
   editar: 3,
   excluir: 4,
-  gerenciar: 5,
+  gerenciar: 5
 };
 
 /**
@@ -67,7 +63,7 @@ const LEGACY_ACTION_LEVEL: Record<Acao, number> = {
 export function canForContext(
   ctx: AuthContext | null | undefined,
   recurso: Recurso,
-  acao: Acao,
+  acao: Acao
 ): boolean {
   if (!ctx) return false;
   if (!ctx.legacyScope) return can(ctx.papel, recurso, acao);
@@ -77,11 +73,7 @@ export function canForContext(
       hasLegacyModuleAccess(ctx.legacyScope, [`v2:${recurso}`], 5)
     );
   }
-  return hasLegacyModuleAccess(
-    ctx.legacyScope,
-    [`v2:${recurso}`],
-    LEGACY_ACTION_LEVEL[acao],
-  );
+  return hasLegacyModuleAccess(ctx.legacyScope, [`v2:${recurso}`], LEGACY_ACTION_LEVEL[acao]);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -95,11 +87,7 @@ export function canForContext(
  * canAny('operador', 'vendas', ['criar', 'editar']) // true
  * canAny('visualizador', 'financeiro', ['ler'])     // false
  */
-export function canAny(
-  papel: Papel | null | undefined,
-  recurso: Recurso,
-  acoes: Acao[]
-): boolean {
+export function canAny(papel: Papel | null | undefined, recurso: Recurso, acoes: Acao[]): boolean {
   return acoes.some((acao) => can(papel, recurso, acao));
 }
 
@@ -110,11 +98,7 @@ export function canAny(
 /**
  * Retorna true se o papel tem permissão para TODAS as ações.
  */
-export function canAll(
-  papel: Papel | null | undefined,
-  recurso: Recurso,
-  acoes: Acao[]
-): boolean {
+export function canAll(papel: Papel | null | undefined, recurso: Recurso, acoes: Acao[]): boolean {
   return acoes.every((acao) => can(papel, recurso, acao));
 }
 
@@ -122,9 +106,7 @@ export function canAll(
 // authorize() — guard funcional para SvelteKit +server.ts
 // ─────────────────────────────────────────────────────────────────────────────
 
-type AuthorizeResult<T> =
-  | { ok: true; value: T }
-  | { ok: false; response: Response };
+type AuthorizeResult<T> = { ok: true; value: T } | { ok: false; response: Response };
 
 /**
  * Guard funcional para handlers SvelteKit.
@@ -148,7 +130,7 @@ export function authorize<T>(
       response: new Response(
         JSON.stringify({ error: 'Não autenticado.', code: 'UNAUTHENTICATED' }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
-      ),
+      )
     };
   }
   if (!can(papel, recurso, acao)) {
@@ -157,7 +139,7 @@ export function authorize<T>(
       response: new Response(
         JSON.stringify({ error: 'Sem permissão.', code: 'FORBIDDEN', recurso, acao }),
         { status: 403, headers: { 'Content-Type': 'application/json' } }
-      ),
+      )
     };
   }
   return { ok: true, value: handler() };
@@ -188,7 +170,7 @@ export function requireCan(recurso: Recurso, acao: Acao): MiddlewareHandler<ApiE
     const baseURL =
       PUBLIC_ENVIRONMENT === 'production'
         ? 'https://vturapp.com.br'
-        : PUBLIC_APP_URL ?? 'http://localhost:5173';
+        : (PUBLIC_APP_URL ?? 'http://localhost:5173');
 
     const { resolveAuthContext } = await import('$lib/server/auth/context');
     const ctx = await resolveAuthContext(c.req.raw.headers, DB, BETTER_AUTH_SECRET, baseURL);
@@ -198,10 +180,7 @@ export function requireCan(recurso: Recurso, acao: Acao): MiddlewareHandler<ApiE
     }
 
     if (!canForContext(ctx, recurso, acao)) {
-      return c.json(
-        { error: 'Sem permissão.', code: 'FORBIDDEN', recurso, acao },
-        403
-      );
+      return c.json({ error: 'Sem permissão.', code: 'FORBIDDEN', recurso, acao }, 403);
     }
 
     // Anexar contexto ao request para uso no handler

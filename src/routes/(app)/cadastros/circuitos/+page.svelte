@@ -10,7 +10,16 @@
   import { BottomSheet, FieldInput, FieldSelect, LoadingState } from '$lib/components/ui';
   import { apiDelete, apiGet, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
-  import { Plus, Route, MapPin, Calendar, DollarSign, Search, SlidersHorizontal, Trash2 } from '$lib/icons';
+  import {
+    Plus,
+    Route,
+    MapPin,
+    Calendar,
+    DollarSign,
+    Search,
+    SlidersHorizontal,
+    Trash2
+  } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
 
   interface Circuito {
@@ -58,11 +67,36 @@
   const columns = [
     { key: 'codigo', label: 'Código', sortable: true, width: '90px' },
     { key: 'nome', label: 'Nome', sortable: true },
-    { key: 'tipo', label: 'Tipo', sortable: true, width: '110px', formatter: (v: string) => getTipoBadge(v) },
-    { key: 'dias', label: 'Duração', sortable: true, width: '100px', formatter: (v: number, row: Circuito) => `${v}d/${row.noites}n` },
+    {
+      key: 'tipo',
+      label: 'Tipo',
+      sortable: true,
+      width: '110px',
+      formatter: (v: string) => getTipoBadge(v)
+    },
+    {
+      key: 'dias',
+      label: 'Duração',
+      sortable: true,
+      width: '100px',
+      formatter: (v: number, row: Circuito) => `${v}d/${row.noites}n`
+    },
     { key: 'destinos_str', label: 'Destinos', sortable: false },
-    { key: 'preco_base', label: 'Preço', sortable: true, align: 'right' as const, width: '110px', formatter: (v: number) => formatCurrency(v) },
-    { key: 'ativo', label: 'Status', sortable: true, width: '90px', formatter: (v: boolean) => getStatusBadge(v) }
+    {
+      key: 'preco_base',
+      label: 'Preço',
+      sortable: true,
+      align: 'right' as const,
+      width: '110px',
+      formatter: (v: number) => formatCurrency(v)
+    },
+    {
+      key: 'ativo',
+      label: 'Status',
+      sortable: true,
+      width: '90px',
+      formatter: (v: boolean) => getStatusBadge(v)
+    }
   ];
 
   onMount(async () => {
@@ -82,11 +116,13 @@
         request.signal
       );
       if (!loadGuard.isCurrent(request.seq)) return;
-      circuitos = (data.items || []).map((c): Circuito => ({
-        ...c,
-        destinos: Array.isArray(c.destinos) ? c.destinos : c.destinos ? [c.destinos] : [],
-        destinos_str: Array.isArray(c.destinos) ? c.destinos.join(', ') : c.destinos || ''
-      }));
+      circuitos = (data.items || []).map(
+        (c): Circuito => ({
+          ...c,
+          destinos: Array.isArray(c.destinos) ? c.destinos : c.destinos ? [c.destinos] : [],
+          destinos_str: Array.isArray(c.destinos) ? c.destinos.join(', ') : c.destinos || ''
+        })
+      );
     } catch (err) {
       if (isCanceledApiError(err)) return;
       if (dev) console.error('Erro ao carregar circuitos:', err);
@@ -116,7 +152,7 @@
 
   async function confirmDelete() {
     if (!circuitoToDelete) return;
-    
+
     try {
       await apiDelete(`/api/v1/circuitos/${circuitoToDelete.id}`);
       toast.success('Circuito excluído com sucesso!');
@@ -131,12 +167,16 @@
 
   $: normalizedSearchQuery = searchQuery.toLowerCase();
 
-  $: filteredCircuitos = circuitos.filter(c => {
+  $: filteredCircuitos = circuitos.filter((c) => {
     if (filtroDias === 'curto' && c.dias > 5) return false;
     if (filtroDias === 'medio' && (c.dias <= 5 || c.dias > 10)) return false;
     if (filtroDias === 'longo' && c.dias <= 10) return false;
-    if (normalizedSearchQuery && !c.nome.toLowerCase().includes(normalizedSearchQuery) &&
-        !c.codigo.toLowerCase().includes(normalizedSearchQuery)) return false;
+    if (
+      normalizedSearchQuery &&
+      !c.nome.toLowerCase().includes(normalizedSearchQuery) &&
+      !c.codigo.toLowerCase().includes(normalizedSearchQuery)
+    )
+      return false;
     return true;
   });
 
@@ -167,16 +207,18 @@
   <title>Circuitos | VTUR</title>
 </svelte:head>
 
-<PageHeader 
+<PageHeader
   title="Circuitos"
   subtitle="Gerenciamento de roteiros e pacotes combinados"
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Cadastros', href: '/cadastros' },
-    { label: 'Circuitos' }
-  ]}
+  breadcrumbs={[{ label: 'Cadastros', href: '/cadastros' }, { label: 'Circuitos' }]}
   actions={[
-    { label: 'Novo Circuito', onClick: () => goto('/cadastros/circuitos/novo'), variant: 'primary', icon: Plus }
+    {
+      label: 'Novo Circuito',
+      onClick: () => goto('/cadastros/circuitos/novo'),
+      variant: 'primary',
+      icon: Plus
+    }
   ]}
 />
 
@@ -238,7 +280,7 @@
       <SlidersHorizontal size={16} class="mr-2" />
       Filtros
       {#if searchQuery.trim() || filtroTipo || filtroDias || filtroStatus}
-        <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-financeiro-500"></span>
+        <span class="bg-financeiro-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
       {/if}
     </Button>
   </div>
@@ -246,50 +288,50 @@
   <!-- Filtros -->
   <Card color="financeiro" class="mb-6 hidden sm:block">
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <FieldInput
-          id="filtro-circuito-busca"
-          label="Busca"
-          placeholder="Nome ou código..."
-          bind:value={searchQuery}
-          icon={Search}
-          class_name="w-full"
-        />
-        <FieldSelect
-          id="filtro-tipo"
-          label="Tipo"
-          bind:value={filtroTipo}
-          options={[
-            { value: 'nacional', label: 'Nacional' },
-            { value: 'internacional', label: 'Internacional' }
-          ]}
-          placeholder="Todos"
-          class_name="w-full"
-          on:change={carregarCircuitos}
-        />
-        <FieldSelect
-          id="filtro-dias"
-          label="Duração"
-          bind:value={filtroDias}
-          options={[
-            { value: 'curto', label: 'Curto (até 5 dias)' },
-            { value: 'medio', label: 'Médio (6-10 dias)' },
-            { value: 'longo', label: 'Longo (11+ dias)' }
-          ]}
-          placeholder="Todas"
-          class_name="w-full"
-        />
-        <FieldSelect
-          id="filtro-status"
-          label="Status"
-          bind:value={filtroStatus}
-          options={[
-            { value: 'ativo', label: 'Ativo' },
-            { value: 'inativo', label: 'Inativo' }
-          ]}
-          placeholder="Todos"
-          class_name="w-full"
-          on:change={carregarCircuitos}
-        />
+      <FieldInput
+        id="filtro-circuito-busca"
+        label="Busca"
+        placeholder="Nome ou código..."
+        bind:value={searchQuery}
+        icon={Search}
+        class_name="w-full"
+      />
+      <FieldSelect
+        id="filtro-tipo"
+        label="Tipo"
+        bind:value={filtroTipo}
+        options={[
+          { value: 'nacional', label: 'Nacional' },
+          { value: 'internacional', label: 'Internacional' }
+        ]}
+        placeholder="Todos"
+        class_name="w-full"
+        on:change={carregarCircuitos}
+      />
+      <FieldSelect
+        id="filtro-dias"
+        label="Duração"
+        bind:value={filtroDias}
+        options={[
+          { value: 'curto', label: 'Curto (até 5 dias)' },
+          { value: 'medio', label: 'Médio (6-10 dias)' },
+          { value: 'longo', label: 'Longo (11+ dias)' }
+        ]}
+        placeholder="Todas"
+        class_name="w-full"
+      />
+      <FieldSelect
+        id="filtro-status"
+        label="Status"
+        bind:value={filtroStatus}
+        options={[
+          { value: 'ativo', label: 'Ativo' },
+          { value: 'inativo', label: 'Inativo' }
+        ]}
+        placeholder="Todos"
+        class_name="w-full"
+        on:change={carregarCircuitos}
+      />
     </div>
   </Card>
 
@@ -369,12 +411,14 @@
       on:change={carregarCircuitos}
     />
   </div>
-  <Button variant="primary" class_name="w-full mt-2" on:click={() => (showFilterSheet = false)}>Aplicar filtros</Button>
+  <Button variant="primary" class_name="w-full mt-2" on:click={() => (showFilterSheet = false)}
+    >Aplicar filtros</Button
+  >
 </BottomSheet>
 
 <!-- Dialog de confirmação -->
-<Dialog 
-  bind:open={showDeleteDialog} 
+<Dialog
+  bind:open={showDeleteDialog}
   title="Confirmar Exclusão"
   size="sm"
   color="financeiro"
@@ -383,10 +427,10 @@
   showConfirm={true}
   confirmText="Excluir"
   onConfirm={confirmDelete}
-  onCancel={() => showDeleteDialog = false}
+  onCancel={() => (showDeleteDialog = false)}
 >
   <p class="text-slate-600">
-    Tem certeza que deseja excluir o circuito <strong>{circuitoToDelete?.nome}</strong>?
-    Esta ação não pode ser desfeita.
+    Tem certeza que deseja excluir o circuito <strong>{circuitoToDelete?.nome}</strong>? Esta ação
+    não pode ser desfeita.
   </p>
 </Dialog>

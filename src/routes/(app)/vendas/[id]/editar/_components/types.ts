@@ -1,4 +1,5 @@
 import type { VendaFormOption, VendaFormParcela } from '$lib/features/vendas/form';
+import type { EstadoCidadeGeografica } from '$lib/features/vendas/cidadeGeograficaEstado';
 
 export type Option = VendaFormOption;
 
@@ -33,6 +34,7 @@ export type VendaEditForm = {
 };
 
 export type ReciboEditForm = {
+  estadoCidade: EstadoCidadeGeografica;
   principal: boolean;
   usar_cidade_padrao: boolean;
   destino_cidade_id: string;

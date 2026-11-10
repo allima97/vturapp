@@ -35,7 +35,12 @@ type VendaRow = {
   valor_total: number | null;
   cancelada: boolean | null;
   clientes?: { nome?: string | null } | null;
-  recibos?: Array<{ valor_taxas?: number | null; tipo_pacote?: string | null; numero_recibo?: string | null; numero_reserva?: string | null }> | null;
+  recibos?: Array<{
+    valor_taxas?: number | null;
+    tipo_pacote?: string | null;
+    numero_recibo?: string | null;
+    numero_reserva?: string | null;
+  }> | null;
 };
 
 type LegacyVendaItem = {
@@ -65,7 +70,8 @@ function deriveTipo(row: VendaRow) {
   const ref = normalizeText(first?.tipo_pacote || '');
   if (ref.includes('seguro') || ref.includes('servico')) return 'servico';
   if (ref.includes('hotel') || ref.includes('resort')) return 'hotel';
-  if (ref.includes('passagem') || ref.includes('aereo') || ref.includes('transporte')) return 'passagem';
+  if (ref.includes('passagem') || ref.includes('aereo') || ref.includes('transporte'))
+    return 'passagem';
   return 'pacote';
 }
 
@@ -81,8 +87,15 @@ export async function handleVendasGet(event: RequestEvent) {
 
     const searchParams = event.url.searchParams;
     const clienteId = String(searchParams.get('cliente_id') || '').trim();
-    const companyIds = resolveScopedCompanyIds(scope, searchParams.get('company_id') || searchParams.get('empresa_id'));
-    const vendedorIds = await resolveScopedVendedorIds(client, scope, searchParams.get('vendedor_ids') || searchParams.get('vendedor_id'));
+    const companyIds = resolveScopedCompanyIds(
+      scope,
+      searchParams.get('company_id') || searchParams.get('empresa_id')
+    );
+    const vendedorIds = await resolveScopedVendedorIds(
+      client,
+      scope,
+      searchParams.get('vendedor_ids') || searchParams.get('vendedor_id')
+    );
     const shouldApplySellerScope = !scope.isGestor && !scope.isMaster && !scope.isFinanceiro;
     const hasSellerScope = shouldApplySellerScope && vendedorIds.length > 0;
     const accessibleClientIds =
@@ -115,7 +128,8 @@ export async function handleVendasGet(event: RequestEvent) {
         ) => {
           let query = client
             .from('vendas')
-            .select(`
+            .select(
+              `
               id,
               numero_venda,
               cliente_id,
@@ -128,14 +142,22 @@ export async function handleVendasGet(event: RequestEvent) {
               cancelada,
               clientes (nome),
               recibos:vendas_recibos (valor_taxas, tipo_pacote, numero_recibo, numero_reserva)
-            `)
+            `
+            )
             .order('data_venda', { ascending: false })
             .limit(5000);
 
           if (companyIdsFilter.length > 0) query = query.in('company_id', companyIdsFilter);
-          if (shouldApplySellerScope && vendedorIdsFilter.length > 0) query = query.in('vendedor_id', vendedorIdsFilter);
+          if (shouldApplySellerScope && vendedorIdsFilter.length > 0)
+            query = query.in('vendedor_id', vendedorIdsFilter);
           if (clienteId) query = query.eq('cliente_id', clienteId);
-          else if (!scope.isAdmin && !hasSellerScope && clientIdsFilter && clientIdsFilter.length > 0) query = query.in('cliente_id', clientIdsFilter);
+          else if (
+            !scope.isAdmin &&
+            !hasSellerScope &&
+            clientIdsFilter &&
+            clientIdsFilter.length > 0
+          )
+            query = query.in('cliente_id', clientIdsFilter);
 
           const { data, error } = await query;
           if (error) throw error;
@@ -144,9 +166,13 @@ export async function handleVendasGet(event: RequestEvent) {
 
         let data: VendaRow[] = [];
         const shouldBatchClients =
-          !clienteId && !scope.isAdmin && !hasSellerScope && accessibleClientIds.length > QUERY_IN_BATCH_SIZE;
+          !clienteId &&
+          !scope.isAdmin &&
+          !hasSellerScope &&
+          accessibleClientIds.length > QUERY_IN_BATCH_SIZE;
         const shouldBatchCompanies = companyIds.length > QUERY_IN_BATCH_SIZE;
-        const shouldBatchVendedores = shouldApplySellerScope && vendedorIds.length > QUERY_IN_BATCH_SIZE;
+        const shouldBatchVendedores =
+          shouldApplySellerScope && vendedorIds.length > QUERY_IN_BATCH_SIZE;
 
         if (shouldBatchClients || shouldBatchCompanies || shouldBatchVendedores) {
           const clientBatches = shouldBatchClients ? chunkArray(accessibleClientIds) : [undefined];
@@ -162,7 +188,11 @@ export async function handleVendasGet(event: RequestEvent) {
           }
           data = dedupeRowsById(data);
         } else {
-          data = await fetchRows(!clienteId && !scope.isAdmin && !hasSellerScope && accessibleClientIds.length > 0 ? accessibleClientIds : undefined);
+          data = await fetchRows(
+            !clienteId && !scope.isAdmin && !hasSellerScope && accessibleClientIds.length > 0
+              ? accessibleClientIds
+              : undefined
+          );
         }
 
         const mappedItems = data.map((row) => ({
@@ -176,17 +206,17 @@ export async function handleVendasGet(event: RequestEvent) {
           data_embarque: row.data_embarque,
           status: deriveStatus(row),
           tipo: deriveTipo(row),
-          comissao: (Array.isArray(row.recibos) ? row.recibos : []).reduce((sum, recibo) => sum + Number(recibo?.valor_taxas || 0), 0)
+          comissao: (Array.isArray(row.recibos) ? row.recibos : []).reduce(
+            (sum, recibo) => sum + Number(recibo?.valor_taxas || 0),
+            0
+          )
         }));
 
         return { items: mappedItems };
       }
     });
 
-    return json(
-      { items, total: items.length },
-      { headers: DYNAMIC_READ_HEADERS }
-    );
+    return json({ items, total: items.length }, { headers: DYNAMIC_READ_HEADERS });
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar vendas.');
   }

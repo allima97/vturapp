@@ -73,7 +73,12 @@
     currency: 'BRL'
   });
 
-  $: canEdit = !$permissoes.ready || $permissoes.isSystemAdmin || $permissoes.isMaster || $permissoes.isFinanceiro || $permissoes.isGestor;
+  $: canEdit =
+    !$permissoes.ready ||
+    $permissoes.isSystemAdmin ||
+    $permissoes.isMaster ||
+    $permissoes.isFinanceiro ||
+    $permissoes.isGestor;
 
   $: empresaOptions = empresas.map((empresa) => ({
     value: empresa.id,
@@ -123,9 +128,17 @@
       label: 'Rateio',
       sortable: false,
       formatter: (_: unknown, row: AjusteItem) => {
-        if (!row.rateio || !row.rateio.ativo) return '<span class="text-slate-400 text-xs">Sem rateio</span>';
-        const nome = row.rateio.vendedor_destino_nome || row.rateio.vendedor_destino?.nome_completo || 'Vendedor';
-        return `<span class="text-xs">${escapeHtml(nome)} · ${Number(row.rateio.percentual_destino || 0).toFixed(2).replace('.', ',')}%</span>`;
+        if (!row.rateio || !row.rateio.ativo)
+          return '<span class="text-slate-400 text-xs">Sem rateio</span>';
+        const nome =
+          row.rateio.vendedor_destino_nome ||
+          row.rateio.vendedor_destino?.nome_completo ||
+          'Vendedor';
+        return `<span class="text-xs">${escapeHtml(nome)} · ${Number(
+          row.rateio.percentual_destino || 0
+        )
+          .toFixed(2)
+          .replace('.', ',')}%</span>`;
       }
     }
   ];
@@ -166,7 +179,10 @@
 
   async function save() {
     if (!selectedItem) return;
-    if (!form.vendedor_destino_id) { toast.error('Selecione o vendedor destino.'); return; }
+    if (!form.vendedor_destino_id) {
+      toast.error('Selecione o vendedor destino.');
+      return;
+    }
 
     saving = true;
     try {
@@ -261,7 +277,14 @@
 
   // O $: do modo legado só reage às variáveis escritas nesta linha (não enxerga dentro de
   // buildAutoReloadKey()). Por isso a mesma expressão da função fica aqui, idêntica.
-  $: autoReloadKey = [empresaId, inicio, fim, filtroVendedor, filtroApenasRateados, busca.trim()].join('|');
+  $: autoReloadKey = [
+    empresaId,
+    inicio,
+    fim,
+    filtroVendedor,
+    filtroApenasRateados,
+    busca.trim()
+  ].join('|');
   $: if (autoReloadEnabled && autoReloadKey !== lastAutoReloadKey) {
     lastAutoReloadKey = autoReloadKey;
     scheduleAutoReload();
@@ -276,13 +299,8 @@
   title="Ajustes de Vendas"
   subtitle="Configure o rateio de comissões entre vendedores para recibos específicos."
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Financeiro', href: '/financeiro' },
-    { label: 'Ajustes de Vendas' }
-  ]}
-  actions={[
-    { label: 'Atualizar', onClick: () => load(), variant: 'secondary', icon: RefreshCw }
-  ]}
+  breadcrumbs={[{ label: 'Financeiro', href: '/financeiro' }, { label: 'Ajustes de Vendas' }]}
+  actions={[{ label: 'Atualizar', onClick: () => load(), variant: 'secondary', icon: RefreshCw }]}
 />
 
 <!-- Mobile: botão de filtros -->
@@ -291,7 +309,7 @@
     <SlidersHorizontal size={16} class="mr-2" />
     Filtros
     {#if filtroVendedor || filtroApenasRateados !== 'false' || busca}
-      <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-financeiro-500"></span>
+      <span class="bg-financeiro-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
     {/if}
   </Button>
 </div>
@@ -328,7 +346,10 @@
       id="aj-vendedor-mobile"
       label="Vendedor"
       bind:value={filtroVendedor}
-      options={[{ value: '', label: 'Todos' }, ...vendedores.map((v) => ({ value: v.id, label: v.nome_completo || 'Vendedor' }))]}
+      options={[
+        { value: '', label: 'Todos' },
+        ...vendedores.map((v) => ({ value: v.id, label: v.nome_completo || 'Vendedor' }))
+      ]}
       placeholder={null}
       class_name="w-full"
     />
@@ -336,7 +357,10 @@
       id="aj-rateados-mobile"
       label="Rateio"
       bind:value={filtroApenasRateados}
-      options={[{ value: 'false', label: 'Todos' }, { value: 'true', label: 'Apenas rateados' }]}
+      options={[
+        { value: 'false', label: 'Todos' },
+        { value: 'true', label: 'Apenas rateados' }
+      ]}
       placeholder={null}
       class_name="w-full"
     />
@@ -354,7 +378,7 @@
 </BottomSheet>
 
 <Card color="financeiro" class="mb-6 hidden sm:block">
-  <div class="flex flex-wrap gap-4 items-end">
+  <div class="flex flex-wrap items-end gap-4">
     {#if canSelectEmpresa}
       <FieldSelect
         id="aj-empresa"
@@ -385,7 +409,10 @@
       id="aj-vendedor"
       label="Vendedor"
       bind:value={filtroVendedor}
-      options={[{ value: '', label: 'Todos' }, ...vendedores.map((v) => ({ value: v.id, label: v.nome_completo || 'Vendedor' }))]}
+      options={[
+        { value: '', label: 'Todos' },
+        ...vendedores.map((v) => ({ value: v.id, label: v.nome_completo || 'Vendedor' }))
+      ]}
       placeholder={null}
       class_name="min-w-[200px]"
     />
@@ -393,7 +420,10 @@
       id="aj-rateados"
       label="Rateio"
       bind:value={filtroApenasRateados}
-      options={[{ value: 'false', label: 'Todos' }, { value: 'true', label: 'Apenas rateados' }]}
+      options={[
+        { value: 'false', label: 'Todos' },
+        { value: 'true', label: 'Apenas rateados' }
+      ]}
       placeholder={null}
       class_name="min-w-[180px]"
     />
@@ -434,7 +464,9 @@
     <div class="space-y-4">
       <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
         <p class="font-semibold text-slate-900">{selectedItem.cliente_nome}</p>
-        <p class="text-slate-600">Recibo: {selectedItem.numero_recibo} · {formatCurrency(selectedItem.valor_total)}</p>
+        <p class="text-slate-600">
+          Recibo: {selectedItem.numero_recibo} · {formatCurrency(selectedItem.valor_total)}
+        </p>
         <p class="text-slate-500">Vendedor origem: {selectedItem.vendedor_origem_nome}</p>
       </div>
 
@@ -475,7 +507,8 @@
         step="1"
         bind:value={form.percentual_destino}
         class_name="w-full"
-        helper="Origem ficará com {100 - Number(form.percentual_destino || 0)}% e destino com {form.percentual_destino}%."
+        helper="Origem ficará com {100 -
+          Number(form.percentual_destino || 0)}% e destino com {form.percentual_destino}%."
       />
 
       <FieldInput

@@ -20,7 +20,9 @@
   <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
     <div>
       <p class="font-semibold text-slate-900">Abrindo dashboard financeiro.</p>
-      <p class="mt-1 text-sm text-slate-500">Use o painel canônico para caixa, conciliação, comissões e pendências fiscais.</p>
+      <p class="mt-1 text-sm text-slate-500">
+        Use o painel canônico para caixa, conciliação, comissões e pendências fiscais.
+      </p>
     </div>
     <Button href="/dashboard/financeiro" variant="outline" color="financeiro">
       <LayoutDashboard size={16} class="mr-2" /> Abrir dashboard

@@ -33,14 +33,20 @@
 
   const columns = [
     { key: 'termo', label: 'Termo', sortable: true },
-    { key: 'descricao', label: 'Descrição', sortable: true, formatter: (v: string | null) => v || '-' },
+    {
+      key: 'descricao',
+      label: 'Descrição',
+      sortable: true,
+      formatter: (v: string | null) => v || '-'
+    },
     {
       key: 'ativo',
       label: 'Status',
       sortable: true,
       width: '90px',
       formatter: (v: boolean) =>
-        v ? '<span class="inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">Ativo</span>'
+        v
+          ? '<span class="inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">Ativo</span>'
           : '<span class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">Inativo</span>'
     }
   ];
@@ -77,7 +83,10 @@
   }
 
   async function save() {
-    if (!form.termo.trim()) { toast.error('Termo obrigatório.'); return; }
+    if (!form.termo.trim()) {
+      toast.error('Termo obrigatório.');
+      return;
+    }
     saving = true;
     try {
       await apiPost('/api/v1/parametros/nao-comissionaveis', {
@@ -118,10 +127,7 @@
 <PageHeader
   title="Parâmetros de Importação"
   subtitle="Gerencie os termos não comissionáveis usados na importação e conciliação de vendas."
-  breadcrumbs={[
-    { label: 'Admin', href: '/admin' },
-    { label: 'Parâmetros de Importação' }
-  ]}
+  breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Parâmetros de Importação' }]}
   actions={[
     { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw },
     { label: 'Novo Termo', onClick: openNew, variant: 'primary', icon: Plus }
@@ -130,7 +136,9 @@
 
 <Card color="financeiro" class="mb-4">
   <p class="text-sm text-slate-600">
-    Termos não comissionáveis são palavras ou expressões que, quando encontradas nos recibos durante a importação ou conciliação, fazem com que o valor correspondente não seja incluído no cálculo de comissões.
+    Termos não comissionáveis são palavras ou expressões que, quando encontradas nos recibos durante
+    a importação ou conciliação, fazem com que o valor correspondente não seja incluído no cálculo
+    de comissões.
   </p>
 </Card>
 
@@ -191,9 +199,6 @@
       placeholder="Explicação do termo"
       class_name="w-full"
     />
-    <FieldCheckbox
-      label="Termo ativo"
-      bind:checked={form.ativo}
-    />
+    <FieldCheckbox label="Termo ativo" bind:checked={form.ativo} />
   </div>
 </Dialog>

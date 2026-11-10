@@ -41,21 +41,28 @@
     const normalizedCurrency = currency || 'BRL';
     const cached = CURRENCY_FORMATTERS.get(normalizedCurrency);
     if (cached) return cached;
-    const formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: normalizedCurrency });
+    const formatter = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: normalizedCurrency
+    });
     CURRENCY_FORMATTERS.set(normalizedCurrency, formatter);
     return formatter;
   }
 
   const columns = [
     { key: 'nome', label: 'Nome', sortable: true },
-    { key: 'descricao', label: 'Descrição', sortable: false, formatter: (v: string | null) => v || '-' },
+    {
+      key: 'descricao',
+      label: 'Descrição',
+      sortable: false,
+      formatter: (v: string | null) => v || '-'
+    },
     {
       key: 'valor_mensal',
       label: 'Mensalidade',
       sortable: true,
       align: 'right' as const,
-      formatter: (v: number, row: Plano) =>
-        getCurrencyFormatter(row.moeda).format(v || 0)
+      formatter: (v: number, row: Plano) => getCurrencyFormatter(row.moeda).format(v || 0)
     },
     {
       key: 'ativo',
@@ -63,7 +70,8 @@
       sortable: true,
       width: '90px',
       formatter: (v: boolean) =>
-        v ? '<span class="inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">Ativo</span>'
+        v
+          ? '<span class="inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700">Ativo</span>'
           : '<span class="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">Inativo</span>'
     }
   ];
@@ -72,7 +80,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const payload = await apiGet<{ items?: Plano[] }>('/api/v1/admin/planos', undefined, request.signal);
+      const payload = await apiGet<{ items?: Plano[] }>(
+        '/api/v1/admin/planos',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       planos = payload.items || [];
     } catch (err) {
@@ -91,12 +103,21 @@
 
   function openEdit(p: Plano) {
     editingId = p.id;
-    form = { nome: p.nome, descricao: p.descricao || '', valor_mensal: String(p.valor_mensal || ''), moeda: p.moeda || 'BRL', ativo: p.ativo };
+    form = {
+      nome: p.nome,
+      descricao: p.descricao || '',
+      valor_mensal: String(p.valor_mensal || ''),
+      moeda: p.moeda || 'BRL',
+      ativo: p.ativo
+    };
     modalOpen = true;
   }
 
   async function save() {
-    if (!form.nome.trim()) { toast.error('Nome obrigatório.'); return; }
+    if (!form.nome.trim()) {
+      toast.error('Nome obrigatório.');
+      return;
+    }
     saving = true;
     try {
       await apiPost('/api/v1/admin/planos', {
@@ -153,10 +174,7 @@
 <PageHeader
   title="Planos de Assinatura"
   subtitle="Gerencie os planos disponíveis para as empresas clientes."
-  breadcrumbs={[
-    { label: 'Admin', href: '/admin' },
-    { label: 'Planos' }
-  ]}
+  breadcrumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Planos' }]}
   actions={[
     { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw },
     { label: 'Novo Plano', onClick: openNew, variant: 'primary', icon: Plus }
@@ -204,7 +222,14 @@
   onRowClick={(row) => openEdit(row)}
 >
   <svelte:fragment slot="row-actions" let:row>
-    <Button variant="ghost" size="sm" color="red" class_name="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600" on:click={() => deletePlano(row.id)} disabled={deletingId === row.id}>
+    <Button
+      variant="ghost"
+      size="sm"
+      color="red"
+      class_name="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+      on:click={() => deletePlano(row.id)}
+      disabled={deletingId === row.id}
+    >
       <Trash2 size={15} />
     </Button>
   </svelte:fragment>
@@ -224,10 +249,33 @@
   onCancel={() => (modalOpen = false)}
 >
   <div class="space-y-4">
-    <FieldInput id="plano-nome" label="Nome" required={true} bind:value={form.nome} placeholder="Ex: Starter, Pro, Enterprise" class_name="w-full" />
-    <FieldTextarea id="plano-desc" label="Descrição" bind:value={form.descricao} rows={2} placeholder="Descrição do plano..." class_name="w-full" />
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <FieldInput id="plano-valor" label="Mensalidade" type="number" step="0.01" min="0" bind:value={form.valor_mensal} placeholder="0,00" class_name="w-full" />
+    <FieldInput
+      id="plano-nome"
+      label="Nome"
+      required={true}
+      bind:value={form.nome}
+      placeholder="Ex: Starter, Pro, Enterprise"
+      class_name="w-full"
+    />
+    <FieldTextarea
+      id="plano-desc"
+      label="Descrição"
+      bind:value={form.descricao}
+      rows={2}
+      placeholder="Descrição do plano..."
+      class_name="w-full"
+    />
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <FieldInput
+        id="plano-valor"
+        label="Mensalidade"
+        type="number"
+        step="0.01"
+        min="0"
+        bind:value={form.valor_mensal}
+        placeholder="0,00"
+        class_name="w-full"
+      />
       <FieldSelect
         id="plano-moeda"
         label="Moeda"
@@ -241,6 +289,11 @@
         class_name="w-full"
       />
     </div>
-    <FieldCheckbox label="Plano ativo" bind:checked={form.ativo} color="financeiro" class_name="rounded-xl border border-slate-200 bg-white px-3 py-2" />
+    <FieldCheckbox
+      label="Plano ativo"
+      bind:checked={form.ativo}
+      color="financeiro"
+      class_name="rounded-xl border border-slate-200 bg-white px-3 py-2"
+    />
   </div>
 </Dialog>

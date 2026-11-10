@@ -2,7 +2,7 @@
 
 **Estado:** CONFIRMADA  
 **Data:** 2026-10-26  
-**Aplicável desde:** F1-03 (validação) e F2-01 (schema Drizzle)  
+**Aplicável desde:** F1-03 (validação) e F2-01 (schema Drizzle)
 
 ## Contexto
 
@@ -28,11 +28,11 @@ O banco atual usa PostgreSQL `numeric` para valores monetários (ex: `123.45` BR
 
 ### Datas
 
-| Dado | Tipo D1 | Formato |
-|---|---|---|
-| Data de calendário (vencimento, data de viagem) | `TEXT` | `YYYY-MM-DD` |
-| Instante / evento | `TEXT` | ISO 8601 UTC (`2026-10-26T09:00:00Z`) |
-| Timestamp com fuso | `TEXT` UTC no banco | Converter para fuso de exibição no cliente |
+| Dado                                            | Tipo D1             | Formato                                    |
+| ----------------------------------------------- | ------------------- | ------------------------------------------ |
+| Data de calendário (vencimento, data de viagem) | `TEXT`              | `YYYY-MM-DD`                               |
+| Instante / evento                               | `TEXT`              | ISO 8601 UTC (`2026-10-26T09:00:00Z`)      |
+| Timestamp com fuso                              | `TEXT` UTC no banco | Converter para fuso de exibição no cliente |
 
 **Nunca converter automaticamente uma data sem hora em timestamp.**
 
@@ -40,22 +40,22 @@ O banco atual usa PostgreSQL `numeric` para valores monetários (ex: `123.45` BR
 
 ```ts
 // Booleano
-integer('ativo', { mode: 'boolean' })
+integer('ativo', { mode: 'boolean' });
 
 // Data de calendário
-text('data_viagem')  // 'YYYY-MM-DD'
+text('data_viagem'); // 'YYYY-MM-DD'
 
 // Timestamp UTC
-text('criado_em')    // ISO 8601 UTC
+text('criado_em'); // ISO 8601 UTC
 
 // UUID
-text('id').$type<string>()
+text('id').$type<string>();
 
 // Valor monetário (centavos)
-integer('valor_bruto')  // centavos inteiros
+integer('valor_bruto'); // centavos inteiros
 
 // Percentual (2 casas)
-integer('pct_comissao')  // ex: 1050 = 10.50%
+integer('pct_comissao'); // ex: 1050 = 10.50%
 ```
 
 ## Consequências

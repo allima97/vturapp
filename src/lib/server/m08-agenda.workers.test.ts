@@ -22,7 +22,7 @@ import {
   editarTarefa,
   concluirTarefa,
   listarTarefas,
-  AgendaError,
+  AgendaError
 } from '$lib/server/agenda-m08/service';
 
 const EMPRESA_Y = 23;
@@ -56,7 +56,7 @@ describe('Suíte Y — M08: Agenda e tarefas', () => {
   it('Y1. criarEvento — retorna item com tipo=evento e allDay=true', async () => {
     const item = await criarEvento(db, EMPRESA_Y, USER_Y1, {
       titulo: 'Reunião de equipe',
-      startDate: '2026-03-10',
+      startDate: '2026-03-10'
     });
     expect(item.id).toBeGreaterThan(0);
     expect(item.tipo).toBe('evento');
@@ -73,7 +73,7 @@ describe('Suíte Y — M08: Agenda e tarefas', () => {
       endDate: '2026-03-15',
       startAt: '08:00',
       endAt: '10:00',
-      allDay: false,
+      allDay: false
     });
     expect(item.allDay).toBe(false);
     expect(item.startAt).toBe('08:00');
@@ -83,10 +83,10 @@ describe('Suíte Y — M08: Agenda e tarefas', () => {
   it('Y3. editarEvento — atualiza titulo; preserva endDate', async () => {
     const original = await criarEvento(db, EMPRESA_Y, USER_Y1, {
       titulo: 'Evento antigo',
-      startDate: '2026-04-01',
+      startDate: '2026-04-01'
     });
     const atualizado = await editarEvento(db, EMPRESA_Y, original.id, {
-      titulo: 'Evento atualizado',
+      titulo: 'Evento atualizado'
     });
     expect(atualizado.titulo).toBe('Evento atualizado');
     expect(atualizado.endDate).toBe('2026-04-01');
@@ -96,7 +96,10 @@ describe('Suíte Y — M08: Agenda e tarefas', () => {
     // Cria eventos dentro do range e fora dele para validar o filtro
     await criarEvento(db, EMPRESA_Y, USER_Y1, { titulo: 'Reunião mar', startDate: '2026-03-10' });
     await criarEvento(db, EMPRESA_Y, USER_Y1, { titulo: 'Check-in mar', startDate: '2026-03-15' });
-    await criarEvento(db, EMPRESA_Y, USER_Y2, { titulo: 'Evento de maio', startDate: '2026-05-20' });
+    await criarEvento(db, EMPRESA_Y, USER_Y2, {
+      titulo: 'Evento de maio',
+      startDate: '2026-05-20'
+    });
     const jan = await listarEventos(db, EMPRESA_Y, { inicio: '2026-03-01', fim: '2026-03-31' });
     expect(jan.some((e) => e.startDate?.startsWith('2026-03'))).toBe(true);
     expect(jan.every((e) => (e.startDate ?? '') >= '2026-03-01')).toBe(true);
@@ -111,7 +114,7 @@ describe('Suíte Y — M08: Agenda e tarefas', () => {
   it('Y6. excluirItem — evento removido; obterItem lança NAO_ENCONTRADO', async () => {
     const item = await criarEvento(db, EMPRESA_Y, USER_Y1, {
       titulo: 'Para excluir',
-      startDate: '2026-06-01',
+      startDate: '2026-06-01'
     });
     await excluirItem(db, EMPRESA_Y, item.id);
     await expect(obterItem(db, EMPRESA_Y, item.id)).rejects.toThrow(AgendaError);
@@ -121,7 +124,7 @@ describe('Suíte Y — M08: Agenda e tarefas', () => {
 
   it('Y7. criarTarefa — status=pendente, prioridade=normal por default', async () => {
     const tarefa = await criarTarefa(db, EMPRESA_Y, USER_Y1, {
-      titulo: 'Enviar proposta',
+      titulo: 'Enviar proposta'
     });
     expect(tarefa.tipo).toBe('tarefa');
     expect(tarefa.status).toBe('pendente');
@@ -133,7 +136,7 @@ describe('Suíte Y — M08: Agenda e tarefas', () => {
     const tarefa = await criarTarefa(db, EMPRESA_Y, USER_Y1, {
       titulo: 'Pagamento urgente',
       vencimento: '2026-03-31',
-      prioridade: 'urgente',
+      prioridade: 'urgente'
     });
     expect(tarefa.vencimento).toBe('2026-03-31');
     expect(tarefa.prioridade).toBe('urgente');
@@ -141,17 +144,17 @@ describe('Suíte Y — M08: Agenda e tarefas', () => {
 
   it('Y9. editarTarefa — atualiza status', async () => {
     const tarefa = await criarTarefa(db, EMPRESA_Y, USER_Y2, {
-      titulo: 'Tarefa em progresso',
+      titulo: 'Tarefa em progresso'
     });
     const atualizada = await editarTarefa(db, EMPRESA_Y, tarefa.id, {
-      status: 'em_andamento',
+      status: 'em_andamento'
     });
     expect(atualizada.status).toBe('em_andamento');
   });
 
   it('Y10. concluirTarefa — done=true, status=concluida', async () => {
     const tarefa = await criarTarefa(db, EMPRESA_Y, USER_Y1, {
-      titulo: 'Concluir relatório',
+      titulo: 'Concluir relatório'
     });
     const concluida = await concluirTarefa(db, EMPRESA_Y, tarefa.id);
     expect(concluida.done).toBe(true);
@@ -160,11 +163,11 @@ describe('Suíte Y — M08: Agenda e tarefas', () => {
 
   it('Y11. listarTarefas — exclui concluídas por padrão', async () => {
     const tarefa = await criarTarefa(db, EMPRESA_Y, USER_Y1, {
-      titulo: 'Tarefa ativa para filtro',
+      titulo: 'Tarefa ativa para filtro'
     });
     // Cria e conclui outra
     const outra = await criarTarefa(db, EMPRESA_Y, USER_Y1, {
-      titulo: 'Concluída para filtro',
+      titulo: 'Concluída para filtro'
     });
     await concluirTarefa(db, EMPRESA_Y, outra.id);
 

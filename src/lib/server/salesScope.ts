@@ -54,7 +54,8 @@ export function isSaleInScope(sale: unknown, params: SaleScopeParams) {
   const applySellerScopeValue = params.applySellerScope ?? shouldApplySellerScope(params.scope);
 
   if (companySet.size > 0 && !companySet.has(saleCompanyId)) return false;
-  if (applySellerScopeValue && vendedorSet.size > 0 && !vendedorSet.has(saleVendedorId)) return false;
+  if (applySellerScopeValue && vendedorSet.size > 0 && !vendedorSet.has(saleVendedorId))
+    return false;
 
   return true;
 }

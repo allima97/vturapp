@@ -56,9 +56,13 @@
           return;
         }
         existing.addEventListener('load', () => resolve(), { once: true });
-        existing.addEventListener('error', () => reject(new Error('Falha ao carregar Turnstile.')), {
-          once: true
-        });
+        existing.addEventListener(
+          'error',
+          () => reject(new Error('Falha ao carregar Turnstile.')),
+          {
+            once: true
+          }
+        );
       });
     }
 

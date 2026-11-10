@@ -125,7 +125,7 @@ export function isConciliacaoImportavel(params: {
  */
 export function calcularValorVendaReal(params: {
   valorLancamentos?: number | null;
-  valorTaxas?: number | null;     // ← recebido mas NÃO usado no cálculo
+  valorTaxas?: number | null; // ← recebido mas NÃO usado no cálculo
   valorDescontos?: number | null;
   valorAbatimentos?: number | null;
 }): number {
@@ -173,7 +173,7 @@ export function resolveConciliacaoComissaoLoja(params: {
     params.valorComissaoLoja,
     params.valorSaldo,
     params.valorCalculadaLoja,
-    params.valorVisaoMaster,
+    params.valorVisaoMaster
   );
 
   if (valorDireto != null) return valorDireto;
@@ -202,12 +202,12 @@ export function resolveConciliacaoPercentualLoja(params: {
     valorSaldo: params.valorSaldo,
     valorCalculadaLoja: params.valorCalculadaLoja,
     valorVisaoMaster: params.valorVisaoMaster,
-    valorVendaReal: params.valorVendaReal,
+    valorVendaReal: params.valorVendaReal
   });
 
   return calcularPercentualComissaoLoja({
     valorVendaReal: params.valorVendaReal,
-    valorSaldo: valorComissaoLoja,
+    valorSaldo: valorComissaoLoja
   });
 }
 
@@ -224,16 +224,10 @@ export function resolveConciliacaoPercentualLoja(params: {
  * - MAIOR_OU_IGUAL_10: pct >= 10
  * - MENOR_10: 0 < pct < 10
  */
-export function classificarFaixaComissao(
-  percentual?: number | null,
-): ConciliacaoFaixaComissao {
+export function classificarFaixaComissao(percentual?: number | null): ConciliacaoFaixaComissao {
   const pct = Number(percentual || 0);
   if (!Number.isFinite(pct) || pct <= 0) return 'SEM_COMISSAO';
-  if (
-    Math.abs(pct - 32) <= 0.6 ||
-    Math.abs(pct - 35) <= 0.6 ||
-    (pct >= 31.5 && pct <= 35.5)
-  ) {
+  if (Math.abs(pct - 32) <= 0.6 || Math.abs(pct - 35) <= 0.6 || (pct >= 31.5 && pct <= 35.5)) {
     return 'SEGURO_32_35';
   }
   if (pct >= 10) return 'MAIOR_OU_IGUAL_10';
@@ -260,7 +254,7 @@ export function temValorFinanceiro(params: {
     params.valorDescontos,
     params.valorAbatimentos,
     params.valorSaldo,
-    params.valorOpfax,
+    params.valorOpfax
   ];
   return values.some((value) => Math.abs(Number(value || 0)) > 0.009);
 }
@@ -294,7 +288,7 @@ export function buildConciliacaoMetrics(params: {
     valorLancamentos: params.valorLancamentos,
     valorTaxas: params.valorTaxas,
     valorDescontos: params.valorDescontos,
-    valorAbatimentos: params.valorAbatimentos,
+    valorAbatimentos: params.valorAbatimentos
   });
 
   // Subtrai valor não comissionável do valor real
@@ -308,7 +302,7 @@ export function buildConciliacaoMetrics(params: {
     valorCalculadaLoja: params.valorCalculadaLoja,
     valorVisaoMaster: params.valorVisaoMaster,
     percentualComissaoLoja: params.percentualComissaoLoja,
-    valorVendaReal,
+    valorVendaReal
   });
 
   // percentual_comissao_loja: derivado do saldo / venda_real
@@ -318,7 +312,7 @@ export function buildConciliacaoMetrics(params: {
     valorSaldo: params.valorSaldo,
     valorCalculadaLoja: params.valorCalculadaLoja,
     valorVisaoMaster: params.valorVisaoMaster,
-    valorVendaReal,
+    valorVendaReal
   });
 
   const faixaComissao = classificarFaixaComissao(percentualComissaoLoja);
@@ -337,7 +331,7 @@ export function buildConciliacaoMetrics(params: {
       valorDescontos: params.valorDescontos,
       valorAbatimentos: params.valorAbatimentos,
       valorSaldo: params.valorSaldo,
-      valorOpfax: params.valorOpfax,
-    }),
+      valorOpfax: params.valorOpfax
+    })
   };
 }

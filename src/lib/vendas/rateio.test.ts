@@ -13,8 +13,8 @@ const venda = {
   vendedor_id: A,
   vendas_recibos: [
     { id: 'rec-1', valor_total: 1000, valor_taxas: 100 },
-    { id: 'rec-2', valor_total: 500, valor_taxas: 50 },
-  ],
+    { id: 'rec-2', valor_total: 500, valor_taxas: 50 }
+  ]
 };
 
 const rateioMap = new Map([
@@ -26,9 +26,9 @@ const rateioMap = new Map([
       vendedor_destino_id: B,
       percentual_origem: 60,
       percentual_destino: 40,
-      ativo: true,
-    },
-  ],
+      ativo: true
+    }
+  ]
 ]) as Map<string, rateio.RateioRow>;
 
 describe('cloneReciboWithFactor', () => {
@@ -36,7 +36,7 @@ describe('cloneReciboWithFactor', () => {
     const c = rateio.cloneReciboWithFactor(
       { id: 'rec-1', valor_total: 1000, valor_taxas: 100, valor_du: 33.33, valor_rav: null },
       0.4,
-      B,
+      B
     );
     expect(c).toMatchObject({
       id: `rec-1::rateio:${B}`,
@@ -45,7 +45,7 @@ describe('cloneReciboWithFactor', () => {
       valor_total: 400,
       valor_taxas: 40,
       valor_du: 13.33,
-      valor_rav: null,
+      valor_rav: null
     });
   });
 });
@@ -54,14 +54,14 @@ describe('applyRateioToSalesForScopedVendedores', () => {
   it('sem escopo: divide o recibo com rateio 60/40 e mantém o outro com o vendedor de origem', () => {
     const out = rateio.applyRateioToSalesForScopedVendedores([venda], rateioMap);
     const porVendedor = Object.fromEntries(
-      out.map((v) => [v.vendedor_id, v.vendas_recibos!.map((r) => [r.id, r.valor_total])]),
+      out.map((v) => [v.vendedor_id, v.vendas_recibos!.map((r) => [r.id, r.valor_total])])
     );
     expect(porVendedor).toEqual({
       [A]: [
         [`rec-1::rateio:${A}`, 600],
-        ['rec-2', 500],
+        ['rec-2', 500]
       ],
-      [B]: [[`rec-1::rateio:${B}`, 400]],
+      [B]: [[`rec-1::rateio:${B}`, 400]]
     });
     const a = out.find((v) => v.vendedor_id === A)!;
     expect(a.rateio_source_bruto_total).toBe(1500);

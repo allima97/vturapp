@@ -81,7 +81,11 @@
 </script>
 
 {#if !semAcesso}
-  <Card title="Contatos enviados" subtitle="Últimos avisos enviados pelo sistema a este cliente." color="clientes">
+  <Card
+    title="Contatos enviados"
+    subtitle="Últimos avisos enviados pelo sistema a este cliente."
+    color="clientes"
+  >
     {#if loading && itens.length === 0}
       <div class="space-y-2" aria-busy="true" aria-label="Carregando contatos">
         {#each [0, 1] as _}
@@ -91,7 +95,9 @@
     {:else if erro}
       <p role="alert" class="text-sm text-red-700">{erro}</p>
     {:else if itens.length === 0}
-      <div class="rounded-vtur-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">
+      <div
+        class="rounded-vtur-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500"
+      >
         Nenhum aviso enviado a este cliente.
       </div>
     {:else}
@@ -99,7 +105,9 @@
         {#each itens as item (item.id)}
           <li class="py-3">
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <span class="text-sm font-medium text-slate-900">{canalLabel(item.canal)}{item.assunto ? ` · ${item.assunto}` : ''}</span>
+              <span class="text-sm font-medium text-slate-900"
+                >{canalLabel(item.canal)}{item.assunto ? ` · ${item.assunto}` : ''}</span
+              >
               <span class="text-xs text-slate-500">{formatarData(item.created_at)}</span>
             </div>
             {#if item.mensagem}

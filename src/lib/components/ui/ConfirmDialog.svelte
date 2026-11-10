@@ -42,7 +42,11 @@
   onConfirm={handleConfirm}
 >
   <div class="flex flex-col items-center gap-4 py-2 text-center">
-    <div class="flex h-12 w-12 items-center justify-center rounded-full {confirmVariant === 'danger' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'}">
+    <div
+      class="flex h-12 w-12 items-center justify-center rounded-full {confirmVariant === 'danger'
+        ? 'bg-red-50 text-red-600'
+        : 'bg-amber-50 text-amber-600'}"
+    >
       <AlertTriangle size={26} />
     </div>
     {#if message}

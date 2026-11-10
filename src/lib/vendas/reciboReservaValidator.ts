@@ -9,8 +9,8 @@ type NumeroLookup = {
 };
 
 export type Duplicidade =
-  | { tipo: "recibo"; valor: string }
-  | { tipo: "reserva"; valor: string; recibos_relacionados?: ReciboRelacionado[] };
+  | { tipo: 'recibo'; valor: string }
+  | { tipo: 'reserva'; valor: string; recibos_relacionados?: ReciboRelacionado[] };
 
 export type ReciboRelacionado = {
   id: string;
@@ -61,8 +61,8 @@ function asMinimalClient(sb: DataClient): MinimalDataClient {
 }
 
 function normalizeNumero(valor?: string | null) {
-  if (!valor) return "";
-  return normalizeText(valor, { trim: true, collapseWhitespace: true }).replace(/\s+/g, "");
+  if (!valor) return '';
+  return normalizeText(valor, { trim: true, collapseWhitespace: true }).replace(/\s+/g, '');
 }
 
 function uniqueNonEmpty(values: string[]) {
@@ -80,14 +80,14 @@ function uniqueNonEmpty(values: string[]) {
 
 async function fetchCancelledVendaIdsBrowser(
   sb: DataClient,
-  companyId?: string | null,
+  companyId?: string | null
 ): Promise<Set<string>> {
   let query = asMinimalClient(sb)
-    .from("vendas")
-    .select<VendaIdRow>("id")
-    .eq("cancelada", true)
+    .from('vendas')
+    .select<VendaIdRow>('id')
+    .eq('cancelada', true)
     .limit(2000);
-  if (companyId) query = query.eq("company_id", companyId);
+  if (companyId) query = query.eq('company_id', companyId);
   const { data } = await query;
   const ids = new Set<string>();
   for (const row of (data || []) as VendaIdRow[]) {
@@ -98,14 +98,14 @@ async function fetchCancelledVendaIdsBrowser(
 
 async function fetchClienteIdMapBrowser(
   sb: DataClient,
-  vendaIds: string[],
+  vendaIds: string[]
 ): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   if (!vendaIds.length) return map;
   const { data } = await asMinimalClient(sb)
-    .from("vendas")
-    .select<VendaClienteLookupRow>("id, cliente_id")
-    .in("id", vendaIds);
+    .from('vendas')
+    .select<VendaClienteLookupRow>('id, cliente_id')
+    .in('id', vendaIds);
   for (const row of (data || []) as VendaClienteLookupRow[]) {
     if (row?.id && row?.cliente_id) {
       map.set(String(row.id), String(row.cliente_id));
@@ -122,12 +122,12 @@ export async function findReciboReservaDuplicado(params: {
 }): Promise<Duplicidade | null> {
   const { client, numeros, ignoreVendaId, companyId } = params;
   const sb = client || dadosBrowser;
-  const recibos = uniqueNonEmpty(numeros.map((n) => n.numero_recibo || ""));
-  const reservas = uniqueNonEmpty(numeros.map((n) => n.numero_reserva || ""));
+  const recibos = uniqueNonEmpty(numeros.map((n) => n.numero_recibo || ''));
+  const reservas = uniqueNonEmpty(numeros.map((n) => n.numero_reserva || ''));
 
   const applyFilters = <T extends QueryResultRow>(query: MinimalQuery<T>) => {
     let q = query;
-    if (ignoreVendaId) q = q.neq("venda_id", ignoreVendaId);
+    if (ignoreVendaId) q = q.neq('venda_id', ignoreVendaId);
     return q;
   };
 
@@ -138,22 +138,22 @@ export async function findReciboReservaDuplicado(params: {
   // VALIDAÇÃO DE RECIBOS (mantém comportamento original - não pode duplicar)
   if (recibos.length) {
     let query = asMinimalClient(sb)
-      .from("vendas_recibos")
-      .select<ExistingReciboRow>("id, numero_recibo, venda_id, vendas!inner(company_id)")
-      .in("numero_recibo", recibos);
+      .from('vendas_recibos')
+      .select<ExistingReciboRow>('id, numero_recibo, venda_id, vendas!inner(company_id)')
+      .in('numero_recibo', recibos);
 
     if (companyId) {
-      query = query.eq("vendas.company_id", companyId);
+      query = query.eq('vendas.company_id', companyId);
     }
 
     const { data, error } = await applyFilters(query.limit(50));
     if (error) throw error;
     // Ignora recibos de vendas canceladas — permite reimportar após cancelamento
     const ativos = ((data || []) as ExistingReciboRow[]).filter(
-      (r) => !cancelledVendaIds.has(String(r?.venda_id || ""))
+      (r) => !cancelledVendaIds.has(String(r?.venda_id || ''))
     );
     if (ativos.length) {
-      return { tipo: "recibo", valor: String(ativos[0]?.numero_recibo || "") };
+      return { tipo: 'recibo', valor: String(ativos[0]?.numero_recibo || '') };
     }
   }
 
@@ -161,30 +161,34 @@ export async function findReciboReservaDuplicado(params: {
   if (reservas.length) {
     // Busca todos os recibos com essas reservas
     let query = asMinimalClient(sb)
-      .from("vendas_recibos")
-      .select<ExistingReciboRow>(`
+      .from('vendas_recibos')
+      .select<ExistingReciboRow>(
+        `
         id,
         numero_recibo,
         numero_reserva,
         venda_id,
         vendas!inner(company_id)
-      `)
-      .in("numero_reserva", reservas);
+      `
+      )
+      .in('numero_reserva', reservas);
 
     if (companyId) {
-      query = query.eq("vendas.company_id", companyId);
+      query = query.eq('vendas.company_id', companyId);
     }
 
     const { data: recibosRaw, error } = await applyFilters(query);
     if (error) throw error;
     // Ignora recibos de vendas canceladas — permite reimportar após cancelamento
     const recibosExistentes = ((recibosRaw || []) as ExistingReciboRow[]).filter(
-      (r) => !cancelledVendaIds.has(String(r?.venda_id || ""))
+      (r) => !cancelledVendaIds.has(String(r?.venda_id || ''))
     );
 
     if (recibosExistentes?.length) {
       // Busca cliente_id das vendas relevantes para verificar conflito de cliente
-      const vendaIds = [...new Set<string>(recibosExistentes.map((r) => String(r?.venda_id || "")).filter(Boolean))];
+      const vendaIds = [
+        ...new Set<string>(recibosExistentes.map((r) => String(r?.venda_id || '')).filter(Boolean))
+      ];
       const clienteIdMap = await fetchClienteIdMapBrowser(sb, vendaIds);
 
       // Para cada número da requisição, verifica se existe conflito
@@ -203,7 +207,7 @@ export async function findReciboReservaDuplicado(params: {
 
         // Verifica se tem algum com o mesmo cliente_id
         const mesmoCliente = recibosComMesmaReserva.some(
-          (r) => clienteIdMap.get(String(r?.venda_id || "")) === numeroAtual.cliente_id
+          (r) => clienteIdMap.get(String(r?.venda_id || '')) === numeroAtual.cliente_id
         );
 
         // Verifica se tem algum com o mesmo numero_recibo
@@ -214,7 +218,7 @@ export async function findReciboReservaDuplicado(params: {
         // BLOQUEIA se for mesmo cliente OU mesmo recibo
         if (mesmoCliente || mesmoRecibo) {
           return {
-            tipo: "reserva",
+            tipo: 'reserva',
             valor: numeroAtual.numero_reserva
           };
         }
@@ -222,15 +226,15 @@ export async function findReciboReservaDuplicado(params: {
         // PERMITE mas retorna os recibos relacionados para criar vínculo
         // (diferente cliente E diferente recibo = mesma viagem, contratantes diferentes)
         return {
-          tipo: "reserva",
+          tipo: 'reserva',
           valor: numeroAtual.numero_reserva,
           recibos_relacionados: recibosComMesmaReserva.map((r) => ({
-            id: String(r?.id || ""),
-            venda_id: String(r?.venda_id || ""),
-            numero_recibo: String(r?.numero_recibo || ""),
-            numero_reserva: String(r?.numero_reserva || ""),
-            cliente_id: String(clienteIdMap.get(String(r?.venda_id || "")) || ""),
-          })),
+            id: String(r?.id || ''),
+            venda_id: String(r?.venda_id || ''),
+            numero_recibo: String(r?.numero_recibo || ''),
+            numero_reserva: String(r?.numero_reserva || ''),
+            cliente_id: String(clienteIdMap.get(String(r?.venda_id || '')) || '')
+          }))
         };
       }
     }
@@ -251,15 +255,13 @@ export async function ensureReciboReservaUnicos(params: {
 
   // Se tem recibos relacionados, retorna info para criar vínculo
   // (não lança erro - permite a importação)
-  if (duplicado.tipo === "reserva" && duplicado.recibos_relacionados) {
+  if (duplicado.tipo === 'reserva' && duplicado.recibos_relacionados) {
     return duplicado.recibos_relacionados;
   }
 
   // Caso contrário, bloqueia
   const err = new Error(
-    duplicado.tipo === "recibo"
-      ? "RECIBO_DUPLICADO"
-      : "RESERVA_DUPLICADA"
+    duplicado.tipo === 'recibo' ? 'RECIBO_DUPLICADO' : 'RESERVA_DUPLICADA'
   ) as Error & {
     code?: string;
     duplicado?: Duplicidade;

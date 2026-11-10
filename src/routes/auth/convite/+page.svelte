@@ -6,7 +6,7 @@
   import { toUserMessage } from '$lib/utils/errors';
   import { FieldInput } from '$lib/components/ui';
   import { Mail, Lock, User, AlertCircle, CheckCircle, Eye, EyeOff } from '$lib/icons';
-  
+
   let email = '';
   let password = '';
   let confirmPassword = '';
@@ -22,7 +22,7 @@
     const params = new URLSearchParams(window.location.search);
     token = params.get('invite') || params.get('token') || token;
   });
-  
+
   async function handleSubmit() {
     if (!email || !password || !nome || !token) {
       error = 'Preencha todos os campos';
@@ -63,7 +63,6 @@
       setTimeout(() => {
         goto('/auth/login');
       }, 2000);
-
     } catch (err: unknown) {
       error = toUserMessage(err, 'Erro ao ativar conta');
     } finally {
@@ -76,40 +75,46 @@
   <title>Ativar Conta | VTUR</title>
 </svelte:head>
 
-<div class="vtur-auth-shell min-h-screen flex items-center justify-center p-4">
+<div class="vtur-auth-shell flex min-h-screen items-center justify-center p-4">
   <div class="w-full max-w-md">
     <!-- Logo -->
     <div class="vtur-auth-brand">
       <div class="vtur-auth-brand-lockup">
         <div class="vtur-auth-brand-row">
-          <img src="/brand/vtur-symbol.png?v=9" alt="VTUR" class="vtur-auth-brand-logo w-auto object-contain drop-shadow-[0_12px_24px_rgba(15,23,42,0.16)]" />
+          <img
+            src="/brand/vtur-symbol.png?v=9"
+            alt="VTUR"
+            class="vtur-auth-brand-logo w-auto object-contain drop-shadow-[0_12px_24px_rgba(15,23,42,0.16)]"
+          />
           <h1 class="vtur-auth-brand-title text-3xl font-bold">VTUR</h1>
         </div>
         <p class="vtur-auth-brand-subtitle">Sistema de Gestão de Viagens</p>
       </div>
     </div>
-    
+
     <Card padding="lg">
       {#if success}
-        <div class="text-center py-4">
-          <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-100 text-green-600 mb-4">
+        <div class="py-4 text-center">
+          <div
+            class="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-full bg-green-100 text-green-600"
+          >
             <CheckCircle size={24} />
           </div>
-          <h3 class="text-lg font-semibold text-slate-900 mb-2">Conta ativada!</h3>
+          <h3 class="mb-2 text-lg font-semibold text-slate-900">Conta ativada!</h3>
           <p class="text-slate-500">Redirecionando para o login...</p>
         </div>
       {:else}
-        <h2 class="text-xl font-semibold text-slate-900 mb-6 text-center">
-          Dados do Convite
-        </h2>
-        
+        <h2 class="mb-6 text-center text-xl font-semibold text-slate-900">Dados do Convite</h2>
+
         {#if error}
-          <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700 text-sm">
+          <div
+            class="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+          >
             <AlertCircle size={18} />
             <span>{error}</span>
           </div>
         {/if}
-        
+
         <form on:submit|preventDefault={handleSubmit} class="space-y-4">
           <!-- Token -->
           <FieldInput
@@ -121,7 +126,7 @@
             disabled={loading}
             class_name="w-full"
           />
-          
+
           <!-- Nome -->
           <FieldInput
             id="nome"
@@ -134,7 +139,7 @@
             disabled={loading}
             class_name="w-full"
           />
-          
+
           <!-- Email -->
           <FieldInput
             id="email"
@@ -147,7 +152,7 @@
             disabled={loading}
             class_name="w-full"
           />
-          
+
           <!-- Senha -->
           <FieldInput
             id="password"
@@ -163,7 +168,7 @@
             disabled={loading}
             class_name="w-full"
           />
-          
+
           <!-- Confirmar Senha -->
           <FieldInput
             id="confirmPassword"
@@ -173,30 +178,32 @@
             placeholder="Digite a senha novamente"
             icon={Lock}
             actionIcon={showConfirmPassword ? EyeOff : Eye}
-            actionLabel={showConfirmPassword ? 'Ocultar confirmação de senha' : 'Mostrar confirmação de senha'}
+            actionLabel={showConfirmPassword
+              ? 'Ocultar confirmação de senha'
+              : 'Mostrar confirmação de senha'}
             onAction={() => (showConfirmPassword = !showConfirmPassword)}
             autocomplete="new-password"
             disabled={loading}
             class_name="w-full"
           />
-          
+
           <!-- Botão -->
           <Button
             type="submit"
             variant="primary"
             size="lg"
-            loading={loading}
+            {loading}
             class_name="w-full justify-center"
           >
             Ativar Conta
           </Button>
         </form>
       {/if}
-      
+
       <!-- Voltar -->
       <div class="mt-6 text-center text-sm">
         <span class="text-slate-500">Já tem conta?</span>
-        <a href="/auth/login" class="ml-1 text-blue-600 hover:text-blue-700 font-medium">
+        <a href="/auth/login" class="ml-1 font-medium text-blue-600 hover:text-blue-700">
           Fazer login
         </a>
       </div>

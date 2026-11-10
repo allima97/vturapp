@@ -2,9 +2,12 @@
 <script lang="ts">
   export let log: string[];
   let mes = '2026-09';
-  function buildKey() { return ['mes', mes].join('|'); }
+  function buildKey() {
+    return ['mes', mes].join('|');
+  }
   $: keyViaFuncao = buildKey();
   $: keyDireta = ['mes', mes].join('|');
   $: log.push(`funcao=${keyViaFuncao} direta=${keyDireta}`);
 </script>
+
 <input type="month" bind:value={mes} />

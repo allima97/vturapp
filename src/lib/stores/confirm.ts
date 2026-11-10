@@ -1,7 +1,16 @@
 import { writable } from 'svelte/store';
 
 export type ConfirmVariant = 'primary' | 'danger';
-export type ConfirmColor = 'clientes' | 'orcamentos' | 'operacao' | 'financeiro' | 'vendas' | 'blue' | 'green' | 'orange' | 'teal';
+export type ConfirmColor =
+  | 'clientes'
+  | 'orcamentos'
+  | 'operacao'
+  | 'financeiro'
+  | 'vendas'
+  | 'blue'
+  | 'green'
+  | 'orange'
+  | 'teal';
 
 export type ConfirmOptions = {
   title?: string;

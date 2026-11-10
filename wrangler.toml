@@ -45,6 +45,17 @@ database_name = "vturapp-db"
 database_id = "36d3da2e-b186-48f8-bb3e-4f9a14b20235"
 migrations_dir = "./drizzle"
 
+# Referência GeoNames já carregada. O aplicativo só lê; a escrita é recusada
+# em runtime. Não aplique migrações nem importação neste binding.
+[[d1_databases]]
+binding = "GEO_DB"
+database_name = "vturapp-geonames-isolado"
+database_id = "bf40654b-8083-4fa1-8424-a923282d9888"
+
+[vars]
+PUBLIC_DEPLOY_ENV = "production"
+PUBLIC_GEONAMES_ATIVO = "1"
+
 # ─── R2 — arquivos privados ───────────────────────────────────────────────────
 # Produção: criar com `wrangler r2 bucket create vturapp-files`.
 [[r2_buckets]]
@@ -82,6 +93,17 @@ binding = "DB"
 database_name = "vturapp-db-staging"
 database_id = "96c13e55-60e3-4e3b-9ecc-b22da019c010"
 migrations_dir = "./drizzle"
+
+# Referência GeoNames já carregada. O aplicativo só lê; a escrita é recusada
+# em runtime. Não aplique migrações nem importação neste binding.
+[[env.staging.d1_databases]]
+binding = "GEO_DB"
+database_name = "vturapp-geonames-isolado"
+database_id = "bf40654b-8083-4fa1-8424-a923282d9888"
+
+[env.staging.vars]
+PUBLIC_DEPLOY_ENV = "staging"
+PUBLIC_GEONAMES_ATIVO = "1"
 
 [[env.staging.r2_buckets]]
 binding = "R2"
@@ -123,3 +145,31 @@ bucket_name = "vturapp-files"
 
 [env.production.triggers]
 crons = ["*/5 * * * *", "7 6 * * *"]
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AMBIENTE: geo
+# Bancos isolados criados em 9/11/2026. Não herda KV nem R2 de propósito:
+# este ambiente só executa D1 e não deve apontar para os namespaces ou
+# buckets de staging e produção. O aviso do Wrangler sobre bindings ausentes
+# é esperado. Não faça deploy deste ambiente no lugar do aplicativo publicado.
+# GEO_DB não tem migrations_dir: o schema vem dos arquivos SQL do GeoNames,
+# não das migrações do aplicativo.
+# ─────────────────────────────────────────────────────────────────────────────
+[env.geo]
+name = "vturapp-geo-isolado"
+compatibility_date = "2026-04-19"
+compatibility_flags = ["nodejs_compat"]
+
+[env.geo.placement]
+region = "aws:us-west-2"
+
+[[env.geo.d1_databases]]
+binding = "DB"
+database_name = "vturapp-db-geo-isolado"
+database_id = "4f480221-b5e7-4639-9e28-d995b9615f7f"
+migrations_dir = "./drizzle"
+
+[[env.geo.d1_databases]]
+binding = "GEO_DB"
+database_name = "vturapp-geonames-isolado"
+database_id = "bf40654b-8083-4fa1-8424-a923282d9888"

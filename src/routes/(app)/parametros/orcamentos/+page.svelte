@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { VTUR_LOGO_URL } from "$lib/brand";
+  import { VTUR_LOGO_URL } from '$lib/brand';
   import { onMount } from 'svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
@@ -79,14 +79,16 @@
     }
     complementoFile = file;
     if (file) {
-      if (complementoPreview && complementoPreview.startsWith('blob:')) URL.revokeObjectURL(complementoPreview);
+      if (complementoPreview && complementoPreview.startsWith('blob:'))
+        URL.revokeObjectURL(complementoPreview);
       complementoPreview = URL.createObjectURL(file);
     }
   }
 
   function removeComplemento() {
     complementoFile = null;
-    if (complementoPreview && complementoPreview.startsWith('blob:')) URL.revokeObjectURL(complementoPreview);
+    if (complementoPreview && complementoPreview.startsWith('blob:'))
+      URL.revokeObjectURL(complementoPreview);
     complementoPreview = null;
     settings.imagem_complementar_url = null;
     settings.imagem_complementar_path = null;
@@ -125,7 +127,9 @@
         const dados = createBrowserDataClient();
 
         if (s.imagem_complementar_path) {
-          const { data } = await dados.storage.from(LOGO_BUCKET).createSignedUrl(s.imagem_complementar_path, 3600);
+          const { data } = await dados.storage
+            .from(LOGO_BUCKET)
+            .createSignedUrl(s.imagem_complementar_path, 3600);
           if (!loadGuard.isCurrent(request.seq)) return;
           complementoPreview = data?.signedUrl || s.imagem_complementar_url || null;
         } else if (s.imagem_complementar_url) {
@@ -158,13 +162,11 @@
     const ext = getFileExtension(file);
     const path = `branding/${userId}/${storageName}.${ext}`;
 
-    const { error: uploadErr } = await dados.storage
-      .from(LOGO_BUCKET)
-      .upload(path, file, {
-        upsert: true,
-        contentType: file.type || 'image/png',
-        cacheControl: '3600'
-      });
+    const { error: uploadErr } = await dados.storage.from(LOGO_BUCKET).upload(path, file, {
+      upsert: true,
+      contentType: file.type || 'image/png',
+      cacheControl: '3600'
+    });
 
     if (uploadErr) throw uploadErr;
 
@@ -181,7 +183,14 @@
       if (!userId) throw new Error('Usuário não autenticado.');
 
       // Faz upload das imagens se houver arquivo novo
-      const complementoInfo = await uploadImagem(dados, userId, complementoFile, settings.imagem_complementar_url, settings.imagem_complementar_path, 'imagem-complementar');
+      const complementoInfo = await uploadImagem(
+        dados,
+        userId,
+        complementoFile,
+        settings.imagem_complementar_url,
+        settings.imagem_complementar_path,
+        'imagem-complementar'
+      );
 
       await apiPost('/api/v1/parametros/orcamentos-pdf', {
         settings: {
@@ -193,7 +202,9 @@
 
       // Atualiza preview com URL assinada após salvar
       if (complementoInfo.path) {
-        const { data } = await dados.storage.from(LOGO_BUCKET).createSignedUrl(complementoInfo.path, 3600);
+        const { data } = await dados.storage
+          .from(LOGO_BUCKET)
+          .createSignedUrl(complementoInfo.path, 3600);
         complementoPreview = data?.signedUrl || complementoInfo.url || null;
       }
 
@@ -224,28 +235,23 @@
   title="Parâmetros de Orçamentos"
   subtitle="Configure os dados do consultor, endereço e rodapé que aparecem nos PDFs de orçamento."
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Parâmetros', href: '/parametros' },
-    { label: 'Orçamentos' }
-  ]}
-  actions={[
-    { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }
-  ]}
+  breadcrumbs={[{ label: 'Parâmetros', href: '/parametros' }, { label: 'Orçamentos' }]}
+  actions={[{ label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw }]}
 />
 
 {#if loading}
   <LoadingState />
 {:else}
   <form on:submit|preventDefault={save} class="space-y-6">
-
     <!-- Logo e Imagem Complementar -->
     <Card title="Imagens do PDF" color="financeiro">
       <div class="grid grid-cols-1 gap-8 md:grid-cols-2">
-
         <div class="space-y-3">
           <p class="text-sm font-medium text-slate-700">Logo VTur</p>
           <img src={VTUR_LOGO_URL} alt="VTur" class="h-20 w-20 object-contain" />
-          <p class="text-xs text-slate-500">Identidade padrão dos orçamentos, roteiros, circuitos e vouchers.</p>
+          <p class="text-xs text-slate-500">
+            Identidade padrão dos orçamentos, roteiros, circuitos e vouchers.
+          </p>
         </div>
 
         <!-- Imagem Complementar -->
@@ -254,7 +260,9 @@
             <ImageIcon size={16} class="text-slate-400" />
             <p class="text-sm font-medium text-slate-700">Imagem Complementar</p>
           </div>
-          <p class="text-xs text-slate-500">Exibida após as informações importantes no rodapé do PDF.</p>
+          <p class="text-xs text-slate-500">
+            Exibida após as informações importantes no rodapé do PDF.
+          </p>
 
           {#if complementoPreview}
             <div class="relative inline-block">
@@ -275,7 +283,9 @@
               </Button>
             </div>
           {:else}
-            <div class="flex h-28 w-full items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 text-slate-400">
+            <div
+              class="flex h-28 w-full items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 text-slate-400"
+            >
               <div class="flex flex-col items-center gap-1 text-xs">
                 <ImageIcon size={20} />
                 <span>Nenhuma imagem definida</span>
@@ -293,17 +303,42 @@
             on:change={onComplementoChange}
           />
         </div>
-
       </div>
     </Card>
 
     <!-- Dados do Consultor -->
     <Card title="Dados do Consultor" color="financeiro">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <FieldInput id="orc-consultor" label="Nome do Consultor" bind:value={settings.consultor_nome} placeholder="Seu nome completo" class_name="w-full" />
-        <FieldInput id="orc-filial" label="Filial / Agência" bind:value={settings.filial_nome} placeholder="Nome da filial ou agência" class_name="w-full" />
-        <FieldInput id="orc-email" label="E-mail" type="email" bind:value={settings.email} placeholder="consultor@agencia.com.br" class_name="w-full" />
-        <FieldInput id="orc-telefone" label="Telefone" bind:value={settings.telefone} placeholder="(00) 0000-0000" mask="phone" class_name="w-full" />
+        <FieldInput
+          id="orc-consultor"
+          label="Nome do Consultor"
+          bind:value={settings.consultor_nome}
+          placeholder="Seu nome completo"
+          class_name="w-full"
+        />
+        <FieldInput
+          id="orc-filial"
+          label="Filial / Agência"
+          bind:value={settings.filial_nome}
+          placeholder="Nome da filial ou agência"
+          class_name="w-full"
+        />
+        <FieldInput
+          id="orc-email"
+          label="E-mail"
+          type="email"
+          bind:value={settings.email}
+          placeholder="consultor@agencia.com.br"
+          class_name="w-full"
+        />
+        <FieldInput
+          id="orc-telefone"
+          label="Telefone"
+          bind:value={settings.telefone}
+          placeholder="(00) 0000-0000"
+          mask="phone"
+          class_name="w-full"
+        />
         <div class="space-y-2">
           <p class="text-sm font-medium text-slate-700">WhatsApp</p>
           <div class="grid grid-cols-[88px_1fr] gap-2">
@@ -331,17 +366,38 @@
     <!-- Endereço -->
     <Card title="Endereço" color="financeiro">
       <div class="space-y-3">
-        <FieldInput id="orc-end1" label="Linha 1" bind:value={settings.endereco_linha1} placeholder="Rua, número, complemento" class_name="w-full" />
-        <FieldInput id="orc-end2" label="Linha 2" bind:value={settings.endereco_linha2} placeholder="Bairro, cidade - UF" class_name="w-full" />
-        <FieldInput id="orc-end3" label="Linha 3" bind:value={settings.endereco_linha3} placeholder="CEP, informações adicionais" class_name="w-full" />
+        <FieldInput
+          id="orc-end1"
+          label="Linha 1"
+          bind:value={settings.endereco_linha1}
+          placeholder="Rua, número, complemento"
+          class_name="w-full"
+        />
+        <FieldInput
+          id="orc-end2"
+          label="Linha 2"
+          bind:value={settings.endereco_linha2}
+          placeholder="Bairro, cidade - UF"
+          class_name="w-full"
+        />
+        <FieldInput
+          id="orc-end3"
+          label="Linha 3"
+          bind:value={settings.endereco_linha3}
+          placeholder="CEP, informações adicionais"
+          class_name="w-full"
+        />
       </div>
     </Card>
 
     <!-- Rodapé -->
     <Card title="Rodapé do PDF" color="financeiro">
-      <div class="flex items-start gap-2 mb-2">
+      <div class="mb-2 flex items-start gap-2">
         <FileText size={16} class="mt-0.5 text-slate-400" />
-        <p class="text-sm text-slate-500">Texto exibido no rodapé dos PDFs de orçamento. Inclui condições gerais, política de cancelamento, etc.</p>
+        <p class="text-sm text-slate-500">
+          Texto exibido no rodapé dos PDFs de orçamento. Inclui condições gerais, política de
+          cancelamento, etc.
+        </p>
       </div>
       <FieldTextarea
         bind:value={settings.rodape_texto}

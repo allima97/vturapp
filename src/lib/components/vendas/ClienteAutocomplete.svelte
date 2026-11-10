@@ -60,7 +60,8 @@
   function parseItems(payload: unknown): ClienteOption[] {
     if (Array.isArray(payload)) return payload as ClienteOption[];
 
-    const items = payload && typeof payload === 'object' ? (payload as { items?: unknown }).items : null;
+    const items =
+      payload && typeof payload === 'object' ? (payload as { items?: unknown }).items : null;
     if (Array.isArray(items)) return items as ClienteOption[];
 
     return [];
@@ -76,7 +77,11 @@
     const query = normalizeLookup(input);
     const base = query
       ? clients.filter((item) =>
-          normalizeLookup([item.nome, item.email, item.telefone, item.whatsapp, item.cpf].filter(Boolean).join(' ')).includes(query)
+          normalizeLookup(
+            [item.nome, item.email, item.telefone, item.whatsapp, item.cpf]
+              .filter(Boolean)
+              .join(' ')
+          ).includes(query)
         )
       : clients;
 
@@ -91,7 +96,10 @@
     }
 
     const selected = uniqueClients([...searchResults, ...clients]).find((item) => {
-      return normalizeLookup(getClienteLabel(item)) === normalized || normalizeLookup(item.nome) === normalized;
+      return (
+        normalizeLookup(getClienteLabel(item)) === normalized ||
+        normalizeLookup(item.nome) === normalized
+      );
     });
 
     if (selected) {
@@ -187,7 +195,9 @@
   />
 
   {#if showOptions}
-    <div class="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg">
+    <div
+      class="absolute z-20 mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-slate-200 bg-white shadow-lg"
+    >
       {#if loading}
         <div class="px-3 py-2 text-sm text-slate-500">Buscando...</div>
       {:else if getFilteredClients(searchText).length === 0}

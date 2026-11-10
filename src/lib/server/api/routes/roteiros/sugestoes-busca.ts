@@ -17,7 +17,10 @@ export async function handleRoteirosSugestoesBuscaGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     const companyId = scope.companyId;
-    const tipo = String(event.url.searchParams.get('tipo') || '').trim().slice(0, 60) || null;
+    const tipo =
+      String(event.url.searchParams.get('tipo') || '')
+        .trim()
+        .slice(0, 60) || null;
     const q = sanitizePostgrestSearchTerm(event.url.searchParams.get('q'), 80);
 
     let query = client

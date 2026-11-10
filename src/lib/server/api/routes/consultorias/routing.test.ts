@@ -13,10 +13,14 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./root', () => ({ handleConsultoriasGet: spy('handleConsultoriasGet'), handleConsultoriasPost: spy('handleConsultoriasPost'), handleConsultoriasPatch: spy('handleConsultoriasPatch') }));
+vi.mock('./root', () => ({
+  handleConsultoriasGet: spy('handleConsultoriasGet'),
+  handleConsultoriasPost: spy('handleConsultoriasPost'),
+  handleConsultoriasPatch: spy('handleConsultoriasPatch')
+}));
 vi.mock('./ics', () => ({ handleConsultoriasIcsGet: spy('handleConsultoriasIcsGet') }));
 
 import { apiApp } from '../../app';
@@ -26,12 +30,12 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/consultorias', 'handleConsultoriasGet', {}],
   ['POST', '/api/v1/consultorias', 'handleConsultoriasPost', {}],
   ['PATCH', '/api/v1/consultorias', 'handleConsultoriasPatch', {}],
-  ['GET', '/api/v1/consultorias/ics', 'handleConsultoriasIcsGet', {}],
+  ['GET', '/api/v1/consultorias/ics', 'handleConsultoriasIcsGet', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/consultorias'],
-  ['PUT', '/api/v1/consultorias/ics'],
+  ['PUT', '/api/v1/consultorias/ics']
 ];
 
 function ev(method: string, path: string) {

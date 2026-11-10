@@ -19,7 +19,7 @@ import {
   editarTarefa,
   concluirTarefa,
   listarTarefas,
-  AgendaError,
+  AgendaError
 } from '$lib/server/agenda-m08/service';
 
 export const agendaV2Routes = new Hono<ApiEnv>();
@@ -28,7 +28,12 @@ export const agendaV2Routes = new Hono<ApiEnv>();
 
 async function contexto(c: Context<ApiEnv>) {
   const baseURL = new URL(c.req.url).origin;
-  const ctx = await resolveAuthContext(c.req.raw.headers, c.env.DB, c.env.BETTER_AUTH_SECRET, baseURL);
+  const ctx = await resolveAuthContext(
+    c.req.raw.headers,
+    c.env.DB,
+    c.env.BETTER_AUTH_SECRET,
+    baseURL
+  );
   if (!ctx) return { res: c.json({ error: 'Não autenticado.' }, 401) };
   const db = getDb(c.env.DB);
   return { ctx, db };
@@ -143,7 +148,12 @@ agendaV2Routes.get('/tarefas', async (c) => {
   const userId = somenteProprио ? r.ctx.userId : (c.req.query('user_id') ?? undefined);
 
   try {
-    const items = await listarTarefas(r.db, r.ctx.empresaId, { status, prioridade, userId, incluirConcluidas });
+    const items = await listarTarefas(r.db, r.ctx.empresaId, {
+      status,
+      prioridade,
+      userId,
+      incluirConcluidas
+    });
     return c.json({ items });
   } catch (err) {
     return respostaErro(c, err);

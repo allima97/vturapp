@@ -3,12 +3,19 @@
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
-  import { 
-    MapPin, Package, Building2, Route, 
-    ArrowRight, Plus, Search
-  } from '$lib/icons';
+  import { MapPin, Package, Building2, Route, ArrowRight, Plus, Search } from '$lib/icons';
 
   const cadastros = [
+    {
+      titulo: 'Passeios Opcionais',
+      descricao: 'Catálogo compartilhado de passeios opcionais por cidade',
+      icone: MapPin,
+      cor: 'financeiro',
+      rota: '/cadastros/opcionais',
+      stats: 'Catálogo',
+      acao: 'Novo Opcional',
+      inline: true
+    },
     {
       titulo: 'Destinos',
       descricao: 'Gerencie destinos turísticos, cidades e países',
@@ -52,43 +59,33 @@
   <title>Cadastros | VTUR</title>
 </svelte:head>
 
-<PageHeader 
+<PageHeader
   title="Cadastros"
   subtitle="Gerenciamento de dados mestres"
   color="financeiro"
   breadcrumbs={[{ label: 'Cadastros' }]}
 />
 
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    {#each cadastros as item}
-    <Card color="financeiro" class="group hover:shadow-lg transition-all duration-200">
+<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+  {#each cadastros as item}
+    <Card color="financeiro" class="group transition-all duration-200 hover:shadow-lg">
       <div class="flex items-start gap-4">
-        <div 
-          class="p-4 rounded-xl"
-          style="background-color: var(--color-financeiro-50);"
-        >
-          <svelte:component 
-            this={item.icone} 
-            size={28} 
-            class="text-financeiro-600"
-          />
+        <div class="rounded-xl p-4" style="background-color: var(--color-financeiro-50);">
+          <svelte:component this={item.icone} size={28} class="text-financeiro-600" />
         </div>
         <div class="flex-1">
           <div class="flex items-center justify-between">
             <h3 class="text-lg font-semibold text-slate-900">{item.titulo}</h3>
-            <span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-financeiro-50 text-financeiro-700">
+            <span
+              class="bg-financeiro-50 text-financeiro-700 inline-flex rounded-full px-2 py-1 text-xs font-medium"
+            >
               {item.stats}
             </span>
           </div>
-          <p class="text-sm text-slate-500 mt-1 mb-4">{item.descricao}</p>
-          
+          <p class="mt-1 mb-4 text-sm text-slate-500">{item.descricao}</p>
+
           <div class="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              color="financeiro"
-              on:click={() => goto(item.rota)}
-            >
+            <Button variant="ghost" size="sm" color="financeiro" on:click={() => goto(item.rota)}>
               <Search size={16} />
               Consultar
             </Button>
@@ -97,13 +94,16 @@
               variant="ghost"
               size="sm"
               color="financeiro"
-              on:click={() => goto(`${item.rota}/novo`)}
+              on:click={() => goto(item.inline ? item.rota : `${item.rota}/novo`)}
             >
               <Plus size={16} />
               {item.acao}
             </Button>
             <span class="ml-auto">
-              <ArrowRight size={16} class="text-slate-400 group-hover:text-financeiro-500 group-hover:translate-x-1 transition-all" />
+              <ArrowRight
+                size={16}
+                class="group-hover:text-financeiro-500 text-slate-400 transition-all group-hover:translate-x-1"
+              />
             </span>
           </div>
         </div>

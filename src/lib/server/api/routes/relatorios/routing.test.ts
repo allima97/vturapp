@@ -13,22 +13,37 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
 vi.mock('./base', () => ({ handleRelatoriosBaseGet: spy('handleRelatoriosBaseGet') }));
-vi.mock('./cidades-busca', () => ({ handleRelatoriosCidadesBuscaGet: spy('handleRelatoriosCidadesBuscaGet') }));
+vi.mock('./cidades-busca', () => ({
+  handleRelatoriosCidadesBuscaGet: spy('handleRelatoriosCidadesBuscaGet')
+}));
 vi.mock('./clientes', () => ({ handleRelatoriosClientesGet: spy('handleRelatoriosClientesGet') }));
 vi.mock('./destinos', () => ({ handleRelatoriosDestinosGet: spy('handleRelatoriosDestinosGet') }));
 vi.mock('./produtos', () => ({ handleRelatoriosProdutosGet: spy('handleRelatoriosProdutosGet') }));
-vi.mock('./produtos-recibos', () => ({ handleRelatoriosProdutosRecibosGet: spy('handleRelatoriosProdutosRecibosGet') }));
+vi.mock('./produtos-recibos', () => ({
+  handleRelatoriosProdutosRecibosGet: spy('handleRelatoriosProdutosRecibosGet')
+}));
 vi.mock('./ranking', () => ({ handleRelatoriosRankingGet: spy('handleRelatoriosRankingGet') }));
-vi.mock('./ranking-debug', () => ({ handleRelatoriosRankingDebugGet: spy('handleRelatoriosRankingDebugGet'), handleRelatoriosRankingDebugPost: spy('handleRelatoriosRankingDebugPost') }));
-vi.mock('./ranking-vendas', () => ({ handleRelatoriosRankingVendasGet: spy('handleRelatoriosRankingVendasGet') }));
+vi.mock('./ranking-debug', () => ({
+  handleRelatoriosRankingDebugGet: spy('handleRelatoriosRankingDebugGet'),
+  handleRelatoriosRankingDebugPost: spy('handleRelatoriosRankingDebugPost')
+}));
+vi.mock('./ranking-vendas', () => ({
+  handleRelatoriosRankingVendasGet: spy('handleRelatoriosRankingVendasGet')
+}));
 vi.mock('./vendas', () => ({ handleRelatoriosVendasGet: spy('handleRelatoriosVendasGet') }));
-vi.mock('./vendas-por-cliente', () => ({ handleRelatoriosVendasPorClienteGet: spy('handleRelatoriosVendasPorClienteGet') }));
-vi.mock('./vendas-por-destino', () => ({ handleRelatoriosVendasPorDestinoGet: spy('handleRelatoriosVendasPorDestinoGet') }));
-vi.mock('./vendas-por-produto', () => ({ handleRelatoriosVendasPorProdutoGet: spy('handleRelatoriosVendasPorProdutoGet') }));
+vi.mock('./vendas-por-cliente', () => ({
+  handleRelatoriosVendasPorClienteGet: spy('handleRelatoriosVendasPorClienteGet')
+}));
+vi.mock('./vendas-por-destino', () => ({
+  handleRelatoriosVendasPorDestinoGet: spy('handleRelatoriosVendasPorDestinoGet')
+}));
+vi.mock('./vendas-por-produto', () => ({
+  handleRelatoriosVendasPorProdutoGet: spy('handleRelatoriosVendasPorProdutoGet')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
@@ -47,7 +62,7 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/relatorios/vendas', 'handleRelatoriosVendasGet', {}],
   ['GET', '/api/v1/relatorios/vendas-por-cliente', 'handleRelatoriosVendasPorClienteGet', {}],
   ['GET', '/api/v1/relatorios/vendas-por-destino', 'handleRelatoriosVendasPorDestinoGet', {}],
-  ['GET', '/api/v1/relatorios/vendas-por-produto', 'handleRelatoriosVendasPorProdutoGet', {}],
+  ['GET', '/api/v1/relatorios/vendas-por-produto', 'handleRelatoriosVendasPorProdutoGet', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
@@ -63,7 +78,7 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/relatorios/vendas'],
   ['PUT', '/api/v1/relatorios/vendas-por-cliente'],
   ['PUT', '/api/v1/relatorios/vendas-por-destino'],
-  ['PUT', '/api/v1/relatorios/vendas-por-produto'],
+  ['PUT', '/api/v1/relatorios/vendas-por-produto']
 ];
 
 function ev(method: string, path: string) {

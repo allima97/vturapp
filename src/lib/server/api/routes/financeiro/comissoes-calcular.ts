@@ -13,8 +13,16 @@ import {
   toErrorResponse
 } from '$lib/server/v1';
 import { resolveGroupedReceiptCommissions } from '$lib/server/comissoes';
-import { applyPersistedComissao, buildPersistedReciboComissaoKey, fetchPersistedComissoes } from '$lib/server/comissoes-registro';
-import { fetchSalesReportRows, getVendaClienteNome, getVendaVendedorNome } from '$lib/server/relatorios';
+import {
+  applyPersistedComissao,
+  buildPersistedReciboComissaoKey,
+  fetchPersistedComissoes
+} from '$lib/server/comissoes-registro';
+import {
+  fetchSalesReportRows,
+  getVendaClienteNome,
+  getVendaVendedorNome
+} from '$lib/server/relatorios';
 import type { ReportReceiptRow, ReportVendaRow } from '$lib/server/relatorios';
 import { monthRangeFromYearMonth, parseISODateParts, todayISODateLocal } from '$lib/date';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
@@ -130,7 +138,9 @@ function getReciboCodigo(recibo: CommissionReceiptRow) {
 }
 
 function getReciboProduto(recibo: CommissionReceiptRow) {
-  return String(recibo?.tipo_produtos?.nome || recibo?.produto_resolvido?.nome || 'Produto sem nome');
+  return String(
+    recibo?.tipo_produtos?.nome || recibo?.produto_resolvido?.nome || 'Produto sem nome'
+  );
 }
 
 function normalizeRowsToReceiptPeriod(rows: CommissionReportRow[]) {
@@ -158,7 +168,12 @@ export async function handleFinanceiroComissoesCalcularPost(event: RequestEvent)
     const podeVerEquipe = canViewTeamCommissions(scope);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['Comissionamento', 'financeiro'], 2, 'Sem permissão para calcular comissões.');
+      ensureModuloAccess(
+        scope,
+        ['Comissionamento', 'financeiro'],
+        2,
+        'Sem permissão para calcular comissões.'
+      );
     }
 
     const body =
@@ -195,7 +210,13 @@ export async function handleFinanceiroComissoesCalcularPost(event: RequestEvent)
 
     if (!vendas || vendas.length === 0) {
       return json(
-        { success: true, message: 'Nenhum recibo encontrado', processadas: 0, erro: 0, detalhes: [] },
+        {
+          success: true,
+          message: 'Nenhum recibo encontrado',
+          processadas: 0,
+          erro: 0,
+          detalhes: []
+        },
         { headers: NO_STORE_HEADERS }
       );
     }
@@ -208,16 +229,32 @@ export async function handleFinanceiroComissoesCalcularPost(event: RequestEvent)
     let processadas = 0;
 
     for (const venda of vendas) {
-      for (const recibo of (Array.isArray(venda.recibos) ? venda.recibos : []).filter(isCommissionReceipt)) {
+      for (const recibo of (Array.isArray(venda.recibos) ? venda.recibos : []).filter(
+        isCommissionReceipt
+      )) {
         const reciboId = String(recibo?.id || '').trim();
         const resolved = reciboId ? resolvedByReceiptId.get(reciboId) : undefined;
         if (!resolved) {
-          resultados.push({ venda_id: venda.id, recibo_id: reciboId, numero_venda: venda.numero_venda, numero_recibo: getReciboCodigo(recibo), status: 'ignorada', motivo: 'Comissão não resolvida para o recibo' });
+          resultados.push({
+            venda_id: venda.id,
+            recibo_id: reciboId,
+            numero_venda: venda.numero_venda,
+            numero_recibo: getReciboCodigo(recibo),
+            status: 'ignorada',
+            motivo: 'Comissão não resolvida para o recibo'
+          });
           continue;
         }
 
         if (resolved.valorComissionavel <= 0) {
-          resultados.push({ venda_id: venda.id, recibo_id: reciboId, numero_venda: venda.numero_venda, numero_recibo: getReciboCodigo(recibo), status: 'ignorada', motivo: 'Valor comissionável é zero' });
+          resultados.push({
+            venda_id: venda.id,
+            recibo_id: reciboId,
+            numero_venda: venda.numero_venda,
+            numero_recibo: getReciboCodigo(recibo),
+            status: 'ignorada',
+            motivo: 'Valor comissionável é zero'
+          });
           continue;
         }
 
@@ -258,7 +295,6 @@ export async function handleFinanceiroComissoesCalcularPost(event: RequestEvent)
       },
       { headers: NO_STORE_HEADERS }
     );
-
   } catch (err) {
     logServerError('[financeiro/comissoes/calcular] falha ao calcular comissoes', err);
     return toErrorResponse(err, 'Erro ao calcular comissões.');
@@ -278,15 +314,20 @@ export async function handleFinanceiroComissoesCalcularGet(event: RequestEvent) 
 
     const { searchParams } = event.url;
     const vendedorId = searchParams.get('vendedor_id');
-    const statusParam = String(searchParams.get('status') || '').trim().toLowerCase();
-    const companyIds = resolveScopedCompanyIds(scope, searchParams.get('empresa_id') || searchParams.get('company_id'));
+    const statusParam = String(searchParams.get('status') || '')
+      .trim()
+      .toLowerCase();
+    const companyIds = resolveScopedCompanyIds(
+      scope,
+      searchParams.get('empresa_id') || searchParams.get('company_id')
+    );
     const mes = searchParams.get('mes');
     const ano = searchParams.get('ano');
     const vendedorIds = await resolveScopedVendedorIds(client, scope, vendedorId);
 
     const hojeParts = parseISODateParts(todayISODateLocal());
-    const mesNum = mes ? parseInt(mes) : (hojeParts?.month || new Date().getMonth() + 1);
-    const anoNum = ano ? parseInt(ano) : (hojeParts?.year || new Date().getFullYear());
+    const mesNum = mes ? parseInt(mes) : hojeParts?.month || new Date().getMonth() + 1;
+    const anoNum = ano ? parseInt(ano) : hojeParts?.year || new Date().getFullYear();
     const range = monthRangeFromYearMonth(anoNum, mesNum);
     const dataInicio = range.inicio;
     const dataFim = range.fim;
@@ -341,63 +382,75 @@ export async function handleFinanceiroComissoesCalcularGet(event: RequestEvent) 
           vendedorIds: persistedVendedorIds
         });
         const persistedByKey = new Map(
-          persistedSnapshot.rows.map((row) => [
-            buildPersistedReciboComissaoKey(row.recibo_id, row.vendedor_id, row.venda_id),
-            row
-          ] as const)
+          persistedSnapshot.rows.map(
+            (row) =>
+              [
+                buildPersistedReciboComissaoKey(row.recibo_id, row.vendedor_id, row.venda_id),
+                row
+              ] as const
+          )
         );
 
-        let items = (vendasForComissao || []).flatMap((v): Array<CommissionListItem | null> =>
-          (Array.isArray(v?.recibos) ? v.recibos : []).filter(isCommissionReceipt).map((recibo) => {
-            const reciboId = String(recibo?.id || '').trim();
-            const resolved = reciboId ? resolvedByReceiptId.get(reciboId) : undefined;
-            if (!resolved) return null;
-            const persisted = persistedByKey.get(buildPersistedReciboComissaoKey(reciboId, v.vendedor_id, v.id));
-            const persistedApplied = applyPersistedComissao(
-              {
-                valor_venda: getReciboValor(recibo),
-                valor_comissionavel: resolved.valorComissionavel,
-                percentual_aplicado: resolved.percentual,
-                valor_comissao: resolved.valorComissao,
-                valor_pago: 0,
-                status: 'pendente'
-              },
-              persisted
-            );
-            const valorComissaoSeguro = scaleCommissionPart(
-              resolved.valorComissaoSeguro,
-              resolved.valorComissao,
-              persistedApplied.valor_comissao
-            );
-            const valorComissaoGeral = roundMoney(Math.max(0, persistedApplied.valor_comissao - valorComissaoSeguro));
-            return {
-              id: reciboId,
-              venda_id: v.id,
-              recibo_id: reciboId,
-              numero_venda: v.numero_venda || `VD-${v.id.slice(0, 8)}`,
-              numero_recibo: getReciboCodigo(recibo) || `REC-${reciboId.slice(0, 8)}`,
-              produto: getReciboProduto(recibo),
-              data_venda: recibo?.data_venda || v.data_venda,
-              cliente: getVendaClienteNome(v),
-              vendedor_id: v.vendedor_id,
-              vendedor: getVendaVendedorNome(v),
-              valor_venda: persistedApplied.valor_venda,
-              valor_comissionavel: persistedApplied.valor_comissionavel,
-              percentual_aplicado: persistedApplied.percentual_aplicado,
-              valor_comissao: persistedApplied.valor_comissao,
-              percentual_comissao_geral: resolved.percentualComissaoGeral,
-              percentual_seguro: resolved.percentualSeguro,
-              valor_comissao_geral: valorComissaoGeral,
-              valor_comissao_seguro: valorComissaoSeguro,
-              valor_pago: persistedApplied.valor_pago,
-              regra_nome: resolved.regraNome,
-              status: persistedApplied.status.toUpperCase(),
-              mes_referencia: mesNum,
-              ano_referencia: anoNum,
-              data_pagamento: persisted?.data_pagamento || null
-            };
-          })
-        ).filter(isCommissionListItem);
+        let items = (vendasForComissao || [])
+          .flatMap(
+            (v): Array<CommissionListItem | null> =>
+              (Array.isArray(v?.recibos) ? v.recibos : [])
+                .filter(isCommissionReceipt)
+                .map((recibo) => {
+                  const reciboId = String(recibo?.id || '').trim();
+                  const resolved = reciboId ? resolvedByReceiptId.get(reciboId) : undefined;
+                  if (!resolved) return null;
+                  const persisted = persistedByKey.get(
+                    buildPersistedReciboComissaoKey(reciboId, v.vendedor_id, v.id)
+                  );
+                  const persistedApplied = applyPersistedComissao(
+                    {
+                      valor_venda: getReciboValor(recibo),
+                      valor_comissionavel: resolved.valorComissionavel,
+                      percentual_aplicado: resolved.percentual,
+                      valor_comissao: resolved.valorComissao,
+                      valor_pago: 0,
+                      status: 'pendente'
+                    },
+                    persisted
+                  );
+                  const valorComissaoSeguro = scaleCommissionPart(
+                    resolved.valorComissaoSeguro,
+                    resolved.valorComissao,
+                    persistedApplied.valor_comissao
+                  );
+                  const valorComissaoGeral = roundMoney(
+                    Math.max(0, persistedApplied.valor_comissao - valorComissaoSeguro)
+                  );
+                  return {
+                    id: reciboId,
+                    venda_id: v.id,
+                    recibo_id: reciboId,
+                    numero_venda: v.numero_venda || `VD-${v.id.slice(0, 8)}`,
+                    numero_recibo: getReciboCodigo(recibo) || `REC-${reciboId.slice(0, 8)}`,
+                    produto: getReciboProduto(recibo),
+                    data_venda: recibo?.data_venda || v.data_venda,
+                    cliente: getVendaClienteNome(v),
+                    vendedor_id: v.vendedor_id,
+                    vendedor: getVendaVendedorNome(v),
+                    valor_venda: persistedApplied.valor_venda,
+                    valor_comissionavel: persistedApplied.valor_comissionavel,
+                    percentual_aplicado: persistedApplied.percentual_aplicado,
+                    valor_comissao: persistedApplied.valor_comissao,
+                    percentual_comissao_geral: resolved.percentualComissaoGeral,
+                    percentual_seguro: resolved.percentualSeguro,
+                    valor_comissao_geral: valorComissaoGeral,
+                    valor_comissao_seguro: valorComissaoSeguro,
+                    valor_pago: persistedApplied.valor_pago,
+                    regra_nome: resolved.regraNome,
+                    status: persistedApplied.status.toUpperCase(),
+                    mes_referencia: mesNum,
+                    ano_referencia: anoNum,
+                    data_pagamento: persisted?.data_pagamento || null
+                  };
+                })
+          )
+          .filter(isCommissionListItem);
 
         if (!podeVerEquipe) {
           items = items.filter((item) => String(item.vendedor_id || '').trim() === scope.userId);
@@ -417,14 +470,17 @@ export async function handleFinanceiroComissoesCalcularGet(event: RequestEvent) 
         return {
           items,
           total: items.length,
-          resumo: { total_pendente: totalPendente, total_pago: totalPago, total_geral: totalPendente + totalPago },
+          resumo: {
+            total_pendente: totalPendente,
+            total_pago: totalPago,
+            total_geral: totalPendente + totalPago
+          },
           persistencia_disponivel: persistedSnapshot.available
         };
       }
     });
 
     return json(payload, { headers: DYNAMIC_READ_HEADERS });
-
   } catch (err) {
     logServerError('[financeiro/comissoes/calcular] falha ao carregar comissoes', err);
     return toErrorResponse(err, 'Erro ao carregar comissões.');

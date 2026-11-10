@@ -9,5 +9,8 @@ export const handleClientesDeleteDelete = async ({ request }: RequestEvent) => {
   const originError = rejectCrossOriginRequest(request);
   if (originError) return originError;
 
-  return json({ error: 'Exclusao de cliente desabilitada.' }, { status: 403, headers: NO_STORE_HEADERS });
+  return json(
+    { error: 'Exclusao de cliente desabilitada.' },
+    { status: 403, headers: NO_STORE_HEADERS }
+  );
 };

@@ -121,9 +121,10 @@ function extractHtmlTableRows(text: string) {
       throw new Error(`Planilha muito extensa. Limite máximo: ${MAX_SPREADSHEET_ROWS} linhas.`);
     }
     const rowHtml = rowMatch[0];
-    const cells = Array.from(rowHtml.matchAll(/<t[dh]\b[\s\S]*?<\/t[dh]>/gi)).map((cellMatch) =>
-      htmlCellText(cellMatch[0])
-    ).slice(0, MAX_SPREADSHEET_COLUMNS).map((cell) => cell.slice(0, MAX_SPREADSHEET_CELL_CHARS));
+    const cells = Array.from(rowHtml.matchAll(/<t[dh]\b[\s\S]*?<\/t[dh]>/gi))
+      .map((cellMatch) => htmlCellText(cellMatch[0]))
+      .slice(0, MAX_SPREADSHEET_COLUMNS)
+      .map((cell) => cell.slice(0, MAX_SPREADSHEET_CELL_CHARS));
     if (cells.some((cell) => cell.trim())) rows.push(cells);
   }
 
@@ -138,11 +139,7 @@ function normalizeSpreadsheetRows(rows: unknown[][], context = 'planilha') {
   return rows.map((row) =>
     (Array.isArray(row) ? row : [])
       .slice(0, MAX_SPREADSHEET_COLUMNS)
-      .map((cell) =>
-        typeof cell === 'string'
-          ? cell.slice(0, MAX_SPREADSHEET_CELL_CHARS)
-          : cell
-      )
+      .map((cell) => (typeof cell === 'string' ? cell.slice(0, MAX_SPREADSHEET_CELL_CHARS) : cell))
   );
 }
 
@@ -216,7 +213,9 @@ function parseXlsxCellValue(cellBody: string, type: string, sharedStrings: strin
     return extractXmlTextTags(cellBody).slice(0, MAX_SPREADSHEET_CELL_CHARS);
   }
 
-  const value = decodeHtmlEntities(String(cellBody || '').match(/<v\b[^>]*>([\s\S]*?)<\/v>/)?.[1] || '');
+  const value = decodeHtmlEntities(
+    String(cellBody || '').match(/<v\b[^>]*>([\s\S]*?)<\/v>/)?.[1] || ''
+  );
   if (type === 's') {
     const index = Number(value);
     return Number.isInteger(index) ? sharedStrings[index] || '' : '';
@@ -289,7 +288,10 @@ async function readXlsxWorkbook(file: File) {
   const workbookXml = entryText('xl/workbook.xml');
   if (!workbookXml) throw new Error('Planilha XLSX inválida: workbook ausente.');
 
-  const sheetTargets = parseWorkbookSheetTargets(workbookXml, entryText('xl/_rels/workbook.xml.rels'));
+  const sheetTargets = parseWorkbookSheetTargets(
+    workbookXml,
+    entryText('xl/_rels/workbook.xml.rels')
+  );
   if (sheetTargets.length > MAX_SPREADSHEET_SHEETS) {
     throw new Error(`Planilha com abas demais. Limite máximo: ${MAX_SPREADSHEET_SHEETS} abas.`);
   }
@@ -330,7 +332,7 @@ function inferStatus(value: unknown): ConciliacaoLinhaInput['status'] {
 function parseMovimentoDateFromTxt(text: string): string | null {
   const raw = String(text || '');
   const br = raw.match(
-    /(?:Movimenta[cç][aã]o|Movimento|Data\s+Movimento)\s*(?:(?:do\s+)?Dia)?\s*:?\s*(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/i
+    /(?:Movimenta[cç][aã]o|Movimento|Data\s+Movimento)\s*(?:(?:do\s+)?Dia)?\s*:?\s*(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})/i
   );
   if (br) {
     const day = br[1].padStart(2, '0');
@@ -399,7 +401,11 @@ function resolveFooterLabel(...values: Array<unknown>) {
   return null;
 }
 
-function parseConciliacaoTxtLayout(text: string, origem = 'arquivo', fallbackDate?: string | null): ParsedImportResult {
+function parseConciliacaoTxtLayout(
+  text: string,
+  origem = 'arquivo',
+  fallbackDate?: string | null
+): ParsedImportResult {
   const lines = String(text || '')
     .replace(/\r\n?/g, '\n')
     .split('\n')
@@ -507,14 +513,19 @@ function parseConciliacaoRowsLayout(
     .map((cell) => String(cell || '').trim())
     .join('\n');
   const movimentoData =
-    parseMovimentoDateFromTxt(flatText) || parseMovimentoDateFromFileName(origem) || fallbackDate || null;
+    parseMovimentoDateFromTxt(flatText) ||
+    parseMovimentoDateFromFileName(origem) ||
+    fallbackDate ||
+    null;
 
   const headerRow = (rows[headerIndex] || []).map((cell: unknown) => String(cell || '').trim());
 
   const colIndex = (needles: string[], fallback = -1) => {
     const wanted = needles.map((value: string) => normalizeHeader(value));
     const normalizedHeader = headerRow.map((value: string) => normalizeHeader(value));
-    const index = normalizedHeader.findIndex((head: string) => wanted.some((needle) => head.includes(needle)));
+    const index = normalizedHeader.findIndex((head: string) =>
+      wanted.some((needle) => head.includes(needle))
+    );
     return index >= 0 ? index : fallback;
   };
 
@@ -614,12 +625,16 @@ async function parseConciliacaoXlsLayout(
     null;
 
   const rows = selected.rows;
-  const headerRow = (rows[selected.headerIndex] || []).map((cell: unknown) => String(cell || '').trim());
+  const headerRow = (rows[selected.headerIndex] || []).map((cell: unknown) =>
+    String(cell || '').trim()
+  );
 
   const colIndex = (needles: string[], fallback = -1) => {
     const wanted = needles.map((value: string) => normalizeHeader(value));
     const normalizedHeader = headerRow.map((value: string) => normalizeHeader(value));
-    const index = normalizedHeader.findIndex((head: string) => wanted.some((needle) => head.includes(needle)));
+    const index = normalizedHeader.findIndex((head: string) =>
+      wanted.some((needle) => head.includes(needle))
+    );
     return index >= 0 ? index : fallback;
   };
 
@@ -774,13 +789,17 @@ export async function parseConciliacaoImportFile(
       const utf8Text = new TextDecoder('utf-8').decode(buffer);
       const latin1Text = new TextDecoder('iso-8859-1').decode(buffer);
       const htmlCandidates = [utf8Text, latin1Text]
-        .map((text) => parseConciliacaoRowsLayout(extractHtmlTableRows(text), file.name, fallbackDate))
+        .map((text) =>
+          parseConciliacaoRowsLayout(extractHtmlTableRows(text), file.name, fallbackDate)
+        )
         .filter((item): item is ParsedImportFileResult => Boolean(item));
 
       const parsedHtml = htmlCandidates.sort((a, b) => b.linhas.length - a.linhas.length)[0];
       if (parsedHtml?.linhas.length) return parsedHtml;
 
-      throw new Error('Arquivos .xls binários não são aceitos. Exporte como .xlsx, .txt ou CSV antes de importar.');
+      throw new Error(
+        'Arquivos .xls binários não são aceitos. Exporte como .xlsx, .txt ou CSV antes de importar.'
+      );
     }
 
     const parsedXls = await parseConciliacaoXlsLayout(file, fallbackDate);
@@ -815,6 +834,10 @@ export async function parseConciliacaoImportFile(
   return {
     ...parsed,
     text,
-    movimentoData: parseMovimentoDateFromTxt(text) || parseMovimentoDateFromFileName(file.name) || fallbackDate || null
+    movimentoData:
+      parseMovimentoDateFromTxt(text) ||
+      parseMovimentoDateFromFileName(file.name) ||
+      fallbackDate ||
+      null
   };
 }

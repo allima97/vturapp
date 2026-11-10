@@ -8,6 +8,7 @@ import { handleVendasCadastroBaseGet } from './cadastro-base';
 import { handleVendasCadastroSavePost } from './cadastro-save';
 import { handleVendasCancelPost } from './cancel';
 import { handleVendasCidadesBuscaGet } from './cidades-busca';
+import { handleVendasCidadesGeograficasGet } from './cidades-geograficas';
 import { handleVendasComplementaresGet } from './complementares';
 import { handleVendasCreatePost } from './create';
 import { handleVendasGestorEquipeGet } from './gestor-equipe';
@@ -33,6 +34,7 @@ export const vendasRoutes = new Hono<ApiEnv>()
   .post('/cadastro-save', (c) => handleVendasCadastroSavePost(c.env.event))
   .post('/cancel', (c) => handleVendasCancelPost(c.env.event))
   .get('/cidades-busca', (c) => handleVendasCidadesBuscaGet(c.env.event))
+  .get('/cidades-geograficas', (c) => handleVendasCidadesGeograficasGet(c.env.event))
   .get('/complementares', (c) => handleVendasComplementaresGet(c.env.event))
   .post('/create', (c) => handleVendasCreatePost(c.env.event))
   .get('/gestor-equipe', (c) => handleVendasGestorEquipeGet(c.env.event))
@@ -45,7 +47,9 @@ export const vendasRoutes = new Hono<ApiEnv>()
   .patch('/recibo-edit', (c) => handleVendasReciboEditPatch(c.env.event))
   .get('/recibo-notas', (c) => handleVendasReciboNotasGet(c.env.event))
   .post('/recibo-principal', (c) => handleVendasReciboPrincipalPost(c.env.event))
-  .get('/:id/ranking-recibos', (c) => handleVendasIdRankingRecibosGet(withRouteParams(c.env.event, c.req.param())))
+  .get('/:id/ranking-recibos', (c) =>
+    handleVendasIdRankingRecibosGet(withRouteParams(c.env.event, c.req.param()))
+  )
   .get('/:id', (c) => handleVendasIdGet(withRouteParams(c.env.event, c.req.param())))
   .patch('/:id', (c) => handleVendasIdPatch(withRouteParams(c.env.event, c.req.param())))
   .delete('/:id', (c) => handleVendasIdDelete(withRouteParams(c.env.event, c.req.param())));

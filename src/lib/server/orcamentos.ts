@@ -26,7 +26,12 @@ export async function resolveQuoteCreatorScope(
 
   if (scope.isAdmin) {
     if (requestedCreatorIds.length > 0) {
-      return { companyIds, creatorIds: requestedCreatorIds, allAccess: false, userId: scope.userId };
+      return {
+        companyIds,
+        creatorIds: requestedCreatorIds,
+        allAccess: false,
+        userId: scope.userId
+      };
     }
     if (companyIds.length > 0) {
       const companyCreatorIds = await fetchVendedorIdsByCompanyIds(client, companyIds);
@@ -39,9 +44,7 @@ export async function resolveQuoteCreatorScope(
     const companyCreatorIds = await fetchVendedorIdsByCompanyIds(client, companyIds);
     const allowedCreatorIds = new Set(companyCreatorIds);
     const ownCompanyAllowed =
-      companyIds.length === 0 ||
-      !scope.companyId ||
-      companyIds.includes(scope.companyId);
+      companyIds.length === 0 || !scope.companyId || companyIds.includes(scope.companyId);
 
     if (ownCompanyAllowed) {
       allowedCreatorIds.add(scope.userId);
@@ -58,17 +61,13 @@ export async function resolveQuoteCreatorScope(
   return { companyIds, creatorIds: [scope.userId], allAccess: false, userId: scope.userId };
 }
 
-export function isQuoteCreatorAllowed(
-  creatorScope: QuoteCreatorScope,
-  createdBy?: string | null
-) {
+export function isQuoteCreatorAllowed(creatorScope: QuoteCreatorScope, createdBy?: string | null) {
   if (creatorScope.allAccess && creatorScope.creatorIds.length === 0) {
     return true;
   }
 
   const creatorId = String(createdBy || '').trim();
   return Boolean(
-    creatorId &&
-      (creatorId === creatorScope.userId || creatorScope.creatorIds.includes(creatorId))
+    creatorId && (creatorId === creatorScope.userId || creatorScope.creatorIds.includes(creatorId))
   );
 }

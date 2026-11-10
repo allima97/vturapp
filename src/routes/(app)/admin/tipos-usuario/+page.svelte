@@ -44,7 +44,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const payload = await apiGet<{ items?: TipoUsuario[] }>('/api/v1/admin/tipos-usuario', undefined, request.signal);
+      const payload = await apiGet<{ items?: TipoUsuario[] }>(
+        '/api/v1/admin/tipos-usuario',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       rows = payload.items || [];
     } catch (err) {
@@ -65,10 +69,7 @@
 <PageHeader
   title="Tipos de usuario"
   subtitle="Perfis administrativos com permissoes padrao aplicadas a novos usuarios."
-  breadcrumbs={[
-    { label: 'Administracao', href: '/admin' },
-    { label: 'Tipos de usuario' }
-  ]}
+  breadcrumbs={[{ label: 'Administracao', href: '/admin' }, { label: 'Tipos de usuario' }]}
   actions={[
     { label: 'Atualizar', onClick: loadPage, variant: 'secondary', icon: RefreshCw },
     { label: 'Novo tipo', href: '/admin/tipos-usuario/novo', variant: 'primary', icon: Plus }

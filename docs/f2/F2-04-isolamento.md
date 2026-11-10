@@ -4,11 +4,11 @@
 
 Provar que dados de um tenant (empresa) são completamente isolados de outros tenants, em três dimensões:
 
-| Dimensão | Mecanismo | Proof |
-|---|---|---|
-| **Leitura** | `assertTenantOwnership(authEmpresaId, row.empresaId)` | test suite + rota proof |
-| **Gravação** | `injectTenantId(body, authEmpresaId)` + `validateTenantWrite()` | test suite |
-| **Revogação** | soft-delete `ativo = false` em `membros_empresa` | test suite |
+| Dimensão      | Mecanismo                                                       | Proof                   |
+| ------------- | --------------------------------------------------------------- | ----------------------- |
+| **Leitura**   | `assertTenantOwnership(authEmpresaId, row.empresaId)`           | test suite + rota proof |
+| **Gravação**  | `injectTenantId(body, authEmpresaId)` + `validateTenantWrite()` | test suite              |
+| **Revogação** | soft-delete `ativo = false` em `membros_empresa`                | test suite              |
 
 ## Contexto: D1 não tem Row-Level Security
 
@@ -39,10 +39,7 @@ Request → resolveAuthContext() → { userId, empresaId, papel }
 ### Padrão de leitura (getMembro)
 
 ```typescript
-const row = await db.select()
-  .from(membrosEmpresa)
-  .where(eq(membrosEmpresa.id, membroId))
-  .limit(1);
+const row = await db.select().from(membrosEmpresa).where(eq(membrosEmpresa.id, membroId)).limit(1);
 
 // Guarda OBRIGATÓRIA antes de retornar
 assertTenantOwnership(authEmpresaId, row[0].empresaId);
@@ -62,23 +59,21 @@ await db.insert(vendas).values(dadosSeguro);
 ```typescript
 // Valida antes de modificar
 assertTenantOwnership(ctx.empresaId, row.empresaId);
-await db.update(membrosEmpresa)
-  .set({ ativo: false })
-  .where(eq(membrosEmpresa.id, membroId));
+await db.update(membrosEmpresa).set({ ativo: false }).where(eq(membrosEmpresa.id, membroId));
 ```
 
 ---
 
 ## Arquivos
 
-| Arquivo | Papel |
-|---|---|
-| `src/lib/server/tenant/guard.ts` | Funções puras: assertTenantOwnership, injectTenantId, validateTenantWrite, assertHasEmpresaId |
-| `src/lib/server/tenant/members.ts` | Serviço: listarMembros, getMembro, revogarMembro (usa guard internamente) |
-| `src/lib/server/tenant/index.ts` | Re-exports |
-| `src/lib/server/tenant/tenant.test.ts` | 37 testes, 100% passando |
-| `src/lib/server/api/routes/tenant-proof/index.ts` | Rotas de prova HTTP (non-production) |
-| `src/lib/server/db/seeds/f2-seed.sql` | Seed: 2 empresas × 3 papéis = 6 usuários sintéticos |
+| Arquivo                                           | Papel                                                                                         |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `src/lib/server/tenant/guard.ts`                  | Funções puras: assertTenantOwnership, injectTenantId, validateTenantWrite, assertHasEmpresaId |
+| `src/lib/server/tenant/members.ts`                | Serviço: listarMembros, getMembro, revogarMembro (usa guard internamente)                     |
+| `src/lib/server/tenant/index.ts`                  | Re-exports                                                                                    |
+| `src/lib/server/tenant/tenant.test.ts`            | 37 testes, 100% passando                                                                      |
+| `src/lib/server/api/routes/tenant-proof/index.ts` | Rotas de prova HTTP (non-production)                                                          |
+| `src/lib/server/db/seeds/f2-seed.sql`             | Seed: 2 empresas × 3 papéis = 6 usuários sintéticos                                           |
 
 ---
 
@@ -91,14 +86,14 @@ npx vitest run src/lib/server/tenant/tenant.test.ts
 
 ### Invariantes provadas
 
-| Invariante | Test |
-|---|---|
-| A. Leitura: Alfa não lê registro de Beta | `assertTenantOwnership(1, 2)` → TenantError |
-| A. Leitura: Beta não lê registro de Alfa | `assertTenantOwnership(2, 1)` → TenantError |
-| B. Escrita: body injection descartado | `injectTenantId({ empresaId: 2 }, 1).empresaId === 1` |
-| C. Escrita: cross-tenant explícito rejeitado | `validateTenantWrite(2, 1)` → TenantError |
-| D. Sem empresa: usuário sem empresa bloqueado | `assertHasEmpresaId(null)` → TenantError |
-| E. Revogação: membro revogado tem ativo=false | simulateRevogarMembro → `ativo === false` |
+| Invariante                                    | Test                                                  |
+| --------------------------------------------- | ----------------------------------------------------- |
+| A. Leitura: Alfa não lê registro de Beta      | `assertTenantOwnership(1, 2)` → TenantError           |
+| A. Leitura: Beta não lê registro de Alfa      | `assertTenantOwnership(2, 1)` → TenantError           |
+| B. Escrita: body injection descartado         | `injectTenantId({ empresaId: 2 }, 1).empresaId === 1` |
+| C. Escrita: cross-tenant explícito rejeitado  | `validateTenantWrite(2, 1)` → TenantError             |
+| D. Sem empresa: usuário sem empresa bloqueado | `assertHasEmpresaId(null)` → TenantError              |
+| E. Revogação: membro revogado tem ativo=false | simulateRevogarMembro → `ativo === false`             |
 
 ### Testes de integração com D1 real
 

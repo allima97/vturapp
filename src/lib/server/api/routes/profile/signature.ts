@@ -35,32 +35,36 @@ export const handleProfileSignatureGet = async (event: RequestEvent) => {
     const user = await requireAuthenticatedUser(event);
     await resolveUserScope(client, user.id);
 
-    const [{ data: userRow, error: userErr }, { data: settingsRow, error: settingsErr }] = await Promise.all([
-      client
-        .from('users')
-        .select('id, nome_completo, company_id')
-        .eq('id', user.id)
-        .maybeSingle(),
-      client
-        .from('quote_print_settings')
-        .select('consultor_nome')
-        .eq('owner_user_id', user.id)
-        .maybeSingle(),
-    ]);
+    const [{ data: userRow, error: userErr }, { data: settingsRow, error: settingsErr }] =
+      await Promise.all([
+        client
+          .from('users')
+          .select('id, nome_completo, company_id')
+          .eq('id', user.id)
+          .maybeSingle(),
+        client
+          .from('quote_print_settings')
+          .select('consultor_nome')
+          .eq('owner_user_id', user.id)
+          .maybeSingle()
+      ]);
 
     if (userErr) throw userErr;
     if (settingsErr) throw settingsErr;
 
     const signature = String(settingsRow?.consultor_nome || userRow?.nome_completo || '').trim();
 
-    return json({
-      signature,
-      assinatura: signature,
-      fallbackName: String(userRow?.nome_completo || '').trim(),
-      companyId: String(userRow?.company_id || '').trim() || null,
-      nome_completo: userRow?.nome_completo || '',
-      cargo: '',
-    }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      {
+        signature,
+        assinatura: signature,
+        fallbackName: String(userRow?.nome_completo || '').trim(),
+        companyId: String(userRow?.company_id || '').trim() || null,
+        nome_completo: userRow?.nome_completo || '',
+        cargo: ''
+      },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     logServerError('[profile/signature] falha ao carregar assinatura', err);
     return toErrorResponse(err, 'Erro ao carregar assinatura.');
@@ -89,16 +93,21 @@ export const handleProfileSignaturePatch = async (event: RequestEvent) => {
       .maybeSingle();
     if (userErr) throw userErr;
 
-    const { error } = await client
+    const { data: existing, error: settingsError } = await client
       .from('quote_print_settings')
-      .upsert(
-        {
-          owner_user_id: user.id,
-          company_id: userRow?.company_id || null,
-          consultor_nome: signature,
-        },
-        { onConflict: 'owner_user_id' }
-    );
+      .select('id')
+      .eq('owner_user_id', user.id)
+      .maybeSingle();
+    if (settingsError) throw settingsError;
+
+    const payload = {
+      owner_user_id: user.id,
+      company_id: userRow?.company_id || null,
+      consultor_nome: signature
+    };
+    const { error } = existing?.id
+      ? await client.from('quote_print_settings').update(payload).eq('id', existing.id)
+      : await client.from('quote_print_settings').insert(payload);
     if (error) throw error;
 
     invalidateQuoteReadModels({

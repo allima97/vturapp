@@ -177,7 +177,8 @@
       <div class="space-y-1">
         <p class="text-sm font-semibold text-slate-900">Area critica do sistema</p>
         <p class="text-sm text-slate-600">
-          Este modulo concentra regras de acesso, perfis, escopo por empresa e configuracoes operacionais.
+          Este modulo concentra regras de acesso, perfis, escopo por empresa e configuracoes
+          operacionais.
         </p>
       </div>
     </div>
@@ -188,7 +189,9 @@
   {:else}
     <div class="vtur-kpi-grid mb-6">
       <div class="vtur-kpi-card">
-        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500"><Users size={20} /></div>
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+          <Users size={20} />
+        </div>
         <div>
           <p class="text-sm font-medium text-slate-500">Usuários ativos</p>
           <p class="text-2xl font-bold text-slate-900">{summary?.counts?.usuarios_ativos ?? 0}</p>
@@ -196,7 +199,11 @@
         </div>
       </div>
       <div class="vtur-kpi-card">
-        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500"><Building2 size={20} /></div>
+        <div
+          class="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-50 text-orange-500"
+        >
+          <Building2 size={20} />
+        </div>
         <div>
           <p class="text-sm font-medium text-slate-500">Empresas no escopo</p>
           <p class="text-2xl font-bold text-slate-900">{summary?.counts?.empresas_total ?? 0}</p>
@@ -204,7 +211,11 @@
         </div>
       </div>
       <div class="vtur-kpi-card">
-        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-500"><BellRing size={20} /></div>
+        <div
+          class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-500"
+        >
+          <BellRing size={20} />
+        </div>
         <div>
           <p class="text-sm font-medium text-slate-500">Avisos ativos</p>
           <p class="text-2xl font-bold text-slate-900">{summary?.counts?.avisos_ativos ?? 0}</p>
@@ -212,10 +223,14 @@
         </div>
       </div>
       <div class="vtur-kpi-card">
-        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500"><AlertCircle size={20} /></div>
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500">
+          <AlertCircle size={20} />
+        </div>
         <div>
           <p class="text-sm font-medium text-slate-500">Vínculos master pendentes</p>
-          <p class="text-2xl font-bold text-slate-900">{summary?.counts?.vinculos_master_pendentes ?? 0}</p>
+          <p class="text-2xl font-bold text-slate-900">
+            {summary?.counts?.vinculos_master_pendentes ?? 0}
+          </p>
           <p class="text-xs text-slate-400">Pendências de portfólio</p>
         </div>
       </div>
@@ -261,7 +276,10 @@
     <div class="grid gap-4 md:grid-cols-2">
       <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
         <div class="flex items-center gap-2 text-slate-900">
-          <CheckCircle2 size={18} class={summary?.indicators?.email_configurado ? 'text-emerald-600' : 'text-slate-400'} />
+          <CheckCircle2
+            size={18}
+            class={summary?.indicators?.email_configurado ? 'text-emerald-600' : 'text-slate-400'}
+          />
           <p class="font-medium">Disparo de e-mail</p>
         </div>
         <p class="mt-2 text-sm text-slate-600">

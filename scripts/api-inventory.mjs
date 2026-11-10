@@ -31,7 +31,9 @@ function walk(dir, acc = []) {
 }
 
 function routeFromFile(file) {
-  const rel = relative(join(ROOT, 'src', 'routes'), file).split(sep).join('/');
+  const rel = relative(join(ROOT, 'src', 'routes'), file)
+    .split(sep)
+    .join('/');
   return '/' + rel.replace(/\/\+server\.(ts|js)$/, '');
 }
 
@@ -40,15 +42,27 @@ const uniqSorted = (arr) => Array.from(new Set(arr)).sort();
 // Rota migrada para Hono: o +server.ts só repassa (apiHandler). A análise de
 // tabelas/guardas passa a ler o módulo em src/lib/server/api/routes/<rota>.ts.
 function honoModuleFor(file) {
-  const rel = relative(API_DIR, file).split(sep).join('/').replace(/\/\+server\.(ts|js)$/, '');
-  const segs = rel.replace(/^v1\/?/, '').split('/').filter(Boolean);
+  const rel = relative(API_DIR, file)
+    .split(sep)
+    .join('/')
+    .replace(/\/\+server\.(ts|js)$/, '');
+  const segs = rel
+    .replace(/^v1\/?/, '')
+    .split('/')
+    .filter(Boolean);
   const [dom, ...rest] = segs;
   const routesDir = join(ROOT, 'src', 'lib', 'server', 'api', 'routes');
   // Convenção dos geradores (migrate_*.py): routes/<dominio>/<segmentos-sem-[]-unidos-por-hifen>.ts
   // ('root' para a raiz do domínio). Mantém o formato antigo (pastas aninhadas) como alternativa.
   const flat = rest.length ? rest.map((s) => s.replace(/^\[|\]$/g, '')).join('-') : 'root';
+  if (dom === 'produtos' && flat === 'cidades-geograficas')
+    return join(routesDir, 'vendas', 'cidades-geograficas.ts');
   const candidates = dom
-    ? [join(routesDir, dom, `${flat}.ts`), join(routesDir, ...segs) + '.ts', join(routesDir, ...segs, 'index.ts')]
+    ? [
+        join(routesDir, dom, `${flat}.ts`),
+        join(routesDir, ...segs) + '.ts',
+        join(routesDir, ...segs, 'index.ts')
+      ]
     : [];
   for (const candidate of candidates) {
     if (existsSync(candidate)) return candidate;
@@ -62,12 +76,20 @@ function analyze(file) {
   const honoModule = isHono ? honoModuleFor(file) : null;
   const src = honoModule ? `${routeSrc}\n${readFileSync(honoModule, 'utf-8')}` : routeSrc;
   const methods = uniqSorted(
-    [...routeSrc.matchAll(/export\s+(?:async\s+)?(?:function|const)\s+(GET|POST|PUT|PATCH|DELETE|OPTIONS|HEAD|fallback)\b/g)].map((m) => m[1]),
+    [
+      ...routeSrc.matchAll(
+        /export\s+(?:async\s+)?(?:function|const)\s+(GET|POST|PUT|PATCH|DELETE|OPTIONS|HEAD|fallback)\b/g
+      )
+    ].map((m) => m[1])
   );
   // re-exports: export { GET } from '...'  /  export { GET as POST }
   for (const m of routeSrc.matchAll(/export\s*\{([^}]*)\}/g)) {
     for (const part of m[1].split(',')) {
-      const name = part.trim().split(/\s+as\s+/).pop()?.trim();
+      const name = part
+        .trim()
+        .split(/\s+as\s+/)
+        .pop()
+        ?.trim();
       if (name && /^(GET|POST|PUT|PATCH|DELETE|OPTIONS|HEAD)$/.test(name)) methods.push(name);
     }
   }
@@ -80,66 +102,92 @@ function analyze(file) {
     tables[table] ??= new Set();
     tables[table].add(op);
   }
+  for (const m of src.matchAll(/\.prepare\(\s*(['"`])([\s\S]*?)\1\s*\)/g)) {
+    const sql = m[2];
+    const match = sql.match(
+      /^\s*(SELECT\b[\s\S]*?\bFROM|INSERT\s+INTO|UPDATE|DELETE\s+FROM)\s+["`]?([a-zA-Z0-9_]+)/i
+    );
+    if (!match) continue;
+    const table = match[2];
+    const operation = match[1].split(/\s+/)[0].toLowerCase();
+    tables[table] ??= new Set();
+    tables[table].add(operation);
+  }
   const tablesOut = Object.fromEntries(
     Object.entries(tables)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([t, ops]) => [t, [...ops].sort()]),
+      .map(([t, ops]) => [t, [...ops].sort()])
   );
 
-  const rpcs = uniqSorted([...src.matchAll(/\.rpc\(\s*['"`]([a-zA-Z0-9_]+)['"`]/g)].map((m) => m[1]));
+  const rpcs = uniqSorted(
+    [...src.matchAll(/\.rpc\(\s*['"`]([a-zA-Z0-9_]+)['"`]/g)].map((m) => m[1])
+  );
 
   const has = (re) => re.test(src);
   const roles = uniqSorted(
-    [...src.matchAll(/scope\.(isAdmin|isMaster|isGestor|isFinanceiro|isVendedor)\b/g)].map((m) => m[1]),
+    [...src.matchAll(/scope\.(isAdmin|isMaster|isGestor|isFinanceiro|isVendedor)\b/g)].map(
+      (m) => m[1]
+    )
   );
   const invalidations = uniqSorted(
     [
       ...src.matchAll(
-        /\b(invalidate[A-Za-z]*ReadModels?|invalidateReadModelCache|publishKvInvalidationAsync|triggerRebuildAsync|markDirtyForCompany|markRankingReadModelDirty)\b/g,
-      ),
-    ].map((m) => m[1]),
+        /\b(invalidate[A-Za-z]*ReadModels?|invalidateReadModelCache|publishKvInvalidationAsync|triggerRebuildAsync|markDirtyForCompany|markRankingReadModelDirty)\b/g
+      )
+    ].map((m) => m[1])
   );
-  const imports = uniqSorted(
-    [...src.matchAll(/from\s+['"](\$lib\/[^'"]+)['"]/g)].map((m) => m[1]),
-  );
+  const imports = uniqSorted([...src.matchAll(/from\s+['"](\$lib\/[^'"]+)['"]/g)].map((m) => m[1]));
 
   return {
     route: routeFromFile(file),
     file: relative(ROOT, file).split(sep).join('/'),
-    hono: isHono ? relative(ROOT, honoModule || file).split(sep).join('/') : null,
+    hono: isHono
+      ? relative(ROOT, honoModule || file)
+          .split(sep)
+          .join('/')
+      : null,
     methods: uniqSorted(methods),
     guards: {
       // sessao validada: helper padrao, wrappers de escopo (_shared.ts) ou safeGetSession
-      requireAuthenticatedUser: has(/requireAuthenticatedUser\s*\(|\brequire\w+Scope\s*\(|locals\.safeGetSession\s*\(/),
-      resolveUserScope: has(/resolveUserScope\s*\(/),
+      requireAuthenticatedUser: has(
+        /requireAuthenticatedUser\s*\(|\brequire\w+Scope\s*\(|locals\.safeGetSession\s*\(/
+      ),
+      resolveUserScope: has(/resolveUserScope\s*\(|\brequire\w+Scope\s*\(/),
       roles,
       rejectCrossOrigin: has(/rejectCrossOriginRequest\s*\(/),
       bodyLimit: has(/read(Json|Text)BodyLimited\s*\(/),
       cronSecret: has(/x-cron-secret|CRON_SECRET/),
       turnstile: has(/turnstile/i),
       adminClient: has(/getAdminClient\s*\(/),
-      debugOnly: has(/isDebugEndpointEnabled|isProductionRuntime/),
+      debugOnly: has(/isDebugEndpointEnabled|isProductionRuntime/)
     },
     tables: tablesOut,
     rpcs,
     invalidations,
     imports,
     mutates: Object.values(tablesOut).some((ops) => ops.some((o) => o !== 'select')),
-    lines: src.split('\n').length,
+    lines: src.split('\n').length
   };
 }
 
 const files = walk(API_DIR).sort();
 const endpoints = files.map(analyze);
 
-const json = JSON.stringify({ generatedBy: 'scripts/api-inventory.mjs', count: endpoints.length, endpoints }, null, 2) + '\n';
+const json =
+  JSON.stringify(
+    { generatedBy: 'scripts/api-inventory.mjs', count: endpoints.length, endpoints },
+    null,
+    2
+  ) + '\n';
 
 if (CHECK) {
   const current = existsSync(join(OUT_DIR, 'api-inventory.json'))
     ? readFileSync(join(OUT_DIR, 'api-inventory.json'), 'utf-8').replace(/\r\n/g, '\n')
     : '';
   if (current !== json) {
-    console.error('[api-inventory] docs/api-inventory.json desatualizado. Rode: node scripts/api-inventory.mjs');
+    console.error(
+      '[api-inventory] docs/api-inventory.json desatualizado. Rode: node scripts/api-inventory.mjs'
+    );
     process.exit(1);
   }
   console.log(`[api-inventory] OK (${endpoints.length} endpoints)`);
@@ -158,15 +206,25 @@ for (const e of endpoints) {
 const yes = (b) => (b ? '✔' : '');
 const OP_LABEL = { select: 'R', insert: 'C', update: 'U', upsert: 'UP', delete: 'D' };
 const mutating = endpoints.filter((e) => e.mutates);
-const mutatingSemAuth = mutating.filter((e) => !e.guards.requireAuthenticatedUser && !e.guards.cronSecret);
-const mutatingSemCsrf = mutating.filter(
-  (e) => e.methods.some((m) => m !== 'GET') && !e.guards.rejectCrossOrigin,
+const mutatingSemAuth = mutating.filter(
+  (e) => !e.guards.requireAuthenticatedUser && !e.guards.cronSecret
 );
-const vendasTables = ['vendas', 'vendas_recibos', 'vendas_recibos_rateio', 'vendas_pagamentos', 'conciliacao_recibos', 'vendas_recibos_complementares'];
+const mutatingSemCsrf = mutating.filter(
+  (e) => e.methods.some((m) => m !== 'GET') && !e.guards.rejectCrossOrigin
+);
+const vendasTables = [
+  'vendas',
+  'vendas_recibos',
+  'vendas_recibos_rateio',
+  'vendas_pagamentos',
+  'conciliacao_recibos',
+  'vendas_recibos_complementares'
+];
 const salesMutSemInvalid = mutating.filter(
   (e) =>
-    Object.entries(e.tables).some(([t, ops]) => vendasTables.includes(t) && ops.some((o) => o !== 'select')) &&
-    e.invalidations.length === 0,
+    Object.entries(e.tables).some(
+      ([t, ops]) => vendasTables.includes(t) && ops.some((o) => o !== 'select')
+    ) && e.invalidations.length === 0
 );
 
 let md = `# Inventário de contrato das APIs\n\n`;
@@ -178,12 +236,25 @@ md += `- Migrados para Hono: **${endpoints.filter((e) => e.hono).length}** (marc
 md += `## Pontos de atenção (detectados automaticamente)\n\n`;
 md += `Heurística por análise de texto — confirmar manualmente antes de agir.\n\n`;
 md += `### Gravam no banco sem \`requireAuthenticatedUser\` (${mutatingSemAuth.length})\n`;
-md += mutatingSemAuth.length ? mutatingSemAuth.map((e) => `- \`${e.route}\` (${e.methods.join(', ')})`).join('\n') + '\n\n' : '- nenhum\n\n';
+md += mutatingSemAuth.length
+  ? mutatingSemAuth.map((e) => `- \`${e.route}\` (${e.methods.join(', ')})`).join('\n') + '\n\n'
+  : '- nenhum\n\n';
 md += `### Métodos de escrita sem \`rejectCrossOriginRequest\` (${mutatingSemCsrf.length})\n`;
-md += mutatingSemCsrf.length ? mutatingSemCsrf.map((e) => `- \`${e.route}\` (${e.methods.join(', ')})`).join('\n') + '\n\n' : '- nenhum\n\n';
+md += mutatingSemCsrf.length
+  ? mutatingSemCsrf.map((e) => `- \`${e.route}\` (${e.methods.join(', ')})`).join('\n') + '\n\n'
+  : '- nenhum\n\n';
 md += `### Gravam em tabelas de venda/conciliação sem invalidação explícita de cache (${salesMutSemInvalid.length})\n`;
 md += `Desde a migration 20260924184114 o read model v4 é marcado dirty por trigger; ainda assim o cache em memória/KV depende da invalidação na aplicação.\n\n`;
-md += salesMutSemInvalid.length ? salesMutSemInvalid.map((e) => `- \`${e.route}\` → ${Object.keys(e.tables).filter((t) => vendasTables.includes(t)).join(', ')}`).join('\n') + '\n\n' : '- nenhum\n\n';
+md += salesMutSemInvalid.length
+  ? salesMutSemInvalid
+      .map(
+        (e) =>
+          `- \`${e.route}\` → ${Object.keys(e.tables)
+            .filter((t) => vendasTables.includes(t))
+            .join(', ')}`
+      )
+      .join('\n') + '\n\n'
+  : '- nenhum\n\n';
 
 md += `## Endpoints por domínio\n\n`;
 md += `Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope · **CSRF** = rejectCrossOriginRequest · **Body** = limite de tamanho do corpo\n\n`;
@@ -195,7 +266,12 @@ for (const [domain, list] of [...byDomain.entries()].sort(([a], [b]) => a.locale
     const tables = Object.entries(e.tables)
       .map(([t, ops]) => `${t}(${ops.map((o) => OP_LABEL[o] || o).join('/')})`)
       .join(', ');
-    const extra = [e.hono && 'hono', e.guards.cronSecret && 'cron-secret', e.guards.turnstile && 'turnstile', e.guards.debugOnly && 'debug-only']
+    const extra = [
+      e.hono && 'hono',
+      e.guards.cronSecret && 'cron-secret',
+      e.guards.turnstile && 'turnstile',
+      e.guards.debugOnly && 'debug-only'
+    ]
       .filter(Boolean)
       .join(' ');
     md += `| \`${e.route.replace('/api', '')}\`${extra ? ` <sub>${extra}</sub>` : ''} | ${e.methods.join(' ')} | ${yes(e.guards.requireAuthenticatedUser)} | ${yes(e.guards.resolveUserScope)} | ${e.guards.roles.map((r) => r.replace(/^is/, '')).join(' ')} | ${yes(e.guards.rejectCrossOrigin)} | ${yes(e.guards.bodyLimit)} | ${tables || '—'} | ${e.rpcs.join(', ') || '—'} | ${e.invalidations.join(', ') || '—'} |\n`;

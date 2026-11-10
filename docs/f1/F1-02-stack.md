@@ -29,7 +29,9 @@ O adapter gera `.svelte-kit/cloudflare/_worker.js` com:
 
 ```js
 export default {
-  async fetch(request, env, ctx) { /* SvelteKit SSR */ }
+  async fetch(request, env, ctx) {
+    /* SvelteKit SSR */
+  }
 };
 ```
 
@@ -52,12 +54,12 @@ exatamente o comportamento da fase F4-04.
 
 **Diferença da abordagem legada:**
 
-| | Legado (`patch-worker-scheduled.js`) | Novo (`inject-scheduled.mjs`) |
-|---|---|---|
-| Lógica | Chama endpoint HTTP `/api/v1/read-model/rebuild` | Roda diretamente no Worker |
-| Secrets | Requer `CRON_SECRET` + `WORKER_BASE_URL` | Não usa secrets de cron |
-| Override | Sobrescreve o default export | Adiciona named export `scheduled` |
-| TypeScript | Sem correspondente TS | Espelhado de `src/lib/server/cron/index.ts` |
+|            | Legado (`patch-worker-scheduled.js`)             | Novo (`inject-scheduled.mjs`)               |
+| ---------- | ------------------------------------------------ | ------------------------------------------- |
+| Lógica     | Chama endpoint HTTP `/api/v1/read-model/rebuild` | Roda diretamente no Worker                  |
+| Secrets    | Requer `CRON_SECRET` + `WORKER_BASE_URL`         | Não usa secrets de cron                     |
+| Override   | Sobrescreve o default export                     | Adiciona named export `scheduled`           |
+| TypeScript | Sem correspondente TS                            | Espelhado de `src/lib/server/cron/index.ts` |
 
 ---
 
@@ -109,11 +111,11 @@ switch (event.cron):
 
 ## Scripts atualizados (package.json)
 
-| Script | Comando |
-|--------|---------|
-| `cf:build` | `npm run build && node scripts/inject-scheduled.mjs` |
-| `cf:deploy` | `npm run cf:build && npx wrangler deploy` |
-| `cf:deploy:staging` | `npm run cf:build && npx wrangler deploy --env staging` |
+| Script                   | Comando                                                          |
+| ------------------------ | ---------------------------------------------------------------- |
+| `cf:build`               | `npm run build && node scripts/inject-scheduled.mjs`             |
+| `cf:deploy`              | `npm run cf:build && npx wrangler deploy`                        |
+| `cf:deploy:staging`      | `npm run cf:build && npx wrangler deploy --env staging`          |
 | `legacy:patch-scheduled` | `node scripts/patch-worker-scheduled.js` (mantido p/ referência) |
 
 ---
@@ -125,7 +127,7 @@ switch (event.cron):
 ```typescript
 interface Platform {
   env?: {
-    DB: D1Database;           // ← @cloudflare/workers-types@4.20260504.1
+    DB: D1Database; // ← @cloudflare/workers-types@4.20260504.1
     R2: R2Bucket;
     KV_BINDING: KVNamespace;
     ASSETS: Fetcher;
@@ -142,7 +144,7 @@ interface Platform {
 ```typescript
 export type ApiEnv = {
   Bindings: {
-    event: RequestEvent;    // legado — remover em F2-03
+    event: RequestEvent; // legado — remover em F2-03
     DB: D1Database;
     R2: R2Bucket;
     KV_BINDING: KVNamespace;
@@ -162,7 +164,7 @@ export async function handleScheduled(
   event: ScheduledEvent,
   env: ScheduledEnv,
   ctx: ExecutionContext
-): Promise<void>
+): Promise<void>;
 ```
 
 ---

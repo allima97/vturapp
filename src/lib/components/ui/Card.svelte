@@ -43,7 +43,9 @@
 -->
 <div class="vtur-card {$$props.class || ''}">
   {#if title || header || subtitle}
-    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+    <div
+      class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4"
+    >
       <div>
         {#if title || header}
           <h3 class="text-sm font-semibold tracking-tight text-slate-800">{title || header}</h3>
@@ -55,7 +57,7 @@
       <slot name="actions" />
     </div>
   {/if}
-  <div class="{paddingClasses[padding] ?? paddingClasses.md}">
+  <div class={paddingClasses[padding] ?? paddingClasses.md}>
     <slot />
   </div>
 </div>

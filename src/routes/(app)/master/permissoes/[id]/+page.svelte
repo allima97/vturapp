@@ -68,7 +68,9 @@
     } catch (err) {
       if (isCanceledApiError(err)) return;
       if (dev) console.error(err);
-      toast.error(toUserMessage(err, 'Nao foi possivel carregar a matriz de permissoes do master.'));
+      toast.error(
+        toUserMessage(err, 'Nao foi possivel carregar a matriz de permissoes do master.')
+      );
     } finally {
       if (pageGuard.isCurrent(request.seq)) loading = false;
     }
@@ -125,7 +127,9 @@
     <Card color="financeiro" title={section.titulo}>
       <div class="space-y-3">
         {#each entriesForSection(section) as entry}
-          <div class="grid gap-3 rounded-xl border border-slate-200 p-4 lg:grid-cols-[minmax(0,1fr)_180px_100px]">
+          <div
+            class="grid gap-3 rounded-xl border border-slate-200 p-4 lg:grid-cols-[minmax(0,1fr)_180px_100px]"
+          >
             <div>
               <p class="font-medium text-slate-900">{entry.label}</p>
               <p class="text-xs text-slate-500">{entry.modulo}</p>
@@ -143,7 +147,9 @@
               />
             </div>
 
-            <label class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 lg:self-end">
+            <label
+              class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 lg:self-end"
+            >
               <Checkbox
                 bind:checked={entry.ativo}
                 on:change={() => {

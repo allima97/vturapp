@@ -26,7 +26,7 @@ const MONTH_INDEX: Record<string, number> = {
   fevereiro: 1,
   mar: 2,
   marco: 2,
-  "março": 2,
+  março: 2,
   abr: 3,
   abril: 3,
   mai: 4,
@@ -44,7 +44,7 @@ const MONTH_INDEX: Record<string, number> = {
   nov: 10,
   novembro: 10,
   dez: 11,
-  dezembro: 11,
+  dezembro: 11
 };
 
 const DATE_RANGE_RE =
@@ -53,50 +53,53 @@ const ROOM_LINE_RE = /^\d+\s+\S+/i;
 const OCCUPANCY_LINE_RE = /^total\s*\(/i;
 
 function normalizeText(value?: string | null) {
-  return String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, " ")
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
     .trim()
     .toLowerCase();
 }
 
 function normalizeLine(value?: string | null) {
-  return String(value || "").replace(/\s+/g, " ").trim();
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 export function normalizeImportedHotelRegime(value?: string | null) {
   const raw = normalizeLine(value);
   const normalized = normalizeText(raw);
-  if (!normalized) return "";
-  if (normalized.includes("cafe da manha")) return "Café da Manhã";
-  if (normalized.includes("meia pensao")) return "Meia Pensão";
-  if (normalized.includes("pensao completa")) return "Pensão Completa";
-  if (normalized.includes("all inclusive")) return "All Inclusive";
-  if (normalized.includes("sem refeicao")) return "Sem Refeição";
+  if (!normalized) return '';
+  if (normalized.includes('cafe da manha')) return 'Café da Manhã';
+  if (normalized.includes('meia pensao')) return 'Meia Pensão';
+  if (normalized.includes('pensao completa')) return 'Pensão Completa';
+  if (normalized.includes('all inclusive')) return 'All Inclusive';
+  if (normalized.includes('sem refeicao')) return 'Sem Refeição';
   return raw;
 }
 
 export function normalizeImportedHotelTarifa(value?: string | null) {
   const raw = normalizeLine(value);
   const normalized = normalizeText(raw);
-  if (!normalized) return "";
-  if (normalized.includes("nao reembols") || normalized.includes("não reembols")) return "Não Reembolsável";
-  if (normalized.includes("reembols")) return "Reembolsável";
+  if (!normalized) return '';
+  if (normalized.includes('nao reembols') || normalized.includes('não reembols'))
+    return 'Não Reembolsável';
+  if (normalized.includes('reembols')) return 'Reembolsável';
   return raw;
 }
 
 function parseMoney(value?: string | null): number {
-  const numeric = String(value || "")
-    .replace(/[^\d,.-]/g, "")
-    .replace(/\./g, "")
-    .replace(",", ".");
+  const numeric = String(value || '')
+    .replace(/[^\d,.-]/g, '')
+    .replace(/\./g, '')
+    .replace(',', '.');
   const parsed = Number(numeric);
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function extractMoneyValues(line?: string | null): number[] {
-  return Array.from(String(line || "").matchAll(/R\$\s*([0-9]{1,3}(?:\.[0-9]{3})*,\d{2})/gi))
+  return Array.from(String(line || '').matchAll(/R\$\s*([0-9]{1,3}(?:\.[0-9]{3})*,\d{2})/gi))
     .map((match) => parseMoney(match[1]))
     .filter((value) => value > 0);
 }
@@ -119,23 +122,23 @@ function diffNights(start: Date | null, end: Date | null) {
 
 function isRecommendedLine(line: string) {
   const normalized = normalizeText(line);
-  return normalized === "recomendado";
+  return normalized === 'recomendado';
 }
 
 function isIgnorableLine(line: string) {
   const normalized = normalizeText(line);
   if (!normalized) return true;
   const exactIgnores = [
-    "selecionado",
-    "excluir",
-    "preferencial",
-    "detalhes",
-    "recomendado",
-    "selecionar",
-    "remover",
-    "excluido",
-    "cancelar",
-    "editar",
+    'selecionado',
+    'excluir',
+    'preferencial',
+    'detalhes',
+    'recomendado',
+    'selecionar',
+    'remover',
+    'excluido',
+    'cancelar',
+    'editar'
   ];
   if (exactIgnores.includes(normalized)) return true;
   // ignora linhas que são apenas "x" ou "✓" etc.
@@ -153,7 +156,7 @@ function isOccupancyLine(line: string) {
 
 function isRefundLine(line: string) {
   const normalized = normalizeText(line);
-  return normalized.includes("reembols");
+  return normalized.includes('reembols');
 }
 
 function isAddressLine(line: string) {
@@ -165,7 +168,8 @@ function isAddressLine(line: string) {
   if (isRoomLine(normalized)) return false;
   if (isOccupancyLine(normalized)) return false;
   if (isRefundLine(normalized)) return false;
-  if (extractMoneyValues(normalized).length > 0 && /^r\$/.test(normalizeText(normalized))) return false;
+  if (extractMoneyValues(normalized).length > 0 && /^r\$/.test(normalizeText(normalized)))
+    return false;
   if (/,/.test(normalized)) return true;
   // Termina com número (possível número de endereço)
   return /\d\s*$/.test(normalized);
@@ -175,7 +179,9 @@ function buildBlocks(text: string) {
   const blocks: string[][] = [];
   let current: string[] = [];
 
-  for (const rawLine of String(text || "").replace(/\r/g, "\n").split("\n")) {
+  for (const rawLine of String(text || '')
+    .replace(/\r/g, '\n')
+    .split('\n')) {
     const line = normalizeLine(rawLine);
     if (!line) continue;
     if (DATE_RANGE_RE.test(line) && current.length > 0) {
@@ -196,7 +202,7 @@ function parseOccupancy(line: string) {
   const childrenMatch = normalized.match(/(\d+)\s*crianc/);
   return {
     qtd_adultos: adultsMatch?.[1] ? Number(adultsMatch[1]) : 0,
-    qtd_criancas: childrenMatch?.[1] ? Number(childrenMatch[1]) : 0,
+    qtd_criancas: childrenMatch?.[1] ? Number(childrenMatch[1]) : 0
   };
 }
 
@@ -204,14 +210,18 @@ function sortHotels(list: ImportedRoteiroHotel[]) {
   return list
     .slice()
     .sort((a, b) => {
-      const dateCompare = String(a.data_inicio || "").localeCompare(String(b.data_inicio || ""));
+      const dateCompare = String(a.data_inicio || '').localeCompare(String(b.data_inicio || ''));
       if (dateCompare !== 0) return dateCompare;
-      return String(a.hotel || "").localeCompare(String(b.hotel || ""));
+      return String(a.hotel || '').localeCompare(String(b.hotel || ''));
     })
     .map((hotel, index) => ({ ...hotel, ordem: index }));
 }
 
-function parseHotelBlock(block: string[], index: number, referenceYear: number): ImportedRoteiroHotel | null {
+function parseHotelBlock(
+  block: string[],
+  index: number,
+  referenceYear: number
+): ImportedRoteiroHotel | null {
   const [periodLine, ...restLines] = block;
   const periodMatch = periodLine.match(DATE_RANGE_RE);
   if (!periodMatch) return null;
@@ -221,7 +231,7 @@ function parseHotelBlock(block: string[], index: number, referenceYear: number):
   const endDay = Number(periodMatch[3]);
   const endMonth = periodMatch[4];
 
-  let startDate = parseDate(startDay, startMonth, referenceYear);
+  const startDate = parseDate(startDay, startMonth, referenceYear);
   let endDate = parseDate(endDay, endMonth, referenceYear);
   if (!startDate || !endDate) return null;
   if (endDate.getTime() < startDate.getTime()) {
@@ -232,19 +242,22 @@ function parseHotelBlock(block: string[], index: number, referenceYear: number):
   const usefulLines = restLines.filter((line) => !isIgnorableLine(line));
   if (usefulLines.length === 0) return null;
 
-  const destinationLine = usefulLines[0] || "";
+  const destinationLine = usefulLines[0] || '';
   const cidade = normalizeLine(destinationLine.split(/\s+-\s+/)[0] || destinationLine);
 
   let cursor = 1;
-  const hotel = usefulLines[cursor] || "";
+  const hotel = usefulLines[cursor] || '';
   if (!hotel) return null;
   cursor += 1;
 
-  while (cursor < usefulLines.length && normalizeText(usefulLines[cursor]) === normalizeText(hotel)) {
+  while (
+    cursor < usefulLines.length &&
+    normalizeText(usefulLines[cursor]) === normalizeText(hotel)
+  ) {
     cursor += 1;
   }
 
-  let endereco = "";
+  let endereco = '';
   if (
     cursor < usefulLines.length &&
     !isRoomLine(usefulLines[cursor]) &&
@@ -258,8 +271,8 @@ function parseHotelBlock(block: string[], index: number, referenceYear: number):
   }
 
   let qtd_apto = 0;
-  let apto = "";
-  const roomLine = usefulLines.find((line, idx) => idx >= cursor && isRoomLine(line)) || "";
+  let apto = '';
+  const roomLine = usefulLines.find((line, idx) => idx >= cursor && isRoomLine(line)) || '';
   if (roomLine) {
     const roomMatch = roomLine.match(/^(\d+)\s+(.+)$/);
     qtd_apto = roomMatch?.[1] ? Number(roomMatch[1]) : 0;
@@ -267,13 +280,17 @@ function parseHotelBlock(block: string[], index: number, referenceYear: number):
     cursor = usefulLines.indexOf(roomLine, cursor) + 1;
   }
 
-  let regime = "";
-  if (cursor < usefulLines.length && !isRefundLine(usefulLines[cursor]) && !isOccupancyLine(usefulLines[cursor])) {
+  let regime = '';
+  if (
+    cursor < usefulLines.length &&
+    !isRefundLine(usefulLines[cursor]) &&
+    !isOccupancyLine(usefulLines[cursor])
+  ) {
     regime = usefulLines[cursor];
     cursor += 1;
   }
 
-  let tipo_tarifa = "";
+  let tipo_tarifa = '';
   if (cursor < usefulLines.length && isRefundLine(usefulLines[cursor])) {
     tipo_tarifa = usefulLines[cursor];
     cursor += 1;
@@ -304,7 +321,7 @@ function parseHotelBlock(block: string[], index: number, referenceYear: number):
     const values = extractMoneyValues(line);
     if (values.length === 0) continue;
     const normalized = normalizeText(line);
-    if (normalized.includes("de r$") && normalized.includes(" por")) {
+    if (normalized.includes('de r$') && normalized.includes(' por')) {
       sawDiscountLine = true;
       valor_original = values[0] || 0;
       if (values.length > 1) valor_final = values[values.length - 1] || valor_final;
@@ -332,14 +349,14 @@ function parseHotelBlock(block: string[], index: number, referenceYear: number):
     noites,
     qtd_apto,
     apto,
-    categoria: "",
+    categoria: '',
     regime: normalizeImportedHotelRegime(regime),
     tipo_tarifa: normalizeImportedHotelTarifa(tipo_tarifa),
     qtd_adultos,
     qtd_criancas,
     valor_original,
     valor_final,
-    ordem: index,
+    ordem: index
   };
 }
 
@@ -358,13 +375,13 @@ export function mergeImportedRoteiroHotels(
 ) {
   const meaningfulExisting = (existing || []).filter((hotel) =>
     Boolean(
-      String(hotel.cidade || "").trim() ||
-        String(hotel.hotel || "").trim() ||
-        String(hotel.data_inicio || "").trim() ||
-        String(hotel.data_fim || "").trim() ||
-        String(hotel.endereco || "").trim() ||
-        String(hotel.apto || "").trim() ||
-        Number(hotel.valor_final || 0) > 0
+      String(hotel.cidade || '').trim() ||
+      String(hotel.hotel || '').trim() ||
+      String(hotel.data_inicio || '').trim() ||
+      String(hotel.data_fim || '').trim() ||
+      String(hotel.endereco || '').trim() ||
+      String(hotel.apto || '').trim() ||
+      Number(hotel.valor_final || 0) > 0
     )
   );
 

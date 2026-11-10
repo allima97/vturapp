@@ -43,11 +43,13 @@ export async function handleViagensDossieGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     const viagemId = String(event.url.searchParams.get('id') || '').trim();
-    if (!isUuid(viagemId)) return json({ error: 'ID de viagem inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    if (!isUuid(viagemId))
+      return json({ error: 'ID de viagem inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     const { data: viagem, error: viagemError } = await client
       .from('viagens')
-      .select(`
+      .select(
+        `
         id, company_id, venda_id, orcamento_id, cliente_id,
         responsavel_user_id, origem, destino, data_inicio, data_fim,
         status, observacoes, follow_up_text, follow_up_fechado,
@@ -65,12 +67,14 @@ export async function handleViagensDossieGet(event: RequestEvent) {
             id, forma_nome, valor_total, parcelas_qtd, vencimento_primeira, paga_comissao
           )
         )
-      `)
+      `
+      )
       .eq('id', viagemId)
       .maybeSingle();
 
     if (viagemError) throw viagemError;
-    if (!viagem) return json({ error: 'Viagem não encontrada.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!viagem)
+      return json({ error: 'Viagem não encontrada.' }, { status: 404, headers: NO_STORE_HEADERS });
 
     // ✅ Ownership compatível com MASTER (múltiplos companyIds)
     const companyIds = resolveScopedCompanyIds(scope, viagem.company_id);
@@ -79,7 +83,10 @@ export async function handleViagensDossieGet(event: RequestEvent) {
     }
 
     if (scope.isVendedor && !vendedorOwnsViagem(user.id, viagem)) {
-      return json({ error: 'Sem acesso a esta viagem.' }, { status: 403, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Sem acesso a esta viagem.' },
+        { status: 403, headers: NO_STORE_HEADERS }
+      );
     }
 
     const statusAtual = await syncViagemStatusIfNeeded(client, viagem);
@@ -100,14 +107,17 @@ export async function handleViagensDossieGet(event: RequestEvent) {
           .limit(20)
       : { data: [] };
 
-    return json({
-      viagem: {
-        ...viagemComStatus,
-        passageiros: acompanhantes || [],
-        vouchers: vouchers || [],
-        historico: []
-      }
-    }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      {
+        viagem: {
+          ...viagemComStatus,
+          passageiros: acompanhantes || [],
+          vouchers: vouchers || [],
+          historico: []
+        }
+      },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar dossie da viagem.');
   }

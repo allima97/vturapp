@@ -2,7 +2,13 @@
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import { json, type RequestEvent } from '@sveltejs/kit';
 import { readTextBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
-import { ensureModuloAccess, getAdminClient, logServerError, requireAuthenticatedUser, resolveUserScope } from '$lib/server/v1';
+import {
+  ensureModuloAccess,
+  getAdminClient,
+  logServerError,
+  requireAuthenticatedUser,
+  resolveUserScope
+} from '$lib/server/v1';
 import { NO_STORE_HEADERS, SHORT_DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
 import { safeJsonParse } from '$lib/utils/json';
 import { toUserMessage } from '$lib/utils/errors';
@@ -154,7 +160,9 @@ export async function handleDashboardWidgetsPost(event: RequestEvent) {
       const msg = readErrorMessage(err);
       if (msg.toLowerCase().includes('settings')) {
         const payloadSemSettings = rows.map(({ settings: _settings, ...row }) => row);
-        const { error: retryError } = await client.from('dashboard_widgets').insert(payloadSemSettings);
+        const { error: retryError } = await client
+          .from('dashboard_widgets')
+          .insert(payloadSemSettings);
         if (retryError) throw retryError;
       } else {
         throw err;

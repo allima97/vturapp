@@ -39,7 +39,13 @@ function readAvisoTemplateBody(value: unknown): AvisoTemplateBody {
 }
 
 function canManageTemplates(scope: Awaited<ReturnType<typeof resolveUserScope>>) {
-  return scope.isAdmin || scope.isMaster || scope.isGestor || Boolean(scope.permissoes.admin) || Boolean(scope.permissoes.admin_users);
+  return (
+    scope.isAdmin ||
+    scope.isMaster ||
+    scope.isGestor ||
+    Boolean(scope.permissoes.admin) ||
+    Boolean(scope.permissoes.admin_users)
+  );
 }
 
 export async function handleAdminAvisosGet(event: RequestEvent) {
@@ -49,7 +55,10 @@ export async function handleAdminAvisosGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!canManageTemplates(scope)) {
-      return new Response('Sem acesso aos templates de aviso.', { status: 403, headers: NO_STORE_HEADERS });
+      return new Response('Sem acesso aos templates de aviso.', {
+        status: 403,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     const templates = await loadAvisoTemplates(client);
@@ -72,15 +81,24 @@ export async function handleAdminAvisosPost(event: RequestEvent) {
     const body = readAvisoTemplateBody(bodyResult.data);
 
     if (!canManageTemplates(scope)) {
-      return new Response('Sem acesso aos templates de aviso.', { status: 403, headers: NO_STORE_HEADERS });
+      return new Response('Sem acesso aos templates de aviso.', {
+        status: 403,
+        headers: NO_STORE_HEADERS
+      });
     }
 
-    const action = String(body.action || 'save').trim().toLowerCase();
+    const action = String(body.action || 'save')
+      .trim()
+      .toLowerCase();
     const id = String(body.id || '').trim();
 
     if (action === 'delete') {
-      if (!id) return new Response('Template nao informado.', { status: 400, headers: NO_STORE_HEADERS });
-      const { error: deleteError } = await client.from('admin_avisos_templates').delete().eq('id', id);
+      if (!id)
+        return new Response('Template nao informado.', { status: 400, headers: NO_STORE_HEADERS });
+      const { error: deleteError } = await client
+        .from('admin_avisos_templates')
+        .delete()
+        .eq('id', id);
       if (deleteError) throw deleteError;
       return json({ id, deleted: true }, { headers: NO_STORE_HEADERS });
     }
@@ -94,7 +112,10 @@ export async function handleAdminAvisosPost(event: RequestEvent) {
     };
 
     if (!payload.nome || !payload.assunto || !payload.mensagem) {
-      return new Response('Nome, assunto e mensagem sao obrigatorios.', { status: 400, headers: NO_STORE_HEADERS });
+      return new Response('Nome, assunto e mensagem sao obrigatorios.', {
+        status: 400,
+        headers: NO_STORE_HEADERS
+      });
     }
 
     if (id) {

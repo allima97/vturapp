@@ -13,11 +13,18 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
-vi.mock('./root', () => ({ handleCircuitosGet: spy('handleCircuitosGet'), handleCircuitosPost: spy('handleCircuitosPost') }));
-vi.mock('./id', () => ({ handleCircuitosIdGet: spy('handleCircuitosIdGet'), handleCircuitosIdPatch: spy('handleCircuitosIdPatch'), handleCircuitosIdDelete: spy('handleCircuitosIdDelete') }));
+vi.mock('./root', () => ({
+  handleCircuitosGet: spy('handleCircuitosGet'),
+  handleCircuitosPost: spy('handleCircuitosPost')
+}));
+vi.mock('./id', () => ({
+  handleCircuitosIdGet: spy('handleCircuitosIdGet'),
+  handleCircuitosIdPatch: spy('handleCircuitosIdPatch'),
+  handleCircuitosIdDelete: spy('handleCircuitosIdDelete')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
@@ -25,14 +32,14 @@ import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
 const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/circuitos', 'handleCircuitosGet', {}],
   ['POST', '/api/v1/circuitos', 'handleCircuitosPost', {}],
-  ['GET', '/api/v1/circuitos/id-123', 'handleCircuitosIdGet', {"id": "id-123"}],
-  ['PATCH', '/api/v1/circuitos/id-123', 'handleCircuitosIdPatch', {"id": "id-123"}],
-  ['DELETE', '/api/v1/circuitos/id-123', 'handleCircuitosIdDelete', {"id": "id-123"}],
+  ['GET', '/api/v1/circuitos/id-123', 'handleCircuitosIdGet', { id: 'id-123' }],
+  ['PATCH', '/api/v1/circuitos/id-123', 'handleCircuitosIdPatch', { id: 'id-123' }],
+  ['DELETE', '/api/v1/circuitos/id-123', 'handleCircuitosIdDelete', { id: 'id-123' }]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/circuitos'],
-  ['PUT', '/api/v1/circuitos/id-123'],
+  ['PUT', '/api/v1/circuitos/id-123']
 ];
 
 function ev(method: string, path: string) {

@@ -1,15 +1,15 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from 'vitest';
 
 import {
   getReceiptCidadeNome,
   getVendaDestino,
   type ReportReceiptRow,
-  type ReportVendaRow,
-} from "$lib/server/relatorios";
+  type ReportVendaRow
+} from '$lib/server/relatorios';
 
 function venda(overrides: Partial<ReportVendaRow> = {}): ReportVendaRow {
   return {
-    id: "venda-1",
+    id: 'venda-1',
     numero_venda: null,
     cliente_id: null,
     vendedor_id: null,
@@ -21,15 +21,15 @@ function venda(overrides: Partial<ReportVendaRow> = {}): ReportVendaRow {
     valor_nao_comissionado: 0,
     valor_taxas: 0,
     cancelada: false,
-    ...overrides,
+    ...overrides
   };
 }
 
 function recibo(
-  overrides: Partial<NonNullable<ReportReceiptRow>> = {},
+  overrides: Partial<NonNullable<ReportReceiptRow>> = {}
 ): NonNullable<ReportReceiptRow> {
   return {
-    id: "recibo-1",
+    id: 'recibo-1',
     numero_recibo: null,
     numero_reserva: null,
     data_venda: null,
@@ -39,51 +39,51 @@ function recibo(
     valor_du: 0,
     valor_rav: 0,
     tipo_pacote: null,
-    ...overrides,
+    ...overrides
   };
 }
 
-describe("destino em relatorios", () => {
-  it("usa a cidade do produto operacional do recibo antes do destino/produto da venda", () => {
+describe('destino em relatorios', () => {
+  it('usa a cidade do produto operacional do recibo antes do destino/produto da venda', () => {
     const cityNames = new Map([
-      ["cidade-bue", "Buenos Aires"],
-      ["cidade-venda", "Sao Paulo"],
+      ['cidade-bue', 'Buenos Aires'],
+      ['cidade-venda', 'Sao Paulo']
     ]);
     const row = venda({
       destinos: {
-        id: "produto-venda",
-        nome: "Seguro Viagem",
-        cidade_id: "cidade-venda",
+        id: 'produto-venda',
+        nome: 'Seguro Viagem',
+        cidade_id: 'cidade-venda'
       },
       recibos: [
         recibo({
           produto_resolvido: {
-            id: "produto-recibo",
-            nome: "Aereo + Hotel",
-            cidade_id: "cidade-bue",
-          },
-        }),
-      ],
+            id: 'produto-recibo',
+            nome: 'Aereo + Hotel',
+            cidade_id: 'cidade-bue'
+          }
+        })
+      ]
     });
 
-    expect(getVendaDestino(row, cityNames)).toBe("Buenos Aires");
+    expect(getVendaDestino(row, cityNames)).toBe('Buenos Aires');
   });
 
-  it("nao usa nome de produto como fallback de destino", () => {
+  it('nao usa nome de produto como fallback de destino', () => {
     const row = venda({
-      destinos: { id: "produto-venda", nome: "Seguro Viagem", cidade_id: null },
+      destinos: { id: 'produto-venda', nome: 'Seguro Viagem', cidade_id: null }
     });
 
-    expect(getVendaDestino(row)).toBe("Destino nao informado");
+    expect(getVendaDestino(row)).toBe('Destino nao informado');
   });
 
-  it("resolve cidade do recibo por destino_cidade_id quando o nome veio ausente", () => {
-    const cityNames = new Map([["cidade-mia", "Miami"]]);
+  it('resolve cidade do recibo por destino_cidade_id quando o nome veio ausente', () => {
+    const cityNames = new Map([['cidade-mia', 'Miami']]);
     const row = venda();
     const item = recibo({
-      destino_cidade: { id: "cidade-mia", nome: null },
+      destino_cidade: { id: 'cidade-mia', nome: null }
     });
 
-    expect(getReceiptCidadeNome(item, row, cityNames)).toBe("Miami");
+    expect(getReceiptCidadeNome(item, row, cityNames)).toBe('Miami');
   });
 });

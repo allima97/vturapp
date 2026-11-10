@@ -85,7 +85,9 @@
   }
 
   function previewText(value: string) {
-    const text = String(value || '').replace(/\s+/g, ' ').trim();
+    const text = String(value || '')
+      .replace(/\s+/g, ' ')
+      .trim();
     return text.length > 180 ? `${text.slice(0, 180)}...` : text;
   }
 
@@ -93,7 +95,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const payload = await apiGet<DocumentationPayload>('/api/v1/documentacao', undefined, request.signal);
+      const payload = await apiGet<DocumentationPayload>(
+        '/api/v1/documentacao',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       sections = payload.sections || [];
       source = payload.source || '';
@@ -215,15 +221,20 @@
   </div>
 
   {#if source === 'legacy'}
-    <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-      Documentação carregada do modelo legado. Ao editar ou criar novos itens, o sistema passa a salvar no modelo estruturado.
+    <div
+      class="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+    >
+      Documentação carregada do modelo legado. Ao editar ou criar novos itens, o sistema passa a
+      salvar no modelo estruturado.
     </div>
   {/if}
 
   <div class="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
     <Card title="Instâncias de documentação" color="financeiro">
       {#if sections.length === 0}
-        <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+        <div
+          class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500"
+        >
           Nenhuma documentação cadastrada.
         </div>
       {:else}
@@ -231,7 +242,10 @@
           {#each sections as section}
             <button
               type="button"
-              class="w-full rounded-xl border px-4 py-3 text-left transition {selected?.id === section.id ? 'border-blue-300 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'}"
+              class="w-full rounded-xl border px-4 py-3 text-left transition {selected?.id ===
+              section.id
+                ? 'border-blue-300 bg-blue-50'
+                : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'}"
               on:click={() => (selectedId = section.id)}
             >
               <div class="flex items-start justify-between gap-3">
@@ -283,16 +297,22 @@
         </div>
 
         {#if selected.summary}
-          <p class="mb-5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          <p
+            class="mb-5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600"
+          >
             {selected.summary}
           </p>
         {/if}
 
-        <div class="prose prose-sm max-w-none whitespace-pre-wrap rounded-xl border border-slate-200 bg-white px-5 py-4 text-slate-700">
+        <div
+          class="prose prose-sm max-w-none rounded-xl border border-slate-200 bg-white px-5 py-4 whitespace-pre-wrap text-slate-700"
+        >
           {selected.content_markdown}
         </div>
       {:else}
-        <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center">
+        <div
+          class="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-10 text-center"
+        >
           <p class="font-medium text-slate-900">Nenhuma documentação selecionada</p>
           <p class="mt-1 text-sm text-slate-500">Crie uma nova instância para começar.</p>
           <Button class_name="mt-4" on:click={openNew}>
@@ -361,12 +381,7 @@
       options={toneOptions}
       placeholder={null}
     />
-    <FieldInput
-      id="doc-sort-order"
-      label="Ordenação"
-      type="number"
-      bind:value={form.sort_order}
-    />
+    <FieldInput id="doc-sort-order" label="Ordenação" type="number" bind:value={form.sort_order} />
     <FieldCheckbox
       id="doc-active"
       label="Documentação ativa"
@@ -395,7 +410,7 @@
     />
     {#if form.content_markdown}
       <div class="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-        <p class="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Prévia curta</p>
+        <p class="text-xs font-semibold tracking-[0.08em] text-slate-500 uppercase">Prévia curta</p>
         <p class="mt-2 text-sm text-slate-600">{previewText(form.content_markdown)}</p>
       </div>
     {/if}

@@ -94,9 +94,11 @@ export function validarCliente(body: unknown): ClienteValidationResult {
     typeof b.documento === 'string' ? b.documento : typeof b.cpf === 'string' ? b.cpf : ''
   );
   if (!documento) {
-    errors.documento = tipoPessoa === 'PJ' ? 'Informe o CNPJ do cliente.' : 'Informe o CPF do cliente.';
+    errors.documento =
+      tipoPessoa === 'PJ' ? 'Informe o CNPJ do cliente.' : 'Informe o CPF do cliente.';
   } else if (tipoPessoa === 'PJ') {
-    if (!isValidCnpj(documento)) errors.documento = 'CNPJ inválido. Informe os 14 dígitos corretamente.';
+    if (!isValidCnpj(documento))
+      errors.documento = 'CNPJ inválido. Informe os 14 dígitos corretamente.';
   } else if (documento.length !== 11) {
     errors.documento = 'CPF inválido. Informe os 11 dígitos corretamente.';
   }
@@ -157,7 +159,7 @@ export function validarCliente(body: unknown): ClienteValidationResult {
       nacionalidade: tipoPessoa === 'PJ' ? null : textoOpcional(b.nacionalidade, 60),
       tags: parseTags(b.tags),
       tipo_cliente: textoOpcional(b.tipo_cliente, 30) ?? 'passageiro',
-      notas: textoOpcional(b.notas ?? b.observacoes, 2000),
-    },
+      notas: textoOpcional(b.notas ?? b.observacoes, 2000)
+    }
   };
 }

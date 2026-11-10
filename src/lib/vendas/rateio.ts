@@ -101,9 +101,7 @@ export function cloneReciboWithFactor<T extends ReciboLike>(
 ): T {
   const rawId = toStr(recibo?.id);
   const nextId =
-    options?.forceSyntheticId || rawId
-      ? `${rawId || 'recibo'}::rateio:${vendedorId}`
-      : rawId;
+    options?.forceSyntheticId || rawId ? `${rawId || 'recibo'}::rateio:${vendedorId}` : rawId;
 
   return {
     ...recibo,
@@ -117,7 +115,7 @@ export function cloneReciboWithFactor<T extends ReciboLike>(
     valor_bruto_override: scaleNumericField(recibo?.valor_bruto_override, fator),
     valor_meta_override: scaleNumericField(recibo?.valor_meta_override, fator),
     valor_liquido_override: scaleNumericField(recibo?.valor_liquido_override, fator),
-    valor_comissao_loja: scaleNumericField(recibo?.valor_comissao_loja, fator),
+    valor_comissao_loja: scaleNumericField(recibo?.valor_comissao_loja, fator)
   } as T;
 }
 
@@ -174,7 +172,9 @@ export async function fetchRateioByReciboIds(
   }
 
   // Cross-reference: conciliacao_recibo_id -> venda_recibo_id
-  const concIds = uniqueCleanStrings(byConcReciboRows.map((row) => row?.conciliacao_recibo_id)).filter(isUuid);
+  const concIds = uniqueCleanStrings(
+    byConcReciboRows.map((row) => row?.conciliacao_recibo_id)
+  ).filter(isUuid);
   if (concIds.length > 0) {
     for (const chunk of chunkArray(concIds, QUERY_IN_BATCH_SIZE)) {
       const { data: concRows, error: concErr } = await client
@@ -235,8 +235,12 @@ export async function fetchSplitSaleIdsForDestinationVendedores(
     }
   }
 
-  const vendaReciboIds = uniqueCleanStrings(splitRows.map((row) => row?.venda_recibo_id)).filter(isUuid);
-  const concReciboIds = uniqueCleanStrings(splitRows.map((row) => row?.conciliacao_recibo_id)).filter(isUuid);
+  const vendaReciboIds = uniqueCleanStrings(splitRows.map((row) => row?.venda_recibo_id)).filter(
+    isUuid
+  );
+  const concReciboIds = uniqueCleanStrings(
+    splitRows.map((row) => row?.conciliacao_recibo_id)
+  ).filter(isUuid);
 
   const vendaIds = new Set<string>();
 
@@ -296,12 +300,14 @@ export function applyRateioToSalesForScopedVendedores<
   items: T[],
   rateioMap: Map<string, RateioRow>,
   scopedVendedorIds?: string[] | null
-): Array<T & {
-  rateio_source_venda_id: string | null;
-  rateio_scope_bruto_total: number;
-  rateio_source_bruto_total: number;
-  rateio_scope_factor: number;
-}> {
+): Array<
+  T & {
+    rateio_source_venda_id: string | null;
+    rateio_scope_bruto_total: number;
+    rateio_source_bruto_total: number;
+    rateio_scope_factor: number;
+  }
+> {
   const scopedSet = cleanStringSet(scopedVendedorIds || []);
   const hasScope = scopedSet.size > 0;
 
@@ -316,10 +322,7 @@ export function applyRateioToSalesForScopedVendedores<
     for (const [reciboIndex, recibo] of recibos.entries()) {
       const rawReciboId = toStr(recibo?.id);
       const primaryReciboId = normalizeReciboLookupId(rawReciboId);
-      const rateio =
-        rateioMap.get(rawReciboId) ||
-        rateioMap.get(primaryReciboId) ||
-        null;
+      const rateio = rateioMap.get(rawReciboId) || rateioMap.get(primaryReciboId) || null;
 
       const baseAllocations =
         rateio &&
@@ -331,12 +334,12 @@ export function applyRateioToSalesForScopedVendedores<
           ? [
               {
                 vendedorId: toStr(rateio.vendedor_origem_id),
-                fator: Math.max(0, Math.min(1, toNumber(rateio.percentual_origem) / 100)),
+                fator: Math.max(0, Math.min(1, toNumber(rateio.percentual_origem) / 100))
               },
               {
                 vendedorId: toStr(rateio.vendedor_destino_id),
-                fator: Math.max(0, Math.min(1, toNumber(rateio.percentual_destino) / 100)),
-              },
+                fator: Math.max(0, Math.min(1, toNumber(rateio.percentual_destino) / 100))
+              }
             ]
           : origemId
             ? [{ vendedorId: origemId, fator: 1 }]
@@ -357,14 +360,14 @@ export function applyRateioToSalesForScopedVendedores<
         const nextRecibo =
           forceSyntheticId || allocation.fator !== 1
             ? cloneReciboWithFactor(recibo, allocation.fator, allocation.vendedorId, {
-                forceSyntheticId,
+                forceSyntheticId
               })
             : recibo;
 
         bucket.push({
           ...nextRecibo,
           rateio_scope_vendor_id: allocation.vendedorId,
-          rateio_scope_index: reciboIndex,
+          rateio_scope_index: reciboIndex
         });
         recibosPorVendedor.set(allocation.vendedorId, bucket);
       }
@@ -377,9 +380,7 @@ export function applyRateioToSalesForScopedVendedores<
           0
         );
         const scopeFactor =
-          sourceBrutoTotal > 0
-            ? Math.max(0, Math.min(1, scopeBrutoTotal / sourceBrutoTotal))
-            : 1;
+          sourceBrutoTotal > 0 ? Math.max(0, Math.min(1, scopeBrutoTotal / sourceBrutoTotal)) : 1;
 
         return {
           ...item,
@@ -388,17 +389,18 @@ export function applyRateioToSalesForScopedVendedores<
           rateio_source_venda_id: toStr(item?.id) || null,
           rateio_scope_bruto_total: scopeBrutoTotal,
           rateio_source_bruto_total: sourceBrutoTotal,
-          rateio_scope_factor: scopeFactor,
+          rateio_scope_factor: scopeFactor
         };
       })
       .filter(
-        (nextItem) =>
-          Array.isArray(nextItem.vendas_recibos) && nextItem.vendas_recibos.length > 0
-      ) as Array<T & {
+        (nextItem) => Array.isArray(nextItem.vendas_recibos) && nextItem.vendas_recibos.length > 0
+      ) as Array<
+      T & {
         rateio_source_venda_id: string | null;
         rateio_scope_bruto_total: number;
         rateio_source_bruto_total: number;
         rateio_scope_factor: number;
-      }>;
+      }
+    >;
   });
 }

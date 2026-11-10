@@ -4,13 +4,13 @@ export type NormalizeTextOptions = {
 };
 
 export function normalizeText(value?: string | null, options: NormalizeTextOptions = {}) {
-  let normalized = (value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+  let normalized = (value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
 
   if (options.collapseWhitespace) {
-    normalized = normalized.replace(/\s+/g, " ");
+    normalized = normalized.replace(/\s+/g, ' ');
   }
 
   if (options.trim) {
@@ -21,9 +21,33 @@ export function normalizeText(value?: string | null, options: NormalizeTextOptio
 }
 
 const LOWER_CASE_WORDS = new Set([
-  'de', 'da', 'do', 'dos', 'a', 'e', 'o', 'em', 'na', 'no', 'nas', 'nos',
-  'por', 'com', 'para', 'sem', 'sob', 'entre', 'até', 'após', 'antes',
-  'desde', 'perante', 'contra', 'sobre', 'trás', 'via'
+  'de',
+  'da',
+  'do',
+  'dos',
+  'a',
+  'e',
+  'o',
+  'em',
+  'na',
+  'no',
+  'nas',
+  'nos',
+  'por',
+  'com',
+  'para',
+  'sem',
+  'sob',
+  'entre',
+  'até',
+  'após',
+  'antes',
+  'desde',
+  'perante',
+  'contra',
+  'sobre',
+  'trás',
+  'via'
 ]);
 
 /**
@@ -41,9 +65,7 @@ export function titleCaseNome(value?: string | null): string {
   for (let index = 0; index < words.length; index += 1) {
     const word = words[index];
     formatted.push(
-      index > 0 && LOWER_CASE_WORDS.has(word)
-        ? word
-        : word.charAt(0).toUpperCase() + word.slice(1),
+      index > 0 && LOWER_CASE_WORDS.has(word) ? word : word.charAt(0).toUpperCase() + word.slice(1)
     );
   }
 

@@ -38,7 +38,7 @@ function readAssinaturaForm(value: unknown): AssinaturaForm {
     linha2_italic: typeof body.linha2_italic === 'boolean' ? body.linha2_italic : null,
     linha3: typeof body.linha3 === 'string' ? body.linha3 : null,
     linha3_font_size: typeof body.linha3_font_size === 'number' ? body.linha3_font_size : null,
-    linha3_italic: typeof body.linha3_italic === 'boolean' ? body.linha3_italic : null,
+    linha3_italic: typeof body.linha3_italic === 'boolean' ? body.linha3_italic : null
   };
 }
 
@@ -77,7 +77,7 @@ export async function handleCrmSignaturePost(event: RequestEvent) {
       linha3: String(assinatura.linha3 || ''),
       linha3_font_size: Number(assinatura.linha3_font_size || 24),
       linha3_italic: Boolean(assinatura.linha3_italic),
-      updated_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
 
     const { error } = await client

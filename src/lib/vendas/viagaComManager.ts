@@ -4,8 +4,8 @@ import { logServerError } from '$lib/server/v1';
 import type { ReciboRelacionado } from './reciboReservaValidator';
 
 function normalizeNumero(valor?: string | null) {
-  if (!valor) return "";
-  return normalizeText(valor, { trim: true, collapseWhitespace: true }).replace(/\s+/g, "");
+  if (!valor) return '';
+  return normalizeText(valor, { trim: true, collapseWhitespace: true }).replace(/\s+/g, '');
 }
 
 function logViajaComError(context: string, error: unknown) {
@@ -74,46 +74,42 @@ export async function criarVinculosViajaComAutomaticos(params: {
     for (const relacionado of relacionados) {
       try {
         // Cria vínculo: recibo novo aponta para recibo relacionado
-        const { error: erro1 } = await client
-          .from("vendas_recibos_complementares")
-          .upsert(
-            {
-              venda_id: vendaId,
-              recibo_id: relacionado.id,
-            },
-            {
-              onConflict: "venda_id,recibo_id",
-              ignoreDuplicates: true
-            }
-          );
+        const { error: erro1 } = await client.from('vendas_recibos_complementares').upsert(
+          {
+            venda_id: vendaId,
+            recibo_id: relacionado.id
+          },
+          {
+            onConflict: 'venda_id,recibo_id',
+            ignoreDuplicates: true
+          }
+        );
 
         if (erro1) {
-          logViajaComError("[viaja-com] erro ao criar vinculo direto", erro1);
+          logViajaComError('[viaja-com] erro ao criar vinculo direto', erro1);
           continue;
         }
 
         // Cria vínculo reverso: recibo relacionado aponta para recibo novo
-        const { error: erro2 } = await client
-          .from("vendas_recibos_complementares")
-          .upsert(
-            {
-              venda_id: relacionado.venda_id,
-              recibo_id: reciboNovo.id,
-            },
-            {
-              onConflict: "venda_id,recibo_id",
-              ignoreDuplicates: true
-            }
-          );
+        const { error: erro2 } = await client.from('vendas_recibos_complementares').upsert(
+          {
+            venda_id: relacionado.venda_id,
+            recibo_id: reciboNovo.id
+          },
+          {
+            onConflict: 'venda_id,recibo_id',
+            ignoreDuplicates: true
+          }
+        );
 
         if (erro2) {
-          logViajaComError("[viaja-com] erro ao criar vinculo reverso", erro2);
+          logViajaComError('[viaja-com] erro ao criar vinculo reverso', erro2);
           continue;
         }
 
         vinculosCriados += 2;
       } catch (error) {
-        logViajaComError("[viaja-com] erro ao criar vinculo", error);
+        logViajaComError('[viaja-com] erro ao criar vinculo', error);
       }
     }
   }
@@ -135,8 +131,9 @@ export async function buscarRecibosComplementares(params: {
   const { client, vendaId } = params;
 
   const { data, error } = await client
-    .from("vendas_recibos_complementares")
-    .select(`
+    .from('vendas_recibos_complementares')
+    .select(
+      `
       recibo_id,
       vendas_recibos!inner(
         id,
@@ -148,11 +145,12 @@ export async function buscarRecibosComplementares(params: {
           clientes(nome)
         )
       )
-    `)
-    .eq("venda_id", vendaId);
+    `
+    )
+    .eq('venda_id', vendaId);
 
   if (error) {
-    logViajaComError("[viaja-com] erro ao buscar recibos complementares", error);
+    logViajaComError('[viaja-com] erro ao buscar recibos complementares', error);
     return [];
   }
 

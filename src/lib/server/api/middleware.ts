@@ -57,7 +57,10 @@ export const requestContext: MiddlewareHandler<ApiEnv> = async (c, next) => {
   res.headers.set(REQUEST_ID_HEADER, requestId);
   const duration = Date.now() - startedAt;
   const previous = res.headers.get('server-timing');
-  res.headers.set('server-timing', previous ? `${previous}, app;dur=${duration}` : `app;dur=${duration}`);
+  res.headers.set(
+    'server-timing',
+    previous ? `${previous}, app;dur=${duration}` : `app;dur=${duration}`
+  );
   c.res = res;
 };
 

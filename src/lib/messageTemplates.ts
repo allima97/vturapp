@@ -1,4 +1,4 @@
-import { getPrimeiroNome, getSaudacaoPorHora } from "./whatsapp";
+import { getPrimeiroNome, getSaudacaoPorHora } from './whatsapp';
 
 export type MessageTemplateVars = {
   nomeCompleto?: string | null;
@@ -24,25 +24,25 @@ export function renderTemplateText(
   vars: MessageTemplateVars,
   options?: RenderTemplateOptions
 ) {
-  const nomeCompleto = (vars.nomeCompleto || "").trim();
+  const nomeCompleto = (vars.nomeCompleto || '').trim();
   const primeiroNome = options?.useFullNameAsFirstName
-    ? nomeCompleto || "Cliente"
-    : getPrimeiroNome(nomeCompleto) || nomeCompleto || "Cliente";
-  const assinatura = (vars.assinatura || vars.consultor || "").trim();
+    ? nomeCompleto || 'Cliente'
+    : getPrimeiroNome(nomeCompleto) || nomeCompleto || 'Cliente';
+  const assinatura = (vars.assinatura || vars.consultor || '').trim();
   const consultor = assinatura;
-  const cargoConsultor = (vars.cargoConsultor || "").trim();
+  const cargoConsultor = (vars.cargoConsultor || '').trim();
   const saudacao = getSaudacaoPorHora();
-  const empresa = (vars.empresa || "").trim();
-  const origem = (vars.origem || "").trim();
-  const destino = (vars.destino || "").trim();
-  const dataViagem = (vars.dataViagem || "").trim();
-  const dataEmbarque = (vars.dataEmbarque || "").trim();
-  const dataRetorno = (vars.dataRetorno || "").trim();
-  const cta = (vars.cta || "").trim();
-  const mensagem = (vars.mensagem || "").trim();
+  const empresa = (vars.empresa || '').trim();
+  const origem = (vars.origem || '').trim();
+  const destino = (vars.destino || '').trim();
+  const dataViagem = (vars.dataViagem || '').trim();
+  const dataEmbarque = (vars.dataEmbarque || '').trim();
+  const dataRetorno = (vars.dataRetorno || '').trim();
+  const cta = (vars.cta || '').trim();
+  const mensagem = (vars.mensagem || '').trim();
 
-  return String(template || "")
-    .replace(/\[(nome|nome_completo)\]/gi, nomeCompleto || "Cliente")
+  return String(template || '')
+    .replace(/\[(nome|nome_completo)\]/gi, nomeCompleto || 'Cliente')
     .replace(/\[(primeiro_nome|nome_cliente|primeiro_nome_cliente)\]/gi, primeiroNome)
     .replace(/\[(assinatura|nome_usuario|consultor)\]/gi, consultor)
     .replace(/\[(cargo_consultor)\]/gi, cargoConsultor)
@@ -55,7 +55,7 @@ export function renderTemplateText(
     .replace(/\[(data_retorno)\]/gi, dataRetorno)
     .replace(/\[(cta)\]/gi, cta)
     .replace(/\[(mensagem)\]/gi, mensagem)
-    .replace(/\{\{\s*(cliente_nome|nome|nome_completo)\s*\}\}/gi, nomeCompleto || "Cliente")
+    .replace(/\{\{\s*(cliente_nome|nome|nome_completo)\s*\}\}/gi, nomeCompleto || 'Cliente')
     .replace(/\{\{\s*(primeiro_nome|nome_cliente|primeiro_nome_cliente)\s*\}\}/gi, primeiroNome)
     .replace(/\{\{\s*(consultor_nome|consultor|assinatura)\s*\}\}/gi, consultor)
     .replace(/\{\{\s*(cargo_consultor)\s*\}\}/gi, cargoConsultor)

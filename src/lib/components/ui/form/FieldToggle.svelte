@@ -49,7 +49,9 @@
 </script>
 
 <div class={class_name}>
-  <div class="flex items-start justify-between gap-4 rounded-xl border border-slate-200 bg-white px-4 py-3">
+  <div
+    class="flex items-start justify-between gap-4 rounded-xl border border-slate-200 bg-white px-4 py-3"
+  >
     <div class="min-w-0">
       {#if label}
         <label for={fieldId} class="block cursor-pointer text-sm font-medium text-slate-700">
@@ -73,7 +75,7 @@
       color={resolvedColor}
       aria-invalid={error ? 'true' : undefined}
       aria-describedby={describedById}
-      aria-label={label ? undefined : ariaLabel ?? undefined}
+      aria-label={label ? undefined : (ariaLabel ?? undefined)}
       on:change
       on:blur
       on:focus

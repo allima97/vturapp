@@ -37,14 +37,20 @@ export async function handleFinanceiroComissoesVendedoresGet(event: RequestEvent
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['Comissionamento', 'RegrasComissao', 'parametros'], 1, 'Sem acesso.');
+      ensureModuloAccess(
+        scope,
+        ['Comissionamento', 'RegrasComissao', 'parametros'],
+        1,
+        'Sem acesso.'
+      );
     }
 
     const { searchParams } = event.url;
     const regraId = searchParams.get('regra_id');
     const companyIds = resolveScopedCompanyIds(scope, searchParams.get('empresa_id'));
 
-    const usersCompanyIds = companyIds.length > 0 ? companyIds : scope.companyId ? [scope.companyId] : [];
+    const usersCompanyIds =
+      companyIds.length > 0 ? companyIds : scope.companyId ? [scope.companyId] : [];
     const usersData =
       scope.isAdmin || scope.isMaster || scope.isFinanceiro || scope.isGestor
         ? await fetchRankingVendedoresByCompanyIds(client, usersCompanyIds)
@@ -87,7 +93,8 @@ export async function handleFinanceiroComissoesVendedoresGet(event: RequestEvent
         regra_id: regraId && commissionContext.regrasMap[regraId] ? regraId : regraBase?.id || null,
         regra_nome:
           regraId && commissionContext.regrasMap[regraId]
-            ? (commissionContext.regrasMap[regraId] as CommissionRuleSummary).nome || 'Regra selecionada'
+            ? (commissionContext.regrasMap[regraId] as CommissionRuleSummary).nome ||
+              'Regra selecionada'
             : regraBase?.nome || 'Calculada por produto/pacote/meta',
         percentual_base: Number(regraBase?.meta_atingida || 0),
         ativo: true,
@@ -95,7 +102,10 @@ export async function handleFinanceiroComissoesVendedoresGet(event: RequestEvent
       };
     });
 
-    return json({ items, total: items.length, regras: regras || [] }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      { items, total: items.length, regras: regras || [] },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar vendedores.');
   }
@@ -113,11 +123,19 @@ export async function handleFinanceiroComissoesVendedoresPost(event: RequestEven
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['Comissionamento', 'RegrasComissao', 'parametros'], 2, 'Sem permissão.');
+      ensureModuloAccess(
+        scope,
+        ['Comissionamento', 'RegrasComissao', 'parametros'],
+        2,
+        'Sem permissão.'
+      );
     }
 
     // Retorna sucesso — associação de vendedor a regra não tem tabela dedicada no schema atual
-    return json({ success: true, message: 'Associação registrada.' }, { headers: NO_STORE_HEADERS });
+    return json(
+      { success: true, message: 'Associação registrada.' },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao associar vendedor.');
   }

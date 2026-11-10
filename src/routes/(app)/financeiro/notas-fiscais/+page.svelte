@@ -72,10 +72,7 @@
   title="Notas Fiscais"
   subtitle="Base do módulo fiscal brasileiro: emissão, conferência, integração com prefeitura e vínculo com vendas/recebimentos."
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Financeiro', href: '/financeiro' },
-    { label: 'Notas Fiscais' }
-  ]}
+  breadcrumbs={[{ label: 'Financeiro', href: '/financeiro' }, { label: 'Notas Fiscais' }]}
 />
 
 <div class="space-y-6">
@@ -94,7 +91,9 @@
           />
         {/if}
         <p class="text-sm leading-6 text-slate-500">
-          A emissão fiscal será tratada por CNPJ/empresa. O escopo atual é <strong class="text-slate-800">{empresaAtual}</strong>.
+          A emissão fiscal será tratada por CNPJ/empresa. O escopo atual é <strong
+            class="text-slate-800">{empresaAtual}</strong
+          >.
         </p>
       </div>
     </Card>
@@ -102,28 +101,32 @@
 
   <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
     <Card color="financeiro">
-      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Pendentes</p>
+      <p class="text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">Pendentes</p>
       <p class="mt-2 text-2xl font-semibold text-slate-950">0</p>
       <p class="mt-1 text-sm text-slate-500">Vendas aguardando emissão em {empresaAtual}</p>
     </Card>
     <Card color="financeiro">
-      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Emitidas</p>
+      <p class="text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">Emitidas</p>
       <p class="mt-2 text-2xl font-semibold text-slate-950">0</p>
       <p class="mt-1 text-sm text-slate-500">Notas autorizadas</p>
     </Card>
     <Card color="financeiro">
-      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Falhas</p>
+      <p class="text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">Falhas</p>
       <p class="mt-2 text-2xl font-semibold text-slate-950">0</p>
       <p class="mt-1 text-sm text-slate-500">Rejeições ou retorno inválido</p>
     </Card>
     <Card color="financeiro">
-      <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Integração</p>
+      <p class="text-xs font-semibold tracking-[0.18em] text-slate-500 uppercase">Integração</p>
       <p class="mt-2 text-lg font-semibold text-slate-950">A configurar</p>
       <p class="mt-1 text-sm text-slate-500">Provider fiscal para {empresaAtual}</p>
     </Card>
   </div>
 
-  <Card title="Plano técnico da emissão fiscal" subtitle="Sem emissão real até configurar provedor, certificado e regras municipais." color="financeiro">
+  <Card
+    title="Plano técnico da emissão fiscal"
+    subtitle="Sem emissão real até configurar provedor, certificado e regras municipais."
+    color="financeiro"
+  >
     <div class="grid gap-4 lg:grid-cols-2">
       <div class="rounded-xl border border-slate-200 p-4">
         <div class="flex items-start gap-3">
@@ -187,13 +190,30 @@
 
   <Card title="Próximos blocos" color="financeiro">
     <div class="grid gap-3 md:grid-cols-3">
-      <Button href="/parametros/empresa" variant="outline" color="financeiro" class_name="justify-start! rounded-xl! p-4!" disabled>
+      <Button
+        href="/parametros/empresa"
+        variant="outline"
+        color="financeiro"
+        class_name="justify-start! rounded-xl! p-4!"
+        disabled
+      >
         <Settings size={18} class="mr-3 text-orange-600" /> Parametrizar empresa
       </Button>
-      <Button href="/vendas" variant="outline" color="financeiro" class_name="justify-start! rounded-xl! p-4!">
+      <Button
+        href="/vendas"
+        variant="outline"
+        color="financeiro"
+        class_name="justify-start! rounded-xl! p-4!"
+      >
         <FileCheck2 size={18} class="mr-3 text-orange-600" /> Conferir vendas
       </Button>
-      <Button href="/financeiro/notas-fiscais" variant="outline" color="financeiro" class_name="justify-start! rounded-xl! p-4!" disabled>
+      <Button
+        href="/financeiro/notas-fiscais"
+        variant="outline"
+        color="financeiro"
+        class_name="justify-start! rounded-xl! p-4!"
+        disabled
+      >
         <PlugZap size={18} class="mr-3 text-orange-600" /> Conectar provedor
       </Button>
     </div>

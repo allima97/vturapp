@@ -55,13 +55,13 @@ import { vi } from 'vitest';
 
 // Stub global de resolveAuthContext
 vi.mock('$lib/server/auth/context', () => ({
-  resolveAuthContext: vi.fn(),
+  resolveAuthContext: vi.fn()
 }));
 
 // Stub de brand — o Workers runtime não suporta importação de assets Vite (?raw)
 vi.mock('$lib/brand', () => ({
   VTUR_LOGO_URL: 'data:image/png;base64,VTUR-LOGO-STUB',
-  VTUR_LOGO_PATH: '/brand/vtur-symbol.png',
+  VTUR_LOGO_PATH: '/brand/vtur-symbol.png'
 }));
 
 const mockAuth = resolveAuthContext as ReturnType<typeof vi.fn>;
@@ -71,13 +71,19 @@ function fakeEnv(d1 = env.DB) {
     DB: d1,
     BETTER_AUTH_SECRET: 'test-secret',
     PUBLIC_APP_URL: 'http://localhost:5173',
-    PUBLIC_ENVIRONMENT: 'test',
+    PUBLIC_ENVIRONMENT: 'test'
   } as unknown as ApiEnv['Bindings'];
 }
 
-async function callPdf(id: string | number, authCtx: object | null = {
-  userId: USUARIO_A, userEmail: 'a@a.com', empresaId: EMPRESA_A, papel: 'operador',
-}) {
+async function callPdf(
+  id: string | number,
+  authCtx: object | null = {
+    userId: USUARIO_A,
+    userEmail: 'a@a.com',
+    empresaId: EMPRESA_A,
+    papel: 'operador'
+  }
+) {
   mockAuth.mockResolvedValueOnce(authCtx);
   // vendasV2Routes está montado em /vendas pelo app-v2; chamamos com caminho relativo ao router
   const req = new Request(`http://localhost/${id}/pdf`);
@@ -108,39 +114,41 @@ function vendaMinima(): VendaNormalizada {
     valor_nao_comissionado_centavos: 0,
     notas: null,
     chave_idempotencia: null,
-    itens: [{
-      produto_id: null,
-      numero_recibo: 'REC-001',
-      numero_reserva: null,
-      data_servico: '2024-12-20',
-      data_fim_servico: null,
-      pax: 2,
-      descricao: 'Pacote Cancún 7 noites',
-      tipo: 'pacote',
-      moeda: 'BRL',
-      cambio_centavos: 10000,
-      valor_neto_centavos: 500000,
-      valor_bruto_centavos: 600000,
-      valor_taxas_centavos: 5000,
-      valor_total_centavos: 605000,
-      paga_comissao: true,
-      notas: null,
-    }],
-    pagamentos: [{
-      forma_id: null,
-      forma_nome: 'Cartão de Crédito',
-      operacao: 'debito',
-      plano: '1x',
-      valor_bruto_centavos: 605000,
-      desconto_centavos: 0,
-      valor_total_centavos: 605000,
-      parcelas_qtd: 1,
-      parcelas_valor_centavos: 605000,
-      paga_comissao: true,
-      parcelas: [
-        { numero: 1, valor_centavos: 605000, vencimento: '2024-12-01' },
-      ],
-    }],
+    itens: [
+      {
+        produto_id: null,
+        numero_recibo: 'REC-001',
+        numero_reserva: null,
+        data_servico: '2024-12-20',
+        data_fim_servico: null,
+        pax: 2,
+        descricao: 'Pacote Cancún 7 noites',
+        tipo: 'pacote',
+        moeda: 'BRL',
+        cambio_centavos: 10000,
+        valor_neto_centavos: 500000,
+        valor_bruto_centavos: 600000,
+        valor_taxas_centavos: 5000,
+        valor_total_centavos: 605000,
+        paga_comissao: true,
+        notas: null
+      }
+    ],
+    pagamentos: [
+      {
+        forma_id: null,
+        forma_nome: 'Cartão de Crédito',
+        operacao: 'debito',
+        plano: '1x',
+        valor_bruto_centavos: 605000,
+        desconto_centavos: 0,
+        valor_total_centavos: 605000,
+        parcelas_qtd: 1,
+        parcelas_valor_centavos: 605000,
+        paga_comissao: true,
+        parcelas: [{ numero: 1, valor_centavos: 605000, vencimento: '2024-12-01' }]
+      }
+    ]
   } as VendaNormalizada;
 }
 
@@ -155,8 +163,14 @@ beforeAll(async () => {
 beforeEach(async () => {
   // Limpa entre testes (ordem: FK dependentes primeiro)
   for (const t of [
-    'venda_parcelas', 'venda_pagamentos', 'venda_itens', 'vendas',
-    'membros_empresa', 'session', 'user', 'empresas',
+    'venda_parcelas',
+    'venda_pagamentos',
+    'venda_itens',
+    'vendas',
+    'membros_empresa',
+    'session',
+    'user',
+    'empresas'
   ]) {
     await env.DB.exec(`DELETE FROM ${t}`);
   }
@@ -166,14 +180,17 @@ beforeEach(async () => {
 
   // Seed: empresas e usuários (requeridos por FKs em vendas)
   await env.DB.batch([
-    env.DB.prepare('INSERT INTO empresas (id, nome, criado_em, atualizado_em) VALUES (?, ?, ?, ?)')
-      .bind(EMPRESA_A, 'Agência Alfa', agora, agora),
-    env.DB.prepare('INSERT INTO empresas (id, nome, criado_em, atualizado_em) VALUES (?, ?, ?, ?)')
-      .bind(EMPRESA_B, 'Agência Beta', agora, agora),
+    env.DB.prepare(
+      'INSERT INTO empresas (id, nome, criado_em, atualizado_em) VALUES (?, ?, ?, ?)'
+    ).bind(EMPRESA_A, 'Agência Alfa', agora, agora),
+    env.DB.prepare(
+      'INSERT INTO empresas (id, nome, criado_em, atualizado_em) VALUES (?, ?, ?, ?)'
+    ).bind(EMPRESA_B, 'Agência Beta', agora, agora)
   ]);
   await env.DB.batch([
-    env.DB.prepare('INSERT INTO user (id, name, email, email_verified, empresa_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)')
-      .bind(USUARIO_A, 'Admin Alfa', 'admin@alfa.com', 1, EMPRESA_A, ts, ts),
+    env.DB.prepare(
+      'INSERT INTO user (id, name, email, email_verified, empresa_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).bind(USUARIO_A, 'Admin Alfa', 'admin@alfa.com', 1, EMPRESA_A, ts, ts)
   ]);
 
   vi.clearAllMocks();
@@ -184,7 +201,6 @@ beforeEach(async () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe('L. GET /api/v2/vendas/:id/pdf — controle de acesso e conteúdo', () => {
-
   // ── L1. 200 com text/html ──
   it('L1. retorna 200 text/html para venda existente', async () => {
     const db = getDb(env.DB);
@@ -223,7 +239,10 @@ describe('L. GET /api/v2/vendas/:id/pdf — controle de acesso e conteúdo', () 
     const v = await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
 
     const res = await callPdf(v.id, {
-      userId: 'usr-b', userEmail: 'b@b.com', empresaId: EMPRESA_B, papel: 'operador',
+      userId: 'usr-b',
+      userEmail: 'b@b.com',
+      empresaId: EMPRESA_B,
+      papel: 'operador'
     });
     expect(res.status).toBe(404);
   });
@@ -242,7 +261,10 @@ describe('L. GET /api/v2/vendas/:id/pdf — controle de acesso e conteúdo', () 
     const v = await criarVenda(db, EMPRESA_A, USUARIO_A, vendaMinima(), env.DB);
 
     const res = await callPdf(v.id, {
-      userId: 'usr-v', userEmail: 'v@v.com', empresaId: EMPRESA_A, papel: 'visualizador',
+      userId: 'usr-v',
+      userEmail: 'v@v.com',
+      empresaId: EMPRESA_A,
+      papel: 'visualizador'
     });
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toMatch('text/html');

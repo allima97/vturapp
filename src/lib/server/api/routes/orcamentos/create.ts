@@ -14,6 +14,7 @@ import {
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateQuoteReadModels } from '$lib/server/readModelCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
+import { complementarListaOperacional } from '$lib/server/destinoOperacional';
 
 const MAX_ORCAMENTO_CREATE_BODY_BYTES = 512 * 1024;
 
@@ -78,11 +79,15 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
 
     const clientId = String(body.client_id || '').trim() || null;
     const clientName = String(body.client_name || body.cliente_nome || '').trim();
-    const clientWhatsapp = String(body.client_whatsapp || body.cliente_telefone || '').trim() || null;
+    const clientWhatsapp =
+      String(body.client_whatsapp || body.cliente_telefone || '').trim() || null;
     const clientEmail = String(body.client_email || '').trim() || null;
 
     if (!clientId && !clientName) {
-      return json({ error: 'Informe o nome do cliente.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Informe o nome do cliente.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
     if (clientId && !isUuid(clientId)) {
       return json({ error: 'Cliente invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
@@ -97,18 +102,27 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
       if (clienteError) throw clienteError;
       const clienteRow = cliente as ClienteScopeRow | null;
       if (!clienteRow?.id) {
-        return json({ error: 'Cliente nao encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+        return json(
+          { error: 'Cliente nao encontrado.' },
+          { status: 404, headers: NO_STORE_HEADERS }
+        );
       }
       if (!scope.isAdmin) {
         const clienteCompanyId = String(clienteRow.company_id || '').trim();
         if (clienteCompanyId && !scope.companyIds.includes(clienteCompanyId)) {
-          return json({ error: 'Cliente fora do seu escopo.' }, { status: 403, headers: NO_STORE_HEADERS });
+          return json(
+            { error: 'Cliente fora do seu escopo.' },
+            { status: 403, headers: NO_STORE_HEADERS }
+          );
         }
       }
     }
 
     if (!body.itens || !Array.isArray(body.itens) || body.itens.length === 0) {
-      return json({ error: 'Adicione pelo menos um item.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Adicione pelo menos um item.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
     const itens = body.itens as OrcamentoCreateItem[];
 
@@ -134,15 +148,31 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
         data_final: body.data_final || null,
         last_interaction_notes: body.notes || body.observacoes || null
       })
-      .select('id, client_id, client_name, client_whatsapp, client_email, status, status_negociacao, total, currency, created_by, data_embarque, data_final, created_at')
+      .select(
+        'id, client_id, client_name, client_whatsapp, client_email, status, status_negociacao, total, currency, created_by, data_embarque, data_final, created_at'
+      )
       .single();
 
     if (quoteError) {
       logServerError('[orcamentos/create] erro ao criar quote', quoteError);
-      return json({ error: 'Erro ao criar orcamento.' }, { status: 500, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Erro ao criar orcamento.' },
+        { status: 500, headers: NO_STORE_HEADERS }
+      );
     }
 
-    const itensParaInserir = itens.map((item, index: number) => ({
+    const preparados = await complementarListaOperacional(
+      itens,
+      event.platform?.env?.DB,
+      event.platform?.env?.GEO_DB,
+      'city_name'
+    );
+    if (!preparados.ok)
+      return json(
+        { error: preparados.error },
+        { status: preparados.status, headers: NO_STORE_HEADERS }
+      );
+    const itensParaInserir = preparados.itens.map((item, index: number) => ({
       quote_id: quote.id,
       title: item.title || item.descricao || `Item ${index + 1}`,
       product_name: item.product_name || item.produto || null,
@@ -150,19 +180,21 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
       total_amount: Number(item.total_amount || item.valor_total || 0),
       order_index: item.order_index ?? index,
       city_name: item.city_name || item.cidade || null,
+      ...(item.destino_geografico_id ? { destino_geografico_id: item.destino_geografico_id } : {}),
       quantity: item.quantity || item.quantidade || 1,
       unit_price: item.unit_price || item.valor_unitario || 0
     }));
 
-    const { error: itemsError } = await client
-      .from('quote_item')
-      .insert(itensParaInserir);
+    const { error: itemsError } = await client.from('quote_item').insert(itensParaInserir);
 
     if (itemsError) {
       // Desfaz o orcamento para nao deixar registro sem itens
       await client.from('quote').delete().eq('id', quote.id);
       logServerError('[orcamentos/create] erro ao criar itens do quote', itemsError);
-      return json({ error: 'Erro ao salvar itens do orcamento.' }, { status: 500, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'Erro ao salvar itens do orcamento.' },
+        { status: 500, headers: NO_STORE_HEADERS }
+      );
     }
 
     invalidateQuoteReadModels({

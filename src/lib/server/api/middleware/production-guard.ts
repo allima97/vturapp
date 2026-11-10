@@ -28,7 +28,7 @@ const DEBUG_PATH_PREFIXES = [
   '/api/v2/debug',
   '/api/v2/diagnostics',
   '/api/v2/test',
-  '/api/v2/internal',
+  '/api/v2/internal'
 ];
 
 /**

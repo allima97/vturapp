@@ -92,7 +92,12 @@ export async function handleConciliacaoRateioInfoGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     if (!scope.isAdmin && !scope.isMaster && !scope.isFinanceiro && !scope.isGestor) {
-      ensureModuloAccess(scope, ['operacao_conciliacao', 'conciliacao'], 1, 'Sem acesso à Conciliação.');
+      ensureModuloAccess(
+        scope,
+        ['operacao_conciliacao', 'conciliacao'],
+        1,
+        'Sem acesso à Conciliação.'
+      );
     }
 
     const { searchParams } = event.url;
@@ -100,14 +105,18 @@ export async function handleConciliacaoRateioInfoGet(event: RequestEvent) {
     const conciliacaoReciboId = String(searchParams.get('conciliacao_recibo_id') || '').trim();
 
     if (!isUuid(vendaReciboId)) {
-      return json({ error: 'venda_recibo_id inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+      return json(
+        { error: 'venda_recibo_id inválido.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     }
 
     const companyIds = resolveScopedCompanyIds(scope, searchParams.get('company_id'));
     // 1. Busca o recibo com produto e vendedor de origem
     const { data: reciboData, error: reciboErr } = await client
       .from('vendas_recibos')
-      .select(`
+      .select(
+        `
         id,
         valor_total,
         vendas!inner(
@@ -124,21 +133,32 @@ export async function handleConciliacaoRateioInfoGet(event: RequestEvent) {
           vendedor_destino_id, percentual_origem, percentual_destino,
           vendedor_destino:users!vendedor_destino_id(id, nome_completo)
         )
-      `)
+      `
+      )
       .eq('id', vendaReciboId)
       .maybeSingle();
 
     if (reciboErr) throw reciboErr;
-    if (!reciboData) return json({ error: 'Recibo não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    if (!reciboData)
+      return json({ error: 'Recibo não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
 
     // Ownership check
     const recibo = reciboData as RateioInfoReciboRow;
     const vendaRow = Array.isArray(recibo.vendas) ? (recibo.vendas[0] ?? null) : null;
-    const produtoRow = Array.isArray(recibo.produto_resolvido) ? (recibo.produto_resolvido[0] ?? null) : null;
-    const tipoProduto = Array.isArray(produtoRow?.tipo_produto) ? (produtoRow.tipo_produto[0] ?? null) : null;
-    const vendedorOrigemRow = Array.isArray(vendaRow?.vendedor) ? (vendaRow.vendedor[0] ?? null) : null;
+    const produtoRow = Array.isArray(recibo.produto_resolvido)
+      ? (recibo.produto_resolvido[0] ?? null)
+      : null;
+    const tipoProduto = Array.isArray(produtoRow?.tipo_produto)
+      ? (produtoRow.tipo_produto[0] ?? null)
+      : null;
+    const vendedorOrigemRow = Array.isArray(vendaRow?.vendedor)
+      ? (vendaRow.vendedor[0] ?? null)
+      : null;
     const reciboCompany = vendaRow?.company_id;
-    if (!scope.isAdmin && (!reciboCompany || companyIds.length === 0 || !companyIds.includes(reciboCompany))) {
+    if (
+      !scope.isAdmin &&
+      (!reciboCompany || companyIds.length === 0 || !companyIds.includes(reciboCompany))
+    ) {
       return json({ error: 'Recibo fora do escopo.' }, { status: 403, headers: NO_STORE_HEADERS });
     }
 
@@ -150,8 +170,8 @@ export async function handleConciliacaoRateioInfoGet(event: RequestEvent) {
 
     // 2. Rateio ativo
     const rateioRow = Array.isArray(recibo.rateio)
-      ? recibo.rateio.find((r) => r.ativo !== false) ?? recibo.rateio[0] ?? null
-      : recibo.rateio ?? null;
+      ? (recibo.rateio.find((r) => r.ativo !== false) ?? recibo.rateio[0] ?? null)
+      : (recibo.rateio ?? null);
 
     // 3. Valor de referência — tenta buscar em conciliacao_recibos se passado
     let valorCalculadaLoja: number | null = null;
@@ -184,24 +204,26 @@ export async function handleConciliacaoRateioInfoGet(event: RequestEvent) {
         id: rateioRow.id,
         ativo: rateioRow.ativo,
         vendedor_destino_id: rateioRow.vendedor_destino_id,
-        vendedor_destino_nome:
-          vendedorDestinoRow?.nome_completo ?? rateioRow.vendedor_destino_id,
+        vendedor_destino_nome: vendedorDestinoRow?.nome_completo ?? rateioRow.vendedor_destino_id,
         percentual_origem: pctOrigem,
         percentual_destino: pctDestino,
-        valor_origem: Math.round((base * pctOrigem) / 100 * 100) / 100,
-        valor_destino: Math.round((base * pctDestino) / 100 * 100) / 100
+        valor_origem: Math.round(((base * pctOrigem) / 100) * 100) / 100,
+        valor_destino: Math.round(((base * pctDestino) / 100) * 100) / 100
       };
     }
 
-    return json({
-      venda_recibo_id: vendaReciboId,
-      soma_na_meta: somaNaMeta,
-      produto_nome: produtoRow?.nome ?? null,
-      produto_tipo_nome: tipoProduto?.nome ?? null,
-      vendedor_origem: vendedorOrigem,
-      rateio: rateioInfo,
-      valor_calculada_loja: valorCalculadaLoja
-    }, { headers: DYNAMIC_READ_HEADERS });
+    return json(
+      {
+        venda_recibo_id: vendaReciboId,
+        soma_na_meta: somaNaMeta,
+        produto_nome: produtoRow?.nome ?? null,
+        produto_tipo_nome: tipoProduto?.nome ?? null,
+        vendedor_origem: vendedorOrigem,
+        rateio: rateioInfo,
+        valor_calculada_loja: valorCalculadaLoja
+      },
+      { headers: DYNAMIC_READ_HEADERS }
+    );
   } catch (err) {
     return toErrorResponse(err, 'Erro ao carregar informações de rateio.');
   }

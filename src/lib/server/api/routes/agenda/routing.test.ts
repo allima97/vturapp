@@ -13,14 +13,17 @@ const spy = vi.hoisted(
   () => (name: string) => async (event: { params: Record<string, unknown> }) => {
     calls.push({ name, params: { ...event.params } });
     return new Response(name, { status: 200 });
-  },
+  }
 );
 
 vi.mock('./root', () => ({ handleAgendaGet: spy('handleAgendaGet') }));
 vi.mock('./create', () => ({ handleAgendaCreatePost: spy('handleAgendaCreatePost') }));
 vi.mock('./delete', () => ({ handleAgendaDeleteDelete: spy('handleAgendaDeleteDelete') }));
 vi.mock('./range', () => ({ handleAgendaRangeGet: spy('handleAgendaRangeGet') }));
-vi.mock('./update', () => ({ handleAgendaUpdatePatch: spy('handleAgendaUpdatePatch'), handleAgendaUpdatePost: spy('handleAgendaUpdatePost') }));
+vi.mock('./update', () => ({
+  handleAgendaUpdatePatch: spy('handleAgendaUpdatePatch'),
+  handleAgendaUpdatePost: spy('handleAgendaUpdatePost')
+}));
 
 import { apiApp } from '../../app';
 import * as catchAll from '../../../../../routes/api/v1/[...path]/+server';
@@ -31,7 +34,7 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['DELETE', '/api/v1/agenda/delete', 'handleAgendaDeleteDelete', {}],
   ['GET', '/api/v1/agenda/range', 'handleAgendaRangeGet', {}],
   ['PATCH', '/api/v1/agenda/update', 'handleAgendaUpdatePatch', {}],
-  ['POST', '/api/v1/agenda/update', 'handleAgendaUpdatePost', {}],
+  ['POST', '/api/v1/agenda/update', 'handleAgendaUpdatePost', {}]
 ];
 
 const SEM_HANDLER: Array<[string, string]> = [
@@ -39,7 +42,7 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/agenda/create'],
   ['PUT', '/api/v1/agenda/delete'],
   ['PUT', '/api/v1/agenda/range'],
-  ['PUT', '/api/v1/agenda/update'],
+  ['PUT', '/api/v1/agenda/update']
 ];
 
 function ev(method: string, path: string) {

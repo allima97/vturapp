@@ -36,8 +36,8 @@ export const authClient = createAuthClient({
      * Plugin cliente para 2FA (TOTP).
      * Expõe: authClient.twoFactor.getTotpUri(), authClient.twoFactor.verify()
      */
-    twoFactorClient(),
-  ],
+    twoFactorClient()
+  ]
 });
 
 /** Re-exportar tipos úteis para uso nos componentes */

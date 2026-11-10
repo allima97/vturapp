@@ -22,7 +22,7 @@ import {
   editarDestino,
   inativarDestino,
   listarDestinos,
-  DestinoError,
+  DestinoError
 } from '$lib/server/destinos/service';
 
 const EMPRESA_W = 21;
@@ -61,7 +61,7 @@ describe('Suíte W — M10: Destinos', () => {
       cidade: 'Cancún',
       pais: 'México',
       paisCod: 'MX',
-      continente: 'América do Norte',
+      continente: 'América do Norte'
     });
     expect(d.id).toBeGreaterThan(0);
     expect(d.nome).toBe('Cancún');
@@ -72,7 +72,11 @@ describe('Suíte W — M10: Destinos', () => {
 
   // ── W2: obterDestino existente ───────────────────────────────────────────
   it('W2. obterDestino — retorna destino criado pelo id', async () => {
-    const criado = await criarDestino(db, { nome: 'Fernando de Noronha', pais: 'Brasil', paisCod: 'BR' });
+    const criado = await criarDestino(db, {
+      nome: 'Fernando de Noronha',
+      pais: 'Brasil',
+      paisCod: 'BR'
+    });
     const obtido = await obterDestino(db, criado.id);
     expect(obtido.id).toBe(criado.id);
     expect(obtido.nome).toBe('Fernando de Noronha');
@@ -92,12 +96,12 @@ describe('Suíte W — M10: Destinos', () => {
       nome: 'Paris Antiga',
       pais: 'França',
       paisCod: 'FR',
-      continente: 'Europa',
+      continente: 'Europa'
     });
     const editado = await editarDestino(db, criado.id, { nome: 'Paris' });
     expect(editado.nome).toBe('Paris');
-    expect(editado.paisCod).toBe('FR');         // preservado
-    expect(editado.continente).toBe('Europa');   // preservado
+    expect(editado.paisCod).toBe('FR'); // preservado
+    expect(editado.continente).toBe('Europa'); // preservado
   });
 
   // ── W5: editarDestino — permite limpar campo nullable ───────────────────
@@ -106,7 +110,7 @@ describe('Suíte W — M10: Destinos', () => {
       nome: 'Roma',
       pais: 'Itália',
       paisCod: 'IT',
-      continente: 'Europa',
+      continente: 'Europa'
     });
     const editado = await editarDestino(db, criado.id, { continente: null });
     expect(editado.continente).toBeNull();

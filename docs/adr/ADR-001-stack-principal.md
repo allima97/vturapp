@@ -2,7 +2,7 @@
 
 **Estado:** PROPOSTA (pendente confirmação em F1-02)  
 **Data:** 2026-10-26  
-**Decisão revertida/nova:** —  
+**Decisão revertida/nova:** —
 
 ## Contexto
 

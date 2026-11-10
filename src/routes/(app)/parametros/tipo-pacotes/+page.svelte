@@ -36,8 +36,10 @@
     };
   }
 
-  $: canEdit = !$permissoes.ready || $permissoes.isSystemAdmin || permissoes.can('parametros', 'edit');
-  $: canDelete = !$permissoes.ready || $permissoes.isSystemAdmin || permissoes.can('parametros', 'admin');
+  $: canEdit =
+    !$permissoes.ready || $permissoes.isSystemAdmin || permissoes.can('parametros', 'edit');
+  $: canDelete =
+    !$permissoes.ready || $permissoes.isSystemAdmin || permissoes.can('parametros', 'admin');
 
   const columns = [
     { key: 'nome', label: 'Nome', sortable: true },
@@ -57,7 +59,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const payload = await apiGet<{ items?: TipoPacote[] }>('/api/v1/parametros/tipo-pacotes', undefined, request.signal);
+      const payload = await apiGet<{ items?: TipoPacote[] }>(
+        '/api/v1/parametros/tipo-pacotes',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       tipos = payload.items || [];
     } catch (err) {
@@ -84,7 +90,10 @@
   }
 
   async function save() {
-    if (!form.nome.trim()) { toast.error('Nome obrigatório.'); return; }
+    if (!form.nome.trim()) {
+      toast.error('Nome obrigatório.');
+      return;
+    }
 
     saving = true;
     try {
@@ -104,7 +113,12 @@
   }
 
   async function deleteTipo(id: string) {
-    if (!(await confirmAction('Deseja excluir este tipo de pacote? Ele não pode estar vinculado a vendas.'))) return;
+    if (
+      !(await confirmAction(
+        'Deseja excluir este tipo de pacote? Ele não pode estar vinculado a vendas.'
+      ))
+    )
+      return;
     deletingId = id;
     try {
       await apiDelete('/api/v1/parametros/tipo-pacotes', { id });
@@ -128,13 +142,12 @@
   title="Tipos de Pacote"
   subtitle="Gerencie a lista global de tipos de pacote utilizados nos recibos."
   color="financeiro"
-  breadcrumbs={[
-    { label: 'Parâmetros', href: '/parametros' },
-    { label: 'Tipos de Pacote' }
-  ]}
+  breadcrumbs={[{ label: 'Parâmetros', href: '/parametros' }, { label: 'Tipos de Pacote' }]}
   actions={[
     { label: 'Atualizar', onClick: load, variant: 'secondary', icon: RefreshCw },
-    ...(canEdit ? [{ label: 'Novo Tipo', onClick: openNew, variant: 'primary' as const, icon: Plus }] : [])
+    ...(canEdit
+      ? [{ label: 'Novo Tipo', onClick: openNew, variant: 'primary' as const, icon: Plus }]
+      : [])
   ]}
 />
 
@@ -189,10 +202,6 @@
       placeholder="Ex: Pacote Completo"
       required={true}
     />
-    <FieldCheckbox
-      label="Tipo ativo"
-      bind:checked={form.ativo}
-      color="financeiro"
-    />
+    <FieldCheckbox label="Tipo ativo" bind:checked={form.ativo} color="financeiro" />
   </div>
 </Dialog>

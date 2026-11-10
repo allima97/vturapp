@@ -88,8 +88,18 @@
   }
 
   const columns = [
-    { key: 'nome', label: 'Usuario', sortable: true, formatter: (_value: unknown, row: Usuario) => userCell(row) },
-    { key: 'tipo', label: 'Perfil', sortable: true, formatter: (value: string) => badge(value || 'OUTRO', 'blue') },
+    {
+      key: 'nome',
+      label: 'Usuario',
+      sortable: true,
+      formatter: (_value: unknown, row: Usuario) => userCell(row)
+    },
+    {
+      key: 'tipo',
+      label: 'Perfil',
+      sortable: true,
+      formatter: (value: string) => badge(value || 'OUTRO', 'blue')
+    },
     { key: 'empresa', label: 'Empresa', sortable: true },
     {
       key: 'escopo',
@@ -106,13 +116,18 @@
       key: 'status',
       label: 'Status',
       sortable: true,
-      formatter: (_value: unknown, row: Usuario) => badge(row.ativo ? 'Ativo' : 'Inativo', row.ativo ? 'green' : 'red')
+      formatter: (_value: unknown, row: Usuario) =>
+        badge(row.ativo ? 'Ativo' : 'Inativo', row.ativo ? 'green' : 'red')
     },
     {
       key: 'ranking',
       label: 'Ranking',
       sortable: true,
-      formatter: (_value: unknown, row: Usuario) => badge(row.participa_ranking ? 'Participa' : 'Nao participa', row.participa_ranking ? 'green' : 'gray')
+      formatter: (_value: unknown, row: Usuario) =>
+        badge(
+          row.participa_ranking ? 'Participa' : 'Nao participa',
+          row.participa_ranking ? 'green' : 'gray'
+        )
     },
     {
       key: 'updated_at',
@@ -126,7 +141,11 @@
     const request = loadGuard.next();
     loading = true;
     try {
-      const payload = await apiGet<{ items?: Usuario[] }>('/api/v1/admin/usuarios', undefined, request.signal);
+      const payload = await apiGet<{ items?: Usuario[] }>(
+        '/api/v1/admin/usuarios',
+        undefined,
+        request.signal
+      );
       if (!loadGuard.isCurrent(request.seq)) return;
       usuarios = payload.items || [];
     } catch (err) {
@@ -184,10 +203,7 @@
 <PageHeader
   title="Usuarios Master"
   subtitle="Listagem consolidada do escopo master com papel, empresa, escopo e status real."
-  breadcrumbs={[
-    { label: 'Master', href: '/master' },
-    { label: 'Usuarios' }
-  ]}
+  breadcrumbs={[{ label: 'Master', href: '/master' }, { label: 'Usuarios' }]}
   actions={[
     { label: 'Atualizar', onClick: loadUsuarios, variant: 'secondary', icon: RefreshCw },
     { label: 'Novo usuario', href: '/master/usuarios/novo', variant: 'primary', icon: Plus }
@@ -197,35 +213,57 @@
 <div class="space-y-6">
   <div class="vtur-kpi-grid mb-6">
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500"><Users size={20} /></div>
-      <div><p class="text-sm font-medium text-slate-500">Total</p><p class="text-2xl font-bold text-slate-900">{stats.total}</p></div>
+      <div
+        class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-500"
+      >
+        <Users size={20} />
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Total</p>
+        <p class="text-2xl font-bold text-slate-900">{stats.total}</p>
+      </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500"><UserCheck size={20} /></div>
-      <div><p class="text-sm font-medium text-slate-500">Ativos</p><p class="text-2xl font-bold text-slate-900">{stats.ativos}</p></div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-green-50 text-green-500">
+        <UserCheck size={20} />
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Ativos</p>
+        <p class="text-2xl font-bold text-slate-900">{stats.ativos}</p>
+      </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500"><UserX size={20} /></div>
-      <div><p class="text-sm font-medium text-slate-500">Inativos</p><p class="text-2xl font-bold text-slate-900">{stats.inativos}</p></div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-50 text-red-500">
+        <UserX size={20} />
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Inativos</p>
+        <p class="text-2xl font-bold text-slate-900">{stats.inativos}</p>
+      </div>
     </div>
     <div class="vtur-kpi-card">
-      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500"><UserCog size={20} /></div>
-      <div><p class="text-sm font-medium text-slate-500">Uso individual</p><p class="text-2xl font-bold text-slate-900">{stats.individuais}</p></div>
+      <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-500">
+        <UserCog size={20} />
+      </div>
+      <div>
+        <p class="text-sm font-medium text-slate-500">Uso individual</p>
+        <p class="text-2xl font-bold text-slate-900">{stats.individuais}</p>
+      </div>
     </div>
   </div>
 
   <!-- Mobile: botão de filtros -->
-<div class="mb-4 sm:hidden">
-  <Button variant="secondary" class_name="w-full" on:click={() => (showFilterSheet = true)}>
-    <SlidersHorizontal size={16} class="mr-2" />
-    Filtros
-    {#if filtroTipo || filtroStatus || filtroEmpresa || filtroEscopo}
-      <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-financeiro-500"></span>
-    {/if}
-  </Button>
-</div>
+  <div class="mb-4 sm:hidden">
+    <Button variant="secondary" class_name="w-full" on:click={() => (showFilterSheet = true)}>
+      <SlidersHorizontal size={16} class="mr-2" />
+      Filtros
+      {#if filtroTipo || filtroStatus || filtroEmpresa || filtroEscopo}
+        <span class="bg-financeiro-500 ml-2 inline-flex h-2 w-2 rounded-full"></span>
+      {/if}
+    </Button>
+  </div>
 
-<Card color="financeiro" title="Filtros" class="hidden sm:block">
+  <Card color="financeiro" title="Filtros" class="hidden sm:block">
     <div class="grid gap-4 md:grid-cols-4">
       <FieldSelect
         id="usuarios-tipo"
@@ -271,54 +309,54 @@
     </div>
   </Card>
 
-<BottomSheet bind:open={showFilterSheet} title="Filtrar Usuários">
-  <div class="space-y-4">
-    <FieldSelect
-      id="usuarios-tipo-mobile"
-      label="Perfil"
-      bind:value={filtroTipo}
-      options={tipoOptions}
-      placeholder="Todos"
-      class_name="w-full"
-    />
+  <BottomSheet bind:open={showFilterSheet} title="Filtrar Usuários">
+    <div class="space-y-4">
+      <FieldSelect
+        id="usuarios-tipo-mobile"
+        label="Perfil"
+        bind:value={filtroTipo}
+        options={tipoOptions}
+        placeholder="Todos"
+        class_name="w-full"
+      />
 
-    <FieldSelect
-      id="usuarios-status-mobile"
-      label="Status"
-      bind:value={filtroStatus}
-      options={[
-        { value: 'true', label: 'Ativo' },
-        { value: 'false', label: 'Inativo' }
-      ]}
-      placeholder="Todos"
-      class_name="w-full"
-    />
+      <FieldSelect
+        id="usuarios-status-mobile"
+        label="Status"
+        bind:value={filtroStatus}
+        options={[
+          { value: 'true', label: 'Ativo' },
+          { value: 'false', label: 'Inativo' }
+        ]}
+        placeholder="Todos"
+        class_name="w-full"
+      />
 
-    <FieldSelect
-      id="usuarios-empresa-mobile"
-      label="Empresa"
-      bind:value={filtroEmpresa}
-      options={empresas.map((empresa) => ({ value: empresa, label: empresa }))}
-      placeholder="Todas"
-      class_name="w-full"
-    />
+      <FieldSelect
+        id="usuarios-empresa-mobile"
+        label="Empresa"
+        bind:value={filtroEmpresa}
+        options={empresas.map((empresa) => ({ value: empresa, label: empresa }))}
+        placeholder="Todas"
+        class_name="w-full"
+      />
 
-    <FieldSelect
-      id="usuarios-escopo-mobile"
-      label="Escopo"
-      bind:value={filtroEscopo}
-      options={[
-        { value: 'corporativo', label: 'Corporativo' },
-        { value: 'individual', label: 'Individual' }
-      ]}
-      placeholder="Todos"
-      class_name="w-full"
-    />
-  </div>
-  <Button variant="primary" class_name="w-full mt-2" on:click={() => (showFilterSheet = false)}>
-    Aplicar filtros
-  </Button>
-</BottomSheet>
+      <FieldSelect
+        id="usuarios-escopo-mobile"
+        label="Escopo"
+        bind:value={filtroEscopo}
+        options={[
+          { value: 'corporativo', label: 'Corporativo' },
+          { value: 'individual', label: 'Individual' }
+        ]}
+        placeholder="Todos"
+        class_name="w-full"
+      />
+    </div>
+    <Button variant="primary" class_name="w-full mt-2" on:click={() => (showFilterSheet = false)}>
+      Aplicar filtros
+    </Button>
+  </BottomSheet>
 
   <DataTable
     title="Usuarios administrados"

@@ -32,7 +32,9 @@ function errorJson(message: string, status: number) {
 }
 
 function normalizeEmail(value: unknown) {
-  return String(value || '').trim().toLowerCase();
+  return String(value || '')
+    .trim()
+    .toLowerCase();
 }
 
 function isEmailLike(value: string) {
@@ -54,7 +56,12 @@ function authAlreadyExists(error: unknown) {
   const anyError = error as Record<string, unknown>;
   const message = String(anyError?.message || anyError?.error_description || '').toLowerCase();
   const status = Number(anyError?.status || 0);
-  return status === 422 || message.includes('already') || message.includes('registered') || message.includes('exists');
+  return (
+    status === 422 ||
+    message.includes('already') ||
+    message.includes('registered') ||
+    message.includes('exists')
+  );
 }
 
 export const POST: RequestHandler = async (event) => {
@@ -74,12 +81,15 @@ export const POST: RequestHandler = async (event) => {
       'auth-convite-activate',
       `${event.getClientAddress?.() || 'unknown'}:${email || inviteId || 'empty'}`,
       { max: 8, windowMs: 60_000 },
-      event.platform?.env?.DB,
+      event.platform?.env?.DB
     );
     if (!rateLimit.allowed) {
       return json(
         { error: 'Muitas tentativas. Aguarde alguns segundos e tente novamente.' },
-        { status: 429, headers: { ...NO_STORE_HEADERS, 'Retry-After': String(rateLimit.retryAfterSeconds) } }
+        {
+          status: 429,
+          headers: { ...NO_STORE_HEADERS, 'Retry-After': String(rateLimit.retryAfterSeconds) }
+        }
       );
     }
 
@@ -91,7 +101,9 @@ export const POST: RequestHandler = async (event) => {
     const adminClient = getAdminClient();
     const { data: convite, error: conviteErr } = await adminClient
       .from('user_convites')
-      .select('id, status, invited_email, invited_user_id, company_id, user_type_id, invited_by_role, expires_at, uso_individual')
+      .select(
+        'id, status, invited_email, invited_user_id, company_id, user_type_id, invited_by_role, expires_at, uso_individual'
+      )
       .eq('id', inviteId)
       .maybeSingle();
 
@@ -120,13 +132,15 @@ export const POST: RequestHandler = async (event) => {
     const companyId = String(conviteRow.company_id || '').trim();
     const userTypeId = String(conviteRow.user_type_id || '').trim();
     const usoIndividual = Boolean(conviteRow.uso_individual);
-    if ((!usoIndividual && !companyId) || !userTypeId) return errorJson('Convite incompleto. Solicite um novo convite.', 400);
+    if ((!usoIndividual && !companyId) || !userTypeId)
+      return errorJson('Convite incompleto. Solicite um novo convite.', 400);
 
     let authUserId = String(conviteRow.invited_user_id || '').trim();
     let createdAuthUser = false;
 
     if (authUserId) {
-      const { data: existingAuthUser, error: existingAuthErr } = await adminClient.auth.admin.getUserById(authUserId);
+      const { data: existingAuthUser, error: existingAuthErr } =
+        await adminClient.auth.admin.getUserById(authUserId);
       if (existingAuthErr) throw existingAuthErr;
 
       const authEmail = normalizeEmail(existingAuthUser?.user?.email);
@@ -156,7 +170,10 @@ export const POST: RequestHandler = async (event) => {
 
       if (createErr) {
         if (authAlreadyExists(createErr)) {
-          return errorJson('Conta ja existente para este e-mail. Faca login e abra novamente o convite.', 409);
+          return errorJson(
+            'Conta ja existente para este e-mail. Faca login e abra novamente o convite.',
+            409
+          );
         }
         throw createErr;
       }
@@ -169,22 +186,20 @@ export const POST: RequestHandler = async (event) => {
     const createdByGestor = String(conviteRow.invited_by_role || '').toUpperCase() === 'GESTOR';
     const nowIso = new Date().toISOString();
 
-    const { error: profileErr } = await adminClient
-      .from('users')
-      .upsert(
-        {
-          id: authUserId,
-          email,
-          nome_completo: nome,
-          uso_individual: usoIndividual,
-          company_id: usoIndividual ? null : companyId,
-          user_type_id: userTypeId,
-          active: true,
-          created_by_gestor: createdByGestor,
-          updated_at: nowIso
-        },
-        { onConflict: 'id' }
-      );
+    const { error: profileErr } = await adminClient.from('users').upsert(
+      {
+        id: authUserId,
+        email,
+        nome_completo: nome,
+        uso_individual: usoIndividual,
+        company_id: usoIndividual ? null : companyId,
+        user_type_id: userTypeId,
+        active: true,
+        created_by_gestor: createdByGestor,
+        updated_at: nowIso
+      },
+      { onConflict: 'id' }
+    );
     if (profileErr) throw profileErr;
 
     const { data: updatedInvite, error: updateInviteErr } = await adminClient
@@ -202,7 +217,10 @@ export const POST: RequestHandler = async (event) => {
     if (!updatedInvite?.id) {
       if (createdAuthUser) {
         await adminClient.auth.admin.deleteUser(authUserId).catch((cleanupErr: any) => {
-          logServerError('[auth/convite/activate] falha ao limpar usuario criado em corrida', cleanupErr);
+          logServerError(
+            '[auth/convite/activate] falha ao limpar usuario criado em corrida',
+            cleanupErr
+          );
         });
       }
       return errorJson('Convite ja foi usado ou cancelado.', 409);

@@ -1,38 +1,53 @@
-<script context="module">// @ts-nocheck (cópia do Flowbite-Svelte 0.48.6, ver README.md)
+<script context="module">
+  // @ts-nocheck (cópia do Flowbite-Svelte 0.48.6, ver README.md)
 </script>
 
-<script>import { twMerge } from "tailwind-merge";
-import Popper from "./Popper.svelte";
-import { setContext } from "svelte";
-import { writable } from "svelte/store";
-export let activeUrl = void 0;
-export let open = false;
-export let containerClass = "divide-y z-50";
-export let classContainer = void 0;
-export let headerClass = "py-1 overflow-hidden rounded-t-lg";
-export let classHeader = void 0;
-export let footerClass = "py-1 overflow-hidden rounded-b-lg";
-export let classFooter = void 0;
-export let activeClass = "text-primary-700 dark:text-primary-700 hover:text-primary-900 dark:hover:text-primary-900";
-export let classActive = void 0;
-export let arrow = false;
-export let trigger = "click";
-export let placement = "bottom";
-export let color = "dropdown";
-export let shadow = true;
-export let rounded = true;
-const activeUrlStore = writable("");
-let activeCls = twMerge(activeClass, classActive);
-setContext("DropdownType", { activeClass: activeCls });
-$: activeUrlStore.set(activeUrl ?? "");
-setContext("activeUrl", activeUrlStore);
-$: containerCls = twMerge(containerClass, classContainer);
-$: headerCls = twMerge(headerClass, classHeader);
-$: ulCls = twMerge("py-1", $$props.class);
-$: footerCls = twMerge(footerClass, classFooter);
+<script>
+  import { twMerge } from 'tailwind-merge';
+  import Popper from './Popper.svelte';
+  import { setContext } from 'svelte';
+  import { writable } from 'svelte/store';
+  export let activeUrl = void 0;
+  export let open = false;
+  export let containerClass = 'divide-y z-50';
+  export let classContainer = void 0;
+  export let headerClass = 'py-1 overflow-hidden rounded-t-lg';
+  export let classHeader = void 0;
+  export let footerClass = 'py-1 overflow-hidden rounded-b-lg';
+  export let classFooter = void 0;
+  export let activeClass =
+    'text-primary-700 dark:text-primary-700 hover:text-primary-900 dark:hover:text-primary-900';
+  export let classActive = void 0;
+  export let arrow = false;
+  export let trigger = 'click';
+  export let placement = 'bottom';
+  export let color = 'dropdown';
+  export let shadow = true;
+  export let rounded = true;
+  const activeUrlStore = writable('');
+  let activeCls = twMerge(activeClass, classActive);
+  setContext('DropdownType', { activeClass: activeCls });
+  $: activeUrlStore.set(activeUrl ?? '');
+  setContext('activeUrl', activeUrlStore);
+  $: containerCls = twMerge(containerClass, classContainer);
+  $: headerCls = twMerge(headerClass, classHeader);
+  $: ulCls = twMerge('py-1', $$props.class);
+  $: footerCls = twMerge(footerClass, classFooter);
 </script>
 
-<Popper activeContent {...$$restProps} {trigger} {arrow} {placement} {shadow} {rounded} {color} class={containerCls} on:show bind:open>
+<Popper
+  activeContent
+  {...$$restProps}
+  {trigger}
+  {arrow}
+  {placement}
+  {shadow}
+  {rounded}
+  {color}
+  class={containerCls}
+  on:show
+  bind:open
+>
   {#if $$slots.header}
     <div class={headerCls}>
       <slot name="header" />

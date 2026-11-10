@@ -22,7 +22,7 @@
 
   const abas = [
     { key: 'calculadora', label: 'Calculadora', icon: Calculator },
-    { key: 'concorrencia', label: 'Concorrência', icon: TrendingDown },
+    { key: 'concorrencia', label: 'Concorrência', icon: TrendingDown }
   ];
 
   const viewportMargin = 12;
@@ -114,83 +114,89 @@
   $: wasOpen = open;
 </script>
 
-<svelte:window on:keydown={(event) => {
-  if (!open) return;
-  if (event.key === 'Escape') {
-    onClose();
-  }
-}} on:pointermove={handleDragMove} on:pointerup={handleDragEnd} on:pointercancel={handleDragEnd} />
+<svelte:window
+  on:keydown={(event) => {
+    if (!open) return;
+    if (event.key === 'Escape') {
+      onClose();
+    }
+  }}
+  on:pointermove={handleDragMove}
+  on:pointerup={handleDragEnd}
+  on:pointercancel={handleDragEnd}
+/>
 
 <OverlayModal bind:open position="center" zIndex="z-50" padding="p-4" onclose={onClose}>
-    <div 
-      bind:this={modalEl}
-      class="flex w-full {abaAtiva === 'concorrencia' ? 'max-w-6xl' : 'max-w-2xl'} max-h-[92vh] flex-col overflow-hidden rounded-xl bg-white shadow-xl will-change-transform"
-      class:ring-2={isDragging}
-      class:ring-vendas-200={isDragging}
-      style={`transform: translate3d(${position.x}px, ${position.y}px, 0);`}
+  <div
+    bind:this={modalEl}
+    class="flex w-full {abaAtiva === 'concorrencia'
+      ? 'max-w-6xl'
+      : 'max-w-2xl'} max-h-[92vh] flex-col overflow-hidden rounded-xl bg-white shadow-xl will-change-transform"
+    class:ring-2={isDragging}
+    class:ring-vendas-200={isDragging}
+    style={`transform: translate3d(${position.x}px, ${position.y}px, 0);`}
+  >
+    <!-- Header -->
+    <div
+      class="vtur-modal-header bg-vendas-50 cursor-move border-b border-slate-100 select-none"
+      role="button"
+      tabindex="0"
+      aria-label="Mover calculadora"
+      on:pointerdown={handleDragStart}
+      on:keydown={handleDragHandleKeydown}
     >
-      <!-- Header -->
-      <div
-        class="vtur-modal-header cursor-move select-none border-b border-slate-100 bg-vendas-50"
-        role="button"
-        tabindex="0"
-        aria-label="Mover calculadora"
-        on:pointerdown={handleDragStart}
-        on:keydown={handleDragHandleKeydown}
-      >
-        <div class="vtur-modal-header__lead">
-          <div class="vtur-modal-header__icon bg-vendas-100">
-            <Calculator size={24} class="text-vendas-600" />
-          </div>
-          <div class="vtur-modal-header__copy">
-            <h3 class="vtur-modal-header__title">Calculadora</h3>
-            <p class="vtur-modal-header__subtitle">Operações rápidas no padrão visual do sistema</p>
-          </div>
+      <div class="vtur-modal-header__lead">
+        <div class="vtur-modal-header__icon bg-vendas-100">
+          <Calculator size={24} class="text-vendas-600" />
         </div>
-        <div data-no-drag>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            class_name="vtur-modal-header__close p-2"
-            ariaLabel="Fechar calculadora"
-            on:click={onClose}
-          >
-            <X size={20} />
-          </Button>
+        <div class="vtur-modal-header__copy">
+          <h3 class="vtur-modal-header__title">Calculadora</h3>
+          <p class="vtur-modal-header__subtitle">Operações rápidas no padrão visual do sistema</p>
         </div>
       </div>
-
-      <!-- Abas -->
-      <div class="vtur-modal-tabs">
-        <Tabs items={abas} bind:activeKey={abaAtiva} />
-      </div>
-
-      <!-- Content -->
-      <div
-        class="vtur-modal-body-dense flex-1 {abaAtiva === 'concorrencia' ? 'vtur-calculator-modal__body--wide' : 'vtur-calculator-modal__body--compact'}"
-      >
-
-        <!-- Aba Concorrência -->
-        {#if abaAtiva === 'concorrencia'}
-          <ConcorrenciaTab />
-        {:else}
-          <CalculatorBody />
-        {/if}
-      </div>
-
-      <!-- Footer -->
-      <div class="vtur-modal-footer vtur-modal-footer--between">
-        {#if abaAtiva === 'concorrencia'}
-          <div></div>
-        {/if}
-        <div class="vtur-modal-footer__actions">
-          <Button variant="secondary" on:click={onClose}>
-            Fechar
-          </Button>
-        </div>
+      <div data-no-drag>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          class_name="vtur-modal-header__close p-2"
+          ariaLabel="Fechar calculadora"
+          on:click={onClose}
+        >
+          <X size={20} />
+        </Button>
       </div>
     </div>
+
+    <!-- Abas -->
+    <div class="vtur-modal-tabs">
+      <Tabs items={abas} bind:activeKey={abaAtiva} />
+    </div>
+
+    <!-- Content -->
+    <div
+      class="vtur-modal-body-dense flex-1 {abaAtiva === 'concorrencia'
+        ? 'vtur-calculator-modal__body--wide'
+        : 'vtur-calculator-modal__body--compact'}"
+    >
+      <!-- Aba Concorrência -->
+      {#if abaAtiva === 'concorrencia'}
+        <ConcorrenciaTab />
+      {:else}
+        <CalculatorBody />
+      {/if}
+    </div>
+
+    <!-- Footer -->
+    <div class="vtur-modal-footer vtur-modal-footer--between">
+      {#if abaAtiva === 'concorrencia'}
+        <div></div>
+      {/if}
+      <div class="vtur-modal-footer__actions">
+        <Button variant="secondary" on:click={onClose}>Fechar</Button>
+      </div>
+    </div>
+  </div>
 </OverlayModal>
 
 <style>
