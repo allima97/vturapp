@@ -83,6 +83,17 @@ database_name = "vturapp-db-staging"
 database_id = "96c13e55-60e3-4e3b-9ecc-b22da019c010"
 migrations_dir = "./drizzle"
 
+# Referência GeoNames já carregada. O aplicativo só lê; a escrita é recusada
+# em runtime. Não aplique migrações nem importação neste binding.
+[[env.staging.d1_databases]]
+binding = "GEO_DB"
+database_name = "vturapp-geonames-isolado"
+database_id = "bf40654b-8083-4fa1-8424-a923282d9888"
+
+[env.staging.vars]
+PUBLIC_DEPLOY_ENV = "staging"
+PUBLIC_GEONAMES_ATIVO = "1"
+
 [[env.staging.r2_buckets]]
 binding = "R2"
 bucket_name = "vturapp-files-staging"

@@ -22,7 +22,7 @@
     "d1:migrate:prod": "wrangler d1 migrations apply vturapp-db --remote --env production",
     "bootstrap:admin": "node scripts/bootstrap-admin.mjs",
     "dev:cf": "wrangler dev --local",
-    "cf:deploy:staging": "npm run cf:build && npx wrangler deploy --env staging",
+    "cf:deploy:staging": "PUBLIC_DEPLOY_ENV=staging PUBLIC_GEONAMES_ATIVO=1 npm run cf:build && npx wrangler deploy --env staging",
     "legacy:patch-scheduled": "node scripts/patch-worker-scheduled.js",
     "drizzle:studio": "drizzle-kit studio"
   },

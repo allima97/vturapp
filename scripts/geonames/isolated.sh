@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Idempotent remote steps for the isolated GeoNames environment.
 # Run this on a machine logged into Wrangler. It refuses staging and production.
+# Staging may bind the same GEO_DB for reads. This script never writes that
+# database through --env staging or --env production.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"

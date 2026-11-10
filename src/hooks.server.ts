@@ -26,6 +26,7 @@ import { initKvNamespace, checkKvEpochAsync } from '$lib/server/kvInvalidation';
 // (rotas +server.ts sao carregadas sob demanda; hooks.server.ts e sempre carregado antes de qualquer request).
 import '$lib/server/reciboContribuicoesReadModel';
 import { toUserMessage } from '$lib/utils/errors';
+import { geoDbSomenteLeitura } from '$lib/server/geoDbLeitura';
 
 const permLevel = (p?: string | null): number => {
   switch ((p || '').toLowerCase()) {
@@ -413,6 +414,9 @@ const dataHook: Handle = async ({ event, resolve }) => {
   const platformEnv = isRecord(event.platform)
     ? ((event.platform as PlatformLike).env ?? null)
     : null;
+  if (platformEnv?.GEO_DB && typeof platformEnv.GEO_DB === 'object') {
+    platformEnv.GEO_DB = geoDbSomenteLeitura(platformEnv.GEO_DB as D1Database);
+  }
   initKvNamespace(platformEnv);
   checkKvEpochAsync();
 

@@ -10,6 +10,10 @@ novembro de 2026 os bancos isolados ficaram com estes ids:
 - `vturapp-db-geo-isolado`, binding `DB`: `4f480221-b5e7-4639-9e28-d995b9615f7f`
 - `vturapp-geonames-isolado`, binding `GEO_DB`: `bf40654b-8083-4fa1-8424-a923282d9888`
 
+Staging também aponta o binding `GEO_DB` para esse mesmo banco, somente para
+leitura. O script continua recusando `--env staging` e `--env production`.
+A validação do aplicativo em staging está em `docs/GEONAMES-STAGING.md`.
+
 `[env.geo]` não declara KV nem R2. O aviso do Wrangler é esperado: os bindings
 do topo do arquivo não são herdados, e este ambiente não deve receber os
 namespaces ou buckets de staging e produção. A carga e as consultas usam só D1.

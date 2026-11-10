@@ -2,6 +2,15 @@
 /// <reference types="@cloudflare/workers-types" />
 
 declare global {
+  interface ImportMetaEnv {
+    readonly PUBLIC_DEPLOY_ENV?: string;
+    readonly PUBLIC_GEONAMES_ATIVO?: string;
+  }
+
+  interface ImportMeta {
+    readonly env: ImportMetaEnv;
+  }
+
   namespace App {
     interface Error {
       message: string;

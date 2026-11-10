@@ -1,18 +1,24 @@
-// Ativar somente após integrar os consumidores e validar a base mundial remota.
-export const catalogoGeograficoAtivo = false;
-// Exige editor completo, migrações aplicadas e base remota validada.
-export const roteiroGeograficoAtivo = false;
-// Ativar somente junto ao fluxo geográfico e após aplicar a migração de revisão.
-export const revisaoRoteiroAtiva = false;
-// Ativar somente após integrar todos os módulos e validar a base mundial remota.
-export const vendasGeograficasAtivas = false;
-// Ativar somente após integrar todos os módulos e validar a base mundial remota.
-export const produtosGeograficosAtivos = false;
-// Exige editor, proteção contra clientes antigos e migração de fornecedores.
-export const fornecedoresGeograficosAtivos = false;
-// Orçamentos, consultoria, viagens, vouchers, preferências e relatórios.
-// Permanece desligada: não grava identidade geográfica nem altera dados existentes.
-export const modulosOperacionaisGeograficosAtivos = false;
+export function flagsGeograficasAtivas(env: Record<string, string | undefined>) {
+  return (
+    env.PUBLIC_DEPLOY_ENV === 'staging' &&
+    (env.PUBLIC_GEONAMES_ATIVO === '1' || env.PUBLIC_GEONAMES_ATIVO === 'true')
+  );
+}
+
+const geonamesAtivo = flagsGeograficasAtivas({
+  PUBLIC_DEPLOY_ENV: import.meta.env.PUBLIC_DEPLOY_ENV,
+  PUBLIC_GEONAMES_ATIVO: import.meta.env.PUBLIC_GEONAMES_ATIVO
+});
+
+// Ligadas somente no build de staging (`PUBLIC_DEPLOY_ENV=staging` e
+// `PUBLIC_GEONAMES_ATIVO=1`). Produção não define essas variáveis.
+export const catalogoGeograficoAtivo = geonamesAtivo;
+export const roteiroGeograficoAtivo = geonamesAtivo;
+export const revisaoRoteiroAtiva = geonamesAtivo;
+export const vendasGeograficasAtivas = geonamesAtivo;
+export const produtosGeograficosAtivos = geonamesAtivo;
+export const fornecedoresGeograficosAtivos = geonamesAtivo;
+export const modulosOperacionaisGeograficosAtivos = geonamesAtivo;
 
 export function campoGeografico(
   id: string | null | undefined,
