@@ -45,6 +45,17 @@ database_name = "vturapp-db"
 database_id = "36d3da2e-b186-48f8-bb3e-4f9a14b20235"
 migrations_dir = "./drizzle"
 
+# Referência GeoNames já carregada. O aplicativo só lê; a escrita é recusada
+# em runtime. Não aplique migrações nem importação neste binding.
+[[d1_databases]]
+binding = "GEO_DB"
+database_name = "vturapp-geonames-isolado"
+database_id = "bf40654b-8083-4fa1-8424-a923282d9888"
+
+[vars]
+PUBLIC_DEPLOY_ENV = "production"
+PUBLIC_GEONAMES_ATIVO = "1"
+
 # ─── R2 — arquivos privados ───────────────────────────────────────────────────
 # Produção: criar com `wrangler r2 bucket create vturapp-files`.
 [[r2_buckets]]

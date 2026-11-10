@@ -1,14 +1,14 @@
 # Validar GeoNames em staging
 
-Produção continua sem `GEO_DB` e sem as flags. Staging lê o banco já carregado
-`vturapp-geonames-isolado` (`bf40654b-8083-4fa1-8424-a923282d9888`) e grava só
-em `vturapp-db-staging`. Não rode `scripts/geonames/isolated.sh load` de novo.
+Staging lê o banco já carregado `vturapp-geonames-isolado`
+(`bf40654b-8083-4fa1-8424-a923282d9888`) e grava só em `vturapp-db-staging`.
+Não rode `scripts/geonames/isolated.sh load` de novo. A produção passou a ler
+o mesmo banco, também só para leitura.
 
 O deploy de staging precisa ser o script do `package.json`. Ele compila com
-`PUBLIC_DEPLOY_ENV=staging` e `PUBLIC_GEONAMES_ATIVO=1`. Esse par liga, só nesse
-build, as flags de catálogo, roteiro, revisão, vendas, produtos, fornecedores
-e módulos operacionais. `npm run cf:deploy` não define as variáveis, então a
-produção permanece desligada.
+`PUBLIC_DEPLOY_ENV=staging` e `PUBLIC_GEONAMES_ATIVO=1`. Esse par liga as flags
+de catálogo, roteiro, revisão, vendas, produtos, fornecedores e módulos
+operacionais. `npm run cf:deploy` faz o mesmo com `PUBLIC_DEPLOY_ENV=production`.
 
 ## 1. Migrações
 

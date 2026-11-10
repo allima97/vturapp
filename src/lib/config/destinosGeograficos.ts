@@ -1,8 +1,8 @@
 export function flagsGeograficasAtivas(env: Record<string, string | undefined>) {
-  return (
-    env.PUBLIC_DEPLOY_ENV === 'staging' &&
-    (env.PUBLIC_GEONAMES_ATIVO === '1' || env.PUBLIC_GEONAMES_ATIVO === 'true')
-  );
+  const ambientePublicado =
+    env.PUBLIC_DEPLOY_ENV === 'production' || env.PUBLIC_DEPLOY_ENV === 'staging';
+  const geonamesPedido = env.PUBLIC_GEONAMES_ATIVO === '1' || env.PUBLIC_GEONAMES_ATIVO === 'true';
+  return ambientePublicado && geonamesPedido;
 }
 
 const geonamesAtivo = flagsGeograficasAtivas({
@@ -10,8 +10,9 @@ const geonamesAtivo = flagsGeograficasAtivas({
   PUBLIC_GEONAMES_ATIVO: import.meta.env.PUBLIC_GEONAMES_ATIVO
 });
 
-// Ligadas somente no build de staging (`PUBLIC_DEPLOY_ENV=staging` e
-// `PUBLIC_GEONAMES_ATIVO=1`). Produção não define essas variáveis.
+// Ligadas no build de produção (`PUBLIC_DEPLOY_ENV=production`) e no de staging
+// (`PUBLIC_DEPLOY_ENV=staging`), sempre com `PUBLIC_GEONAMES_ATIVO=1`.
+// Um build sem essas variáveis permanece desligado.
 export const catalogoGeograficoAtivo = geonamesAtivo;
 export const roteiroGeograficoAtivo = geonamesAtivo;
 export const revisaoRoteiroAtiva = geonamesAtivo;

@@ -5,21 +5,25 @@ Atualize-o a cada etapa, distinguindo validação local de alterações remotas.
 
 ## Situação
 
-- As flags geográficas ficam desligadas na produção e no build padrão. O
-  script `npm run cf:deploy:staging` compila com `PUBLIC_DEPLOY_ENV=staging` e
-  `PUBLIC_GEONAMES_ATIVO=1`, o que liga catálogo, roteiro, revisão, vendas,
-  produtos, fornecedores e módulos operacionais só nesse build.
+- Staging foi validado com login e com uma cópia dos dados de produção. A
+  busca GeoNames funciona e está rápida. Com essa aprovação, a produção foi
+  autorizada.
+- As sete flags ligam no build de produção e no de staging. `npm run cf:deploy`
+  compila com `PUBLIC_DEPLOY_ENV=production` e `PUBLIC_GEONAMES_ATIVO=1`.
+  `npm run cf:deploy:staging` continua com `PUBLIC_DEPLOY_ENV=staging` e o
+  mesmo `PUBLIC_GEONAMES_ATIVO=1`. Um `npm run cf:build` sem essas variáveis
+  permanece desligado. As flags são catálogo, roteiro, revisão, vendas,
+  produtos, fornecedores e módulos operacionais.
 - Em 9 de novembro de 2026 a base mundial foi carregada no D1 isolado
   `vturapp-geonames-isolado` (`bf40654b-8083-4fa1-8424-a923282d9888`). Esse
-  mesmo banco agora também é o `GEO_DB` de `[env.staging]`, só para leitura.
-  O banco do aplicativo em staging continua `vturapp-db-staging`. Produção
-  continua sem `GEO_DB`.
-- As migrações `0000` a `0024` foram aplicadas somente em
-  `vturapp-db-geo-isolado` (`4f480221-b5e7-4639-9e28-d995b9615f7f`). Staging
-  ainda está em `0015`. O roteiro para aplicar `0016`–`0024` e publicar o
-  Worker de staging está em `docs/GEONAMES-STAGING.md`. Não foram aplicadas
-  em produção.
-- Não houve publicação desta integração.
+  mesmo banco é o `GEO_DB` da raiz (worker `vturapp`) e de `[env.staging]`,
+  só para leitura, sem `migrations_dir`. O banco do aplicativo em produção
+  continua `vturapp-db`. O de staging continua `vturapp-db-staging`.
+- A produção já estava na migração `0018` e recebeu `0019` a `0024`. As
+  migrações `0000` a `0024` também estão em `vturapp-db-geo-isolado`
+  (`4f480221-b5e7-4639-9e28-d995b9615f7f`).
+- O Worker de produção ainda não foi publicado desta configuração. O comando
+  no Mac é `npm run cf:deploy`.
 - Endereços de clientes, perfil e empresas preenchidos por CEP estão fora do
   escopo e devem permanecer intactos.
 
@@ -69,14 +73,13 @@ Atualize-o a cada etapa, distinguindo validação local de alterações remotas.
       O benchmark mediu 16, 5.369 e 1 linhas lidas. Isso não ativa produção.
 - [ ] Executar testes autenticados de ponta a ponta e regressões dos módulos,
       inclusive dados legados e cenários de falha e concorrência.
-- [ ] Validar em staging com o roteiro `docs/GEONAMES-STAGING.md`: migrar
-      `vturapp-db-staging` de `0015` até `0024`, conferir as chaves estrangeiras,
-      publicar com `npm run cf:deploy:staging` e percorrer roteiro, venda,
-      produto, fornecedor, orçamento, voucher e endereços por CEP. A preparação
-      está no repositório; a execução no Mac ainda não foi feita.
-- [ ] Somente depois da validação em staging, aplicar migrações e configuração
-      em produção, ativar as flags, publicar e verificar a versão publicada.
-      Produção continua sem `GEO_DB` e com as flags desligadas.
+- [x] Validar em staging com login e com cópia dos dados de produção. A busca
+      GeoNames foi aprovada: funciona e está rápida.
+- [x] Aplicar em produção as migrações `0019` a `0024`. A produção já estava
+      em `0018`. O `DB` de produção não foi trocado.
+- [ ] Publicar o Worker de produção com `npm run cf:deploy` e verificar a
+      versão publicada. A configuração já está na raiz do `wrangler.toml` e no
+      build. O deploy não foi feito daqui.
 
 ## Última validação local (9 de novembro de 2026, continuação)
 
