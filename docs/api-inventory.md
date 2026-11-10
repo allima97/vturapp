@@ -2,7 +2,7 @@
 
 Gerado por `node scripts/api-inventory.mjs` — **não editar à mão**. JSON completo em `docs/api-inventory.json`.
 
-- Endpoints: **274** (130 gravam no banco)
+- Endpoints: **274** (128 gravam no banco)
 - Domínios: 54
 - Migrados para Hono: **254** (marcados com <sub>hono</sub>)
 
@@ -355,7 +355,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
-| `/v1/paises` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin | ✔ | ✔ | paises(D/R/U) | — | invalidateCatalogReadModels |
+| `/v1/paises` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin |  |  | paises(R) | — | — |
 
 ### parametros (12)
 
@@ -461,7 +461,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
-| `/v1/subdivisoes` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin | ✔ | ✔ | subdivisoes(D/R/U) | — | invalidateCatalogReadModels |
+| `/v1/subdivisoes` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin |  |  | subdivisoes(R) | — | — |
 
 ### tarefas (3)
 

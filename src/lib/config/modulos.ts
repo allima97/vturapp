@@ -395,16 +395,7 @@ export const SECOES_PERMISSOES: ModuloSecaoPermissoes[] = [
   {
     id: 'cadastro',
     titulo: 'Cadastro',
-    modulos: [
-      'Cadastros',
-      'Paises',
-      'Subdivisoes',
-      'Cidades',
-      'Destinos',
-      'Produtos',
-      'ProdutosLote',
-      'Fornecedores'
-    ]
+    modulos: ['Cadastros', 'Cidades', 'Destinos', 'Produtos', 'ProdutosLote', 'Fornecedores']
   },
   {
     id: 'parametros',
@@ -551,9 +542,11 @@ export const MODULOS_ADMIN_PERMISSOES: string[] = (() => {
   };
 
   for (const label of Object.keys(MAPA_MODULOS)) {
+    if (label === 'Paises' || label === 'Subdivisoes') continue;
     addLabel(label);
   }
   for (const label of Object.values(ROTAS_MODULOS)) {
+    if (label === 'Paises' || label === 'Subdivisoes') continue;
     addLabel(label);
   }
 

@@ -271,16 +271,7 @@ export const SECOES_PERMISSOES: ModuloSecaoPermissoes[] = [
   {
     id: 'cadastro',
     titulo: 'Cadastro',
-    modulos: [
-      'Cadastros',
-      'Paises',
-      'Subdivisoes',
-      'Cidades',
-      'Destinos',
-      'Produtos',
-      'ProdutosLote',
-      'Fornecedores'
-    ]
+    modulos: ['Cadastros', 'Cidades', 'Destinos', 'Produtos', 'ProdutosLote', 'Fornecedores']
   },
   {
     id: 'parametros',
@@ -323,16 +314,7 @@ const GLOBAL_MODULE_GROUPS: Record<string, string[]> = {
     'Formas de Pagamento',
     'RegrasComissao'
   ],
-  Cadastros: [
-    'Paises',
-    'Subdivisoes',
-    'Cidades',
-    'Destinos',
-    'Produtos',
-    'Circuitos',
-    'ProdutosLote',
-    'Fornecedores'
-  ],
+  Cadastros: ['Cidades', 'Destinos', 'Produtos', 'Circuitos', 'ProdutosLote', 'Fornecedores'],
   Relatorios: [
     'RelatorioVendas',
     'RelatorioDestinos',
@@ -505,6 +487,7 @@ export const MODULOS_ADMIN_PERMISSOES: string[] = (() => {
   };
 
   for (const label of Object.keys(MAPA_MODULOS)) {
+    if (label === 'Paises' || label === 'Subdivisoes') continue;
     addLabel(label);
   }
   return list;

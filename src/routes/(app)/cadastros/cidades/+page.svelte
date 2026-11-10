@@ -3,11 +3,10 @@
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
-  import SubdivisaoAutocomplete from '$lib/components/cadastros/SubdivisaoAutocomplete.svelte';
   import Dialog from '$lib/components/ui/Dialog.svelte';
   import DataTable from '$lib/components/ui/DataTable.svelte';
   import { toast } from '$lib/stores/ui';
-  import { BottomSheet, FieldInput, FieldSelect } from '$lib/components/ui';
+  import { BottomSheet, FieldInput } from '$lib/components/ui';
   import { apiDelete, apiGet, apiPost } from '$lib/services/api';
   import { Plus, Trash2, RefreshCw, Search, SlidersHorizontal } from '$lib/icons';
   import { escapeHtml } from '$lib/utils/html';
@@ -18,19 +17,8 @@
   type Cidade = {
     id: string;
     nome: string;
-    subdivisao_id: string | null;
     descricao: string | null;
     created_at: string | null;
-    subdivisao?: { id: string; nome: string; pais?: { id: string; nome: string } | null } | null;
-  };
-
-  type Subdivisao = { id: string; nome: string; pais_id: string; pais?: { nome: string } | null };
-
-  type SubdivisoesResponse = {
-    items?: Subdivisao[] | null;
-    total?: number;
-    page?: number;
-    pageSize?: number;
   };
 
   type CidadesResponse = {
@@ -41,38 +29,22 @@
   };
 
   let cidades: Cidade[] = [];
-  let subdivisoes: Subdivisao[] = [];
   let loading = true;
-  let loadingSubdivisoes = true;
   let modalOpen = false;
   let saving = false;
   let deletingId = '';
   let editingId: string | null = null;
   let busca = '';
-  let buscaSubdivisao = '';
-  let filtroSubdivisao = '';
   let totalCidades = 0;
   let autoReloadEnabled = false;
   let lastAutoReloadKey = '';
-  let lastSubdivisoesKey = '';
   let showFilterSheet = false;
   const autoReload = createDebouncedReloader(() => load(), 300);
-  const subdivisoesAutoReload = createDebouncedReloader(() => loadSubdivisoes(), 300);
 
-  let form = { nome: '', subdivisao_id: '', descricao: '' };
+  let form = { nome: '', descricao: '' };
 
   const columns = [
     { key: 'nome', label: 'Cidade', sortable: true },
-    {
-      key: 'subdivisao',
-      label: 'Estado/Província',
-      sortable: false,
-      formatter: (_: unknown, row: Cidade) => {
-        const sub = row.subdivisao?.nome || '-';
-        const pais = row.subdivisao?.pais?.nome || '';
-        return `<span>${pais ? `${escapeHtml(sub)} · ${escapeHtml(pais)}` : escapeHtml(sub)}</span>`;
-      }
-    },
     {
       key: 'descricao',
       label: 'Descrição',
@@ -81,36 +53,11 @@
     }
   ];
 
-  async function loadSubdivisoes() {
-    const term = buscaSubdivisao.trim();
-    if (term.length < 2) {
-      subdivisoes = [];
-      loadingSubdivisoes = false;
-      return;
-    }
-
-    loadingSubdivisoes = true;
-    try {
-      const payload = await apiGet<SubdivisoesResponse>(
-        '/api/v1/subdivisoes',
-        { q: term, page: 1, pageSize: 200 },
-        undefined,
-        30_000
-      );
-      subdivisoes = Array.isArray(payload?.items) ? payload.items : [];
-    } catch (_err) {
-      subdivisoes = [];
-    } finally {
-      loadingSubdivisoes = false;
-    }
-  }
-
   async function load() {
     const term = busca.trim();
     const hasCityTerm = term.length >= 2;
-    const hasSubdivisaoFilter = Boolean(filtroSubdivisao);
 
-    if (!hasCityTerm && !hasSubdivisaoFilter) {
+    if (!hasCityTerm) {
       cidades = [];
       totalCidades = 0;
       loading = false;
@@ -124,8 +71,7 @@
         payload = await apiGet<CidadesResponse>(
           '/api/v1/cidades',
           {
-            q: hasCityTerm ? term : undefined,
-            subdivisao_id: hasSubdivisaoFilter ? filtroSubdivisao : undefined,
+            q: term,
             page: 1,
             pageSize: 200
           },
@@ -150,13 +96,13 @@
 
   function openNew() {
     editingId = null;
-    form = { nome: '', subdivisao_id: '', descricao: '' };
+    form = { nome: '', descricao: '' };
     modalOpen = true;
   }
 
   function openEdit(c: Cidade) {
     editingId = c.id;
-    form = { nome: c.nome, subdivisao_id: c.subdivisao_id || '', descricao: c.descricao || '' };
+    form = { nome: c.nome, descricao: c.descricao || '' };
     modalOpen = true;
   }
 
@@ -170,7 +116,7 @@
       await apiPost('/api/v1/cidades', {
         id: editingId || undefined,
         nome: form.nome,
-        subdivisao_id: form.subdivisao_id || null,
+        subdivisao_id: null,
         descricao: form.descricao || null
       });
       toast.success(editingId ? 'Cidade atualizada.' : 'Cidade criada.');
@@ -200,47 +146,28 @@
   onMount(() => {
     // Modo sob demanda: evita carregar a tabela inteira sem filtro.
     lastAutoReloadKey = buildAutoReloadKey();
-    lastSubdivisoesKey = buildSubdivisoesKey();
     autoReloadEnabled = true;
     void load();
-    void loadSubdivisoes();
   });
 
   onDestroy(() => {
     autoReload.cancel();
-    subdivisoesAutoReload.cancel();
   });
 
   function buildAutoReloadKey() {
-    return [busca.trim(), filtroSubdivisao].join('|');
-  }
-
-  function buildSubdivisoesKey() {
-    return buscaSubdivisao.trim();
+    return busca.trim();
   }
 
   function scheduleAutoReload() {
     autoReload.schedule();
   }
 
-  function scheduleSubdivisoesReload() {
-    subdivisoesAutoReload.schedule();
-  }
-
   // O $: do modo legado só reage às variáveis escritas nesta linha (não enxerga dentro de
   // buildAutoReloadKey()). Por isso a mesma expressão da função fica aqui, idêntica.
-  $: autoReloadKey = [busca.trim(), filtroSubdivisao].join('|');
+  $: autoReloadKey = busca.trim();
   $: if (autoReloadEnabled && autoReloadKey !== lastAutoReloadKey) {
     lastAutoReloadKey = autoReloadKey;
     scheduleAutoReload();
-  }
-
-  // O $: do modo legado só reage às variáveis escritas nesta linha (não enxerga dentro de
-  // buildSubdivisoesKey()). Por isso a mesma expressão da função fica aqui, idêntica.
-  $: subdivisoesKey = buscaSubdivisao.trim();
-  $: if (autoReloadEnabled && subdivisoesKey !== lastSubdivisoesKey) {
-    lastSubdivisoesKey = subdivisoesKey;
-    scheduleSubdivisoesReload();
   }
 </script>
 
@@ -263,7 +190,7 @@
   <Button variant="secondary" class_name="w-full" on:click={() => (showFilterSheet = true)}>
     <SlidersHorizontal size={16} class="mr-2" />
     Filtros
-    {#if busca.trim() || filtroSubdivisao}
+    {#if busca.trim()}
       <span class="ml-2 inline-flex h-2 w-2 rounded-full bg-blue-500"></span>
     {/if}
   </Button>
@@ -282,29 +209,6 @@
         scheduleAutoReload();
       }}
     />
-    <FieldSelect
-      id="cid-sub"
-      label="Estado/Província"
-      bind:value={filtroSubdivisao}
-      options={[
-        { value: '', label: 'Todos' },
-        ...subdivisoes.map((s) => ({ value: s.id, label: s.nome }))
-      ]}
-      placeholder={null}
-      disabled={loadingSubdivisoes || buscaSubdivisao.trim().length < 2}
-    />
-    <FieldInput
-      id="cid-sub-search"
-      label="Buscar Estado/Província"
-      bind:value={buscaSubdivisao}
-      placeholder="Digite 2+ letras para carregar estados..."
-      class_name="min-w-[260px]"
-      on:input={(event) => {
-        const target = event.target as HTMLInputElement | null;
-        buscaSubdivisao = target?.value ?? buscaSubdivisao;
-        scheduleSubdivisoesReload();
-      }}
-    />
   </div>
 </Card>
 
@@ -315,25 +219,6 @@
       bind:value={busca}
       icon={Search}
       placeholder="Buscar cidade..."
-      class_name="w-full"
-    />
-    <FieldSelect
-      id="cid-sub-mobile"
-      label="Estado/Província"
-      bind:value={filtroSubdivisao}
-      options={[
-        { value: '', label: 'Todos' },
-        ...subdivisoes.map((s) => ({ value: s.id, label: s.nome }))
-      ]}
-      placeholder={null}
-      class_name="w-full"
-      disabled={loadingSubdivisoes || buscaSubdivisao.trim().length < 2}
-    />
-    <FieldInput
-      id="cid-sub-search-mobile"
-      label="Buscar Estado/Província"
-      bind:value={buscaSubdivisao}
-      placeholder="Digite 2+ letras para carregar estados..."
       class_name="w-full"
     />
   </div>
@@ -388,13 +273,6 @@
       bind:value={form.nome}
       placeholder="Nome da cidade"
       class_name="w-full"
-    />
-    <SubdivisaoAutocomplete
-      id="cid-sub-form"
-      label="Estado/Província"
-      bind:value={form.subdivisao_id}
-      placeholder="Digite para buscar estados..."
-      helper="Digite pelo menos 2 letras e selecione a opção desejada."
     />
     <FieldInput
       id="cid-desc"

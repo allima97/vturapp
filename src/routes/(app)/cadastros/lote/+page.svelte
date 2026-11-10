@@ -11,9 +11,7 @@
   import { Upload, FileText, CheckCircle, AlertCircle, Download } from '$lib/icons';
 
   type TipoProduto = { id: string; nome: string };
-  type Subdivisao = { id: string; nome: string };
   type TipoProdutosResponse = { items?: TipoProduto[] | null };
-  type SubdivisoesResponse = { items?: Subdivisao[] | null };
   type ImportacaoLoteResponse = {
     criados?: number;
     atualizados?: number;
@@ -21,14 +19,12 @@
   };
 
   let tipos: TipoProduto[] = [];
-  let subdivisoes: Subdivisao[] = [];
   let loading = false;
   let saving = false;
   let resultado: { criados: number; atualizados: number; erros: string[] } | null = null;
 
   // Formulário de lote
   let tipoId = '';
-  let subdivisaoId = '';
   let textoProdutos = '';
   const baseGuard = createLoadGuard();
   $: produtosNaLista = textoProdutos
@@ -38,13 +34,13 @@
   async function loadBase() {
     const request = baseGuard.next();
     try {
-      const [tiposPayload, subPayload] = await Promise.all([
-        apiGet<TipoProdutosResponse>('/api/v1/tipo-produtos', { all: 1 }, request.signal),
-        apiGet<SubdivisoesResponse>('/api/v1/subdivisoes', { pageSize: 5000 }, request.signal)
-      ]);
+      const tiposPayload = await apiGet<TipoProdutosResponse>(
+        '/api/v1/tipo-produtos',
+        { all: 1 },
+        request.signal
+      );
       if (!baseGuard.isCurrent(request.seq)) return;
       tipos = tiposPayload.items || [];
-      subdivisoes = subPayload.items || [];
     } catch (err) {
       if (isCanceledApiError(err)) return;
       toast.error(toUserMessage(err, 'Erro ao carregar dados base.'));
@@ -83,10 +79,7 @@
         ativo: true
       }));
 
-      const data = await apiPost<ImportacaoLoteResponse>('/api/v1/produtos', {
-        produtos,
-        subdivisao_id: subdivisaoId || null
-      });
+      const data = await apiPost<ImportacaoLoteResponse>('/api/v1/produtos', { produtos });
 
       resultado = {
         criados: data.criados || linhas.length,
@@ -129,27 +122,14 @@
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
   <div class="space-y-6 lg:col-span-2">
     <Card title="Configuração da importação">
-      <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <FieldSelect
-          id="lote-tipo"
-          label="Tipo de produto"
-          required={true}
-          bind:value={tipoId}
-          options={[...tipos.map((t) => ({ value: t.id, label: t.nome }))]}
-          class_name="w-full"
-        />
-        <FieldSelect
-          id="lote-sub"
-          label="Estado/Subdivisão (opcional)"
-          bind:value={subdivisaoId}
-          placeholder={null}
-          options={[
-            { value: '', label: 'Todas as cidades' },
-            ...subdivisoes.map((s) => ({ value: s.id, label: s.nome }))
-          ]}
-          class_name="w-full"
-        />
-      </div>
+      <FieldSelect
+        id="lote-tipo"
+        label="Tipo de produto"
+        required={true}
+        bind:value={tipoId}
+        options={[...tipos.map((t) => ({ value: t.id, label: t.nome }))]}
+        class_name="w-full"
+      />
     </Card>
 
     <Card title="Lista de produtos">

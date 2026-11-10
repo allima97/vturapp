@@ -1373,7 +1373,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 316
+      "lines": 312
     },
     {
       "route": "/api/v1/admin/tipos-usuario",
@@ -3510,13 +3510,14 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 281
+      "lines": 304
     },
     {
       "route": "/api/v1/consultorias/ics",
@@ -5785,13 +5786,14 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 358
+      "lines": 370
     },
     {
       "route": "/api/v1/operacao/recados",
@@ -5922,6 +5924,7 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/httpCache",
         "$lib/server/orcamentos",
         "$lib/server/readModelCache",
@@ -5929,7 +5932,7 @@
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 344
+      "lines": 354
     },
     {
       "route": "/api/v1/orcamentos/[id]/resumo-venda",
@@ -6119,13 +6122,14 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 219
+      "lines": 232
     },
     {
       "route": "/api/v1/orcamentos/delete",
@@ -6371,6 +6375,7 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/httpCache",
         "$lib/server/orcamentos",
         "$lib/server/readModelCache",
@@ -6379,7 +6384,7 @@
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 373
+      "lines": 388
     },
     {
       "route": "/api/v1/orcamentos/status",
@@ -6607,8 +6612,8 @@
         "roles": [
           "isAdmin"
         ],
-        "rejectCrossOrigin": true,
-        "bodyLimit": true,
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
         "cronSecret": false,
         "turnstile": false,
         "adminClient": true,
@@ -6616,24 +6621,19 @@
       },
       "tables": {
         "paises": [
-          "delete",
-          "select",
-          "update"
+          "select"
         ]
       },
       "rpcs": [],
-      "invalidations": [
-        "invalidateCatalogReadModels"
-      ],
+      "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
-        "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
-      "mutates": true,
-      "lines": 203
+      "mutates": false,
+      "lines": 110
     },
     {
       "route": "/api/v1/parametros/cambios",
@@ -7365,12 +7365,13 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 108
+      "lines": 117
     },
     {
       "route": "/api/v1/preferencias/share-accept",
@@ -8030,6 +8031,8 @@
       "rpcs": [],
       "invalidations": [],
       "imports": [
+        "$lib/config/destinosGeograficos",
+        "$lib/relatorioDestino",
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
@@ -8040,7 +8043,7 @@
         "$lib/server/vendas-kpis"
       ],
       "mutates": false,
-      "lines": 286
+      "lines": 293
     },
     {
       "route": "/api/v1/relatorios/produtos-recibos",
@@ -8444,10 +8447,11 @@
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
+        "$lib/server/roteiroRegistrosLegados",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 544
+      "lines": 553
     },
     {
       "route": "/api/v1/roteiros/[id]",
@@ -8754,10 +8758,11 @@
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
+        "$lib/server/roteiroRegistrosLegados",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 937
+      "lines": 959
     },
     {
       "route": "/api/v1/roteiros/sugestoes-busca",
@@ -8876,8 +8881,8 @@
         "roles": [
           "isAdmin"
         ],
-        "rejectCrossOrigin": true,
-        "bodyLimit": true,
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
         "cronSecret": false,
         "turnstile": false,
         "adminClient": true,
@@ -8885,24 +8890,19 @@
       },
       "tables": {
         "subdivisoes": [
-          "delete",
-          "select",
-          "update"
+          "select"
         ]
       },
       "rpcs": [],
-      "invalidations": [
-        "invalidateCatalogReadModels"
-      ],
+      "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
-        "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
-      "mutates": true,
-      "lines": 231
+      "mutates": false,
+      "lines": 153
     },
     {
       "route": "/api/v1/tarefas",
@@ -10660,6 +10660,7 @@
       ],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/httpCache",
         "$lib/server/readModelCache",
         "$lib/server/requestGuards",
@@ -10667,7 +10668,7 @@
         "$lib/viagens/status"
       ],
       "mutates": true,
-      "lines": 167
+      "lines": 198
     },
     {
       "route": "/api/v1/viagens/delete",
@@ -10919,13 +10920,14 @@
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
         "$lib/server/v1",
         "$lib/utils/array"
       ],
       "mutates": true,
-      "lines": 248
+      "lines": 277
     },
     {
       "route": "/api/v1/vouchers/[id]",
@@ -10966,12 +10968,13 @@
       "invalidations": [],
       "imports": [
         "$lib/server/api/sveltekit",
+        "$lib/server/destinoOperacional",
         "$lib/server/httpCache",
         "$lib/server/requestGuards",
         "$lib/server/v1"
       ],
       "mutates": true,
-      "lines": 244
+      "lines": 266
     },
     {
       "route": "/api/v1/vouchers/create",

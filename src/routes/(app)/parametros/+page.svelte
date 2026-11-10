@@ -782,8 +782,6 @@
       items: [
         { key: 'cadastros_produtos', label: 'Produtos', href: '/cadastros/produtos' },
         { key: 'cadastros_circuitos', label: 'Circuitos', href: '/cadastros/circuitos' },
-        { key: 'cadastros_paises', label: 'Países', href: '/cadastros/paises' },
-        { key: 'cadastros_estados', label: 'Estados', href: '/cadastros/estados' },
         { key: 'cadastros_cidades', label: 'Cidades', href: '/cadastros/cidades' },
         { key: 'cadastros_opcionais', label: 'Passeios Opcionais', href: '/cadastros/opcionais' },
         { key: 'cadastros_destinos', label: 'Destinos', href: '/cadastros/destinos' },

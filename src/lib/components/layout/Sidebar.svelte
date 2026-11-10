@@ -26,14 +26,12 @@
     FileChartColumn,
     FileText,
     Gift,
-    Globe,
     ImagePlus,
     LayoutDashboard,
     LogOut,
     Mail,
     Map as MapIcon,
     MapPin,
-    MapPinned,
     Megaphone,
     Menu,
     MessageSquare,
@@ -256,8 +254,6 @@
           href: '/cadastros/circuitos',
           icon: MapIcon
         },
-        { key: 'cadastros_paises', name: 'Países', href: '/cadastros/paises', icon: Globe },
-        { key: 'cadastros_estados', name: 'Estados', href: '/cadastros/estados', icon: MapPinned },
         { key: 'cadastros_cidades', name: 'Cidades', href: '/cadastros/cidades', icon: MapPin },
         {
           key: 'cadastros_opcionais',

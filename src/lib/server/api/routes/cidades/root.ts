@@ -144,15 +144,15 @@ export async function handleCidadesPost(event: RequestEvent) {
 
     if (!String(nome || '').trim())
       return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
-    if (!subdivisaoId || !isUuid(subdivisaoId))
+    if (subdivisaoId && !isUuid(subdivisaoId))
       return json(
-        { error: 'Estado/Subdivisão obrigatório.' },
+        { error: 'Estado/Subdivisão inválido.' },
         { status: 400, headers: NO_STORE_HEADERS }
       );
 
     const payload = {
       nome: String(nome).trim(),
-      subdivisao_id: subdivisaoId,
+      subdivisao_id: subdivisaoId || null,
       descricao: String(descricao || '').trim() || null
     };
 

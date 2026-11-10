@@ -24,6 +24,15 @@ Atualize-o a cada etapa, distinguindo validação local de alterações remotas.
   (`4f480221-b5e7-4639-9e28-d995b9615f7f`).
 - O Worker de produção ainda não foi publicado desta configuração. O comando
   no Mac é `npm run cf:deploy`.
+- Em produção, `legado_paises`, `legado_subdivisoes` e `legado_estados` estão
+  vazios. Há 473 cidades, todas sem `subdivisao_id`, e nenhuma venda, circuito,
+  orçamento ou produto aponta para cidade por essas tabelas. As telas e os
+  atalhos de Países e Estados saíram do menu, de Parâmetros e de Personalizar
+  perfil. Os endereços antigos redirecionam para Cidades. `POST` e `DELETE` de
+  `/api/v1/paises` e `/api/v1/subdivisoes` respondem 410. O `GET` permanece.
+  As permissões `cadastros_paises` e `cadastros_estados` continuam no banco e
+  somem da tela de configuração. Cidades permanece, e o estado deixa de ser
+  pedido no formulário e na importação em lote. Não houve `DROP` nem `DELETE`.
 - Endereços de clientes, perfil e empresas preenchidos por CEP estão fora do
   escopo e devem permanecer intactos.
 
