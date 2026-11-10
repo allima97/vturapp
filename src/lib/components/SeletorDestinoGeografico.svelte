@@ -21,6 +21,7 @@
   export let disabled = false;
   export let idioma = '';
   export let valid = false;
+  export let somenteGeonames = false;
 
   const dispatch = createEventDispatcher<{ select: Destino; edit: void }>();
   let input: HTMLInputElement;
@@ -74,7 +75,8 @@
           query: {
             q: query.trim(),
             idioma: locale(),
-            ...(buscaExata ? { pais: pais.trim(), offset: proximo } : { limite: 8 })
+            ...(buscaExata ? { pais: pais.trim(), offset: proximo } : { limite: 8 }),
+            ...(somenteGeonames ? { somente: 'geonames' } : {})
           },
           noCache: true
         }

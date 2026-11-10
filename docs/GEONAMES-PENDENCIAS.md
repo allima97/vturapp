@@ -24,6 +24,12 @@ Atualize-o a cada etapa, distinguindo validação local de alterações remotas.
   (`4f480221-b5e7-4639-9e28-d995b9615f7f`).
 - O Worker de produção ainda não foi publicado desta configuração. O comando
   no Mac é `npm run cf:deploy`.
+- A tela `/cadastros/cidades` busca no GeoNames e nos destinos personalizados,
+  com limite de 20. O cadastro novo grava só `destinos_personalizados`, com
+  nome livre e referência obrigatória do GeoNames. Edição e exclusão valem só
+  para personalizados; a exclusão é recusada quando o destino já está em uso.
+  `legado_cidades` segue como identidade interna. O `POST /api/v1/cidades` não
+  cria mais linha solta. A importação em lote continua sendo de produtos.
 - Em produção, `legado_paises`, `legado_subdivisoes` e `legado_estados` estão
   vazios. Há 473 cidades, todas sem `subdivisao_id`, e nenhuma venda, circuito,
   orçamento ou produto aponta para cidade por essas tabelas. As telas e os

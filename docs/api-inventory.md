@@ -112,7 +112,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
-| `/v1/cidades` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin | ✔ | ✔ | cidades(D/R/U) | — | invalidateCatalogReadModels |
+| `/v1/cidades` <sub>hono</sub> | DELETE GET POST | ✔ | ✔ | Admin | ✔ |  | cidades(D/R) | — | invalidateCatalogReadModels |
 | `/v1/cidades/[id]` <sub>hono</sub> | DELETE GET PATCH | ✔ | ✔ | Admin | ✔ | ✔ | cidades(D/R/U) | — | invalidateCatalogReadModels |
 
 ### circuitos (2)

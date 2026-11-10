@@ -164,12 +164,9 @@
     <Card title="Instruções">
       <div class="space-y-3 text-sm text-slate-600">
         <p>1. Selecione o <strong>tipo de produto</strong> que será aplicado a todos os itens.</p>
-        <p>
-          2. Opcionalmente, selecione um <strong>estado/subdivisão</strong> para vincular os produtos
-          a uma região.
-        </p>
-        <p>3. Cole a lista de produtos, <strong>um por linha</strong>.</p>
-        <p>4. Clique em <strong>Importar produtos</strong>.</p>
+        <p>2. Cole a lista de produtos, <strong>um por linha</strong>.</p>
+        <p>3. Clique em <strong>Importar produtos</strong>.</p>
+        <p>Destinos e cidades personalizadas são cadastrados em Cidades, não nesta importação.</p>
         <p class="text-amber-700">Produtos com o mesmo nome já existentes serão ignorados.</p>
       </div>
     </Card>

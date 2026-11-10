@@ -20,16 +20,7 @@ import {
   READ_MODEL_TAGS
 } from '$lib/server/readModelCache';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
-import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
-
-const MAX_CIDADES_BODY_BYTES = 64 * 1024;
-
-type CidadeBody = {
-  id?: unknown;
-  nome?: unknown;
-  descricao?: unknown;
-  subdivisao_id?: unknown;
-};
+import { rejectCrossOriginRequest } from '$lib/server/requestGuards';
 
 type CidadeListRow = {
   id: string;
@@ -45,17 +36,6 @@ type CidadeListRow = {
       }[]
     | null;
 };
-
-function readCidadeBody(value: unknown): CidadeBody {
-  if (!value || typeof value !== 'object') return {};
-  const body = value as Record<string, unknown>;
-  return {
-    id: body.id,
-    nome: body.nome,
-    descricao: body.descricao,
-    subdivisao_id: body.subdivisao_id
-  };
-}
 
 export async function handleCidadesGet(event: RequestEvent) {
   try {
@@ -122,77 +102,14 @@ export async function handleCidadesGet(event: RequestEvent) {
   }
 }
 
-export async function handleCidadesPost(event: RequestEvent) {
-  try {
-    const originError = rejectCrossOriginRequest(event.request);
-    if (originError) return originError;
-    const bodyResult = await readJsonBodyLimited(event.request, MAX_CIDADES_BODY_BYTES);
-    if (!bodyResult.ok) return bodyResult.response;
-
-    const client = getAdminClient();
-    const user = await requireAuthenticatedUser(event);
-    const scope = await resolveUserScope(client, user.id);
-
-    if (!scope.isAdmin) {
-      ensureModuloAccess(scope, ['Cidades'], 2, 'Sem permissão para salvar cidades.');
-    }
-
-    const body = readCidadeBody(bodyResult.data);
-    const { nome, descricao } = body;
-    const id = String(body.id || '').trim();
-    const subdivisaoId = String(body.subdivisao_id || '').trim();
-
-    if (!String(nome || '').trim())
-      return json({ error: 'Nome obrigatório.' }, { status: 400, headers: NO_STORE_HEADERS });
-    if (subdivisaoId && !isUuid(subdivisaoId))
-      return json(
-        { error: 'Estado/Subdivisão inválido.' },
-        { status: 400, headers: NO_STORE_HEADERS }
-      );
-
-    const payload = {
-      nome: String(nome).trim(),
-      subdivisao_id: subdivisaoId || null,
-      descricao: String(descricao || '').trim() || null
-    };
-
-    let result;
-    if (id && isUuid(id)) {
-      const { data, error: updateError } = await client
-        .from('cidades')
-        .update(payload)
-        .eq('id', id)
-        .select('id')
-        .single();
-      if (updateError) throw updateError;
-      result = data;
-      registrarLog(event, {
-        userId: user.id,
-        modulo: 'Cadastros',
-        acao: 'cidade_editada',
-        detalhes: { id, payload }
-      });
-    } else {
-      const { data, error: insertError } = await client
-        .from('cidades')
-        .insert(payload)
-        .select('id')
-        .single();
-      if (insertError) throw insertError;
-      result = data;
-      registrarLog(event, {
-        userId: user.id,
-        modulo: 'Cadastros',
-        acao: 'cidade_criada',
-        detalhes: { ...payload }
-      });
-    }
-
-    invalidateCatalogReadModels({ userId: user.id });
-    return json({ ok: true, id: result?.id }, { headers: NO_STORE_HEADERS });
-  } catch (err) {
-    return toErrorResponse(err, 'Erro ao salvar cidade.');
-  }
+export function handleCidadesPost(_event: RequestEvent) {
+  return json(
+    {
+      error:
+        'O cadastro de cidades passou a ser feito como destino personalizado, com uma localidade do GeoNames.'
+    },
+    { status: 410, headers: NO_STORE_HEADERS }
+  );
 }
 
 export async function handleCidadesDelete(event: RequestEvent) {

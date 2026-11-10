@@ -28,6 +28,7 @@ export type DestinoBusca = {
   label: string;
   origem: 'geonames' | 'personalizado';
   referencia: ReferenciaAdministrativa;
+  referencia_id?: string;
   referencia_indisponivel?: boolean;
 };
 
@@ -37,6 +38,7 @@ function destinoSemReferencia(destino: DestinoPersonalizado): DestinoBusca {
     nome: destino.nome,
     label: rotuloReferenciaIndisponivel(destino.nome),
     origem: 'personalizado',
+    referencia_id: `geonames:${destino.referenciaGeoNamesId}`,
     referencia_indisponivel: true,
     referencia: {
       localidade: destino.nome,
@@ -88,12 +90,13 @@ export async function buscarDestinos(
   geoDb: D1Database,
   texto: string,
   locale: string,
-  limite = 8
+  limite = 8,
+  somenteGeonames = false
 ): Promise<{ items: DestinoBusca[]; podeHaverMais: boolean }> {
   if (!Number.isInteger(limite) || limite < 1 || limite > 49)
     throw new Error('Limite de busca inválido.');
   const [locais, lugares] = await Promise.all([
-    buscarDestinosPersonalizados(db, texto, limite + 1),
+    somenteGeonames ? Promise.resolve([]) : buscarDestinosPersonalizados(db, texto, limite + 1),
     searchGeoNames(geoDb, texto, limite + 1)
   ]);
   const locaisExibidos = locais.slice(0, limite);
@@ -118,6 +121,7 @@ export async function buscarDestinos(
       nome: destino.nome,
       label: `${destino.nome}, ${referencia.label}`,
       origem: 'personalizado',
+      referencia_id: `geonames:${destino.referenciaGeoNamesId}`,
       referencia: referenciaAdministrativa(referencia)
     };
   });
@@ -129,6 +133,7 @@ export async function buscarDestinos(
       nome: resultado.name,
       label: resultado.label,
       origem: 'geonames',
+      referencia_id: `geonames:${place.id}`,
       referencia: referenciaAdministrativa(resultado)
     };
   });
@@ -156,6 +161,7 @@ export async function obterDestino(
       nome: resultado.name,
       label: resultado.label,
       origem: 'geonames',
+      referencia_id: id,
       referencia: referenciaAdministrativa(resultado)
     };
   }
@@ -170,6 +176,7 @@ export async function obterDestino(
       nome: destino.nome,
       label: `${destino.nome}, ${resultado.label}`,
       origem: 'personalizado',
+      referencia_id: `geonames:${destino.referenciaGeoNamesId}`,
       referencia: referenciaAdministrativa(resultado)
     };
   }

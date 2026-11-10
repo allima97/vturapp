@@ -119,23 +119,16 @@ describe('auditoria (formato do histórico da tabela logs)', () => {
     state.pending = [];
   });
 
-  it('cidade_criada: payload { nome, descricao, subdivisao_id }', async () => {
+  it('cidade solta não é mais criada nem gera log', async () => {
     const res = await handleCidadesPost(
       evento('POST', '/api/v1/cidades', { nome: ' Porto ', subdivisao_id: UUID_SUB })
     );
-    expect(res.status).toBe(200);
-    expect(await logs()).toEqual([
-      {
-        userId: 'u-1',
-        modulo: 'Cadastros',
-        acao: 'cidade_criada',
-        detalhes: { nome: 'Porto', subdivisao_id: UUID_SUB, descricao: null }
-      }
-    ]);
+    expect(res.status).toBe(410);
+    expect(await logs()).toEqual([]);
   });
 
-  it('cidade_editada (POST com id): { id, payload }', async () => {
-    await handleCidadesPost(
+  it('edição pelo POST antigo de cidades também fica recusada', async () => {
+    const res = await handleCidadesPost(
       evento('POST', '/api/v1/cidades', {
         id: UUID_A,
         nome: 'Lisboa',
@@ -143,17 +136,8 @@ describe('auditoria (formato do histórico da tabela logs)', () => {
         subdivisao_id: UUID_SUB
       })
     );
-    expect(await logs()).toEqual([
-      {
-        userId: 'u-1',
-        modulo: 'Cadastros',
-        acao: 'cidade_editada',
-        detalhes: {
-          id: UUID_A,
-          payload: { nome: 'Lisboa', subdivisao_id: UUID_SUB, descricao: 'x' }
-        }
-      }
-    ]);
+    expect(res.status).toBe(410);
+    expect(await logs()).toEqual([]);
   });
 
   it('cidade_editada (PATCH /:id) e cidade_excluida (DELETE /:id e DELETE ?id=)', async () => {
@@ -176,9 +160,9 @@ describe('auditoria (formato do histórico da tabela logs)', () => {
     ]);
   });
 
-  it('erro de validação não gera log', async () => {
+  it('cadastro antigo de cidade não grava mesmo sem nome', async () => {
     const res = await handleCidadesPost(evento('POST', '/api/v1/cidades', { nome: '' }));
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(410);
     expect(await logs()).toEqual([]);
   });
 
@@ -303,12 +287,10 @@ describe('auditoria (formato do histórico da tabela logs)', () => {
     });
   });
 
-  it('as gravações de negócio continuam as mesmas (log de consultas)', async () => {
+  it('o cadastro antigo de cidade não grava na tabela interna', async () => {
     await handleCidadesPost(
       evento('POST', '/api/v1/cidades', { nome: 'Porto', subdivisao_id: UUID_SUB })
     );
-    expect(sortedQueryLog(db.log)).toEqual([
-      `insert cidades [] {"nome":"Porto","subdivisao_id":"${UUID_SUB}","descricao":null}`
-    ]);
+    expect(sortedQueryLog(db.log)).toEqual([]);
   });
 });
