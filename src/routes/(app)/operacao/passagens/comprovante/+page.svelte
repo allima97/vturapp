@@ -192,8 +192,8 @@
 
 <style>
   .comprovante {
-    max-width: 800px;
-    margin: 0 auto;
+    box-sizing: border-box;
+    width: 100%;
     padding: 24px;
     color: #17233c;
     background: white;
@@ -314,8 +314,19 @@
     text-align: center;
   }
   .duracao span {
+    display: flex;
+    align-items: center;
+    width: 110px;
+    max-width: 100%;
     color: #0075ca;
     font-size: 18px;
+  }
+  .duracao span::before,
+  .duracao span::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: #cbd5e1;
   }
   .detalhes {
     display: grid;
