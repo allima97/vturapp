@@ -141,12 +141,19 @@ it('preserva registros existentes, compartilha por empresa e bloqueia quem não 
       )
     ).status
   ).toBe(400);
-  const updated = { ...payload, id, localizador: 'DEF456' };
+  const updated = {
+    ...payload,
+    id,
+    localizador: 'DEF456',
+    trechos: [
+      { ...payload.trechos[0], cidadeOrigem: 'Cidade Exemplo', cidadeDestino: 'Outra Cidade' }
+    ]
+  };
   expect((await handlePassagensPost(event('/api/v1/passagens', 'POST', updated))).status).toBe(200);
   expect(
     await (await handlePassagensGet(event(`/api/v1/passagens?id=${id}`))).json()
   ).toMatchObject({
-    item: { id, localizador: 'DEF456' }
+    item: { id, localizador: 'DEF456', trechos: updated.trechos }
   });
   expect((await handlePassagensDelete(event(`/api/v1/passagens?id=${id}`, 'DELETE'))).status).toBe(
     200

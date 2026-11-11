@@ -43,6 +43,10 @@ it('permite importar, revisar, salvar e abrir comprovante', async () => {
     )
   );
   expect(target.querySelector<HTMLInputElement>('#assento-0-0')?.value).toBe('17D');
+  const cidade = target.querySelector<HTMLInputElement>('#cidade-origem-0')!;
+  cidade.value = 'Cidade Exemplo';
+  cidade.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
   click(target, 'Salvar passagem');
   await vi.waitFor(() =>
     expect(api.fetch).toHaveBeenCalledWith(
@@ -51,6 +55,7 @@ it('permite importar, revisar, salvar e abrir comprovante', async () => {
         method: 'POST',
         body: expect.objectContaining({
           localizador: 'ABC123',
+          trechos: [expect.objectContaining({ cidadeOrigem: 'Cidade Exemplo' })],
           passageiros: [
             expect.objectContaining({ nome: 'SOBRENOME EXEMPLO, MARIA', assentos: ['17D'] })
           ]

@@ -1,26 +1,87 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
+  import {
+    loadAirportCodeCityLookup,
+    type AirportCodeCityLookup
+  } from '$lib/airportCodeCityLookup';
   import { apiFetch } from '$lib/services/api';
   import { toUserMessage } from '$lib/utils/errors';
-  import type { PassagemImportada } from '$lib/passagens/importacao';
+  import type { PassagemImportada, TrechoPassagem } from '$lib/passagens/importacao';
 
   let item: PassagemImportada | null = null;
+  let cidades: AirportCodeCityLookup = {};
+  let cidadesIndisponiveis = false;
   let error = '';
   let loading = true;
-  function formatarData(value: string) {
-    const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}:\d{2})$/.exec(value);
-    return match ? `${match[3]}/${match[2]}/${match[1]} — ${match[4]}` : value;
+
+  function cidade(codigo: string, informada?: string) {
+    return informada?.trim() || cidades[codigo.trim().toUpperCase()] || '';
   }
+
+  function aeroporto(codigo: string, informada?: string) {
+    const nome = cidade(codigo, informada);
+    return nome ? `${nome} (${codigo})` : codigo;
+  }
+
+  function data(value: string, completa = false) {
+    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+    if (!match) return value || 'Não informada';
+    const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+    return new Intl.DateTimeFormat('pt-BR', {
+      timeZone: 'UTC',
+      ...(completa ? { weekday: 'long' as const } : {}),
+      day: '2-digit',
+      month: completa ? ('long' as const) : ('short' as const),
+      year: 'numeric'
+    }).format(date);
+  }
+
+  function horario(value: string) {
+    return value.includes('T') ? value.split('T')[1] : '';
+  }
+
+  function tituloTrecho(trechos: TrechoPassagem[], indice: number) {
+    if (
+      trechos.length === 2 &&
+      trechos[0].origem.toUpperCase() === trechos[1].destino.toUpperCase() &&
+      trechos[0].destino.toUpperCase() === trechos[1].origem.toUpperCase()
+    )
+      return indice === 0 ? 'IDA' : 'VOLTA';
+    return `TRECHO ${indice + 1}`;
+  }
+
+  function destinoDaRota(trechos: TrechoPassagem[]) {
+    const retorno = trechos.findIndex(
+      (trecho, indice) =>
+        indice > 0 && trecho.destino.toUpperCase() === trechos[0].origem.toUpperCase()
+    );
+    return trechos[retorno > 0 ? retorno - 1 : trechos.length - 1];
+  }
+
+  function assentos(indice: number) {
+    return (
+      item?.passageiros
+        .map((p) => p.assentos[indice])
+        .filter(Boolean)
+        .join(', ') || 'Não informados'
+    );
+  }
+
   onMount(async () => {
     try {
       const id = $page.url.searchParams.get('id');
       if (!id) throw new Error('Identificação da passagem não informada.');
-      const response = await apiFetch<{ item: PassagemImportada }>('/api/v1/passagens', {
-        query: { id },
-        noCache: true,
-        redirectOnForbidden: false
-      });
+      const [response, lookup] = await Promise.all([
+        apiFetch<{ item: PassagemImportada }>('/api/v1/passagens', {
+          query: { id },
+          noCache: true,
+          redirectOnForbidden: false
+        }),
+        loadAirportCodeCityLookup()
+      ]);
+      cidades = lookup;
+      cidadesIndisponiveis = Object.keys(lookup).length === 0;
       item = response.item;
     } catch (err) {
       error = toUserMessage(err, 'Não foi possível carregar o comprovante.');
@@ -37,74 +98,104 @@
     <p role="alert">{error}</p>
   {:else if item}
     <div class="acoes">
+      {#if cidadesIndisponiveis}
+        <p role="status">
+          Não foi possível consultar as cidades dos aeroportos. Você pode informá-las ao editar a
+          passagem.
+        </p>
+      {/if}
       <button type="button" on:click={() => window.print()}>Imprimir / Salvar em PDF</button>
     </div>
-    <header>
-      <h1>COMPROVANTE DE VIAGEM</h1>
-      <p>
-        Companhia aérea: {[...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')}
-      </p>
-      <p class="pnr">CÓDIGO DE RESERVA (PNR): <strong>{item.localizador}</strong></p>
-      <p>Passageiros: {item.passageiros.length}</p>
-      {#if item.emissao}<p>Emissão: {item.emissao.split('-').reverse().join('/')}</p>{/if}
+    <header class="cabecalho">
+      <strong>{[...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')}</strong>
+      <span>COMPROVANTE DE VIAGEM</span>
     </header>
+    <div class="reserva">
+      <div>
+        <span class="rotulo">CÓDIGO DE RESERVA (PNR)</span>
+        <strong class="localizador">{item.localizador}</strong>
+      </div>
+      <div class="resumo">
+        <p>
+          <strong>Rota:</strong>
+          {aeroporto(item.trechos[0].origem, item.trechos[0].cidadeOrigem)} / {aeroporto(
+            destinoDaRota(item.trechos).destino,
+            destinoDaRota(item.trechos).cidadeDestino
+          )}
+        </p>
+        <p><strong>Passageiros:</strong> {item.passageiros.length}</p>
+        {#if item.emissao}<p><strong>Emissão:</strong> {data(item.emissao, true)}</p>{/if}
+      </div>
+    </div>
     <h2>ITINERÁRIO DE VOO</h2>
     {#each item.trechos as trecho, i}
-      <section>
-        <h3>TRECHO {i + 1} — {trecho.voo}</h3>
-        <div class="trajeto">
-          <div>
-            <strong>{trecho.origem}</strong>
-            <p>{formatarData(trecho.saida)}</p>
+      <section class="trecho">
+        <div class="trecho-cabecalho">
+          <strong>{tituloTrecho(item.trechos, i)} — {data(trecho.saida, true)}</strong>
+          <strong>Voo {trecho.voo}</strong>
+        </div>
+        <div class="trecho-corpo">
+          <div class="trajeto">
+            <div class="local">
+              <strong class="codigo">{trecho.origem}</strong>
+              <strong>{cidade(trecho.origem, trecho.cidadeOrigem) || 'Cidade não informada'}</strong
+              >
+              <p>{data(trecho.saida)} — <strong>{horario(trecho.saida)}</strong></p>
+            </div>
+            <div class="duracao">
+              <strong>DURAÇÃO: {trecho.duracao || 'Não informada'}</strong><span>✈</span>
+            </div>
+            <div class="local destino">
+              <strong class="codigo">{trecho.destino}</strong>
+              <strong
+                >{cidade(trecho.destino, trecho.cidadeDestino) || 'Cidade não informada'}</strong
+              >
+              <p>{data(trecho.chegada)} — <strong>{horario(trecho.chegada)}</strong></p>
+            </div>
           </div>
           <div class="detalhes">
-            <p>COMPANHIA: {trecho.companhia}</p>
-            <p>CLASSE: {trecho.classe || 'Não informada'}</p>
-            <p>DURAÇÃO: {trecho.duracao || 'Não informada'}</p>
-          </div>
-          <div>
-            <strong>{trecho.destino}</strong>
-            <p>{formatarData(trecho.chegada)}</p>
+            <div><span class="rotulo">COMPANHIA</span><strong>{trecho.companhia}</strong></div>
+            <div>
+              <span class="rotulo">CLASSE</span><strong>{trecho.classe || 'Não informada'}</strong>
+            </div>
+            <div><span class="rotulo">ASSENTOS</span><strong>{assentos(i)}</strong></div>
+            <div>
+              <span class="rotulo">STATUS DO VOO</span><strong
+                >{trecho.status || 'Não informado'}</strong
+              >
+            </div>
           </div>
         </div>
-        <p>STATUS: {trecho.status || 'Não informado'}</p>
       </section>
     {/each}
     <h2>PASSAGEIROS E BILHETES ELETRÔNICOS</h2>
     <table>
       <thead
-        ><tr
-          ><th>Nome do passageiro</th><th>Número do bilhete</th><th>Status</th><th
-            >Assentos por trecho</th
-          ></tr
+        ><tr><th>Nome do passageiro</th><th>Número do bilhete</th><th>Status do bilhete</th></tr
         ></thead
       >
-      <tbody
-        >{#each item.passageiros as passageiro}<tr
-            ><td>{passageiro.nome}</td><td>{passageiro.bilhete || 'Não informado'}</td><td
-              >{passageiro.status || 'Não informado'}</td
-            ><td
-              >{passageiro.assentos
-                .map((assento, i) => (assento ? `${i + 1}: ${assento}` : ''))
-                .filter(Boolean)
-                .join(' · ') || 'Não informados'}</td
-            ></tr
-          >{/each}</tbody
-      >
+      <tbody>
+        {#each item.passageiros as passageiro}
+          <tr
+            ><td><strong>{passageiro.nome}</strong></td><td
+              >{passageiro.bilhete || 'Não informado'}</td
+            ><td>{passageiro.status || 'Não informado'}</td></tr
+          >
+        {/each}
+      </tbody>
     </table>
     <footer>
-      Comprovante de viagem • PNR: {item.localizador}<br />Confira as informações e documentos
-      diretamente com a companhia aérea.
+      {[...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')} — Reserva: {item.localizador}
     </footer>
   {/if}
 </div>
 
 <style>
   .comprovante {
-    max-width: 860px;
+    max-width: 800px;
     margin: 0 auto;
     padding: 24px;
-    color: #172554;
+    color: #17233c;
     background: white;
     font-family: Arial, sans-serif;
     font-size: 13px;
@@ -113,55 +204,130 @@
     text-align: right;
     margin-bottom: 20px;
   }
+  .acoes p {
+    color: #92400e;
+  }
   .acoes button {
     padding: 9px 14px;
-    border: 1px solid #1e3a8a;
+    border: 1px solid #0075ca;
     border-radius: 6px;
     cursor: pointer;
   }
-  header {
-    border-top: 6px solid #1e3a8a;
-    border-bottom: 1px solid #cbd5e1;
-    padding: 15px 0;
+  .cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    border-bottom: 2px solid #0075ca;
+    padding-bottom: 14px;
   }
-  h1 {
-    font-size: 19px;
-    margin: 0 0 12px;
+  .cabecalho strong {
+    color: #0075ca;
+    font-size: 22px;
+    text-transform: uppercase;
   }
-  h2 {
+  .cabecalho span {
+    color: #475569;
     font-size: 14px;
-    background: #e8eef8;
-    padding: 10px;
-    margin-top: 22px;
+    font-weight: bold;
+    text-align: right;
   }
-  h3 {
-    font-size: 13px;
-    color: #1e3a8a;
+  .reserva {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    background: #f6f8fb;
+    border: 1px solid #cbd5e1;
+    border-left: 4px solid #0075ca;
+    border-radius: 4px;
+    padding: 14px 18px;
+    margin-top: 18px;
+  }
+  .rotulo {
+    display: block;
+    color: #64748b;
+    font-size: 10px;
+    font-weight: bold;
+  }
+  .localizador {
+    display: block;
+    font-size: 26px;
+    letter-spacing: 1px;
+  }
+  .resumo {
+    text-align: right;
   }
   p {
-    margin: 6px 0;
+    margin: 3px 0;
   }
-  .pnr strong {
-    font-size: 20px;
+  h2 {
+    font-size: 15px;
+    border-bottom: 1px solid #dbe3ec;
+    padding-bottom: 7px;
+    margin: 20px 0 10px;
   }
-  section {
-    border: 1px solid #d5deeb;
+  .trecho {
+    border: 1px solid #cbd5e1;
     border-radius: 5px;
-    padding: 12px;
-    margin: 10px 0;
+    margin-bottom: 12px;
     break-inside: avoid;
+    overflow: hidden;
+  }
+  .trecho-cabecalho {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 14px;
+    background: #101b33;
+    color: white;
+  }
+  .trecho-corpo {
+    padding: 12px 14px;
   }
   .trajeto {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr auto 1fr;
     gap: 12px;
-    align-items: start;
+    align-items: center;
   }
-  .trajeto strong {
-    font-size: 19px;
+  .local > strong {
+    display: block;
+  }
+  .codigo {
+    color: #0075ca;
+    font-size: 22px;
+  }
+  .local p {
+    margin-top: 5px;
+    color: #475569;
+  }
+  .destino {
+    text-align: right;
+  }
+  .duracao {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: #64748b;
+    font-size: 10px;
+    text-align: center;
+  }
+  .duracao span {
+    color: #0075ca;
+    font-size: 18px;
   }
   .detalhes {
-    font-size: 11px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    border-top: 1px dashed #dbe3ec;
+    margin-top: 12px;
+    padding-top: 10px;
+  }
+  .detalhes strong {
+    display: block;
+    overflow-wrap: anywhere;
   }
   table {
     width: 100%;
@@ -169,21 +335,38 @@
   }
   th,
   td {
-    padding: 9px;
+    padding: 9px 10px;
     text-align: left;
-    border-bottom: 1px solid #d5deeb;
+    border-bottom: 1px solid #dbe3ec;
     overflow-wrap: anywhere;
   }
   th {
     background: #f1f5f9;
-    font-size: 11px;
+    color: #334155;
+    font-size: 10px;
     text-transform: uppercase;
   }
+  tr {
+    break-inside: avoid;
+  }
   footer {
-    margin-top: 28px;
-    padding-top: 10px;
-    border-top: 1px solid #cbd5e1;
+    margin-top: 32px;
+    padding-top: 12px;
+    border-top: 1px solid #dbe3ec;
+    color: #64748b;
     font-size: 11px;
+  }
+  @media (max-width: 600px) {
+    .cabecalho,
+    .reserva {
+      flex-wrap: wrap;
+    }
+    .resumo {
+      text-align: left;
+    }
+    .detalhes {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
   @media print {
     :global(body *) {
@@ -203,6 +386,8 @@
       width: 100%;
       padding: 0;
       max-width: none;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
     }
   }
 </style>

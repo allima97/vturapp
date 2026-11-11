@@ -10,6 +10,10 @@
   import { apiFetch, ApiError } from '$lib/services/api';
   import { toUserMessage } from '$lib/utils/errors';
   import {
+    loadAirportCodeCityLookup,
+    type AirportCodeCityLookup
+  } from '$lib/airportCodeCityLookup';
+  import {
     importarTextoPassagem,
     type PassagemImportada,
     type TrechoPassagem,
@@ -29,6 +33,8 @@
     voo: '',
     origem: '',
     destino: '',
+    cidadeOrigem: '',
+    cidadeDestino: '',
     saida: '',
     chegada: '',
     status: '',
@@ -53,6 +59,8 @@
   let loading = true;
   let saving = false;
   let error = '';
+  let cidades: AirportCodeCityLookup = {};
+  let cidadesIndisponiveis = false;
 
   async function carregar() {
     loading = true;
@@ -74,7 +82,17 @@
       loading = false;
     }
   }
-  onMount(carregar);
+  onMount(() => {
+    void carregar();
+    void loadAirportCodeCityLookup().then((lookup) => {
+      cidades = lookup;
+      cidadesIndisponiveis = Object.keys(lookup).length === 0;
+    });
+  });
+
+  function cidadeSugerida(codigo: string) {
+    return cidades[codigo.trim().toUpperCase()] || '';
+  }
 
   function novo() {
     id = '';
@@ -128,7 +146,11 @@
       form = {
         localizador: result.item.localizador,
         emissao: result.item.emissao,
-        trechos: result.item.trechos,
+        trechos: result.item.trechos.map((trecho) => ({
+          ...trecho,
+          cidadeOrigem: trecho.cidadeOrigem || '',
+          cidadeDestino: trecho.cidadeDestino || ''
+        })),
         passageiros: result.item.passageiros.map((passageiro) => ({
           ...passageiro,
           assentos: result.item.trechos.map((_, indice) => passageiro.assentos[indice] || '')
@@ -275,6 +297,12 @@
           bind:value={form.emissao}
         />
         <section class="space-y-3">
+          {#if cidadesIndisponiveis}
+            <p role="status" class="text-sm text-amber-700">
+              Não foi possível consultar as cidades dos aeroportos. Informe-as manualmente nos
+              trechos.
+            </p>
+          {/if}
           <div class="flex flex-wrap items-center justify-between gap-3">
             <h3 class="font-semibold text-slate-900">Trechos de voo</h3>
             <Button variant="secondary" size="sm" on:click={adicionarTrecho}
@@ -298,12 +326,31 @@
                 />
                 <FieldInput id={`voo-${i}`} label="Voo" bind:value={trecho.voo} required />
                 <FieldInput id={`classe-${i}`} label="Classe" bind:value={trecho.classe} />
-                <FieldInput id={`origem-${i}`} label="Origem" bind:value={trecho.origem} required />
+                <FieldInput
+                  id={`origem-${i}`}
+                  label="Aeroporto de origem"
+                  bind:value={trecho.origem}
+                  required
+                />
+                <FieldInput
+                  id={`cidade-origem-${i}`}
+                  label="Cidade de origem"
+                  bind:value={trecho.cidadeOrigem}
+                  placeholder={cidadeSugerida(trecho.origem) || 'Informe a cidade'}
+                  helper="Deixe vazio para usar a cidade sugerida pelo código do aeroporto."
+                />
                 <FieldInput
                   id={`destino-${i}`}
-                  label="Destino"
+                  label="Aeroporto de destino"
                   bind:value={trecho.destino}
                   required
+                />
+                <FieldInput
+                  id={`cidade-destino-${i}`}
+                  label="Cidade de destino"
+                  bind:value={trecho.cidadeDestino}
+                  placeholder={cidadeSugerida(trecho.destino) || 'Informe a cidade'}
+                  helper="Deixe vazio para usar a cidade sugerida pelo código do aeroporto."
                 />
                 <FieldInput
                   id={`duracao-${i}`}

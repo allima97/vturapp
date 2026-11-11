@@ -3,6 +3,8 @@ export type TrechoPassagem = {
   voo: string;
   origem: string;
   destino: string;
+  cidadeOrigem?: string;
+  cidadeDestino?: string;
   saida: string;
   chegada: string;
   status: string;

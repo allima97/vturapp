@@ -92,6 +92,8 @@ function validar(body: unknown) {
     if (values.some((value) => value === null) || values.slice(0, 6).some((value) => !value))
       return null;
     const [companhia, voo, origem, destino, saida, chegada, status, duracao, classe] = values;
+    const cidadeOrigem = texto(item.cidadeOrigem ?? '', 150);
+    const cidadeDestino = texto(item.cidadeDestino ?? '', 150);
     if (
       !companhia ||
       !voo ||
@@ -101,11 +103,25 @@ function validar(body: unknown) {
       !chegada ||
       status === null ||
       duracao === null ||
-      classe === null
+      classe === null ||
+      cidadeOrigem === null ||
+      cidadeDestino === null
     )
       return null;
     if (!dataHoraValida(saida) || !dataHoraValida(chegada)) return null;
-    trechos.push({ companhia, voo, origem, destino, saida, chegada, status, duracao, classe });
+    trechos.push({
+      companhia,
+      voo,
+      origem,
+      destino,
+      saida,
+      chegada,
+      status,
+      duracao,
+      classe,
+      cidadeOrigem,
+      cidadeDestino
+    });
   }
   const passageiros = [];
   for (const raw of input.passageiros) {
