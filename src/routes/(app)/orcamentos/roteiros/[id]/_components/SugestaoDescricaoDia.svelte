@@ -34,7 +34,13 @@
       limite: '8'
     });
     if (termo.trim()) params.set('q', termo.trim());
-    const response = await fetch(`/api/v1/roteiros/descricoes-dia?${params}`);
+    let response: Response;
+    try {
+      response = await fetch(`/api/v1/roteiros/descricoes-dia?${params}`);
+    } catch {
+      erro = 'Não foi possível carregar as descrições salvas.';
+      return;
+    }
     if (!response.ok) {
       erro = 'Não foi possível carregar as descrições salvas.';
       return;
@@ -127,6 +133,9 @@
     {#if aberto}
       <div
         class="absolute z-20 mt-1 w-full min-w-64 rounded-md border border-slate-200 bg-white p-2 shadow-md"
+        role="dialog"
+        aria-label="Descrições salvas"
+        tabindex="0"
         onkeydown={teclado}
       >
         <label class="sr-only" for={buscaId}>Buscar nas descrições salvas</label>

@@ -173,7 +173,7 @@ describe('cidades cadastradas para roteiros', () => {
     ).toMatchObject({
       ok: false,
       status: 400,
-      error: expect.stringContaining('não corresponde ao cadastro')
+      error: expect.stringContaining('não é salvo só com o nome da cidade')
     });
   });
 });
