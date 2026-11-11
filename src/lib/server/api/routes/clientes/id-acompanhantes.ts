@@ -81,12 +81,15 @@ export async function handleClientesIdAcompanhantesPost(event: RequestEvent) {
       .eq('id', clienteId)
       .maybeSingle();
     if (clienteError) throw clienteError;
+    if (!clienteRow) {
+      return json({ error: 'Cliente não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
+    }
 
     const { data, error } = await client
       .from('cliente_acompanhantes')
       .insert({
         cliente_id: clienteId,
-        company_id: clienteRow?.company_id || scope.companyId || scope.companyIds[0] || null,
+        company_id: clienteRow.company_id || scope.companyId || scope.companyIds[0] || null,
         nome_completo: nomeCompleto,
         cpf: String(body?.cpf || '').replace(/\D/g, '') || null,
         telefone: String(body?.telefone || '').trim() || null,

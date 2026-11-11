@@ -72,6 +72,14 @@ import { handleClientesListGet } from './list';
 import { handleClientesResolveImportPost } from './resolve-import';
 import { handleClientesAvisosHistoryGet } from './avisos-history';
 import { handleClientesAvisosSendGet, handleClientesAvisosSendPost } from './avisos-send';
+import {
+  handleClientesIdAcompanhantesGet,
+  handleClientesIdAcompanhantesPost
+} from './id-acompanhantes';
+import {
+  handleClientesIdAcompanhantesAcompanhanteIdPatch,
+  handleClientesIdAcompanhantesAcompanhanteIdDelete
+} from './id-acompanhantes-acompanhanteId';
 import { handleOrcamentosClienteCreatePost } from '../orcamentos/cliente-create';
 import { ensureClienteAccess } from '$lib/server/clientes';
 import type { UserScope } from '$lib/server/v1';
@@ -197,6 +205,59 @@ it('atualiza imediatamente os IDs acessíveis para usuários sem empresa', async
     .bind(newId, 'Novo cliente', owner)
     .run();
   await expect(resolveRealAccessibleClientIds(state.client!, params)).resolves.toContain(newId);
+});
+
+it('permite gerenciar acompanhantes de cliente individual sem empresa e protege acesso', async () => {
+  state.userId = owner;
+  const clienteId = crypto.randomUUID();
+  await env.DB.prepare('INSERT INTO legado_clientes (id, nome, created_by) VALUES (?, ?, ?)')
+    .bind(clienteId, 'Cliente individual', owner)
+    .run();
+  const request = (method: string, body?: object, acompanhanteId?: string) => {
+    const result = event(`/api/v1/clientes/${clienteId}/acompanhantes`, method, body);
+    result.params = { id: clienteId, ...(acompanhanteId ? { acompanhanteId } : {}) };
+    return result;
+  };
+  const created = await handleClientesIdAcompanhantesPost(
+    request('POST', { nome_completo: 'Acompanhante' })
+  );
+  expect(created.status, await created.clone().text()).toBe(200);
+  const result = await created.json<{ item: { id: string; company_id: string | null } }>();
+  expect(result.item.company_id).toBeNull();
+  const list = await handleClientesIdAcompanhantesGet(request('GET'));
+  expect(await list.json()).toMatchObject({ items: [{ id: result.item.id, company_id: null }] });
+  state.userId = other;
+  expect((await handleClientesIdAcompanhantesGet(request('GET'))).status).toBe(403);
+  expect(
+    (await handleClientesIdAcompanhantesPost(request('POST', { nome_completo: 'Outro' }))).status
+  ).toBe(403);
+  expect(
+    (
+      await handleClientesIdAcompanhantesAcompanhanteIdPatch(
+        request('PATCH', { nome_completo: 'Outro' }, result.item.id)
+      )
+    ).status
+  ).toBe(403);
+  expect(
+    (
+      await handleClientesIdAcompanhantesAcompanhanteIdDelete(
+        request('DELETE', undefined, result.item.id)
+      )
+    ).status
+  ).toBe(403);
+  state.userId = owner;
+  const updated = await handleClientesIdAcompanhantesAcompanhanteIdPatch(
+    request('PATCH', { nome_completo: 'Nome atualizado' }, result.item.id)
+  );
+  expect(updated.status, await updated.clone().text()).toBe(200);
+  expect(await updated.json()).toMatchObject({ item: { nome_completo: 'Nome Atualizado' } });
+  const removed = await handleClientesIdAcompanhantesAcompanhanteIdDelete(
+    request('DELETE', undefined, result.item.id)
+  );
+  expect(removed.status, await removed.clone().text()).toBe(200);
+  expect(await (await handleClientesIdAcompanhantesGet(request('GET'))).json()).toEqual({
+    items: []
+  });
 });
 
 it('associa ao usuário individual clientes criados no orçamento ou importação', async () => {
