@@ -14,6 +14,7 @@
   import { construirLinkWhatsApp } from '$lib/whatsapp';
   import {
     ArrowLeft,
+    Award,
     Calendar,
     Cake,
     Edit,
@@ -408,7 +409,7 @@
       <div class="space-y-4">
         {#if linkWhatsApp || telefoneDigitos || cliente.email}
           <div
-            class="flex flex-wrap justify-end gap-2"
+            class="flex flex-wrap justify-end gap-4"
             aria-label="Falar com o cliente"
             role="group"
           >
@@ -499,7 +500,7 @@
           </div>
           <div
             class="grid grid-cols-2 gap-x-4 gap-y-3 lg:grid-cols-4"
-            aria-label="Contatos do cliente"
+            aria-label="Contatos e classificação do cliente"
           >
             <div class="flex min-w-0 items-start gap-3">
               <div
@@ -532,6 +533,17 @@
               <div class="min-w-0">
                 <p class="text-sm text-slate-500">E-mail</p>
                 <p class="font-medium break-words text-slate-900">{cliente.email || '-'}</p>
+              </div>
+            </div>
+            <div class="flex min-w-0 items-start gap-3">
+              <div
+                class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+              >
+                <Award size={18} class="text-clientes-600" aria-hidden="true" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm text-slate-500">Classificação</p>
+                <p class="font-medium break-words text-slate-900">{cliente.classificacao || '-'}</p>
               </div>
             </div>
           </div>

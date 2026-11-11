@@ -66,6 +66,7 @@ it('mostra as seções em abas na ordem solicitada e abre apenas a aba seleciona
       nascimento: '1990-01-01',
       genero: 'Feminino',
       nacionalidade: 'Brasileira',
+      classificacao: 'A',
       notas: 'Nota preservada'
     };
   });
@@ -94,7 +95,6 @@ it('mostra as seções em abas na ordem solicitada e abre apenas a aba seleciona
   expect(summary).toBeTruthy();
   expect(buttons[0].getAttribute('aria-selected')).toBe('true');
   const resumo = target.querySelector<HTMLElement>('#cliente-panel-resumo')!;
-  expect(resumo.textContent).not.toContain('Classificacao');
   expect(resumo.textContent).not.toContain('Ultima compra');
   expect(resumo.textContent).not.toContain('Prospect');
   expect(target.textContent).toContain('Última compra');
@@ -109,7 +109,7 @@ it('mostra as seções em abas na ordem solicitada e abre apenas a aba seleciona
   expect(endereco.compareDocumentPosition(tags) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   const dados = target.querySelector('[aria-label="Dados do cliente"]')!;
   const pessoais = dados.querySelector('[aria-label="Dados pessoais"]')!;
-  const contatos = dados.querySelector('[aria-label="Contatos do cliente"]')!;
+  const contatos = dados.querySelector('[aria-label="Contatos e classificação do cliente"]')!;
   for (const group of [pessoais, contatos]) {
     expect(group.classList.contains('grid-cols-2')).toBe(true);
     expect(group.classList.contains('lg:grid-cols-4')).toBe(true);
@@ -126,8 +126,13 @@ it('mostra as seções em abas na ordem solicitada e abre apenas a aba seleciona
   expect([...contatos.children].map((item) => item.querySelector('p')?.textContent)).toEqual([
     'Telefone',
     'WhatsApp',
-    'E-mail'
+    'E-mail',
+    'Classificação'
   ]);
+  expect(contatos.lastElementChild?.textContent).toContain('A');
+  expect(
+    target.querySelector('[aria-label="Falar com o cliente"]')?.classList.contains('gap-4')
+  ).toBe(true);
   expect(
     pessoais.compareDocumentPosition(contatos) & Node.DOCUMENT_POSITION_FOLLOWING
   ).toBeTruthy();
