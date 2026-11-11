@@ -25,6 +25,9 @@ vi.mock('./root', () => ({
 vi.mock('./id', () => ({ handleRoteirosIdGet: spy('handleRoteirosIdGet') }));
 vi.mock('./delete', () => ({ handleRoteirosDeleteDelete: spy('handleRoteirosDeleteDelete') }));
 vi.mock('./dias-busca', () => ({ handleRoteirosDiasBuscaGet: spy('handleRoteirosDiasBuscaGet') }));
+vi.mock('./descricoes-dia', () => ({
+  handleRoteirosDescricoesDiaGet: spy('handleRoteirosDescricoesDiaGet')
+}));
 vi.mock('./cidades-busca', () => ({
   handleRoteirosCidadesBuscaGet: spy('handleRoteirosCidadesBuscaGet')
 }));
@@ -54,6 +57,7 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/roteiros/id-123', 'handleRoteirosIdGet', { id: 'id-123' }],
   ['DELETE', '/api/v1/roteiros/delete', 'handleRoteirosDeleteDelete', {}],
   ['GET', '/api/v1/roteiros/dias-busca', 'handleRoteirosDiasBuscaGet', {}],
+  ['GET', '/api/v1/roteiros/descricoes-dia', 'handleRoteirosDescricoesDiaGet', {}],
   ['GET', '/api/v1/roteiros/cidades-busca', 'handleRoteirosCidadesBuscaGet', {}],
   ['POST', '/api/v1/roteiros/gerar-orcamento', 'handleRoteirosGerarOrcamentoPost', {}],
   ['GET', '/api/v1/roteiros/list', 'handleRoteirosListGet', {}],
@@ -68,6 +72,7 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/roteiros/id-123'],
   ['PUT', '/api/v1/roteiros/delete'],
   ['PUT', '/api/v1/roteiros/dias-busca'],
+  ['PUT', '/api/v1/roteiros/descricoes-dia'],
   ['PUT', '/api/v1/roteiros/gerar-orcamento'],
   ['PUT', '/api/v1/roteiros/list'],
   ['PUT', '/api/v1/roteiros/save'],

@@ -5,11 +5,14 @@ import { createDataClient } from './query';
 
 it('preserva registros existentes e permite acessar identidades após a migração', async () => {
   const migrations = env.TEST_MIGRATIONS;
-  const migration = migrations.find((item) => item.name.startsWith('0020_'));
-  if (!migration) throw new Error('Migração 0020 não encontrada.');
+  const posteriores = migrations.filter(
+    (item) => item.name.startsWith('0020_') || item.name.startsWith('0025_')
+  );
+  if (!posteriores.some((item) => item.name.startsWith('0020_')))
+    throw new Error('Migração 0020 não encontrada.');
   await applyD1Migrations(
     env.DB,
-    migrations.filter((item) => !item.name.startsWith('0020_'))
+    migrations.filter((item) => !item.name.startsWith('0020_') && !item.name.startsWith('0025_'))
   );
   const roteiro = crypto.randomUUID();
   const owner = crypto.randomUUID();
@@ -34,7 +37,7 @@ it('preserva registros existentes e permite acessar identidades após a migraç�
       "INSERT INTO catalogo_opcionais (id, cidade, cidade_chave, nome) VALUES (?, 'Roma', 'roma', 'Passeio')"
     ).bind(opcional)
   ]);
-  await applyD1Migrations(env.DB, [migration]);
+  await applyD1Migrations(env.DB, posteriores);
 
   const client = createDataClient({
     db: env.DB,

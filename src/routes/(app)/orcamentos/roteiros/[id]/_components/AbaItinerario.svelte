@@ -4,6 +4,7 @@
   import Card from '$lib/components/ui/Card.svelte';
   import { type RotDia, addItem, moveDown, moveUp, newDia, removeItem } from './tipos';
   import CidadeRoteiro from './CidadeRoteiro.svelte';
+  import SugestaoDescricaoDia from './SugestaoDescricaoDia.svelte';
   import { ChevronDown, ChevronUp, FileText, Plus, Trash2 } from '$lib/icons';
 
   let {
@@ -97,12 +98,19 @@
                   class_name="w-full"
                 />
                 <FieldInput label="Data" type="date" bind:value={dia.data} class_name="w-full" />
-                <FieldInput
-                  label="Descrição"
-                  bind:value={dia.descricao}
-                  placeholder="Atividades do dia"
-                  class_name="w-full"
-                />
+                <div>
+                  <FieldInput
+                    label="Descrição"
+                    bind:value={dia.descricao}
+                    placeholder="Atividades do dia"
+                    class_name="w-full"
+                  />
+                  <SugestaoDescricaoDia
+                    bind:descricao={dia.descricao}
+                    cidadeId={dia.cidade_id}
+                    fieldId={`dia-descricao-${index}`}
+                  />
+                </div>
               </div>
             </details>
             <div class="flex items-center gap-1">

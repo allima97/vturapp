@@ -41,6 +41,18 @@ Atualize-o a cada etapa, distinguindo validação local de alterações remotas.
   pedido no formulário e na importação em lote. Não houve `DROP` nem `DELETE`.
 - Endereços de clientes, perfil e empresas preenchidos por CEP estão fora do
   escopo e devem permanecer intactos.
+- Descrições salvas do dia vêm de `legado_roteiro_dia.descricao` (escopo da
+  empresa) e de `legado_circuito_dias.descricao`, ligada à cidade por
+  `legado_circuito_dias_cidades` e `legado_cidades.destino_geografico_id`.
+  A correspondência é só a identidade `geonames:` ou `personalizado:`. Não há
+  fallback por nome. A migração `0025` só cria índices. Ela não foi aplicada
+  em staging nem em produção daqui.
+- Dia novo de roteiro, com o modo geográfico ligado, só grava se a cidade
+  estiver vinculada. O formulário de circuito ainda não persiste dias: o
+  envio mostra um aviso e não grava `legado_circuito_dias`.
+- O autocomplete do GeoNames já restringe a busca longa à classe `P`. A busca
+  curta passou a exigir `feature_class = 'P'` também. A classe e a população
+  ficam só no `GEO_DB`, não em `legado_cidades`. Nenhum `DELETE` foi executado.
 
 ## Pendências antes da ativação
 

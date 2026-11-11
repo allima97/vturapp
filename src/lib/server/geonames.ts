@@ -73,7 +73,8 @@ export async function searchGeoNames(
       .prepare(
         `SELECT p.id, p.name, p.country_code, p.admin1, p.admin2, p.population
            FROM short_search s JOIN place p ON p.id = s.place_id
-           WHERE s.prefix = ? ORDER BY s.rank LIMIT ? OFFSET ?`
+           WHERE s.prefix = ? AND p.feature_class = 'P'
+           ORDER BY s.rank LIMIT ? OFFSET ?`
       )
       .bind(term, limit, offset)
       .all<PlaceRow>();
