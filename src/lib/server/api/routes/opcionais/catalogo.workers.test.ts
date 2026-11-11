@@ -89,6 +89,22 @@ describe('catálogo global de opcionais no D1', () => {
       })
     );
     expect(otherCity.status).toBe(200);
+    const nomeBusca = await handleOpcionaisGet(event('GET', '?nome=bel%C3%A9m'));
+    expect(await nomeBusca.json()).toMatchObject({ items: [item], hasMore: false });
+    for (const termo of ['portugal', 'Belém', 'bairro']) {
+      const resultado = await handleOpcionaisGet(event('GET', `?q=${encodeURIComponent(termo)}`));
+      expect(await resultado.json()).toMatchObject({ items: [item], hasMore: false });
+    }
+    expect(await (await handleOpcionaisGet(event('GET', '?q=%25'))).json()).toMatchObject({
+      items: []
+    });
+    const nomeCidadeBusca = await handleOpcionaisGet(
+      event('GET', '?cidade=Lisboa%2C%20Ohio%2C%20Estados%20Unidos&nome=Bel%C3%A9m')
+    );
+    expect(await nomeCidadeBusca.json()).toMatchObject({ items: [] });
+    expect(await (await handleOpcionaisGet(event('GET', '?nome=%25'))).json()).toMatchObject({
+      items: []
+    });
     const snapshot = { nome: item.nome, descricao: item.descricao };
     const roteiroId = crypto.randomUUID();
     await env.DB.prepare(
@@ -194,6 +210,14 @@ describe('catálogo global de opcionais no D1', () => {
     expect(
       await (await handleOpcionaisGet(event('GET', '?cidade_id=geonames%3A1'))).json()
     ).toMatchObject({ items: [item] });
+    expect(
+      await (await handleOpcionaisGet(event('GET', '?q=Roma%2C%20Italy'))).json()
+    ).toMatchObject({ items: [item] });
+    expect(
+      await (
+        await handleOpcionaisGet(event('GET', '?cidade_id=geonames%3A2&q=Roma%2C%20Italy'))
+      ).json()
+    ).toMatchObject({ items: [] });
     expect(
       await (await handleOpcionaisGet(event('GET', '?cidade=Roma%2C%20Italy'))).json()
     ).toMatchObject({ items: [] });

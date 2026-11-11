@@ -37,6 +37,68 @@ Mais uma linha.`;
       { cidadeOriginal: '', passeios: [{ nome: 'Passeio', descricao: 'Descrição' }] }
     ]);
   });
+  it('interpreta títulos e descrições em linhas alternadas, com ou sem linhas em branco', () => {
+    expect(
+      parseImportacaoOpcionais(
+        '\uFEFFPasseio Gótico\r\n \r\nVisita ao bairro\r\n\r\nFlamenco\r\n\r\nEspetáculo\r\n',
+        'cidade'
+      )
+    ).toEqual([
+      {
+        cidadeOriginal: '',
+        passeios: [
+          { nome: 'Passeio Gótico', descricao: 'Visita ao bairro' },
+          { nome: 'Flamenco', descricao: 'Espetáculo' }
+        ]
+      }
+    ]);
+  });
+  it('aceita pares simples em várias cidades e mantém o formato anterior em outro grupo', () => {
+    expect(
+      parseImportacaoOpcionais(
+        '## Lisboa\nBelém\n\nPasseio de barco\n## Porto\n#### Ribeira\n##### Primeira linha\nSegunda linha',
+        'arquivo'
+      )
+    ).toEqual([
+      {
+        cidadeOriginal: 'Lisboa',
+        passeios: [{ nome: 'Belém', descricao: 'Passeio de barco' }]
+      },
+      {
+        cidadeOriginal: 'Porto',
+        passeios: [{ nome: 'Ribeira', descricao: 'Primeira linha\nSegunda linha' }]
+      }
+    ]);
+  });
+  it('rejeita títulos simples sem descrição e formatos misturados no mesmo grupo', () => {
+    expect(() => parseImportacaoOpcionais('Passeio', 'cidade')).toThrow('Linha 1');
+    expect(() => parseImportacaoOpcionais('Passeio\n\n', 'cidade')).toThrow(
+      'descrição após o título'
+    );
+    expect(() => parseImportacaoOpcionais('## Lisboa\nPasseio\n## Porto', 'arquivo')).toThrow(
+      'Linha 2'
+    );
+    expect(() => parseImportacaoOpcionais('Tour\nDescrição\n#### Outro', 'cidade')).toThrow(
+      'não misture formatos'
+    );
+  });
+  it('aplica limites também ao formato simples', () => {
+    expect(() =>
+      parseImportacaoOpcionais(
+        Array.from({ length: 101 }, (_, i) => `Passeio ${i}\nDescrição`).join('\n'),
+        'cidade'
+      )
+    ).toThrow('até 100');
+    expect(() => parseImportacaoOpcionais(`${'x'.repeat(301)}\nDescrição`, 'cidade')).toThrow(
+      'nome do passeio inválido'
+    );
+    expect(() => parseImportacaoOpcionais(`Passeio\n${'x'.repeat(20001)}`, 'cidade')).toThrow(
+      'descrição excede'
+    );
+    expect(() => parseImportacaoOpcionais(`Passeio\n\n${'x'.repeat(20001)}`, 'cidade')).toThrow(
+      'Linha 3: descrição excede'
+    );
+  });
   it('preserva parágrafos de descrições com várias linhas', () => {
     const result = parseImportacaoOpcionais(
       '#### Passeio\n##### Primeiro parágrafo.\n\nSegundo parágrafo.',

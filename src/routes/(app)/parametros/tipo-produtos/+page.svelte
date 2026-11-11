@@ -41,12 +41,15 @@
   }
 
   const TIPOS = [
-    { value: 'servico', label: 'Serviço' },
+    { value: 'servico', label: 'Passeio' },
     { value: 'pacote', label: 'Pacote' },
     { value: 'hotel', label: 'Hotel' },
     { value: 'aereo', label: 'Aéreo' },
     { value: 'seguro', label: 'Seguro' },
     { value: 'transfer', label: 'Transfer' },
+    { value: 'rodoviario', label: 'Rodoviário' },
+    { value: 'ingresso', label: 'Ingresso' },
+    { value: 'show', label: 'Show' },
     { value: 'cruzeiro', label: 'Cruzeiro' },
     { value: 'outro', label: 'Outro' }
   ];

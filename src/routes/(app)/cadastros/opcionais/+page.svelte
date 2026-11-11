@@ -1,9 +1,11 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onDestroy } from 'svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
+  import Dialog from '$lib/components/ui/Dialog.svelte';
   import { FieldInput, FieldTextarea } from '$lib/components/ui';
+  import { Plus, Search } from '$lib/icons';
   import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
   import SeletorDestinoGeografico from '$lib/components/SeletorDestinoGeografico.svelte';
   import { catalogoGeograficoAtivo } from '$lib/config/destinosGeograficos';
@@ -11,38 +13,58 @@
   import { toast } from '$lib/stores/ui';
   import { confirmAction } from '$lib/stores/confirm';
   import { toUserMessage } from '$lib/utils/errors';
+  import { createDebouncedReloader } from '$lib/utils/autoReload';
   import type { OpcionalCatalogo } from '$lib/catalogoOpcionais';
   import ImportarOpcionais from './ImportarOpcionais.svelte';
+  import CadastroLoteOpcionais from './CadastroLoteOpcionais.svelte';
 
   let items: OpcionalCatalogo[] = [];
-  let cidadeFiltro = '';
-  let cidadeFiltroId = '';
-  let filtroValido = false;
-  let filtroLegado = false;
+  let busca = '';
   let form = { id: '', cidade: '', cidade_id: '', nome: '', descricao: '' };
   let destinoValido = false;
   let loading = false;
   let saving = false;
+  let modalOpen = false;
+  let loteOpen = false;
+  let importacaoOpen = false;
+  let importando = false;
   let pagina = 1;
   let temMais = false;
+  let erroBusca = '';
   let sequencia = 0;
+  let filtroAplicado = '';
+  const buscaAutomatica = createDebouncedReloader(() => pesquisar(), 300);
 
-  async function load(page = 1) {
-    if (catalogoGeograficoAtivo && !filtroLegado && cidadeFiltro.trim() && !filtroValido) {
-      toast.error('Selecione uma cidade na lista para filtrar.');
+  function limparResultados() {
+    sequencia++;
+    items = [];
+    temMais = false;
+    pagina = 1;
+    loading = false;
+    erroBusca = '';
+    filtroAplicado = '';
+  }
+
+  function pesquisar() {
+    if (Array.from(busca.trim()).length < 2) {
+      limparResultados();
       return;
     }
+    filtroAplicado = busca.trim();
+    void load();
+  }
+
+  async function load(page = 1) {
+    if (!filtroAplicado) return;
     const seq = ++sequencia;
     loading = true;
+    erroBusca = '';
     try {
       const result = await apiFetch<{ items: OpcionalCatalogo[]; hasMore: boolean }>(
         '/api/v1/opcionais',
         {
           query: {
-            cidade: catalogoGeograficoAtivo && !filtroLegado ? '' : cidadeFiltro,
-            ...(catalogoGeograficoAtivo && !filtroLegado && cidadeFiltroId
-              ? { cidade_id: cidadeFiltroId }
-              : {}),
+            q: filtroAplicado,
             pagina: page
           },
           noCache: true
@@ -54,7 +76,10 @@
       pagina = page;
     } catch (err) {
       if (seq !== sequencia) return;
-      toast.error(toUserMessage(err, 'Erro ao carregar opcionais.'));
+      items = [];
+      temMais = false;
+      erroBusca = toUserMessage(err, 'Erro ao carregar opcionais.');
+      toast.error(erroBusca);
     } finally {
       if (seq === sequencia) loading = false;
     }
@@ -82,6 +107,7 @@
         cidade_id: catalogoGeograficoAtivo ? form.cidade_id : undefined
       });
       toast.success('Opcional salvo no catálogo compartilhado.');
+      modalOpen = false;
       limpar();
       await load();
     } catch (err) {
@@ -108,8 +134,9 @@
     }
   }
 
-  onMount(() => {
-    void load();
+  onDestroy(() => {
+    buscaAutomatica.cancel();
+    sequencia++;
   });
 </script>
 
@@ -119,13 +146,67 @@
   title="Passeios Opcionais"
   subtitle="Catálogo compartilhado de passeios por cidade."
   breadcrumbs={[{ label: 'Cadastros', href: '/cadastros' }, { label: 'Passeios Opcionais' }]}
+  actions={[
+    {
+      label: 'Novo opcional',
+      icon: Plus,
+      onClick: () => {
+        limpar();
+        modalOpen = true;
+      }
+    },
+    {
+      label: 'Adicionar em lote',
+      variant: 'secondary',
+      onClick: () => (loteOpen = true)
+    },
+    {
+      label: 'Importar passeios opcionais',
+      variant: 'secondary',
+      onClick: () => (importacaoOpen = true)
+    }
+  ]}
 />
 
-<Card title={form.id ? 'Editar opcional' : 'Novo opcional'}>
-  <p class="mb-4 text-sm text-slate-500">
-    Os passeios são compartilhados entre os usuários. Alterações no catálogo não modificam roteiros
-    já salvos.
-  </p>
+{#if loteOpen}
+  <CadastroLoteOpcionais
+    bind:open={loteOpen}
+    geografico={catalogoGeograficoAtivo}
+    onSaved={() => {
+      void load();
+    }}
+  />
+{/if}
+
+<Dialog
+  bind:open={importacaoOpen}
+  title="Importar passeios opcionais"
+  size="lg"
+  cancelText="Fechar"
+  loading={importando}
+  dismissable={!importando}
+>
+  {#if importacaoOpen}
+    <ImportarOpcionais
+      geografico={catalogoGeograficoAtivo}
+      bind:salvando={importando}
+      onImported={() => {
+        void load();
+      }}
+    />
+  {/if}
+</Dialog>
+
+<Dialog
+  bind:open={modalOpen}
+  title={form.id ? 'Editar opcional' : 'Novo opcional'}
+  description="Os passeios são compartilhados entre os usuários. Alterações no catálogo não modificam roteiros já salvos."
+  showConfirm
+  confirmText="Salvar opcional"
+  loading={saving}
+  dismissable={!saving}
+  onConfirm={salvar}
+>
   <div class="space-y-3">
     {#if catalogoGeograficoAtivo}
       {#key form.id}
@@ -150,72 +231,50 @@
     {/if}
     <FieldInput label="Nome do passeio" bind:value={form.nome} required />
     <FieldTextarea label="Descrição" bind:value={form.descricao} rows={5} />
-    <div class="flex gap-2">
-      <Button type="button" disabled={saving} on:click={salvar}
-        >{saving ? 'Salvando...' : 'Salvar opcional'}</Button
-      >
-      {#if form.id}<Button type="button" variant="secondary" on:click={limpar}
-          >Cancelar edição</Button
-        >{/if}
-    </div>
   </div>
-</Card>
-
-<div class="mt-4">
-  <ImportarOpcionais
-    geografico={catalogoGeograficoAtivo}
-    onImported={() => {
-      void load();
-    }}
-  />
-</div>
+</Dialog>
 
 <div class="mt-4">
   <Card title="Opcionais cadastrados">
+    <FieldInput
+      id="opcional-busca"
+      label="Buscar opcional (cidade ou descrição)"
+      placeholder="Digite pelo menos 2 letras da cidade, nome ou descrição"
+      icon={Search}
+      maxlength={300}
+      bind:value={busca}
+      class_name="mb-4"
+      on:input={(event) => {
+        busca = (event.target as HTMLInputElement).value;
+        buscaAutomatica.cancel();
+        limparResultados();
+        if (Array.from(busca.trim()).length >= 2) buscaAutomatica.schedule();
+      }}
+    />
     <div class="mb-4 flex flex-wrap items-end gap-2">
-      {#if catalogoGeograficoAtivo}
-        <label class="text-sm text-slate-700">
-          <input
-            type="checkbox"
-            bind:checked={filtroLegado}
-            on:change={() => {
-              cidadeFiltro = '';
-              cidadeFiltroId = '';
-            }}
-          /> Buscar registros antigos por texto
-        </label>
-      {/if}
-      {#if catalogoGeograficoAtivo && !filtroLegado}
-        <div class="min-w-[220px] flex-1">
-          <SeletorDestinoGeografico
-            fieldId="opcional-filtro"
-            label="Filtrar por cidade"
-            bind:value={cidadeFiltro}
-            bind:destinoId={cidadeFiltroId}
-            bind:valid={filtroValido}
-          />
-        </div>
-      {:else}
-        <CidadeDestinoAutocomplete
-          id="opcional-filtro"
-          label="Filtrar por cidade"
-          bind:value={cidadeFiltro}
-          endpoint="/api/v1/opcionais/cidades"
-          class_name="min-w-[220px] flex-1"
-        />
-      {/if}
-      <Button type="button" variant="secondary" on:click={() => load()}>Buscar</Button>
       <Button
         type="button"
         variant="secondary"
         on:click={() => {
-          cidadeFiltro = '';
-          cidadeFiltroId = '';
-          void load();
-        }}>Todas as cidades</Button
+          buscaAutomatica.cancel();
+          pesquisar();
+        }}>Buscar</Button
+      >
+      <Button
+        type="button"
+        variant="secondary"
+        on:click={() => {
+          busca = '';
+          buscaAutomatica.cancel();
+          limparResultados();
+        }}>Limpar busca</Button
       >
     </div>
     {#if loading}<p class="text-sm text-slate-500">Carregando...</p>
+    {:else if !filtroAplicado}<p class="text-sm text-slate-500">
+        Digite pelo menos 2 letras da cidade, nome ou descrição para encontrar opcionais.
+      </p>
+    {:else if erroBusca}<p role="alert" class="text-sm text-red-700">{erroBusca}</p>
     {:else if items.length === 0}<p class="text-sm text-slate-500">Nenhum opcional encontrado.</p>
     {:else}
       <div class="space-y-3">
@@ -236,6 +295,7 @@
                   }
                   destinoValido = false;
                   form = { ...item, cidade_id: item.cidade_id || '' };
+                  modalOpen = true;
                 }}>Editar</Button
               >
               <Button type="button" variant="secondary" size="xs" on:click={() => excluir(item)}

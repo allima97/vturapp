@@ -211,11 +211,14 @@ disponíveis no catálogo (`-`), em grupos separados. A comparação usa o nome 
 alterar o nome da cópia pode fazer o original voltar a aparecer como disponível. É possível
 adicionar todos os passeios de uma cidade ou das cidades do itinerário e da aba. O roteiro
 permite até 100 cidades e 100 passeios por cidade; salve-o para manter as alterações.
-Em **Importar passeios opcionais**, cole texto ou escolha um arquivo `.md`/`.txt` em UTF-8.
-Use `#### Nome do passeio` seguido de `##### Descrição`. Para várias cidades, inicie cada
-grupo com `## Cidade, região, país`; antes de importar, confirme cada cidade no seletor.
-No modo de uma cidade, omita o cabeçalho de cidade e selecione-a no sistema. A prévia
-permite conferir os passeios e nomes já existentes na mesma cidade são ignorados.
+No botão **Importar passeios opcionais**, no cabeçalho do catálogo, cole texto ou escolha
+um arquivo `.md`/`.txt` em UTF-8 no modal.
+Informe o título em uma linha e a descrição na próxima linha com texto, repetindo para cada passeio.
+Linhas em branco são ignoradas. Confira os pares na prévia antes de importar. Para descrições
+com várias linhas, também é possível
+usar o formato anterior: `#### Nome do passeio` seguido de `##### Descrição`.
+Importe uma cidade por vez: omita o cabeçalho de cidade e selecione-a no campo acima do texto.
+A prévia permite conferir os passeios e nomes já existentes na mesma cidade são ignorados.
 
 ## Stack Tecnológica
 

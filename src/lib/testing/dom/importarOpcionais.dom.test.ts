@@ -67,7 +67,7 @@ describe('prévia da importação', () => {
   it('exige cidade selecionada e envia os passeios após confirmação', async () => {
     vi.useFakeTimers();
     api.get.mockResolvedValue([{ nome: 'Barcelona, Catalunha, Espanha' }]);
-    api.post.mockResolvedValue({ importados: 1, ignorados: 0 });
+    api.post.mockResolvedValue({ importados: 2, ignorados: 0 });
     const target = document.createElement('div');
     const onImported = vi.fn();
     const component = mount(ImportarOpcionais, { target, props: { onImported } });
@@ -80,16 +80,16 @@ describe('prévia da importação', () => {
       return found;
     };
     const textarea = target.querySelector('textarea')!;
-    textarea.value = '#### Passeio\n##### Descrição';
+    textarea.value = 'Passeio\n\nDescrição\n\nOutro passeio\n\nOutra descrição';
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
     flushSync();
     button('Analisar e conferir').click();
     flushSync();
-    button('Confirmar importação').click();
+    button('Salvar passeios').click();
     flushSync();
     expect(api.post).not.toHaveBeenCalled();
-    expect(target.textContent).toContain('Selecione e confirme cada cidade');
-    const input = target.querySelector<HTMLInputElement>('#import-cidade-0')!;
+    expect(target.textContent).toContain('Selecione e confirme a cidade');
+    const input = target.querySelector<HTMLInputElement>('#import-cidade-unica')!;
     input.dispatchEvent(new Event('focus'));
     input.value = 'Barcelona';
     input.dispatchEvent(new Event('input', { bubbles: true }));
@@ -100,125 +100,100 @@ describe('prévia da importação', () => {
       new MouseEvent('mousedown', { bubbles: true })
     );
     flushSync();
-    button('Confirmar importação').click();
+    button('Salvar passeios').click();
     await tick();
     flushSync();
     expect(api.post).toHaveBeenCalledWith('/api/v1/opcionais/importar', {
-      items: [{ cidade: 'Barcelona, Catalunha, Espanha', nome: 'Passeio', descricao: 'Descrição' }]
+      items: [
+        { cidade: 'Barcelona, Catalunha, Espanha', nome: 'Passeio', descricao: 'Descrição' },
+        {
+          cidade: 'Barcelona, Catalunha, Espanha',
+          nome: 'Outro passeio',
+          descricao: 'Outra descrição'
+        }
+      ]
     });
     expect(onImported).toHaveBeenCalledOnce();
-    expect(target.textContent).toContain('1 passeio(s) importado(s)');
+    expect(target.textContent).toContain('2 passeio(s) importado(s)');
     await unmount(component);
   });
 
-  it('exige confirmação independente para cada cidade do arquivo', async () => {
-    vi.useFakeTimers();
-    api.get.mockImplementation(async (_path: string, query: { q: string }) => [
-      { nome: query.q === 'Lisboa' ? 'Lisboa, Portugal' : 'Porto, Portugal' }
-    ]);
-    api.post.mockResolvedValue({ importados: 2, ignorados: 0 });
+  it('rejeita texto com cabeçalhos de cidade e não oferece múltiplas cidades', async () => {
     const target = document.createElement('div');
     const component = mount(ImportarOpcionais, { target, props: { onImported: vi.fn() } });
     flushSync();
-    const radio = target.querySelector<HTMLInputElement>('input[value="arquivo"]')!;
-    radio.checked = true;
-    radio.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(target.querySelector('input[type="radio"]')).toBeNull();
     const textarea = target.querySelector('textarea')!;
-    textarea.value = '## Lisboa\n#### Tour A\n##### Texto A\n## Porto\n#### Tour B\n##### Texto B';
+    textarea.value = '## Lisboa\nPasseio\nDescrição\n## Porto\nOutro\nDescrição';
     textarea.dispatchEvent(new Event('input', { bubbles: true }));
     flushSync();
-    const button = (text: string) => {
-      const found = [...target.querySelectorAll('button')].find((item) =>
-        item.textContent?.includes(text)
-      );
-      if (!found) throw new Error(`Botão ausente: ${text}`);
-      return found;
-    };
-    button('Analisar e conferir').click();
+    [...target.querySelectorAll('button')]
+      .find((button) => button.textContent?.includes('Analisar e conferir'))!
+      .click();
     flushSync();
-    const selectCity = async (index: number, query: string, city: string) => {
-      const input = target.querySelector<HTMLInputElement>(`#import-cidade-${index}`)!;
-      input.dispatchEvent(new Event('focus'));
-      input.value = query;
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      await vi.advanceTimersByTimeAsync(300);
-      await tick();
-      flushSync();
-      button(city).dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-      flushSync();
-    };
-    await selectCity(0, 'Lisboa', 'Lisboa, Portugal');
-    button('Confirmar importação').click();
-    flushSync();
-    expect(api.post).not.toHaveBeenCalled();
-    await selectCity(1, 'Porto', 'Porto, Portugal');
-    button('Confirmar importação').click();
-    await tick();
-    expect(api.post).toHaveBeenCalledWith('/api/v1/opcionais/importar', {
-      items: [
-        { cidade: 'Lisboa, Portugal', nome: 'Tour A', descricao: 'Texto A' },
-        { cidade: 'Porto, Portugal', nome: 'Tour B', descricao: 'Texto B' }
-      ]
-    });
+    expect(target.querySelector('[role="alert"]')?.textContent).toContain('remova a cidade');
+    expect(
+      [...target.querySelectorAll('button')].some((button) =>
+        button.textContent?.includes('Salvar passeios')
+      )
+    ).toBe(false);
     await unmount(component);
   });
 
-  it('envia identidades distintas, exige seleção e invalida alterações posteriores', async () => {
+  it('mostra a cidade antes do texto e preserva a escolha ao analisar novamente', async () => {
     vi.useFakeTimers();
-    api.fetch.mockResolvedValue({
-      items: [
-        { id: 'geonames:1', nome: 'Roma', label: 'Roma, Itália', origem: 'geonames' },
-        { id: 'geonames:2', nome: 'Roma', label: 'Roma, Texas', origem: 'geonames' }
-      ],
+    api.fetch.mockReset().mockResolvedValue({
+      items: [{ id: 'geonames:1', nome: 'Roma', label: 'Roma, Itália', origem: 'geonames' }],
       podeHaverMais: false
     });
-    api.post.mockResolvedValue({ importados: 2, ignorados: 0 });
+    api.post.mockReset().mockResolvedValue({ importados: 1, ignorados: 0 });
     const target = document.createElement('div');
     const component = mount(ImportarOpcionais, {
       target,
       props: { onImported: vi.fn(), geografico: true }
     });
     flushSync();
-    const radio = target.querySelector<HTMLInputElement>('input[value="arquivo"]')!;
-    radio.checked = true;
-    radio.dispatchEvent(new Event('change', { bubbles: true }));
-    const textarea = target.querySelector('textarea')!;
-    textarea.value = '## Roma A\n#### Tour A\n##### Texto A\n## Roma B\n#### Tour B\n##### Texto B';
-    textarea.dispatchEvent(new Event('input', { bubbles: true }));
-    flushSync();
     const button = (text: string) =>
       [...target.querySelectorAll('button')].find((item) => item.textContent?.includes(text))!;
+    const city = target.querySelector<HTMLInputElement>('#import-cidade-unica')!;
+    const textarea = target.querySelector<HTMLTextAreaElement>('#texto-importar-opcionais')!;
+    expect(city.compareDocumentPosition(textarea) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(button('Salvar passeios')).toBeUndefined();
+    city.value = 'Roma';
+    city.dispatchEvent(new Event('input', { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(300);
+    await tick();
+    flushSync();
+    button('Roma, Itália').click();
+    textarea.value = 'Museu\n\nVisita guiada';
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
     button('Analisar e conferir').click();
     flushSync();
-    const select = async (index: number, label: string) => {
-      const input = target.querySelector<HTMLInputElement>(`#import-cidade-${index}`)!;
-      input.value = 'Roma';
-      input.dispatchEvent(new Event('input', { bubbles: true }));
-      await vi.advanceTimersByTimeAsync(300);
-      await tick();
-      flushSync();
-      button(label).click();
-      flushSync();
-    };
-    await select(0, 'Roma, Itália');
-    button('Confirmar importação').click();
+    expect(city.value).toBe('Roma, Itália');
+    expect(button('Salvar passeios')).toBeDefined();
+    city.value = 'Outra cidade';
+    city.dispatchEvent(new Event('input', { bubbles: true }));
     flushSync();
+    button('Salvar passeios').click();
     expect(api.post).not.toHaveBeenCalled();
-    await select(1, 'Roma, Texas');
-    const input = target.querySelector<HTMLInputElement>('#import-cidade-0')!;
-    input.value = 'Outra cidade';
-    input.dispatchEvent(new Event('input', { bubbles: true }));
+    city.value = 'Roma';
+    city.dispatchEvent(new Event('input', { bubbles: true }));
+    await vi.advanceTimersByTimeAsync(300);
+    await tick();
     flushSync();
-    button('Confirmar importação').click();
+    button('Roma, Itália').click();
+    textarea.value = 'Parque\n\nCaminhada';
+    textarea.dispatchEvent(new Event('input', { bubbles: true }));
     flushSync();
-    expect(api.post).not.toHaveBeenCalled();
-    await select(0, 'Roma, Itália');
-    button('Confirmar importação').click();
+    expect(button('Salvar passeios')).toBeUndefined();
+    button('Analisar e conferir').click();
+    flushSync();
+    button('Salvar passeios').click();
     await tick();
     expect(api.post).toHaveBeenCalledWith('/api/v1/opcionais/importar', {
       items: [
-        { cidade: 'Roma, Itália', cidade_id: 'geonames:1', nome: 'Tour A', descricao: 'Texto A' },
-        { cidade: 'Roma, Texas', cidade_id: 'geonames:2', nome: 'Tour B', descricao: 'Texto B' }
+        { cidade: 'Roma, Itália', cidade_id: 'geonames:1', nome: 'Parque', descricao: 'Caminhada' }
       ]
     });
     await unmount(component);

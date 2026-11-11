@@ -41,30 +41,46 @@ export async function handleOpcionaisGet(event: RequestEvent) {
     const { db } = await requireOpcionaisScope(event, 1, true);
     const cidade = String(event.url.searchParams.get('cidade') || '').trim();
     const cidadeId = event.url.searchParams.get('cidade_id');
+    const nome = String(event.url.searchParams.get('nome') || '').trim();
+    const busca = String(event.url.searchParams.get('q') || '').trim();
     if (cidade.length > 200) return invalid('Cidade inválida.');
+    if (nome.length > 300) return invalid('Nome inválido.');
+    if (busca.length > 300) return invalid('Busca inválida.');
     if (cidadeId !== null && !destinoIdValido(cidadeId))
       return invalid('Identificação da cidade inválida.');
     const rawPage = Number(event.url.searchParams.get('pagina') || '1');
     if (!Number.isSafeInteger(rawPage) || rawPage < 1 || rawPage > 10000)
       return invalid('Página inválida.');
     const key = chaveCidadeOpcional(cidade);
-    const statement = cidadeId
-      ? db
-          .prepare(
-            'SELECT id, cidade, cidade_id, nome, descricao FROM catalogo_opcionais WHERE cidade_id = ? ORDER BY nome, id LIMIT 101 OFFSET ?'
-          )
-          .bind(cidadeId.toLowerCase(), (rawPage - 1) * 100)
-      : key
-        ? db
-            .prepare(
-              'SELECT id, cidade, cidade_id, nome, descricao FROM catalogo_opcionais WHERE cidade_chave = ? AND cidade_id IS NULL ORDER BY nome, id LIMIT 101 OFFSET ?'
-            )
-            .bind(key, (rawPage - 1) * 100)
-        : db
-            .prepare(
-              'SELECT id, cidade, cidade_id, nome, descricao FROM catalogo_opcionais ORDER BY cidade_chave, nome, id LIMIT 101 OFFSET ?'
-            )
-            .bind((rawPage - 1) * 100);
+    const filtros: string[] = [];
+    const parametros: (string | number)[] = [];
+    if (cidadeId) {
+      filtros.push('cidade_id = ?');
+      parametros.push(cidadeId.toLowerCase());
+    } else if (key) {
+      filtros.push('cidade_chave = ? AND cidade_id IS NULL');
+      parametros.push(key);
+    }
+    if (nome) {
+      filtros.push("nome LIKE ? ESCAPE '\\'");
+      parametros.push(`%${nome.replace(/[\\%_]/g, '\\$&')}%`);
+    }
+    if (busca) {
+      const minusculo = `%${busca.toLocaleLowerCase('pt-BR').replace(/[\\%_]/g, '\\$&')}%`;
+      const maiusculo = `%${busca.toLocaleUpperCase('pt-BR').replace(/[\\%_]/g, '\\$&')}%`;
+      filtros.push(
+        "(cidade LIKE ? ESCAPE '\\' OR cidade LIKE ? ESCAPE '\\' OR nome LIKE ? ESCAPE '\\' OR nome LIKE ? ESCAPE '\\' OR descricao LIKE ? ESCAPE '\\' OR descricao LIKE ? ESCAPE '\\')"
+      );
+      parametros.push(minusculo, maiusculo, minusculo, maiusculo, minusculo, maiusculo);
+    }
+    parametros.push((rawPage - 1) * 100);
+    const statement = db
+      .prepare(
+        `SELECT id, cidade, cidade_id, nome, descricao FROM catalogo_opcionais
+         ${filtros.length ? `WHERE ${filtros.join(' AND ')}` : ''}
+         ORDER BY ${cidadeId || key ? 'nome, id' : 'cidade_chave, nome, id'} LIMIT 101 OFFSET ?`
+      )
+      .bind(...parametros);
     const result = await statement.all<OpcionalCatalogo>();
     return json(
       { items: result.results.slice(0, 100), hasMore: result.results.length > 100 },

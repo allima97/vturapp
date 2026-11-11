@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import { FieldTextarea } from '$lib/components/ui';
   import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
@@ -14,24 +13,19 @@
 
   export let onImported: () => void;
   export let geografico = false;
-  let modo: 'cidade' | 'arquivo' = 'cidade';
+  export let salvando = false;
   let texto = '';
+  let cidadeUnica = '';
+  let cidadeUnicaConfirmada: string | null = null;
+  let cidadeUnicaId = '';
+  let cidadeUnicaValida = false;
   let grupos: CidadeImportada[] = [];
-  let cidades: string[] = [];
-  let cidadesConfirmadas: (string | null)[] = [];
-  let cidadesIds: string[] = [];
-  let cidadesValidas: boolean[] = [];
   let erro = '';
   let resultado = '';
-  let salvando = false;
   let leitura = 0;
 
   function limparPrevia() {
     grupos = [];
-    cidades = [];
-    cidadesConfirmadas = [];
-    cidadesIds = [];
-    cidadesValidas = [];
     erro = '';
     resultado = '';
   }
@@ -65,31 +59,26 @@
     leitura++;
     limparPrevia();
     try {
-      grupos = parseImportacaoOpcionais(texto, modo);
-      cidades = grupos.map(() => '');
-      cidadesConfirmadas = grupos.map(() => null);
-      cidadesIds = grupos.map(() => '');
-      cidadesValidas = grupos.map(() => false);
+      grupos = parseImportacaoOpcionais(texto, 'cidade');
     } catch (err) {
       erro = toUserMessage(err, 'Não foi possível analisar o texto.');
     }
   }
 
   async function importar() {
-    if (
-      geografico
-        ? cidadesIds.some((id, index) => !id || !cidadesValidas[index])
-        : cidadesConfirmadas.some((cidade, index) => !cidade || cidade !== cidades[index])
-    ) {
-      erro = 'Selecione e confirme cada cidade na lista de sugestões antes de importar.';
+    const cidadeInvalida = geografico
+      ? !cidadeUnica.trim() || !cidadeUnicaId || !cidadeUnicaValida
+      : !cidadeUnicaConfirmada || cidadeUnicaConfirmada !== cidadeUnica;
+    if (cidadeInvalida) {
+      erro = 'Selecione e confirme a cidade na lista de sugestões antes de importar.';
       return;
     }
-    const items = grupos.flatMap((grupo, index) =>
-      grupo.passeios.map((passeio) =>
-        geografico
-          ? { ...passeio, cidade: cidades[index], cidade_id: cidadesIds[index] }
-          : { ...passeio, cidade: cidadesConfirmadas[index] || '' }
-      )
+    const items = grupos.flatMap((grupo) =>
+      grupo.passeios.map((passeio) => ({
+        ...passeio,
+        cidade: cidadeUnica,
+        ...(geografico ? { cidade_id: cidadeUnicaId } : {})
+      }))
     );
     salvando = true;
     erro = '';
@@ -100,10 +89,10 @@
       );
       resultado = `${resposta.importados} passeio(s) importado(s); ${resposta.ignorados} duplicado(s) ignorado(s).`;
       grupos = [];
-      cidades = [];
-      cidadesConfirmadas = [];
-      cidadesIds = [];
-      cidadesValidas = [];
+      cidadeUnica = '';
+      cidadeUnicaConfirmada = null;
+      cidadeUnicaId = '';
+      cidadeUnicaValida = false;
       texto = '';
       onImported();
     } catch (err) {
@@ -114,37 +103,40 @@
   }
 </script>
 
-<Card title="Importar passeios opcionais">
+<div>
   <p class="mb-3 text-sm text-slate-600">
     Cole o texto ou escolha um arquivo .md ou .txt em UTF-8. Nenhum passeio é salvo sem sua
     confirmação.
   </p>
-  <fieldset class="mb-3 space-y-2">
-    <legend class="text-sm font-semibold">Como identificar as cidades?</legend>
-    <label class="flex gap-2 text-sm"
-      ><input
-        type="radio"
-        name="modo-importacao"
-        value="cidade"
-        bind:group={modo}
+  <div class="mb-4">
+    {#if geografico}
+      <SeletorDestinoGeografico
+        fieldId="import-cidade-unica"
+        label="Cidade para todos os passeios"
+        bind:value={cidadeUnica}
+        bind:destinoId={cidadeUnicaId}
+        bind:valid={cidadeUnicaValida}
         disabled={salvando}
-        on:change={limparPrevia}
-      /> Selecionar uma cidade para todos os passeios</label
-    >
-    <label class="flex gap-2 text-sm"
-      ><input
-        type="radio"
-        name="modo-importacao"
-        value="arquivo"
-        bind:group={modo}
+        required
+      />
+    {:else}
+      <CidadeDestinoAutocomplete
+        id="import-cidade-unica"
+        label="Cidade para todos os passeios"
+        bind:value={cidadeUnica}
+        endpoint="/api/v1/opcionais/cidades"
         disabled={salvando}
-        on:change={limparPrevia}
-      /> Identificar e confirmar cada cidade do texto</label
-    >
-  </fieldset>
+        required
+        onSelect={(cidade) => {
+          cidadeUnicaConfirmada = cidade;
+        }}
+      />
+    {/if}
+  </div>
   <p class="mb-2 text-sm text-slate-500">
-    Use <code>#### Nome do passeio</code> e, na linha seguinte, <code>##### Descrição</code>. No
-    modo de várias cidades, inicie cada grupo com <code>## Cidade, região, país</code>.
+    Escreva o título de cada passeio em uma linha e a descrição na próxima linha com texto. Linhas
+    em branco são ignoradas. Repita para os demais passeios e confira a prévia. Não inclua a cidade
+    no texto.
   </p>
   <label for="arquivo-opcionais" class="mb-1 block text-sm font-medium">Arquivo (.md ou .txt)</label
   >
@@ -167,7 +159,7 @@
       leitura++;
       limparPrevia();
     }}
-    placeholder={'#### Nome do passeio\n##### Descrição do passeio'}
+    placeholder={'Nome do passeio\nDescrição do passeio\n\nOutro passeio\nDescrição do outro passeio'}
   />
   <div class="mt-3">
     <Button type="button" variant="secondary" disabled={salvando} on:click={analisar}
@@ -179,35 +171,10 @@
   {#if grupos.length}
     <div class="mt-4 space-y-4">
       <p class="text-sm font-semibold">
-        Confira os passeios e selecione cada cidade na lista de sugestões.
+        Confira os passeios e confirme a cidade selecionada acima.
       </p>
-      {#each grupos as grupo, index}
+      {#each grupos as grupo}
         <div class="rounded-lg border border-slate-200 p-3">
-          {#if grupo.cidadeOriginal}<p class="mb-2 text-sm">
-              Cidade indicada no texto: <strong>{grupo.cidadeOriginal}</strong>
-            </p>{/if}
-          {#if geografico}
-            <SeletorDestinoGeografico
-              fieldId={`import-cidade-${index}`}
-              label="Cidade confirmada no sistema"
-              bind:value={cidades[index]}
-              bind:destinoId={cidadesIds[index]}
-              bind:valid={cidadesValidas[index]}
-              disabled={salvando}
-              required
-            />
-          {:else}
-            <CidadeDestinoAutocomplete
-              id={`import-cidade-${index}`}
-              label="Cidade confirmada no sistema"
-              bind:value={cidades[index]}
-              endpoint="/api/v1/opcionais/cidades"
-              disabled={salvando}
-              onSelect={(cidade) => {
-                cidadesConfirmadas[index] = cidade;
-              }}
-            />
-          {/if}
           <ul class="mt-3 space-y-2">
             {#each grupo.passeios as passeio}
               <li>
@@ -225,8 +192,8 @@
         arquivo.
       </p>
       <Button type="button" disabled={salvando} on:click={importar}
-        >{salvando ? 'Importando...' : 'Confirmar importação'}</Button
+        >{salvando ? 'Salvando...' : 'Salvar passeios'}</Button
       >
     </div>
   {/if}
-</Card>
+</div>

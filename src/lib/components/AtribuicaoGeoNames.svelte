@@ -1,4 +1,4 @@
-<p class="text-xs text-slate-600 dark:text-slate-300">
+<p class="text-[08px] text-slate-600 dark:text-slate-300">
   Dados geográficos: <a
     href="https://www.geonames.org/"
     target="_blank"
