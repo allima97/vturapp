@@ -1646,7 +1646,7 @@
       />
     </div>
 
-    <div class="mt-4 flex flex-wrap items-center gap-3">
+    <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center [&>*]:w-full sm:[&>*]:w-auto">
       <Button
         type="button"
         variant="secondary"
@@ -1853,7 +1853,7 @@
   </div>
 
   <!-- ─── Botão salvar flutuante ─────────────────────────────────────────── -->
-  <div class="mt-6 flex justify-end gap-3">
+  <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end [&>*]:w-full sm:[&>*]:w-auto">
     <Button type="button" variant="secondary" on:click={() => goto('/orcamentos/roteiros')}
       >Cancelar</Button
     >
