@@ -38,6 +38,7 @@ import { cardsRoutes } from './routes/cards';
 import { muralRoutes } from './routes/mural';
 import { todoRoutes } from './routes/todo';
 import { vouchersRoutes } from './routes/vouchers';
+import { passagensRoutes } from './routes/passagens';
 import { fornecedoresRoutes } from './routes/fornecedores';
 import { pagamentosRoutes } from './routes/pagamentos';
 import { tarefasRoutes } from './routes/tarefas';
@@ -101,6 +102,7 @@ export function createApiApp() {
   app.route('/mural', muralRoutes);
   app.route('/todo', todoRoutes);
   app.route('/vouchers', vouchersRoutes);
+  app.route('/passagens', passagensRoutes);
   app.route('/fornecedores', fornecedoresRoutes);
   app.route('/pagamentos', pagamentosRoutes);
   app.route('/tarefas', tarefasRoutes);

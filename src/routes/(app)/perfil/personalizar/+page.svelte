@@ -40,6 +40,7 @@
         { key: 'ultimas_compras', label: 'Últimas Compras', href: '/operacao/ultimas-compras' },
         { key: 'clientes', label: 'Clientes', href: '/clientes' },
         { key: 'viagens', label: 'Viagens', href: '/operacao/viagens' },
+        { key: 'passagens', label: 'Passagem', href: '/operacao/passagens' },
         { key: 'orcamentos', label: 'Orçamentos', href: '/orcamentos' },
         { key: 'roteiros', label: 'Roteiros', href: '/orcamentos/roteiros' },
         { key: 'vouchers', label: 'Vouchers', href: '/operacao/vouchers' },

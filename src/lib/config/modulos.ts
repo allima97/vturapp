@@ -213,6 +213,7 @@ export const ROTAS_MODULOS: Record<string, string> = {
   '/operacao/documentos-viagens': 'Documentos Viagens',
   '/operacao/vouchers': 'Vouchers',
   '/operacao/viagens': 'Viagens',
+  '/operacao/passagens': 'Operacao',
   '/operacao/campanhas': 'Campanhas',
   '/operacao/comissionamento': 'Comissionamento',
   '/operacao/controle-sac': 'Controle de SAC',
