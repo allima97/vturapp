@@ -14,6 +14,7 @@ import {
 import { sanitizeImportedClienteNome } from '$lib/features/clientes/form';
 import { titleCaseNome } from '$lib/normalizeText';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
+import { validateCPF } from '$lib/utils/validation';
 import { invalidateClientReadModels } from '$lib/server/readModelCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import { chunkArray, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
@@ -93,7 +94,7 @@ export async function handleClientesResolveImportPost(event: RequestEvent) {
     const cep = String(body.cep || '').trim() || null;
     const rg = String(body.rg || '').trim() || null;
 
-    if (!cpf || cpf.length !== 11) {
+    if (!validateCPF(body.cpf)) {
       return new Response('CPF inválido.', { status: 400, headers: NO_STORE_HEADERS });
     }
 
@@ -102,7 +103,8 @@ export async function handleClientesResolveImportPost(event: RequestEvent) {
     // ✅ Filtra clientes pelo escopo da empresa do usuário
     const requestedCompanyId = String(body?.company_id || body?.empresa_id || '').trim();
     const allowedCompanyIds = resolveScopedCompanyIds(scope, requestedCompanyId || null);
-    if (!scope.isAdmin && allowedCompanyIds.length === 0) {
+    const individual = scope.isVendedor && scope.usoIndividual && !requestedCompanyId;
+    if (!scope.isAdmin && allowedCompanyIds.length === 0 && !individual) {
       return json(
         { error: requestedCompanyId ? 'Empresa fora do escopo.' : 'Empresa não identificada.' },
         { status: requestedCompanyId ? 403 : 400, headers: NO_STORE_HEADERS }
@@ -118,7 +120,9 @@ export async function handleClientesResolveImportPost(event: RequestEvent) {
         .in('cpf', [cpf, formattedCpf])
         .limit(1);
 
-      if (!scope.isAdmin && companyIdsFilter && companyIdsFilter.length > 0) {
+      if (individual) {
+        query = query.eq('created_by', user.id);
+      } else if (!scope.isAdmin && companyIdsFilter && companyIdsFilter.length > 0) {
         query = query.in('company_id', companyIdsFilter);
       }
 
@@ -173,7 +177,7 @@ export async function handleClientesResolveImportPost(event: RequestEvent) {
       ? requestedCompanyId || null
       : resolveScopedCompanyId(scope, requestedCompanyId || null);
 
-    if (!scope.isAdmin && !companyId) {
+    if (!scope.isAdmin && !companyId && !individual) {
       return json(
         { error: requestedCompanyId ? 'Empresa fora do escopo.' : 'Empresa não identificada.' },
         { status: requestedCompanyId ? 403 : 400, headers: NO_STORE_HEADERS }
@@ -205,6 +209,7 @@ export async function handleClientesResolveImportPost(event: RequestEvent) {
 
     invalidateClientReadModels({
       companyIds: companyId ? [companyId] : allowedCompanyIds,
+      vendedorIds: [user.id],
       userId: user.id
     });
 

@@ -83,6 +83,48 @@ it('mantém ID salvo e bloqueia confirmação quando a resolução falha', async
   await unmount(app);
 });
 
+it('preserva confirmação ao mudar de aba, mas volta a bloquear se a cidade for editada', async () => {
+  vi.useFakeTimers();
+  api.fetch.mockImplementation(async (path: string) => {
+    if (path.includes('/busca'))
+      return {
+        items: [{ id: 'geonames:1', nome: 'Roma', label: 'Roma, Itália', origem: 'geonames' }],
+        podeHaverMais: false
+      };
+    return new Promise(() => {});
+  });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  let get: () => Cidade = () => ({ cidade: '' });
+  const app = mount(Harness, {
+    target,
+    props: { inicial: { cidade: '' }, expose: (value) => (get = value) }
+  });
+  flushSync();
+  let input = target.querySelector<HTMLInputElement>('#cidade-teste')!;
+  input.value = 'Roma';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  await vi.advanceTimersByTimeAsync(300);
+  await tick();
+  flushSync();
+  [...target.querySelectorAll('button')]
+    .find((button) => button.textContent?.includes('Roma, Itália'))!
+    .click();
+  flushSync();
+  target.querySelector<HTMLButtonElement>('button')!.click();
+  flushSync();
+  target.querySelector<HTMLButtonElement>('button')!.click();
+  flushSync();
+  expect(get()).toMatchObject({ cidade_id: 'geonames:1', cidade_pendente: false });
+  expect(api.fetch.mock.calls.some(([path]) => String(path).includes('/detalhes'))).toBe(false);
+  input = target.querySelector<HTMLInputElement>('#cidade-teste')!;
+  input.value = 'Outra cidade';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+  expect(get()).toMatchObject({ cidade_id: '', cidade_pendente: true });
+  await unmount(app);
+});
+
 it('permite preservar uma cidade legada e selecionar geografia explicitamente', async () => {
   const target = document.createElement('div');
   document.body.appendChild(target);
@@ -142,5 +184,85 @@ it.each([
   option!.click();
   flushSync();
   expect(input.value).toBe('Roma, Itália');
+  await unmount(app);
+});
+
+it('habilita a busca de descrições somente após selecionar a cidade do dia', async () => {
+  vi.useFakeTimers();
+  api.fetch.mockResolvedValue({
+    items: [{ id: 'geonames:1', nome: 'Roma', label: 'Roma, Itália', origem: 'geonames' }],
+    podeHaverMais: false
+  });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  let get: () => { descricaoSolicitada: Cidade | null } = () => ({ descricaoSolicitada: null });
+  const app = mount(ItinerarioHarness, {
+    target,
+    props: { expose: (value: () => unknown) => (get = value as typeof get) }
+  });
+  flushSync();
+  [...target.querySelectorAll('button')]
+    .find((button) => button.textContent?.includes('Adicionar dia'))!
+    .click();
+  flushSync();
+  const buscar = [...target.querySelectorAll('button')].find((button) =>
+    button.textContent?.includes('Buscar descrições desta cidade')
+  )!;
+  expect(buscar.disabled).toBe(true);
+  const input = target.querySelector<HTMLInputElement>('#dia-cidade-0')!;
+  input.value = 'Roma';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  await vi.advanceTimersByTimeAsync(300);
+  await tick();
+  flushSync();
+  [...target.querySelectorAll('button')]
+    .find((button) => button.textContent?.includes('Roma, Itália'))!
+    .click();
+  flushSync();
+  expect(buscar.disabled).toBe(false);
+  buscar.click();
+  flushSync();
+  expect(get().descricaoSolicitada).toMatchObject({
+    cidade: 'Roma, Itália',
+    cidade_id: 'geonames:1'
+  });
+  await unmount(app);
+});
+
+it('preserva a cidade já confirmada ao adicionar outro hotel e salvar imediatamente', async () => {
+  vi.useFakeTimers();
+  api.fetch.mockImplementation(async (path: string) => {
+    if (path.includes('/busca'))
+      return {
+        items: [{ id: 'geonames:1', nome: 'Roma', label: 'Roma, Itália', origem: 'geonames' }],
+        podeHaverMais: false
+      };
+    return new Promise(() => {});
+  });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  let get: () => { hoteis: Cidade[] } = () => ({ hoteis: [] });
+  const app = mount(ServicosHarness, {
+    target,
+    props: { expose: (value: () => unknown) => (get = value as typeof get) }
+  });
+  flushSync();
+  const input = target.querySelector<HTMLInputElement>('#hotel-cidade-0')!;
+  input.value = 'Roma';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  await vi.advanceTimersByTimeAsync(300);
+  await tick();
+  flushSync();
+  [...target.querySelectorAll('button')]
+    .find((button) => button.textContent?.includes('Roma, Itália'))!
+    .click();
+  flushSync();
+  expect(get().hoteis[0]).toMatchObject({ cidade_id: 'geonames:1', cidade_pendente: false });
+  [...target.querySelectorAll('button')]
+    .find((button) => button.textContent?.includes('Adicionar hotel'))!
+    .click();
+  flushSync();
+  expect(get().hoteis[0]).toMatchObject({ cidade_id: 'geonames:1', cidade_pendente: false });
+  expect(get().hoteis.some((hotel) => hotel.cidade_pendente)).toBe(false);
   await unmount(app);
 });

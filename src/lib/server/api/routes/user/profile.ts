@@ -6,6 +6,7 @@ import { json } from '@sveltejs/kit';
 import { getAdminClient, requireAuthenticatedUser, toErrorResponse } from '$lib/server/v1';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
+import { validateOptionalCPF } from '$lib/utils/validation';
 
 const MAX_USER_PROFILE_BODY_BYTES = 64 * 1024;
 const USER_PROFILE_ALLOWED_UPDATE_FIELDS = [
@@ -71,6 +72,13 @@ export async function handleUserProfilePatch(event: RequestEvent) {
     const user = await requireAuthenticatedUser(event);
 
     const body = readUserProfileBody(bodyResult.data);
+
+    if ('cpf' in body && !validateOptionalCPF(body.cpf)) {
+      return json(
+        { error: 'CPF inválido. Confira os dígitos informados.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
+    }
 
     const payload: Record<string, unknown> = {};
     // Campos que o usuário pode editar no próprio perfil (apenas colunas que existem no schema)

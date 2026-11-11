@@ -11,6 +11,8 @@
   import { toast } from '$lib/stores/ui';
   import { toUserMessage } from '$lib/utils/errors';
   import { createLoadGuard } from '$lib/utils/loadGuard';
+  import { formatDocumentoSalvo } from '$lib/features/clientes/form';
+  import { validateOptionalCNPJ } from '$lib/utils/validation';
 
   const emptyForm = {
     id: '',
@@ -142,7 +144,7 @@
           id: payload.empresa.id,
           nome_empresa: payload.empresa.nome_empresa || '',
           nome_fantasia: payload.empresa.nome_fantasia || '',
-          cnpj: payload.empresa.cnpj || '',
+          cnpj: formatDocumentoSalvo(payload.empresa.cnpj || '', 'PJ'),
           telefone: payload.empresa.telefone || '',
           endereco: payload.empresa.endereco || '',
           cidade: payload.empresa.cidade || '',
@@ -169,6 +171,10 @@
   }
 
   async function saveCompany() {
+    if (!validateOptionalCNPJ(form.cnpj)) {
+      toast.error('CNPJ inválido. Confira os dígitos informados.');
+      return;
+    }
     saving = true;
     try {
       const payload = await apiPost<{ id?: string }>('/api/v1/admin/empresas', form);
@@ -272,6 +278,7 @@
       />
       <FieldInput
         id="empresa-cnpj"
+        documentType="cnpj"
         label="CNPJ"
         bind:value={form.cnpj}
         mask="cnpj"

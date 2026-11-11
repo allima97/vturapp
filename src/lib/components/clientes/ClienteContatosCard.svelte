@@ -11,6 +11,7 @@
   export let clienteId: string;
   /** Muda quando um aviso novo é enviado pela própria ficha, para recarregar a lista. */
   export let versao = 0;
+  export let collapsible = false;
 
   type AvisoHistorico = {
     id: string;
@@ -27,7 +28,7 @@
 
   let itens: AvisoHistorico[] = [];
   let loading = true;
-  let semAcesso = false;
+  export let semAcesso = false;
   let erro: string | null = null;
   let controller: AbortController | null = null;
   let carregado = -1;
@@ -50,14 +51,21 @@
     loading = true;
     erro = null;
     try {
-      const data = await apiFetch<{ items?: AvisoHistorico[] }>('/api/v1/clientes/avisos/history', {
-        query: { cliente_id: clienteId },
-        signal: atual.signal,
-        // Depois de enviar um aviso, busca de novo (sem o cache curto das leituras).
-        noCache: recarregando,
-        redirectOnForbidden: false
-      });
-      itens = Array.isArray(data?.items) ? data.items : [];
+      const data = await apiFetch<{ items?: AvisoHistorico[]; unavailable?: boolean }>(
+        '/api/v1/clientes/avisos/history',
+        {
+          query: { cliente_id: clienteId },
+          signal: atual.signal,
+          // Depois de enviar um aviso, busca de novo (sem o cache curto das leituras).
+          noCache: recarregando,
+          redirectOnForbidden: false
+        }
+      );
+      if (data?.unavailable) {
+        erro = 'Histórico de contatos temporariamente indisponível.';
+      } else {
+        itens = Array.isArray(data?.items) ? data.items : [];
+      }
     } catch (err) {
       if (isCanceledApiError(err)) return;
       if (err instanceof ApiError && err.status === 403) semAcesso = true;
@@ -85,6 +93,7 @@
     title="Contatos enviados"
     subtitle="Últimos avisos enviados pelo sistema a este cliente."
     color="clientes"
+    {collapsible}
   >
     {#if loading && itens.length === 0}
       <div class="space-y-2" aria-busy="true" aria-label="Carregando contatos">

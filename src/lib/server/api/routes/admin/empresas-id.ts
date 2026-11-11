@@ -14,6 +14,7 @@ import {
   toErrorResponse
 } from '$lib/server/v1';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
+import { validateOptionalCNPJ } from '$lib/utils/validation';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import { cleanStringSet } from '$lib/utils/array';
 
@@ -175,6 +176,12 @@ export async function handleAdminEmpresasIdPatch(event: RequestEvent) {
         : {};
 
     const updatePayload: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    if ('cnpj' in body && !validateOptionalCNPJ(body.cnpj)) {
+      return json(
+        { error: 'CNPJ inválido. Confira os dígitos informados.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
+    }
     // Apenas campos que existem na tabela companies
     for (const field of ADMIN_COMPANY_ALLOWED_UPDATE_FIELDS) {
       if (body[field] !== undefined) updatePayload[field] = body[field];

@@ -6,6 +6,7 @@
   import { buildVturInputClasses } from '../inputContract';
   import { inputMask, type MaskType } from '$lib/actions/inputMask';
   import { uniqueFieldId } from './fieldId';
+  import { validateCPF, validateCNPJ } from '$lib/utils/validation';
 
   type IconProps = { class?: string; size?: number | string };
   type IconComponent = Component<IconProps> | ComponentType<SvelteComponent<IconProps>>;
@@ -52,14 +53,32 @@
    * Valores: 'cpf' | 'cnpj' | 'phone' | 'cep' | 'date' | 'rg'
    */
   export let mask: MaskType | undefined = undefined;
+  export let documentType: 'cpf' | 'cnpj' | undefined = undefined;
+
+  let documentEdited = false;
+  let documentBlurred = false;
+
+  $: documentValue = String(value ?? '').trim();
+  $: documentDigits = documentValue.replace(/\D/g, '');
+  $: shouldValidateDocument =
+    !!documentType &&
+    (documentBlurred ||
+      (documentEdited && documentDigits.length >= (documentType === 'cpf' ? 11 : 14)));
+  $: documentValid =
+    documentType === 'cpf' ? validateCPF(documentValue) : validateCNPJ(documentValue);
+  $: documentMessage =
+    shouldValidateDocument && (documentValue || required)
+      ? `${documentType === 'cpf' ? 'CPF' : 'CNPJ'} ${documentValid ? 'válido' : 'inválido'}.`
+      : null;
+  $: visibleError = error || (documentMessage && !documentValid ? documentMessage : null);
 
   $: fieldId = id || uniqueFieldId(label);
-  $: describedById = error || helper ? `${fieldId}-desc` : undefined;
+  $: describedById = visibleError || documentMessage || helper ? `${fieldId}-desc` : undefined;
   $: inputClasses = buildVturInputClasses(
     'text-sm',
-    icon || prefix ? 'pl-10' : '',
+    prefix || (icon && !mask) ? 'pl-10' : '',
     suffix || actionIcon ? 'pr-10' : '',
-    error ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'focus:ring-blue-200'
+    visibleError ? 'border-red-400 focus:border-red-500 focus:ring-red-200' : 'focus:ring-blue-200'
   );
 </script>
 
@@ -98,11 +117,13 @@
         {readonly}
         autocomplete={autocomplete ?? undefined}
         maxlength={maxlength ?? undefined}
-        aria-invalid={error ? 'true' : undefined}
+        aria-invalid={visibleError ? 'true' : undefined}
         aria-describedby={describedById}
-        class="{inputClasses} w-full"
+        class="{inputClasses} w-full p-2.5"
+        on:input={() => (documentEdited = true)}
         on:input
         on:change
+        on:blur={() => (documentBlurred = true)}
         on:blur
         on:focus
         on:keydown
@@ -124,12 +145,14 @@
         {step}
         {maxlength}
         wrapperClass="relative w-full"
-        aria-invalid={error ? 'true' : undefined}
+        aria-invalid={visibleError ? 'true' : undefined}
         aria-describedby={describedById}
-        color={error ? 'red' : 'base'}
+        color={visibleError ? 'red' : 'base'}
         class={inputClasses}
+        on:input={() => (documentEdited = true)}
         on:input
         on:change
+        on:blur={() => (documentBlurred = true)}
         on:blur
         on:focus
         on:keydown
@@ -153,12 +176,14 @@
         {step}
         {maxlength}
         wrapperClass="relative w-full"
-        aria-invalid={error ? 'true' : undefined}
+        aria-invalid={visibleError ? 'true' : undefined}
         aria-describedby={describedById}
-        color={error ? 'red' : 'base'}
+        color={visibleError ? 'red' : 'base'}
         class={inputClasses}
+        on:input={() => (documentEdited = true)}
         on:input
         on:change
+        on:blur={() => (documentBlurred = true)}
         on:blur
         on:focus
         on:keydown
@@ -185,8 +210,12 @@
     {/if}
   </div>
 
-  {#if error}
-    <Helper id={describedById} class="mt-1 text-red-600">{error}</Helper>
+  {#if visibleError}
+    <Helper id={describedById} class="mt-1 text-red-600" aria-live="polite">{visibleError}</Helper>
+  {:else if documentMessage}
+    <Helper id={describedById} class="mt-1 text-green-700" aria-live="polite"
+      >{documentMessage}</Helper
+    >
   {:else if helper}
     <Helper id={describedById} class="mt-1 text-slate-500">{helper}</Helper>
   {/if}

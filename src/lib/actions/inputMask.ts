@@ -89,14 +89,18 @@ export function inputMask(node: HTMLInputElement, params: MaskParams) {
       const newPos = Math.max(0, cursor + diff);
       node.setSelectionRange(newPos, newPos);
     }
-
-    // Dispara evento 'input' para que bind:value do Svelte atualize
-    node.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
   // Aplica imediatamente se já houver valor
   if (node.value) {
-    node.value = applyMask(node.value, params.type);
+    const documentLength = params.type === 'cpf' ? 11 : params.type === 'cnpj' ? 14 : null;
+    if (
+      documentLength === null ||
+      (/^[\d\s./-]*$/.test(node.value) &&
+        node.value.replace(NON_DIGIT_RE, '').length === documentLength)
+    ) {
+      node.value = applyMask(node.value, params.type);
+    }
   }
 
   node.addEventListener('input', onInput, true);

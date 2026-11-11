@@ -24,10 +24,7 @@ it('preserva identidade dos homônimos e invalida edição livre', async () => {
   document.body.appendChild(target);
   const app = mount(Harness, { target });
   flushSync();
-  expect(target.querySelector('a[href="https://www.geonames.org/"]')?.textContent).toBe('GeoNames');
-  expect(
-    target.querySelector('a[href="https://creativecommons.org/licenses/by/4.0/"]')?.textContent
-  ).toBe('CC BY 4.0');
+  expect(target.querySelector('a[href="https://www.geonames.org/"]')).toBeNull();
   const input = target.querySelector<HTMLInputElement>('#destino')!;
   input.value = 'Roma';
   input.dispatchEvent(new Event('input', { bubbles: true }));

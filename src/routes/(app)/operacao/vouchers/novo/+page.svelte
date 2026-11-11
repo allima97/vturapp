@@ -32,6 +32,7 @@
     Plane,
     Phone,
     Smartphone,
+    Whatsapp,
     AlertCircle
   } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
@@ -618,7 +619,7 @@
 {#if loading}
   <LoadingState />
 {:else}
-  <div class="mx-auto max-w-6xl pb-20">
+  <div class="w-full pb-20">
     <SelecaoFornecedor {providers} provider={form.provider} {setVoucherProvider} />
 
     <WizardEtapas {steps} {goToStep} {getStepStatus} />
@@ -1489,6 +1490,7 @@
                 <FieldInput
                   id="voucher-emergencia-whatsapp"
                   label="WhatsApp"
+                  icon={Whatsapp}
                   type="text"
                   value={form.extra_data.emergencia?.whatsapp || ''}
                   on:input={(e) =>

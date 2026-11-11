@@ -10,11 +10,23 @@
     FieldTextarea,
     PageHeader
   } from '$lib/components/ui';
-  import { ArrowLeft, Calendar, FileText, Mail, MapPin, Phone, Save, Tag, User } from '$lib/icons';
+  import {
+    ArrowLeft,
+    Calendar,
+    FileText,
+    Mail,
+    MapPin,
+    Phone,
+    Whatsapp,
+    Save,
+    Tag,
+    User
+  } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { ApiError, apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { toUserMessage } from '$lib/utils/errors';
   import { createLoadGuard } from '$lib/utils/loadGuard';
+  import { mensagemErroCep } from '$lib/features/enderecos/cep';
   import {
     buildClientePayload,
     classificacaoSelectOptions,
@@ -59,6 +71,7 @@
   }
 
   function setTipoPessoa(value: 'PF' | 'PJ') {
+    errors = { ...errors, cpf: '' };
     formData = {
       ...formData,
       tipo_pessoa: value,
@@ -74,12 +87,16 @@
   }
 
   function handleDocumentoInput(event: Event) {
+    errors = { ...errors, cpf: '' };
     const input = event.currentTarget as HTMLInputElement;
-    updateField('cpf', formatDocumento(input.value, formData.tipo_pessoa));
+    input.value = formatDocumento(input.value, formData.tipo_pessoa);
+    updateField('cpf', input.value);
   }
 
   function handleCepInput(event: Event) {
     const input = event.currentTarget as HTMLInputElement;
+    cepGuard.abort();
+    cepStatus = null;
     updateField('cep', formatCep(input.value));
   }
 
@@ -112,8 +129,8 @@
       };
       cepStatus = 'Endereco carregado pelo CEP.';
     } catch (error) {
-      if (isCanceledApiError(error)) return;
-      cepStatus = 'Nao foi possivel carregar o CEP.';
+      if (isCanceledApiError(error) || !cepGuard.isCurrent(request.seq)) return;
+      cepStatus = mensagemErroCep(error);
     }
   }
 
@@ -193,6 +210,7 @@
 
       <FieldInput
         id="cpf"
+        documentType={formData.tipo_pessoa === 'PJ' ? 'cnpj' : 'cpf'}
         label={formData.tipo_pessoa === 'PJ' ? 'CNPJ' : 'CPF'}
         value={formData.cpf}
         required={true}
@@ -279,7 +297,7 @@
         label="WhatsApp"
         value={formData.whatsapp}
         type="tel"
-        icon={Phone}
+        icon={Whatsapp}
         placeholder="(00) 00000-0000"
         on:input={(event) => handleTelefoneInput('whatsapp', event)}
       />

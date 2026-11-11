@@ -12,6 +12,7 @@
   import { toUserMessage } from '$lib/utils/errors';
 
   export let clienteId: string;
+  export let collapsible = false;
 
   type ViagemCliente = {
     id: string;
@@ -33,7 +34,7 @@
 
   let viagens: ViagemCliente[] = [];
   let loading = true;
-  let semAcesso = false;
+  export let semAcesso = false;
   let erro: string | null = null;
   const controller = new AbortController();
 
@@ -61,7 +62,7 @@
 </script>
 
 {#if !semAcesso}
-  <Card title="Viagens" color="clientes">
+  <Card title="Viagens" color="clientes" {collapsible}>
     {#if loading}
       <div class="space-y-2" aria-busy="true" aria-label="Carregando viagens">
         {#each [0, 1] as _}

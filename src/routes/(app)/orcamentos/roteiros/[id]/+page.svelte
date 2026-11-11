@@ -6,7 +6,7 @@
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { browser } from '$app/environment';
-  import { onDestroy, onMount } from 'svelte';
+  import { onDestroy, onMount, tick } from 'svelte';
   import { browserData as dados } from '$lib/db/browserData';
   import { construirLinkWhatsApp } from '$lib/whatsapp';
   import { mergeImportedRoteiroAereo, parseImportedRoteiroAereo } from '$lib/roteiroAereoImport';
@@ -40,7 +40,6 @@
   } from '$lib/icons';
   import { ApiError, apiFetch, apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { ensureServerSessionCookie } from '$lib/services/session';
-  import { diffDaysISODate } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
   import { safeOpenNewTab } from '$lib/security/url';
   import {
@@ -70,7 +69,11 @@
     parseDiasImportText
   } from './_components/importacao-dias';
   import { formatBRL } from './_components/formatadores';
+  import { atualizarDataHotel } from './_components/hotel-datas';
+  import { renderPreviewDia } from './_components/preview-dia';
+  import { nomeCidadeNoPdf } from './_components/preview-cidade';
   import AbaItinerario from './_components/AbaItinerario.svelte';
+  import CidadeRoteiro from './_components/CidadeRoteiro.svelte';
   import AbaTransporte from './_components/AbaTransporte.svelte';
   import AbaHoteis from './_components/AbaHoteis.svelte';
   import AbaOpcionais from './_components/AbaOpcionais.svelte';
@@ -267,7 +270,12 @@
 
   let showDiasBusca = $state(false);
   let diasBuscaQ = $state('');
-  let diasBuscaCidade = $state('');
+  let diasBuscaDestino = $state<RotDia>(newDia(0));
+  let diaBuscaAlvo = $state<RotDia | null>(null);
+  let diasBuscaOffset = $state(0);
+  let diasBuscaTemMais = $state(false);
+  let diasBuscaRealizada = $state(false);
+  let diasBuscaChave = $state('');
   let diasBuscaResults: DiaBuscaResult[] = $state([]);
   let diasBuscaLoading = $state(false);
   let showDiasImport = $state(false);
@@ -319,21 +327,8 @@
   // ─── List operations ───────────────────────────────────────────────────────
 
   // ─── Hotel auto-calc noites ────────────────────────────────────────────────
-  function calcNoites(dataInicio: string, dataFim: string): number | null {
-    if (!dataInicio || !dataFim) return null;
-    const diff = diffDaysISODate(dataInicio, dataFim);
-    if (diff === null) return null;
-    return diff > 0 ? diff : null;
-  }
-
   function onHotelDateChange(index: number, field: 'data_inicio' | 'data_fim', value: string) {
-    const hotel = hoteis[index];
-    const updated = { ...hotel, [field]: value };
-    const noites = calcNoites(
-      field === 'data_inicio' ? value : hotel.data_inicio,
-      field === 'data_fim' ? value : hotel.data_fim
-    );
-    hoteis = updateItem(hoteis, index, { [field]: value, noites: noites ?? updated.noites });
+    atualizarDataHotel(hoteis[index], field, value);
   }
 
   function onAereoValorChange(index: number, field: 'valor_total' | 'taxas', rawValue: string) {
@@ -484,14 +479,26 @@
 
   // ─── Save ──────────────────────────────────────────────────────────────────
   function cidadePendente() {
-    const campo = document.querySelector<HTMLInputElement>('[data-roteiro-cidade-pendente="true"]');
-    const pendente = [...dias, ...hoteis, ...passeios, ...opcionais].some(
-      (item) => item.cidade_pendente
-    );
-    if (!campo && !pendente) return false;
-    campo?.focus();
-    toast.error('Selecione ou confirme a cidade na lista de sugestões antes de continuar.');
-    return true;
+    const grupos = [
+      { itens: dias, aba: 'itinerario', label: 'Itinerário', campo: 'dia' },
+      { itens: hoteis, aba: 'hoteis', label: 'Hotéis', campo: 'hotel' },
+      { itens: passeios, aba: 'passeios', label: 'Passeios', campo: 'passeio' },
+      { itens: opcionais, aba: 'opcionais', label: 'Opcionais', campo: 'opcional' }
+    ] as const;
+    for (const grupo of grupos) {
+      const indice = grupo.itens.findIndex((item) => item.cidade_pendente);
+      if (indice < 0) continue;
+      abaAtiva = grupo.aba;
+      void tick().then(() => {
+        const campo = document.getElementById(`${grupo.campo}-cidade-${indice}`);
+        const detalhes = campo?.closest('details');
+        if (detalhes) detalhes.open = true;
+        campo?.focus();
+      });
+      toast.error(`Confirme a cidade em ${grupo.label}, item ${indice + 1}, antes de continuar.`);
+      return true;
+    }
+    return false;
   }
 
   async function save() {
@@ -634,23 +641,62 @@
   }
 
   // ─── Buscar dias no banco ──────────────────────────────────────────────────
-  async function buscarDias() {
+  function chaveDestinoBusca() {
+    return `${diasBuscaDestino.cidade_id || ''}|${diasBuscaDestino.cidade}`;
+  }
+
+  function abrirBuscaDias() {
+    diasBuscaController?.abort();
+    diasBuscaSeq += 1;
+    diasBuscaLoading = false;
+    diaBuscaAlvo = null;
+    diasBuscaDestino = newDia(0);
+    diasBuscaQ = '';
+    diasBuscaResults = [];
+    diasBuscaChave = '';
+    diasBuscaRealizada = false;
+    showDiasBusca = true;
+  }
+
+  function abrirDescricoes(dia: RotDia) {
+    diaBuscaAlvo = dia;
+    diasBuscaDestino = { ...newDia(0), cidade: dia.cidade, cidade_id: dia.cidade_id };
+    diasBuscaQ = '';
+    diasBuscaResults = [];
+    diasBuscaOffset = 0;
+    diasBuscaRealizada = false;
+    showDiasBusca = true;
+    void buscarDias(0);
+  }
+
+  async function buscarDias(offset = 0) {
+    if (!diasBuscaDestino.cidade.trim() || diasBuscaDestino.cidade_pendente) {
+      toast.error('Selecione uma cidade cadastrada para buscar descrições.');
+      return;
+    }
     diasBuscaController?.abort();
     const controller = new AbortController();
     diasBuscaController = controller;
     const seq = ++diasBuscaSeq;
+    const chave = chaveDestinoBusca();
     diasBuscaLoading = true;
     try {
-      const data = await apiGet<{ dias?: DiaBuscaResult[] }>(
+      const data = await apiGet<{ dias?: DiaBuscaResult[]; temMais?: boolean }>(
         '/api/v1/roteiros/dias-busca',
         {
           q: diasBuscaQ,
-          cidade: diasBuscaCidade
+          cidade_exata: diasBuscaDestino.cidade,
+          cidade_id: diasBuscaDestino.cidade_id || '',
+          offset
         },
         controller.signal
       );
-      if (seq !== diasBuscaSeq || destroyed) return;
+      if (seq !== diasBuscaSeq || destroyed || chave !== chaveDestinoBusca()) return;
       diasBuscaResults = data.dias || [];
+      diasBuscaChave = chave;
+      diasBuscaOffset = offset;
+      diasBuscaTemMais = Boolean(data.temMais);
+      diasBuscaRealizada = true;
     } catch (err) {
       if (isCanceledApiError(err)) return;
       toast.error(toUserMessage(err, 'Erro ao buscar dias.'));
@@ -660,10 +706,18 @@
   }
 
   function addDiaBanco(dia: DiaBuscaResult) {
+    if (diaBuscaAlvo) {
+      const descricao = String(dia.descricao || '').trim();
+      diaBuscaAlvo.descricao = [diaBuscaAlvo.descricao.trim(), descricao]
+        .filter(Boolean)
+        .join('\n\n');
+      showDiasBusca = false;
+      return;
+    }
     const nextItem: RotDia = {
       percurso: String(dia.percurso || '').trim(),
-      cidade: String(dia.cidade || '').trim(),
-      cidade_id: dia.cidade_id ?? null,
+      cidade: diasBuscaDestino.cidade,
+      cidade_id: diasBuscaDestino.cidade_id ?? null,
       data: String(dia.data || '').trim(),
       descricao: String(dia.descricao || '').trim(),
       ordem: dias.length
@@ -1150,15 +1204,8 @@
     const diasItems = dias.filter((dia) => dia.cidade || dia.percurso || dia.data || dia.descricao);
     const diasHtml =
       diasItems.length > 0
-        ? buildPreviewCards(
-            diasItems,
-            (dia, index) => `
-        <article class="card">
-          <h3>Dia ${index + 1} - ${escapePreviewHtml(dia.cidade || dia.percurso || 'Sem título')}</h3>
-          ${dia.data ? `<p class="meta">${escapePreviewHtml(formatPreviewDate(dia.data))}</p>` : ''}
-          ${dia.percurso && dia.percurso !== dia.cidade ? `<p class="meta">${escapePreviewHtml(dia.percurso)}</p>` : ''}
-          ${dia.descricao ? `<p>${escapePreviewHtml(dia.descricao).replace(/\n/g, '<br>')}</p>` : '<p class="empty">Sem descrição.</p>'}
-        </article>`
+        ? buildPreviewCards(diasItems, (dia, index) =>
+            renderPreviewDia(dia, index, formatPreviewDate)
           )
         : '';
 
@@ -1189,7 +1236,7 @@
                 String(item.apto || '').trim() || '-',
                 String(item.regime || '').trim() || '-'
               ]);
-              return `<div class="preview-group-block"><div class="preview-group-title">${escapePreviewHtml(cidade)}</div>${buildPreviewTable(['Nome hotel', 'Início', 'Fim', 'Noites', 'Acomodação', 'Regime'], rows, 'hotel-preview-table')}</div>`;
+              return `<div class="preview-group-block"><div class="preview-group-title">${escapePreviewHtml(nomeCidadeNoPdf(cidade))}</div>${buildPreviewTable(['Nome hotel', 'Início', 'Fim', 'Noites', 'Acomodação', 'Regime'], rows, 'hotel-preview-table')}</div>`;
             })
             .join('')
         : '';
@@ -1220,7 +1267,7 @@
                   String(item.ingressos || '').trim() || '-'
                 ];
               });
-              return `<div class="preview-group-block"><div class="preview-group-title">${escapePreviewHtml(cidade)}</div>${buildPreviewTable(['Data', 'Descrição', 'Ingressos'], rows, 'passeio-preview-table')}</div>`;
+              return `<div class="preview-group-block"><div class="preview-group-title">${escapePreviewHtml(nomeCidadeNoPdf(cidade))}</div>${buildPreviewTable(['Data', 'Descrição', 'Ingressos'], rows, 'passeio-preview-table')}</div>`;
             })
             .join('')
         : '';
@@ -1466,7 +1513,16 @@
             ${buildPreviewSection('Itinerário Detalhado', diasHtml)}
             ${buildPreviewRawSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
             ${buildPreviewRawSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
-            ${buildPreviewSection('Passeios Opcionais — sugestões sem data marcada, não incluídas no valor do roteiro', buildOpcionaisHtml(removerPasseiosIncorporados(opcionais, passeios), escapePreviewHtml))}
+            ${buildPreviewSection(
+              'Passeios Opcionais — sugestões sem data marcada, não incluídas no valor do roteiro',
+              buildOpcionaisHtml(
+                removerPasseiosIncorporados(opcionais, passeios).map((grupo) => ({
+                  ...grupo,
+                  cidade: nomeCidadeNoPdf(grupo.cidade)
+                })),
+                escapePreviewHtml
+              )
+            )}
             ${buildPreviewRawSection('Passagem Aérea', transportesHtml, 'preview-airfare-section')}
             ${buildPreviewRawSection('Investimento', investimentoHtml, 'preview-investimento-section')}
             ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
@@ -1645,6 +1701,7 @@
   <!-- ─── Abas ──────────────────────────────────────────────────────────── -->
   <Tabs
     className="mb-4"
+    mobileDropdown
     activeKey={abaAtiva}
     onSelect={selecionarAba}
     items={ABAS.map((aba) => ({
@@ -1663,6 +1720,8 @@
       bind:showDiasBusca
       bind:showDiasImport
       {sugestoes}
+      buscarDescricoes={abrirDescricoes}
+      {abrirBuscaDias}
     />
 
     <!-- ──────────────────── ABA: HOTÉIS ──────────────────────────────────── -->
@@ -1898,19 +1957,17 @@
   cancelText="Fechar"
   onCancel={() => {
     showDiasBusca = false;
+    diasBuscaController?.abort();
   }}
 >
   <div class="space-y-3">
     <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <FieldInput label="Texto" bind:value={diasBuscaQ} placeholder="Palavra-chave..." id="db-q" />
-      <FieldDatalistInput
-        id="db-cidade"
-        label="Cidade"
-        bind:value={diasBuscaCidade}
-        placeholder="Filtrar por cidade"
-        options={sugestoes['cidade'] || []}
-        listId="sugestoes-cidade"
-      />
+      {#if diaBuscaAlvo}
+        <p class="self-end pb-2 text-sm text-slate-600">Cidade: {diasBuscaDestino.cidade}</p>
+      {:else}
+        <CidadeRoteiro bind:destino={diasBuscaDestino} fieldId="db-cidade" />
+      {/if}
     </div>
 
     <Button
@@ -1919,12 +1976,12 @@
       color="clientes"
       size="sm"
       loading={diasBuscaLoading}
-      on:click={buscarDias}
+      on:click={() => buscarDias(0)}
     >
       Buscar
     </Button>
 
-    {#if diasBuscaResults.length > 0}
+    {#if diasBuscaChave === chaveDestinoBusca() && diasBuscaResults.length > 0}
       <div class="max-h-72 overflow-y-auto rounded-lg border border-slate-200">
         {#each diasBuscaResults as dia}
           <div
@@ -1934,7 +1991,7 @@
               <span class="font-medium text-slate-700">{dia.cidade || '-'}</span>
               {#if dia.data}<span class="ml-2 text-xs text-slate-400">{dia.data}</span>{/if}
               {#if dia.percurso}<p class="mt-0.5 text-xs text-slate-500">{dia.percurso}</p>{/if}
-              {#if dia.descricao}<p class="mt-0.5 line-clamp-2 text-xs text-slate-600">
+              {#if dia.descricao}<p class="mt-0.5 text-xs whitespace-pre-wrap text-slate-600">
                   {dia.descricao}
                 </p>{/if}
             </div>
@@ -1945,13 +2002,31 @@
               class_name="shrink-0 border border-clientes-200 bg-clientes-100 px-2.5! py-1! text-xs font-medium text-clientes-700 hover:!bg-clientes-200"
               on:click={() => addDiaBanco(dia)}
             >
-              Usar
+              {diaBuscaAlvo ? 'Incluir descrição' : 'Adicionar dia'}
             </Button>
           </div>
         {/each}
       </div>
-    {:else if !diasBuscaLoading}
-      <p class="py-4 text-center text-sm text-slate-400">Nenhum resultado. Tente buscar acima.</p>
+      <div class="flex items-center justify-between gap-2">
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          disabled={diasBuscaOffset === 0 || diasBuscaLoading}
+          on:click={() => buscarDias(Math.max(0, diasBuscaOffset - 20))}>Anterior</Button
+        >
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          disabled={!diasBuscaTemMais || diasBuscaLoading}
+          on:click={() => buscarDias(diasBuscaOffset + 20)}>Próxima</Button
+        >
+      </div>
+    {:else if !diasBuscaLoading && diasBuscaRealizada && diasBuscaChave === chaveDestinoBusca()}
+      <p class="py-4 text-center text-sm text-slate-400">
+        Nenhuma descrição encontrada para esta cidade.
+      </p>
     {/if}
   </div>
 </Dialog>

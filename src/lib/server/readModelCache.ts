@@ -19,7 +19,7 @@ type CacheOptions<T> = {
 // TTL padrão para dados que mudam com frequência (vendas, ranking, KPIs).
 // Usado quando nenhum TTL explícito é passado e não é dado transacional.
 const DEFAULT_TTL_MS = 30_000;
-// Stale padrão — mantém cache válido para revalidação em background.
+// Janela máxima para usar o último resultado caso a revalidação falhe.
 const DEFAULT_STALE_TTL_MS = 120_000;
 
 // TTL para catálogos semi-estáticos: países, cidades, produtos base, planos, módulos.
@@ -43,10 +43,8 @@ const MAX_CACHE_KEY_LENGTH = 900;
 // após cada mutação. TTL de 30s é o equilíbrio entre frescura e throughput.
 const TRANSACTIONAL_TTL_MS = 30_000;
 const TRANSACTIONAL_STALE_TTL_MS = 120_000;
-const ERROR_FALLBACK_STALE_MS = 300_000;
 
 const cache = new Map<string, CacheEntry<unknown>>();
-const inflight = new Map<string, Promise<unknown>>();
 let invalidationEpoch = 0;
 
 type SalesInvalidationPublisher = (scope?: { companyIds?: string[] | null }) => void;
@@ -285,6 +283,7 @@ export async function getCachedReadModel<T>(options: CacheOptions<T>): Promise<T
 
   const writeEntry = (value: T) => {
     if (loaderEpoch !== invalidationEpoch) return value;
+    if (cache.get(options.key) !== existing) return value;
 
     const writtenAt = nowMs();
     cache.set(options.key, {
@@ -304,49 +303,17 @@ export async function getCachedReadModel<T>(options: CacheOptions<T>): Promise<T
     return existing.value;
   }
 
-  if (existing && existing.staleUntil > now) {
-    existing.lastAccessAt = now;
-    if (!inflight.has(options.key)) {
-      const refreshPromise = options
-        .loader()
-        .then(writeEntry)
-        .catch(() => existing.value)
-        .finally(() => {
-          if (inflight.get(options.key) === refreshPromise) {
-            inflight.delete(options.key);
-          }
-        });
-      inflight.set(options.key, refreshPromise);
+  try {
+    return writeEntry(await options.loader());
+  } catch (error) {
+    const fallback = cache.get(options.key) as CacheEntry<T> | undefined;
+    if (fallback && fallback.staleUntil > nowMs() && loaderEpoch === invalidationEpoch) {
+      console.error('[read-model-cache] falha ao atualizar dados em cache', error);
+      fallback.lastAccessAt = nowMs();
+      return fallback.value;
     }
-    return existing.value;
+    throw error;
   }
-
-  const pending = inflight.get(options.key) as Promise<T> | undefined;
-  if (pending) return pending;
-
-  const promise = options
-    .loader()
-    .then(writeEntry)
-    .catch((error) => {
-      // Produção deve preferir dado antigo a erro/timeout em telas analíticas.
-      // Se já havia uma versão em memória, mantém por uma janela curta enquanto
-      // a próxima tentativa tenta recomputar novamente.
-      if (existing) {
-        const fallbackAt = nowMs();
-        existing.lastAccessAt = fallbackAt;
-        existing.staleUntil = fallbackAt + Math.min(staleTtlMs, ERROR_FALLBACK_STALE_MS);
-        return existing.value;
-      }
-      throw error;
-    })
-    .finally(() => {
-      if (inflight.get(options.key) === promise) {
-        inflight.delete(options.key);
-      }
-    });
-
-  inflight.set(options.key, promise);
-  return promise;
 }
 
 export function invalidateReadModelCache(options?: {
@@ -355,7 +322,6 @@ export function invalidateReadModelCache(options?: {
   keyPrefix?: string;
 }) {
   invalidationEpoch += 1;
-  inflight.clear();
 
   const tags = cleanStringSet(options?.tags);
   const scopeTags = cleanStringSet(options?.scopeTags);

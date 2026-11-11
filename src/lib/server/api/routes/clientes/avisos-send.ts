@@ -16,7 +16,7 @@ import {
   resolveUserScope,
   toErrorResponse
 } from '$lib/server/v1';
-import { ensureClienteModuloAccess } from '$lib/server/clientes';
+import { ensureClienteAccess, ensureClienteModuloAccess } from '$lib/server/clientes';
 
 const MAX_CLIENTE_AVISO_SEND_BODY_BYTES = 128 * 1024;
 const VALID_AVISO_CHANNELS = new Set(['email', 'whatsapp']);
@@ -89,6 +89,7 @@ export async function handleClientesAvisosSendGet(event: RequestEvent) {
     if (!clienteId || !isUuid(clienteId)) {
       return json({ error: 'Cliente invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
     }
+    await ensureClienteAccess(client, scope, clienteId);
 
     const { data, error } = await client
       .from('cliente_avisos_historico')
@@ -159,6 +160,7 @@ export async function handleClientesAvisosSendPost(event: RequestEvent) {
     if (!clienteId || !isUuid(clienteId)) {
       return json({ error: 'Cliente invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
     }
+    await ensureClienteAccess(client, scope, clienteId, undefined, undefined, 2);
 
     if (!VALID_AVISO_CHANNELS.has(canal)) {
       return json({ error: 'Canal invalido.' }, { status: 400, headers: NO_STORE_HEADERS });

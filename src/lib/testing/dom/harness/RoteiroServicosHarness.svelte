@@ -2,6 +2,7 @@
   import AbaHoteis from '../../../../routes/(app)/orcamentos/roteiros/[id]/_components/AbaHoteis.svelte';
   import AbaPasseios from '../../../../routes/(app)/orcamentos/roteiros/[id]/_components/AbaPasseios.svelte';
   import AbaTransporte from '../../../../routes/(app)/orcamentos/roteiros/[id]/_components/AbaTransporte.svelte';
+  import { atualizarDataHotel } from '../../../../routes/(app)/orcamentos/roteiros/[id]/_components/hotel-datas';
   import {
     newHotel,
     newPasseio,
@@ -25,7 +26,8 @@
   const PASSEIO_TIPO_OPTIONS = ['Passeio', 'Ingresso'];
   const TRANSPORTE_TIPO_OPTIONS = ['Aéreo'];
   const TRANSPORTE_TIPO_VOO_OPTIONS = ['Internacional'];
-  const onHotelDateChange = () => {};
+  const onHotelDateChange = (index: number, field: 'data_inicio' | 'data_fim', value: string) =>
+    atualizarDataHotel(hoteis[index], field, value);
   const onAereoValorChange = () => {};
   // svelte-ignore state_referenced_locally
   expose(() => ({ hoteis, passeios, transportes }));

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import { apiFetch } from '$lib/services/api';
-  import AtribuicaoGeoNames from '$lib/components/AtribuicaoGeoNames.svelte';
 
   type Destino = {
     id: string;
@@ -21,7 +20,9 @@
   export let disabled = false;
   export let idioma = '';
   export let valid = false;
+  export let validando = false;
   export let somenteGeonames = false;
+  export let validarInicial = true;
 
   const dispatch = createEventDispatcher<{ select: Destino; edit: void }>();
   let input: HTMLInputElement;
@@ -36,11 +37,12 @@
   let offset = 0;
   let sequencia = 0;
   let timer: ReturnType<typeof setTimeout> | undefined;
-  let resolvendo = Boolean(destinoId);
+  let resolvendo = Boolean(destinoId) && validarInicial;
   let validacaoFalhou = false;
   let referenciaIndisponivel = false;
 
   $: invalido = validacaoFalhou || (Boolean((value ?? '').trim()) && !destinoId);
+  $: validando = resolvendo;
   $: valid = !resolvendo && !invalido && (!required || Boolean((value ?? '').trim() && destinoId));
   $: if (input) {
     input.setCustomValidity(
@@ -139,7 +141,7 @@
   }
 
   onMount(() => {
-    if (!destinoId) return;
+    if (!destinoId || !validarInicial) return;
     const idInicial = destinoId;
     const atual = ++sequencia;
     resolvendo = true;
@@ -196,7 +198,6 @@
     placeholder="Digite e selecione o destino"
     class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 disabled:cursor-not-allowed disabled:bg-slate-100"
   />
-  <AtribuicaoGeoNames />
   {#if invalido}
     <p class="mt-1 text-xs text-red-600" role="alert">Selecione um destino na lista.</p>
   {/if}

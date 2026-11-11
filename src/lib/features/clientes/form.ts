@@ -1,4 +1,5 @@
 export type TipoPessoa = 'PF' | 'PJ';
+import { validateCPF, validateCNPJ } from '$lib/utils/validation';
 
 export type ClienteFormData = {
   nome: string;
@@ -64,7 +65,6 @@ export const estadosBrasil = [
 export const classificacaoOptions = ['', 'A', 'B', 'C', 'D', 'E'];
 export const generoOptions = ['', 'Masculino', 'Feminino', 'Outros'];
 
-const REPEATED_DIGITS_PATTERN = /^(\d)\1+$/;
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function buildClienteSelectOptions(options: string[]) {
@@ -161,6 +161,13 @@ export function formatDocumento(value: string, tipoPessoa: TipoPessoa) {
   return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
 }
 
+export function formatDocumentoSalvo(value: string, tipoPessoa: TipoPessoa) {
+  const length = tipoPessoa === 'PJ' ? 14 : 11;
+  return /^[\d\s./-]*$/.test(value) && onlyDigits(value).length === length
+    ? formatDocumento(value, tipoPessoa)
+    : value;
+}
+
 export function formatCep(value: string) {
   const digits = onlyDigits(value).slice(0, 8);
   if (digits.length <= 5) return digits;
@@ -168,19 +175,7 @@ export function formatCep(value: string) {
 }
 
 export function isValidCnpj(value: string) {
-  const digits = onlyDigits(value);
-  if (digits.length !== 14) return false;
-  if (REPEATED_DIGITS_PATTERN.test(digits)) return false;
-
-  const calc = (base: string, factors: number[]) => {
-    const sum = base.split('').reduce((acc, num, index) => acc + Number(num) * factors[index], 0);
-    const mod = sum % 11;
-    return mod < 2 ? 0 : 11 - mod;
-  };
-
-  const d1 = calc(digits.slice(0, 12), [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
-  const d2 = calc(digits.slice(0, 13), [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
-  return digits === `${digits.slice(0, 12)}${d1}${d2}`;
+  return validateCNPJ(value);
 }
 
 export function parseTagsInput(value: string) {
@@ -248,7 +243,7 @@ export function fillClienteFormFromApi(
     ...initial,
     nome: sanitizeImportedClienteNome(String(data.nome || '')),
     nascimento: String(data.nascimento || data.data_nascimento || '').slice(0, 10),
-    cpf: formatDocumento(String(data.cpf || ''), tipoPessoa),
+    cpf: formatDocumentoSalvo(String(data.cpf || ''), tipoPessoa),
     tipo_pessoa: tipoPessoa,
     telefone: String(data.telefone || ''),
     whatsapp: String(data.whatsapp || ''),
@@ -285,10 +280,10 @@ export function validateClienteForm(form: ClienteFormData): ClienteValidationRes
     errors.cpf =
       form.tipo_pessoa === 'PJ' ? 'Informe o CNPJ do cliente.' : 'Informe o CPF do cliente.';
   } else if (form.tipo_pessoa === 'PJ') {
-    if (!isValidCnpj(documentoDigits)) {
+    if (!isValidCnpj(form.cpf)) {
       errors.cpf = 'CNPJ invalido. Informe os 14 digitos corretamente.';
     }
-  } else if (documentoDigits.length !== 11) {
+  } else if (!validateCPF(form.cpf)) {
     errors.cpf = 'CPF invalido. Informe os 11 digitos corretamente.';
   }
 

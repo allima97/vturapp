@@ -8,7 +8,16 @@
   import { toUserMessage } from '$lib/utils/errors';
   import { apiGet, apiPatch, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
-  import { Save, User, Phone, MapPin, Mail, Building2 } from '$lib/icons';
+  import { mensagemErroCep } from '$lib/features/enderecos/cep';
+  import { validateOptionalCPF } from '$lib/utils/validation';
+  import {
+    formatCep,
+    formatDocumento,
+    formatDocumentoSalvo,
+    formatTelefone,
+    onlyDigits
+  } from '$lib/features/clientes/form';
+  import { Save, User, Phone, Whatsapp, MapPin, Mail, Building2, Calendar } from '$lib/icons';
 
   type Perfil = {
     id: string;
@@ -118,12 +127,12 @@
       if (perfil) {
         form = {
           nome_completo: perfil.nome_completo || '',
-          cpf: perfil.cpf || '',
+          cpf: formatDocumentoSalvo(perfil.cpf || '', 'PF'),
           data_nascimento: perfil.data_nascimento || '',
-          telefone: perfil.telefone || '',
-          whatsapp: perfil.whatsapp || '',
+          telefone: displayFormatted(perfil.telefone || '', [10, 11], formatTelefone),
+          whatsapp: displayFormatted(perfil.whatsapp || '', [10, 11], formatTelefone),
           rg: perfil.rg || '',
-          cep: perfil.cep || '',
+          cep: displayFormatted(perfil.cep || '', [8], formatCep),
           endereco: perfil.endereco || '',
           numero: perfil.numero || '',
           complemento: perfil.complemento || '',
@@ -152,6 +161,36 @@
     }
   }
 
+  function displayFormatted(
+    value: string,
+    lengths: number[],
+    formatter: (value: string) => string
+  ) {
+    return /^[\d\s().-]*$/.test(value) && lengths.includes(onlyDigits(value).length)
+      ? formatter(value)
+      : value;
+  }
+
+  function handleTelefoneInput(field: 'telefone' | 'whatsapp', event: Event) {
+    const input = event.currentTarget as HTMLInputElement;
+    input.value = formatTelefone(input.value);
+    form = { ...form, [field]: input.value };
+  }
+
+  function handleCpfInput(event: Event) {
+    const input = event.currentTarget as HTMLInputElement;
+    input.value = formatDocumento(input.value, 'PF');
+    form = { ...form, cpf: input.value };
+  }
+
+  function handleCepInput(event: Event) {
+    cepGuard.abort();
+    cepStatus = null;
+    const input = event.currentTarget as HTMLInputElement;
+    input.value = formatCep(input.value);
+    form = { ...form, cep: input.value };
+  }
+
   async function buscarCep() {
     const digits = String(form.cep || '').replace(/\D/g, '');
     if (digits.length !== 8) {
@@ -177,14 +216,18 @@
       };
       cepStatus = 'Endereço carregado.';
     } catch (err) {
-      if (isCanceledApiError(err)) return;
-      cepStatus = 'CEP não encontrado.';
+      if (isCanceledApiError(err) || !cepGuard.isCurrent(request.seq)) return;
+      cepStatus = mensagemErroCep(err);
     }
   }
 
   async function save() {
     if (!form.nome_completo.trim()) {
       toast.error('Nome completo obrigatório.');
+      return;
+    }
+    if (!validateOptionalCPF(form.cpf)) {
+      toast.error('CPF inválido. Confira os dígitos informados.');
       return;
     }
 
@@ -248,11 +291,12 @@
         />
         <FieldInput
           id="perfil-cpf"
+          documentType="cpf"
           label="CPF"
           bind:value={form.cpf}
           placeholder="000.000.000-00"
           maxlength={14}
-          mask="cpf"
+          on:input={handleCpfInput}
           class_name="w-full"
         />
         <FieldInput
@@ -260,7 +304,6 @@
           label="RG"
           bind:value={form.rg}
           placeholder="Documento de identidade"
-          mask="rg"
           class_name="w-full"
         />
         <FieldInput
@@ -268,6 +311,7 @@
           label="Data de nascimento"
           type="date"
           bind:value={form.data_nascimento}
+          icon={Calendar}
           class_name="w-full"
         />
         <FieldInput
@@ -289,18 +333,20 @@
           id="perfil-telefone"
           label="Telefone"
           bind:value={form.telefone}
-          placeholder="(00) 0000-0000"
-          mask="phone"
+          type="tel"
+          placeholder="(00) 00000-0000"
           icon={Phone}
+          on:input={(event) => handleTelefoneInput('telefone', event)}
           class_name="w-full"
         />
         <FieldInput
           id="perfil-whatsapp"
           label="WhatsApp"
           bind:value={form.whatsapp}
+          type="tel"
           placeholder="(00) 00000-0000"
-          mask="phone"
-          icon={Phone}
+          icon={Whatsapp}
+          on:input={(event) => handleTelefoneInput('whatsapp', event)}
           class_name="w-full"
         />
       </div>
@@ -314,14 +360,12 @@
           bind:value={form.cep}
           placeholder="00000-000"
           maxlength={9}
-          mask="cep"
           icon={MapPin}
+          helper={cepStatus}
+          on:input={handleCepInput}
           on:blur={buscarCep}
           class_name="w-full"
         />
-        {#if cepStatus}
-          <p class="text-xs text-slate-500">{cepStatus}</p>
-        {/if}
         <FieldInput
           id="perfil-endereco"
           label="Endereço"

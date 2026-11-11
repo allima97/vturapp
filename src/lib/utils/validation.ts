@@ -97,7 +97,7 @@ export function validateForm(
  * Aceita com ou sem máscara (000.000.000-00 ou 00000000000).
  */
 export function validateCPF(value: unknown): boolean {
-  if (!value) return false;
+  if (typeof value !== 'string' || !/^[\d\s.-]+$/.test(value)) return false;
   const n = String(value).replace(/\D/g, '');
   if (n.length !== 11) return false;
   if (REPEATED_DIGITS_PATTERN.test(n)) return false; // todos iguais
@@ -120,7 +120,7 @@ export function validateCPF(value: unknown): boolean {
  * Aceita com ou sem máscara.
  */
 export function validateCNPJ(value: unknown): boolean {
-  if (!value) return false;
+  if (typeof value !== 'string' || !/^[\d\s./-]+$/.test(value)) return false;
   const n = String(value).replace(/\D/g, '');
   if (n.length !== 14) return false;
   if (REPEATED_DIGITS_PATTERN.test(n)) return false;
@@ -137,6 +137,14 @@ export function validateCNPJ(value: unknown): boolean {
 
   const d2 = calc(base + d1, [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2]);
   return d2 === parseInt(n[13]);
+}
+
+export function validateOptionalCPF(value: unknown): boolean {
+  return value == null || (typeof value === 'string' && (!value.trim() || validateCPF(value)));
+}
+
+export function validateOptionalCNPJ(value: unknown): boolean {
+  return value == null || (typeof value === 'string' && (!value.trim() || validateCNPJ(value)));
 }
 
 /**

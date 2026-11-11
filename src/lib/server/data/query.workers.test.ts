@@ -24,6 +24,17 @@ describe('cliente de dados D1', () => {
     });
   }
 
+  it('retorna erro de relação inexistente mesmo com filtros encadeados', async () => {
+    const result = await client()
+      .from('tabela_inexistente')
+      .select('id')
+      .eq('id', 'x')
+      .order('id')
+      .limit(10);
+    expect(result.error).toMatchObject({ code: '42P01' });
+    expect(result.data).toBeNull();
+  });
+
   it('grava e le uma linha do catalogo legado', async () => {
     const id = crypto.randomUUID();
     const inserted = await client()

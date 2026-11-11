@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { FieldDatalistInput, FieldInput } from '$lib/components/ui';
+  import { FieldInput, FieldTextarea } from '$lib/components/ui';
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import { type RotDia, addItem, moveDown, moveUp, newDia, removeItem } from './tipos';
@@ -12,7 +12,9 @@
     diasImportMsg = $bindable(),
     showDiasBusca = $bindable(),
     showDiasImport = $bindable(),
-    sugestoes
+    sugestoes,
+    buscarDescricoes,
+    abrirBuscaDias
   }: {
     dias: RotDia[];
     diasImportError: string | null;
@@ -20,6 +22,8 @@
     showDiasBusca: boolean;
     showDiasImport: boolean;
     sugestoes: Record<string, string[]>;
+    buscarDescricoes?: (dia: RotDia) => void;
+    abrirBuscaDias?: () => void;
   } = $props();
 </script>
 
@@ -43,7 +47,8 @@
       variant="secondary"
       size="sm"
       on:click={() => {
-        showDiasBusca = true;
+        if (abrirBuscaDias) abrirBuscaDias();
+        else showDiasBusca = true;
       }}
     >
       Buscar dias no banco
@@ -97,12 +102,24 @@
                   class_name="w-full"
                 />
                 <FieldInput label="Data" type="date" bind:value={dia.data} class_name="w-full" />
-                <FieldInput
+              </div>
+              <div class="mt-3">
+                <FieldTextarea
                   label="Descrição"
                   bind:value={dia.descricao}
                   placeholder="Atividades do dia"
-                  class_name="w-full"
+                  rows={3}
                 />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  class_name="mt-2"
+                  disabled={!dia.cidade.trim() || Boolean(dia.cidade_pendente)}
+                  on:click={() => buscarDescricoes?.(dia)}
+                >
+                  Buscar descrições desta cidade
+                </Button>
               </div>
             </details>
             <div class="flex items-center gap-1">

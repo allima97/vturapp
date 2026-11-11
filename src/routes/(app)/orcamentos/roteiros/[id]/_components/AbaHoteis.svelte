@@ -2,15 +2,7 @@
   import { FieldDatalistInput, FieldInput, FieldSelect, FieldTextarea } from '$lib/components/ui';
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
-  import {
-    type RotHotel,
-    addItem,
-    moveDown,
-    moveUp,
-    newHotel,
-    removeItem,
-    updateItem
-  } from './tipos';
+  import { type RotHotel, addItem, moveDown, moveUp, newHotel, removeItem } from './tipos';
   import { ChevronDown, ChevronUp, Plus, Trash2 } from '$lib/icons';
   import CidadeRoteiro from './CidadeRoteiro.svelte';
 
@@ -161,9 +153,7 @@
                   class_name="w-full"
                   placeholder="Auto"
                   on:input={(e) => {
-                    hoteis = updateItem(hoteis, index, {
-                      noites: Number((e.target as HTMLInputElement).value) || null
-                    });
+                    hotel.noites = Number((e.target as HTMLInputElement).value) || null;
                   }}
                 />
               </div>
@@ -174,9 +164,7 @@
                   value={hotel.qtd_apto ?? ''}
                   class_name="w-full"
                   on:input={(e) => {
-                    hoteis = updateItem(hoteis, index, {
-                      qtd_apto: Number((e.target as HTMLInputElement).value) || null
-                    });
+                    hotel.qtd_apto = Number((e.target as HTMLInputElement).value) || null;
                   }}
                 />
               </div>
@@ -219,9 +207,7 @@
                   value={hotel.qtd_adultos ?? ''}
                   class_name="w-full"
                   on:input={(e) => {
-                    hoteis = updateItem(hoteis, index, {
-                      qtd_adultos: Number((e.target as HTMLInputElement).value) || null
-                    });
+                    hotel.qtd_adultos = Number((e.target as HTMLInputElement).value) || null;
                   }}
                 />
               </div>
@@ -232,9 +218,7 @@
                   value={hotel.qtd_criancas ?? ''}
                   class_name="w-full"
                   on:input={(e) => {
-                    hoteis = updateItem(hoteis, index, {
-                      qtd_criancas: Number((e.target as HTMLInputElement).value) || null
-                    });
+                    hotel.qtd_criancas = Number((e.target as HTMLInputElement).value) || null;
                   }}
                 />
               </div>
@@ -245,9 +229,7 @@
                   value={hotel.valor_original ?? ''}
                   class_name="w-full"
                   on:input={(e) => {
-                    hoteis = updateItem(hoteis, index, {
-                      valor_original: Number((e.target as HTMLInputElement).value) || null
-                    });
+                    hotel.valor_original = Number((e.target as HTMLInputElement).value) || null;
                   }}
                 />
               </div>
@@ -258,9 +240,7 @@
                   value={hotel.valor_final ?? ''}
                   class_name="w-full"
                   on:input={(e) => {
-                    hoteis = updateItem(hoteis, index, {
-                      valor_final: Number((e.target as HTMLInputElement).value) || null
-                    });
+                    hotel.valor_final = Number((e.target as HTMLInputElement).value) || null;
                   }}
                 />
               </div>

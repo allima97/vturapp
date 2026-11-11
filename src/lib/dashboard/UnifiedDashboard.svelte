@@ -611,6 +611,7 @@
   $: showAniversariantesWidget = activeWidgetOrder.includes('aniversariantes');
   $: showAtividadesRecentesWidget = activeWidgetOrder.includes('atividades_recentes');
   $: showOrcamentosWidget = activeWidgetOrder.includes('orcamentos');
+  $: showConsultoriasWidget = activeWidgetOrder.includes('consultorias') && podeVerConsultoria;
   $: showVendedorFiltro = Boolean(
     userCtx &&
     VENDEDOR_FILTER_ROLES.has(String(userCtx.papel || '').toUpperCase()) &&
@@ -1658,61 +1659,68 @@
   </div>
 {/if}
 
-<!-- Linha 4: Atividades recentes + Orçamentos recentes -->
-{#if showAtividadesRecentesWidget || showOrcamentosWidget}
-  <div class="mb-6 grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2">
-    {#if showAtividadesRecentesWidget}
-      <div class="vtur-card p-6">
-        <div class="mb-4 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div
-              class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600"
-            >
-              <Clock size={18} />
-            </div>
-            <div>
-              <h3 class="text-base font-bold text-slate-900">Atividades Recentes</h3>
-              <p class="text-xs text-slate-500">Últimas movimentações no sistema</p>
-            </div>
+<!-- Linha 4: Atividades recentes -->
+{#if showAtividadesRecentesWidget}
+  <div class="mb-6">
+    <div class="vtur-card p-6">
+      <div class="mb-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div
+            class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600"
+          >
+            <Clock size={18} />
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900">Atividades Recentes</h3>
+            <p class="text-xs text-slate-500">Últimas movimentações no sistema</p>
           </div>
         </div>
-        <div class="border-t border-slate-100 pt-4">
-          {#if loading}
-            <LoadingState />
-          {:else if activityFeed.length === 0}
-            <p class="py-6 text-center text-sm text-slate-400">Nenhuma atividade recente.</p>
-          {:else}
-            <div class="space-y-0">
-              {#each activityFeed as item, idx}
-                <div class="relative flex items-start gap-4 py-3">
-                  {#if idx < activityFeed.length - 1}
-                    <span class="absolute top-12 left-[19px] h-[calc(100%-12px)] w-px bg-slate-200"
-                    ></span>
-                  {/if}
-                  <div
-                    class="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-600 shadow-xs"
-                  >
-                    {#if item.icon === 'orcamento'}<FileText size={18} class="text-amber-500" />
-                    {:else if item.icon === 'aniversario'}<Gift size={18} class="text-green-500" />
-                    {:else if item.icon === 'viagem'}<Plane size={18} class="text-indigo-500" />
-                    {:else if item.icon === 'followup'}<Clock size={18} class="text-violet-500" />
-                    {:else}<Clock size={18} class="text-slate-400" />{/if}
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <p class="text-sm font-semibold text-slate-900">{item.titulo}</p>
-                    <p class="text-xs text-slate-500">{item.subtitulo}</p>
-                  </div>
-                  <span class="shrink-0 pt-1 text-xs text-slate-400">{item.tempo}</span>
-                </div>
-              {/each}
-            </div>
-          {/if}
-        </div>
       </div>
-    {/if}
+      <div class="border-t border-slate-100 pt-4">
+        {#if loading}
+          <LoadingState />
+        {:else if activityFeed.length === 0}
+          <p class="py-6 text-center text-sm text-slate-400">Nenhuma atividade recente.</p>
+        {:else}
+          <div class="space-y-0">
+            {#each activityFeed as item, idx}
+              <div class="relative flex items-start gap-4 py-3">
+                {#if idx < activityFeed.length - 1}
+                  <span class="absolute top-12 left-[19px] h-[calc(100%-12px)] w-px bg-slate-200"
+                  ></span>
+                {/if}
+                <div
+                  class="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-slate-100 bg-white text-slate-600 shadow-xs"
+                >
+                  {#if item.icon === 'orcamento'}<FileText size={18} class="text-amber-500" />
+                  {:else if item.icon === 'aniversario'}<Gift size={18} class="text-green-500" />
+                  {:else if item.icon === 'viagem'}<Plane size={18} class="text-indigo-500" />
+                  {:else if item.icon === 'followup'}<Clock size={18} class="text-violet-500" />
+                  {:else}<Clock size={18} class="text-slate-400" />{/if}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-semibold text-slate-900">{item.titulo}</p>
+                  <p class="text-xs text-slate-500">{item.subtitulo}</p>
+                </div>
+                <span class="shrink-0 pt-1 text-xs text-slate-400">{item.tempo}</span>
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    </div>
+  </div>
+{/if}
 
+<!-- Linha 5: Orçamentos recentes + Consultorias -->
+{#if showOrcamentosWidget || showConsultoriasWidget}
+  <div
+    class="mb-6 grid grid-cols-1 gap-4 sm:gap-6 {showOrcamentosWidget && showConsultoriasWidget
+      ? 'lg:grid-cols-2'
+      : ''}"
+  >
     {#if showOrcamentosWidget}
-      <div class="vtur-card p-6">
+      <div class="vtur-card min-w-0 p-6">
         <div class="mb-4 flex items-center justify-between">
           <div class="flex items-center gap-3">
             <div
@@ -1786,44 +1794,44 @@
         </div>
       </div>
     {/if}
-  </div>
-{/if}
-
-<!-- Linha 5: Consultorias (largura total, quando disponível) -->
-{#if activeWidgetOrder.includes('consultorias') && podeVerConsultoria}
-  <div class="vtur-card mb-6 p-6">
-    <div class="mb-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div
-          class="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50 text-purple-600"
-        >
-          <UserPlus size={18} />
+    {#if showConsultoriasWidget}
+      <div class="vtur-card min-w-0 p-6">
+        <div class="mb-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div
+              class="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-50 text-purple-600"
+            >
+              <UserPlus size={18} />
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Consultorias agendadas</h3>
+              <p class="text-xs text-slate-500">Próximas sessões</p>
+            </div>
+          </div>
         </div>
-        <div>
-          <h3 class="text-base font-bold text-slate-900">Consultorias agendadas</h3>
-          <p class="text-xs text-slate-500">Próximas sessões</p>
+        <div class="border-t border-slate-100 pt-4">
+          {#if loading}
+            <LoadingState />
+          {:else if consultorias.length === 0}
+            <p class="py-6 text-center text-sm text-slate-400">Nenhuma consultoria agendada.</p>
+          {:else}
+            <div class="grid grid-cols-1 gap-3">
+              {#each consultorias.slice(0, 6) as c}
+                <div
+                  class="rounded-xl border border-slate-100 p-3 transition-colors hover:bg-slate-50"
+                >
+                  <p class="truncate text-sm font-semibold text-slate-900">{c.cliente_nome}</p>
+                  <p class="mt-0.5 text-xs text-slate-500">
+                    {formatDateTime(c.data_hora)}{#if c.destino}
+                      · {c.destino}{/if}
+                  </p>
+                </div>
+              {/each}
+            </div>
+          {/if}
         </div>
       </div>
-    </div>
-    <div class="border-t border-slate-100 pt-4">
-      {#if loading}
-        <LoadingState />
-      {:else if consultorias.length === 0}
-        <p class="py-6 text-center text-sm text-slate-400">Nenhuma consultoria agendada.</p>
-      {:else}
-        <div class="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {#each consultorias.slice(0, 6) as c}
-            <div class="rounded-xl border border-slate-100 p-3 transition-colors hover:bg-slate-50">
-              <p class="truncate text-sm font-semibold text-slate-900">{c.cliente_nome}</p>
-              <p class="mt-0.5 text-xs text-slate-500">
-                {formatDateTime(c.data_hora)}{#if c.destino}
-                  · {c.destino}{/if}
-              </p>
-            </div>
-          {/each}
-        </div>
-      {/if}
-    </div>
+    {/if}
   </div>
 {/if}
 

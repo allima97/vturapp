@@ -13,6 +13,7 @@ import {
 import { invalidateUserReadModels } from '$lib/server/readModelCache';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
+import { validateOptionalCNPJ } from '$lib/utils/validation';
 
 const MAX_PARAMETROS_EMPRESA_BODY_BYTES = 64 * 1024;
 const EMPRESA_ALLOWED_UPDATE_FIELDS = [
@@ -88,6 +89,13 @@ export async function handleParametrosEmpresaPatch(event: RequestEvent) {
       bodyResult.data && typeof bodyResult.data === 'object'
         ? (bodyResult.data as EmpresaRequestBody)
         : {};
+
+    if ('cnpj' in body && !validateOptionalCNPJ(body.cnpj)) {
+      return json(
+        { error: 'CNPJ inválido. Confira os dígitos informados.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
+    }
 
     const payload: EmpresaUpdatePayload = {};
     for (const key of EMPRESA_ALLOWED_UPDATE_FIELDS) {

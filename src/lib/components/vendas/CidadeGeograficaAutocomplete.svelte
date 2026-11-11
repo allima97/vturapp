@@ -2,7 +2,6 @@
   import { createEventDispatcher, onDestroy, onMount } from 'svelte';
   import type { EstadoCidadeGeografica } from '$lib/features/vendas/cidadeGeograficaEstado';
   import { apiFetch } from '$lib/services/api';
-  import AtribuicaoGeoNames from '$lib/components/AtribuicaoGeoNames.svelte';
 
   type Cidade = {
     id: string;
@@ -262,7 +261,6 @@
     placeholder="Digite e selecione a cidade"
     class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm"
   />
-  <AtribuicaoGeoNames />
   {#if error}<p class="mt-1 text-xs text-red-600" role="alert">{error}</p>{/if}
   {#if vinculando}<p class="mt-1 text-xs text-slate-500">Validando cidade...</p>{/if}
   {#if erroBusca}<p class="mt-1 text-xs text-red-600" role="alert">{erroBusca}</p>{/if}

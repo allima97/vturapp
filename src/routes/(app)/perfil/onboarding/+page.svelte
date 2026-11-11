@@ -9,7 +9,10 @@
   import { apiGet, apiPatch, isCanceledApiError } from '$lib/services/api';
   import { toUserMessage } from '$lib/utils/errors';
   import { createLoadGuard } from '$lib/utils/loadGuard';
-  import { Save, CheckCircle, User, Phone, MapPin } from '$lib/icons';
+  import { mensagemErroCep } from '$lib/features/enderecos/cep';
+  import { validateCPF } from '$lib/utils/validation';
+  import { Save, CheckCircle, User, Phone, Whatsapp, MapPin } from '$lib/icons';
+  import { formatDocumentoSalvo } from '$lib/features/clientes/form';
 
   let loading = true;
   let saving = false;
@@ -93,7 +96,7 @@
       if (!loadGuard.isCurrent(request.seq)) return;
       form = {
         nome_completo: perfil.nome_completo || '',
-        cpf: perfil.cpf || '',
+        cpf: formatDocumentoSalvo(perfil.cpf || '', 'PF'),
         data_nascimento: perfil.data_nascimento || '',
         telefone: perfil.telefone || '',
         whatsapp: perfil.whatsapp || '',
@@ -136,14 +139,18 @@
       };
       cepStatus = 'Endereço carregado.';
     } catch (err) {
-      if (isCanceledApiError(err)) return;
-      cepStatus = 'CEP não encontrado.';
+      if (isCanceledApiError(err) || !cepGuard.isCurrent(request.seq)) return;
+      cepStatus = mensagemErroCep(err);
     }
   }
 
   async function save() {
     if (!form.nome_completo.trim()) {
       toast.error('Nome completo obrigatório.');
+      return;
+    }
+    if (!validateCPF(form.cpf)) {
+      toast.error('CPF inválido. Confira os dígitos informados.');
       return;
     }
     if (!form.telefone.trim()) {
@@ -230,11 +237,13 @@
         />
         <FieldInput
           id="ob-cpf"
+          documentType="cpf"
           label="CPF"
           required
           bind:value={form.cpf}
           placeholder="000.000.000-00"
           maxlength={14}
+          mask="cpf"
           class_name="w-full"
         />
         <FieldInput
@@ -259,6 +268,7 @@
           label="WhatsApp"
           bind:value={form.whatsapp}
           placeholder="(00) 00000-0000"
+          icon={Whatsapp}
           class_name="w-full"
         />
       </div>
@@ -294,10 +304,14 @@
           placeholder="00000-000"
           maxlength={9}
           icon={MapPin}
+          helper={cepStatus}
+          on:input={() => {
+            cepGuard.abort();
+            cepStatus = null;
+          }}
           on:blur={buscarCep}
           class_name="w-full"
         />
-        {#if cepStatus}<p class="text-xs text-slate-500">{cepStatus}</p>{/if}
         <FieldInput
           id="ob-endereco"
           label="Endereço"

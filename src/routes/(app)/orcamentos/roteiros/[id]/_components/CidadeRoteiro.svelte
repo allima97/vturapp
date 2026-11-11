@@ -13,10 +13,12 @@
   export let required = false;
 
   let valido = false;
+  let validando = false;
+  const validarInicial = destino.cidade_pendente !== false;
   if (roteiroGeograficoAtivo && destino.cidade_modo_geografico === undefined)
     destino.cidade_modo_geografico = Boolean(destino.cidade_id || !destino.cidade.trim());
   $: geografico = roteiroGeograficoAtivo && destino.cidade_modo_geografico === true;
-  $: if (geografico) destino.cidade_pendente = !valido;
+  $: if (geografico) destino.cidade_pendente = !valido && !validando;
 </script>
 
 {#if geografico}
@@ -26,6 +28,8 @@
     bind:value={destino.cidade}
     bind:destinoId={destino.cidade_id}
     bind:valid={valido}
+    bind:validando
+    {validarInicial}
     {required}
   />
 {:else}
@@ -40,10 +44,10 @@
     {required}
     onInput={(cidade) => {
       if (destino.cidade_id) destino.cidade_id = undefined;
-      if (roteiroGeograficoAtivo) destino.cidade_pendente = Boolean(cidade.trim());
+      destino.cidade_pendente = Boolean(cidade.trim());
     }}
     onSelect={(cidade) => {
-      if (cidade && roteiroGeograficoAtivo) destino.cidade_pendente = false;
+      if (cidade) destino.cidade_pendente = false;
     }}
   />
   {#if roteiroGeograficoAtivo}

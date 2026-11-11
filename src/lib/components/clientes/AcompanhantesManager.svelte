@@ -12,6 +12,8 @@
   import { Calendar, Phone, Save, Trash2, UserPlus, Users } from '$lib/icons';
   import { formatDate } from '$lib/utils/formatters';
   import { toUserMessage } from '$lib/utils/errors';
+  import { formatDocumentoSalvo } from '$lib/features/clientes/form';
+  import { validateOptionalCPF } from '$lib/utils/validation';
 
   import { confirmAction } from '$lib/stores/confirm';
   import { apiFetch, apiGet, isCanceledApiError } from '$lib/services/api';
@@ -43,6 +45,7 @@
   export let editable = false;
   export let title = 'Acompanhantes';
   export let subtitle = 'Relacionamentos e passageiros vinculados ao cliente.';
+  export let collapsible = false;
 
   let acompanhantes: Acompanhante[] = [];
   let loading = false;
@@ -90,7 +93,7 @@
   function fillForm(item: Acompanhante) {
     form = {
       nome_completo: String(item.nome_completo || ''),
-      cpf: String(item.cpf || ''),
+      cpf: formatDocumentoSalvo(String(item.cpf || ''), 'PF'),
       telefone: String(item.telefone || ''),
       grau_parentesco: String(item.grau_parentesco || ''),
       rg: String(item.rg || ''),
@@ -152,6 +155,10 @@
       toast.error('Informe o nome completo do acompanhante.');
       return;
     }
+    if (!validateOptionalCPF(form.cpf)) {
+      toast.error('CPF inválido. Confira os dígitos informados.');
+      return;
+    }
 
     saving = true;
     errorMessage = null;
@@ -204,7 +211,7 @@
   }
 </script>
 
-<Card {title} color="clientes">
+<Card {title} color="clientes" {collapsible}>
   <div class="space-y-4">
     <p class="text-sm text-slate-500">{subtitle}</p>
 
@@ -324,9 +331,11 @@
 
           <FieldInput
             id="acomp-cpf"
+            documentType="cpf"
             label="CPF"
             bind:value={form.cpf}
             placeholder="CPF do acompanhante"
+            mask="cpf"
           />
 
           <FieldInput

@@ -707,6 +707,23 @@ export async function resolveAccessibleClientIds(
     return [];
   }
 
+  const loadClientIds = async () => {
+    const { data, error } = await client.rpc('accessible_client_ids', {
+      p_company_ids: companyIds,
+      p_vendedor_ids: vendedorIds
+    });
+    if (error) throw error;
+    return Array.from(
+      new Set(
+        ((data || []) as Array<{ cliente_id?: string | null }>)
+          .map((row) => String(row?.cliente_id || '').trim())
+          .filter(Boolean)
+      )
+    );
+  };
+
+  if (companyIds.length === 0) return loadClientIds();
+
   // getCachedReadModelWithKv: além do cache local (por instância), reaproveita
   // o valor entre instâncias via KV (cache L2) -- ver kvInvalidation.ts. O
   // kvTtlSeconds usa o mesmo teto de 120s já aceito abaixo para o cache local
@@ -724,25 +741,7 @@ export async function resolveAccessibleClientIds(
     ttlMs: 120_000,
     staleTtlMs: 900_000,
     kvTtlSeconds: 120,
-    loader: async () => {
-      // Substitui o cruzamento de lotes em JS por uma única chamada RPC
-      // (função accessible_client_ids, ver dados/migrations) que reproduz
-      // exatamente a mesma lógica de OR entre as três condições.
-      const { data, error } = await client.rpc('accessible_client_ids', {
-        p_company_ids: companyIds,
-        p_vendedor_ids: vendedorIds
-      });
-
-      if (error) throw error;
-
-      const clientIds = new Set<string>();
-      for (const row of (data || []) as Array<{ cliente_id?: string | null }>) {
-        const id = String(row?.cliente_id || '').trim();
-        if (id) clientIds.add(id);
-      }
-
-      return Array.from(clientIds);
-    }
+    loader: loadClientIds
   });
 }
 

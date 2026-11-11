@@ -29,6 +29,7 @@ type ClienteInsertPayload = {
   ativo: boolean;
   active: boolean;
   company_id?: string;
+  created_by: string;
 };
 
 export async function handleOrcamentosClienteCreatePost(event: RequestEvent) {
@@ -64,7 +65,8 @@ export async function handleOrcamentosClienteCreatePost(event: RequestEvent) {
     const companyId = scope.isAdmin
       ? requestedCompanyId || null
       : resolveScopedCompanyId(scope, requestedCompanyId || null);
-    if (!scope.isAdmin && !companyId) {
+    const individual = scope.isVendedor && scope.usoIndividual && !requestedCompanyId;
+    if (!scope.isAdmin && !companyId && !individual) {
       return new Response(
         requestedCompanyId ? 'Empresa fora do escopo.' : 'Empresa nao identificada.',
         {
@@ -76,6 +78,7 @@ export async function handleOrcamentosClienteCreatePost(event: RequestEvent) {
 
     const payload: ClienteInsertPayload = {
       nome,
+      created_by: user.id,
       telefone,
       whatsapp: telefone,
       ativo: true,
@@ -92,6 +95,7 @@ export async function handleOrcamentosClienteCreatePost(event: RequestEvent) {
 
     invalidateClientReadModels({
       companyIds: companyId ? [companyId] : [],
+      vendedorIds: [user.id],
       userId: user.id
     });
 

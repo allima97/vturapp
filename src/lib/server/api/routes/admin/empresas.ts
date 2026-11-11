@@ -14,6 +14,7 @@ import {
   toErrorResponse
 } from '$lib/server/v1';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
+import { validateOptionalCNPJ } from '$lib/utils/validation';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import { cleanStringSet, chunkArray, dedupeById, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 
@@ -200,6 +201,12 @@ export async function handleAdminEmpresasPost(event: RequestEvent) {
     ensureCanManageCompanies(scope);
 
     const id = String(body.id || '').trim();
+    if ('cnpj' in body && !validateOptionalCNPJ(body.cnpj)) {
+      return json(
+        { error: 'CNPJ inválido. Confira os dígitos informados.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
+    }
     const payload = {
       nome_fantasia: String(body.nome_fantasia || body.nome || '').trim() || null,
       nome_empresa: String(body.nome_empresa || '').trim() || null,

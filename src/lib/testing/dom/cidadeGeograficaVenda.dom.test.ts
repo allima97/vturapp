@@ -48,12 +48,7 @@ function setup(initialValue = '') {
 it('distingue homônimos e cidades antigas sem criar vínculo por nome', async () => {
   apiFetch.mockResolvedValue(resultado);
   const tela = setup();
-  expect(tela.target.querySelector('a[href="https://www.geonames.org/"]')?.textContent).toBe(
-    'GeoNames'
-  );
-  expect(
-    tela.target.querySelector('a[href="https://creativecommons.org/licenses/by/4.0/"]')?.textContent
-  ).toBe('CC BY 4.0');
+  expect(tela.target.querySelector('a[href="https://www.geonames.org/"]')).toBeNull();
   tela.digitar('Roma');
   expect(tela.target.querySelector('[data-pending]')?.textContent).toBe('true');
   await vi.waitFor(() => expect(tela.target.textContent).toContain('Roma, Texas'));

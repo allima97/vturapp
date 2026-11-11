@@ -420,6 +420,7 @@ export async function handleClientesListGet(event: RequestEvent) {
         companyIds,
         vendedorIds,
         userId: canUseCompanyScope ? null : user.id,
+        individualClientIds: scope.usoIndividual ? scopedClientIds : null,
         page,
         pageSize,
         all,

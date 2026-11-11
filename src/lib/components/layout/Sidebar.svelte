@@ -13,45 +13,84 @@
   import { menuVisivel } from '$lib/stores/navegacao';
   import {
     AlertCircle,
+    Archive,
+    Award,
     Banknote,
     BarChart2,
+    Bell,
     BellRing,
+    BookOpen,
+    Briefcase,
+    Building,
     Building2,
+    Cake,
     Calendar,
+    CalendarDays,
     ChevronDown,
     ChevronLeft,
     ChevronRight,
     CircleDollarSign,
+    Compass,
     CreditCard,
+    Database,
+    FileCheck2,
     FileChartColumn,
+    FileClock,
+    FileDown,
+    FileSearch,
+    FileSpreadsheet,
     FileText,
+    Fingerprint,
+    FolderKanban,
     Gift,
+    Globe,
+    History,
     ImagePlus,
+    KeyRound,
+    Layers3,
     LayoutDashboard,
     LogOut,
     Mail,
-    Map as MapIcon,
     MapPin,
+    MapPinned,
     Megaphone,
     Menu,
+    MessageCircle,
     MessageSquare,
+    MessagesSquare,
+    Network,
     Package,
+    Pencil,
+    Percent,
+    PieChart,
     Plane,
+    Receipt,
+    ReceiptText,
     RefreshCw,
+    Route,
     Settings,
     Shield,
+    ShieldCheck,
     SlidersHorizontal,
     ShoppingCart,
     SquareCheckBig,
     Star,
+    Tag,
+    Target,
     Ticket,
     Trophy,
     TrendingUp,
     Truck,
+    Upload,
+    User,
+    UserCheck,
     Users,
     UserCircle,
+    UserCog,
+    UserPlus,
     Video,
-    Wallet
+    Wallet,
+    Wrench
   } from '$lib/icons';
   import { slide } from 'svelte/transition';
   import Button from '$lib/components/ui/Button.svelte';
@@ -125,7 +164,7 @@
           key: 'acompanhamento',
           name: 'Follow-up',
           href: '/operacao/acompanhamento',
-          icon: FileText
+          icon: FileClock
         },
         { key: 'recados', name: 'Recados', href: '/operacao/recados', icon: MessageSquare },
         { key: 'aniversariantes', name: 'Aniversariantes', href: '/aniversariantes', icon: Gift }
@@ -144,8 +183,8 @@
         },
         { key: 'clientes', name: 'Clientes', href: '/clientes', icon: Users },
         { key: 'viagens', name: 'Viagens', href: '/operacao/viagens', icon: Plane },
-        { key: 'orcamentos', name: 'Orçamentos', href: '/orcamentos', icon: FileText },
-        { key: 'roteiros', name: 'Roteiros', href: '/orcamentos/roteiros', icon: MapIcon },
+        { key: 'orcamentos', name: 'Orçamentos', href: '/orcamentos', icon: FileSpreadsheet },
+        { key: 'roteiros', name: 'Roteiros', href: '/orcamentos/roteiros', icon: Route },
         { key: 'vouchers', name: 'Vouchers', href: '/operacao/vouchers', icon: Ticket },
         {
           key: 'controle_sac',
@@ -180,15 +219,15 @@
       title: 'FINANCEIRO',
       collapsible: true,
       items: [
-        { key: 'caixa', name: 'Caixa', href: '/financeiro/caixa', icon: TrendingUp },
+        { key: 'caixa', name: 'Caixa', href: '/financeiro/caixa', icon: Banknote },
         {
           key: 'vendas_financeiro',
           name: 'Vendas / Pagamentos',
           href: '/vendas',
-          icon: CircleDollarSign
+          icon: Receipt
         },
         { key: 'comissoes', name: 'Comissionamento', href: '/financeiro/comissoes', icon: Wallet },
-        { key: 'fechamento', name: 'Fechamento', href: '/comissoes/fechamento', icon: Wallet },
+        { key: 'fechamento', name: 'Fechamento', href: '/comissoes/fechamento', icon: FileCheck2 },
         {
           key: 'ajustes_vendas',
           name: 'Ajustes Vendas',
@@ -205,9 +244,9 @@
           key: 'notas_fiscais',
           name: 'Notas Fiscais',
           href: '/financeiro/notas-fiscais',
-          icon: FileText
+          icon: ReceiptText
         },
-        { key: 'regras', name: 'Regras', href: '/financeiro/regras', icon: Settings }
+        { key: 'regras', name: 'Regras', href: '/financeiro/regras', icon: Percent }
       ]
     },
     {
@@ -215,30 +254,30 @@
       collapsible: true,
       items: [
         { key: 'parametros', name: 'Parâmetros', href: '/parametros', icon: Settings },
-        { key: 'metas', name: 'Metas', href: '/parametros/metas', icon: TrendingUp },
-        { key: 'equipe', name: 'Equipe', href: '/parametros/equipe', icon: Users },
-        { key: 'escalas', name: 'Escalas', href: '/parametros/escalas', icon: Calendar },
-        { key: 'cambios', name: 'Câmbios', href: '/parametros/cambios', icon: Banknote },
+        { key: 'metas', name: 'Metas', href: '/parametros/metas', icon: Target },
+        { key: 'equipe', name: 'Equipe', href: '/parametros/equipe', icon: Network },
+        { key: 'escalas', name: 'Escalas', href: '/parametros/escalas', icon: CalendarDays },
+        { key: 'cambios', name: 'Câmbios', href: '/parametros/cambios', icon: RefreshCw },
         {
           key: 'tipo_pacotes',
           name: 'Tipo Pacotes',
           href: '/parametros/tipo-pacotes',
-          icon: Package
+          icon: Layers3
         },
         {
           key: 'tipo_produtos',
           name: 'Tipo Produtos',
           href: '/parametros/tipo-produtos',
-          icon: Package
+          icon: Tag
         },
         { key: 'vouchers_assets', name: 'Vouchers', href: '/parametros/vouchers', icon: ImagePlus },
         {
           key: 'orcamentos_pdf',
           name: 'Orçamentos PDF',
           href: '/parametros/orcamentos',
-          icon: FileText
+          icon: FileDown
         },
-        { key: 'crm', name: 'CRM', href: '/parametros/crm', icon: MessageSquare },
+        { key: 'crm', name: 'CRM', href: '/parametros/crm', icon: MessageCircle },
         { key: 'avisos', name: 'Avisos', href: '/parametros/avisos', icon: BellRing },
         { key: 'empresa', name: 'Empresa', href: '/parametros/empresa', icon: Building2 }
       ]
@@ -252,17 +291,17 @@
           key: 'cadastros_circuitos',
           name: 'Circuitos',
           href: '/cadastros/circuitos',
-          icon: MapIcon
+          icon: MapPinned
         },
         { key: 'cadastros_cidades', name: 'Cidades', href: '/cadastros/cidades', icon: MapPin },
         {
           key: 'cadastros_opcionais',
           name: 'Passeios Opcionais',
           href: '/cadastros/opcionais',
-          icon: MapIcon
+          icon: Compass
         },
-        { key: 'cadastros_destinos', name: 'Destinos', href: '/cadastros/destinos', icon: MapIcon },
-        { key: 'cadastros_lote', name: 'Lote', href: '/cadastros/lote', icon: Package },
+        { key: 'cadastros_destinos', name: 'Destinos', href: '/cadastros/destinos', icon: Globe },
+        { key: 'cadastros_lote', name: 'Lote', href: '/cadastros/lote', icon: Archive },
         {
           key: 'cadastros_fornecedores',
           name: 'Fornecedores',
@@ -276,13 +315,18 @@
       collapsible: true,
       items: [
         { key: 'meu_perfil', name: 'Meu Perfil', href: '/perfil', icon: UserCircle },
-        { key: 'minha_escala', name: 'Minha Escala', href: '/perfil/escala', icon: Calendar },
-        { key: 'autenticacao_2fa', name: 'Autenticação 2FA', href: '/perfil/mfa', icon: Shield },
+        { key: 'minha_escala', name: 'Minha Escala', href: '/perfil/escala', icon: History },
+        {
+          key: 'autenticacao_2fa',
+          name: 'Autenticação 2FA',
+          href: '/perfil/mfa',
+          icon: Fingerprint
+        },
         {
           key: 'personalizar_menu',
           name: 'Personalizar Menu',
           href: '/perfil/personalizar',
-          icon: Settings
+          icon: Pencil
         },
         {
           key: 'preferencias',
@@ -295,10 +339,10 @@
   ] as MenuSection[];
 
   const masterItems: MenuItem[] = [
-    { name: 'Master', href: '/master', icon: Shield },
-    { name: 'Usuários', href: '/master/usuarios', icon: Users },
-    { name: 'Permissões', href: '/master/permissoes', icon: Shield },
-    { name: 'Empresas', href: '/master/empresas', icon: Building2 }
+    { name: 'Master', href: '/master', icon: Briefcase },
+    { name: 'Usuários', href: '/master/usuarios', icon: User },
+    { name: 'Permissões', href: '/master/permissoes', icon: KeyRound },
+    { name: 'Empresas', href: '/master/empresas', icon: Building }
   ];
 
   const adminItems: MenuItem[] = [
@@ -307,49 +351,55 @@
       key: 'admin_dashboard',
       name: 'Dashboard Admin',
       href: '/dashboard/admin',
-      icon: LayoutDashboard,
+      icon: PieChart,
       systemOnly: true
     },
-    { key: 'admin_planos', name: 'Planos', href: '/admin/planos', icon: CreditCard },
-    { key: 'admin_financeiro', name: 'Financeiro', href: '/admin/financeiro', icon: Wallet },
-    { key: 'admin_empresas', name: 'Empresas', href: '/admin/empresas', icon: Building2 },
-    { key: 'admin_usuarios', name: 'Usuários', href: '/admin/usuarios', icon: Users },
-    { key: 'admin_tipos', name: 'Tipos de usuário', href: '/admin/tipos-usuario', icon: Users },
+    { key: 'admin_planos', name: 'Planos', href: '/admin/planos', icon: Award },
+    { key: 'admin_financeiro', name: 'Financeiro', href: '/admin/financeiro', icon: TrendingUp },
+    { key: 'admin_empresas', name: 'Empresas', href: '/admin/empresas', icon: FolderKanban },
+    { key: 'admin_usuarios', name: 'Usuários', href: '/admin/usuarios', icon: UserPlus },
+    { key: 'admin_tipos', name: 'Tipos de usuário', href: '/admin/tipos-usuario', icon: UserCog },
     {
       key: 'admin_aniversariantes',
       name: 'Aniversariantes',
       href: '/admin/aniversariantes',
-      icon: Gift
+      icon: Cake
     },
-    { key: 'admin_avisos', name: 'Avisos', href: '/admin/avisos', icon: Megaphone },
-    { key: 'admin_crm', name: 'CRM — Templates', href: '/admin/crm', icon: MessageSquare },
+    { key: 'admin_avisos', name: 'Avisos', href: '/admin/avisos', icon: Bell },
+    { key: 'admin_crm', name: 'CRM — Templates', href: '/admin/crm', icon: MessagesSquare },
     { key: 'admin_email', name: 'E-mail', href: '/admin/email', icon: Mail },
     {
       key: 'admin_modulos',
       name: 'Módulos do sistema',
       href: '/admin/modulos-sistema',
-      icon: Settings
+      icon: Database
     },
-    { key: 'admin_permissoes', name: 'Permissões', href: '/admin/permissoes', icon: Shield },
+    { key: 'admin_permissoes', name: 'Permissões', href: '/admin/permissoes', icon: ShieldCheck },
     {
       key: 'admin_parametros_importacao',
       name: 'Parâmetros importação',
       href: '/admin/parametros-importacao',
-      icon: Settings
+      icon: Upload
     },
     {
       key: 'admin_fix_recibos',
       name: 'Correção de recibos',
       href: '/admin/fix-recibos',
-      icon: RefreshCw
+      icon: Wrench
     },
-    { key: 'admin_lgpd', name: 'LGPD', href: '/admin/lgpd', icon: Shield, systemOnly: true },
-    { key: 'admin_logs', name: 'Logs', href: '/dashboard/logs', icon: FileText, systemOnly: true },
+    { key: 'admin_lgpd', name: 'LGPD', href: '/admin/lgpd', icon: UserCheck, systemOnly: true },
+    {
+      key: 'admin_logs',
+      name: 'Logs',
+      href: '/dashboard/logs',
+      icon: FileSearch,
+      systemOnly: true
+    },
     {
       key: 'admin_documentacao',
       name: 'Documentação',
       href: '/documentacao',
-      icon: FileText,
+      icon: BookOpen,
       systemOnly: true
     }
   ];
@@ -645,16 +695,21 @@
     : $permissoes.isFinanceiro
       ? [
           { key: 'dashboard', name: 'Dashboard', href: dashboardHref, icon: LayoutDashboard },
-          { key: 'caixa', name: 'Caixa', href: '/financeiro/caixa', icon: TrendingUp },
-          { key: 'vendas_financeiro', name: 'Vendas', href: '/vendas', icon: CircleDollarSign },
+          { key: 'caixa', name: 'Caixa', href: '/financeiro/caixa', icon: Banknote },
+          { key: 'vendas_financeiro', name: 'Vendas', href: '/vendas', icon: Receipt },
           {
             key: 'ajustes_vendas',
             name: 'Ajustes',
             href: '/financeiro/ajustes-vendas',
-            icon: Settings
+            icon: SlidersHorizontal
           },
           { key: 'comissoes', name: 'Comissões', href: '/financeiro/comissoes', icon: Wallet },
-          { key: 'notas_fiscais', name: 'NF', href: '/financeiro/notas-fiscais', icon: FileText },
+          {
+            key: 'notas_fiscais',
+            name: 'NF',
+            href: '/financeiro/notas-fiscais',
+            icon: ReceiptText
+          },
           { key: 'meu_perfil', name: 'Perfil', href: '/perfil', icon: UserCircle }
         ]
       : [
@@ -667,8 +722,8 @@
             href: '/operacao/ultimas-compras',
             icon: ShoppingCart
           },
-          { key: 'orcamentos', name: 'Orçamentos', href: '/orcamentos', icon: FileText },
-          { key: 'roteiros', name: 'Roteiros', href: '/orcamentos/roteiros', icon: MapIcon },
+          { key: 'orcamentos', name: 'Orçamentos', href: '/orcamentos', icon: FileSpreadsheet },
+          { key: 'roteiros', name: 'Roteiros', href: '/orcamentos/roteiros', icon: Route },
           { key: 'viagens', name: 'Viagens', href: '/operacao/viagens', icon: Plane },
           { key: 'vouchers', name: 'Vouchers', href: '/operacao/vouchers', icon: Ticket },
           { key: 'tarefas', name: 'Tarefas', href: '/operacao/tarefas', icon: SquareCheckBig },
@@ -677,7 +732,7 @@
             key: 'acompanhamento',
             name: 'Follow-up',
             href: '/operacao/acompanhamento',
-            icon: FileText
+            icon: FileClock
           },
           { key: 'controle_sac', name: 'SAC', href: '/operacao/controle-sac', icon: AlertCircle },
           { key: 'campanhas', name: 'Campanhas', href: '/operacao/campanhas', icon: Megaphone },
@@ -700,9 +755,14 @@
             href: '/operacao/minhas-preferencias',
             icon: Star
           },
-          { key: 'caixa', name: 'Caixa', href: '/financeiro/caixa', icon: TrendingUp },
+          { key: 'caixa', name: 'Caixa', href: '/financeiro/caixa', icon: Banknote },
           { key: 'comissoes', name: 'Comissões', href: '/financeiro/comissoes', icon: Wallet },
-          { key: 'fechamento', name: 'Fechamento', href: '/comissoes/fechamento', icon: Wallet },
+          {
+            key: 'fechamento',
+            name: 'Fechamento',
+            href: '/comissoes/fechamento',
+            icon: FileCheck2
+          },
           { key: 'relatorios', name: 'Relatórios', href: '/relatorios', icon: FileChartColumn },
           { key: 'rel_ranking', name: 'Ranking', href: '/relatorios/ranking', icon: Trophy },
           {
@@ -713,7 +773,7 @@
           },
           { key: 'parametros', name: 'Parâmetros', href: '/parametros', icon: Settings },
           $permissoes.isMaster
-            ? { name: 'Master', href: '/master', icon: Shield }
+            ? { name: 'Master', href: '/master', icon: Briefcase }
             : { name: 'Admin', href: '/admin', icon: Shield },
           { key: 'meu_perfil', name: 'Perfil', href: '/perfil', icon: UserCircle }
         ];

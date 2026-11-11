@@ -4,6 +4,7 @@
   import { get } from 'svelte/store';
   import Sidebar from '$lib/components/layout/Sidebar.svelte';
   import Topbar from '$lib/components/layout/Topbar.svelte';
+  import AtribuicaoGeoNames from '$lib/components/AtribuicaoGeoNames.svelte';
   import GlobalConfirmDialog from '$lib/components/ui/GlobalConfirmDialog.svelte';
   import LoadingState from '$lib/components/ui/LoadingState.svelte';
   import ToastContainer from '$lib/components/ui/ToastContainer.svelte';
@@ -121,5 +122,8 @@
         <LoadingState className="min-h-[60vh]" />
       {/if}
     </div>
+    <footer aria-label="Créditos de dados geográficos" class="mt-8 pb-4">
+      <AtribuicaoGeoNames />
+    </footer>
   </main>
 </div>

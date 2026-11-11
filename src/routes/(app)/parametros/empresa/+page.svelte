@@ -10,6 +10,8 @@
   import { apiGet, apiPatch, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
   import { toUserMessage } from '$lib/utils/errors';
+  import { formatDocumentoSalvo } from '$lib/features/clientes/form';
+  import { validateOptionalCNPJ } from '$lib/utils/validation';
 
   type Empresa = {
     id: string;
@@ -94,7 +96,7 @@
         form = {
           nome_empresa: empresa.nome_empresa || '',
           nome_fantasia: empresa.nome_fantasia || '',
-          cnpj: empresa.cnpj || '',
+          cnpj: formatDocumentoSalvo(empresa.cnpj || '', 'PJ'),
           ie: empresa.ie || '',
           im: empresa.im || '',
           email: empresa.email || '',
@@ -118,6 +120,10 @@
   }
 
   async function handleSubmit() {
+    if (!validateOptionalCNPJ(form.cnpj)) {
+      toast.error('CNPJ inválido. Confira os dígitos informados.');
+      return;
+    }
     saving = true;
     try {
       await apiPatch('/api/v1/parametros/empresa', form);
@@ -184,6 +190,7 @@
         />
         <FieldInput
           id="emp-cnpj"
+          documentType="cnpj"
           label="CNPJ"
           type="text"
           bind:value={form.cnpj}

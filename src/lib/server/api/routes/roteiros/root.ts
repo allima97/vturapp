@@ -484,6 +484,11 @@ export async function handleRoteirosPatch(event: RequestEvent) {
           { status: 400, headers: NO_STORE_HEADERS }
         );
       }
+      if (safeTipo.toLowerCase() === 'cidade')
+        return json(
+          { error: 'Selecione cidades no cadastro de destinos, não nas sugestões de roteiro.' },
+          { status: 400, headers: NO_STORE_HEADERS }
+        );
 
       const normalizedValor = safeValor.toLowerCase();
 

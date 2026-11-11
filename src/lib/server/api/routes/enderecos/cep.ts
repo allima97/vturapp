@@ -56,7 +56,7 @@ export const handleEnderecosCepGet = async ({
           accept: 'application/json'
         }
       },
-      4_000,
+      15_000,
       fetch
     );
 

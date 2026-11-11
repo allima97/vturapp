@@ -9,7 +9,7 @@
   import { createBrowserDataClient } from '$lib/db/browserData';
   import { apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
-  import { Save, RefreshCw, FileText, Upload, ImageIcon, X } from '$lib/icons';
+  import { Save, RefreshCw, FileText, Upload, ImageIcon, X, Whatsapp } from '$lib/icons';
   import { toUserMessage } from '$lib/utils/errors';
 
   const LOGO_BUCKET = 'quotes';
@@ -354,6 +354,7 @@
               id="orc-whatsapp"
               label="Número"
               bind:value={settings.whatsapp}
+              icon={Whatsapp}
               placeholder="(00) 00000-0000"
               helper="Código do país + número (ex: 55 + 11 99999-9999)"
               class_name="w-full"

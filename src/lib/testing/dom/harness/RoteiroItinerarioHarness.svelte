@@ -8,10 +8,18 @@
   let diasImportMsg: string | null = $state('msg antiga');
   let showDiasBusca = $state(false);
   let showDiasImport = $state(false);
+  let descricaoSolicitada: RotDia | null = $state(null);
   let sugestoes: Record<string, string[]> = $state({});
   // svelte-ignore state_referenced_locally
   const e = expose;
-  e(() => ({ dias, diasImportError, diasImportMsg, showDiasBusca, showDiasImport }));
+  e(() => ({
+    dias,
+    diasImportError,
+    diasImportMsg,
+    showDiasBusca,
+    showDiasImport,
+    descricaoSolicitada
+  }));
 </script>
 
 <AbaItinerario
@@ -21,4 +29,5 @@
   bind:showDiasBusca
   bind:showDiasImport
   {sugestoes}
+  buscarDescricoes={(dia) => (descricaoSolicitada = dia)}
 />

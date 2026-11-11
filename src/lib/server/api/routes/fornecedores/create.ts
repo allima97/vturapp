@@ -14,6 +14,7 @@ import { fetchFornecedorById, sanitizeFornecedorPayload } from '$lib/server/forn
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateCatalogReadModels } from '$lib/server/readModelCache';
 import { prepararCidadeFornecedor } from '$lib/server/fornecedorCidadeGeografica';
+import { validateOptionalCNPJ } from '$lib/utils/validation';
 
 const MAX_FORNECEDOR_CREATE_BODY_BYTES = 128 * 1024;
 const validationError = (message: string) =>
@@ -82,6 +83,9 @@ export async function handleFornecedoresCreatePost(event: RequestEvent) {
     }
     if (payload.localizacao === 'brasil' && !payload.cnpj) {
       return validationError('CNPJ é obrigatório para fornecedores no Brasil.');
+    }
+    if (payload.localizacao === 'brasil' && !validateOptionalCNPJ(body.cnpj)) {
+      return validationError('CNPJ inválido. Confira os dígitos informados.');
     }
     if (payload.localizacao === 'brasil' && !payload.cep) {
       return validationError('CEP é obrigatório para fornecedores no Brasil.');

@@ -9,7 +9,7 @@ import {
   resolveUserScope,
   toErrorResponse
 } from '$lib/server/v1';
-import { ensureClienteModuloAccess } from '$lib/server/clientes';
+import { ensureClienteAccess, ensureClienteModuloAccess } from '$lib/server/clientes';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 
 export async function handleClientesAvisosHistoryGet(event: RequestEvent) {
@@ -26,6 +26,7 @@ export async function handleClientesAvisosHistoryGet(event: RequestEvent) {
     if (!clienteId || !isUuid(clienteId)) {
       return json({ error: 'Cliente invalido.' }, { status: 400, headers: NO_STORE_HEADERS });
     }
+    await ensureClienteAccess(client, scope, clienteId);
 
     const { data, error } = await client
       .from('cliente_avisos_historico')

@@ -10,6 +10,12 @@ import {
   toErrorResponse
 } from '$lib/server/v1';
 import { DYNAMIC_READ_HEADERS } from '$lib/server/httpCache';
+import { destinoIdValido } from '$lib/destinoIdentidade';
+import { cidadeCadastrada } from './cidades-busca';
+import {
+  IdentidadeDestinoInvalida,
+  resolverDestinoParaPersistencia
+} from '$lib/server/destinoPersistencia';
 
 type ScopeLike = { isAdmin?: boolean; isGestor?: boolean; isMaster?: boolean };
 
@@ -48,6 +54,66 @@ export async function handleRoteirosDiasBuscaGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     ensureModuloAccess(scope, ['Orcamentos'], 1, 'Sem acesso a Roteiros.');
+
+    const cidadeExata = event.url.searchParams.get('cidade_exata')?.trim() || '';
+    const cidadeId = event.url.searchParams.get('cidade_id')?.trim() || '';
+    if (cidadeExata || cidadeId) {
+      const db = event.platform?.env?.DB;
+      if (!db) throw new Error('Banco D1 indisponível nesta requisição.');
+      if (cidadeId && !destinoIdValido(cidadeId))
+        return json({ error: 'Identidade da cidade inválida.' }, { status: 400 });
+      let label = cidadeExata;
+      if (cidadeId) {
+        const geoDb = event.platform?.env?.GEO_DB;
+        if (!geoDb) return json({ error: 'Busca geográfica indisponível.' }, { status: 503 });
+        try {
+          label = (await resolverDestinoParaPersistencia(db, geoDb, cidadeId)).cidade;
+        } catch (error) {
+          if (error instanceof IdentidadeDestinoInvalida)
+            return json({ error: error.message }, { status: 400 });
+          throw error;
+        }
+      } else if (label.length > 200 || !(await cidadeCadastrada(db, label))) {
+        return json({ error: 'Selecione uma cidade cadastrada.' }, { status: 400 });
+      }
+
+      const offsetText = event.url.searchParams.get('offset') || '0';
+      if (!/^\d{1,6}$/.test(offsetText))
+        return json({ error: 'Página inválida.' }, { status: 400 });
+      const offset = Number(offsetText);
+      const termo = sanitizePostgrestSearchTerm(event.url.searchParams.get('q'));
+      const filtros = [
+        cidadeId
+          ? '(cidade_id = ? OR (cidade_id IS NULL AND cidade = ?))'
+          : '(cidade_id IS NULL AND cidade = ?)',
+        "descricao IS NOT NULL AND TRIM(descricao) <> ''"
+      ];
+      const valores: (string | number)[] = cidadeId ? [cidadeId.toLowerCase(), label] : [label];
+      if (!shouldScopeByOwner(scope) && scope.companyId && !scope.isAdmin && !scope.isMaster) {
+        filtros.push('company_id = ?');
+        valores.push(scope.companyId);
+      } else if (shouldScopeByOwner(scope)) {
+        filtros.push('created_by = ?');
+        valores.push(user.id);
+      }
+      if (termo.length >= 2) {
+        filtros.push("(descricao LIKE ? ESCAPE '\\' OR percurso LIKE ? ESCAPE '\\')");
+        const busca = `%${termo.replace(/[\\%_]/g, '\\$&')}%`;
+        valores.push(busca, busca);
+      }
+      const resultado = await db
+        .prepare(
+          `SELECT id, percurso, cidade, cidade_id, descricao, data, roteiro_id
+           FROM legado_roteiro_dia WHERE ${filtros.join(' AND ')}
+           ORDER BY created_at DESC, id DESC LIMIT 21 OFFSET ?`
+        )
+        .bind(...valores, offset)
+        .all<SearchDayRow>();
+      return json(
+        { dias: resultado.results.slice(0, 20), temMais: resultado.results.length > 20 },
+        { headers: DYNAMIC_READ_HEADERS }
+      );
+    }
 
     const rawQ = sanitizePostgrestSearchTerm(event.url.searchParams.get('q'));
     const rawCidade = sanitizePostgrestSearchTerm(event.url.searchParams.get('cidade'));

@@ -20,6 +20,7 @@
     Plane,
     Phone,
     Smartphone,
+    Whatsapp,
     AlertCircle,
     CheckCircle
   } from '$lib/icons';
@@ -1730,6 +1731,7 @@
               <FieldInput
                 id="voucher-modal-emergencia-whatsapp"
                 label="WhatsApp"
+                icon={Whatsapp}
                 type="text"
                 value={form.extra_data.emergencia?.whatsapp || ''}
                 placeholder="+55 11 99999-9999"

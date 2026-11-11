@@ -9,7 +9,7 @@
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import { FieldInput, FieldSelect, FieldTextarea, LoadingState } from '$lib/components/ui';
-  import { ArrowLeft, Save, Send, Plus, X, FileText, Search, User } from '$lib/icons';
+  import { ArrowLeft, Save, Send, Plus, X, FileText, Search, User, Whatsapp } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { addDaysISODate, todayISODateLocal } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
@@ -426,6 +426,7 @@
           <FieldInput
             label="Telefone/WhatsApp"
             bind:value={formData.cliente_telefone}
+            icon={Whatsapp}
             placeholder="(00) 00000-0000"
           />
           <FieldInput

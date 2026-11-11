@@ -4,7 +4,7 @@
  * Regras portadas do sistema legado (docs/f0/F0-04; origem em
  * src/lib/features/clientes/form.ts — os helpers puros são reutilizados):
  *   - nome obrigatório (após sanitização);
- *   - documento obrigatório: CPF com 11 dígitos ou CNPJ com 14 válido;
+ *   - documento obrigatório: CPF ou CNPJ com dígitos verificadores válidos;
  *   - telefone obrigatório com DDD (10+ dígitos);
  *   - e-mail opcional, validado quando presente;
  *   - documento/cep ficam só com dígitos; e-mail em minúsculas;
@@ -14,6 +14,7 @@
  */
 
 import { onlyDigits, isValidCnpj } from '$lib/features/clientes/form';
+import { validateCPF } from '$lib/utils/validation';
 
 export type ClienteInput = {
   nome: string;
@@ -90,16 +91,16 @@ export function validarCliente(body: unknown): ClienteValidationResult {
 
   const tipoPessoa = b.tipo_pessoa === 'PJ' ? 'PJ' : 'PF';
 
-  const documento = onlyDigits(
-    typeof b.documento === 'string' ? b.documento : typeof b.cpf === 'string' ? b.cpf : ''
-  );
+  const documentoOriginal =
+    typeof b.documento === 'string' ? b.documento : typeof b.cpf === 'string' ? b.cpf : '';
+  const documento = onlyDigits(documentoOriginal);
   if (!documento) {
     errors.documento =
       tipoPessoa === 'PJ' ? 'Informe o CNPJ do cliente.' : 'Informe o CPF do cliente.';
   } else if (tipoPessoa === 'PJ') {
-    if (!isValidCnpj(documento))
+    if (!isValidCnpj(documentoOriginal))
       errors.documento = 'CNPJ inválido. Informe os 14 dígitos corretamente.';
-  } else if (documento.length !== 11) {
+  } else if (!validateCPF(documentoOriginal)) {
     errors.documento = 'CPF inválido. Informe os 11 dígitos corretamente.';
   }
 

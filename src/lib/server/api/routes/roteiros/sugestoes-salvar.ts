@@ -52,6 +52,11 @@ export async function handleRoteirosSugestoesSalvarPost(event: RequestEvent) {
     const valor = String(body.valor).trim().slice(0, 160);
     if (!tipo || !valor)
       return new Response('Dados invalidos.', { status: 400, headers: NO_STORE_HEADERS });
+    if (tipo.toLowerCase() === 'cidade')
+      return json(
+        { error: 'Selecione cidades no cadastro de destinos, não nas sugestões de roteiro.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
     const valorBusca = sanitizePostgrestSearchTerm(valor, 160);
     if (!valorBusca)
       return new Response('Dados invalidos.', { status: 400, headers: NO_STORE_HEADERS });

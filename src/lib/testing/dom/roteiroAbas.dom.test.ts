@@ -85,6 +85,57 @@ describe('roteiro: aba Investimento', () => {
   });
 });
 
+describe('roteiro: datas dos hotéis', () => {
+  it('mantém o cartão aberto e o foco durante a edição e calcula as noites', () => {
+    const t = montar(ServicosHarness);
+    const card = [...t.target.querySelectorAll('details')].find((item) =>
+      item.textContent?.includes('Hotel Ciutat Vella')
+    )!;
+    card.open = true;
+    const [entrada, saida] = [...card.querySelectorAll<HTMLInputElement>('input[type="date"]')];
+    entrada.focus();
+    for (const valor of ['0002-08-11', '0020-08-11', '0202-08-11', '2027-08-11']) {
+      entrada.value = valor;
+      entrada.dispatchEvent(new Event('input', { bubbles: true }));
+      entrada.dispatchEvent(new Event('change', { bubbles: true }));
+      flushSync();
+      expect(card.open).toBe(true);
+      expect(card.querySelector('input[type="date"]')).toBe(entrada);
+      expect(document.activeElement).toBe(entrada);
+    }
+    saida.value = '2027-08-15';
+    saida.dispatchEvent(new Event('input', { bubbles: true }));
+    saida.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(t.get().hoteis[0]).toMatchObject({
+      data_inicio: '2027-08-11',
+      data_fim: '2027-08-15',
+      noites: 4
+    });
+    expect(card.open).toBe(true);
+    expect(card.querySelectorAll('input[type="date"]')[1]).toBe(saida);
+    t.fim();
+  });
+
+  it('mantém o foco ao editar campos numéricos do hotel', () => {
+    const t = montar(ServicosHarness);
+    const card = [...t.target.querySelectorAll('details')].find((item) =>
+      item.textContent?.includes('Hotel Ciutat Vella')
+    )!;
+    card.open = true;
+    const qtd = card.querySelectorAll<HTMLInputElement>('input[type="number"]')[1];
+    qtd.focus();
+    qtd.value = '12';
+    qtd.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+    expect(t.get().hoteis[0].qtd_apto).toBe(12);
+    expect(card.open).toBe(true);
+    expect(card.querySelectorAll('input[type="number"]')[1]).toBe(qtd);
+    expect(document.activeElement).toBe(qtd);
+    t.fim();
+  });
+});
+
 describe('roteiro: aba Itinerário', () => {
   it('mantém os dias recolhidos e permite abrir, editar e fechar sem perder os dados', () => {
     const t = montar(ItinerarioHarness);
@@ -262,6 +313,7 @@ describe('roteiro: aba Opcionais', () => {
     flushSync();
     expect(t.get()[0]).toEqual({
       cidade: 'Barcelona',
+      cidade_pendente: true,
       passeios: [{ nome: 'Bairro Gótico', descricao: 'Passeio e jantar' }]
     });
     expect(t.target.querySelector('input[type="date"]')).toBeNull();

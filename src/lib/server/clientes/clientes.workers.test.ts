@@ -162,11 +162,12 @@ describe('CRUD de clientes (D1 real)', () => {
   });
 
   it('pagina por cursor com ordenação determinística', async () => {
+    const documentos = ['10000000108', '10000000280', '10000000361', '10000000442', '10000000523'];
     for (let i = 1; i <= 5; i++) {
       await criarCliente(db(), EMPRESA_A, USUARIO_A, {
         ...clienteValido,
         nome: `Cliente ${String(i).padStart(2, '0')}`,
-        documento: `5299822472${i}` === '52998224725' ? '52998224726' : `5299822472${i}`
+        documento: documentos[i - 1]
       });
     }
     const pagina1 = await listarClientes(db(), EMPRESA_A, { limite: 2 });

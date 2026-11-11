@@ -93,16 +93,16 @@ async function canAccessCliente(db: D1Database, args: Record<string, unknown>) {
   const saleSeller = sellers.length ? ` AND vendedor_id IN (${placeholders(sellers)})` : '';
   const sql = `
     SELECT 1 AS ok FROM legado_clientes
-    WHERE id = ?1 ${companySql} ${sellerSql}
+    WHERE id = ? ${companySql} ${sellerSql}
     UNION
     SELECT 1 AS ok FROM legado_vendas
-    WHERE cliente_id = ?1 AND cancelada = 0 ${companySql} ${saleSeller}
+    WHERE cliente_id = ? AND cancelada = 0 ${companySql} ${saleSeller}
     UNION
     SELECT 1 AS ok
     FROM legado_viagem_passageiros vp
     JOIN legado_viagens vi ON vi.id = vp.viagem_id
     JOIN legado_vendas v2 ON v2.id = vi.venda_id
-    WHERE vp.cliente_id = ?1 AND v2.cancelada = 0
+    WHERE vp.cliente_id = ? AND v2.cancelada = 0
       ${companies.length ? ` AND v2.company_id IN (${placeholders(companies)})` : ''}
       ${sellers.length ? ` AND v2.vendedor_id IN (${placeholders(sellers)})` : ''}
     LIMIT 1

@@ -19,6 +19,8 @@
   export let activeKey = '';
   export let onSelect: ((key: string) => void) | undefined = undefined;
   export let className = '';
+  export let idPrefix = '';
+  export let mobileDropdown = false;
 
   function selectTab(key: string, disabled?: boolean) {
     if (disabled) return;
@@ -41,9 +43,24 @@
   }
 </script>
 
+{#if mobileDropdown}
+  <select
+    class={`vtur-tabs-select ${className}`.trim()}
+    aria-label="Selecionar aba"
+    value={activeKey}
+    on:change={(event) => selectTab(event.currentTarget.value)}
+  >
+    {#each items as item}
+      <option value={item.key} disabled={item.disabled}>
+        {item.label}{item.badge != null && item.badge !== '' && item.badge !== 0 ? ` (${item.badge})` : ''}
+      </option>
+    {/each}
+  </select>
+{/if}
+
 <!-- svelte-ignore a11y_interactive_supports_focus -->
 <div
-  class={`vtur-tabs ${className}`.trim()}
+  class={`vtur-tabs ${mobileDropdown ? 'vtur-tabs--collapse' : ''} ${className}`.trim()}
   role="tablist"
   bind:this={listEl}
   on:keydown={handleKeydown}
@@ -54,6 +71,8 @@
       variant="unstyled"
       size="sm"
       role="tab"
+      id={idPrefix ? `${idPrefix}-tab-${item.key}` : null}
+      ariaControls={idPrefix ? `${idPrefix}-panel-${item.key}` : null}
       ariaSelected={activeKey === item.key}
       tabindex={index === tabStop ? 0 : -1}
       class_name={`vtur-tab ${activeKey === item.key ? 'vtur-tab--active' : ''}`.trim()}
@@ -76,3 +95,25 @@
     </Button>
   {/each}
 </div>
+
+<style>
+  .vtur-tabs-select {
+    display: none;
+    width: 100%;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.75rem;
+    background: #fff;
+    color: #1e3a8a;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+  @media (max-width: 767px) {
+    .vtur-tabs-select {
+      display: block;
+    }
+    :global(.vtur-tabs.vtur-tabs--collapse) {
+      display: none;
+    }
+  }
+</style>

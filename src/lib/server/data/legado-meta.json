@@ -1,5 +1,22 @@
 {
   "tables": {
+    "cliente_avisos_historico": {
+      "columns": {
+        "id": { "kind": "text", "nullable": false },
+        "cliente_id": { "kind": "text", "nullable": false },
+        "template_id": { "kind": "text", "nullable": true },
+        "canal": { "kind": "text", "nullable": false },
+        "assunto": { "kind": "text", "nullable": true },
+        "mensagem": { "kind": "text", "nullable": true },
+        "status": { "kind": "text", "nullable": true },
+        "provider": { "kind": "text", "nullable": true },
+        "provider_id": { "kind": "text", "nullable": true },
+        "destinatario": { "kind": "text", "nullable": true },
+        "enviado_por": { "kind": "text", "nullable": true },
+        "created_at": { "kind": "text", "nullable": false }
+      },
+      "primaryKey": ["id"]
+    },
     "admin_avisos_templates": {
       "columns": {
         "id": { "kind": "text", "nullable": false },

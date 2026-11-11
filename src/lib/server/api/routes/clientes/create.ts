@@ -7,7 +7,6 @@ import {
   getAdminClient,
   isUuid,
   requireAuthenticatedUser,
-  resolveScopedCompanyId,
   resolveUserScope,
   toErrorResponse
 } from '$lib/server/v1';
@@ -55,9 +54,9 @@ export async function handleClientesCreatePost(event: RequestEvent) {
     if (scope.isAdmin) {
       // Admin: usa company_id explícito se válido, senão null
       companyId = isUuid(requestedCompanyId) ? requestedCompanyId : null;
-    } else if (isUuid(requestedCompanyId)) {
+    } else if (requestedCompanyId) {
       // Qualquer papel com company_id explícito: valida se está no escopo
-      if (!scopedIdSet.has(requestedCompanyId)) {
+      if (!isUuid(requestedCompanyId) || !scopedIdSet.has(requestedCompanyId)) {
         return json(
           { error: 'company_id fora do escopo.' },
           { status: 403, headers: NO_STORE_HEADERS }
@@ -67,8 +66,9 @@ export async function handleClientesCreatePost(event: RequestEvent) {
     } else {
       // Sem company_id explícito: usa o primeiro disponível no escopo do usuário
       // (funciona para Vendedor, Gestor, Master, Financeiro)
-      companyId = scopedIds[0] ?? scope.companyId ?? null;
-      if (!companyId) {
+      companyId =
+        scope.isVendedor && scope.usoIndividual ? null : (scopedIds[0] ?? scope.companyId ?? null);
+      if (!companyId && !(scope.isVendedor && scope.usoIndividual)) {
         return json(
           { error: 'Empresa não identificada para criar cliente.' },
           { status: 400, headers: NO_STORE_HEADERS }
@@ -130,6 +130,7 @@ export async function handleClientesCreatePost(event: RequestEvent) {
 
     invalidateClientReadModels({
       companyIds: companyId ? [companyId] : [],
+      vendedorIds: [user.id],
       userId: user.id
     });
 

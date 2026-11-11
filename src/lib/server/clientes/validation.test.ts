@@ -36,11 +36,14 @@ describe('validarCliente', () => {
     }
   });
 
-  it('CPF precisa de 11 dígitos', () => {
-    const r = validarCliente({ ...base, documento: '123456' });
-    expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.errors.documento).toContain('CPF');
-  });
+  it.each(['123456', '52998224724', '11111111111', 'x52998224725'])(
+    'rejeita CPF inválido: %s',
+    (documento) => {
+      const r = validarCliente({ ...base, documento });
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.errors.documento).toContain('CPF');
+    }
+  );
 
   it('CNPJ precisa ser válido (dígitos verificadores)', () => {
     const invalido = validarCliente({

@@ -11,6 +11,7 @@ import {
 import { ensureClienteAccess } from '$lib/server/clientes';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateClientReadModels } from '$lib/server/readModelCache';
+import { validateOptionalCPF } from '$lib/utils/validation';
 import {
   readJsonBodyLimited,
   rejectCrossOriginRequest,
@@ -40,6 +41,12 @@ export async function handleClientesIdAcompanhantesAcompanhanteIdPatch(event: Re
         ? (bodyResult.data as Record<string, unknown>)
         : {};
     const nomeCompleto = String(body?.nome_completo || '').trim();
+    if (!validateOptionalCPF(body.cpf)) {
+      return json(
+        { error: 'CPF inválido. Confira os dígitos informados.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
+    }
     if (!nomeCompleto) {
       return json(
         { error: 'Informe o nome completo do acompanhante.' },

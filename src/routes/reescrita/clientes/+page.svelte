@@ -17,6 +17,8 @@
   } from '$lib/components/ui';
   import ClientNameCell from '$lib/components/ui/ClientNameCell.svelte';
   import ClientActionsCell from '$lib/components/ui/ClientActionsCell.svelte';
+  import { formatDocumentoSalvo } from '$lib/features/clientes/form';
+  import { validateCPF, validateCNPJ } from '$lib/utils/validation';
 
   type Cliente = {
     id: number;
@@ -199,7 +201,7 @@
     form = {
       nome: cliente.nome,
       tipo_pessoa: cliente.tipo_pessoa,
-      documento: cliente.documento,
+      documento: formatDocumentoSalvo(cliente.documento, cliente.tipo_pessoa),
       telefone: cliente.telefone,
       email: cliente.email ?? '',
       cidade: cliente.cidade ?? '',
@@ -217,7 +219,7 @@
       form = {
         nome: editing.nome,
         tipo_pessoa: editing.tipo_pessoa,
-        documento: editing.documento,
+        documento: formatDocumentoSalvo(editing.documento, editing.tipo_pessoa),
         telefone: editing.telefone,
         email: editing.email ?? '',
         cidade: editing.cidade ?? '',
@@ -231,6 +233,10 @@
 
   async function salvar(event: SubmitEvent) {
     event.preventDefault();
+    if (!(form.tipo_pessoa === 'PF' ? validateCPF(form.documento) : validateCNPJ(form.documento))) {
+      error = `${form.tipo_pessoa === 'PF' ? 'CPF' : 'CNPJ'} inválido. Confira os dígitos informados.`;
+      return;
+    }
     saving = true;
     error = '';
     try {
@@ -450,6 +456,7 @@
       />
       <FieldInput
         label={form.tipo_pessoa === 'PF' ? 'CPF' : 'CNPJ'}
+        documentType={form.tipo_pessoa === 'PF' ? 'cpf' : 'cnpj'}
         bind:value={form.documento}
         mask={form.tipo_pessoa === 'PF' ? 'cpf' : 'cnpj'}
         autocomplete="off"

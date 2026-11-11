@@ -6,6 +6,7 @@ const nav = vi.hoisted(() => ({ goto: vi.fn(async () => {}) }));
 vi.mock('$app/navigation', () => ({ goto: nav.goto }));
 
 import ClienteViagensCard from '$lib/components/clientes/ClienteViagensCard.svelte';
+import ClienteContatosCard from '$lib/components/clientes/ClienteContatosCard.svelte';
 import ContatosHarness from './harness/ContatosHarness.svelte';
 
 let app: ReturnType<typeof mount> | null = null;
@@ -78,6 +79,17 @@ describe('ficha do cliente: viagens', () => {
 });
 
 describe('ficha do cliente: contatos enviados', () => {
+  it('informa quando o histórico está indisponível', async () => {
+    responder(200, { items: [], unavailable: true });
+    montar(ClienteContatosCard, { clienteId: 'indisponivel' });
+    await vi.waitFor(() =>
+      expect(document.body.textContent).toContain(
+        'Histórico de contatos temporariamente indisponível.'
+      )
+    );
+    expect(document.body.textContent).not.toContain('Nenhum aviso enviado');
+  });
+
   it('mostra canal e assunto; recarrega quando um aviso é enviado', async () => {
     const f = responder(200, {
       items: [

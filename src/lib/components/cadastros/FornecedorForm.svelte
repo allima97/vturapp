@@ -13,7 +13,9 @@
     FieldTextarea,
     LoadingState
   } from '$lib/components/ui';
-  import { ArrowLeft, Save, Trash2 } from '$lib/icons';
+  import { ArrowLeft, Save, Trash2, Whatsapp } from '$lib/icons';
+  import { formatDocumentoSalvo } from '$lib/features/clientes/form';
+  import { validateCNPJ } from '$lib/utils/validation';
   import { toast } from '$lib/stores/ui';
   import { formatDate } from '$lib/utils/formatters';
   import { toUserMessage } from '$lib/utils/errors';
@@ -128,7 +130,7 @@
       nome_completo: data.nome_completo || '',
       nome_fantasia: data.nome_fantasia || '',
       localizacao: data.localizacao || 'brasil',
-      cnpj: data.cnpj || '',
+      cnpj: formatDocumentoSalvo(data.cnpj || '', 'PJ'),
       cep: data.cep || '',
       cidade: data.cidade || '',
       estado: data.estado || '',
@@ -255,6 +257,8 @@
       return toast.error('Principais serviços são obrigatórios.');
     if (form.localizacao === 'brasil' && !form.cnpj.trim())
       return toast.error('CNPJ é obrigatório para fornecedores do Brasil.');
+    if (form.localizacao === 'brasil' && !validateCNPJ(form.cnpj))
+      return toast.error('CNPJ inválido. Confira os dígitos informados.');
     if (form.localizacao === 'brasil' && !form.cep.trim())
       return toast.error('CEP é obrigatório para fornecedores do Brasil.');
 
@@ -364,9 +368,11 @@
         {#if form.localizacao === 'brasil'}
           <FieldInput
             id="forn-cnpj"
+            documentType="cnpj"
             label="CNPJ"
             bind:value={form.cnpj}
             placeholder="00.000.000/0000-00"
+            mask="cnpj"
             class_name="w-full"
           />
           <FieldInput
@@ -499,6 +505,7 @@
           id="forn-whatsapp"
           label="WhatsApp"
           value={form.whatsapp}
+          icon={Whatsapp}
           class_name="w-full"
           on:input={(e) => {
             const t = e.target as HTMLInputElement;

@@ -514,10 +514,11 @@ export function createDataClient(context: DataContext): DataClient {
           });
         }
       };
-      return new Proxy(missing, {
+      const missingBuilder = new Proxy(missing, {
         get: (target, prop) =>
-          prop in target ? target[prop as keyof typeof target] : () => missing
+          prop in target ? target[prop as keyof typeof target] : () => missingBuilder
       });
+      return missingBuilder;
     }
 
     let operation: 'select' | 'insert' | 'update' | 'upsert' | 'delete' = 'select';

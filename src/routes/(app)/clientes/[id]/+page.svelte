@@ -4,6 +4,7 @@
   import { onDestroy, onMount } from 'svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
+  import Tabs from '$lib/components/ui/Tabs.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import LoadingState from '$lib/components/ui/LoadingState.svelte';
   import KPICard from '$lib/components/kpis/KPICard.svelte';
@@ -14,16 +15,18 @@
   import {
     ArrowLeft,
     Calendar,
+    Cake,
     Edit,
     FileText,
+    Globe,
     Mail,
     MapPin,
-    MessageCircle,
     Phone,
     Send,
     ShoppingCart,
     Ticket,
     User,
+    Whatsapp,
     Wallet,
     Users,
     Clock,
@@ -115,6 +118,24 @@
   let loadSeq = 0;
   // Fase 5.4: recarrega "Contatos enviados" depois de enviar um aviso pela ficha.
   let versaoContatos = 0;
+  let abaAtiva = 'resumo';
+  let semAcessoViagens = false;
+  let semAcessoContatos = false;
+  $: abas = [
+    { key: 'resumo', label: 'Resumo do cliente' },
+    { key: 'acompanhantes', label: 'Acompanhantes' },
+    { key: 'vendas', label: 'Histórico de vendas' },
+    { key: 'orcamentos', label: 'Histórico de orçamentos' },
+    ...(!semAcessoViagens ? [{ key: 'viagens', label: 'Viagens' }] : []),
+    ...(!semAcessoContatos ? [{ key: 'contatos', label: 'Contatos enviados' }] : []),
+    { key: 'notas', label: 'Notas e contexto' }
+  ];
+  $: if (
+    (abaAtiva === 'viagens' && semAcessoViagens) ||
+    (abaAtiva === 'contatos' && semAcessoContatos)
+  ) {
+    abaAtiva = 'resumo';
+  }
 
   $: totalGasto = historicoVendas.reduce((acc, item) => acc + Number(item.valor_total || 0), 0);
   $: ticketMedio = historicoVendas.length > 0 ? totalGasto / historicoVendas.length : 0;
@@ -174,10 +195,6 @@
       fechado: 'Convertido em Venda'
     };
     return labels[key] || String(status || '-');
-  }
-
-  function getTipoPessoaLabel(value: string | null | undefined) {
-    return value === 'PJ' ? 'Pessoa Juridica' : 'Pessoa Fisica';
   }
 
   async function carregarCliente() {
@@ -380,11 +397,17 @@
     rápida de recorrência, negociação e potencial de reativação.
   </div>
 
-  <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-    <div class="space-y-6 lg:col-span-1">
-      <Card title="Resumo do cliente" color="clientes">
-        <div class="space-y-4">
-          <div class="flex items-center gap-3">
+  <Tabs items={abas} bind:activeKey={abaAtiva} idPrefix="cliente" mobileDropdown className="mb-6" />
+  <div
+    id="cliente-panel-resumo"
+    role="tabpanel"
+    aria-labelledby="cliente-tab-resumo"
+    hidden={abaAtiva !== 'resumo'}
+  >
+    <Card title="Resumo do cliente" color="clientes">
+      <div class="space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex min-w-0 items-center gap-3">
             <div class="bg-clientes-100 flex h-10 w-10 items-center justify-center rounded-full">
               <User size={18} class="text-clientes-600" />
             </div>
@@ -402,7 +425,7 @@
                   rel="noopener noreferrer"
                   class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800 transition-colors hover:bg-emerald-100 focus-visible:outline-2 focus-visible:outline-emerald-600"
                 >
-                  <MessageCircle size={15} aria-hidden="true" /> WhatsApp
+                  <Whatsapp size={15} aria-hidden="true" /> WhatsApp
                 </a>
               {/if}
               {#if telefoneDigitos}
@@ -423,50 +446,63 @@
               {/if}
             </div>
           {/if}
+        </div>
 
-          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div class="rounded-vtur-lg border border-slate-200 bg-slate-50 px-4 py-3">
-              <p class="text-xs tracking-wide text-slate-500 uppercase">Status</p>
-              <span
-                class={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusBadge(cliente.status)}`}
-              >
-                {getStatusLabel(cliente.status)}
-              </span>
+        <div
+          class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
+          aria-label="Dados do cliente"
+        >
+          <div class="flex min-w-0 items-start gap-3">
+            <div
+              class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+            >
+              <FileText size={18} class="text-clientes-600" aria-hidden="true" />
             </div>
-            <div class="rounded-vtur-lg border border-slate-200 bg-slate-50 px-4 py-3">
-              <p class="text-xs tracking-wide text-slate-500 uppercase">Classificacao</p>
-              <p class="mt-2 font-medium text-slate-900">{cliente.classificacao || '-'}</p>
-            </div>
-            <div class="rounded-vtur-lg border border-slate-200 bg-slate-50 px-4 py-3">
-              <p class="text-xs tracking-wide text-slate-500 uppercase">Tipo</p>
-              <p class="mt-2 font-medium text-slate-900">
-                {getTipoPessoaLabel(cliente.tipo_pessoa)} · {cliente.tipo_cliente || 'passageiro'}
-              </p>
-            </div>
-            <div class="rounded-vtur-lg border border-slate-200 bg-slate-50 px-4 py-3">
-              <p class="text-xs tracking-wide text-slate-500 uppercase">Ultima compra</p>
-              <p class="mt-2 font-medium text-slate-900">{formatDate(cliente.ultima_compra)}</p>
-            </div>
-          </div>
-
-          <div class="space-y-3">
-            <div>
+            <div class="min-w-0">
               <p class="text-sm text-slate-500">CPF/CNPJ</p>
               <p class="font-medium text-slate-900">{cliente.documento_formatado || '-'}</p>
             </div>
-            <div>
+          </div>
+          <div class="flex min-w-0 items-start gap-3">
+            <div
+              class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+            >
+              <Phone size={18} class="text-clientes-600" aria-hidden="true" />
+            </div>
+            <div class="min-w-0">
               <p class="text-sm text-slate-500">Telefone</p>
               <p class="font-medium text-slate-900">{cliente.telefone || '-'}</p>
             </div>
-            <div>
+          </div>
+          <div class="flex min-w-0 items-start gap-3">
+            <div
+              class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+            >
+              <Whatsapp size={18} class="text-clientes-600" aria-hidden="true" />
+            </div>
+            <div class="min-w-0">
               <p class="text-sm text-slate-500">WhatsApp</p>
               <p class="font-medium text-slate-900">{cliente.whatsapp || '-'}</p>
             </div>
-            <div>
-              <p class="text-sm text-slate-500">E-mail</p>
-              <p class="font-medium text-slate-900">{cliente.email || '-'}</p>
+          </div>
+          <div class="flex min-w-0 items-start gap-3">
+            <div
+              class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+            >
+              <Mail size={18} class="text-clientes-600" aria-hidden="true" />
             </div>
-            <div>
+            <div class="min-w-0">
+              <p class="text-sm text-slate-500">E-mail</p>
+              <p class="font-medium break-words text-slate-900">{cliente.email || '-'}</p>
+            </div>
+          </div>
+          <div class="flex min-w-0 items-start gap-3">
+            <div
+              class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+            >
+              <Cake size={18} class="text-clientes-600" aria-hidden="true" />
+            </div>
+            <div class="min-w-0">
               <p class="text-sm text-slate-500">Nascimento</p>
               <p class="font-medium text-slate-900">
                 {formatDate(cliente.nascimento)}
@@ -475,41 +511,43 @@
                 {/if}
               </p>
             </div>
-            <div>
-              <p class="text-sm text-slate-500">Genero / Nacionalidade</p>
+          </div>
+          <div class="flex min-w-0 items-start gap-3">
+            <div
+              class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+            >
+              <Globe size={18} class="text-clientes-600" aria-hidden="true" />
+            </div>
+            <div class="min-w-0">
+              <p class="text-sm text-slate-500">Gênero / Nacionalidade</p>
               <p class="font-medium text-slate-900">
                 {[cliente.genero, cliente.nacionalidade].filter(Boolean).join(' · ') || '-'}
               </p>
             </div>
           </div>
         </div>
-      </Card>
-
-      <Card title="Endereco e tags" color="clientes">
-        <div class="space-y-3">
-          <div class="flex items-start gap-3">
-            <MapPin size={18} class="text-clientes-600 mt-0.5" />
-            <div class="text-sm text-slate-700">
-              <p>
-                {cliente.endereco || 'Endereco nao informado'}{cliente.numero
-                  ? `, ${cliente.numero}`
-                  : ''}
-              </p>
-              {#if cliente.complemento}
-                <p>{cliente.complemento}</p>
-              {/if}
-              {#if cliente.bairro}
-                <p>{cliente.bairro}</p>
-              {/if}
-              <p>{[cliente.cidade, cliente.estado].filter(Boolean).join('/')}</p>
-              {#if cliente.cep}
-                <p>CEP: {cliente.cep}</p>
-              {/if}
-            </div>
-          </div>
-
-          <div>
-            <p class="mb-2 text-sm text-slate-500">Tags</p>
+      </div>
+      <div class="mt-5 flex items-start gap-3 border-t border-slate-100 pt-4">
+        <div
+          class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+        >
+          <MapPin size={18} class="text-clientes-600" aria-hidden="true" />
+        </div>
+        <div class="min-w-0 space-y-2">
+          <h4 class="text-sm font-semibold text-slate-800">Endereço e tags</h4>
+          <p class="min-w-0 text-sm break-words text-slate-700" aria-label="Endereço do cliente">
+            {[
+              `${cliente.endereco || 'Endereço não informado'}${cliente.numero ? `, ${cliente.numero}` : ''}`,
+              cliente.complemento,
+              cliente.bairro,
+              [cliente.cidade, cliente.estado].filter(Boolean).join('/'),
+              cliente.cep ? `CEP: ${cliente.cep}` : ''
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+          <div class="flex flex-wrap items-center gap-2" aria-label="Tags do cliente">
+            <span class="text-sm text-slate-500">Tags:</span>
             {#if cliente.tags && cliente.tags.length > 0}
               <div class="flex flex-wrap gap-2">
                 {#each cliente.tags as tag}
@@ -520,130 +558,172 @@
                 {/each}
               </div>
             {:else}
-              <p class="text-sm text-slate-500">Nenhuma tag cadastrada.</p>
+              <span class="text-sm text-slate-500">Nenhuma tag cadastrada.</span>
             {/if}
           </div>
         </div>
-      </Card>
+      </div>
+    </Card>
+  </div>
 
-      <Card title="Notas e contexto" color="clientes">
-        <p class="text-sm leading-6 text-slate-700">
-          {cliente.notas || cliente.observacoes || 'Sem observacoes registradas.'}
-        </p>
-      </Card>
-    </div>
+  <div
+    id="cliente-panel-acompanhantes"
+    role="tabpanel"
+    aria-labelledby="cliente-tab-acompanhantes"
+    hidden={abaAtiva !== 'acompanhantes'}
+  >
+    <AcompanhantesManager
+      {clienteId}
+      editable={false}
+      title="Acompanhantes"
+      subtitle="Consulta dos acompanhantes associados ao cliente."
+    />
+  </div>
 
-    <div class="space-y-6 lg:col-span-2">
-      <Card title="Historico de vendas" color="clientes">
-        {#if historicoVendas.length > 0}
-          <div class="overflow-x-visible md:overflow-x-auto">
-            <table class="table-mobile-cards w-full text-sm">
-              <thead class="bg-slate-50">
-                <tr>
-                  <th class="px-4 py-3 text-left font-semibold text-slate-600">Lancamento</th>
-                  <th class="px-4 py-3 text-left font-semibold text-slate-600">Destino</th>
-                  <th class="px-4 py-3 text-left font-semibold text-slate-600">Embarque</th>
-                  <th class="px-4 py-3 text-right font-semibold text-slate-600">Valor</th>
-                  <th class="px-4 py-3 text-right font-semibold text-slate-600">Taxas</th>
-                  <th class="px-4 py-3 text-left font-semibold text-slate-600">Vinculo</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-200">
-                {#each historicoVendas as venda}
-                  <tr
-                    class="cursor-pointer transition-colors hover:bg-slate-50"
-                    on:click={() => goto(`/vendas/${venda.id}`)}
+  <div
+    id="cliente-panel-vendas"
+    role="tabpanel"
+    aria-labelledby="cliente-tab-vendas"
+    hidden={abaAtiva !== 'vendas'}
+  >
+    <Card title="Histórico de vendas" color="clientes">
+      {#if historicoVendas.length > 0}
+        <div class="overflow-x-visible md:overflow-x-auto">
+          <table class="table-mobile-cards w-full text-sm">
+            <thead class="bg-slate-50">
+              <tr>
+                <th class="px-4 py-3 text-left font-semibold text-slate-600">Lancamento</th>
+                <th class="px-4 py-3 text-left font-semibold text-slate-600">Destino</th>
+                <th class="px-4 py-3 text-left font-semibold text-slate-600">Embarque</th>
+                <th class="px-4 py-3 text-right font-semibold text-slate-600">Valor</th>
+                <th class="px-4 py-3 text-right font-semibold text-slate-600">Taxas</th>
+                <th class="px-4 py-3 text-left font-semibold text-slate-600">Vinculo</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+              {#each historicoVendas as venda}
+                <tr
+                  class="cursor-pointer transition-colors hover:bg-slate-50"
+                  on:click={() => goto(`/vendas/${venda.id}`)}
+                >
+                  <td class="px-4 py-3 text-slate-700">{formatDate(venda.data_lancamento)}</td>
+                  <td class="px-4 py-3">
+                    <div class="font-medium text-slate-900">{venda.destino_nome || '-'}</div>
+                    <div class="text-xs text-slate-500">
+                      {venda.destino_cidade_nome || 'Sem cidade'}
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 text-slate-700">{formatDate(venda.data_embarque)}</td>
+                  <td class="px-4 py-3 text-right font-medium text-slate-900"
+                    >{formatCurrency(venda.valor_total)}</td
                   >
-                    <td class="px-4 py-3 text-slate-700">{formatDate(venda.data_lancamento)}</td>
-                    <td class="px-4 py-3">
-                      <div class="font-medium text-slate-900">{venda.destino_nome || '-'}</div>
-                      <div class="text-xs text-slate-500">
-                        {venda.destino_cidade_nome || 'Sem cidade'}
-                      </div>
-                    </td>
-                    <td class="px-4 py-3 text-slate-700">{formatDate(venda.data_embarque)}</td>
-                    <td class="px-4 py-3 text-right font-medium text-slate-900"
-                      >{formatCurrency(venda.valor_total)}</td
-                    >
-                    <td class="px-4 py-3 text-right text-slate-700"
-                      >{formatCurrency(venda.valor_taxas)}</td
-                    >
-                    <td class="px-4 py-3">
-                      <span
-                        class={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${venda.origem_vinculo === 'passageiro' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}
-                      >
-                        {venda.origem_vinculo === 'passageiro' ? 'Passageiro' : 'Titular'}
-                      </span>
-                    </td>
-                  </tr>
-                {/each}
-              </tbody>
-            </table>
-          </div>
-        {:else}
-          <div
-            class="rounded-vtur-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500"
-          >
-            Nenhuma venda vinculada a este cliente.
-          </div>
-        {/if}
-      </Card>
-
-      <Card title="Historico de orcamentos" color="clientes">
-        {#if historicoOrcamentos.length > 0}
-          <div class="overflow-x-visible md:overflow-x-auto">
-            <table class="table-mobile-cards w-full text-sm">
-              <thead class="bg-slate-50">
-                <tr>
-                  <th class="px-4 py-3 text-left font-semibold text-slate-600">Data</th>
-                  <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
-                  <th class="px-4 py-3 text-left font-semibold text-slate-600">Produto</th>
-                  <th class="px-4 py-3 text-right font-semibold text-slate-600">Valor</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-200">
-                {#each historicoOrcamentos as orcamento}
-                  <tr
-                    class="cursor-pointer transition-colors hover:bg-slate-50"
-                    on:click={() => goto(`/orcamentos/${orcamento.id}`)}
+                  <td class="px-4 py-3 text-right text-slate-700"
+                    >{formatCurrency(venda.valor_taxas)}</td
                   >
-                    <td class="px-4 py-3 text-slate-700">{formatDate(orcamento.data_orcamento)}</td>
-                    <td class="px-4 py-3">
-                      <span
-                        class={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusBadge(orcamento.status)}`}
-                      >
-                        {getStatusLabel(orcamento.status)}
-                      </span>
-                    </td>
-                    <td class="px-4 py-3 text-slate-900">{orcamento.produto_nome || '-'}</td>
-                    <td class="px-4 py-3 text-right text-slate-900"
-                      >{formatCurrency(orcamento.valor)}</td
+                  <td class="px-4 py-3">
+                    <span
+                      class={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${venda.origem_vinculo === 'passageiro' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}
                     >
-                  </tr>
-                {/each}
-              </tbody>
-            </table>
-          </div>
-        {:else}
-          <div
-            class="rounded-vtur-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500"
-          >
-            Nenhum orcamento vinculado a este cliente.
-          </div>
-        {/if}
-      </Card>
+                      {venda.origem_vinculo === 'passageiro' ? 'Passageiro' : 'Titular'}
+                    </span>
+                  </td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
+      {:else}
+        <div
+          class="rounded-vtur-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500"
+        >
+          Nenhuma venda vinculada a este cliente.
+        </div>
+      {/if}
+    </Card>
+  </div>
 
-      <ClienteViagensCard clienteId={String(clienteId || '')} />
+  <div
+    id="cliente-panel-orcamentos"
+    role="tabpanel"
+    aria-labelledby="cliente-tab-orcamentos"
+    hidden={abaAtiva !== 'orcamentos'}
+  >
+    <Card title="Histórico de orçamentos" color="clientes">
+      {#if historicoOrcamentos.length > 0}
+        <div class="overflow-x-visible md:overflow-x-auto">
+          <table class="table-mobile-cards w-full text-sm">
+            <thead class="bg-slate-50">
+              <tr>
+                <th class="px-4 py-3 text-left font-semibold text-slate-600">Data</th>
+                <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
+                <th class="px-4 py-3 text-left font-semibold text-slate-600">Produto</th>
+                <th class="px-4 py-3 text-right font-semibold text-slate-600">Valor</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200">
+              {#each historicoOrcamentos as orcamento}
+                <tr
+                  class="cursor-pointer transition-colors hover:bg-slate-50"
+                  on:click={() => goto(`/orcamentos/${orcamento.id}`)}
+                >
+                  <td class="px-4 py-3 text-slate-700">{formatDate(orcamento.data_orcamento)}</td>
+                  <td class="px-4 py-3">
+                    <span
+                      class={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusBadge(orcamento.status)}`}
+                    >
+                      {getStatusLabel(orcamento.status)}
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-slate-900">{orcamento.produto_nome || '-'}</td>
+                  <td class="px-4 py-3 text-right text-slate-900"
+                    >{formatCurrency(orcamento.valor)}</td
+                  >
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
+      {:else}
+        <div
+          class="rounded-vtur-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500"
+        >
+          Nenhum orcamento vinculado a este cliente.
+        </div>
+      {/if}
+    </Card>
+  </div>
 
-      <ClienteContatosCard clienteId={String(clienteId || '')} versao={versaoContatos} />
-
-      <AcompanhantesManager
-        {clienteId}
-        editable={false}
-        title="Acompanhantes"
-        subtitle="Consulta dos acompanhantes associados ao cliente."
-      />
-    </div>
+  <div
+    id="cliente-panel-viagens"
+    role="tabpanel"
+    aria-labelledby="cliente-tab-viagens"
+    hidden={abaAtiva !== 'viagens'}
+  >
+    <ClienteViagensCard clienteId={String(clienteId || '')} bind:semAcesso={semAcessoViagens} />
+  </div>
+  <div
+    id="cliente-panel-contatos"
+    role="tabpanel"
+    aria-labelledby="cliente-tab-contatos"
+    hidden={abaAtiva !== 'contatos'}
+  >
+    <ClienteContatosCard
+      clienteId={String(clienteId || '')}
+      versao={versaoContatos}
+      bind:semAcesso={semAcessoContatos}
+    />
+  </div>
+  <div
+    id="cliente-panel-notas"
+    role="tabpanel"
+    aria-labelledby="cliente-tab-notas"
+    hidden={abaAtiva !== 'notas'}
+  >
+    <Card title="Notas e contexto" color="clientes">
+      <p class="text-sm leading-6 text-slate-700">
+        {cliente.notas || cliente.observacoes || 'Sem observacoes registradas.'}
+      </p>
+    </Card>
   </div>
 
   {#if ModalAvisoClienteComponent}
