@@ -9,8 +9,8 @@
     LoadingState
   } from '$lib/components/ui';
   import { toast } from '$lib/stores/ui';
-  import { Calendar, Phone, Save, Trash2, UserPlus, Users } from '$lib/icons';
-  import { formatDate } from '$lib/utils/formatters';
+  import { Calendar, Save, Trash2, UserPlus, Users } from '$lib/icons';
+  import { formatDate, formatPhone } from '$lib/utils/formatters';
   import { toUserMessage } from '$lib/utils/errors';
   import { formatDocumentoSalvo } from '$lib/features/clientes/form';
   import { validateOptionalCPF } from '$lib/utils/validation';
@@ -53,6 +53,8 @@
   let deleting = false;
   let errorMessage: string | null = null;
   let selectedId = '';
+  let formOpen = false;
+  let telefoneUsaMascara = true;
   let loadedClienteId = '';
   const loadGuard = createLoadGuard();
 
@@ -87,14 +89,32 @@
 
   $: if (clienteId && clienteId !== loadedClienteId) {
     loadedClienteId = clienteId;
+    selectedId = '';
+    form = createInitialForm();
+    formOpen = false;
+    telefoneUsaMascara = true;
     void loadAcompanhantes();
   }
 
+  function telefoneFormatado(value: string | null) {
+    const raw = String(value || '').trim();
+    const digits = raw.replace(/\D/g, '');
+    return /^[\d\s()+-]+$/.test(raw) && (digits.length === 10 || digits.length === 11)
+      ? formatPhone(raw)
+      : raw;
+  }
+
   function fillForm(item: Acompanhante) {
+    const telefone = String(item.telefone || '').trim();
+    const telefoneDigits = telefone.replace(/\D/g, '');
+    telefoneUsaMascara =
+      !telefone ||
+      (/^[\d\s()+-]+$/.test(telefone) &&
+        (telefoneDigits.length === 10 || telefoneDigits.length === 11));
     form = {
       nome_completo: String(item.nome_completo || ''),
       cpf: formatDocumentoSalvo(String(item.cpf || ''), 'PF'),
-      telefone: String(item.telefone || ''),
+      telefone: telefoneFormatado(item.telefone),
       grau_parentesco: String(item.grau_parentesco || ''),
       rg: String(item.rg || ''),
       data_nascimento: String(item.data_nascimento || '').slice(0, 10),
@@ -138,13 +158,25 @@
   }
 
   function handleRowClick(item: Acompanhante) {
+    if (!editable || saving || deleting) return;
     selectedId = item.id;
     fillForm(item);
+    formOpen = true;
   }
 
   function novoAcompanhante() {
     selectedId = '';
     form = createInitialForm();
+    telefoneUsaMascara = true;
+    errorMessage = null;
+    formOpen = true;
+  }
+
+  function fecharFormulario() {
+    selectedId = '';
+    form = createInitialForm();
+    telefoneUsaMascara = true;
+    formOpen = false;
     errorMessage = null;
   }
 
@@ -177,7 +209,7 @@
       toast.success(selectedId ? 'Acompanhante atualizado.' : 'Acompanhante cadastrado.');
       await loadAcompanhantes();
       if (!selectedId) {
-        novoAcompanhante();
+        fecharFormulario();
       }
     } catch (error: unknown) {
       errorMessage = toUserMessage(error, 'Erro ao salvar acompanhante.');
@@ -200,7 +232,7 @@
       });
 
       toast.success('Acompanhante removido.');
-      novoAcompanhante();
+      fecharFormulario();
       await loadAcompanhantes();
     } catch (error: unknown) {
       errorMessage = toUserMessage(error, 'Erro ao remover acompanhante.');
@@ -212,8 +244,41 @@
 </script>
 
 <Card {title} color="clientes" {collapsible}>
+  <svelte:fragment slot="actions">
+    {#if editable && !collapsible}
+      <Button
+        type="button"
+        variant="primary"
+        color="clientes"
+        on:click={novoAcompanhante}
+        disabled={saving || deleting}
+        ariaExpanded={formOpen}
+        ariaControls="form-acompanhante"
+      >
+        <UserPlus size={16} class="mr-2" />
+        Novo
+      </Button>
+    {/if}
+  </svelte:fragment>
   <div class="space-y-4">
     <p class="text-sm text-slate-500">{subtitle}</p>
+
+    {#if editable && collapsible}
+      <div class="flex justify-end">
+        <Button
+          type="button"
+          variant="primary"
+          color="clientes"
+          on:click={novoAcompanhante}
+          disabled={saving || deleting}
+          ariaExpanded={formOpen}
+          ariaControls="form-acompanhante"
+        >
+          <UserPlus size={16} class="mr-2" />
+          Novo
+        </Button>
+      </div>
+    {/if}
 
     {#if errorMessage}
       <div
@@ -251,16 +316,19 @@
           {:else}
             {#each acompanhantes as item}
               <tr
-                class="cursor-pointer transition-colors hover:bg-slate-50"
+                class:cursor-pointer={editable}
+                class="transition-colors hover:bg-slate-50"
                 class:bg-clientes-50={item.id === selectedId}
                 on:click={() => handleRowClick(item)}
               >
                 <td class="px-4 py-3">
                   <div class="font-medium text-slate-900">{item.nome_completo}</div>
-                  <div class="text-xs text-slate-500">{item.cpf || '-'}</div>
+                  <div class="text-xs text-slate-500">
+                    {formatDocumentoSalvo(item.cpf || '', 'PF') || '-'}
+                  </div>
                 </td>
                 <td class="px-4 py-3 text-slate-700">{item.grau_parentesco || '-'}</td>
-                <td class="px-4 py-3 text-slate-700">{item.telefone || '-'}</td>
+                <td class="px-4 py-3 text-slate-700">{telefoneFormatado(item.telefone) || '-'}</td>
                 <td class="px-4 py-3 text-slate-700">
                   {formatDate(item.data_nascimento)}
                 </td>
@@ -280,8 +348,8 @@
       </table>
     </div>
 
-    {#if editable}
-      <div class="rounded-vtur-xl border border-slate-200 bg-white p-5">
+    {#if editable && formOpen}
+      <div id="form-acompanhante" class="rounded-vtur-xl border border-slate-200 bg-white p-5">
         <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h3 class="text-base font-semibold text-slate-900">
@@ -293,16 +361,12 @@
           </div>
 
           <div class="flex gap-2">
-            <Button type="button" variant="secondary" on:click={novoAcompanhante}>
-              <UserPlus size={16} class="mr-2" />
-              Novo
-            </Button>
             {#if selectedId}
               <Button
                 type="button"
                 variant="danger"
                 on:click={excluirAcompanhante}
-                disabled={deleting}
+                disabled={deleting || saving}
               >
                 <Trash2 size={16} class="mr-2" />
                 Excluir
@@ -343,7 +407,7 @@
             label="Telefone"
             bind:value={form.telefone}
             placeholder="(00) 00000-0000"
-            icon={Phone}
+            mask={telefoneUsaMascara ? 'phone' : undefined}
           />
 
           <FieldInput
@@ -380,20 +444,27 @@
           </div>
         </div>
 
-        <div class="mt-4 flex justify-end">
+        <div class="mt-4 flex flex-wrap justify-end gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            on:click={fecharFormulario}
+            disabled={saving || deleting}>Cancelar</Button
+          >
           <Button
             type="button"
             variant="primary"
             color="clientes"
             on:click={salvarAcompanhante}
             loading={saving}
+            disabled={deleting}
           >
             <Save size={16} class="mr-2" />
             {selectedId ? 'Salvar alteracoes' : 'Salvar acompanhante'}
           </Button>
         </div>
       </div>
-    {:else if acompanhantes.length === 0}
+    {:else if !editable && acompanhantes.length === 0 && !loading}
       <div
         class="rounded-vtur-xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500"
       >
