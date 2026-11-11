@@ -20,10 +20,17 @@ async function contexto(event: RequestEvent, nivel: number) {
   const user = await requireAuthenticatedUser(event);
   const scope = await resolveUserScope(client, user.id);
   ensureModuloAccess(scope, ['Operacao'], nivel, 'Sem permissão para acessar passagens.');
-  if (!scope.companyId || !isUuid(scope.companyId)) return null;
+  if (!scope.usoIndividual && (!scope.companyId || !isUuid(scope.companyId))) return null;
   const db = event.platform?.env?.DB;
   if (!db) throw new Error('Banco D1 indisponível nesta requisição.');
-  return { db, companyId: scope.companyId, userId: user.id };
+  const companyId = scope.usoIndividual ? null : scope.companyId;
+  return {
+    db,
+    companyId,
+    userId: user.id,
+    scopeSql: companyId ? 'company_id = ?' : 'company_id IS NULL AND created_by = ?',
+    scopeId: companyId || user.id
+  };
 }
 
 function texto(value: unknown, limit: number) {
@@ -131,8 +138,8 @@ export async function handlePassagensGet(event: RequestEvent) {
     if (id && !isUuid(id)) return invalid('Identificação inválida.');
     if (id) {
       const row = await ctx.db
-        .prepare('SELECT id, dados, updated_at FROM passagens WHERE id = ? AND company_id = ?')
-        .bind(id, ctx.companyId)
+        .prepare(`SELECT id, dados, updated_at FROM passagens WHERE id = ? AND ${ctx.scopeSql}`)
+        .bind(id, ctx.scopeId)
         .first<{ id: string; dados: string; updated_at: string }>();
       if (!row) return invalid('Passagem não encontrada.', 404);
       return json(
@@ -146,9 +153,9 @@ export async function handlePassagensGet(event: RequestEvent) {
       return invalid('Página inválida.');
     const rows = await ctx.db
       .prepare(
-        'SELECT id, localizador, updated_at FROM passagens WHERE company_id = ? ORDER BY updated_at DESC, id LIMIT 51 OFFSET ?'
+        `SELECT id, localizador, updated_at FROM passagens WHERE ${ctx.scopeSql} ORDER BY updated_at DESC, id LIMIT 51 OFFSET ?`
       )
-      .bind(ctx.companyId, (pagina - 1) * 50)
+      .bind(ctx.scopeId, (pagina - 1) * 50)
       .all();
     return json(
       { items: rows.results.slice(0, 50), hasMore: rows.results.length > 50 },
@@ -170,8 +177,8 @@ export async function handlePassagensDelete(event: RequestEvent) {
     const id = event.url.searchParams.get('id') || '';
     if (!isUuid(id)) return invalid('Identificação inválida.');
     const deleted = await ctx.db
-      .prepare('DELETE FROM passagens WHERE id = ? AND company_id = ? RETURNING id')
-      .bind(id, ctx.companyId)
+      .prepare(`DELETE FROM passagens WHERE id = ? AND ${ctx.scopeSql} RETURNING id`)
+      .bind(id, ctx.scopeId)
       .first();
     if (!deleted) return invalid('Passagem não encontrada.', 404);
     return json({ ok: true }, { headers: NO_STORE_HEADERS });
@@ -200,9 +207,9 @@ export async function handlePassagensPost(event: RequestEvent) {
     if (id) {
       const updated = await ctx.db
         .prepare(
-          "UPDATE passagens SET localizador = ?, dados = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = ? AND company_id = ? RETURNING id"
+          `UPDATE passagens SET localizador = ?, dados = ?, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE id = ? AND ${ctx.scopeSql} RETURNING id`
         )
-        .bind(dados.localizador, dadosJson, id, ctx.companyId)
+        .bind(dados.localizador, dadosJson, id, ctx.scopeId)
         .first();
       if (!updated) return invalid('Passagem não encontrada.', 404);
       return json({ id }, { headers: NO_STORE_HEADERS });

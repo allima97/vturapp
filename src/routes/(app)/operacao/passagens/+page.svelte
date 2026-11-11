@@ -68,7 +68,7 @@
     } catch (err) {
       error =
         err instanceof ApiError && err.status === 403
-          ? 'Sem acesso a passagens. Verifique sua permissão e vínculo com uma empresa.'
+          ? 'Sem acesso a passagens. Verifique sua permissão e, se aplicável, o vínculo com uma empresa.'
           : toUserMessage(err, 'Não foi possível carregar passagens.');
     } finally {
       loading = false;
