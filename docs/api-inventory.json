@@ -1,6 +1,6 @@
 {
   "generatedBy": "scripts/api-inventory.mjs",
-  "count": 274,
+  "count": 275,
   "endpoints": [
     {
       "route": "/api/arquivos",
@@ -8530,7 +8530,7 @@
         "$lib/server/v1"
       ],
       "mutates": false,
-      "lines": 210
+      "lines": 223
     },
     {
       "route": "/api/v1/roteiros/delete",
@@ -8572,6 +8572,46 @@
       ],
       "mutates": true,
       "lines": 78
+    },
+    {
+      "route": "/api/v1/roteiros/descricoes-dia",
+      "file": "src/routes/api/v1/roteiros/descricoes-dia/+server.ts",
+      "hono": "src/lib/server/api/routes/roteiros/descricoes-dia.ts",
+      "methods": [
+        "GET"
+      ],
+      "guards": {
+        "requireAuthenticatedUser": true,
+        "resolveUserScope": true,
+        "roles": [
+          "isAdmin"
+        ],
+        "rejectCrossOrigin": false,
+        "bodyLimit": false,
+        "cronSecret": false,
+        "turnstile": false,
+        "adminClient": true,
+        "debugOnly": false
+      },
+      "tables": {
+        "legado_circuito_dias": [
+          "select"
+        ],
+        "legado_roteiro_dia": [
+          "select"
+        ]
+      },
+      "rpcs": [],
+      "invalidations": [],
+      "imports": [
+        "$lib/descricoesDia",
+        "$lib/destinoIdentidade",
+        "$lib/server/api/sveltekit",
+        "$lib/server/httpCache",
+        "$lib/server/v1"
+      ],
+      "mutates": false,
+      "lines": 118
     },
     {
       "route": "/api/v1/roteiros/dias-busca",

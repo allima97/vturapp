@@ -305,7 +305,7 @@ it('mantém principal e filhos coerentes em salvamentos completos simultâneos',
   }
 });
 
-it('substitui os dias no salvamento simplificado e aceita descrição vazia', async () => {
+it('recusa dia sem identidade e mantém o dia já salvo', async () => {
   const id = crypto.randomUUID();
   await env.DB.batch([
     env.DB.prepare('INSERT INTO legado_cidades (id, nome) VALUES (?, ?)').bind(
@@ -336,12 +336,12 @@ it('substitui os dias no salvamento simplificado e aceita descrição vazia', as
       safeGetSession: async () => ({ session: { id: 'sessao' }, user: { id: 'owner' } })
     }
   } as never);
-  expect(response.status).toBe(200);
+  expect(response.status).toBe(400);
   expect(
     await env.DB.prepare('SELECT nome FROM legado_roteiro_personalizado WHERE id = ?')
       .bind(id)
       .first()
-  ).toEqual({ nome: 'Viagem Alterada' });
+  ).toEqual({ nome: 'Original' });
   expect(
     (
       await env.DB.prepare(
@@ -350,10 +350,7 @@ it('substitui os dias no salvamento simplificado e aceita descrição vazia', as
         .bind(id)
         .all()
     ).results
-  ).toEqual([
-    { cidade: 'Rome, United States', cidade_id: 'geonames:2', descricao: '' },
-    { cidade: 'Cidade legada', cidade_id: null, descricao: 'Livre' }
-  ]);
+  ).toEqual([{ cidade: 'Antiga', cidade_id: null, descricao: 'Anterior' }]);
 });
 
 it('reverte criação e edição simplificadas se uma inserção de dia falhar', async () => {
@@ -742,7 +739,7 @@ it('rejeita ID inexistente ou ausência da base antes do salvamento simplificado
   ).toEqual({ total: 0 });
 });
 
-it('permite dados legados e geográficos juntos sem associá-los pelo nome', async () => {
+it('recusa dia com nome solto mesmo quando outro dia tem identidade', async () => {
   await env.DB.prepare(
     'INSERT INTO legado_cidades (id, nome, estado_nome, pais_nome) VALUES (?, ?, ?, ?)'
   )
@@ -763,15 +760,12 @@ it('permite dados legados e geográficos juntos sem associá-los pelo nome', asy
     }),
     platform: { env: { DB: env.DB, GEO_DB: env.GEO_TEST } }
   } as Parameters<typeof handleRoteirosSavePost>[0]);
-  expect(response.status).toBe(200);
-  const { id } = await response.json<{ id: string }>();
-  const rows = await env.DB.prepare(
-    'SELECT cidade, cidade_id FROM legado_roteiro_dia WHERE roteiro_id = ? ORDER BY ordem'
-  )
-    .bind(id)
-    .all();
-  expect(rows.results).toEqual([
-    { cidade: 'Roma, Lácio, Itália', cidade_id: null },
-    { cidade: 'Roma, Italy', cidade_id: 'geonames:1' }
-  ]);
+  expect(response.status).toBe(400);
+  expect(
+    await env.DB.prepare(
+      'SELECT count(*) AS total FROM legado_roteiro_personalizado WHERE nome = ?'
+    )
+      .bind('Viagem mista')
+      .first()
+  ).toEqual({ total: 0 });
 });

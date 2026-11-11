@@ -2,9 +2,9 @@
 
 Gerado por `node scripts/api-inventory.mjs` — **não editar à mão**. JSON completo em `docs/api-inventory.json`.
 
-- Endpoints: **274** (128 gravam no banco)
+- Endpoints: **275** (128 gravam no banco)
 - Domínios: 54
-- Migrados para Hono: **254** (marcados com <sub>hono</sub>)
+- Migrados para Hono: **255** (marcados com <sub>hono</sub>)
 
 ## Pontos de atenção (detectados automaticamente)
 
@@ -441,7 +441,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/v1/relatorios/vendas-por-produto` <sub>hono</sub> | GET |  |  |  |  |  | — | — | — |
 | `/v1/relatorios/vendas` <sub>hono</sub> | GET | ✔ | ✔ | Admin Financeiro Gestor Master Vendedor |  |  | cidades(R), parametros_comissao(R), users(R), vendas(R), vendas_pagamentos(R), vendas_recibos_rateio(R) | — | — |
 
-### roteiros (11)
+### roteiros (12)
 
 | Rota | Métodos | Auth | Escopo | Perfis | CSRF | Body | Tabelas (operações) | RPC | Invalidação |
 |---|---|:-:|:-:|---|:-:|:-:|---|---|---|
@@ -449,6 +449,7 @@ Legenda: **Auth** = requireAuthenticatedUser · **Escopo** = resolveUserScope ·
 | `/v1/roteiros/[id]` <sub>hono</sub> | GET | ✔ | ✔ | Admin Gestor Master |  |  | roteiro_dia(R), roteiro_investimento(R), roteiro_passeio(R), roteiro_personalizado(R) | — | — |
 | `/v1/roteiros/cidades-busca` <sub>hono</sub> | GET | ✔ | ✔ |  |  |  | — | — | — |
 | `/v1/roteiros/delete` <sub>hono</sub> | DELETE | ✔ | ✔ | Admin Gestor Master | ✔ |  | roteiro_personalizado(D/R) | — | — |
+| `/v1/roteiros/descricoes-dia` <sub>hono</sub> | GET | ✔ | ✔ | Admin |  |  | legado_circuito_dias(R), legado_roteiro_dia(R) | — | — |
 | `/v1/roteiros/dias-busca` <sub>hono</sub> | GET | ✔ | ✔ | Admin Gestor Master |  |  | roteiro_dia(R) | — | — |
 | `/v1/roteiros/gerar-orcamento` <sub>hono</sub> | POST | ✔ | ✔ | Admin | ✔ | ✔ | clientes(R), quote(C), quote_item(C), roteiro_personalizado(R) | — | invalidateQuoteReadModels |
 | `/v1/roteiros/list` <sub>hono</sub> | GET | ✔ | ✔ | Admin Gestor Master |  |  | roteiro_personalizado(R) | — | — |

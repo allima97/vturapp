@@ -184,6 +184,15 @@ describe('busca GeoNames', () => {
     expect(labels[19].label).toBe('Cidade 19, Município 19, Região 19, País 19');
   });
 
+  it('ignora divisão administrativa mesmo no índice curto', async () => {
+    await env.DB.batch([
+      env.DB.prepare("INSERT INTO place VALUES (14, 'Zzz Admin', 'IT', '', '', 9000, 'A', 'ADM2')"),
+      env.DB.prepare("INSERT INTO place VALUES (15, 'Zzz Cidade', 'IT', '', '', 10, 'P', 'PPL')"),
+      env.DB.prepare("INSERT INTO short_search VALUES ('zz', 0, 14), ('zz', 1, 15)")
+    ]);
+    expect((await searchGeoNames(env.DB, 'zz')).map((place) => place.id)).toEqual([15]);
+  });
+
   it('uses the bounded prefix index for short suggestions', async () => {
     const plan = await env.DB.prepare(
       'EXPLAIN QUERY PLAN SELECT p.id FROM short_search s JOIN place p ON p.id = s.place_id WHERE s.prefix = ? ORDER BY s.rank LIMIT ?'

@@ -157,6 +157,19 @@ async function prepararCidadesRoteiro(
         copia.push({ ...entrada, ...destino });
         continue;
       }
+      if (key === 'dias' && permitirIdentidades) {
+        const solto = ['descricao', 'percurso', 'data', 'cidade'].some(
+          (campo) => typeof entrada[campo] === 'string' && entrada[campo].trim() !== ''
+        );
+        if (solto)
+          return {
+            ok: false,
+            status: 400,
+            error: `Selecione a cidade na lista em ${titulo}, item ${indice + 1}. Um dia não é salvo só com o nome da cidade.`
+          };
+        copia.push({ ...entrada, cidade_id: null });
+        continue;
+      }
       const cidade = entrada.cidade;
       if (cidade != null && cidade !== '') {
         if (typeof cidade !== 'string')

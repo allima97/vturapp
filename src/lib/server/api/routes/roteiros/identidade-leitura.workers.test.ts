@@ -18,11 +18,16 @@ import { handleRoteirosIdGet } from './id';
 import { handleRoteirosDiasBuscaGet } from './dias-busca';
 
 it('retorna identidades nas leituras e não esconde falhas de consulta como listas vazias', async () => {
-  const migration = env.TEST_MIGRATIONS.find((item) => item.name.startsWith('0020_'));
-  if (!migration) throw new Error('Migração 0020 não encontrada.');
+  const posteriores = env.TEST_MIGRATIONS.filter(
+    (item) => item.name.startsWith('0020_') || item.name.startsWith('0025_')
+  );
+  if (!posteriores.some((item) => item.name.startsWith('0020_')))
+    throw new Error('Migração 0020 não encontrada.');
   await applyD1Migrations(
     env.DB,
-    env.TEST_MIGRATIONS.filter((item) => !item.name.startsWith('0020_'))
+    env.TEST_MIGRATIONS.filter(
+      (item) => !item.name.startsWith('0020_') && !item.name.startsWith('0025_')
+    )
   );
   const roteiro = crypto.randomUUID();
   await env.DB.batch([
@@ -47,7 +52,7 @@ it('retorna identidades nas leituras e não esconde falhas de consulta como list
     headers: new Headers()
   });
   const event = { params: { id: roteiro } } as Parameters<typeof handleRoteirosIdGet>[0];
-  await applyD1Migrations(env.DB, [migration]);
+  await applyD1Migrations(env.DB, posteriores);
   await env.DB.batch([
     env.DB.prepare("UPDATE legado_roteiro_dia SET cidade_id = 'geonames:3169070'"),
     env.DB.prepare("UPDATE legado_roteiro_hotel SET cidade_id = 'geonames:3169070'"),

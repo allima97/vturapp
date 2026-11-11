@@ -205,14 +205,14 @@ it('protege os dias em conflitos do salvamento simplificado e aceita revisão le
     id,
     revisao: '',
     nome: 'Primeiro',
-    dias: [{ cidade_id: null, descricao: 'Primeiro' }]
+    dias: [{ cidade_id: 'geonames:1', descricao: 'Primeiro' }]
   });
   expect(saved.status).toBe(200);
   const stale = await simple({
     id,
     revisao: '',
     nome: 'Segundo',
-    dias: [{ cidade_id: null, descricao: 'Segundo' }]
+    dias: [{ cidade_id: 'geonames:1', descricao: 'Segundo' }]
   });
   expect(stale.status).toBe(409);
   expect(
@@ -259,7 +259,7 @@ it.each([
   }
 );
 
-it('rejeita omissão no salvamento simplificado e aceita identidade nula explícita', async () => {
+it('rejeita omissão no salvamento simplificado e dia sem cidade vinculada', async () => {
   const id = crypto.randomUUID();
   await env.DB.batch([
     env.DB.prepare(
@@ -281,14 +281,19 @@ it('rejeita omissão no salvamento simplificado e aceita identidade nula explíc
       .bind(id)
       .first()
   ).toEqual({ cidade_id: 'geonames:1' });
-  const accepted = await simple({
+  const recusado = await simple({
     id,
     revisao: '',
     nome: 'Alterado',
     dias: [{ cidade_id: null, descricao: 'Dia sem cidade' }],
     identidades_removidas_confirmadas: [{ colecao: 'dias', cidade_id: 'geonames:1', quantidade: 1 }]
   });
-  expect(accepted.status).toBe(200);
+  expect(recusado.status).toBe(400);
+  expect(
+    await env.DB.prepare('SELECT cidade_id FROM legado_roteiro_dia WHERE roteiro_id = ?')
+      .bind(id)
+      .first()
+  ).toEqual({ cidade_id: 'geonames:1' });
 });
 
 it('exige confirmação das perdas reais em cada coleção e verifica a revisão novamente', async () => {
@@ -307,7 +312,7 @@ it('exige confirmação das perdas reais em cada coleção e verifica a revisão
     id,
     revisao,
     nome: 'Alterado',
-    dias: [{ cidade_id: null, descricao: 'Sem destino' }],
+    dias: [],
     hoteis: [],
     passeios: [],
     opcionais: []
@@ -342,7 +347,7 @@ it('exige confirmação das perdas reais em cada coleção e verifica a revisão
         .bind(id)
         .all()
     ).results
-  ).toEqual([{ cidade_id: null }]);
+  ).toEqual([]);
 });
 
 it('preserva identificadores opcionais dos grupos na criação, leitura, edição e duplicação', async () => {
@@ -629,22 +634,17 @@ it('preserva dias idênticos na criação e edição e exige confirmação para 
   ]);
 });
 
-it('preserva dias idênticos sem identidade geográfica no fluxo versionado', async () => {
+it('recusa dia novo sem cidade vinculada', async () => {
   const dia = { cidade_id: null, descricao: 'Dia sem destino' };
-  const created = await complete({ nome: 'Original', dias: [dia, dia] });
-  expect(created.status).toBe(200);
-  const { id, revisao } = await created.json<{ id: string; revisao: string }>();
-  const edited = await complete({ id, revisao, nome: 'Alterado', dias: [dia, dia] });
-  expect(edited.status).toBe(200);
-  const rows = await env.DB.prepare(
-    'SELECT cidade_id, descricao, ordem FROM legado_roteiro_dia WHERE roteiro_id = ? ORDER BY ordem'
-  )
-    .bind(id)
-    .all();
-  expect(rows.results).toEqual([
-    { cidade_id: null, descricao: 'Dia sem destino', ordem: 0 },
-    { cidade_id: null, descricao: 'Dia sem destino', ordem: 1 }
-  ]);
+  const created = await complete({ nome: 'Sem cidade vinculada', dias: [dia, dia] });
+  expect(created.status).toBe(400);
+  expect(
+    await env.DB.prepare(
+      'SELECT count(*) AS total FROM legado_roteiro_personalizado WHERE nome = ?'
+    )
+      .bind('Sem cidade vinculada')
+      .first()
+  ).toEqual({ total: 0 });
 });
 
 it('não expõe identidades removidas de roteiro fora do escopo', async () => {
@@ -663,17 +663,22 @@ it('não expõe identidades removidas de roteiro fora do escopo', async () => {
     nome: 'Alterado',
     dias: [{ cidade_id: null, descricao: 'Dia' }]
   });
-  expect(response.status).toBe(409);
+  expect(response.status).toBe(400);
   expect(await response.json()).not.toHaveProperty('identidades_removidas');
 });
 
-it('aceita cidades legadas com identidade nula explícita em todas as coleções', async () => {
+it('exige cidade vinculada no dia e ainda aceita legado explícito nas outras coleções', async () => {
   await env.DB.prepare('INSERT INTO legado_cidades (id, nome) VALUES (?, ?)')
     .bind(crypto.randomUUID(), 'Cidade Legada')
     .run();
+  const recusado = await complete({
+    nome: 'Legado',
+    dias: [{ cidade: 'Cidade Legada', cidade_id: null, descricao: 'Dia' }]
+  });
+  expect(recusado.status).toBe(400);
   const response = await complete({
     nome: 'Legado',
-    dias: [{ cidade: 'Cidade Legada', cidade_id: null, descricao: 'Dia' }],
+    dias: [{ cidade: 'Rome', cidade_id: 'geonames:1', descricao: 'Dia' }],
     hoteis: [{ cidade: 'Cidade Legada', cidade_id: null, hotel: 'Hotel' }],
     passeios: [{ cidade: 'Cidade Legada', cidade_id: null, passeio: 'Passeio' }],
     opcionais: [{ cidade: 'Cidade Legada', cidade_id: null, passeios: [] }]
@@ -683,7 +688,7 @@ it('aceita cidades legadas com identidade nula explícita em todas as coleções
   const details = await handleRoteirosIdGet({ params: { id } } as never);
   expect(await details.json()).toMatchObject({
     roteiro: {
-      dias: [{ cidade: 'Cidade Legada', cidade_id: null }],
+      dias: [{ cidade: 'Rome, Italy', cidade_id: 'geonames:1' }],
       hoteis: [{ cidade: 'Cidade Legada', cidade_id: null }],
       passeios: [{ cidade: 'Cidade Legada', cidade_id: null }],
       opcionais: [{ cidade: 'Cidade Legada', passeios: [] }]
