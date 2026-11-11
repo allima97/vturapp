@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   agruparDescricoes,
   aplicarDescricao,
-  destacarBusca,
   filtrarDescricoes,
-  teclaLista
+  teclaLista,
+  trechosBusca
 } from './descricoesDia';
 
 describe('descrições salvas do dia', () => {
@@ -22,10 +22,12 @@ describe('descrições salvas do dia', () => {
     expect(filtrarDescricoes(grupos, 'praia').map((item) => item.texto)).toEqual(['Dia de praia']);
   });
 
-  it('destaca o termo ignorando acentos e escapa HTML', () => {
-    expect(destacarBusca('Visita à <Sagrada> Família', 'sagrada')).toBe(
-      'Visita à &lt;<mark>Sagrada</mark>&gt; Família'
-    );
+  it('destaca o termo ignorando acentos sem montar HTML', () => {
+    expect(trechosBusca('Visita à <Sagrada> Família', 'sagrada')).toEqual([
+      { texto: 'Visita à <', destaque: false },
+      { texto: 'Sagrada', destaque: true },
+      { texto: '> Família', destaque: false }
+    ]);
   });
 
   it('navega com setas e aplica substituição ou acréscimo', () => {

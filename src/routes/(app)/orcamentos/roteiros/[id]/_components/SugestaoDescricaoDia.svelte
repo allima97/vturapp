@@ -1,6 +1,6 @@
 <script lang="ts">
   import { destinoIdValido } from '$lib/destinoIdentidade';
-  import { aplicarDescricao, destacarBusca, teclaLista } from '$lib/descricoesDia';
+  import { aplicarDescricao, teclaLista, trechosBusca } from '$lib/descricoesDia';
 
   let {
     descricao = $bindable(''),
@@ -160,7 +160,11 @@
                   onmouseenter={() => (indice = itemIndex)}
                   onclick={() => escolher(item.texto)}
                 >
-                  <span class="line-clamp-3">{@html destacarBusca(item.texto, consulta)}</span>
+                  <span class="line-clamp-3">
+                    {#each trechosBusca(item.texto, consulta) as trecho}
+                      {#if trecho.destaque}<mark>{trecho.texto}</mark>{:else}{trecho.texto}{/if}
+                    {/each}
+                  </span>
                   <span class="mt-0.5 block text-xs text-slate-500">
                     {item.usos === 1 ? 'usada 1 vez' : `usada ${item.usos} vezes`}
                   </span>

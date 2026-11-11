@@ -48,15 +48,9 @@ export function filtrarDescricoes(itens: DescricaoAgrupada[], consulta: string) 
   });
 }
 
-function escapeHtml(value: string) {
-  return value
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;');
-}
+export type TrechoDescricao = { texto: string; destaque: boolean };
 
-export function destacarBusca(texto: string, consulta: string) {
+export function trechosBusca(texto: string, consulta: string): TrechoDescricao[] {
   const palavras = [
     ...new Set(
       normalizarTexto(consulta)
@@ -65,7 +59,7 @@ export function destacarBusca(texto: string, consulta: string) {
     )
   ];
   const chars = [...texto];
-  if (!palavras.length) return escapeHtml(texto);
+  if (!palavras.length) return [{ texto, destaque: false }];
   const normalizado = chars.map(normalizarChar).join('');
   const faixas: Array<[number, number]> = [];
   for (const palavra of palavras) {
@@ -77,23 +71,24 @@ export function destacarBusca(texto: string, consulta: string) {
       from = at + palavra.length;
     }
   }
-  if (!faixas.length) return escapeHtml(texto);
+  if (!faixas.length) return [{ texto, destaque: false }];
   faixas.sort((a, b) => a[0] - b[0] || b[1] - a[1]);
   const unidas: Array<[number, number]> = [];
   for (const faixa of faixas) {
     const ultima = unidas.at(-1);
-    if (!ultima || faixa[0] > ultima[1]) unidas.push(faixa);
+    if (!ultima || faixa[0] > ultima[1]) unidas.push([...faixa]);
     else ultima[1] = Math.max(ultima[1], faixa[1]);
   }
-  let html = '';
+  const trechos: TrechoDescricao[] = [];
   let cursor = 0;
   for (const [inicio, fim] of unidas) {
-    html += escapeHtml(chars.slice(cursor, inicio).join(''));
-    html += `<mark>${escapeHtml(chars.slice(inicio, fim).join(''))}</mark>`;
+    if (inicio > cursor)
+      trechos.push({ texto: chars.slice(cursor, inicio).join(''), destaque: false });
+    trechos.push({ texto: chars.slice(inicio, fim).join(''), destaque: true });
     cursor = fim;
   }
-  html += escapeHtml(chars.slice(cursor).join(''));
-  return html;
+  if (cursor < chars.length) trechos.push({ texto: chars.slice(cursor).join(''), destaque: false });
+  return trechos;
 }
 
 export function teclaLista(key: string, indice: number, total: number) {
