@@ -108,12 +108,29 @@ it('mostra as seções em abas na ordem solicitada e abre apenas a aba seleciona
   expect(tags.textContent).toContain('Família');
   expect(endereco.compareDocumentPosition(tags) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   const dados = target.querySelector('[aria-label="Dados do cliente"]')!;
-  expect(dados.classList.contains('grid-cols-2')).toBe(true);
-  expect(dados.classList.contains('xl:grid-cols-6')).toBe(true);
-  expect(dados.children).toHaveLength(6);
-  for (const item of dados.children) {
-    expect(item.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+  const pessoais = dados.querySelector('[aria-label="Dados pessoais"]')!;
+  const contatos = dados.querySelector('[aria-label="Contatos do cliente"]')!;
+  for (const group of [pessoais, contatos]) {
+    expect(group.classList.contains('grid-cols-2')).toBe(true);
+    expect(group.classList.contains('lg:grid-cols-4')).toBe(true);
+    for (const item of group.children) {
+      expect(item.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+    }
   }
+  expect([...pessoais.children].map((item) => item.querySelector('p')?.textContent)).toEqual([
+    'Nome',
+    'CPF/CNPJ',
+    'Nascimento',
+    'Gênero / Nacionalidade'
+  ]);
+  expect([...contatos.children].map((item) => item.querySelector('p')?.textContent)).toEqual([
+    'Telefone',
+    'WhatsApp',
+    'E-mail'
+  ]);
+  expect(
+    pessoais.compareDocumentPosition(contatos) & Node.DOCUMENT_POSITION_FOLLOWING
+  ).toBeTruthy();
   const whatsapp = target.querySelector<HTMLAnchorElement>('a[href^="https://wa.me/"]')!;
   expect(whatsapp.querySelector('svg')).not.toBeNull();
   expect(

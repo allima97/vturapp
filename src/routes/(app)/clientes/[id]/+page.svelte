@@ -406,123 +406,133 @@
   >
     <Card title="Resumo do cliente" color="clientes">
       <div class="space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="flex min-w-0 items-center gap-3">
-            <div class="bg-clientes-100 flex h-10 w-10 items-center justify-center rounded-full">
-              <User size={18} class="text-clientes-600" />
-            </div>
-            <div>
-              <p class="text-sm text-slate-500">Nome</p>
-              <p class="font-medium text-slate-900">{cliente.nome}</p>
-            </div>
+        {#if linkWhatsApp || telefoneDigitos || cliente.email}
+          <div
+            class="flex flex-wrap justify-end gap-2"
+            aria-label="Falar com o cliente"
+            role="group"
+          >
+            {#if linkWhatsApp}
+              <a
+                href={linkWhatsApp}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800 transition-colors hover:bg-emerald-100 focus-visible:outline-2 focus-visible:outline-emerald-600"
+              >
+                <Whatsapp size={15} aria-hidden="true" /> WhatsApp
+              </a>
+            {/if}
+            {#if telefoneDigitos}
+              <a
+                href={`tel:${telefoneDigitos}`}
+                class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-blue-500"
+              >
+                <Phone size={15} aria-hidden="true" /> Ligar
+              </a>
+            {/if}
+            {#if cliente.email}
+              <a
+                href={`mailto:${cliente.email}`}
+                class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-blue-500"
+              >
+                <Mail size={15} aria-hidden="true" /> E-mail
+              </a>
+            {/if}
           </div>
-          {#if linkWhatsApp || telefoneDigitos || cliente.email}
-            <div class="flex flex-wrap gap-2" aria-label="Falar com o cliente" role="group">
-              {#if linkWhatsApp}
-                <a
-                  href={linkWhatsApp}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-800 transition-colors hover:bg-emerald-100 focus-visible:outline-2 focus-visible:outline-emerald-600"
-                >
-                  <Whatsapp size={15} aria-hidden="true" /> WhatsApp
-                </a>
-              {/if}
-              {#if telefoneDigitos}
-                <a
-                  href={`tel:${telefoneDigitos}`}
-                  class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-blue-500"
-                >
-                  <Phone size={15} aria-hidden="true" /> Ligar
-                </a>
-              {/if}
-              {#if cliente.email}
-                <a
-                  href={`mailto:${cliente.email}`}
-                  class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-blue-500"
-                >
-                  <Mail size={15} aria-hidden="true" /> E-mail
-                </a>
-              {/if}
-            </div>
-          {/if}
-        </div>
+        {/if}
 
-        <div
-          class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6"
-          aria-label="Dados do cliente"
-        >
-          <div class="flex min-w-0 items-start gap-3">
-            <div
-              class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-            >
-              <FileText size={18} class="text-clientes-600" aria-hidden="true" />
+        <div class="space-y-4 text-sm" aria-label="Dados do cliente">
+          <div class="grid grid-cols-2 gap-x-4 gap-y-3 lg:grid-cols-4" aria-label="Dados pessoais">
+            <div class="flex min-w-0 items-start gap-3">
+              <div
+                class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+              >
+                <User size={18} class="text-clientes-600" aria-hidden="true" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm text-slate-500">Nome</p>
+                <p class="font-medium break-words text-slate-900">{cliente.nome}</p>
+              </div>
             </div>
-            <div class="min-w-0">
-              <p class="text-sm text-slate-500">CPF/CNPJ</p>
-              <p class="font-medium text-slate-900">{cliente.documento_formatado || '-'}</p>
+            <div class="flex min-w-0 items-start gap-3">
+              <div
+                class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+              >
+                <FileText size={18} class="text-clientes-600" aria-hidden="true" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm text-slate-500">CPF/CNPJ</p>
+                <p class="font-medium text-slate-900">{cliente.documento_formatado || '-'}</p>
+              </div>
             </div>
-          </div>
-          <div class="flex min-w-0 items-start gap-3">
-            <div
-              class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-            >
-              <Phone size={18} class="text-clientes-600" aria-hidden="true" />
+            <div class="flex min-w-0 items-start gap-3">
+              <div
+                class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+              >
+                <Cake size={18} class="text-clientes-600" aria-hidden="true" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm text-slate-500">Nascimento</p>
+                <p class="font-medium text-slate-900">
+                  {formatDate(cliente.nascimento)}
+                  {#if calculateAge(cliente.nascimento)}
+                    <span class="ml-1 text-slate-500"
+                      >({calculateAge(cliente.nascimento)} anos)</span
+                    >
+                  {/if}
+                </p>
+              </div>
             </div>
-            <div class="min-w-0">
-              <p class="text-sm text-slate-500">Telefone</p>
-              <p class="font-medium text-slate-900">{cliente.telefone || '-'}</p>
-            </div>
-          </div>
-          <div class="flex min-w-0 items-start gap-3">
-            <div
-              class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-            >
-              <Whatsapp size={18} class="text-clientes-600" aria-hidden="true" />
-            </div>
-            <div class="min-w-0">
-              <p class="text-sm text-slate-500">WhatsApp</p>
-              <p class="font-medium text-slate-900">{cliente.whatsapp || '-'}</p>
-            </div>
-          </div>
-          <div class="flex min-w-0 items-start gap-3">
-            <div
-              class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-            >
-              <Mail size={18} class="text-clientes-600" aria-hidden="true" />
-            </div>
-            <div class="min-w-0">
-              <p class="text-sm text-slate-500">E-mail</p>
-              <p class="font-medium break-words text-slate-900">{cliente.email || '-'}</p>
-            </div>
-          </div>
-          <div class="flex min-w-0 items-start gap-3">
-            <div
-              class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-            >
-              <Cake size={18} class="text-clientes-600" aria-hidden="true" />
-            </div>
-            <div class="min-w-0">
-              <p class="text-sm text-slate-500">Nascimento</p>
-              <p class="font-medium text-slate-900">
-                {formatDate(cliente.nascimento)}
-                {#if calculateAge(cliente.nascimento)}
-                  <span class="ml-1 text-slate-500">({calculateAge(cliente.nascimento)} anos)</span>
-                {/if}
-              </p>
+            <div class="flex min-w-0 items-start gap-3">
+              <div
+                class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+              >
+                <Globe size={18} class="text-clientes-600" aria-hidden="true" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm text-slate-500">Gênero / Nacionalidade</p>
+                <p class="font-medium break-words text-slate-900">
+                  {[cliente.genero, cliente.nacionalidade].filter(Boolean).join(' · ') || '-'}
+                </p>
+              </div>
             </div>
           </div>
-          <div class="flex min-w-0 items-start gap-3">
-            <div
-              class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-            >
-              <Globe size={18} class="text-clientes-600" aria-hidden="true" />
+          <div
+            class="grid grid-cols-2 gap-x-4 gap-y-3 lg:grid-cols-4"
+            aria-label="Contatos do cliente"
+          >
+            <div class="flex min-w-0 items-start gap-3">
+              <div
+                class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+              >
+                <Phone size={18} class="text-clientes-600" aria-hidden="true" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm text-slate-500">Telefone</p>
+                <p class="font-medium text-slate-900">{cliente.telefone || '-'}</p>
+              </div>
             </div>
-            <div class="min-w-0">
-              <p class="text-sm text-slate-500">Gênero / Nacionalidade</p>
-              <p class="font-medium text-slate-900">
-                {[cliente.genero, cliente.nacionalidade].filter(Boolean).join(' · ') || '-'}
-              </p>
+            <div class="flex min-w-0 items-start gap-3">
+              <div
+                class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+              >
+                <Whatsapp size={18} class="text-clientes-600" aria-hidden="true" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm text-slate-500">WhatsApp</p>
+                <p class="font-medium text-slate-900">{cliente.whatsapp || '-'}</p>
+              </div>
+            </div>
+            <div class="flex min-w-0 items-start gap-3">
+              <div
+                class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+              >
+                <Mail size={18} class="text-clientes-600" aria-hidden="true" />
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm text-slate-500">E-mail</p>
+                <p class="font-medium break-words text-slate-900">{cliente.email || '-'}</p>
+              </div>
             </div>
           </div>
         </div>
