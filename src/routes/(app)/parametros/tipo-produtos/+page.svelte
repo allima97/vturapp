@@ -41,16 +41,16 @@
   }
 
   const TIPOS = [
-    { value: 'servico', label: 'Passeio' },
-    { value: 'pacote', label: 'Pacote' },
-    { value: 'hotel', label: 'Hotel' },
-    { value: 'aereo', label: 'Aéreo' },
-    { value: 'seguro', label: 'Seguro' },
-    { value: 'transfer', label: 'Transfer' },
-    { value: 'rodoviario', label: 'Rodoviário' },
-    { value: 'ingresso', label: 'Ingresso' },
-    { value: 'show', label: 'Show' },
+    { value: 'aereo', label: 'Aéreo' },  
     { value: 'cruzeiro', label: 'Cruzeiro' },
+    { value: 'hotel', label: 'Hotel' },
+    { value: 'ingresso', label: 'Ingresso' },
+    { value: 'pacote', label: 'Pacote' },
+    { value: 'servico', label: 'Passeio' },   
+    { value: 'seguro', label: 'Seguro' },
+    { value: 'show', label: 'Show' },
+    { value: 'transfer', label: 'Transfer' },
+    { value: 'rodoviario', label: 'Rodoviário' },    
     { value: 'outro', label: 'Outro' }
   ];
 
