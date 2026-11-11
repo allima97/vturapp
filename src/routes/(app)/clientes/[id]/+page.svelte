@@ -406,7 +406,7 @@
     hidden={abaAtiva !== 'resumo'}
   >
     <Card title="Resumo do cliente" color="clientes">
-      <div class="space-y-4">
+      <svelte:fragment slot="actions">
         {#if linkWhatsApp || telefoneDigitos || cliente.email}
           <div
             class="flex flex-wrap justify-end gap-4"
@@ -441,7 +441,8 @@
             {/if}
           </div>
         {/if}
-
+      </svelte:fragment>
+      <div class="space-y-4">
         <div class="space-y-4 text-sm" aria-label="Dados do cliente">
           <div class="grid grid-cols-2 gap-x-4 gap-y-3 lg:grid-cols-4" aria-label="Dados pessoais">
             <div class="flex min-w-0 items-start gap-3">

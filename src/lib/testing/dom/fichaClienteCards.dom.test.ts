@@ -133,6 +133,17 @@ it('mostra as seções em abas na ordem solicitada e abre apenas a aba seleciona
   expect(
     target.querySelector('[aria-label="Falar com o cliente"]')?.classList.contains('gap-4')
   ).toBe(true);
+  const acoes = resumo.querySelector<HTMLElement>('[aria-label="Falar com o cliente"]')!;
+  expect(acoes.parentElement).toBe(summary?.parentElement?.parentElement);
+  expect(acoes.parentElement?.classList.contains('items-center')).toBe(true);
+  expect([...acoes.querySelectorAll('a')].map((link) => link.textContent?.trim())).toEqual([
+    'WhatsApp',
+    'Ligar',
+    'E-mail'
+  ]);
+  expect(acoes.querySelector('a[href^="https://wa.me/"]')).not.toBeNull();
+  expect(acoes.querySelector('a[href="tel:11912345678"]')).not.toBeNull();
+  expect(acoes.querySelector('a[href="mailto:cliente@exemplo.com"]')).not.toBeNull();
   expect(
     pessoais.compareDocumentPosition(contatos) & Node.DOCUMENT_POSITION_FOLLOWING
   ).toBeTruthy();
