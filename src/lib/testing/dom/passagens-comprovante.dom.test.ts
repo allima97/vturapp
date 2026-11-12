@@ -2,17 +2,25 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { mount, unmount } from 'svelte';
 import { readable } from 'svelte/store';
 
-const mocks = vi.hoisted(() => ({ api: vi.fn(), lookup: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  api: vi.fn(),
+  lookup: vi.fn(),
+  url: 'https://example.test/operacao/passagens/comprovante?id=abc'
+}));
 vi.mock('$lib/services/api', () => ({ apiFetch: mocks.api }));
 vi.mock('$lib/airportCodeCityLookup', () => ({ loadAirportCodeCityLookup: mocks.lookup }));
 vi.mock('$app/stores', () => ({
-  page: readable({ url: new URL('https://example.test/operacao/passagens/comprovante?id=abc') })
+  page: {
+    subscribe: (run: (value: { url: URL }) => void) =>
+      readable({ url: new URL(mocks.url) }).subscribe(run)
+  }
 }));
 import Comprovante from '../../../routes/(app)/operacao/passagens/comprovante/+page.svelte';
 
 afterEach(() => {
   mocks.api.mockReset();
   mocks.lookup.mockReset();
+  mocks.url = 'https://example.test/operacao/passagens/comprovante?id=abc';
   document.body.replaceChildren();
 });
 
@@ -99,10 +107,27 @@ it('mostra cidades, dados da reserva e assentos nos trechos sem inventar informa
         ?.querySelector('strong')?.textContent
   );
   expect(tarifas).toEqual(['Light', '-']);
+  const links = [...target.querySelectorAll('.acoes a')];
+  expect(links.map((link) => link.textContent?.trim())).toEqual(['Voltar', 'Editar']);
+  expect(links[0].getAttribute('href')).toBe('/operacao/passagens');
+  expect(links[1].getAttribute('href')).toBe('/operacao/passagens?editar=abc&origem=comprovante');
+  expect(target.textContent).toContain('Não informado');
+  await unmount(app);
+});
+
+it('retorna à edição quando o comprovante foi aberto pelo formulário', async () => {
+  mocks.url = 'https://example.test/operacao/passagens/comprovante?id=abc&origem=edicao';
+  mocks.lookup.mockResolvedValue({});
+  mocks.api.mockResolvedValue({
+    item: { localizador: 'ABC123', emissao: '', trechos: [], passageiros: [] }
+  });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Comprovante, { target });
+  await vi.waitFor(() => expect(target.textContent).toContain('COMPROVANTE DE VIAGEM'));
   expect(target.querySelector('.acoes a')?.getAttribute('href')).toBe(
     '/operacao/passagens?editar=abc'
   );
-  expect(target.textContent).toContain('Não informado');
   await unmount(app);
 });
 

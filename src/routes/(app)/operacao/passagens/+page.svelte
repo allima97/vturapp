@@ -74,6 +74,7 @@
   let loading = true;
   let saving = false;
   let error = '';
+  let erroAbertura = '';
   let cidades: AirportCodeCityLookup = {};
   let cidadesIndisponiveis = false;
   const classes = ['Econômica', 'Econômica Premium', 'Executiva', 'Primeira Classe'];
@@ -123,6 +124,7 @@
     revisaoConfirmada = false;
     erroArquivo = '';
     progressoArquivo = '';
+    erroAbertura = '';
     const editarId = url.searchParams.get('editar');
     if (editarId) void abrir(editarId, pedido);
     else if (url.searchParams.get('nova') === '1') novo();
@@ -302,7 +304,7 @@
       editando = true;
     } catch (err) {
       if (pedido === pedidoAbertura)
-        toast.error(toUserMessage(err, 'Não foi possível abrir a passagem.'));
+        erroAbertura = toUserMessage(err, 'Não foi possível abrir a passagem.');
     }
   }
   async function salvar() {
@@ -360,69 +362,89 @@
 />
 
 <div class="space-y-5">
-  <Card title="Passagens salvas" color="operacao">
-    <svelte:fragment slot="actions">
-      <Button color="operacao" on:click={iniciarNovaPassagem} disabled={loading || !!error}
-        >Nova passagem</Button
-      >
-    </svelte:fragment>
-    {#if loading}
-      <p class="text-sm text-slate-500">Carregando passagens...</p>
-    {:else if error}
-      <p role="alert" class="text-sm text-red-700">{error}</p>
-    {:else if !items.length}
-      <p class="text-sm text-slate-500">Nenhuma passagem salva.</p>
-    {:else}
-      <ul class="divide-y divide-slate-200">
-        {#each items as item (item.id)}
-          <li class="flex flex-wrap items-center justify-between gap-3 py-3">
-            <span class="font-medium text-slate-900">Localizador: {item.localizador}</span>
-            <div class="flex flex-wrap gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                on:click={() => goto(`/operacao/passagens?editar=${encodeURIComponent(item.id)}`)}
-                >Abrir</Button
-              >
-              <Button
-                variant="secondary"
-                size="sm"
-                href={`/operacao/passagens/comprovante?id=${encodeURIComponent(item.id)}`}
-                >Comprovante</Button
-              >
-              <Button variant="danger" size="sm" on:click={() => excluir(item.id)}>Excluir</Button>
-            </div>
-          </li>
-        {/each}
-      </ul>
-    {/if}
-    {#if !loading && !error && (pagina > 1 || hasMore)}
-      <div class="mt-4 flex flex-wrap items-center justify-end gap-3">
-        <Button
-          variant="secondary"
-          size="sm"
-          disabled={pagina === 1}
-          on:click={() => {
-            pagina -= 1;
-            void carregar();
-          }}>Anterior</Button
+  {#if !$page.url.searchParams.has('editar') && $page.url.searchParams.get('nova') !== '1'}
+    <Card title="Passagens salvas" color="operacao">
+      <svelte:fragment slot="actions">
+        <Button color="operacao" on:click={iniciarNovaPassagem} disabled={loading || !!error}
+          >Nova passagem</Button
         >
-        <span class="text-sm text-slate-600">Página {pagina}</span>
-        <Button
-          variant="secondary"
-          size="sm"
-          disabled={!hasMore}
-          on:click={() => {
-            pagina += 1;
-            void carregar();
-          }}>Próxima</Button
-        >
-      </div>
-    {/if}
-  </Card>
-
-  {#if editando}
+      </svelte:fragment>
+      {#if loading}
+        <p class="text-sm text-slate-500">Carregando passagens...</p>
+      {:else if error}
+        <p role="alert" class="text-sm text-red-700">{error}</p>
+      {:else if !items.length}
+        <p class="text-sm text-slate-500">Nenhuma passagem salva.</p>
+      {:else}
+        <ul class="divide-y divide-slate-200">
+          {#each items as item (item.id)}
+            <li class="flex flex-wrap items-center justify-between gap-3 py-3">
+              <span class="font-medium text-slate-900">Localizador: {item.localizador}</span>
+              <div class="flex flex-wrap gap-2">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  on:click={() => goto(`/operacao/passagens?editar=${encodeURIComponent(item.id)}`)}
+                  >Abrir</Button
+                >
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  href={`/operacao/passagens/comprovante?id=${encodeURIComponent(item.id)}`}
+                  >Comprovante</Button
+                >
+                <Button variant="danger" size="sm" on:click={() => excluir(item.id)}>Excluir</Button
+                >
+              </div>
+            </li>
+          {/each}
+        </ul>
+      {/if}
+      {#if !loading && !error && (pagina > 1 || hasMore)}
+        <div class="mt-4 flex flex-wrap items-center justify-end gap-3">
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={pagina === 1}
+            on:click={() => {
+              pagina -= 1;
+              void carregar();
+            }}>Anterior</Button
+          >
+          <span class="text-sm text-slate-600">Página {pagina}</span>
+          <Button
+            variant="secondary"
+            size="sm"
+            disabled={!hasMore}
+            on:click={() => {
+              pagina += 1;
+              void carregar();
+            }}>Próxima</Button
+          >
+        </div>
+      {/if}
+    </Card>
+  {:else if erroAbertura}
+    <Card title="Passagem" color="operacao">
+      <p role="alert" class="mb-4 text-sm text-red-700">{erroAbertura}</p>
+      <Button variant="secondary" href="/operacao/passagens">Voltar</Button>
+    </Card>
+  {:else if !editando}
+    <Card title="Passagem" color="operacao">
+      <p role="status" class="text-sm text-slate-500">Carregando passagem...</p>
+      <Button variant="secondary" href="/operacao/passagens">Voltar</Button>
+    </Card>
+  {:else}
     <Card title={id ? 'Editar passagem' : 'Nova passagem'} color="operacao">
+      <svelte:fragment slot="actions">
+        <Button
+          variant="secondary"
+          href={$page.url.searchParams.get('origem') === 'comprovante' && id
+            ? `/operacao/passagens/comprovante?id=${encodeURIComponent(id)}`
+            : '/operacao/passagens'}
+          disabled={saving || processandoArquivo}>Voltar</Button
+        >
+      </svelte:fragment>
       <div class="space-y-6">
         <details class="importacao-editavel rounded-lg border border-slate-200 p-4">
           <summary class="flex cursor-pointer items-center justify-between gap-2 font-medium">
@@ -722,7 +744,7 @@
         <div class="flex flex-wrap justify-end gap-3">
           <Button
             variant="secondary"
-            on:click={() => (editando = false)}
+            href="/operacao/passagens"
             disabled={saving || processandoArquivo}>Fechar</Button
           >
           <Button color="operacao" on:click={salvar} loading={saving} disabled={processandoArquivo}
@@ -730,7 +752,7 @@
           >
           {#if id}<Button
               variant="secondary"
-              href={`/operacao/passagens/comprovante?id=${encodeURIComponent(id)}`}
+              href={`/operacao/passagens/comprovante?id=${encodeURIComponent(id)}&origem=edicao`}
               >Gerar comprovante</Button
             >{/if}
         </div>

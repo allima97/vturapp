@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
+  import Button from '$lib/components/ui/Button.svelte';
   import {
     loadAirportCodeCityLookup,
     type AirportCodeCityLookup
@@ -167,6 +168,22 @@
 </script>
 
 <div class="comprovante">
+  <div class="acoes">
+    <Button
+      variant="secondary"
+      href={$page.url.searchParams.get('origem') === 'edicao' && $page.url.searchParams.get('id')
+        ? `/operacao/passagens?editar=${encodeURIComponent($page.url.searchParams.get('id') || '')}`
+        : '/operacao/passagens'}>Voltar</Button
+    >
+    {#if item}
+      <Button
+        variant="secondary"
+        href={`/operacao/passagens?editar=${encodeURIComponent($page.url.searchParams.get('id') || '')}&origem=comprovante`}
+        >Editar</Button
+      >
+      <Button color="operacao" on:click={() => window.print()}>Imprimir / Salvar em PDF</Button>
+    {/if}
+  </div>
   {#if loading}
     <p>Carregando comprovante...</p>
   {:else if error}
@@ -179,11 +196,6 @@
           passagem.
         </p>
       {/if}
-      <a
-        href={`/operacao/passagens?editar=${encodeURIComponent($page.url.searchParams.get('id') || '')}`}
-        >Editar</a
-      >
-      <button type="button" on:click={() => window.print()}>Imprimir / Salvar em PDF</button>
     </div>
     <header class="cabecalho">
       <strong>{[...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')}</strong>
@@ -297,24 +309,14 @@
     font-size: 13px;
   }
   .acoes {
-    text-align: right;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
     margin-bottom: 20px;
   }
   .acoes p {
     color: #92400e;
-  }
-  .acoes button,
-  .acoes a {
-    display: inline-block;
-    padding: 9px 14px;
-    border: 1px solid #0075ca;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  .acoes a {
-    margin-right: 8px;
-    color: #17233c;
-    text-decoration: none;
   }
   .cabecalho {
     display: flex;

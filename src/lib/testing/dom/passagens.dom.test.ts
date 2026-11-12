@@ -292,9 +292,11 @@ it('permite importar, revisar, salvar e abrir comprovante', async () => {
     (link) => link.textContent?.trim() === 'Gerar comprovante'
   )!;
   expect(comprovante.getAttribute('href')).toBe(
-    '/operacao/passagens/comprovante?id=00000000-0000-4000-8000-000000000001'
+    '/operacao/passagens/comprovante?id=00000000-0000-4000-8000-000000000001&origem=edicao'
   );
   expect(comprovante.getAttribute('target')).toBeNull();
+  api.navigate('/operacao/passagens');
+  flushSync();
   click(target, 'Nova passagem');
   expect(target.querySelector<HTMLInputElement>('#passagem-localizador')?.value).toBe('');
   expect(target.textContent).not.toContain('Gerar comprovante');
@@ -325,20 +327,71 @@ it('mostra apenas a lista ao retornar para Passagem após abrir uma passagem', a
   api.fetch.mockImplementation(async (_path, options) =>
     options.query?.id
       ? { item: { id, localizador: 'ABC123', emissao: '', trechos: [], passageiros: [] } }
-      : { items: [{ id, localizador: 'ABC123' }] }
+      : {
+          items: [
+            { id, localizador: 'ABC123' },
+            { id: '00000000-0000-4000-8000-000000000002', localizador: 'DEF456' }
+          ]
+        }
   );
   const target = document.createElement('div');
   document.body.appendChild(target);
   const app = mount(Passagens, { target });
   await vi.waitFor(() => expect(target.textContent).toContain('Localizador: ABC123'));
   click(target, 'Abrir');
+  expect(target.textContent).not.toContain('Passagens salvas');
+  expect(target.textContent).not.toContain('Localizador: ABC123');
   await vi.waitFor(() =>
     expect(target.querySelector<HTMLInputElement>('#passagem-localizador')?.value).toBe('ABC123')
   );
+  expect(target.textContent).not.toContain('Passagens salvas');
+  expect(target.textContent).not.toContain('DEF456');
+  const voltar = [...target.querySelectorAll('a')].find((a) => a.textContent?.trim() === 'Voltar');
+  expect(voltar?.getAttribute('href')).toBe('/operacao/passagens');
   api.navigate('/operacao/passagens');
   flushSync();
   expect(target.querySelector('#passagem-localizador')).toBeNull();
   expect(target.textContent).toContain('Localizador: ABC123');
+  expect(target.textContent).toContain('Localizador: DEF456');
+  await unmount(app);
+});
+
+it('retorna ao comprovante ao editar a partir dele', async () => {
+  const id = '00000000-0000-4000-8000-000000000001';
+  api.navigate(`/operacao/passagens?editar=${id}&origem=comprovante`);
+  api.fetch.mockImplementation(async (_path, options) =>
+    options.query?.id
+      ? { item: { id, localizador: 'ABC123', emissao: '', trechos: [], passageiros: [] } }
+      : { items: [] }
+  );
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() => expect(target.querySelector('#passagem-localizador')).not.toBeNull());
+  expect(target.textContent).not.toContain('Passagens salvas');
+  const voltar = [...target.querySelectorAll('a')].find((a) => a.textContent?.trim() === 'Voltar');
+  expect(voltar?.getAttribute('href')).toBe(`/operacao/passagens/comprovante?id=${id}`);
+  await unmount(app);
+});
+
+it('exibe erro e retorno sem apresentar a lista se falhar ao abrir passagem', async () => {
+  api.navigate('/operacao/passagens?editar=inexistente');
+  api.fetch.mockImplementation(async (_path, options) => {
+    if (options.query?.id) throw new Error('Passagem indisponível');
+    return { items: [] };
+  });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() =>
+    expect(target.querySelector('[role=alert]')?.textContent).toContain('Passagem indisponível')
+  );
+  expect(target.textContent).not.toContain('Passagens salvas');
+  expect(
+    [...target.querySelectorAll('a')]
+      .find((a) => a.textContent?.trim() === 'Voltar')
+      ?.getAttribute('href')
+  ).toBe('/operacao/passagens');
   await unmount(app);
 });
 
