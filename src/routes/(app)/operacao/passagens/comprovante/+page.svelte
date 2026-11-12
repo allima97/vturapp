@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onDestroy, onMount } from 'svelte';
   import { page } from '$app/stores';
   import Button from '$lib/components/ui/Button.svelte';
   import { nomePassageiroMaiusculo } from '$lib/passagens/nome';
@@ -22,6 +22,32 @@
   let cidadesIndisponiveis = false;
   let error = '';
   let loading = true;
+  let tituloAnterior: string | null = null;
+
+  function restaurarTitulo() {
+    if (tituloAnterior !== null) {
+      document.title = tituloAnterior;
+      tituloAnterior = null;
+    }
+    window.removeEventListener('afterprint', restaurarTitulo);
+  }
+
+  function imprimir() {
+    if (!item) return;
+    if (tituloAnterior === null) tituloAnterior = document.title;
+    document.title = item.localizador;
+    window.addEventListener('afterprint', restaurarTitulo);
+    try {
+      window.print();
+    } catch (err) {
+      restaurarTitulo();
+      throw err;
+    }
+  }
+
+  onDestroy(() => {
+    if (tituloAnterior !== null) restaurarTitulo();
+  });
 
   function cidade(codigo: string, informada?: string) {
     return informada?.trim() || cidades[codigo.trim().toUpperCase()] || '';
@@ -153,7 +179,7 @@
         href={`/operacao/passagens?editar=${encodeURIComponent($page.url.searchParams.get('id') || '')}&origem=comprovante`}
         >Editar</Button
       >
-      <Button color="operacao" on:click={() => window.print()}>Imprimir / Salvar em PDF</Button>
+      <Button color="operacao" on:click={imprimir}>Imprimir / Salvar em PDF</Button>
     {/if}
   </div>
   {#if loading}

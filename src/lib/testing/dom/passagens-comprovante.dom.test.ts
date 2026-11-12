@@ -24,6 +24,34 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
+it('usa o localizador como título durante a impressão e restaura o título ao terminar', async () => {
+  mocks.lookup.mockResolvedValue({});
+  mocks.api.mockResolvedValue({
+    item: { localizador: 'WYYLUU', emissao: '', trechos: [], passageiros: [] }
+  });
+  document.title = 'VTUR';
+  const imprimir = vi.spyOn(window, 'print').mockImplementation(() => {
+    expect(document.title).toBe('WYYLUU');
+  });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Comprovante, { target });
+  await vi.waitFor(() => expect(target.textContent).toContain('Imprimir / Salvar em PDF'));
+  const botao = [...target.querySelectorAll('button')].find((button) =>
+    button.textContent?.includes('Imprimir / Salvar em PDF')
+  );
+  expect(botao).toBeDefined();
+  botao?.click();
+  expect(imprimir).toHaveBeenCalledOnce();
+  expect(document.title).toBe('WYYLUU');
+  window.dispatchEvent(new Event('afterprint'));
+  expect(document.title).toBe('VTUR');
+  botao?.click();
+  await unmount(app);
+  expect(document.title).toBe('VTUR');
+  imprimir.mockRestore();
+});
+
 it('mostra cidades, dados da reserva e assentos nos trechos sem inventar informações', async () => {
   mocks.lookup.mockResolvedValue({ GRU: 'São Paulo', MIA: 'Miami' });
   mocks.api.mockResolvedValue({
