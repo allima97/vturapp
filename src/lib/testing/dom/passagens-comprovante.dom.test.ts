@@ -73,6 +73,9 @@ it('mostra cidades, dados da reserva e assentos nos trechos sem inventar informa
   expect(target.textContent).toContain('Companhia Exemplo / Outra Companhia');
   expect(target.textContent).toContain('IDA');
   expect(target.textContent).toContain('VOLTA');
+  expect(target.querySelector('.resumo p')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+    'Rota: São Paulo (GRU) / Miami (MIA)'
+  );
   expect(target.querySelectorAll('.trecho')[0].textContent).toContain('33A');
   expect(target.querySelectorAll('.trecho')[1].textContent).toContain('34B');
   expect(target.querySelectorAll('.duracao')[0].textContent).not.toContain('Chegada no dia');
@@ -96,6 +99,65 @@ it('mostra cidades, dados da reserva e assentos nos trechos sem inventar informa
     '/operacao/passagens?editar=abc'
   );
   expect(target.textContent).toContain('Não informado');
+  await unmount(app);
+});
+
+it.each([
+  {
+    trechos: [
+      { origem: 'MSN', destino: 'ORD' },
+      { origem: 'LHR', destino: 'GRU' }
+    ],
+    esperado: 'Madison (MSN) / Chicago (ORD) e Londres (LHR) / São Paulo (GRU)'
+  },
+  {
+    trechos: [
+      { origem: 'MSN', destino: 'ORD' },
+      { origem: 'ord', destino: 'LHR' },
+      { origem: 'GRU', destino: 'AAA' },
+      { origem: 'BBB', destino: 'CCC' }
+    ],
+    esperado: 'Madison (MSN) / Londres (LHR) e São Paulo (GRU) / AAA e BBB / CCC'
+  },
+  {
+    trechos: [
+      { origem: 'MSN', destino: 'ORD' },
+      { origem: 'ORD', destino: 'MSN' },
+      { origem: 'MSN', destino: 'GRU' }
+    ],
+    esperado: 'Madison (MSN) / São Paulo (GRU)'
+  }
+])('separa rotas descontínuas sem inventar conexões', async ({ trechos, esperado }) => {
+  mocks.lookup.mockResolvedValue({
+    MSN: 'Madison',
+    ORD: 'Chicago',
+    LHR: 'Londres',
+    GRU: 'São Paulo'
+  });
+  mocks.api.mockResolvedValue({
+    item: {
+      localizador: 'ABC123',
+      emissao: '',
+      trechos: trechos.map((trecho) => ({
+        companhia: 'Exemplo',
+        voo: 'XY 1',
+        saida: '2026-11-20T00:05',
+        chegada: '2026-11-20T06:50',
+        status: '',
+        duracao: '',
+        classe: '',
+        ...trecho
+      })),
+      passageiros: [{ nome: 'Pessoa Exemplo', bilhete: '', status: '', assentos: [] }]
+    }
+  });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Comprovante, { target });
+  await vi.waitFor(() => expect(target.querySelector('.resumo p')).not.toBeNull());
+  expect(target.querySelector('.resumo p')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+    `Rota: ${esperado}`
+  );
   await unmount(app);
 });
 

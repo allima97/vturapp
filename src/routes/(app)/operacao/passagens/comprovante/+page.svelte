@@ -64,11 +64,33 @@
   }
 
   function destinoDaRota(trechos: TrechoPassagem[]) {
-    const retorno = trechos.findIndex(
-      (trecho, indice) =>
-        indice > 0 && trecho.destino.toUpperCase() === trechos[0].origem.toUpperCase()
-    );
-    return trechos[retorno > 0 ? retorno - 1 : trechos.length - 1];
+    const ultimo = trechos[trechos.length - 1];
+    const terminaNaOrigem =
+      trechos.length > 1 &&
+      ultimo.destino.trim().toUpperCase() === trechos[0].origem.trim().toUpperCase();
+    return trechos[terminaNaOrigem ? trechos.length - 2 : trechos.length - 1];
+  }
+
+  function resumoRotas(trechos: TrechoPassagem[]) {
+    const grupos: TrechoPassagem[][] = [];
+    for (const trecho of trechos) {
+      const grupo = grupos[grupos.length - 1];
+      if (
+        !grupo ||
+        grupo[grupo.length - 1].destino.trim().toUpperCase() !== trecho.origem.trim().toUpperCase()
+      ) {
+        grupos.push([trecho]);
+      } else {
+        grupo.push(trecho);
+      }
+    }
+    return grupos
+      .map((grupo) => {
+        const origem = grupo[0];
+        const destino = destinoDaRota(grupo);
+        return `${aeroporto(origem.origem, origem.cidadeOrigem)} / ${aeroporto(destino.destino, destino.cidadeDestino)}`;
+      })
+      .join(' e ');
   }
 
   function assentos(indice: number) {
@@ -175,10 +197,7 @@
       <div class="resumo">
         <p>
           <strong>Rota:</strong>
-          {aeroporto(item.trechos[0].origem, item.trechos[0].cidadeOrigem)} / {aeroporto(
-            destinoDaRota(item.trechos).destino,
-            destinoDaRota(item.trechos).cidadeDestino
-          )}
+          {resumoRotas(item.trechos)}
         </p>
         <p>
           <strong>Passageiros:</strong>
