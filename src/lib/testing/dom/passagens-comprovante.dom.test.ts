@@ -101,6 +101,17 @@ it('mostra cidades, dados da reserva e assentos nos trechos sem inventar informa
   expect(
     [...target.querySelectorAll('tbody tr')].map((row) => row.children[1].textContent)
   ).toEqual(['Adulto', 'Criança', 'Infant', 'Não informado']);
+  const tabela = target.querySelector('table');
+  expect(tabela?.querySelectorAll('tbody tr')).toHaveLength(4);
+  const aviso = tabela?.nextElementSibling;
+  expect(aviso?.classList.contains('aviso-embarque')).toBe(true);
+  expect(aviso?.textContent?.replace(/\s+/g, ' ')).toContain('Atenção ao horário de seu embarque!');
+  expect(aviso?.textContent?.replace(/\s+/g, ' ')).toContain(
+    'Apresente-se no aeroporto indicado com pelo menos 3 horas de antecedência para voos internacionais e 2 horas de antecedência para voos nacionais.'
+  );
+  expect(aviso?.querySelectorAll('strong')[1]?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+    'Para um maior controle, baixe o aplicativo da companhia aérea e acompanhe a situação de seu voo.'
+  );
   const tarifas = [...target.querySelectorAll('.trecho')].map(
     (trecho) =>
       [...trecho.querySelectorAll('.detalhes > div')]

@@ -264,6 +264,19 @@
         {/each}
       </tbody>
     </table>
+    <aside class="aviso-embarque" aria-label="Orientações de embarque">
+      <strong>Atenção ao horário de seu embarque!</strong>
+      <p>
+        Apresente-se no aeroporto indicado com pelo menos 3 horas de antecedência para voos
+        internacionais e 2 horas de antecedência para voos nacionais.
+      </p>
+      <p>
+        <strong>
+          Para um maior controle, baixe o aplicativo da companhia aérea e acompanhe a situação de
+          seu voo.
+        </strong>
+      </p>
+    </aside>
     <footer>
       {[...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')} — Reserva: {item.localizador}
     </footer>
@@ -446,10 +459,19 @@
   tr {
     break-inside: avoid;
   }
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  .aviso-embarque {
+    background: #f6f8fb;
+    border: 1px solid #cbd5e1;
+    border-radius: 4px;
+    margin-top: 16px;
+    padding: 14px 18px;
+    break-inside: avoid;
+  }
   footer {
-    margin-top: 32px;
-    padding-top: 12px;
-    border-top: 1px solid #dbe3ec;
+    margin-top: 24px;
     color: #64748b;
     font-size: 11px;
   }
