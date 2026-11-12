@@ -82,6 +82,10 @@ it('mostra cidades, dados da reserva e assentos nos trechos sem inventar informa
   expect(target.querySelectorAll('.duracao')[1].textContent).toContain(
     'Chegada no dia seguinte (+1)'
   );
+  expect(target.querySelectorAll('.duracao')[0].querySelector('.aviso-chegada')).toBeNull();
+  expect(target.querySelectorAll('.duracao')[1].querySelector('.aviso-chegada')?.textContent).toBe(
+    'Chegada no dia seguinte (+1)'
+  );
   expect(target.textContent).toContain('12345');
   const resumo = target.querySelector('.resumo')?.textContent?.replace(/\s+/g, ' ');
   expect(resumo).toContain('Passageiros: 1 Adulto + 1 Criança + 1 Infant + 1 Não informado');
@@ -230,6 +234,9 @@ it('indica vários dias de diferença e não avisa para chegada anterior à saí
   document.body.appendChild(target);
   const app = mount(Comprovante, { target });
   await vi.waitFor(() => expect(target.textContent).toContain('Chegada 2 dias depois (+2)'));
+  expect(target.querySelectorAll('.duracao')[0].querySelector('.aviso-chegada')?.textContent).toBe(
+    'Chegada 2 dias depois (+2)'
+  );
   expect(target.querySelectorAll('.duracao')[1].querySelector('small')).toBeNull();
   await unmount(app);
 });

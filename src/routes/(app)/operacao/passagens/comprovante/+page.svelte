@@ -224,7 +224,7 @@
             <div class="duracao">
               <strong>DURAÇÃO: {trecho.duracao || 'Não informada'}</strong><span>✈</span>
               {#if avisoChegada(trecho.saida, trecho.chegada)}
-                <small>{avisoChegada(trecho.saida, trecho.chegada)}</small>
+                <small class="aviso-chegada">{avisoChegada(trecho.saida, trecho.chegada)}</small>
               {/if}
             </div>
             <div class="local destino">
@@ -431,8 +431,14 @@
     height: 2px;
     background: #cbd5e1;
   }
-  .duracao small {
+  .aviso-chegada {
+    color: #92400e;
     font-size: 10px;
+    font-weight: 700;
+    border: 1px solid #b45309;
+    border-radius: 4px;
+    padding: 3px 6px;
+    margin-top: 4px;
   }
   .detalhes {
     display: grid;
