@@ -1,14 +1,26 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { flushSync, mount, unmount } from 'svelte';
 
-const api = vi.hoisted(() => ({ fetch: vi.fn(), url: 'https://example.test/operacao/passagens' }));
+const api = vi.hoisted(() => ({
+  fetch: vi.fn(),
+  url: 'https://example.test/operacao/passagens',
+  subscribers: new Set<(value: { url: URL }) => void>(),
+  navigate(url: string) {
+    this.url = new URL(url, this.url).href;
+    for (const subscriber of this.subscribers) subscriber({ url: new URL(this.url) });
+  }
+}));
 vi.mock('$app/stores', () => ({
   page: {
     subscribe: (run: (value: { url: URL }) => void) => {
+      api.subscribers.add(run);
       run({ url: new URL(api.url) });
-      return () => {};
+      return () => api.subscribers.delete(run);
     }
   }
+}));
+vi.mock('$app/navigation', () => ({
+  goto: async (url: string) => api.navigate(url)
 }));
 vi.mock('$lib/services/api', async (original) => ({
   ...(await original<typeof import('$lib/services/api')>()),
@@ -27,6 +39,7 @@ function click(target: HTMLElement, label: string) {
 
 afterEach(() => {
   api.fetch.mockReset();
+  api.url = 'https://example.test/operacao/passagens';
   document.body.replaceChildren();
 });
 
@@ -115,6 +128,81 @@ it('permite importar, revisar, salvar e abrir comprovante', async () => {
     )
   );
   await vi.waitFor(() => expect(target.textContent).toContain('Gerar comprovante'));
+  const comprovante = [...target.querySelectorAll('a')].find(
+    (link) => link.textContent?.trim() === 'Gerar comprovante'
+  )!;
+  expect(comprovante.getAttribute('href')).toBe(
+    '/operacao/passagens/comprovante?id=00000000-0000-4000-8000-000000000001'
+  );
+  expect(comprovante.getAttribute('target')).toBeNull();
+  click(target, 'Nova passagem');
+  expect(target.querySelector<HTMLInputElement>('#passagem-localizador')?.value).toBe('');
+  expect(target.textContent).not.toContain('Gerar comprovante');
+  await unmount(app);
+});
+
+it('abre o comprovante de passagem salva na mesma aba', async () => {
+  api.fetch.mockResolvedValue({
+    items: [{ id: '00000000-0000-4000-8000-000000000001', localizador: 'ABC123' }]
+  });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() => expect(target.textContent).toContain('Localizador: ABC123'));
+  expect(target.querySelector('#passagem-localizador')).toBeNull();
+  const comprovante = [...target.querySelectorAll('a')].find(
+    (link) => link.textContent?.trim() === 'Comprovante'
+  )!;
+  expect(comprovante.getAttribute('href')).toBe(
+    '/operacao/passagens/comprovante?id=00000000-0000-4000-8000-000000000001'
+  );
+  expect(comprovante.getAttribute('target')).toBeNull();
+  await unmount(app);
+});
+
+it('mostra apenas a lista ao retornar para Passagem após abrir uma passagem', async () => {
+  const id = '00000000-0000-4000-8000-000000000001';
+  api.fetch.mockImplementation(async (_path, options) =>
+    options.query?.id
+      ? { item: { id, localizador: 'ABC123', emissao: '', trechos: [], passageiros: [] } }
+      : { items: [{ id, localizador: 'ABC123' }] }
+  );
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() => expect(target.textContent).toContain('Localizador: ABC123'));
+  click(target, 'Abrir');
+  await vi.waitFor(() =>
+    expect(target.querySelector<HTMLInputElement>('#passagem-localizador')?.value).toBe('ABC123')
+  );
+  api.navigate('/operacao/passagens');
+  flushSync();
+  expect(target.querySelector('#passagem-localizador')).toBeNull();
+  expect(target.textContent).toContain('Localizador: ABC123');
+  await unmount(app);
+});
+
+it('não reabre o formulário se a consulta da passagem terminar após voltar à lista', async () => {
+  const id = '00000000-0000-4000-8000-000000000001';
+  let concluir: (value: unknown) => void = () => {};
+  const resposta = new Promise((resolve) => {
+    concluir = resolve;
+  });
+  api.fetch.mockImplementation(async (_path, options) =>
+    options.query?.id ? resposta : { items: [{ id, localizador: 'ABC123' }] }
+  );
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() => expect(target.textContent).toContain('Localizador: ABC123'));
+  click(target, 'Abrir');
+  api.navigate('/operacao/passagens');
+  flushSync();
+  concluir({ item: { id, localizador: 'ABC123', emissao: '', trechos: [], passageiros: [] } });
+  await resposta;
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  flushSync();
+  expect(target.querySelector('#passagem-localizador')).toBeNull();
   await unmount(app);
 });
 

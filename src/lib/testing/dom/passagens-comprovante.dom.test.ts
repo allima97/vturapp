@@ -71,7 +71,13 @@ it('mostra cidades, dados da reserva e assentos nos trechos sem inventar informa
     'Chegada no dia seguinte (+1)'
   );
   expect(target.textContent).toContain('12345');
-  expect(target.textContent).toContain('Light');
+  const tarifas = [...target.querySelectorAll('.trecho')].map(
+    (trecho) =>
+      [...trecho.querySelectorAll('.detalhes > div')]
+        .find((detalhe) => detalhe.querySelector('.rotulo')?.textContent === 'TARIFA')
+        ?.querySelector('strong')?.textContent
+  );
+  expect(tarifas).toEqual(['Light', '-']);
   expect(target.querySelector('.acoes a')?.getAttribute('href')).toBe(
     '/operacao/passagens?editar=abc'
   );
@@ -156,8 +162,8 @@ it('mostra o destino final da ida quando há conexão', async () => {
       localizador: 'ABC123',
       emissao: '',
       trechos: [
-        { ...trecho, origem: 'AAA', destino: 'BBB' },
-        { ...trecho, origem: 'BBB', destino: 'CCC' },
+        { ...trecho, origem: 'AAA', destino: 'BBB', tarifa: '' },
+        { ...trecho, origem: 'BBB', destino: 'CCC', tarifa: '   ' },
         { ...trecho, origem: 'CCC', destino: 'AAA' }
       ],
       passageiros: [{ nome: 'Pessoa Exemplo', bilhete: '', status: '', assentos: [] }]
@@ -171,5 +177,13 @@ it('mostra o destino final da ida quando há conexão', async () => {
       'Origem (AAA) / Destino final (CCC)'
     )
   );
+  expect(
+    [...target.querySelectorAll('.trecho')].map(
+      (trecho) =>
+        [...trecho.querySelectorAll('.detalhes > div')]
+          .find((detalhe) => detalhe.querySelector('.rotulo')?.textContent === 'TARIFA')
+          ?.querySelector('strong')?.textContent
+    )
+  ).toEqual(['-', '-', '-']);
   await unmount(app);
 });

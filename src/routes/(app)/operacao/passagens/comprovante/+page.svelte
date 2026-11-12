@@ -180,9 +180,9 @@
             <div>
               <span class="rotulo">CLASSE</span><strong>{trecho.classe || 'Não informada'}</strong>
             </div>
-            {#if trecho.tarifa}
-              <div><span class="rotulo">TARIFA</span><strong>{trecho.tarifa}</strong></div>
-            {/if}
+            <div>
+              <span class="rotulo">TARIFA</span><strong>{trecho.tarifa?.trim() || '-'}</strong>
+            </div>
             <div><span class="rotulo">ASSENTOS</span><strong>{assentos(i)}</strong></div>
             <div>
               <span class="rotulo">STATUS DO VOO</span><strong

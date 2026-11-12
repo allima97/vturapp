@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
@@ -59,6 +60,8 @@
   let texto = '';
   let avisos: string[] = [];
   let editando = false;
+  let montado = false;
+  let pedidoAbertura = 0;
   let loading = true;
   let saving = false;
   let error = '';
@@ -89,13 +92,26 @@
   }
   onMount(() => {
     void carregar();
-    const editarId = $page.url.searchParams.get('editar');
-    if (editarId) void abrir(editarId);
+    montado = true;
     void loadAirportCodeCityLookup().then((lookup) => {
       cidades = lookup;
       cidadesIndisponiveis = Object.keys(lookup).length === 0;
     });
   });
+
+  $: if (montado) sincronizarPagina($page.url);
+
+  function sincronizarPagina(url: URL) {
+    const pedido = ++pedidoAbertura;
+    editando = false;
+    id = '';
+    form = vazio();
+    texto = '';
+    avisos = [];
+    const editarId = url.searchParams.get('editar');
+    if (editarId) void abrir(editarId, pedido);
+    else if (url.searchParams.get('nova') === '1') novo();
+  }
 
   function cidadeSugerida(codigo: string) {
     return cidades[codigo.trim().toUpperCase()] || '';
@@ -132,6 +148,14 @@
     texto = '';
     avisos = [];
     editando = true;
+  }
+  function iniciarNovaPassagem() {
+    if ($page.url.searchParams.get('nova') === '1' && !$page.url.searchParams.has('editar')) {
+      pedidoAbertura++;
+      novo();
+    } else {
+      void goto('/operacao/passagens?nova=1');
+    }
   }
   async function analisar() {
     if (!texto.trim()) {
@@ -179,13 +203,14 @@
       return { ...passageiro, assentos };
     });
   }
-  async function abrir(itemId: string) {
+  async function abrir(itemId: string, pedido: number) {
     try {
       const result = await apiFetch<{ item: PassagemSalva }>('/api/v1/passagens', {
         query: { id: itemId },
         noCache: true,
         redirectOnForbidden: false
       });
+      if (pedido !== pedidoAbertura) return;
       id = result.item.id;
       form = {
         localizador: result.item.localizador,
@@ -207,7 +232,8 @@
       texto = '';
       editando = true;
     } catch (err) {
-      toast.error(toUserMessage(err, 'Não foi possível abrir a passagem.'));
+      if (pedido === pedidoAbertura)
+        toast.error(toUserMessage(err, 'Não foi possível abrir a passagem.'));
     }
   }
   async function salvar() {
@@ -263,7 +289,9 @@
 <div class="space-y-5">
   <Card title="Passagens salvas" color="operacao">
     <svelte:fragment slot="actions">
-      <Button color="operacao" on:click={novo} disabled={loading || !!error}>Nova passagem</Button>
+      <Button color="operacao" on:click={iniciarNovaPassagem} disabled={loading || !!error}
+        >Nova passagem</Button
+      >
     </svelte:fragment>
     {#if loading}
       <p class="text-sm text-slate-500">Carregando passagens...</p>
@@ -277,13 +305,17 @@
           <li class="flex flex-wrap items-center justify-between gap-3 py-3">
             <span class="font-medium text-slate-900">Localizador: {item.localizador}</span>
             <div class="flex flex-wrap gap-2">
-              <Button variant="secondary" size="sm" on:click={() => abrir(item.id)}>Abrir</Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                on:click={() => goto(`/operacao/passagens?editar=${encodeURIComponent(item.id)}`)}
+                >Abrir</Button
+              >
               <Button
                 variant="secondary"
                 size="sm"
                 href={`/operacao/passagens/comprovante?id=${encodeURIComponent(item.id)}`}
-                target="_blank"
-                rel="noopener noreferrer">Comprovante</Button
+                >Comprovante</Button
               >
               <Button variant="danger" size="sm" on:click={() => excluir(item.id)}>Excluir</Button>
             </div>
@@ -553,8 +585,7 @@
           {#if id}<Button
               variant="secondary"
               href={`/operacao/passagens/comprovante?id=${encodeURIComponent(id)}`}
-              target="_blank"
-              rel="noopener noreferrer">Gerar comprovante</Button
+              >Gerar comprovante</Button
             >{/if}
         </div>
 
