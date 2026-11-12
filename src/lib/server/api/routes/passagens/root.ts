@@ -114,8 +114,8 @@ function validar(body: unknown) {
     trechos.push({
       companhia,
       voo,
-      origem,
-      destino,
+      origem: origem.toUpperCase(),
+      destino: destino.toUpperCase(),
       saida,
       chegada,
       status,

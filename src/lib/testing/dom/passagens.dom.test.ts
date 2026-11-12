@@ -50,6 +50,21 @@ it('permite importar, revisar, salvar e abrir comprovante', async () => {
       'SOBRENOME EXEMPLO, MARIA'
     )
   );
+  const detalhes = target.querySelector<HTMLDetailsElement>('.trecho-editavel')!;
+  expect(detalhes.open).toBe(false);
+  detalhes.open = true;
+  const origem = target.querySelector<HTMLInputElement>('#origem-0')!;
+  origem.value = 'gru';
+  origem.dispatchEvent(new Event('input', { bubbles: true }));
+  const destino = target.querySelector<HTMLInputElement>('#destino-0')!;
+  destino.value = 'lIs';
+  destino.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+  expect(origem.value).toBe('GRU');
+  expect(destino.value).toBe('LIS');
+  detalhes.open = false;
+  detalhes.open = true;
+  expect(origem.value).toBe('GRU');
   expect(target.querySelector<HTMLInputElement>('#assento-0-0')?.value).toBe('17D');
   const cidade = target.querySelector<HTMLInputElement>('#cidade-origem-0')!;
   cidade.value = 'Cidade Exemplo';
@@ -79,6 +94,8 @@ it('permite importar, revisar, salvar e abrir comprovante', async () => {
           trechos: [
             expect.objectContaining({
               cidadeOrigem: 'Cidade Exemplo',
+              origem: 'GRU',
+              destino: 'LIS',
               duracao: '10:19',
               tarifa: 'Personalizada'
             })
@@ -110,5 +127,86 @@ it('abre para edição a passagem indicada pelo comprovante', async () => {
   );
   expect(target.textContent).toContain('Editar passagem');
   api.url = 'https://example.test/operacao/passagens';
+  await unmount(app);
+});
+
+it('recolhe trechos novos e preserva os demais ao remover um trecho', async () => {
+  api.fetch.mockResolvedValue({ items: [] });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() => expect(target.textContent).toContain('Nenhuma passagem salva.'));
+  click(target, 'Nova passagem');
+  click(target, 'Adicionar trecho');
+  click(target, 'Adicionar trecho');
+  const detalhes = target.querySelectorAll<HTMLDetailsElement>('.trecho-editavel');
+  expect([...detalhes].map((item) => item.open)).toEqual([false, false]);
+  detalhes[1].open = true;
+  const origem = target.querySelector<HTMLInputElement>('#origem-1')!;
+  origem.value = 'lis';
+  origem.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+  detalhes[0].open = true;
+  const remover = [...detalhes[0].querySelectorAll('button')].find(
+    (button) => button.textContent?.trim() === 'Remover trecho'
+  )!;
+  remover.click();
+  flushSync();
+  expect(target.querySelectorAll('.trecho-editavel')).toHaveLength(1);
+  expect(target.querySelector<HTMLInputElement>('#origem-0')?.value).toBe('LIS');
+  await unmount(app);
+});
+
+it('reordena os trechos preservando os assentos de cada passageiro', async () => {
+  api.fetch.mockImplementation(async (_path, options) =>
+    options.method === 'POST' ? { id: '00000000-0000-4000-8000-000000000001' } : { items: [] }
+  );
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() => expect(target.textContent).toContain('Nenhuma passagem salva.'));
+  click(target, 'Nova passagem');
+  click(target, 'Adicionar trecho');
+  click(target, 'Adicionar trecho');
+  click(target, 'Adicionar passageiro');
+  for (const [selector, value] of [
+    ['#origem-0', 'gru'],
+    ['#origem-1', 'lis'],
+    ['#assento-0-0', '12A'],
+    ['#assento-0-1', '23B']
+  ]) {
+    const input = target.querySelector<HTMLInputElement>(selector)!;
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  flushSync();
+  const details = target.querySelectorAll<HTMLDetailsElement>('.trecho-editavel');
+  details[0].open = true;
+  expect(
+    details[0].querySelector<HTMLButtonElement>('[aria-label="Mover trecho 1 para cima"]')?.disabled
+  ).toBe(true);
+  details[0].querySelector<HTMLButtonElement>('[aria-label="Mover trecho 1 para baixo"]')!.click();
+  flushSync();
+  expect(target.querySelector<HTMLInputElement>('#origem-0')?.value).toBe('LIS');
+  expect(target.querySelector<HTMLInputElement>('#origem-1')?.value).toBe('GRU');
+  expect(target.querySelector<HTMLInputElement>('#assento-0-0')?.value).toBe('23B');
+  expect(target.querySelector<HTMLInputElement>('#assento-0-1')?.value).toBe('12A');
+  expect(target.querySelectorAll<HTMLDetailsElement>('.trecho-editavel')[1].open).toBe(true);
+  click(target, 'Salvar passagem');
+  await vi.waitFor(() =>
+    expect(api.fetch).toHaveBeenCalledWith(
+      '/api/v1/passagens',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.objectContaining({
+          trechos: [
+            expect.objectContaining({ origem: 'LIS' }),
+            expect.objectContaining({ origem: 'GRU' })
+          ],
+          passageiros: [expect.objectContaining({ assentos: ['23B', '12A'] })]
+        })
+      })
+    )
+  );
   await unmount(app);
 });

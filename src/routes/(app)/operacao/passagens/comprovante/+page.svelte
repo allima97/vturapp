@@ -82,7 +82,14 @@
       ]);
       cidades = lookup;
       cidadesIndisponiveis = Object.keys(lookup).length === 0;
-      item = response.item;
+      item = {
+        ...response.item,
+        trechos: response.item.trechos.map((trecho) => ({
+          ...trecho,
+          origem: trecho.origem.toUpperCase(),
+          destino: trecho.destino.toUpperCase()
+        }))
+      };
     } catch (err) {
       error = toUserMessage(err, 'Não foi possível carregar o comprovante.');
     } finally {

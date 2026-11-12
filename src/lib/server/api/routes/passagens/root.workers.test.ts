@@ -148,6 +148,8 @@ it('preserva registros existentes, compartilha por empresa e bloqueia quem não 
     trechos: [
       {
         ...payload.trechos[0],
+        origem: 'gru',
+        destino: 'lis',
         cidadeOrigem: 'Cidade Exemplo',
         cidadeDestino: 'Outra Cidade',
         tarifa: 'Tarifa personalizada'
@@ -158,7 +160,11 @@ it('preserva registros existentes, compartilha por empresa e bloqueia quem não 
   expect(
     await (await handlePassagensGet(event(`/api/v1/passagens?id=${id}`))).json()
   ).toMatchObject({
-    item: { id, localizador: 'DEF456', trechos: updated.trechos }
+    item: {
+      id,
+      localizador: 'DEF456',
+      trechos: [{ ...updated.trechos[0], origem: 'GRU', destino: 'LIS' }]
+    }
   });
   expect((await handlePassagensDelete(event(`/api/v1/passagens?id=${id}`, 'DELETE'))).status).toBe(
     200

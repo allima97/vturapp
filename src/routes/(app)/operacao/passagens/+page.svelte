@@ -101,6 +101,16 @@
     return cidades[codigo.trim().toUpperCase()] || '';
   }
 
+  function formatarAeroporto(event: Event, trecho: TrechoPassagem, campo: 'origem' | 'destino') {
+    const input = event.currentTarget;
+    if (!(input instanceof HTMLInputElement)) return;
+    const inicio = input.selectionStart;
+    const fim = input.selectionEnd;
+    input.value = input.value.toUpperCase();
+    trecho[campo] = input.value;
+    if (inicio !== null && fim !== null) input.setSelectionRange(inicio, fim);
+  }
+
   function formatarDuracao(event: Event, trecho: TrechoPassagem) {
     const input = event.currentTarget;
     if (!(input instanceof HTMLInputElement)) return;
@@ -157,6 +167,18 @@
       assentos: passageiro.assentos.filter((_, n) => n !== indice)
     }));
   }
+  function moverTrecho(indice: number, deslocamento: -1 | 1) {
+    const destino = indice + deslocamento;
+    if (destino < 0 || destino >= form.trechos.length) return;
+    const trechos = [...form.trechos];
+    [trechos[indice], trechos[destino]] = [trechos[destino], trechos[indice]];
+    form.trechos = trechos;
+    form.passageiros = form.passageiros.map((passageiro) => {
+      const assentos = form.trechos.map((_, n) => passageiro.assentos[n] || '');
+      [assentos[indice], assentos[destino]] = [assentos[destino], assentos[indice]];
+      return { ...passageiro, assentos };
+    });
+  }
   async function abrir(itemId: string) {
     try {
       const result = await apiFetch<{ item: PassagemSalva }>('/api/v1/passagens', {
@@ -170,6 +192,8 @@
         emissao: result.item.emissao,
         trechos: result.item.trechos.map((trecho) => ({
           ...trecho,
+          origem: trecho.origem.toUpperCase(),
+          destino: trecho.destino.toUpperCase(),
           cidadeOrigem: trecho.cidadeOrigem || '',
           cidadeDestino: trecho.cidadeDestino || '',
           tarifa: trecho.tarifa || ''
@@ -338,97 +362,121 @@
               >Adicionar trecho</Button
             >
           </div>
-          {#each form.trechos as trecho, i}
-            <div class="space-y-3 rounded-lg border border-slate-200 p-4">
-              <div class="flex items-center justify-between gap-2">
-                <h4 class="font-medium">Trecho {i + 1}</h4>
-                <Button variant="secondary" size="sm" on:click={() => removerTrecho(i)}
-                  >Remover trecho</Button
+          {#each form.trechos as trecho, i (trecho)}
+            <details class="trecho-editavel rounded-lg border border-slate-200 p-4">
+              <summary class="flex cursor-pointer items-center justify-between gap-2 font-medium">
+                <span
+                  >Trecho {i + 1}{#if trecho.origem && trecho.destino}
+                    — {trecho.origem} → {trecho.destino}{/if}</span
                 >
+                <span class="trecho-toggle" aria-hidden="true"></span>
+              </summary>
+              <div class="mt-3 space-y-3">
+                <div class="flex flex-wrap justify-end gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={i === 0}
+                    ariaLabel={`Mover trecho ${i + 1} para cima`}
+                    on:click={() => moverTrecho(i, -1)}>↑ Mover para cima</Button
+                  >
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={i === form.trechos.length - 1}
+                    ariaLabel={`Mover trecho ${i + 1} para baixo`}
+                    on:click={() => moverTrecho(i, 1)}>↓ Mover para baixo</Button
+                  >
+                  <Button variant="secondary" size="sm" on:click={() => removerTrecho(i)}
+                    >Remover trecho</Button
+                  >
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <FieldInput
+                    id={`companhia-${i}`}
+                    label="Companhia aérea"
+                    bind:value={trecho.companhia}
+                    required
+                  />
+                  <FieldInput id={`voo-${i}`} label="Voo" bind:value={trecho.voo} required />
+                  <FieldDatalistInput
+                    id={`classe-${i}`}
+                    label="Classe"
+                    bind:value={trecho.classe}
+                    options={classes}
+                    placeholder="Selecione ou digite"
+                  />
+                  <FieldDatalistInput
+                    id={`tarifa-${i}`}
+                    label="Tarifa"
+                    bind:value={trecho.tarifa}
+                    options={tarifas}
+                    placeholder="Selecione ou digite"
+                  />
+                  <FieldInput
+                    id={`origem-${i}`}
+                    label="Aeroporto de origem"
+                    bind:value={trecho.origem}
+                    required
+                    on:input={(event) => formatarAeroporto(event, trecho, 'origem')}
+                  />
+                  <FieldInput
+                    id={`cidade-origem-${i}`}
+                    label="Cidade de origem"
+                    bind:value={trecho.cidadeOrigem}
+                    placeholder={cidadeSugerida(trecho.origem) || 'Informe a cidade'}
+                    helper="Deixe vazio para usar a cidade sugerida pelo código do aeroporto."
+                  />
+                  <FieldInput
+                    id={`destino-${i}`}
+                    label="Aeroporto de destino"
+                    bind:value={trecho.destino}
+                    required
+                    on:input={(event) => formatarAeroporto(event, trecho, 'destino')}
+                  />
+                  <FieldInput
+                    id={`cidade-destino-${i}`}
+                    label="Cidade de destino"
+                    bind:value={trecho.cidadeDestino}
+                    placeholder={cidadeSugerida(trecho.destino) || 'Informe a cidade'}
+                    helper="Deixe vazio para usar a cidade sugerida pelo código do aeroporto."
+                  />
+                  <FieldInput
+                    id={`duracao-${i}`}
+                    label="Duração"
+                    bind:value={trecho.duracao}
+                    placeholder="Ex.: 10:19"
+                    maxlength={5}
+                    helper="Horas e minutos, por exemplo 10:19."
+                    on:input={(event) => formatarDuracao(event, trecho)}
+                  />
+                  <FieldInput
+                    id={`saida-${i}`}
+                    label="Saída (horário local)"
+                    type="datetime-local"
+                    bind:value={trecho.saida}
+                    required
+                  />
+                  <FieldInput
+                    id={`chegada-${i}`}
+                    label="Chegada (horário local)"
+                    type="datetime-local"
+                    bind:value={trecho.chegada}
+                    required
+                  />
+                  <FieldInput
+                    id={`status-voo-${i}`}
+                    label="Status do voo"
+                    bind:value={trecho.status}
+                  />
+                </div>
+                {#if id}
+                  <p class="text-right text-sm text-slate-500">
+                    O comprovante usa a última versão salva.
+                  </p>
+                {/if}
               </div>
-              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <FieldInput
-                  id={`companhia-${i}`}
-                  label="Companhia aérea"
-                  bind:value={trecho.companhia}
-                  required
-                />
-                <FieldInput id={`voo-${i}`} label="Voo" bind:value={trecho.voo} required />
-                <FieldDatalistInput
-                  id={`classe-${i}`}
-                  label="Classe"
-                  bind:value={trecho.classe}
-                  options={classes}
-                  placeholder="Selecione ou digite"
-                />
-                <FieldDatalistInput
-                  id={`tarifa-${i}`}
-                  label="Tarifa"
-                  bind:value={trecho.tarifa}
-                  options={tarifas}
-                  placeholder="Selecione ou digite"
-                />
-                <FieldInput
-                  id={`origem-${i}`}
-                  label="Aeroporto de origem"
-                  bind:value={trecho.origem}
-                  required
-                />
-                <FieldInput
-                  id={`cidade-origem-${i}`}
-                  label="Cidade de origem"
-                  bind:value={trecho.cidadeOrigem}
-                  placeholder={cidadeSugerida(trecho.origem) || 'Informe a cidade'}
-                  helper="Deixe vazio para usar a cidade sugerida pelo código do aeroporto."
-                />
-                <FieldInput
-                  id={`destino-${i}`}
-                  label="Aeroporto de destino"
-                  bind:value={trecho.destino}
-                  required
-                />
-                <FieldInput
-                  id={`cidade-destino-${i}`}
-                  label="Cidade de destino"
-                  bind:value={trecho.cidadeDestino}
-                  placeholder={cidadeSugerida(trecho.destino) || 'Informe a cidade'}
-                  helper="Deixe vazio para usar a cidade sugerida pelo código do aeroporto."
-                />
-                <FieldInput
-                  id={`duracao-${i}`}
-                  label="Duração"
-                  bind:value={trecho.duracao}
-                  placeholder="Ex.: 10:19"
-                  maxlength={5}
-                  helper="Horas e minutos, por exemplo 10:19."
-                  on:input={(event) => formatarDuracao(event, trecho)}
-                />
-                <FieldInput
-                  id={`saida-${i}`}
-                  label="Saída (horário local)"
-                  type="datetime-local"
-                  bind:value={trecho.saida}
-                  required
-                />
-                <FieldInput
-                  id={`chegada-${i}`}
-                  label="Chegada (horário local)"
-                  type="datetime-local"
-                  bind:value={trecho.chegada}
-                  required
-                />
-                <FieldInput
-                  id={`status-voo-${i}`}
-                  label="Status do voo"
-                  bind:value={trecho.status}
-                />
-              </div>
-              {#if id}
-                <p class="text-right text-sm text-slate-500">
-                  O comprovante usa a última versão salva.
-                </p>
-              {/if}
-            </div>
+            </details>
           {/each}
         </section>
         <section class="space-y-3">
@@ -441,6 +489,22 @@
               >Adicionar passageiro</Button
             >
           </div>
+
+          <style>
+            .trecho-editavel summary {
+              list-style: none;
+            }
+            .trecho-editavel summary::-webkit-details-marker {
+              display: none;
+            }
+            .trecho-toggle::before {
+              content: '+';
+              font-size: 1.25rem;
+            }
+            .trecho-editavel[open] .trecho-toggle::before {
+              content: '−';
+            }
+          </style>
           {#each form.passageiros as passageiro, i}
             <div class="space-y-3 rounded-lg border border-slate-200 p-4">
               <div class="flex items-center justify-between gap-2">

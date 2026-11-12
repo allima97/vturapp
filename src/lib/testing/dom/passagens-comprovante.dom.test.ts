@@ -26,8 +26,8 @@ it('mostra cidades, dados da reserva e assentos nos trechos sem inventar informa
         {
           companhia: 'Companhia Exemplo',
           voo: 'XY 123',
-          origem: 'GRU',
-          destino: 'MIA',
+          origem: 'gru',
+          destino: 'mia',
           saida: '2026-11-20T00:05',
           chegada: '2026-11-20T06:50',
           status: 'HK',
@@ -57,6 +57,8 @@ it('mostra cidades, dados da reserva e assentos nos trechos sem inventar informa
   document.body.appendChild(target);
   const app = mount(Comprovante, { target });
   await vi.waitFor(() => expect(target.textContent).toContain('São Paulo'));
+  expect(target.querySelectorAll('.codigo')[0].textContent).toBe('GRU');
+  expect(target.querySelectorAll('.codigo')[1].textContent).toBe('MIA');
   expect(target.textContent).toContain('Miami');
   expect(target.textContent).toContain('Cidade corrigida');
   expect(target.textContent).toContain('Companhia Exemplo / Outra Companhia');
