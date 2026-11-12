@@ -95,6 +95,7 @@ it('mostra cidades, dados da reserva e assentos nos trechos sem inventar informa
     'Chegada no dia seguinte (+1)'
   );
   expect(target.textContent).toContain('12345');
+  expect(target.querySelector('tbody tr td')?.textContent).toBe('PESSOA EXEMPLO');
   const resumo = target.querySelector('.resumo')?.textContent?.replace(/\s+/g, ' ');
   expect(resumo).toContain('Passageiros: 1 Adulto + 1 Criança + 1 Infant + 1 Não informado');
   expect(

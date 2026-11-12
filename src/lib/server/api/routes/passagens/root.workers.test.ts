@@ -104,7 +104,9 @@ it('preserva registros existentes, compartilha por empresa e bloqueia quem não 
   expect(created.status, await created.clone().text()).toBe(201);
   const { id } = await created.json<{ id: string }>();
   const detail = await handlePassagensGet(event(`/api/v1/passagens?id=${id}`));
-  expect(await detail.json()).toMatchObject({ item: { ...payload, id } });
+  expect(await detail.json()).toMatchObject({
+    item: { ...payload, id, passageiros: [{ ...payload.passageiros[0], nome: 'PESSOA EXEMPLO' }] }
+  });
   state.userId = userB;
   expect((await handlePassagensGet(event(`/api/v1/passagens?id=${id}`))).status).toBe(200);
   state.userId = userA;

@@ -102,7 +102,7 @@ Fornecedores
 1234567 Gol CLASSE TURÍSTICA (A/A) 1234 - MCO/MIA
 Dados da Reserva
 Passageiros Sobrenome Nome Nascimento Sexo Idade Local de Embarque Observação
-SILVA\tMARIA\t25/01/1951\tFeminino\t76\tMCO Dados Pessoais
+Silva\tMaria\t25/01/1951\tFeminino\t76\tMCO Dados Pessoais
 Voo CVC Cia.
 G3 6064 MCO MIA 27/01/2027 20:04 27/01/2027 21:24 ABC123 ABC123 05/11/2026 CLASSIC
 Reserva de Passagens Aéreas
@@ -420,6 +420,7 @@ it('abre passagem salva bloqueada e desbloqueia somente até salvar', async () =
   document.body.appendChild(target);
   const app = mount(Passagens, { target });
   await vi.waitFor(() => expect(target.querySelector('#passageiro-0')).not.toBeNull());
+  expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe('MARIA EXEMPLO');
   expect(target.querySelector('.importacao-editavel')).toBeNull();
   const localizador = target.querySelector<HTMLInputElement>('#passagem-localizador')!;
   const emissao = target.querySelector<HTMLInputElement>('#passagem-emissao')!;
@@ -463,6 +464,25 @@ it('abre passagem salva bloqueada e desbloqueia somente até salvar', async () =
     })
   );
   expect(target.textContent).not.toContain('Salvar passagem');
+  await unmount(app);
+});
+
+it('converte nome digitado em maiúsculas preservando acentos e posição do cursor', async () => {
+  api.fetch.mockResolvedValue({ items: [] });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() => expect(target.textContent).toContain('Nenhuma passagem salva.'));
+  click(target, 'Nova passagem');
+  click(target, 'Adicionar passageiro');
+  const input = target.querySelector<HTMLInputElement>('#passageiro-0')!;
+  input.value = 'josé silva';
+  input.setSelectionRange(4, 4);
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+  expect(input.value).toBe('JOSÉ SILVA');
+  expect(input.selectionStart).toBe(4);
+  expect(target.querySelector('.passageiro-editavel summary')?.textContent).toContain('JOSÉ SILVA');
   await unmount(app);
 });
 
@@ -589,7 +609,7 @@ it('permite abrir e fechar passageiros preservando seus dados', async () => {
   tipo.value = 'CHD';
   tipo.dispatchEvent(new Event('change', { bubbles: true }));
   flushSync();
-  expect(detalhes[1].querySelector('summary')?.textContent).toContain('Pessoa Exemplo');
+  expect(detalhes[1].querySelector('summary')?.textContent).toContain('PESSOA EXEMPLO');
   detalhes[1].open = false;
   detalhes[1].open = true;
   expect(target.querySelector<HTMLInputElement>('#assento-1-0')?.value).toBe('17A');
@@ -599,7 +619,7 @@ it('permite abrir e fechar passageiros preservando seus dados', async () => {
     .click();
   flushSync();
   expect(target.querySelectorAll('.passageiro-editavel')).toHaveLength(1);
-  expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe('Pessoa Exemplo');
+  expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe('PESSOA EXEMPLO');
   expect(target.querySelector<HTMLInputElement>('#bilhete-0')?.value).toBe('123456');
   expect(
     [...target.getElementsByTagName('select')].find((s) => s.id === 'tipo-passageiro-0')?.value
@@ -614,7 +634,7 @@ it('permite abrir e fechar passageiros preservando seus dados', async () => {
         body: expect.objectContaining({
           passageiros: [
             expect.objectContaining({
-              nome: 'Pessoa Exemplo',
+              nome: 'PESSOA EXEMPLO',
               tipo: 'CHD',
               bilhete: '123456',
               assentos: ['17A']
@@ -677,8 +697,8 @@ it('reordena passageiros preservando campos, assentos e estado aberto', async ()
   flushSync();
   const ordenados = target.querySelectorAll<HTMLDetailsElement>('.passageiro-editavel');
   expect([...ordenados].map((item) => item.open)).toEqual([false, true]);
-  expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe('Ana Exemplo');
-  expect(target.querySelector<HTMLInputElement>('#passageiro-1')?.value).toBe('Maria Exemplo');
+  expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe('ANA EXEMPLO');
+  expect(target.querySelector<HTMLInputElement>('#passageiro-1')?.value).toBe('MARIA EXEMPLO');
   expect(
     [...target.getElementsByTagName('select')].find((select) => select.id === 'tipo-passageiro-1')
       ?.value
@@ -690,7 +710,7 @@ it('reordena passageiros preservando campos, assentos e estado aberto', async ()
     .querySelector<HTMLButtonElement>('[aria-label="Mover passageiro 2 para cima"]')!
     .click();
   flushSync();
-  expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe('Maria Exemplo');
+  expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe('MARIA EXEMPLO');
   expect(target.querySelector<HTMLInputElement>('#assento-0-1')?.value).toBe('14B');
   target.querySelector<HTMLButtonElement>('[aria-label="Mover passageiro 1 para baixo"]')!.click();
   flushSync();
@@ -703,12 +723,12 @@ it('reordena passageiros preservando campos, assentos e estado aberto', async ()
         body: expect.objectContaining({
           passageiros: [
             expect.objectContaining({
-              nome: 'Ana Exemplo',
+              nome: 'ANA EXEMPLO',
               bilhete: '987654',
               assentos: ['15C', '16D']
             }),
             expect.objectContaining({
-              nome: 'Maria Exemplo',
+              nome: 'MARIA EXEMPLO',
               tipo: 'CHD',
               bilhete: '123456',
               status: 'Emitido',

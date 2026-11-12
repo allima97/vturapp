@@ -13,6 +13,7 @@
   import { confirmAction } from '$lib/stores/confirm';
   import { apiFetch, ApiError } from '$lib/services/api';
   import { toUserMessage } from '$lib/utils/errors';
+  import { nomePassageiroMaiusculo } from '$lib/passagens/nome';
   import {
     loadAirportCodeCityLookup,
     type AirportCodeCityLookup
@@ -146,6 +147,23 @@
     if (inicio !== null && fim !== null) input.setSelectionRange(inicio, fim);
   }
 
+  function formatarNomePassageiro(event: Event, passageiro: PassageiroPassagem) {
+    const input = event.currentTarget;
+    if (!(input instanceof HTMLInputElement)) return;
+    const valor = input.value;
+    const inicio = input.selectionStart;
+    const fim = input.selectionEnd;
+    const formatado = nomePassageiroMaiusculo(valor);
+    input.value = formatado;
+    passageiro.nome = formatado;
+    if (inicio !== null && fim !== null) {
+      input.setSelectionRange(
+        nomePassageiroMaiusculo(valor.slice(0, inicio)).length,
+        nomePassageiroMaiusculo(valor.slice(0, fim)).length
+      );
+    }
+  }
+
   function formatarDuracao(event: Event, trecho: TrechoPassagem) {
     const input = event.currentTarget;
     if (!(input instanceof HTMLInputElement)) return;
@@ -198,6 +216,7 @@
       ...resultado.dados,
       passageiros: resultado.dados.passageiros.map((passageiro) => ({
         ...passageiro,
+        nome: nomePassageiroMaiusculo(passageiro.nome),
         assentos: resultado.dados.trechos.map((_, indice) => passageiro.assentos[indice] || '')
       }))
     };
@@ -298,6 +317,7 @@
         })),
         passageiros: result.item.passageiros.map((passageiro) => ({
           ...passageiro,
+          nome: nomePassageiroMaiusculo(passageiro.nome),
           tipo: passageiro.tipo || '',
           assentos: result.item.trechos.map((_, indice) => passageiro.assentos[indice] || '')
         }))
@@ -743,6 +763,7 @@
                     id={`passageiro-${i}`}
                     label="Nome"
                     bind:value={passageiro.nome}
+                    on:input={(event) => formatarNomePassageiro(event, passageiro)}
                     required
                   />
                   <FieldSelect

@@ -2,6 +2,7 @@ import { json, type RequestEvent } from '@sveltejs/kit';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import { isTipoPassageiro } from '$lib/passagens/importacao';
+import { nomePassageiroMaiusculo } from '$lib/passagens/nome';
 import {
   ensureModuloAccess,
   getAdminClient,
@@ -146,7 +147,9 @@ function validar(body: unknown) {
       return null;
     const assentos = item.assentos.map((value: unknown) => texto(value, 30));
     if (assentos.some((value: string | null) => value === null)) return null;
-    passageiros.push({ nome, tipo, bilhete, status, assentos });
+    const nomeFormatado = nomePassageiroMaiusculo(nome);
+    if (nomeFormatado.length > 200) return null;
+    passageiros.push({ nome: nomeFormatado, tipo, bilhete, status, assentos });
   }
   return { localizador, emissao, trechos, passageiros };
 }

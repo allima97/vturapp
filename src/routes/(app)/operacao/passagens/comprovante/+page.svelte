@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
   import Button from '$lib/components/ui/Button.svelte';
+  import { nomePassageiroMaiusculo } from '$lib/passagens/nome';
   import {
     loadAirportCodeCityLookup,
     type AirportCodeCityLookup
@@ -277,7 +278,7 @@
       <tbody>
         {#each item.passageiros as passageiro}
           <tr
-            ><td><strong>{passageiro.nome}</strong></td><td
+            ><td><strong>{nomePassageiroMaiusculo(passageiro.nome)}</strong></td><td
               >{passageiro.tipo === 'ADT'
                 ? 'Adulto'
                 : passageiro.tipo === 'CHD'
