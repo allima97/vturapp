@@ -425,7 +425,9 @@ it('permite abrir e fechar passageiros preservando seus dados', async () => {
   detalhes[1].open = true;
   expect(target.querySelector<HTMLInputElement>('#assento-1-0')?.value).toBe('17A');
   detalhes[0].open = true;
-  detalhes[0].querySelector<HTMLButtonElement>('button')!.click();
+  [...detalhes[0].querySelectorAll('button')]
+    .find((button) => button.textContent?.trim() === 'Remover passageiro')!
+    .click();
   flushSync();
   expect(target.querySelectorAll('.passageiro-editavel')).toHaveLength(1);
   expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe('Pessoa Exemplo');
@@ -453,6 +455,99 @@ it('permite abrir e fechar passageiros preservando seus dados', async () => {
       })
     )
   );
+  await unmount(app);
+});
+
+it('reordena passageiros preservando campos, assentos e estado aberto', async () => {
+  api.fetch.mockImplementation(async (_path, options) =>
+    options.method === 'POST' ? { id: '00000000-0000-4000-8000-000000000001' } : { items: [] }
+  );
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() => expect(target.textContent).toContain('Nenhuma passagem salva.'));
+  click(target, 'Nova passagem');
+  click(target, 'Adicionar trecho');
+  click(target, 'Adicionar trecho');
+  click(target, 'Adicionar passageiro');
+  click(target, 'Adicionar passageiro');
+  const detalhes = target.querySelectorAll<HTMLDetailsElement>('.passageiro-editavel');
+  detalhes[0].open = true;
+  for (const [selector, value] of [
+    ['#passageiro-0', 'Maria Exemplo'],
+    ['#bilhete-0', '123456'],
+    ['#status-bilhete-0', 'Emitido'],
+    ['#assento-0-0', '12A'],
+    ['#assento-0-1', '14B'],
+    ['#passageiro-1', 'Ana Exemplo'],
+    ['#bilhete-1', '987654'],
+    ['#assento-1-0', '15C'],
+    ['#assento-1-1', '16D']
+  ]) {
+    const input = target.querySelector<HTMLInputElement>(selector)!;
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  const tipo = [...target.getElementsByTagName('select')].find(
+    (select) => select.id === 'tipo-passageiro-0'
+  )!;
+  tipo.value = 'CHD';
+  tipo.dispatchEvent(new Event('change', { bubbles: true }));
+  flushSync();
+  expect(
+    detalhes[0].querySelector<HTMLButtonElement>('[aria-label="Mover passageiro 1 para cima"]')
+      ?.disabled
+  ).toBe(true);
+  expect(
+    detalhes[1].querySelector<HTMLButtonElement>('[aria-label="Mover passageiro 2 para baixo"]')
+      ?.disabled
+  ).toBe(true);
+  detalhes[0]
+    .querySelector<HTMLButtonElement>('[aria-label="Mover passageiro 1 para baixo"]')!
+    .click();
+  flushSync();
+  const ordenados = target.querySelectorAll<HTMLDetailsElement>('.passageiro-editavel');
+  expect([...ordenados].map((item) => item.open)).toEqual([false, true]);
+  expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe('Ana Exemplo');
+  expect(target.querySelector<HTMLInputElement>('#passageiro-1')?.value).toBe('Maria Exemplo');
+  expect(
+    [...target.getElementsByTagName('select')].find((select) => select.id === 'tipo-passageiro-1')
+      ?.value
+  ).toBe('CHD');
+  expect(target.querySelector<HTMLInputElement>('#status-bilhete-1')?.value).toBe('Emitido');
+  expect(target.querySelector<HTMLInputElement>('#assento-0-1')?.value).toBe('16D');
+  expect(target.querySelector<HTMLInputElement>('#assento-1-0')?.value).toBe('12A');
+  click(target, 'Salvar passagem');
+  await vi.waitFor(() =>
+    expect(api.fetch).toHaveBeenCalledWith(
+      '/api/v1/passagens',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.objectContaining({
+          passageiros: [
+            expect.objectContaining({
+              nome: 'Ana Exemplo',
+              bilhete: '987654',
+              assentos: ['15C', '16D']
+            }),
+            expect.objectContaining({
+              nome: 'Maria Exemplo',
+              tipo: 'CHD',
+              bilhete: '123456',
+              status: 'Emitido',
+              assentos: ['12A', '14B']
+            })
+          ]
+        })
+      })
+    )
+  );
+  ordenados[1]
+    .querySelector<HTMLButtonElement>('[aria-label="Mover passageiro 2 para cima"]')!
+    .click();
+  flushSync();
+  expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe('Maria Exemplo');
+  expect(target.querySelector<HTMLInputElement>('#assento-0-1')?.value).toBe('14B');
   await unmount(app);
 });
 

@@ -264,6 +264,13 @@
       return { ...passageiro, assentos };
     });
   }
+  function moverPassageiro(indice: number, deslocamento: -1 | 1) {
+    const destino = indice + deslocamento;
+    if (destino < 0 || destino >= form.passageiros.length) return;
+    const passageiros = [...form.passageiros];
+    [passageiros[indice], passageiros[destino]] = [passageiros[destino], passageiros[indice]];
+    form.passageiros = passageiros;
+  }
   async function abrir(itemId: string, pedido: number) {
     try {
       const result = await apiFetch<{ item: PassagemSalva }>('/api/v1/passagens', {
@@ -639,7 +646,7 @@
             >
           </div>
 
-          {#each form.passageiros as passageiro, i}
+          {#each form.passageiros as passageiro, i (passageiro)}
             <details class="passageiro-editavel rounded-lg border border-slate-200 p-4">
               <summary class="flex cursor-pointer items-center justify-between gap-2 font-medium">
                 <span
@@ -649,7 +656,21 @@
                 <span class="trecho-toggle" aria-hidden="true"></span>
               </summary>
               <div class="mt-3 space-y-3">
-                <div class="flex justify-end">
+                <div class="flex flex-wrap justify-end gap-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={i === 0}
+                    ariaLabel={`Mover passageiro ${i + 1} para cima`}
+                    on:click={() => moverPassageiro(i, -1)}>↑ Mover para cima</Button
+                  >
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    disabled={i === form.passageiros.length - 1}
+                    ariaLabel={`Mover passageiro ${i + 1} para baixo`}
+                    on:click={() => moverPassageiro(i, 1)}>↓ Mover para baixo</Button
+                  >
                   <Button
                     variant="secondary"
                     size="sm"
