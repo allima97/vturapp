@@ -1,4 +1,5 @@
 import { importarCvc } from './importacao-cvc';
+import { importarRoteiroCvc } from './importacao-roteiro-cvc';
 
 export type TrechoPassagem = {
   companhia: string;
@@ -58,7 +59,7 @@ function dataHoraLocal(value: string) {
  * vazios para revisão; o texto copiado pode variar entre sistemas de reservas.
  */
 export function importarTextoPassagem(texto: string): ResultadoImportacaoPassagem {
-  const cvc = importarCvc(texto);
+  const cvc = importarRoteiroCvc(texto) ?? importarCvc(texto);
   if (cvc) {
     const avisos = [
       'Confira todos os dados importados antes de salvar. O formato de texto pode variar entre sistemas.',

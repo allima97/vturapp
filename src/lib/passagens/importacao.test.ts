@@ -229,4 +229,87 @@ CONTRATANTE`);
       'ANA CLARA OUTRO SOBRENOME'
     ]);
   });
+
+  it('importa roteiro CVC concatenado cruzando nomes com a lista de reservas', () => {
+    const resultado = importarTextoPassagem(`Consulta de Roteiro e Reserva
+ContratanteNomePassageirosMaria Exemplo
+Fornecedores
+Transporte AéreoNúmero do AcordoTransporte AéreoCategoriaTrechoData InicialData Final3350602GolCLASSE TURÍSTICA(A/A)1234 - MCO/GRU
+Dados da Reserva
+PassageirosSobrenomeNomeNascimentoSexoIdadeLocal de EmbarqueObservaçãoSilva Exemplo Maria 25/01/1951Feminino76 MCO ![](https://example.test/plus.gif) Dados PessoaisOutro Sobrenome Ana 22/10/2018Feminino8 MCO ![](https://example.test/plus.gif) Dados Pessoais
+Voo CVCCia.Malha AéreaNúmero do VooOrigemDestinoData de EmbarqueData de ChegadaTipoEquipamentoLocalizador GDSLocalizador Cia.Data de LiberaçãoFamíliaLoc**Acordo - MCO/GRU**G3 6064MCOMIA27/01/2027 20:0427/01/2027 21:24  ABC123ABC12305/11/2026CLASSIC![](https://example.test/editar.gif)G3 6011MIAGRU27/01/2027 22:5028/01/2027 09:25  ABC123ABC12305/11/2026CLASSIC![](https://example.test/editar.gif)
+Reserva de Passagens AéreasTrecho(s)Passageiros(s)Localizador SGOLLocalizador Cia AéreaAssentoPrazo da Reserva AéreaSituaçãoGOL
+ORLANDO/GUARULHOSOutro Sobrenome/AnaABC123ABC123  RESERVADASilva Exemplo/MariaABC123ABC123  RESERVADA
+OrçamentoPreço`);
+    expect(resultado.dados.localizador).toBe('ABC123');
+    expect(resultado.dados.trechos).toEqual([
+      expect.objectContaining({
+        companhia: 'Gol',
+        voo: 'G3 6064',
+        origem: 'MCO',
+        destino: 'MIA',
+        saida: '2027-01-27T20:04',
+        chegada: '2027-01-27T21:24',
+        tarifa: 'CLASSIC',
+        classe: 'Classe turística',
+        status: '',
+        duracao: ''
+      }),
+      expect.objectContaining({
+        companhia: 'Gol',
+        voo: 'G3 6011',
+        origem: 'MIA',
+        destino: 'GRU',
+        saida: '2027-01-27T22:50',
+        chegada: '2027-01-28T09:25',
+        tarifa: 'CLASSIC'
+      })
+    ]);
+    expect(resultado.dados.passageiros).toEqual([
+      { nome: 'Maria Silva Exemplo', tipo: '', bilhete: '', status: '', assentos: [] },
+      { nome: 'Ana Outro Sobrenome', tipo: '', bilhete: '', status: '', assentos: [] }
+    ]);
+    expect(resultado.avisos.join(' ')).toContain('não informa o tipo');
+  });
+
+  it('mantém localizador vazio quando voos têm localizadores diferentes e não inventa nomes', () => {
+    const resultado = importarTextoPassagem(`Consulta de Roteiro e Reserva
+Passageiros Sobrenome Nome Nascimento Sexo Idade Local de Embarque Observação
+SILVA MARIA 25/01/1951 Feminino 76 MCO Dados Pessoais
+Voo CVC Cia. Malha Aérea Número do Voo Origem Destino Data de Embarque Data de Chegada
+G3 6064 MCO MIA 27/01/2027 20:04 27/01/2027 21:24 ABC123 ABC123 05/11/2026 CLASSIC
+G3 6011 MIA GRU 27/01/2027 22:50 28/01/2027 09:25 DEF456 DEF456 05/11/2026 CLASSIC
+Reserva de Passagens Aéreas
+Orçamento`);
+    expect(resultado.dados.localizador).toBe('');
+    expect(resultado.dados.passageiros[0]?.nome).toBe('SILVA MARIA');
+    expect(resultado.avisos.join(' ')).toContain('não foi possível separar');
+    expect(resultado.avisos.join(' ')).toContain('não há um único valor');
+  });
+
+  it('interpreta as colunas separadas de sobrenome e nome em roteiro CVC', () => {
+    const resultado = importarTextoPassagem(`Consulta de Roteiro e Reserva
+Passageiros   Sobrenome   Nome   Nascimento   Sexo   Idade   Local de Embarque   Observação
+SILVA EXEMPLO\tANA CLARA\t25/01/1951\tFeminino\t76\tMCO\tDados Pessoais
+Voo CVC Cia.
+Reserva de Passagens Aéreas`);
+    expect(resultado.dados.passageiros[0]?.nome).toBe('ANA CLARA SILVA EXEMPLO');
+  });
+
+  it('não atribui companhia de fornecedor com rota diferente e usa localizador da companhia', () => {
+    const resultado = importarTextoPassagem(`Consulta de Roteiro e Reserva
+Fornecedores
+3350602 Outra Companhia CLASSE TURÍSTICA (A/A) 1234 - AAA/BBB
+Dados da Reserva
+Passageiros Sobrenome Nome Nascimento Sexo Idade Local de Embarque Observação
+SILVA\tMARIA\t25/01/1951\tFeminino\t76\tMCO Dados Pessoais
+Voo CVC Cia.
+G3 6064 MCO MIA 27/01/2027 20:04 27/01/2027 21:24 ABC123 XYZ456 05/11/2026 CLASSIC
+Reserva de Passagens Aéreas
+Orçamento`);
+    expect(resultado.dados.localizador).toBe('XYZ456');
+    expect(resultado.dados.trechos[0]?.companhia).toBe('');
+    expect(resultado.dados.trechos[0]?.classe).toBe('');
+    expect(resultado.avisos.join(' ')).toContain('não foi possível associá-las');
+  });
 });

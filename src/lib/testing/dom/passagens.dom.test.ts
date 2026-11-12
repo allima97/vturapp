@@ -87,6 +87,50 @@ CONTRATANTE`;
   await unmount(app);
 });
 
+it('permite revisar e salvar um roteiro CVC sem atribuir tipos desconhecidos', async () => {
+  api.fetch.mockImplementation(async (_path, options) =>
+    options.method === 'POST' ? { id: '00000000-0000-4000-8000-000000000001' } : { items: [] }
+  );
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() => expect(target.textContent).toContain('Nenhuma passagem salva.'));
+  click(target, 'Nova passagem');
+  const text = target.querySelector<HTMLTextAreaElement>('#texto-reserva')!;
+  text.value = `Consulta de Roteiro e Reserva
+Fornecedores
+1234567 Gol CLASSE TURÍSTICA (A/A) 1234 - MCO/MIA
+Dados da Reserva
+Passageiros Sobrenome Nome Nascimento Sexo Idade Local de Embarque Observação
+SILVA\tMARIA\t25/01/1951\tFeminino\t76\tMCO Dados Pessoais
+Voo CVC Cia.
+G3 6064 MCO MIA 27/01/2027 20:04 27/01/2027 21:24 ABC123 ABC123 05/11/2026 CLASSIC
+Reserva de Passagens Aéreas
+Orçamento`;
+  text.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+  click(target, 'Analisar texto');
+  await vi.waitFor(() =>
+    expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe('MARIA SILVA')
+  );
+  expect(target.textContent).toContain('O roteiro não informa o tipo de passageiro');
+  click(target, 'Salvar passagem');
+  await vi.waitFor(() =>
+    expect(api.fetch).toHaveBeenCalledWith(
+      '/api/v1/passagens',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.objectContaining({
+          localizador: 'ABC123',
+          passageiros: [expect.objectContaining({ nome: 'MARIA SILVA', tipo: '' })],
+          trechos: [expect.objectContaining({ voo: 'G3 6064', companhia: 'Gol' })]
+        })
+      })
+    )
+  );
+  await unmount(app);
+});
+
 it.each(['application/pdf', 'image/png'])(
   'exige revisão dos dados antes de salvar arquivo %s',
   async (tipo) => {
