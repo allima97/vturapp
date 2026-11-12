@@ -385,7 +385,9 @@ it('mostra passageiro, quantidade, data e rota na lista sem inventar conexões',
   document.body.appendChild(target);
   const app = mount(Passagens, { target });
   await vi.waitFor(() => expect(target.textContent).toContain('Localizador: ABC123'));
-  expect(target.textContent).toContain('JOSÉ EXEMPLO x 04 → 27/01/2027 → Orlando / São Paulo');
+  expect(target.textContent).toContain(
+    'Localizador: ABC123 → JOSÉ EXEMPLO x 04 → 27/01/2027 → Orlando / São Paulo'
+  );
   expect(target.textContent).toContain('ANA EXEMPLO x 01 → 28/01/2027 → AAA / BBB e CCC / DDD');
   await vi.waitFor(() =>
     expect(target.textContent).toContain('MARIA EXEMPLO x 02 → 30/01/2027 → Orlando / São Paulo')

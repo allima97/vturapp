@@ -451,7 +451,7 @@
             <li class="flex flex-wrap items-center justify-between gap-3 py-3">
               <div class="min-w-0">
                 <span class="font-medium text-slate-900">Localizador: {item.localizador}</span>
-                <span class="text-sm text-slate-700"> — {resumoLista(item)}</span>
+                <span class="text-sm text-slate-700"> → {resumoLista(item)}</span>
               </div>
               <div class="flex flex-wrap gap-2">
                 <Button
