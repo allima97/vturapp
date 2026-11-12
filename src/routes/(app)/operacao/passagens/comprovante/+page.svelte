@@ -104,6 +104,10 @@
           passagem.
         </p>
       {/if}
+      <a
+        href={`/operacao/passagens?editar=${encodeURIComponent($page.url.searchParams.get('id') || '')}`}
+        >Editar</a
+      >
       <button type="button" on:click={() => window.print()}>Imprimir / Salvar em PDF</button>
     </div>
     <header class="cabecalho">
@@ -158,6 +162,9 @@
             <div>
               <span class="rotulo">CLASSE</span><strong>{trecho.classe || 'Não informada'}</strong>
             </div>
+            {#if trecho.tarifa}
+              <div><span class="rotulo">TARIFA</span><strong>{trecho.tarifa}</strong></div>
+            {/if}
             <div><span class="rotulo">ASSENTOS</span><strong>{assentos(i)}</strong></div>
             <div>
               <span class="rotulo">STATUS DO VOO</span><strong
@@ -207,11 +214,18 @@
   .acoes p {
     color: #92400e;
   }
-  .acoes button {
+  .acoes button,
+  .acoes a {
+    display: inline-block;
     padding: 9px 14px;
     border: 1px solid #0075ca;
     border-radius: 6px;
     cursor: pointer;
+  }
+  .acoes a {
+    margin-right: 8px;
+    color: #17233c;
+    text-decoration: none;
   }
   .cabecalho {
     display: flex;
@@ -330,7 +344,7 @@
   }
   .detalhes {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 10px;
     border-top: 1px dashed #dbe3ec;
     margin-top: 12px;

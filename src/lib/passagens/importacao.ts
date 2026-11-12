@@ -10,6 +10,7 @@ export type TrechoPassagem = {
   status: string;
   duracao: string;
   classe: string;
+  tarifa?: string;
 };
 
 export type PassageiroPassagem = {

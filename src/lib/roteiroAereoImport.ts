@@ -318,6 +318,10 @@ const KNOWN_AIRPORT_ALIASES: AirportAliasEntry[] = [
   { code: 'JOI', city: 'Joinville', aliases: ['joi', 'joinville', 'lauro carneiro de loyola'] }
 ];
 
+export function getKnownAirportCities(): Record<string, string> {
+  return Object.fromEntries(KNOWN_AIRPORT_ALIASES.map(({ code, city }) => [code, city]));
+}
+
 const CITY_ALIAS_LOOKUP: Record<string, string> = {
   'new york': 'Nova Iorque',
   'new york city': 'Nova Iorque',

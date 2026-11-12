@@ -32,7 +32,8 @@ it('mostra cidades, dados da reserva e assentos nos trechos sem inventar informa
           chegada: '2026-11-20T06:50',
           status: 'HK',
           duracao: '08:45',
-          classe: 'O'
+          classe: 'O',
+          tarifa: 'Light'
         },
         {
           companhia: 'Outra Companhia',
@@ -64,6 +65,10 @@ it('mostra cidades, dados da reserva e assentos nos trechos sem inventar informa
   expect(target.querySelectorAll('.trecho')[0].textContent).toContain('33A');
   expect(target.querySelectorAll('.trecho')[1].textContent).toContain('34B');
   expect(target.textContent).toContain('12345');
+  expect(target.textContent).toContain('Light');
+  expect(target.querySelector('.acoes a')?.getAttribute('href')).toBe(
+    '/operacao/passagens?editar=abc'
+  );
   expect(target.textContent).toContain('Não informado');
   await unmount(app);
 });

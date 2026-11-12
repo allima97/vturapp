@@ -1,7 +1,32 @@
+import { getKnownAirportCities } from '$lib/roteiroAereoImport';
+
 export type AirportCodeCityLookup = Record<string, string>;
 
 const AIRPORT_CODE_CITY_LOOKUP_URL = '/data/airports-iata-city.json';
 const IATA_CODE_PATTERN = /^[A-Z]{3}$/;
+const PORTUGUESE_AIRPORT_CITIES: AirportCodeCityLookup = {
+  ...getKnownAirportCities(),
+  ATH: 'Atenas',
+  BER: 'Berlim',
+  BUD: 'Budapeste',
+  CAI: 'Cairo',
+  CPH: 'Copenhague',
+  EDI: 'Edimburgo',
+  LGW: 'Londres',
+  LTN: 'Londres',
+  STN: 'Londres',
+  LCY: 'Londres',
+  ORY: 'Paris',
+  CIA: 'Roma',
+  PEK: 'Pequim',
+  PKX: 'Pequim',
+  PRG: 'Praga',
+  SVO: 'Moscou',
+  DME: 'Moscou',
+  VKO: 'Moscou',
+  VIE: 'Viena',
+  WAW: 'Varsóvia'
+};
 
 let airportLookupCache: AirportCodeCityLookup | null = null;
 let airportLookupPromise: Promise<AirportCodeCityLookup> | null = null;
@@ -15,7 +40,7 @@ function normalizeAirportLookup(raw: unknown): AirportCodeCityLookup {
       .toUpperCase();
     const normalizedCity = String(city || '').trim();
     if (!IATA_CODE_PATTERN.test(normalizedCode) || !normalizedCity) continue;
-    out[normalizedCode] = normalizedCity;
+    out[normalizedCode] = PORTUGUESE_AIRPORT_CITIES[normalizedCode] || normalizedCity;
   }
   return out;
 }

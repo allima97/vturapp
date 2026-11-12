@@ -146,7 +146,12 @@ it('preserva registros existentes, compartilha por empresa e bloqueia quem não 
     id,
     localizador: 'DEF456',
     trechos: [
-      { ...payload.trechos[0], cidadeOrigem: 'Cidade Exemplo', cidadeDestino: 'Outra Cidade' }
+      {
+        ...payload.trechos[0],
+        cidadeOrigem: 'Cidade Exemplo',
+        cidadeDestino: 'Outra Cidade',
+        tarifa: 'Tarifa personalizada'
+      }
     ]
   };
   expect((await handlePassagensPost(event('/api/v1/passagens', 'POST', updated))).status).toBe(200);

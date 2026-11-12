@@ -1,9 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { page } from '$app/stores';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import FieldInput from '$lib/components/ui/form/FieldInput.svelte';
+  import FieldDatalistInput from '$lib/components/ui/form/FieldDatalistInput.svelte';
   import FieldTextarea from '$lib/components/ui/form/FieldTextarea.svelte';
   import { toast } from '$lib/stores/ui';
   import { confirmAction } from '$lib/stores/confirm';
@@ -39,7 +41,8 @@
     chegada: '',
     status: '',
     duracao: '',
-    classe: ''
+    classe: '',
+    tarifa: ''
   });
   const passageiroVazio = (): PassageiroPassagem => ({
     nome: '',
@@ -61,6 +64,8 @@
   let error = '';
   let cidades: AirportCodeCityLookup = {};
   let cidadesIndisponiveis = false;
+  const classes = ['Econômica', 'Econômica Premium', 'Executiva', 'Primeira Classe'];
+  const tarifas = ['Light', 'Standard', 'FULL', 'Classic'];
 
   async function carregar() {
     loading = true;
@@ -84,6 +89,8 @@
   }
   onMount(() => {
     void carregar();
+    const editarId = $page.url.searchParams.get('editar');
+    if (editarId) void abrir(editarId);
     void loadAirportCodeCityLookup().then((lookup) => {
       cidades = lookup;
       cidadesIndisponiveis = Object.keys(lookup).length === 0;
@@ -92,6 +99,21 @@
 
   function cidadeSugerida(codigo: string) {
     return cidades[codigo.trim().toUpperCase()] || '';
+  }
+
+  function formatarDuracao(event: Event, trecho: TrechoPassagem) {
+    const input = event.currentTarget;
+    if (!(input instanceof HTMLInputElement)) return;
+    const valor = input.value.replace(/[^\d:]/g, '');
+    const partes = valor.split(':');
+    const formatado =
+      partes.length > 1
+        ? `${partes[0].slice(0, 2)}:${partes.slice(1).join('').slice(0, 2)}`
+        : valor.length > 2
+          ? `${valor.slice(0, 2)}:${valor.slice(2, 4)}`
+          : valor;
+    input.value = formatado;
+    trecho.duracao = formatado;
   }
 
   function novo() {
@@ -149,7 +171,8 @@
         trechos: result.item.trechos.map((trecho) => ({
           ...trecho,
           cidadeOrigem: trecho.cidadeOrigem || '',
-          cidadeDestino: trecho.cidadeDestino || ''
+          cidadeDestino: trecho.cidadeDestino || '',
+          tarifa: trecho.tarifa || ''
         })),
         passageiros: result.item.passageiros.map((passageiro) => ({
           ...passageiro,
@@ -164,6 +187,12 @@
     }
   }
   async function salvar() {
+    if (
+      form.trechos.some((trecho) => trecho.duracao && !/^\d{1,2}:[0-5]\d$/.test(trecho.duracao))
+    ) {
+      toast.error('Informe a duração no formato horas:minutos, por exemplo 10:19.');
+      return;
+    }
     saving = true;
     try {
       const result = await apiFetch<{ id: string }>('/api/v1/passagens', {
@@ -325,7 +354,20 @@
                   required
                 />
                 <FieldInput id={`voo-${i}`} label="Voo" bind:value={trecho.voo} required />
-                <FieldInput id={`classe-${i}`} label="Classe" bind:value={trecho.classe} />
+                <FieldDatalistInput
+                  id={`classe-${i}`}
+                  label="Classe"
+                  bind:value={trecho.classe}
+                  options={classes}
+                  placeholder="Selecione ou digite"
+                />
+                <FieldDatalistInput
+                  id={`tarifa-${i}`}
+                  label="Tarifa"
+                  bind:value={trecho.tarifa}
+                  options={tarifas}
+                  placeholder="Selecione ou digite"
+                />
                 <FieldInput
                   id={`origem-${i}`}
                   label="Aeroporto de origem"
@@ -356,7 +398,10 @@
                   id={`duracao-${i}`}
                   label="Duração"
                   bind:value={trecho.duracao}
-                  placeholder="Ex.: 01:19"
+                  placeholder="Ex.: 10:19"
+                  maxlength={5}
+                  helper="Horas e minutos, por exemplo 10:19."
+                  on:input={(event) => formatarDuracao(event, trecho)}
                 />
                 <FieldInput
                   id={`saida-${i}`}
