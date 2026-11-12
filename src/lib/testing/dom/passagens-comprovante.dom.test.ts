@@ -81,11 +81,7 @@ it('mostra cidades, dados da reserva e assentos nos trechos sem inventar informa
   );
   expect(target.textContent).toContain('12345');
   const resumo = target.querySelector('.resumo')?.textContent?.replace(/\s+/g, ' ');
-  expect(resumo).toContain('Passageiros: 4');
-  expect(resumo).toContain('Adultos: 1');
-  expect(resumo).toContain('Crianças: 1');
-  expect(resumo).toContain('Infant: 1');
-  expect(resumo).toContain('Não informados: 1');
+  expect(resumo).toContain('Passageiros: 1 Adulto + 1 Criança + 1 Infant + 1 Não informado');
   expect(
     [...target.querySelectorAll('tbody tr')].map((row) => row.children[1].textContent)
   ).toEqual(['Adulto', 'Criança', 'Infant', 'Não informado']);
@@ -100,6 +96,50 @@ it('mostra cidades, dados da reserva e assentos nos trechos sem inventar informa
     '/operacao/passagens?editar=abc'
   );
   expect(target.textContent).toContain('Não informado');
+  await unmount(app);
+});
+
+it.each([
+  [['ADT', 'ADT'], '2 Adultos'],
+  [['ADT', 'CHD'], '1 Adulto + 1 Criança'],
+  [['CHD', 'CHD', 'INF', 'INF'], '2 Crianças + 2 Infants'],
+  [[undefined, undefined], '2 Não informados'],
+  [['ADT', undefined], '1 Adulto + 1 Não informado']
+])('resume somente categorias presentes: %s', async (tipos, esperado) => {
+  mocks.lookup.mockResolvedValue({ AAA: 'Origem', BBB: 'Destino' });
+  mocks.api.mockResolvedValue({
+    item: {
+      localizador: 'ABC123',
+      emissao: '',
+      trechos: [
+        {
+          companhia: 'Exemplo',
+          voo: 'XY 1',
+          origem: 'AAA',
+          destino: 'BBB',
+          saida: '2026-11-20T00:05',
+          chegada: '2026-11-20T06:50',
+          status: '',
+          duracao: '',
+          classe: ''
+        }
+      ],
+      passageiros: tipos.map((tipo) => ({
+        nome: 'Pessoa Exemplo',
+        tipo,
+        bilhete: '',
+        status: '',
+        assentos: []
+      }))
+    }
+  });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Comprovante, { target });
+  await vi.waitFor(() => expect(target.querySelectorAll('.resumo p')).toHaveLength(2));
+  expect(target.querySelectorAll('.resumo p')[1].textContent?.replace(/\s+/g, ' ').trim()).toBe(
+    `Passageiros: ${esperado}`
+  );
   await unmount(app);
 });
 

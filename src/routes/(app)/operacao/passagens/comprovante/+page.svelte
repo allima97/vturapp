@@ -8,7 +8,11 @@
   import { apiFetch } from '$lib/services/api';
   import { diffDaysISODate } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
-  import type { PassagemImportada, TrechoPassagem } from '$lib/passagens/importacao';
+  import type {
+    PassagemImportada,
+    PassageiroPassagem,
+    TrechoPassagem
+  } from '$lib/passagens/importacao';
 
   let item: PassagemImportada | null = null;
   let cidades: AirportCodeCityLookup = {};
@@ -73,6 +77,40 @@
         .map((p) => p.assentos[indice])
         .filter(Boolean)
         .join(', ') || 'Não informados'
+    );
+  }
+
+  function resumoPassageiros(passageiros: PassageiroPassagem[]) {
+    const categorias = [
+      {
+        quantidade: passageiros.filter((p) => p.tipo === 'ADT').length,
+        singular: 'Adulto',
+        plural: 'Adultos'
+      },
+      {
+        quantidade: passageiros.filter((p) => p.tipo === 'CHD').length,
+        singular: 'Criança',
+        plural: 'Crianças'
+      },
+      {
+        quantidade: passageiros.filter((p) => p.tipo === 'INF').length,
+        singular: 'Infant',
+        plural: 'Infants'
+      },
+      {
+        quantidade: passageiros.filter((p) => !p.tipo).length,
+        singular: 'Não informado',
+        plural: 'Não informados'
+      }
+    ];
+    return (
+      categorias
+        .filter(({ quantidade }) => quantidade > 0)
+        .map(
+          ({ quantidade, singular, plural }) =>
+            `${quantidade} ${quantidade === 1 ? singular : plural}`
+        )
+        .join(' + ') || '0'
     );
   }
 
@@ -144,13 +182,7 @@
         </p>
         <p>
           <strong>Passageiros:</strong>
-          {item.passageiros.length}
-          (Adultos: {item.passageiros.filter((p) => p.tipo === 'ADT').length}, Crianças: {item.passageiros.filter(
-            (p) => p.tipo === 'CHD'
-          ).length}, Infant: {item.passageiros.filter((p) => p.tipo === 'INF')
-            .length}{#if item.passageiros.some((p) => !p.tipo)}, Não informados: {item.passageiros.filter(
-              (p) => !p.tipo
-            ).length}{/if})
+          {resumoPassageiros(item.passageiros)}
         </p>
         {#if item.emissao}<p><strong>Emissão:</strong> {data(item.emissao, true)}</p>{/if}
       </div>
