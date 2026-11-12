@@ -78,4 +78,10 @@ inf\tSOBRENOME\tBEBE\tX\tEmitida`);
       'INF'
     ]);
   });
+
+  it('reconhece duração quando o OCR acrescenta um caractere antes do horário', () => {
+    const resultado = importarTextoPassagem(`segmentos
+Companhia Exemplo XY 123 12/11/2026 - 15:00 12/11/2026 - 16:19 HK AAA - Aaa BBB - Bbb E90 D01:19`);
+    expect(resultado.dados.trechos[0]?.duracao).toBe('01:19');
+  });
 });

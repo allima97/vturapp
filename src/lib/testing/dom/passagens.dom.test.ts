@@ -5,11 +5,13 @@ const api = vi.hoisted(() => ({
   fetch: vi.fn(),
   url: 'https://example.test/operacao/passagens',
   subscribers: new Set<(value: { url: URL }) => void>(),
+  extrair: vi.fn(),
   navigate(url: string) {
     this.url = new URL(url, this.url).href;
     for (const subscriber of this.subscribers) subscriber({ url: new URL(this.url) });
   }
 }));
+vi.mock('$lib/passagens/arquivo', () => ({ extrairTextoArquivo: api.extrair }));
 vi.mock('$app/stores', () => ({
   page: {
     subscribe: (run: (value: { url: URL }) => void) => {
@@ -39,8 +41,77 @@ function click(target: HTMLElement, label: string) {
 
 afterEach(() => {
   api.fetch.mockReset();
+  api.extrair.mockReset();
   api.url = 'https://example.test/operacao/passagens';
   document.body.replaceChildren();
+});
+
+it.each(['application/pdf', 'image/png'])(
+  'exige revisão dos dados antes de salvar arquivo %s',
+  async (tipo) => {
+    api.fetch.mockImplementation(async (_path, options) =>
+      options.method === 'POST' ? { id: '00000000-0000-4000-8000-000000000001' } : { items: [] }
+    );
+    api.extrair.mockResolvedValue(
+      'LOC: ABC123\nsegmentos\nCompanhia Exemplo XY 123 12/11/2026 - 15:00 12/11/2026 - 16:19 HK AAA - Aaa BBB - Bbb E90 01:19 W\npassageiros\nADT\tEXEMPLO\tMARIA\tFeminino\tEmitida'
+    );
+    const target = document.createElement('div');
+    document.body.appendChild(target);
+    const app = mount(Passagens, { target });
+    await vi.waitFor(() => expect(target.textContent).toContain('Nenhuma passagem salva.'));
+    click(target, 'Nova passagem');
+    const entrada = target.querySelector<HTMLInputElement>('#arquivo-reserva')!;
+    const file = new File(['teste'], tipo === 'application/pdf' ? 'reserva.pdf' : 'reserva.png', {
+      type: tipo
+    });
+    Object.defineProperty(entrada, 'files', { configurable: true, value: [file] });
+    entrada.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    click(target, 'Extrair texto do arquivo');
+    await vi.waitFor(() =>
+      expect(target.querySelector<HTMLTextAreaElement>('#texto-reserva')?.value).toContain('ABC123')
+    );
+    expect(api.extrair).toHaveBeenCalledWith(file, expect.any(Function));
+    click(target, 'Analisar texto');
+    await vi.waitFor(() => expect(target.textContent).toContain('Revisei e confirmei'));
+    click(target, 'Salvar passagem');
+    expect(api.fetch.mock.calls.some(([, options]) => options?.method === 'POST')).toBe(false);
+    const confirmacao = target.querySelector<HTMLInputElement>('input[type=checkbox]')!;
+    confirmacao.click();
+    flushSync();
+    click(target, 'Salvar passagem');
+    await vi.waitFor(() =>
+      expect(api.fetch.mock.calls.some(([, options]) => options?.method === 'POST')).toBe(true)
+    );
+    await unmount(app);
+  }
+);
+
+it('informa falha de leitura sem modificar os dados da passagem', async () => {
+  api.fetch.mockResolvedValue({ items: [] });
+  api.extrair.mockRejectedValue(new Error('Arquivo ilegível'));
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() => expect(target.textContent).toContain('Nenhuma passagem salva.'));
+  click(target, 'Nova passagem');
+  const localizador = target.querySelector<HTMLInputElement>('#passagem-localizador')!;
+  localizador.value = 'ABC123';
+  localizador.dispatchEvent(new Event('input', { bubbles: true }));
+  const entrada = target.querySelector<HTMLInputElement>('#arquivo-reserva')!;
+  Object.defineProperty(entrada, 'files', {
+    configurable: true,
+    value: [new File(['inválido'], 'reserva.pdf', { type: 'application/pdf' })]
+  });
+  entrada.dispatchEvent(new Event('change', { bubbles: true }));
+  flushSync();
+  click(target, 'Extrair texto do arquivo');
+  await vi.waitFor(() =>
+    expect(target.querySelector('[role=alert]')?.textContent).toContain('Arquivo ilegível')
+  );
+  expect(localizador.value).toBe('ABC123');
+  expect(target.querySelector('input[type=checkbox]')).toBeNull();
+  await unmount(app);
 });
 
 it('permite importar, revisar, salvar e abrir comprovante', async () => {

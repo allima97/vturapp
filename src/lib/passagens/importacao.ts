@@ -41,7 +41,7 @@ export type ResultadoImportacaoPassagem = {
 
 const DATA_HORA = '\\d{2}/\\d{2}/\\d{4}\\s*-\\s*\\d{2}:\\d{2}';
 const SEGMENTO = new RegExp(
-  `^(.+?)\\s+([A-Z0-9]{2})\\s*(\\d{1,4})\\s+(${DATA_HORA})\\s+(${DATA_HORA})\\s+([A-Z]{2})\\s+([A-Z]{3})(?:\\s*-\\s*[A-Za-z]{3})?\\s+([A-Z]{3})(?:\\s*-\\s*[A-Za-z]{3})?\\s+\\S+\\s+(\\d{1,2}:\\d{2})(?:\\s+([A-Z]))?(?:\\s+.*)?$`,
+  `^(.+?)\\s+([A-Z0-9]{2})\\s*(\\d{1,4})\\s+(${DATA_HORA})\\s+(${DATA_HORA})\\s+([A-Z]{2})\\s+([A-Z]{3})(?:\\s*-\\s*[A-Za-z]{3})?\\s+([A-Z]{3})(?:\\s*-\\s*[A-Za-z]{3})?\\s+\\S+\\s+(?:[A-Za-z]\\s*)?(\\d{1,2}:\\d{2})(?:\\s+([A-Z]))?(?:\\s+.*)?$`,
   'i'
 );
 
@@ -149,5 +149,7 @@ export function importarTextoPassagem(texto: string): ResultadoImportacaoPassage
   ];
   if (!dados.localizador) avisos.push('Localizador não reconhecido: informe-o manualmente.');
   if (!dados.trechos.length) avisos.push('Nenhum trecho reconhecido: informe os voos manualmente.');
+  if (!dados.passageiros.length)
+    avisos.push('Nenhum passageiro reconhecido: informe os passageiros manualmente.');
   return { dados, avisos };
 }

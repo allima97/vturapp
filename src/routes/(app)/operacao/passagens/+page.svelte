@@ -61,6 +61,13 @@
   let id = '';
   let texto = '';
   let avisos: string[] = [];
+  let arquivo: File | null = null;
+  let processandoArquivo = false;
+  let progressoArquivo = '';
+  let erroArquivo = '';
+  let textoDeArquivo = false;
+  let revisaoArquivoPendente = false;
+  let revisaoConfirmada = false;
   let editando = false;
   let montado = false;
   let pedidoAbertura = 0;
@@ -110,6 +117,12 @@
     form = vazio();
     texto = '';
     avisos = [];
+    arquivo = null;
+    textoDeArquivo = false;
+    revisaoArquivoPendente = false;
+    revisaoConfirmada = false;
+    erroArquivo = '';
+    progressoArquivo = '';
     const editarId = url.searchParams.get('editar');
     if (editarId) void abrir(editarId, pedido);
     else if (url.searchParams.get('nova') === '1') novo();
@@ -149,6 +162,12 @@
     form = vazio();
     texto = '';
     avisos = [];
+    arquivo = null;
+    textoDeArquivo = false;
+    revisaoArquivoPendente = false;
+    revisaoConfirmada = false;
+    erroArquivo = '';
+    progressoArquivo = '';
     editando = true;
   }
   function iniciarNovaPassagem() {
@@ -178,6 +197,46 @@
       }))
     };
     avisos = resultado.avisos;
+    if (textoDeArquivo) {
+      avisos = [
+        'O reconhecimento pode omitir ou alterar dados. Compare todos os trechos, passageiros, datas e assentos com o arquivo original antes de confirmar.',
+        `Foram reconhecidos ${resultado.dados.trechos.length} trecho(s) e ${resultado.dados.passageiros.length} passageiro(s). Confira se não faltou nenhum.`,
+        ...avisos
+      ];
+    }
+    revisaoArquivoPendente = textoDeArquivo;
+    revisaoConfirmada = false;
+  }
+  async function lerArquivo() {
+    if (!arquivo) {
+      erroArquivo = 'Selecione um PDF ou uma imagem para importar.';
+      return;
+    }
+    if (
+      texto.trim() &&
+      !(await confirmAction('A extração substituirá o texto atual. Deseja continuar?'))
+    )
+      return;
+    const pedido = pedidoAbertura;
+    processandoArquivo = true;
+    erroArquivo = '';
+    try {
+      const { extrairTextoArquivo } = await import('$lib/passagens/arquivo');
+      const extraido = await extrairTextoArquivo(arquivo, (mensagem) => {
+        if (pedido === pedidoAbertura) progressoArquivo = mensagem;
+      });
+      if (pedido !== pedidoAbertura) return;
+      if (!extraido.trim())
+        throw new Error('Nenhum texto foi reconhecido. Tente outra imagem ou PDF.');
+      texto = extraido;
+      textoDeArquivo = true;
+      progressoArquivo = 'Texto extraído. Confira e corrija o texto antes de analisar.';
+    } catch (err) {
+      if (pedido === pedidoAbertura)
+        erroArquivo = toUserMessage(err, 'Não foi possível ler o arquivo.');
+    } finally {
+      processandoArquivo = false;
+    }
   }
   function adicionarTrecho() {
     form.trechos = [...form.trechos, trechoVazio()];
@@ -240,6 +299,10 @@
     }
   }
   async function salvar() {
+    if (revisaoArquivoPendente && !revisaoConfirmada) {
+      toast.error('Confirme a revisão dos dados importados antes de salvar.');
+      return;
+    }
     if (
       form.trechos.some((trecho) => trecho.duracao && !/^\d{1,2}:[0-5]\d$/.test(trecho.duracao))
     ) {
@@ -356,10 +419,39 @@
       <div class="space-y-6">
         <details class="importacao-editavel rounded-lg border border-slate-200 p-4">
           <summary class="flex cursor-pointer items-center justify-between gap-2 font-medium">
-            <span>Importar texto da reserva</span>
+            <span>Importar reserva por texto, PDF ou imagem</span>
             <span class="trecho-toggle" aria-hidden="true"></span>
           </summary>
           <div class="mt-3 space-y-3">
+            <div class="space-y-2">
+              <label for="arquivo-reserva" class="block text-sm font-medium text-slate-700">
+                PDF ou imagem da reserva
+              </label>
+              <input
+                id="arquivo-reserva"
+                type="file"
+                accept="application/pdf,image/png,image/jpeg,image/webp"
+                disabled={processandoArquivo}
+                on:change={(event) => {
+                  arquivo = event.currentTarget.files?.[0] ?? null;
+                  erroArquivo = '';
+                  progressoArquivo = '';
+                }}
+              />
+              <p class="text-sm text-slate-600">
+                Até 10 MB e 10 páginas. O arquivo é processado no navegador.
+              </p>
+              <Button
+                type="button"
+                variant="secondary"
+                on:click={lerArquivo}
+                disabled={saving || processandoArquivo}>Extrair texto do arquivo</Button
+              >
+              {#if progressoArquivo}<p role="status" class="text-sm text-slate-600">
+                  {progressoArquivo}
+                </p>{/if}
+              {#if erroArquivo}<p role="alert" class="text-sm text-red-700">{erroArquivo}</p>{/if}
+            </div>
             <FieldTextarea
               id="texto-reserva"
               label="Texto da reserva"
@@ -367,8 +459,11 @@
               rows={6}
               helper="Cole o texto copiado da reserva. O reconhecimento é inicial e pode variar conforme o sistema; revise todos os dados."
             />
-            <Button type="button" variant="secondary" on:click={analisar} disabled={saving}
-              >Analisar texto</Button
+            <Button
+              type="button"
+              variant="secondary"
+              on:click={analisar}
+              disabled={saving || processandoArquivo}>Analisar texto</Button
             >
           </div>
         </details>
@@ -379,6 +474,17 @@
           >
             {#each avisos as aviso}<p>{aviso}</p>{/each}
           </div>
+        {/if}
+        {#if revisaoArquivoPendente}
+          <label
+            class="flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900"
+          >
+            <input type="checkbox" bind:checked={revisaoConfirmada} />
+            <span
+              >Revisei e confirmei os dados importados, incluindo voos, datas, passageiros e
+              assentos.</span
+            >
+          </label>
         {/if}
         <FieldInput
           id="passagem-localizador"
@@ -593,10 +699,14 @@
           {/each}
         </section>
         <div class="flex flex-wrap justify-end gap-3">
-          <Button variant="secondary" on:click={() => (editando = false)} disabled={saving}
-            >Fechar</Button
+          <Button
+            variant="secondary"
+            on:click={() => (editando = false)}
+            disabled={saving || processandoArquivo}>Fechar</Button
           >
-          <Button color="operacao" on:click={salvar} loading={saving}>Salvar passagem</Button>
+          <Button color="operacao" on:click={salvar} loading={saving} disabled={processandoArquivo}
+            >Salvar passagem</Button
+          >
           {#if id}<Button
               variant="secondary"
               href={`/operacao/passagens/comprovante?id=${encodeURIComponent(id)}`}
