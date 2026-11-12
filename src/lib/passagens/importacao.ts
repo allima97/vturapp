@@ -1,3 +1,5 @@
+import { importarCvc } from './importacao-cvc';
+
 export type TrechoPassagem = {
   companhia: string;
   voo: string;
@@ -56,6 +58,20 @@ function dataHoraLocal(value: string) {
  * vazios para revisão; o texto copiado pode variar entre sistemas de reservas.
  */
 export function importarTextoPassagem(texto: string): ResultadoImportacaoPassagem {
+  const cvc = importarCvc(texto);
+  if (cvc) {
+    const avisos = [
+      'Confira todos os dados importados antes de salvar. O formato de texto pode variar entre sistemas.',
+      'Confira passageiros, bilhetes e assentos e preencha os campos não reconhecidos.',
+      ...cvc.avisos
+    ];
+    if (!cvc.dados.localizador) avisos.push('Localizador não reconhecido: informe-o manualmente.');
+    if (!cvc.dados.trechos.length)
+      avisos.push('Nenhum trecho reconhecido: informe os voos manualmente.');
+    if (!cvc.dados.passageiros.length)
+      avisos.push('Nenhum passageiro reconhecido: informe os passageiros manualmente.');
+    return { dados: cvc.dados, avisos };
+  }
   const dados: PassagemImportada = { localizador: '', emissao: '', trechos: [], passageiros: [] };
   const linhas = texto
     .split(/\r?\n/)
