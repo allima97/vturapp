@@ -19,6 +19,7 @@ import {
 import { hasVerifiedTotpFactor, normalizeMfaRedirectPath } from '$lib/server/authMfa';
 import { resolveDashboardPathByUserType } from '$lib/server/dashboardRedirect';
 import { checkPersistentRateLimit } from '$lib/server/persistentRateLimit';
+import { buildCspPolicy } from '$lib/server/csp';
 import { logServerError } from '$lib/server/v1';
 import { initKvNamespace, checkKvEpochAsync } from '$lib/server/kvInvalidation';
 // Import so por efeito colateral -- garante que o registro de registerSalesReadModelDirtyMarker (ver reciboContribuicoesReadModel.ts)
@@ -190,36 +191,6 @@ function isUnsafeHttpMethod(method: string) {
 const PUBLIC_AUTH_MAX_BODY_BYTES = 32 * 1024;
 const AUTHENTICATED_API_MAX_BODY_BYTES = 10 * 1024 * 1024;
 const AUTHENTICATED_API_UPLOAD_MAX_BODY_BYTES = 20 * 1024 * 1024;
-
-function buildCspPolicy() {
-  const connectSrc = [
-    "'self'",
-    // Turnstile carrega recursos do desafio via fetch de data: URIs (erro 600010 sem isso)
-    'data:',
-    'https://challenges.cloudflare.com',
-    'https://cloudflareinsights.com'
-  ];
-  if (dev) {
-    connectSrc.push('http:', 'https:', 'ws:', 'wss:');
-  }
-
-  return [
-    "default-src 'self'",
-    "base-uri 'self'",
-    "object-src 'none'",
-    "frame-ancestors 'none'",
-    "img-src 'self' data: blob: https:",
-    "font-src 'self' data: https:",
-    "style-src 'self' 'unsafe-inline' https:",
-    dev
-      ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://static.cloudflareinsights.com"
-      : "script-src 'self' 'unsafe-inline' https://challenges.cloudflare.com https://static.cloudflareinsights.com",
-    `connect-src ${Array.from(new Set(connectSrc)).join(' ')}`,
-    'frame-src https://challenges.cloudflare.com',
-    "worker-src 'self' blob:",
-    "form-action 'self'"
-  ].join('; ');
-}
 
 type RateLimitRule = {
   prefix: string;
@@ -538,7 +509,7 @@ const securityHeadersHook: Handle = async ({ event, resolve }) => {
   );
   response.headers.set(
     dev ? 'Content-Security-Policy-Report-Only' : 'Content-Security-Policy',
-    buildCspPolicy()
+    buildCspPolicy(dev)
   );
 
   const forwardedProto = event.request.headers.get('x-forwarded-proto');
