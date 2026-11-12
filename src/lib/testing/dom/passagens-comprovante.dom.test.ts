@@ -49,7 +49,16 @@ it('mostra cidades, dados da reserva e assentos nos trechos sem inventar informa
         }
       ],
       passageiros: [
-        { nome: 'Pessoa Exemplo', bilhete: '12345', status: 'Emitido', assentos: ['33A', '34B'] }
+        {
+          nome: 'Pessoa Exemplo',
+          tipo: 'ADT',
+          bilhete: '12345',
+          status: 'Emitido',
+          assentos: ['33A', '34B']
+        },
+        { nome: 'Criança Exemplo', tipo: 'CHD', bilhete: '', status: '', assentos: [] },
+        { nome: 'Infant Exemplo', tipo: 'INF', bilhete: '', status: '', assentos: [] },
+        { nome: 'Tipo Ausente', bilhete: '', status: '', assentos: [] }
       ]
     }
   });
@@ -71,6 +80,15 @@ it('mostra cidades, dados da reserva e assentos nos trechos sem inventar informa
     'Chegada no dia seguinte (+1)'
   );
   expect(target.textContent).toContain('12345');
+  const resumo = target.querySelector('.resumo')?.textContent?.replace(/\s+/g, ' ');
+  expect(resumo).toContain('Passageiros: 4');
+  expect(resumo).toContain('Adultos: 1');
+  expect(resumo).toContain('Crianças: 1');
+  expect(resumo).toContain('Infant: 1');
+  expect(resumo).toContain('Não informados: 1');
+  expect(
+    [...target.querySelectorAll('tbody tr')].map((row) => row.children[1].textContent)
+  ).toEqual(['Adulto', 'Criança', 'Infant', 'Não informado']);
   const tarifas = [...target.querySelectorAll('.trecho')].map(
     (trecho) =>
       [...trecho.querySelectorAll('.detalhes > div')]

@@ -1,6 +1,7 @@
 import { json, type RequestEvent } from '@sveltejs/kit';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
+import { isTipoPassageiro } from '$lib/passagens/importacao';
 import {
   ensureModuloAccess,
   getAdminClient,
@@ -133,17 +134,19 @@ function validar(body: unknown) {
     const nome = texto(item.nome, 200);
     const bilhete = texto(item.bilhete, 80);
     const status = texto(item.status, 100);
+    const tipo = item.tipo ?? '';
     if (
       !nome ||
       bilhete === null ||
       status === null ||
+      (tipo !== '' && !isTipoPassageiro(tipo)) ||
       !Array.isArray(item.assentos) ||
       item.assentos.length > input.trechos.length
     )
       return null;
     const assentos = item.assentos.map((value: unknown) => texto(value, 30));
     if (assentos.some((value: string | null) => value === null)) return null;
-    passageiros.push({ nome, bilhete, status, assentos });
+    passageiros.push({ nome, tipo, bilhete, status, assentos });
   }
   return { localizador, emissao, trechos, passageiros };
 }

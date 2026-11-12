@@ -145,6 +145,12 @@ it('preserva registros existentes, compartilha por empresa e bloqueia quem não 
     ...payload,
     id,
     localizador: 'DEF456',
+    passageiros: [
+      { ...payload.passageiros[0], tipo: 'ADT' },
+      { ...payload.passageiros[0], tipo: 'CHD' },
+      { ...payload.passageiros[0], tipo: 'INF' },
+      { ...payload.passageiros[0] }
+    ],
     trechos: [
       {
         ...payload.trechos[0],
@@ -163,9 +169,20 @@ it('preserva registros existentes, compartilha por empresa e bloqueia quem não 
     item: {
       id,
       localizador: 'DEF456',
+      passageiros: [{ tipo: 'ADT' }, { tipo: 'CHD' }, { tipo: 'INF' }, { tipo: '' }],
       trechos: [{ ...updated.trechos[0], origem: 'GRU', destino: 'LIS' }]
     }
   });
+  expect(
+    (
+      await handlePassagensPost(
+        event('/api/v1/passagens', 'POST', {
+          ...payload,
+          passageiros: [{ ...payload.passageiros[0], tipo: 'INVALIDO' }]
+        })
+      )
+    ).status
+  ).toBe(400);
   expect((await handlePassagensDelete(event(`/api/v1/passagens?id=${id}`, 'DELETE'))).status).toBe(
     200
   );

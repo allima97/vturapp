@@ -142,7 +142,16 @@
             destinoDaRota(item.trechos).cidadeDestino
           )}
         </p>
-        <p><strong>Passageiros:</strong> {item.passageiros.length}</p>
+        <p>
+          <strong>Passageiros:</strong>
+          {item.passageiros.length}
+          (Adultos: {item.passageiros.filter((p) => p.tipo === 'ADT').length}, Crianças: {item.passageiros.filter(
+            (p) => p.tipo === 'CHD'
+          ).length}, Infant: {item.passageiros.filter((p) => p.tipo === 'INF')
+            .length}{#if item.passageiros.some((p) => !p.tipo)}, Não informados: {item.passageiros.filter(
+              (p) => !p.tipo
+            ).length}{/if})
+        </p>
         {#if item.emissao}<p><strong>Emissão:</strong> {data(item.emissao, true)}</p>{/if}
       </div>
     </div>
@@ -196,15 +205,26 @@
     <h2>PASSAGEIROS E BILHETES ELETRÔNICOS</h2>
     <table>
       <thead
-        ><tr><th>Nome do passageiro</th><th>Número do bilhete</th><th>Status do bilhete</th></tr
+        ><tr
+          ><th>Nome do passageiro</th><th>Tipo</th><th>Número do bilhete</th><th
+            >Status do bilhete</th
+          ></tr
         ></thead
       >
       <tbody>
         {#each item.passageiros as passageiro}
           <tr
             ><td><strong>{passageiro.nome}</strong></td><td
-              >{passageiro.bilhete || 'Não informado'}</td
-            ><td>{passageiro.status || 'Não informado'}</td></tr
+              >{passageiro.tipo === 'ADT'
+                ? 'Adulto'
+                : passageiro.tipo === 'CHD'
+                  ? 'Criança'
+                  : passageiro.tipo === 'INF'
+                    ? 'Infant'
+                    : 'Não informado'}</td
+            ><td>{passageiro.bilhete || 'Não informado'}</td><td
+              >{passageiro.status || 'Não informado'}</td
+            ></tr
           >
         {/each}
       </tbody>

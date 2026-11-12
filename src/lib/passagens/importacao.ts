@@ -13,8 +13,15 @@ export type TrechoPassagem = {
   tarifa?: string;
 };
 
+export type TipoPassageiro = 'ADT' | 'CHD' | 'INF';
+
+export function isTipoPassageiro(value: unknown): value is TipoPassageiro {
+  return value === 'ADT' || value === 'CHD' || value === 'INF';
+}
+
 export type PassageiroPassagem = {
   nome: string;
+  tipo?: TipoPassageiro | '';
   bilhete: string;
   status: string;
   assentos: string[];
@@ -107,8 +114,11 @@ export function importarTextoPassagem(texto: string): ResultadoImportacaoPassage
         .filter(Boolean);
       const faixa = colunas.findIndex((parte) => /^(ADT|CHD|INF)$/i.test(parte));
       if (faixa >= 0 && colunas[faixa + 1] && colunas[faixa + 2]) {
+        const tipo = colunas[faixa].toUpperCase();
+        if (!isTipoPassageiro(tipo)) continue;
         dados.passageiros.push({
           nome: `${colunas[faixa + 1]}, ${colunas[faixa + 2]}`,
+          tipo,
           bilhete: '',
           status: colunas[faixa + 4] || '',
           assentos: []

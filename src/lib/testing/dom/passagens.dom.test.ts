@@ -121,7 +121,11 @@ it('permite importar, revisar, salvar e abrir comprovante', async () => {
             })
           ],
           passageiros: [
-            expect.objectContaining({ nome: 'SOBRENOME EXEMPLO, MARIA', assentos: ['17D'] })
+            expect.objectContaining({
+              nome: 'SOBRENOME EXEMPLO, MARIA',
+              tipo: 'ADT',
+              assentos: ['17D']
+            })
           ]
         })
       })
@@ -254,6 +258,11 @@ it('permite abrir e fechar passageiros preservando seus dados', async () => {
     input.value = value;
     input.dispatchEvent(new Event('input', { bubbles: true }));
   }
+  const tipo = [...target.getElementsByTagName('select')].find(
+    (select) => select.id === 'tipo-passageiro-1'
+  )!;
+  tipo.value = 'CHD';
+  tipo.dispatchEvent(new Event('change', { bubbles: true }));
   flushSync();
   expect(detalhes[1].querySelector('summary')?.textContent).toContain('Pessoa Exemplo');
   detalhes[1].open = false;
@@ -265,6 +274,9 @@ it('permite abrir e fechar passageiros preservando seus dados', async () => {
   expect(target.querySelectorAll('.passageiro-editavel')).toHaveLength(1);
   expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe('Pessoa Exemplo');
   expect(target.querySelector<HTMLInputElement>('#bilhete-0')?.value).toBe('123456');
+  expect(
+    [...target.getElementsByTagName('select')].find((s) => s.id === 'tipo-passageiro-0')?.value
+  ).toBe('CHD');
   expect(target.querySelector<HTMLInputElement>('#assento-0-0')?.value).toBe('17A');
   click(target, 'Salvar passagem');
   await vi.waitFor(() =>
@@ -276,6 +288,7 @@ it('permite abrir e fechar passageiros preservando seus dados', async () => {
           passageiros: [
             expect.objectContaining({
               nome: 'Pessoa Exemplo',
+              tipo: 'CHD',
               bilhete: '123456',
               assentos: ['17A']
             })

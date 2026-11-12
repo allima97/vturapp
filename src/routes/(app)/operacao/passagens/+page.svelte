@@ -6,6 +6,7 @@
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import FieldInput from '$lib/components/ui/form/FieldInput.svelte';
+  import FieldSelect from '$lib/components/ui/form/FieldSelect.svelte';
   import FieldDatalistInput from '$lib/components/ui/form/FieldDatalistInput.svelte';
   import FieldTextarea from '$lib/components/ui/form/FieldTextarea.svelte';
   import { toast } from '$lib/stores/ui';
@@ -47,6 +48,7 @@
   });
   const passageiroVazio = (): PassageiroPassagem => ({
     nome: '',
+    tipo: '',
     bilhete: '',
     status: '',
     assentos: form.trechos.map(() => '')
@@ -225,6 +227,7 @@
         })),
         passageiros: result.item.passageiros.map((passageiro) => ({
           ...passageiro,
+          tipo: passageiro.tipo || '',
           assentos: result.item.trechos.map((_, indice) => passageiro.assentos[indice] || '')
         }))
       };
@@ -554,6 +557,18 @@
                     label="Nome"
                     bind:value={passageiro.nome}
                     required
+                  />
+                  <FieldSelect
+                    id={`tipo-passageiro-${i}`}
+                    label="Tipo de passageiro"
+                    bind:value={passageiro.tipo}
+                    placeholder={null}
+                    options={[
+                      { value: '', label: 'Não informado' },
+                      { value: 'ADT', label: 'Adulto' },
+                      { value: 'CHD', label: 'Criança' },
+                      { value: 'INF', label: 'Infant' }
+                    ]}
                   />
                   <FieldInput
                     id={`bilhete-${i}`}

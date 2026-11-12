@@ -57,7 +57,25 @@ SOBRENOME EXEMPLO/MARIA\t17D`);
     expect(resultado.dados.localizador).toBe('ABC123');
     expect(resultado.dados.trechos[0].classe).toBe('W');
     expect(resultado.dados.passageiros).toEqual([
-      { nome: 'SOBRENOME EXEMPLO, MARIA', bilhete: '', status: 'Emitida', assentos: ['17D'] }
+      {
+        nome: 'SOBRENOME EXEMPLO, MARIA',
+        tipo: 'ADT',
+        bilhete: '',
+        status: 'Emitida',
+        assentos: ['17D']
+      }
+    ]);
+  });
+
+  it('reconhece os tipos de passageiro da reserva', () => {
+    const resultado = importarTextoPassagem(`passageiros
+adt\tSOBRENOME\tADULTO\tX\tEmitida
+CHD\tSOBRENOME\tCRIANCA\tX\tEmitida
+inf\tSOBRENOME\tBEBE\tX\tEmitida`);
+    expect(resultado.dados.passageiros.map((passageiro) => passageiro.tipo)).toEqual([
+      'ADT',
+      'CHD',
+      'INF'
     ]);
   });
 });
