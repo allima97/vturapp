@@ -74,7 +74,7 @@ export function importarCvc(texto: string): { dados: PassagemImportada; avisos: 
   if (cabecalho) {
     const linhas = blocoPassageiros.slice(cabecalho.index + cabecalho[0].length);
     const entrada =
-      /([A-ZÀ-Ü][A-ZÀ-Ü .'-]*?)[ \t]*(ADT|CHD|INF)[ \t]*(?:\d{1,3}[A-Z][ \t]*)?[\d., \t-]*?\d{2}\/\d{2}\/\d{4}(?=\s|[A-ZÀ-Ü]|$)/gi;
+      /([A-ZÀ-Ü][A-ZÀ-Ü \t.'-]*?)[ \t]*(ADT|CHD|INF)[ \t]*(?:\d{1,3}[A-Z][ \t]*)?[\d., \t-]*?\d{2}\/\d{2}\/\d{4}(?=\s|[A-ZÀ-Ü]|$)/gi;
     for (const match of linhas.matchAll(entrada)) {
       const tipo = match[2].toUpperCase();
       if (tipo !== 'ADT' && tipo !== 'CHD' && tipo !== 'INF') continue;
@@ -83,7 +83,7 @@ export function importarCvc(texto: string): { dados: PassagemImportada; avisos: 
         .split(/\s{2,}|\t+/)
         .filter(Boolean);
       const nome =
-        partes.length === 2 ? `${partes[1].trim()}, ${partes[0].trim()}` : match[1].trim();
+        partes.length === 2 ? `${partes[0].trim()} ${partes[1].trim()}` : match[1].trim();
       dados.passageiros.push({
         nome,
         tipo: tipo satisfies TipoPassageiro,

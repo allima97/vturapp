@@ -46,6 +46,47 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
+it('preserva nome e sobrenome CVC na revisão e no salvamento', async () => {
+  api.fetch.mockImplementation(async (_path, options) =>
+    options.method === 'POST' ? { id: '00000000-0000-4000-8000-000000000001' } : { items: [] }
+  );
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() => expect(target.textContent).toContain('Nenhuma passagem salva.'));
+  click(target, 'Nova passagem');
+  const text = target.querySelector<HTMLTextAreaElement>('#texto-reserva')!;
+  text.value = `RESERVA CIA. AÉREA
+CM - COMPANHIA EXEMPLO   ABC123   HST
+TRECHOS
+CM 841 GRU - GUARULHOS 15/01/2027 01:30 PTY - PANAMA CITY 15/01/2027 06:17 Economy Classic
+PASSAGEIROS
+Nome\tSobrenome\tTipo\tData de Nascimento
+MARIA\tSILVA EXEMPLO\tADT\t4.228,86\t25/01/1951
+CONTRATANTE`;
+  text.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+  click(target, 'Analisar texto');
+  await vi.waitFor(() =>
+    expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe(
+      'MARIA SILVA EXEMPLO'
+    )
+  );
+  click(target, 'Salvar passagem');
+  await vi.waitFor(() =>
+    expect(api.fetch).toHaveBeenCalledWith(
+      '/api/v1/passagens',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.objectContaining({
+          passageiros: [expect.objectContaining({ nome: 'MARIA SILVA EXEMPLO' })]
+        })
+      })
+    )
+  );
+  await unmount(app);
+});
+
 it.each(['application/pdf', 'image/png'])(
   'exige revisão dos dados antes de salvar arquivo %s',
   async (tipo) => {

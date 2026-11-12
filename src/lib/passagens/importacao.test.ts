@@ -129,8 +129,8 @@ CONTRATANTE`);
       })
     ]);
     expect(resultado.dados.passageiros).toEqual([
-      { nome: 'EXEMPLO SILVA, MARIA', tipo: 'ADT', bilhete: '', status: '', assentos: [] },
-      { nome: 'EXEMPLO SILVA, ANA', tipo: 'CHD', bilhete: '', status: '', assentos: [] }
+      { nome: 'MARIA EXEMPLO SILVA', tipo: 'ADT', bilhete: '', status: '', assentos: [] },
+      { nome: 'ANA EXEMPLO SILVA', tipo: 'CHD', bilhete: '', status: '', assentos: [] }
     ]);
   });
 
@@ -171,7 +171,7 @@ MARIA   EXEMPLO   ADT   12A   4.228,86   25/01/1951
 CONTRATANTE`);
     expect(resultado.dados.localizador).toBe('');
     expect(resultado.dados.passageiros).toEqual([
-      { nome: 'EXEMPLO, MARIA', tipo: 'ADT', bilhete: '', status: '', assentos: [] }
+      { nome: 'MARIA EXEMPLO', tipo: 'ADT', bilhete: '', status: '', assentos: [] }
     ]);
     expect(resultado.avisos.join(' ')).toContain('Localizador não reconhecido');
   });
@@ -211,7 +211,22 @@ MARIA   EXEMPLO   ADT   4.228,86
 ANA   EXEMPLO   CHD   3.807,07   22/10/2018
 CONTRATANTE`);
     expect(resultado.dados.passageiros).toEqual([
-      { nome: 'EXEMPLO, ANA', tipo: 'CHD', bilhete: '', status: '', assentos: [] }
+      { nome: 'ANA EXEMPLO', tipo: 'CHD', bilhete: '', status: '', assentos: [] }
+    ]);
+  });
+
+  it('mantém nome e sobrenome de colunas tabuladas na ordem original', () => {
+    const resultado = importarTextoPassagem(`RESERVA CIA. AÉREA
+CM - COMPANHIA EXEMPLO   ABC123   HST
+TRECHOS
+PASSAGEIROS
+Nome\tSobrenome\tTipo\tAssento\tTarifa\tData de Nascimento
+MARIA\tSILVA EXEMPLO\tADT\t\t4.228,86\t25/01/1951
+ANA CLARA\tOUTRO SOBRENOME\tCHD\t\t3.807,07\t22/10/2018
+CONTRATANTE`);
+    expect(resultado.dados.passageiros.map((p) => p.nome)).toEqual([
+      'MARIA SILVA EXEMPLO',
+      'ANA CLARA OUTRO SOBRENOME'
     ]);
   });
 });
