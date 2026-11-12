@@ -122,7 +122,7 @@
         <LoadingState className="min-h-[60vh]" />
       {/if}
     </div>
-    <footer aria-label="Créditos de dados geográficos" class="mt-8 pb-4">
+    <footer aria-label="Créditos de dados geográficos" class="mt-8 pb-4 text-right">
       <AtribuicaoGeoNames />
     </footer>
   </main>
