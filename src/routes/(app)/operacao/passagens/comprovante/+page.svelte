@@ -6,6 +6,7 @@
     type AirportCodeCityLookup
   } from '$lib/airportCodeCityLookup';
   import { apiFetch } from '$lib/services/api';
+  import { diffDaysISODate } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
   import type { PassagemImportada, TrechoPassagem } from '$lib/passagens/importacao';
 
@@ -39,6 +40,13 @@
 
   function horario(value: string) {
     return value.includes('T') ? value.split('T')[1] : '';
+  }
+
+  function avisoChegada(saida: string, chegada: string) {
+    const dias = diffDaysISODate(saida, chegada);
+    if (dias === null || dias <= 0) return '';
+    if (dias === 1) return 'Chegada no dia seguinte (+1)';
+    return `Chegada ${dias} dias depois (+${dias})`;
   }
 
   function tituloTrecho(trechos: TrechoPassagem[], indice: number) {
@@ -155,6 +163,9 @@
             </div>
             <div class="duracao">
               <strong>DURAÇÃO: {trecho.duracao || 'Não informada'}</strong><span>✈</span>
+              {#if avisoChegada(trecho.saida, trecho.chegada)}
+                <small>{avisoChegada(trecho.saida, trecho.chegada)}</small>
+              {/if}
             </div>
             <div class="local destino">
               <strong class="codigo">{trecho.destino}</strong>
@@ -348,6 +359,9 @@
     flex: 1;
     height: 2px;
     background: #cbd5e1;
+  }
+  .duracao small {
+    font-size: 10px;
   }
   .detalhes {
     display: grid;

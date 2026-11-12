@@ -39,17 +39,24 @@ it('permite importar, revisar, salvar e abrir comprovante', async () => {
   const app = mount(Passagens, { target });
   await vi.waitFor(() => expect(target.textContent).toContain('Nenhuma passagem salva.'));
   click(target, 'Nova passagem');
+  const importacao = target.querySelector<HTMLDetailsElement>('.importacao-editavel')!;
+  expect(importacao.open).toBe(false);
+  importacao.open = true;
   const text = target.querySelector<HTMLTextAreaElement>('#texto-reserva')!;
   text.value =
     'LOC: ABC123\nsegmentos\nCompanhia Exemplo XY 123 12/11/2026 - 15:00 12/11/2026 - 16:19 HK AAA - Aaa BBB - Bbb E90 01:19 W\npassageiros\nADT\tSOBRENOME EXEMPLO\tMARIA\tFeminino\tEmitida\nassentos\nSOBRENOME EXEMPLO/MARIA\t17D';
   text.dispatchEvent(new Event('input', { bubbles: true }));
   flushSync();
   click(target, 'Analisar texto');
+  importacao.open = false;
   await vi.waitFor(() =>
     expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe(
       'SOBRENOME EXEMPLO, MARIA'
     )
   );
+  expect(target.querySelector<HTMLDetailsElement>('.passageiro-editavel')?.open).toBe(false);
+  importacao.open = true;
+  expect(text.value).toContain('LOC: ABC123');
   const detalhes = target.querySelector<HTMLDetailsElement>('.trecho-editavel')!;
   expect(detalhes.open).toBe(false);
   detalhes.open = true;
@@ -111,6 +118,87 @@ it('permite importar, revisar, salvar e abrir comprovante', async () => {
   await unmount(app);
 });
 
+it('mantém os avisos de análise visíveis com a importação fechada', async () => {
+  api.fetch.mockResolvedValue({ items: [] });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() => expect(target.textContent).toContain('Nenhuma passagem salva.'));
+  click(target, 'Nova passagem');
+  const importacao = target.querySelector<HTMLDetailsElement>('.importacao-editavel')!;
+  importacao.open = true;
+  const text = target.querySelector<HTMLTextAreaElement>('#texto-reserva')!;
+  text.value = 'Texto sem reserva reconhecida';
+  text.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+  click(target, 'Analisar texto');
+  await vi.waitFor(() => expect(target.textContent).toContain('Localizador não reconhecido'));
+  importacao.open = false;
+  const aviso = [...target.querySelectorAll('[role="status"]')].find((item) =>
+    item.textContent?.includes('Localizador não reconhecido')
+  );
+  expect(aviso).toBeDefined();
+  expect(importacao.contains(aviso!)).toBe(false);
+  await unmount(app);
+});
+
+it('permite abrir e fechar passageiros preservando seus dados', async () => {
+  api.fetch.mockImplementation(async (_path, options) =>
+    options.method === 'POST' ? { id: '00000000-0000-4000-8000-000000000001' } : { items: [] }
+  );
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() => expect(target.textContent).toContain('Nenhuma passagem salva.'));
+  click(target, 'Nova passagem');
+  click(target, 'Adicionar trecho');
+  click(target, 'Adicionar passageiro');
+  click(target, 'Adicionar passageiro');
+  const detalhes = target.querySelectorAll<HTMLDetailsElement>('.passageiro-editavel');
+  expect([...detalhes].map((item) => item.open)).toEqual([false, false]);
+  detalhes[1].open = true;
+  for (const [selector, value] of [
+    ['#passageiro-1', 'Pessoa Exemplo'],
+    ['#bilhete-1', '123456'],
+    ['#assento-1-0', '17A']
+  ]) {
+    const input = target.querySelector<HTMLInputElement>(selector)!;
+    input.value = value;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  flushSync();
+  expect(detalhes[1].querySelector('summary')?.textContent).toContain('Pessoa Exemplo');
+  detalhes[1].open = false;
+  detalhes[1].open = true;
+  expect(target.querySelector<HTMLInputElement>('#assento-1-0')?.value).toBe('17A');
+  detalhes[0].open = true;
+  detalhes[0].querySelector<HTMLButtonElement>('button')!.click();
+  flushSync();
+  expect(target.querySelectorAll('.passageiro-editavel')).toHaveLength(1);
+  expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe('Pessoa Exemplo');
+  expect(target.querySelector<HTMLInputElement>('#bilhete-0')?.value).toBe('123456');
+  expect(target.querySelector<HTMLInputElement>('#assento-0-0')?.value).toBe('17A');
+  click(target, 'Salvar passagem');
+  await vi.waitFor(() =>
+    expect(api.fetch).toHaveBeenCalledWith(
+      '/api/v1/passagens',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.objectContaining({
+          passageiros: [
+            expect.objectContaining({
+              nome: 'Pessoa Exemplo',
+              bilhete: '123456',
+              assentos: ['17A']
+            })
+          ]
+        })
+      })
+    )
+  );
+  await unmount(app);
+});
+
 it('abre para edição a passagem indicada pelo comprovante', async () => {
   const id = '00000000-0000-4000-8000-000000000001';
   api.url = `https://example.test/operacao/passagens?editar=${id}`;
@@ -126,6 +214,7 @@ it('abre para edição a passagem indicada pelo comprovante', async () => {
     expect(target.querySelector<HTMLInputElement>('#passagem-localizador')?.value).toBe('ABC123')
   );
   expect(target.textContent).toContain('Editar passagem');
+  expect(target.querySelector<HTMLDetailsElement>('.importacao-editavel')?.open).toBe(false);
   api.url = 'https://example.test/operacao/passagens';
   await unmount(app);
 });

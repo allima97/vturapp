@@ -319,16 +319,24 @@
   {#if editando}
     <Card title={id ? 'Editar passagem' : 'Nova passagem'} color="operacao">
       <div class="space-y-6">
-        <FieldTextarea
-          id="texto-reserva"
-          label="Texto da reserva"
-          bind:value={texto}
-          rows={6}
-          helper="Cole o texto copiado da reserva. O reconhecimento é inicial e pode variar conforme o sistema; revise todos os dados."
-        />
-        <Button type="button" variant="secondary" on:click={analisar} disabled={saving}
-          >Analisar texto</Button
-        >
+        <details class="importacao-editavel rounded-lg border border-slate-200 p-4">
+          <summary class="flex cursor-pointer items-center justify-between gap-2 font-medium">
+            <span>Importar texto da reserva</span>
+            <span class="trecho-toggle" aria-hidden="true"></span>
+          </summary>
+          <div class="mt-3 space-y-3">
+            <FieldTextarea
+              id="texto-reserva"
+              label="Texto da reserva"
+              bind:value={texto}
+              rows={6}
+              helper="Cole o texto copiado da reserva. O reconhecimento é inicial e pode variar conforme o sistema; revise todos os dados."
+            />
+            <Button type="button" variant="secondary" on:click={analisar} disabled={saving}
+              >Analisar texto</Button
+            >
+          </div>
+        </details>
         {#if avisos.length}
           <div
             role="status"
@@ -490,58 +498,51 @@
             >
           </div>
 
-          <style>
-            .trecho-editavel summary {
-              list-style: none;
-            }
-            .trecho-editavel summary::-webkit-details-marker {
-              display: none;
-            }
-            .trecho-toggle::before {
-              content: '+';
-              font-size: 1.25rem;
-            }
-            .trecho-editavel[open] .trecho-toggle::before {
-              content: '−';
-            }
-          </style>
           {#each form.passageiros as passageiro, i}
-            <div class="space-y-3 rounded-lg border border-slate-200 p-4">
-              <div class="flex items-center justify-between gap-2">
-                <h4 class="font-medium">Passageiro {i + 1}</h4>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  on:click={() => (form.passageiros = form.passageiros.filter((_, n) => n !== i))}
-                  >Remover passageiro</Button
+            <details class="passageiro-editavel rounded-lg border border-slate-200 p-4">
+              <summary class="flex cursor-pointer items-center justify-between gap-2 font-medium">
+                <span
+                  >Passageiro {i + 1}{#if passageiro.nome}
+                    — {passageiro.nome}{/if}</span
                 >
-              </div>
-              <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <FieldInput
-                  id={`passageiro-${i}`}
-                  label="Nome"
-                  bind:value={passageiro.nome}
-                  required
-                />
-                <FieldInput
-                  id={`bilhete-${i}`}
-                  label="Número do bilhete"
-                  bind:value={passageiro.bilhete}
-                />
-                <FieldInput
-                  id={`status-bilhete-${i}`}
-                  label="Status do bilhete"
-                  bind:value={passageiro.status}
-                />
-                {#each form.trechos as trecho, j}
+                <span class="trecho-toggle" aria-hidden="true"></span>
+              </summary>
+              <div class="mt-3 space-y-3">
+                <div class="flex justify-end">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    on:click={() => (form.passageiros = form.passageiros.filter((_, n) => n !== i))}
+                    >Remover passageiro</Button
+                  >
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   <FieldInput
-                    id={`assento-${i}-${j}`}
-                    label={`Assento — trecho ${j + 1}${trecho.voo ? ` (${trecho.voo})` : ''}`}
-                    bind:value={passageiro.assentos[j]}
+                    id={`passageiro-${i}`}
+                    label="Nome"
+                    bind:value={passageiro.nome}
+                    required
                   />
-                {/each}
+                  <FieldInput
+                    id={`bilhete-${i}`}
+                    label="Número do bilhete"
+                    bind:value={passageiro.bilhete}
+                  />
+                  <FieldInput
+                    id={`status-bilhete-${i}`}
+                    label="Status do bilhete"
+                    bind:value={passageiro.status}
+                  />
+                  {#each form.trechos as trecho, j}
+                    <FieldInput
+                      id={`assento-${i}-${j}`}
+                      label={`Assento — trecho ${j + 1}${trecho.voo ? ` (${trecho.voo})` : ''}`}
+                      bind:value={passageiro.assentos[j]}
+                    />
+                  {/each}
+                </div>
               </div>
-            </div>
+            </details>
           {/each}
         </section>
         <div class="flex flex-wrap justify-end gap-3">
@@ -556,6 +557,28 @@
               rel="noopener noreferrer">Gerar comprovante</Button
             >{/if}
         </div>
+
+        <style>
+          .trecho-editavel summary,
+          .passageiro-editavel summary,
+          .importacao-editavel summary {
+            list-style: none;
+          }
+          .trecho-editavel summary::-webkit-details-marker,
+          .passageiro-editavel summary::-webkit-details-marker,
+          .importacao-editavel summary::-webkit-details-marker {
+            display: none;
+          }
+          .trecho-toggle::before {
+            content: '+';
+            font-size: 1.25rem;
+          }
+          .trecho-editavel[open] .trecho-toggle::before,
+          .passageiro-editavel[open] .trecho-toggle::before,
+          .importacao-editavel[open] .trecho-toggle::before {
+            content: '−';
+          }
+        </style>
       </div>
     </Card>
   {/if}
