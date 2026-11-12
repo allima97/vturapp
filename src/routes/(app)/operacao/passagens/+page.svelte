@@ -69,6 +69,7 @@
   let revisaoArquivoPendente = false;
   let revisaoConfirmada = false;
   let editando = false;
+  let modoEdicao = false;
   let montado = false;
   let pedidoAbertura = 0;
   let loading = true;
@@ -114,6 +115,7 @@
   function sincronizarPagina(url: URL) {
     const pedido = ++pedidoAbertura;
     editando = false;
+    modoEdicao = false;
     id = '';
     form = vazio();
     texto = '';
@@ -171,6 +173,7 @@
     erroArquivo = '';
     progressoArquivo = '';
     editando = true;
+    modoEdicao = true;
   }
   function iniciarNovaPassagem() {
     if ($page.url.searchParams.get('nova') === '1' && !$page.url.searchParams.has('editar')) {
@@ -302,12 +305,14 @@
       avisos = [];
       texto = '';
       editando = true;
+      modoEdicao = $page.url.searchParams.get('origem') === 'comprovante';
     } catch (err) {
       if (pedido === pedidoAbertura)
         erroAbertura = toUserMessage(err, 'Não foi possível abrir a passagem.');
     }
   }
   async function salvar() {
+    if (!modoEdicao || saving) return;
     if (revisaoArquivoPendente && !revisaoConfirmada) {
       toast.error('Confirme a revisão dos dados importados antes de salvar.');
       return;
@@ -319,14 +324,25 @@
       return;
     }
     saving = true;
+    const pedido = pedidoAbertura;
+    const novaPassagem = !id;
     try {
       const result = await apiFetch<{ id: string }>('/api/v1/passagens', {
         method: 'POST',
         body: { ...form, id },
         redirectOnForbidden: false
       });
-      id = result.id;
       toast.success('Passagem salva.');
+      if (pedido !== pedidoAbertura) return;
+      id = result.id;
+      modoEdicao = false;
+      avisos = [];
+      revisaoArquivoPendente = false;
+      if (novaPassagem) {
+        await goto(`/operacao/passagens?editar=${encodeURIComponent(result.id)}`, {
+          replaceState: true
+        });
+      }
       await carregar();
     } catch (err) {
       toast.error(toUserMessage(err, 'Não foi possível salvar a passagem.'));
@@ -435,7 +451,10 @@
       <Button variant="secondary" href="/operacao/passagens">Voltar</Button>
     </Card>
   {:else}
-    <Card title={id ? 'Editar passagem' : 'Nova passagem'} color="operacao">
+    <Card
+      title={id ? (modoEdicao ? 'Editar passagem' : 'Dados da passagem') : 'Nova passagem'}
+      color="operacao"
+    >
       <svelte:fragment slot="actions">
         <Button
           variant="secondary"
@@ -446,56 +465,58 @@
         >
       </svelte:fragment>
       <div class="space-y-6">
-        <details class="importacao-editavel rounded-lg border border-slate-200 p-4">
-          <summary class="flex cursor-pointer items-center justify-between gap-2 font-medium">
-            <span>Importar reserva por texto, PDF ou imagem</span>
-            <span class="trecho-toggle" aria-hidden="true"></span>
-          </summary>
-          <div class="mt-3 space-y-3">
-            <div class="space-y-2">
-              <label for="arquivo-reserva" class="block text-sm font-medium text-slate-700">
-                PDF ou imagem da reserva
-              </label>
-              <input
-                id="arquivo-reserva"
-                type="file"
-                accept="application/pdf,image/png,image/jpeg,image/webp"
-                disabled={processandoArquivo}
-                on:change={(event) => {
-                  arquivo = event.currentTarget.files?.[0] ?? null;
-                  erroArquivo = '';
-                  progressoArquivo = '';
-                }}
+        {#if !id}
+          <details class="importacao-editavel rounded-lg border border-slate-200 p-4">
+            <summary class="flex cursor-pointer items-center justify-between gap-2 font-medium">
+              <span>Importar reserva por texto, PDF ou imagem</span>
+              <span class="trecho-toggle" aria-hidden="true"></span>
+            </summary>
+            <div class="mt-3 space-y-3">
+              <div class="space-y-2">
+                <label for="arquivo-reserva" class="block text-sm font-medium text-slate-700">
+                  PDF ou imagem da reserva
+                </label>
+                <input
+                  id="arquivo-reserva"
+                  type="file"
+                  accept="application/pdf,image/png,image/jpeg,image/webp"
+                  disabled={processandoArquivo}
+                  on:change={(event) => {
+                    arquivo = event.currentTarget.files?.[0] ?? null;
+                    erroArquivo = '';
+                    progressoArquivo = '';
+                  }}
+                />
+                <p class="text-sm text-slate-600">
+                  Até 10 MB e 10 páginas. O arquivo é processado no navegador.
+                </p>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  on:click={lerArquivo}
+                  disabled={saving || processandoArquivo}>Extrair texto do arquivo</Button
+                >
+                {#if progressoArquivo}<p role="status" class="text-sm text-slate-600">
+                    {progressoArquivo}
+                  </p>{/if}
+                {#if erroArquivo}<p role="alert" class="text-sm text-red-700">{erroArquivo}</p>{/if}
+              </div>
+              <FieldTextarea
+                id="texto-reserva"
+                label="Texto da reserva"
+                bind:value={texto}
+                rows={6}
+                helper="Cole o texto copiado da reserva. O reconhecimento é inicial e pode variar conforme o sistema; revise todos os dados."
               />
-              <p class="text-sm text-slate-600">
-                Até 10 MB e 10 páginas. O arquivo é processado no navegador.
-              </p>
               <Button
                 type="button"
                 variant="secondary"
-                on:click={lerArquivo}
-                disabled={saving || processandoArquivo}>Extrair texto do arquivo</Button
+                on:click={analisar}
+                disabled={saving || processandoArquivo}>Analisar texto</Button
               >
-              {#if progressoArquivo}<p role="status" class="text-sm text-slate-600">
-                  {progressoArquivo}
-                </p>{/if}
-              {#if erroArquivo}<p role="alert" class="text-sm text-red-700">{erroArquivo}</p>{/if}
             </div>
-            <FieldTextarea
-              id="texto-reserva"
-              label="Texto da reserva"
-              bind:value={texto}
-              rows={6}
-              helper="Cole o texto copiado da reserva. O reconhecimento é inicial e pode variar conforme o sistema; revise todos os dados."
-            />
-            <Button
-              type="button"
-              variant="secondary"
-              on:click={analisar}
-              disabled={saving || processandoArquivo}>Analisar texto</Button
-            >
-          </div>
-        </details>
+          </details>
+        {/if}
         {#if avisos.length}
           <div
             role="status"
@@ -515,18 +536,20 @@
             >
           </label>
         {/if}
-        <FieldInput
-          id="passagem-localizador"
-          label="Localizador (PNR)"
-          bind:value={form.localizador}
-          required
-        />
-        <FieldInput
-          id="passagem-emissao"
-          label="Data de emissão"
-          type="date"
-          bind:value={form.emissao}
-        />
+        <fieldset disabled={!modoEdicao || saving} class="grid grid-cols-2 gap-3">
+          <FieldInput
+            id="passagem-localizador"
+            label="Localizador (PNR)"
+            bind:value={form.localizador}
+            required
+          />
+          <FieldInput
+            id="passagem-emissao"
+            label="Data de emissão"
+            type="date"
+            bind:value={form.emissao}
+          />
+        </fieldset>
         <section class="space-y-3">
           {#if cidadesIndisponiveis}
             <p role="status" class="text-sm text-amber-700">
@@ -536,9 +559,12 @@
           {/if}
           <div class="flex flex-wrap items-center justify-between gap-3">
             <h3 class="font-semibold text-slate-900">Trechos de voo</h3>
-            <Button variant="secondary" size="sm" on:click={adicionarTrecho}
-              >Adicionar trecho</Button
-            >
+            {#if modoEdicao}<Button
+                variant="secondary"
+                size="sm"
+                disabled={saving}
+                on:click={adicionarTrecho}>Adicionar trecho</Button
+              >{/if}
           </div>
           {#each form.trechos as trecho, i (trecho)}
             <details class="trecho-editavel rounded-lg border border-slate-200 p-4">
@@ -550,26 +576,32 @@
                 <span class="trecho-toggle" aria-hidden="true"></span>
               </summary>
               <div class="mt-3 space-y-3">
-                <div class="flex flex-wrap justify-end gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={i === 0}
-                    ariaLabel={`Mover trecho ${i + 1} para cima`}
-                    on:click={() => moverTrecho(i, -1)}>↑ Mover para cima</Button
-                  >
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={i === form.trechos.length - 1}
-                    ariaLabel={`Mover trecho ${i + 1} para baixo`}
-                    on:click={() => moverTrecho(i, 1)}>↓ Mover para baixo</Button
-                  >
-                  <Button variant="secondary" size="sm" on:click={() => removerTrecho(i)}
-                    >Remover trecho</Button
-                  >
-                </div>
-                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {#if modoEdicao}<div class="flex flex-wrap justify-end gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={saving || i === 0}
+                      ariaLabel={`Mover trecho ${i + 1} para cima`}
+                      on:click={() => moverTrecho(i, -1)}>↑ Mover para cima</Button
+                    >
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={saving || i === form.trechos.length - 1}
+                      ariaLabel={`Mover trecho ${i + 1} para baixo`}
+                      on:click={() => moverTrecho(i, 1)}>↓ Mover para baixo</Button
+                    >
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={saving}
+                      on:click={() => removerTrecho(i)}>Remover trecho</Button
+                    >
+                  </div>{/if}
+                <fieldset
+                  disabled={!modoEdicao || saving}
+                  class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+                >
                   <FieldInput
                     id={`companhia-${i}`}
                     label="Companhia aérea"
@@ -647,8 +679,8 @@
                     label="Status do voo"
                     bind:value={trecho.status}
                   />
-                </div>
-                {#if id}
+                </fieldset>
+                {#if id && modoEdicao}
                   <p class="text-right text-sm text-slate-500">
                     O comprovante usa a última versão salva.
                   </p>
@@ -660,12 +692,13 @@
         <section class="space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <h3 class="font-semibold text-slate-900">Passageiros e bilhetes</h3>
-            <Button
-              variant="secondary"
-              size="sm"
-              on:click={() => (form.passageiros = [...form.passageiros, passageiroVazio()])}
-              >Adicionar passageiro</Button
-            >
+            {#if modoEdicao}<Button
+                variant="secondary"
+                size="sm"
+                disabled={saving}
+                on:click={() => (form.passageiros = [...form.passageiros, passageiroVazio()])}
+                >Adicionar passageiro</Button
+              >{/if}
           </div>
 
           {#each form.passageiros as passageiro, i (passageiro)}
@@ -678,29 +711,34 @@
                 <span class="trecho-toggle" aria-hidden="true"></span>
               </summary>
               <div class="mt-3 space-y-3">
-                <div class="flex flex-wrap justify-end gap-2">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={i === 0}
-                    ariaLabel={`Mover passageiro ${i + 1} para cima`}
-                    on:click={() => moverPassageiro(i, -1)}>↑ Mover para cima</Button
-                  >
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={i === form.passageiros.length - 1}
-                    ariaLabel={`Mover passageiro ${i + 1} para baixo`}
-                    on:click={() => moverPassageiro(i, 1)}>↓ Mover para baixo</Button
-                  >
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    on:click={() => (form.passageiros = form.passageiros.filter((_, n) => n !== i))}
-                    >Remover passageiro</Button
-                  >
-                </div>
-                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {#if modoEdicao}<div class="flex flex-wrap justify-end gap-2">
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={saving || i === 0}
+                      ariaLabel={`Mover passageiro ${i + 1} para cima`}
+                      on:click={() => moverPassageiro(i, -1)}>↑ Mover para cima</Button
+                    >
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={saving || i === form.passageiros.length - 1}
+                      ariaLabel={`Mover passageiro ${i + 1} para baixo`}
+                      on:click={() => moverPassageiro(i, 1)}>↓ Mover para baixo</Button
+                    >
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={saving}
+                      on:click={() =>
+                        (form.passageiros = form.passageiros.filter((_, n) => n !== i))}
+                      >Remover passageiro</Button
+                    >
+                  </div>{/if}
+                <fieldset
+                  disabled={!modoEdicao || saving}
+                  class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+                >
                   <FieldInput
                     id={`passageiro-${i}`}
                     label="Nome"
@@ -736,7 +774,7 @@
                       bind:value={passageiro.assentos[j]}
                     />
                   {/each}
-                </div>
+                </fieldset>
               </div>
             </details>
           {/each}
@@ -747,9 +785,13 @@
             href="/operacao/passagens"
             disabled={saving || processandoArquivo}>Fechar</Button
           >
-          <Button color="operacao" on:click={salvar} loading={saving} disabled={processandoArquivo}
-            >Salvar passagem</Button
-          >
+          {#if modoEdicao}<Button
+              color="operacao"
+              on:click={salvar}
+              loading={saving}
+              disabled={processandoArquivo}>Salvar passagem</Button
+            >{:else}<Button color="operacao" on:click={() => (modoEdicao = true)}>Editar</Button
+            >{/if}
           {#if id}<Button
               variant="secondary"
               href={`/operacao/passagens/comprovante?id=${encodeURIComponent(id)}&origem=edicao`}

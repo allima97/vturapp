@@ -200,9 +200,15 @@ it('informa falha de leitura sem modificar os dados da passagem', async () => {
 });
 
 it('permite importar, revisar, salvar e abrir comprovante', async () => {
-  api.fetch.mockImplementation(async (_path, options) =>
-    options.method === 'POST' ? { id: '00000000-0000-4000-8000-000000000001' } : { items: [] }
-  );
+  const id = '00000000-0000-4000-8000-000000000001';
+  let saved: Record<string, unknown> = {};
+  api.fetch.mockImplementation(async (_path, options) => {
+    if (options.method === 'POST') {
+      saved = options.body;
+      return { id };
+    }
+    return options.query?.id ? { item: { ...saved, id } } : { items: [] };
+  });
   const target = document.createElement('div');
   document.body.appendChild(target);
   const app = mount(Passagens, { target });
@@ -288,6 +294,10 @@ it('permite importar, revisar, salvar e abrir comprovante', async () => {
     )
   );
   await vi.waitFor(() => expect(target.textContent).toContain('Gerar comprovante'));
+  expect(target.querySelector('#texto-reserva')).toBeNull();
+  expect(
+    target.querySelector<HTMLInputElement>('#passagem-localizador')?.matches(':disabled')
+  ).toBe(true);
   const comprovante = [...target.querySelectorAll('a')].find(
     (link) => link.textContent?.trim() === 'Gerar comprovante'
   )!;
@@ -371,6 +381,112 @@ it('retorna ao comprovante ao editar a partir dele', async () => {
   expect(target.textContent).not.toContain('Passagens salvas');
   const voltar = [...target.querySelectorAll('a')].find((a) => a.textContent?.trim() === 'Voltar');
   expect(voltar?.getAttribute('href')).toBe(`/operacao/passagens/comprovante?id=${id}`);
+  await unmount(app);
+});
+
+it('abre passagem salva bloqueada e desbloqueia somente até salvar', async () => {
+  const id = '00000000-0000-4000-8000-000000000001';
+  api.navigate(`/operacao/passagens?editar=${id}`);
+  api.fetch.mockImplementation(async (_path, options) => {
+    if (options.method === 'POST') return { id };
+    if (options.query?.id)
+      return {
+        item: {
+          id,
+          localizador: 'ABC123',
+          emissao: '2027-01-15',
+          trechos: [
+            {
+              companhia: 'Exemplo',
+              voo: 'XY 123',
+              origem: 'AAA',
+              destino: 'BBB',
+              saida: '2027-01-15T10:00',
+              chegada: '2027-01-15T12:00',
+              status: '',
+              duracao: '',
+              classe: '',
+              tarifa: ''
+            }
+          ],
+          passageiros: [
+            { nome: 'Maria Exemplo', tipo: 'ADT', bilhete: '123', status: '', assentos: ['12A'] }
+          ]
+        }
+      };
+    return { items: [] };
+  });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() => expect(target.querySelector('#passageiro-0')).not.toBeNull());
+  expect(target.querySelector('.importacao-editavel')).toBeNull();
+  const localizador = target.querySelector<HTMLInputElement>('#passagem-localizador')!;
+  const emissao = target.querySelector<HTMLInputElement>('#passagem-emissao')!;
+  expect(localizador.closest('fieldset')).toBe(emissao.closest('fieldset'));
+  expect(localizador.closest('fieldset')?.className).toContain('grid-cols-2');
+  for (const selector of [
+    '#passagem-localizador',
+    '#passagem-emissao',
+    '#companhia-0',
+    '#classe-0',
+    '#passageiro-0',
+    '#tipo-passageiro-0',
+    '#assento-0-0'
+  ]) {
+    expect(target.querySelector(selector)?.matches(':disabled')).toBe(true);
+  }
+  expect(target.textContent).not.toContain('Adicionar passageiro');
+  expect(target.textContent).not.toContain('Remover trecho');
+  click(target, 'Editar');
+  expect(target.querySelector('.importacao-editavel')).toBeNull();
+  expect(localizador.matches(':disabled')).toBe(false);
+  expect(target.querySelector('#assento-0-0')?.matches(':disabled')).toBe(false);
+  localizador.value = 'DEF456';
+  localizador.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+  click(target, 'Salvar passagem');
+  await vi.waitFor(() => expect(target.textContent).toContain('Dados da passagem'));
+  expect(
+    target.querySelector<HTMLInputElement>('#passagem-localizador')?.matches(':disabled')
+  ).toBe(true);
+  expect(target.querySelector<HTMLInputElement>('#passagem-localizador')?.value).toBe('DEF456');
+  expect(api.fetch).toHaveBeenCalledWith(
+    '/api/v1/passagens',
+    expect.objectContaining({
+      method: 'POST',
+      body: expect.objectContaining({
+        id,
+        localizador: 'DEF456',
+        passageiros: [expect.objectContaining({ assentos: ['12A'] })]
+      })
+    })
+  );
+  expect(target.textContent).not.toContain('Salvar passagem');
+  await unmount(app);
+});
+
+it('mantém a edição aberta quando o salvamento falha', async () => {
+  const id = '00000000-0000-4000-8000-000000000001';
+  api.navigate(`/operacao/passagens?editar=${id}`);
+  api.fetch.mockImplementation(async (_path, options) => {
+    if (options.method === 'POST') throw new Error('Falha ao salvar');
+    if (options.query?.id)
+      return { item: { id, localizador: 'ABC123', emissao: '', trechos: [], passageiros: [] } };
+    return { items: [] };
+  });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() => expect(target.querySelector('#passagem-localizador')).not.toBeNull());
+  click(target, 'Editar');
+  click(target, 'Salvar passagem');
+  await vi.waitFor(() =>
+    expect(
+      target.querySelector<HTMLInputElement>('#passagem-localizador')?.matches(':disabled')
+    ).toBe(false)
+  );
+  expect(target.textContent).toContain('Salvar passagem');
   await unmount(app);
 });
 
@@ -570,6 +686,14 @@ it('reordena passageiros preservando campos, assentos e estado aberto', async ()
   expect(target.querySelector<HTMLInputElement>('#status-bilhete-1')?.value).toBe('Emitido');
   expect(target.querySelector<HTMLInputElement>('#assento-0-1')?.value).toBe('16D');
   expect(target.querySelector<HTMLInputElement>('#assento-1-0')?.value).toBe('12A');
+  ordenados[1]
+    .querySelector<HTMLButtonElement>('[aria-label="Mover passageiro 2 para cima"]')!
+    .click();
+  flushSync();
+  expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe('Maria Exemplo');
+  expect(target.querySelector<HTMLInputElement>('#assento-0-1')?.value).toBe('14B');
+  target.querySelector<HTMLButtonElement>('[aria-label="Mover passageiro 1 para baixo"]')!.click();
+  flushSync();
   click(target, 'Salvar passagem');
   await vi.waitFor(() =>
     expect(api.fetch).toHaveBeenCalledWith(
@@ -595,18 +719,12 @@ it('reordena passageiros preservando campos, assentos e estado aberto', async ()
       })
     )
   );
-  ordenados[1]
-    .querySelector<HTMLButtonElement>('[aria-label="Mover passageiro 2 para cima"]')!
-    .click();
-  flushSync();
-  expect(target.querySelector<HTMLInputElement>('#passageiro-0')?.value).toBe('Maria Exemplo');
-  expect(target.querySelector<HTMLInputElement>('#assento-0-1')?.value).toBe('14B');
   await unmount(app);
 });
 
 it('abre para edição a passagem indicada pelo comprovante', async () => {
   const id = '00000000-0000-4000-8000-000000000001';
-  api.url = `https://example.test/operacao/passagens?editar=${id}`;
+  api.url = `https://example.test/operacao/passagens?editar=${id}&origem=comprovante`;
   api.fetch.mockImplementation(async (_path, options) =>
     options.query?.id
       ? { item: { id, localizador: 'ABC123', emissao: '', trechos: [], passageiros: [] } }
@@ -619,7 +737,10 @@ it('abre para edição a passagem indicada pelo comprovante', async () => {
     expect(target.querySelector<HTMLInputElement>('#passagem-localizador')?.value).toBe('ABC123')
   );
   expect(target.textContent).toContain('Editar passagem');
-  expect(target.querySelector<HTMLDetailsElement>('.importacao-editavel')?.open).toBe(false);
+  expect(target.querySelector('.importacao-editavel')).toBeNull();
+  expect(
+    target.querySelector<HTMLInputElement>('#passagem-localizador')?.matches(':disabled')
+  ).toBe(false);
   api.url = 'https://example.test/operacao/passagens';
   await unmount(app);
 });
