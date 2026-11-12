@@ -1,7 +1,7 @@
 import { json, type RequestEvent } from '@sveltejs/kit';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
-import { isTipoPassageiro } from '$lib/passagens/importacao';
+import { isTipoPassageiro, type PassagemImportada } from '$lib/passagens/importacao';
 import { nomePassageiroMaiusculo } from '$lib/passagens/nome';
 import {
   ensureModuloAccess,
@@ -178,14 +178,26 @@ export async function handlePassagensGet(event: RequestEvent) {
       return invalid('Página inválida.');
     const rows = await ctx.db
       .prepare(
-        `SELECT id, localizador, updated_at FROM passagens WHERE ${ctx.scopeSql} ORDER BY updated_at DESC, id LIMIT 51 OFFSET ?`
+        `SELECT id, localizador, updated_at, dados FROM passagens WHERE ${ctx.scopeSql} ORDER BY updated_at DESC, id LIMIT 51 OFFSET ?`
       )
       .bind(ctx.scopeId, (pagina - 1) * 50)
-      .all();
-    return json(
-      { items: rows.results.slice(0, 50), hasMore: rows.results.length > 50 },
-      { headers: NO_STORE_HEADERS }
-    );
+      .all<{ id: string; localizador: string; updated_at: string; dados: string }>();
+    const items = rows.results.slice(0, 50).map(({ dados, ...item }) => {
+      const passagem: PassagemImportada = JSON.parse(dados);
+      return {
+        ...item,
+        primeiroPassageiro: passagem.passageiros[0]?.nome || '',
+        quantidadePassageiros: passagem.passageiros.length,
+        dataVoo: passagem.trechos[0]?.saida || '',
+        rota: passagem.trechos.map(({ origem, destino, cidadeOrigem, cidadeDestino }) => ({
+          origem,
+          destino,
+          cidadeOrigem,
+          cidadeDestino
+        }))
+      };
+    });
+    return json({ items, hasMore: rows.results.length > 50 }, { headers: NO_STORE_HEADERS });
   } catch (err) {
     logServerError('[passagens] falha ao consultar', err);
     return toErrorResponse(err, 'Erro ao carregar passagens.');

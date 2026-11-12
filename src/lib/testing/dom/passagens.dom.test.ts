@@ -12,6 +12,9 @@ const api = vi.hoisted(() => ({
   }
 }));
 vi.mock('$lib/passagens/arquivo', () => ({ extrairTextoArquivo: api.extrair }));
+vi.mock('$lib/airportCodeCityLookup', () => ({
+  loadAirportCodeCityLookup: async () => ({ MCO: 'Orlando', GRU: 'São Paulo' })
+}));
 vi.mock('$app/stores', () => ({
   page: {
     subscribe: (run: (value: { url: URL }) => void) => {
@@ -329,6 +332,67 @@ it('abre o comprovante de passagem salva na mesma aba', async () => {
     '/operacao/passagens/comprovante?id=00000000-0000-4000-8000-000000000001'
   );
   expect(comprovante.getAttribute('target')).toBeNull();
+  await unmount(app);
+});
+
+it('mostra passageiro, quantidade, data e rota na lista sem inventar conexões', async () => {
+  api.fetch.mockResolvedValue({
+    items: [
+      {
+        id: '00000000-0000-4000-8000-000000000001',
+        localizador: 'ABC123',
+        primeiroPassageiro: 'José Exemplo',
+        quantidadePassageiros: 4,
+        dataVoo: '2027-01-27T20:04',
+        rota: [
+          { origem: 'MCO', destino: 'MIA', cidadeOrigem: 'Orlando', cidadeDestino: 'Miami' },
+          { origem: 'MIA', destino: 'GRU', cidadeDestino: 'São Paulo' }
+        ]
+      },
+      {
+        id: '00000000-0000-4000-8000-000000000002',
+        localizador: 'DEF456',
+        primeiroPassageiro: 'Ana Exemplo',
+        quantidadePassageiros: 1,
+        dataVoo: '2027-01-28T10:00',
+        rota: [
+          { origem: 'AAA', destino: 'BBB' },
+          { origem: 'CCC', destino: 'DDD' }
+        ]
+      },
+      {
+        id: '00000000-0000-4000-8000-000000000003',
+        localizador: 'GHI789',
+        primeiroPassageiro: 'Maria Exemplo',
+        quantidadePassageiros: 2,
+        dataVoo: '2027-01-30T10:00',
+        rota: [
+          { origem: 'MCO', destino: 'GRU' },
+          { origem: 'GRU', destino: 'MCO' }
+        ]
+      },
+      {
+        id: '00000000-0000-4000-8000-000000000004',
+        localizador: 'JKL012',
+        primeiroPassageiro: '',
+        quantidadePassageiros: 0,
+        dataVoo: '2027-02-30T10:00',
+        rota: []
+      }
+    ]
+  });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  await vi.waitFor(() => expect(target.textContent).toContain('Localizador: ABC123'));
+  expect(target.textContent).toContain('JOSÉ EXEMPLO x 04 → 27/01/2027 → Orlando / São Paulo');
+  expect(target.textContent).toContain('ANA EXEMPLO x 01 → 28/01/2027 → AAA / BBB e CCC / DDD');
+  await vi.waitFor(() =>
+    expect(target.textContent).toContain('MARIA EXEMPLO x 02 → 30/01/2027 → Orlando / São Paulo')
+  );
+  expect(target.textContent).toContain(
+    'Passageiro não informado x 00 → Data não informada → Rota não informada'
+  );
   await unmount(app);
 });
 

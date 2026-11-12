@@ -14,6 +14,7 @@
   import { apiFetch, ApiError } from '$lib/services/api';
   import { toUserMessage } from '$lib/utils/errors';
   import { nomePassageiroMaiusculo } from '$lib/passagens/nome';
+  import { resumoRotas, type TrechoRota } from '$lib/passagens/rotas';
   import {
     loadAirportCodeCityLookup,
     type AirportCodeCityLookup
@@ -25,7 +26,15 @@
     type PassageiroPassagem
   } from '$lib/passagens/importacao';
 
-  type ListaItem = { id: string; localizador: string; updated_at: string };
+  type ListaItem = {
+    id: string;
+    localizador: string;
+    updated_at: string;
+    primeiroPassageiro: string;
+    quantidadePassageiros: number;
+    dataVoo: string;
+    rota: TrechoRota[];
+  };
   type PassagemSalva = PassagemImportada & { id: string };
   const vazio = (): PassagemImportada => ({
     localizador: '',
@@ -135,6 +144,31 @@
 
   function cidadeSugerida(codigo: string) {
     return cidades[codigo.trim().toUpperCase()] || '';
+  }
+
+  function resumoLista(item: ListaItem) {
+    const nome = item.primeiroPassageiro
+      ? nomePassageiroMaiusculo(item.primeiroPassageiro)
+      : 'Passageiro não informado';
+    const quantidade = String(item.quantidadePassageiros ?? 0).padStart(2, '0');
+    const data = /^(\d{4})-(\d{2})-(\d{2})(?:T|$)/.exec(item.dataVoo || '');
+    const civil = data
+      ? new Date(Date.UTC(Number(data[1]), Number(data[2]) - 1, Number(data[3])))
+      : null;
+    const dataFormatada =
+      data &&
+      civil &&
+      civil.getUTCFullYear() === Number(data[1]) &&
+      civil.getUTCMonth() === Number(data[2]) - 1 &&
+      civil.getUTCDate() === Number(data[3])
+        ? `${data[3]}/${data[2]}/${data[1]}`
+        : 'Data não informada';
+    const rota = resumoRotas(
+      item.rota || [],
+      (codigo, informada) =>
+        informada?.trim() || cidadeSugerida(codigo) || codigo || 'Não informado'
+    );
+    return `${nome} x ${quantidade} → ${dataFormatada} → ${rota || 'Rota não informada'}`;
   }
 
   function formatarAeroporto(event: Event, trecho: TrechoPassagem, campo: 'origem' | 'destino') {
@@ -415,7 +449,10 @@
         <ul class="divide-y divide-slate-200">
           {#each items as item (item.id)}
             <li class="flex flex-wrap items-center justify-between gap-3 py-3">
-              <span class="font-medium text-slate-900">Localizador: {item.localizador}</span>
+              <div class="min-w-0">
+                <span class="font-medium text-slate-900">Localizador: {item.localizador}</span>
+                <span class="text-sm text-slate-700"> — {resumoLista(item)}</span>
+              </div>
               <div class="flex flex-wrap gap-2">
                 <Button
                   variant="secondary"
