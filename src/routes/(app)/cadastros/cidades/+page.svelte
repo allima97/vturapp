@@ -274,6 +274,7 @@
     ? 'Nenhum destino encontrado'
     : 'Digite pelo menos 2 letras para buscar'}
   onRowClick={(row) => abrirEdicao(row)}
+  rowActionsAvailable={(row) => row.origem === 'personalizado'}
 >
   <svelte:fragment slot="row-actions" let:row>
     {#if row.origem === 'personalizado'}

@@ -525,6 +525,7 @@
         />
 
         <FieldInput
+          money
           id="produto-valor-neto"
           label="Valor líquido"
           type="number"
@@ -541,6 +542,7 @@
           class_name="w-full"
         />
         <FieldInput
+          money
           id="produto-valor-venda"
           label="Valor de venda"
           type="number"
@@ -570,6 +572,7 @@
           class_name="w-full"
         />
         <FieldInput
+          money
           id="produto-valor-reais"
           label="Valor em reais"
           type="number"
@@ -697,17 +700,13 @@
                     updateTarifa(index, 'validade_ate', (e.target as HTMLInputElement).value)}
                 />
                 <FieldInput
+                  money
                   type="number"
                   step="0.01"
                   value={tarifa.valor_neto}
                   placeholder="Valor líquido"
                   class_name="w-full"
-                  on:input={(e) =>
-                    updateTarifa(
-                      index,
-                      'valor_neto',
-                      Number((e.target as HTMLInputElement).value || 0)
-                    )}
+                  on:moneyInput={(e) => updateTarifa(index, 'valor_neto', Number(e.detail || 0))}
                 />
                 <FieldInput
                   type="number"
@@ -721,17 +720,13 @@
                   }}
                 />
                 <FieldInput
+                  money
                   type="number"
                   step="0.01"
                   value={tarifa.valor_venda}
                   placeholder="Valor de venda"
                   class_name="w-full"
-                  on:input={(e) =>
-                    updateTarifa(
-                      index,
-                      'valor_venda',
-                      Number((e.target as HTMLInputElement).value || 0)
-                    )}
+                  on:moneyInput={(e) => updateTarifa(index, 'valor_venda', Number(e.detail || 0))}
                 />
                 <FieldSelect
                   value={tarifa.moeda}
@@ -760,6 +755,7 @@
                     )}
                 />
                 <FieldInput
+                  money
                   type="number"
                   step="0.01"
                   value={tarifa.valor_em_reais}

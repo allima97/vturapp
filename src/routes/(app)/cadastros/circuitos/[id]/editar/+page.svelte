@@ -100,6 +100,7 @@
       </div>
 
       <FieldInput
+        money
         id="circuito-preco-base"
         label="Preço Base"
         type="number"

@@ -9,7 +9,7 @@
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import Dialog from '$lib/components/ui/Dialog.svelte';
-  import { FieldInput, FieldSelect, FieldTextarea, LoadingState } from '$lib/components/ui';
+  import { FieldInput, FieldSelect, FieldTextarea, LoadingState, Tabs } from '$lib/components/ui';
   import { toast } from '$lib/stores/ui';
   import { toUserMessage } from '$lib/utils/errors';
   import {
@@ -507,23 +507,37 @@
             </Button>
           </div>
 
-          <div class="mural-wa-mobile-tabs" role="tablist" aria-label="Seções do mural">
-            <Button
-              type="button"
-              variant="unstyled"
-              class_name={`mural-wa-tab ${mobileTab === 'chats' ? 'active' : ''}`}
-              on:click={() => (mobileTab = 'chats')}
-            >
-              Chats
-            </Button>
-            <Button
-              type="button"
-              variant="unstyled"
-              class_name={`mural-wa-tab ${mobileTab === 'contacts' ? 'active' : ''}`}
-              on:click={() => (mobileTab = 'contacts')}
-            >
-              Contatos
-            </Button>
+          <div class="px-4 pt-3 pb-1 md:hidden">
+            <Tabs
+              activeKey={mobileTab}
+              items={[
+                { key: 'chats', label: 'Chats' },
+                { key: 'contacts', label: 'Contatos' }
+              ]}
+              onSelect={(key) => {
+                if (key === 'chats' || key === 'contacts') mobileTab = key;
+              }}
+            />
+          </div>
+          <div class="hidden md:block">
+            <div class="mural-wa-mobile-tabs" role="tablist" aria-label="Seções do mural">
+              <Button
+                type="button"
+                variant="unstyled"
+                class_name={`mural-wa-tab ${mobileTab === 'chats' ? 'active' : ''}`}
+                on:click={() => (mobileTab = 'chats')}
+              >
+                Chats
+              </Button>
+              <Button
+                type="button"
+                variant="unstyled"
+                class_name={`mural-wa-tab ${mobileTab === 'contacts' ? 'active' : ''}`}
+                on:click={() => (mobileTab = 'contacts')}
+              >
+                Contatos
+              </Button>
+            </div>
           </div>
 
           <FieldInput

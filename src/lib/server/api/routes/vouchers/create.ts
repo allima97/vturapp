@@ -11,6 +11,7 @@ import {
 } from '$lib/server/v1';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
+import { isIndividualVoucherScope } from './scope';
 
 const MAX_VOUCHER_CREATE_BODY_BYTES = 512 * 1024;
 
@@ -39,12 +40,19 @@ export async function handleVouchersCreatePost(event: RequestEvent) {
       bodyResult.data && typeof bodyResult.data === 'object'
         ? (bodyResult.data as Record<string, unknown>)
         : {};
+    const companyId = isIndividualVoucherScope(scope) ? null : scope.companyId;
+    if (!companyId && !isIndividualVoucherScope(scope)) {
+      return json(
+        { error: 'Selecione uma empresa para criar o voucher.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
+    }
 
     const { data, error } = await client
       .from('vouchers')
       .insert([
         {
-          company_id: scope.companyId,
+          company_id: companyId,
           created_by: user.id,
           provider: body.provider || 'generic',
           nome: body.nome || 'Voucher',

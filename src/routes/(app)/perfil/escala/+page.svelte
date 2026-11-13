@@ -260,6 +260,7 @@
           {#each usuarios as usuario}
             <tr class="hover:bg-slate-50/50">
               <td
+                data-label="Colaborador"
                 class="sticky left-0 z-10 border-r border-slate-100 bg-white px-4 py-2 font-medium text-slate-900"
               >
                 {usuario.nome_completo || usuario.email || 'Usuário'}
@@ -268,6 +269,7 @@
                 {@const registro = getDiaEquipe(usuario.id, date)}
                 {@const feriado = isFeriado(date)}
                 <td
+                  data-label={formatDate(date)}
                   class="px-0.5 py-1 text-center {dow === 0 || dow === 6 ? 'bg-slate-50/50' : ''}"
                 >
                   {#if registro?.tipo}
@@ -334,16 +336,16 @@
                 ? 'bg-red-50/30'
                 : ''}"
             >
-              <td class="px-4 py-2 text-slate-700">
+              <td data-label="Data" class="px-4 py-2 text-slate-700">
                 {formatDate(date)}
               </td>
-              <td class="px-4 py-2 text-xs text-slate-500">
+              <td data-label="Dia" class="px-4 py-2 text-xs text-slate-500">
                 {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'][dow]}
                 {#if feriado}
                   <span class="ml-1 text-red-500">({feriado.nome})</span>
                 {/if}
               </td>
-              <td class="px-4 py-2">
+              <td data-label="Tipo" class="px-4 py-2">
                 {#if registro?.tipo}
                   <span
                     class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold {TIPO_COLOR[
@@ -361,14 +363,16 @@
                   <span class="text-xs text-slate-300">—</span>
                 {/if}
               </td>
-              <td class="px-4 py-2 text-xs text-slate-600">
+              <td data-label="Horário" class="px-4 py-2 text-xs text-slate-600">
                 {#if registro?.hora_inicio && registro?.hora_fim}
                   {registro.hora_inicio.slice(0, 5)} – {registro.hora_fim.slice(0, 5)}
                 {:else}
                   —
                 {/if}
               </td>
-              <td class="px-4 py-2 text-xs text-slate-500">{registro?.observacao || '—'}</td>
+              <td data-label="Observação" class="px-4 py-2 text-xs text-slate-500"
+                >{registro?.observacao || '—'}</td
+              >
             </tr>
           {/each}
         </tbody>

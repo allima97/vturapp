@@ -9,17 +9,19 @@
     FieldInput,
     FieldSelect,
     FileInput,
+    LoadingState,
     PageHeader
   } from '$lib/components/ui';
   import { toast } from '$lib/stores/ui';
   import { permissoes } from '$lib/stores/permissoes';
-  import { apiDelete, apiFetch, apiGet, isCanceledApiError } from '$lib/services/api';
+  import { apiDelete, apiFetch, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
   import { ImagePlus, Pencil, RefreshCw, Save, Shield, Trash2, X } from '$lib/icons';
   import type {
     VoucherAssetRecord,
     VoucherAssetKind,
-    VoucherAssetProvider
+    VoucherAssetProvider,
+    VoucherLogoEsquerdo
   } from '$lib/vouchers/types';
   import { escapeHtml } from '$lib/utils/html';
   import { toUserMessage } from '$lib/utils/errors';
@@ -37,14 +39,15 @@
     { value: 'special_tours', label: 'Special Tours' },
     { value: 'europamundo', label: 'Europamundo' },
     { value: 'sato_tours', label: 'Sato Tours' },
+    { value: 'empresa', label: 'Minha empresa' },
     { value: 'generic', label: 'Genérico' }
   ];
 
   const assetKindOptions = [
+    { value: 'logo', label: 'Logo' },
     { value: 'image', label: 'Imagem' },
     { value: 'app_icon', label: 'Ícone de app' }
   ];
-  const contextGuard = createLoadGuard();
   const assetsGuard = createLoadGuard();
 
   function createDefaultForm(): AssetForm {
@@ -60,8 +63,12 @@
 
   let assets: VoucherAssetRecord[] = [];
   let loading = true;
+  let assetsReady = false;
   let saving = false;
   let companyId: string | null = null;
+  let individual = false;
+  let logoEsquerdo: VoucherLogoEsquerdo = 'vtur';
+  let savingSettings = false;
   let fileList: FileList | undefined = undefined;
   let form = createDefaultForm();
   let deleteTarget: VoucherAssetRecord | null = null;
@@ -72,9 +79,10 @@
     $permissoes.isSystemAdmin ||
     $permissoes.isMaster ||
     $permissoes.isGestor ||
-    permissoes.can('parametros', 'edit') ||
+    permissoes.can('parametros', 'create') ||
     permissoes.can('parametros', 'admin') ||
-    permissoes.can('operacao', 'edit');
+    permissoes.can('Vouchers', 'create') ||
+    permissoes.can('operacao', 'create');
   $: canDelete =
     !$permissoes.ready ||
     $permissoes.isSystemAdmin ||
@@ -82,8 +90,14 @@
     $permissoes.isGestor ||
     permissoes.can('parametros', 'delete') ||
     permissoes.can('parametros', 'admin') ||
+    permissoes.can('Vouchers', 'delete') ||
     permissoes.can('operacao', 'delete');
-  $: accessDenied = $permissoes.ready && !canEdit && !canDelete;
+  $: accessDenied =
+    $permissoes.ready &&
+    !canEdit &&
+    !canDelete &&
+    !permissoes.can('parametros', 'view') &&
+    !permissoes.can('Vouchers', 'view');
   $: selectedAsset = form.id ? assets.find((asset) => asset.id === form.id) || null : null;
 
   const columns = [
@@ -136,47 +150,25 @@
   ];
 
   onMount(async () => {
-    if (await loadUserContext()) {
-      await loadAssets();
-    } else {
-      loading = false;
-    }
+    await loadAssets();
   });
-
-  async function loadUserContext() {
-    const request = contextGuard.next();
-    try {
-      const payload = await apiGet<{ company_id?: string | null }>(
-        '/api/v1/user/context',
-        undefined,
-        request.signal
-      );
-      if (!contextGuard.isCurrent(request.seq)) return false;
-      companyId = payload.company_id || null;
-      return true;
-    } catch (err) {
-      if (isCanceledApiError(err)) return false;
-      toast.error(toUserMessage(err, 'Erro ao carregar contexto da empresa.'));
-      return false;
-    }
-  }
 
   async function loadAssets() {
     const request = assetsGuard.next();
-    if (!companyId) {
-      loading = false;
-      return;
-    }
-
     loading = true;
     try {
-      const payload = await apiGet<{ items?: VoucherAssetRecord[] }>(
-        '/api/v1/voucher-assets',
-        { company_id: companyId },
-        request.signal
-      );
+      const payload = await apiFetch<{
+        items?: VoucherAssetRecord[];
+        logo_esquerdo: VoucherLogoEsquerdo;
+        individual: boolean;
+        company_id: string | null;
+      }>('/api/v1/voucher-assets', { signal: request.signal, noCache: true });
       if (!assetsGuard.isCurrent(request.seq)) return;
       assets = payload.items || [];
+      logoEsquerdo = payload.logo_esquerdo;
+      individual = payload.individual;
+      companyId = payload.company_id;
+      assetsReady = true;
     } catch (err) {
       if (isCanceledApiError(err)) return;
       toast.error(toUserMessage(err, 'Erro ao carregar assets de voucher.'));
@@ -203,7 +195,7 @@
   }
 
   async function saveAsset() {
-    if (!companyId) {
+    if (!companyId && !individual) {
       toast.error('Nenhuma empresa ativa encontrada para salvar o asset.');
       return;
     }
@@ -216,7 +208,7 @@
     saving = true;
     try {
       const body = new FormData();
-      body.set('company_id', companyId);
+      if (!individual && companyId) body.set('company_id', companyId);
       body.set('provider', form.provider);
       body.set('asset_kind', form.asset_kind);
       body.set('label', form.label);
@@ -248,15 +240,31 @@
     }
   }
 
+  async function saveSettings() {
+    savingSettings = true;
+    try {
+      await apiFetch('/api/v1/voucher-assets/settings', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ logo_esquerdo: logoEsquerdo })
+      });
+      toast.success('Configuração do voucher salva.');
+    } catch (err) {
+      toast.error(toUserMessage(err, 'Erro ao salvar configuração do voucher.'));
+    } finally {
+      savingSettings = false;
+    }
+  }
+
   async function confirmDelete() {
-    if (!deleteTarget || !companyId) return;
+    if (!deleteTarget) return;
 
     try {
       const payload = await apiDelete<{ success?: boolean; error?: string }>(
         '/api/v1/voucher-assets',
         {
           id: deleteTarget.id,
-          company_id: companyId
+          ...(!individual && companyId ? { company_id: companyId } : {})
         }
       );
       if (payload?.success === false) {
@@ -299,7 +307,15 @@
       </div>
     </div>
   </Card>
-{:else if !companyId}
+{:else if loading && !assetsReady}
+  <LoadingState message="Carregando parâmetros de vouchers..." />
+{:else if !assetsReady}
+  <Card color="operacao">
+    <p class="text-sm text-slate-600">
+      Não foi possível carregar os parâmetros de vouchers. Tente atualizar.
+    </p>
+  </Card>
+{:else if !companyId && !individual}
   <Card color="operacao">
     <p class="text-sm text-slate-600">
       Não foi possível resolver a empresa ativa do seu contexto. Abra esta tela com uma empresa
@@ -307,6 +323,35 @@
     </p>
   </Card>
 {:else}
+  <Card color="operacao" title="Logo à esquerda do voucher">
+    <div class="space-y-4">
+      <FieldSelect
+        id="voucher-logo-esquerdo"
+        label="Escolha o logo"
+        value={logoEsquerdo}
+        options={[
+          { value: 'vtur', label: 'Logo VTUR' },
+          { value: 'empresa', label: 'Logo da minha empresa' },
+          { value: 'operadora', label: 'Logo da operadora nos dois lados' }
+        ]}
+        disabled={savingSettings || !assetsReady}
+        on:change={(event) =>
+          (logoEsquerdo = (event.currentTarget as HTMLSelectElement).value as VoucherLogoEsquerdo)}
+      />
+      <p class="text-sm text-slate-600">
+        Esta escolha é pessoal. Cadastre abaixo o logo da operadora e, se desejar, o da sua empresa.
+        O logo ativo de menor ordem será utilizado.
+      </p>
+      <Button
+        variant="primary"
+        color="operacao"
+        disabled={savingSettings || !assetsReady}
+        on:click={saveSettings}
+      >
+        <Save size={18} class="mr-2" /> Salvar escolha
+      </Button>
+    </div>
+  </Card>
   <div class="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
     <Card color="operacao" title={form.id ? 'Editar asset' : 'Novo asset'}>
       <div class="space-y-4">
@@ -419,6 +464,7 @@
       searchable={true}
       extraSearchKeys={['provider', 'asset_kind', 'label']}
       emptyMessage="Nenhum asset cadastrado para vouchers"
+      rowActionsAvailable={() => canEdit || canDelete}
     >
       <svelte:fragment slot="row-actions" let:row>
         <div class="flex items-center gap-1">

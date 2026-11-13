@@ -1070,6 +1070,7 @@
                   </div>
                   <div>
                     <FieldInput
+                      money
                       id={`venda-nova-recibo-total-${index}`}
                       label="Valor total"
                       bind:value={recibo.valor_total}
@@ -1233,6 +1234,7 @@
                   </div>
                   <div>
                     <FieldInput
+                      money
                       id={`venda-nova-recibo-total-${index}`}
                       label="Valor total"
                       bind:value={recibo.valor_total}
@@ -1243,6 +1245,7 @@
                   </div>
                   <div>
                     <FieldInput
+                      money
                       id={`venda-nova-recibo-taxas-${index}`}
                       label="Taxas"
                       bind:value={recibo.valor_taxas}
@@ -1251,6 +1254,7 @@
                   </div>
                   <div>
                     <FieldInput
+                      money
                       id={`venda-nova-recibo-du-${index}`}
                       label="DU"
                       bind:value={recibo.valor_du}
@@ -1259,6 +1263,7 @@
                   </div>
                   <div>
                     <FieldInput
+                      money
                       id={`venda-nova-recibo-rav-${index}`}
                       label="RAV/RAC"
                       bind:value={recibo.valor_rav}
@@ -1368,6 +1373,7 @@
                 </div>
                 <div>
                   <FieldInput
+                    money
                     id={`venda-nova-pagamento-bruto-${index}`}
                     label="Valor bruto"
                     bind:value={pagamento.valor_bruto}
@@ -1376,6 +1382,7 @@
                 </div>
                 <div>
                   <FieldInput
+                    money
                     id={`venda-nova-pagamento-desconto-${index}`}
                     label="Desconto"
                     bind:value={pagamento.desconto_valor}
@@ -1384,6 +1391,7 @@
                 </div>
                 <div>
                   <FieldInput
+                    money
                     id={`venda-nova-pagamento-total-${index}`}
                     label="Total"
                     bind:value={pagamento.valor_total}
@@ -1409,6 +1417,7 @@
                 </div>
                 <div>
                   <FieldInput
+                    money
                     id={`venda-nova-pagamento-valor-parcela-${index}`}
                     label="Valor da parcela"
                     bind:value={pagamento.parcelas_valor}
@@ -1437,7 +1446,7 @@
                 <div class="mb-3 flex items-center justify-between">
                   <p class="text-sm font-medium text-slate-700">Parcelas</p>
                   <Button type="button" variant="ghost" on:click={() => addParcela(index)}
-                    >Adicionar parcela</Button
+                    ><Plus size={16} class="mr-2" />Adicionar parcela</Button
                   >
                 </div>
                 {#if pagamento.parcelas.length === 0}
@@ -1452,6 +1461,7 @@
                           placeholder="Número"
                         />
                         <FieldInput
+                          money
                           bind:value={parcela.valor}
                           class_name="w-full"
                           placeholder="Valor"
@@ -1520,21 +1530,25 @@
 
         <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
           <FieldInput
+            money
             label="Valor total da venda"
             bind:value={venda.valor_total}
             class_name="w-full"
           />
           <FieldInput
+            money
             label="Valor total bruto"
             bind:value={venda.valor_total_bruto}
             class_name="w-full"
           />
           <FieldInput
+            money
             label="Valor total pago"
             bind:value={venda.valor_total_pago}
             class_name="w-full"
           />
           <FieldInput
+            money
             label="Valor não comissionado"
             bind:value={venda.valor_nao_comissionado}
             class_name="w-full"

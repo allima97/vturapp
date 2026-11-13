@@ -138,6 +138,12 @@ describe('opcionais do roteiro', () => {
   it('gera PDF agrupado por cidade sem campos de data e escapa conteúdo', () => {
     const escape = (s: string) => s.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const html = buildOpcionaisHtml(exemplo, escape);
+    expect(html.match(/<article class="card roteiro-card">/g)).toHaveLength(2);
+    const [barcelona, paris] = html.split('</article>');
+    expect(barcelona).toMatch(/<thead>[\s\S]*Barcelona[\s\S]*<\/thead>/);
+    expect(barcelona).toContain('Bairro Gótico');
+    expect(barcelona).toContain('Flamenco');
+    expect(paris).toContain('Rio Sena');
     expect(html.indexOf('Barcelona')).toBeLessThan(html.indexOf('Paris'));
     expect(html).toContain('Passeio e jantar<br>Praça Reial');
     expect(html).not.toContain('Data');
@@ -149,5 +155,27 @@ describe('opcionais do roteiro', () => {
     ).not.toContain('<script>');
     expect(buildOpcionaisHtml([], escape)).toBe('');
     expect(buildOpcionaisHtml([{ cidade: 'Roma', passeios: [] }], escape)).toBe('');
+  });
+  it('agrupa registros da mesma cidade sem juntar homônimos nem alterar os dados originais', () => {
+    const grupos = [
+      {
+        cidade: 'Paris, França',
+        cidade_id: 'geonames:1',
+        passeios: [{ nome: 'A', descricao: '' }]
+      },
+      { cidade: 'Paris, Texas', cidade_id: 'geonames:2', passeios: [{ nome: 'B', descricao: '' }] },
+      { cidade: 'Paris, França', cidade_id: 'geonames:1', passeios: [{ nome: 'C', descricao: '' }] }
+    ];
+    const html = buildOpcionaisHtml(
+      grupos,
+      (s) => s,
+      (cidade) => cidade.split(',')[0]
+    );
+    const cards = html.split('</article>');
+    expect(cards).toHaveLength(3);
+    expect(cards[0]).toContain('<h3>A</h3>');
+    expect(cards[0]).toContain('<h3>C</h3>');
+    expect(cards[1]).toContain('<h3>B</h3>');
+    expect(grupos[0].passeios).toHaveLength(1);
   });
 });

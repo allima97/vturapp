@@ -14,15 +14,25 @@ import {
   type UserScope
 } from '$lib/server/v1';
 import { validateUploadedFile } from '$lib/server/uploadValidation';
-import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
+import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readFormDataBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import { cleanStringSet, chunkArray, dedupeById, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
+import { isIndividualVoucherScope } from '../vouchers/scope';
+import type { VoucherLogoEsquerdo } from '$lib/vouchers/types';
+import { readJsonBodyLimited } from '$lib/server/requestGuards';
 
 const VOUCHER_ASSET_BUCKET = 'voucher-assets';
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const BOOLEAN_TRUE_VALUES = new Set(['1', 'true', 'on', 'yes', 'sim']);
-const VALID_PROVIDERS = new Set(['vtur', 'special_tours', 'europamundo', 'sato_tours', 'generic']);
-const VALID_ASSET_KINDS = new Set(['image', 'app_icon']);
+const VALID_PROVIDERS = new Set([
+  'vtur',
+  'empresa',
+  'special_tours',
+  'europamundo',
+  'sato_tours',
+  'generic'
+]);
+const VALID_ASSET_KINDS = new Set(['logo', 'image', 'app_icon']);
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 const MAX_REQUEST_SIZE_BYTES = MAX_FILE_SIZE_BYTES + 512 * 1024;
 const PT_BR_COLLATOR = new Intl.Collator('pt-BR');
@@ -45,7 +55,7 @@ function canAccessVoucherAssets(scope: UserScope, level: number) {
   if (scope.isMaster || scope.isGestor) return true;
   ensureModuloAccess(
     scope,
-    ['parametros', 'vouchers', 'operacao'],
+    ['parametros', 'Vouchers', 'operacao_vouchers', 'operacao'],
     level,
     'Sem acesso a Voucher Assets.'
   );
@@ -87,32 +97,33 @@ function validateAssetKind(assetKind: string) {
 }
 
 function buildStoragePath(params: {
-  companyId: string;
+  ownerPath: string;
   provider: string;
   assetKind: string;
   fileName: string;
 }) {
   const extension = params.fileName.split('.').pop()?.toLowerCase() || 'bin';
   const safeExtension = extension.replace(/[^a-z0-9]/g, '') || 'bin';
-  return `${params.companyId}/${params.provider}/${params.assetKind}/${Date.now()}-${crypto.randomUUID()}.${safeExtension}`;
+  return `${params.ownerPath}/${params.provider}/${params.assetKind}/${Date.now()}-${crypto.randomUUID()}.${safeExtension}`;
 }
 
 async function withPreviewUrl(client: DadosAdminClient, asset: VoucherAssetRow) {
-  try {
-    if (!asset.storage_bucket || !asset.storage_path) {
-      return { ...asset, preview_url: null };
-    }
-    const { data: signed } = await client.storage
-      .from(asset.storage_bucket)
-      .createSignedUrl(asset.storage_path, 3600);
-    return { ...asset, preview_url: signed?.signedUrl || null };
-  } catch {
-    return { ...asset, preview_url: null };
-  }
+  if (!asset.storage_bucket || !asset.storage_path)
+    throw new Error('Arquivo do voucher sem caminho.');
+  const { data: signed, error } = await client.storage
+    .from(asset.storage_bucket)
+    .createSignedUrl(asset.storage_path, 3600);
+  if (error) throw error;
+  if (!signed?.signedUrl) throw new Error('Não foi possível gerar o endereço da imagem.');
+  return { ...asset, preview_url: signed.signedUrl };
 }
 
 async function resolveTargetCompanyId(scope: UserScope, requestedCompanyId?: string | null) {
   const normalizedRequested = normalizeText(requestedCompanyId);
+  if (isIndividualVoucherScope(scope)) {
+    if (normalizedRequested) throw new Error('Uma conta individual não pode selecionar empresa.');
+    return null;
+  }
   if (normalizedRequested && !isUuid(normalizedRequested)) {
     throw new Error('Empresa inválida para o voucher asset.');
   }
@@ -125,6 +136,21 @@ async function resolveTargetCompanyId(scope: UserScope, requestedCompanyId?: str
   if (companyId) return companyId;
 
   throw new Error('Selecione uma empresa válida para o voucher asset.');
+}
+
+function canAccessAsset(
+  scope: UserScope,
+  asset: { company_id: string | null; created_by: string | null },
+  requestedCompanyId?: string | null
+) {
+  if (isIndividualVoucherScope(scope)) {
+    return !requestedCompanyId && asset.company_id === null && asset.created_by === scope.userId;
+  }
+  const allowedCompanySet = cleanStringSet(resolveScopedCompanyIds(scope, requestedCompanyId));
+  return scope.isAdmin
+    ? allowedCompanySet.size === 0 ||
+        (!!asset.company_id && allowedCompanySet.has(asset.company_id))
+    : !!asset.company_id && allowedCompanySet.has(asset.company_id);
 }
 
 async function validateFile(file: File | null, required = true) {
@@ -156,7 +182,6 @@ export async function handleVoucherAssetsGet(event: RequestEvent) {
     const scope = await resolveUserScope(client, user.id);
 
     canAccessVoucherAssets(scope, 1);
-
     const companyIds = resolveScopedCompanyIds(scope, event.url.searchParams.get('company_id'));
 
     const buildQuery = (companyIdsFilter = companyIds) => {
@@ -168,7 +193,9 @@ export async function handleVoucherAssetsGet(event: RequestEvent) {
         .order('asset_kind')
         .order('ordem');
 
-      if (companyIdsFilter.length > 0) query = query.in('company_id', companyIdsFilter);
+      if (isIndividualVoucherScope(scope))
+        query = query.is('company_id', null).eq('created_by', user.id);
+      else if (companyIdsFilter.length > 0) query = query.in('company_id', companyIdsFilter);
 
       return query;
     };
@@ -209,7 +236,22 @@ export async function handleVoucherAssetsGet(event: RequestEvent) {
     );
     const withUrls = await Promise.all(assets.map((asset) => withPreviewUrl(client, asset)));
 
-    return json({ success: true, items: withUrls }, { headers: DYNAMIC_READ_HEADERS });
+    const db = event.platform?.env?.DB;
+    if (!db) throw new Error('Banco D1 indisponível nesta requisição.');
+    const settings = await db
+      .prepare('SELECT logo_esquerdo FROM voucher_visual_settings WHERE user_id = ?')
+      .bind(user.id)
+      .first<{ logo_esquerdo: VoucherLogoEsquerdo }>();
+    return json(
+      {
+        success: true,
+        items: withUrls,
+        logo_esquerdo: settings?.logo_esquerdo || 'vtur',
+        individual: isIndividualVoucherScope(scope),
+        company_id: scope.companyId
+      },
+      { headers: NO_STORE_HEADERS }
+    );
   } catch (err: unknown) {
     return toErrorResponse(err, 'Erro ao carregar voucher assets.');
   }
@@ -238,6 +280,9 @@ export async function handleVoucherAssetsPost(event: RequestEvent) {
     const label = normalizeOptionalText(formData.get('label'));
     const ordem = normalizeOrder(formData.get('ordem'));
     const ativo = normalizeBoolean(formData.get('ativo'), true);
+    if (isIndividualVoucherScope(scope) && normalizeText(formData.get('company_id'))) {
+      return mutationError('Uma conta individual não pode selecionar empresa.', 403);
+    }
     const companyId = await resolveTargetCompanyId(
       scope,
       normalizeText(formData.get('company_id'))
@@ -249,7 +294,7 @@ export async function handleVoucherAssetsPost(event: RequestEvent) {
     const file = validatedFile.file;
 
     const storagePath = buildStoragePath({
-      companyId,
+      ownerPath: companyId || `individual/${user.id}`,
       provider,
       assetKind,
       fileName: file.name
@@ -278,7 +323,7 @@ export async function handleVoucherAssetsPost(event: RequestEvent) {
         ordem
       })
       .select(
-        'id, company_id, provider, asset_kind, label, storage_bucket, storage_path, mime_type, size_bytes, ativo, ordem, created_at, updated_at'
+        'id, company_id, created_by, provider, asset_kind, label, storage_bucket, storage_path, mime_type, size_bytes, ativo, ordem, created_at, updated_at'
       )
       .single();
 
@@ -325,25 +370,16 @@ export async function handleVoucherAssetsPatch(event: RequestEvent) {
     const assetQuery = client
       .from('voucher_assets')
       .select(
-        'id, company_id, provider, asset_kind, label, storage_bucket, storage_path, mime_type, size_bytes, ativo, ordem, created_at, updated_at'
+        'id, company_id, created_by, provider, asset_kind, label, storage_bucket, storage_path, mime_type, size_bytes, ativo, ordem, created_at, updated_at'
       )
       .eq('id', id);
 
-    const scopedCompanyIds = resolveScopedCompanyIds(
-      scope,
-      normalizeText(formData.get('company_id'))
-    );
-
     const { data: existingRaw, error: existingError } = await assetQuery.maybeSingle();
     if (existingError) throw existingError;
-    const existingCompanyId = String(existingRaw?.company_id || '').trim();
-    const allowedCompanySet = cleanStringSet(scopedCompanyIds);
-    const isAllowed =
-      Boolean(existingRaw) &&
-      ((scope.isAdmin &&
-        (allowedCompanySet.size === 0 || allowedCompanySet.has(existingCompanyId))) ||
-        (!scope.isAdmin && allowedCompanySet.has(existingCompanyId)));
-    if (!existingRaw || !isAllowed) {
+    if (
+      !existingRaw ||
+      !canAccessAsset(scope, existingRaw, normalizeText(formData.get('company_id')))
+    ) {
       return mutationError('Voucher asset não encontrado.', 404);
     }
     const existing = existingRaw;
@@ -370,7 +406,7 @@ export async function handleVoucherAssetsPatch(event: RequestEvent) {
     if (validatedFile) {
       const file = validatedFile.file;
       nextStoragePath = buildStoragePath({
-        companyId: existing.company_id,
+        ownerPath: existing.company_id || `individual/${existing.created_by}`,
         provider,
         assetKind,
         fileName: file.name
@@ -452,23 +488,15 @@ export async function handleVoucherAssetsDelete(event: RequestEvent) {
 
     const assetQuery = client
       .from('voucher_assets')
-      .select('id, company_id, storage_bucket, storage_path')
+      .select('id, company_id, created_by, storage_bucket, storage_path')
       .eq('id', id);
-
-    const scopedCompanyIds = resolveScopedCompanyIds(scope, requestedCompanyId);
 
     const { data: existingRaw, error: existingError } = await assetQuery.maybeSingle();
     if (existingError) throw existingError;
-    const existingCompanyId = String(existingRaw?.company_id || '').trim();
-    const allowedCompanySet = cleanStringSet(scopedCompanyIds);
-    const isAllowed =
-      Boolean(existingRaw) &&
-      ((scope.isAdmin &&
-        (allowedCompanySet.size === 0 || allowedCompanySet.has(existingCompanyId))) ||
-        (!scope.isAdmin && allowedCompanySet.has(existingCompanyId)));
-    if (!existingRaw || !isAllowed) {
+    if (!existingRaw || !canAccessAsset(scope, existingRaw, requestedCompanyId)) {
       return mutationError('Voucher asset não encontrado.', 404);
     }
+
     const existing = existingRaw;
 
     const { error: deleteError } = await client
@@ -487,5 +515,36 @@ export async function handleVoucherAssetsDelete(event: RequestEvent) {
     return json({ success: true, id: existing.id }, { headers: NO_STORE_HEADERS });
   } catch (err: unknown) {
     return toErrorResponse(err, 'Erro ao excluir voucher asset.');
+  }
+}
+
+export async function handleVoucherSettingsPatch(event: RequestEvent) {
+  try {
+    const originError = rejectCrossOriginRequest(event.request);
+    if (originError) return originError;
+    const result = await readJsonBodyLimited(event.request, 4096);
+    if (!result.ok) return result.response;
+    const user = await requireAuthenticatedUser(event);
+    const client = getAdminClient();
+    const scope = await resolveUserScope(client, user.id);
+    canAccessVoucherAssets(scope, 1);
+    const value =
+      result.data && typeof result.data === 'object'
+        ? (result.data as { logo_esquerdo?: unknown }).logo_esquerdo
+        : null;
+    if (value !== 'vtur' && value !== 'empresa' && value !== 'operadora') {
+      return mutationError('Escolha uma opção válida para o logo.', 400);
+    }
+    const db = event.platform?.env?.DB;
+    if (!db) throw new Error('Banco D1 indisponível nesta requisição.');
+    await db
+      .prepare(
+        'INSERT INTO voucher_visual_settings (user_id, logo_esquerdo) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET logo_esquerdo = excluded.logo_esquerdo'
+      )
+      .bind(user.id, value)
+      .run();
+    return json({ success: true, logo_esquerdo: value }, { headers: NO_STORE_HEADERS });
+  } catch (err) {
+    return toErrorResponse(err, 'Erro ao salvar configuração visual do voucher.');
   }
 }

@@ -87,8 +87,43 @@ it('mantém ids de dias, hotéis e passeios entre salvamentos e renova na duplic
   document.body.appendChild(target);
   const app = mount(Page, { target });
   await vi.waitFor(() => expect(target.querySelector('#rot-dur')).toBeTruthy());
+  for (const id of ['rot-nome', 'rot-dur', 'rot-cidades-visitadas']) {
+    expect(target.querySelector<HTMLInputElement>(`input#${id}`)).toBeNull();
+    expect(target.querySelector(`#${id}`)).toBeTruthy();
+  }
+  const detailFieldset = target.querySelector<HTMLFieldSetElement>(
+    'fieldset[aria-label="Dados detalhados do roteiro"]'
+  )!;
+  const detailControls = () => [
+    ...detailFieldset.querySelectorAll('input, select, textarea, button')
+  ];
+  expect(detailFieldset.disabled).toBe(true);
+  expect(detailControls().length).toBeGreaterThan(0);
+  expect(detailControls().every((control) => control.matches(':disabled'))).toBe(true);
+  expect(target.textContent).not.toContain('Incluir cabeçalho e rodapé no PDF');
+  const actionCount = (label: string) =>
+    [...target.querySelectorAll('button')].filter((item) => item.textContent?.includes(label))
+      .length;
+  expect(actionCount('Visualizar PDF')).toBe(1);
+  expect(actionCount('Duplicar roteiro')).toBe(1);
+  expect(actionCount('Salvar roteiro')).toBe(1);
   const button = (text: string) =>
     [...target.querySelectorAll('button')].find((item) => item.textContent?.includes(text))!;
+  expect(actionCount('Editar')).toBe(1);
+  button('Editar').click();
+  flushSync();
+  expect(detailFieldset.disabled).toBe(false);
+  expect(detailControls().some((control) => !control.matches(':disabled'))).toBe(true);
+  for (const id of ['rot-nome', 'rot-dur', 'rot-cidades-visitadas']) {
+    expect(target.querySelector<HTMLInputElement>(`input#${id}`)?.readOnly).toBe(false);
+  }
+  button('Concluir edição').click();
+  flushSync();
+  expect(detailFieldset.disabled).toBe(true);
+  for (const id of ['rot-nome', 'rot-dur', 'rot-cidades-visitadas']) {
+    expect(target.querySelector<HTMLInputElement>(`input#${id}`)).toBeNull();
+    expect(target.querySelector(`#${id}`)).toBeTruthy();
+  }
   button('Salvar roteiro').click();
   await vi.waitFor(() => expect(mocks.salvar).toHaveBeenCalledTimes(1));
   const primeira = mocks.salvar.mock.calls[0][0];
@@ -138,6 +173,8 @@ it('salva hotéis com cidades confirmadas depois de adicionar outra linha', asyn
   await vi.waitFor(() => expect(target.querySelector('#rot-dur')).toBeTruthy());
   const button = (text: string) =>
     [...target.querySelectorAll('button')].find((item) => item.textContent?.includes(text))!;
+  button('Editar').click();
+  flushSync();
   button('Hotéis').click();
   flushSync();
   button('Adicionar hotel').click();
@@ -187,6 +224,8 @@ it('permite salvar hotel após sair do itinerário durante validação de cidade
   await vi.waitFor(() => expect(target.querySelector('#rot-dur')).toBeTruthy());
   const button = (text: string) =>
     [...target.querySelectorAll('button')].find((item) => item.textContent?.includes(text))!;
+  button('Editar').click();
+  flushSync();
   button('Hotéis').click();
   flushSync();
   button('Adicionar hotel').click();
@@ -224,6 +263,8 @@ it('abre a aba e o dia com cidade não confirmada e permite corrigir antes de sa
   await vi.waitFor(() => expect(target.querySelector('#rot-dur')).toBeTruthy());
   const button = (text: string) =>
     [...target.querySelectorAll('button')].find((item) => item.textContent?.includes(text))!;
+  button('Editar').click();
+  flushSync();
   button('Adicionar dia').click();
   flushSync();
   let input = target.querySelector<HTMLInputElement>('#dia-cidade-0')!;
@@ -271,9 +312,22 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
         roteiro: {
           nome: 'Viagem',
           revisao: '',
-          dias: [{ ordem: 0, cidade: barcelona, percurso: 'Roma - Barcelona' }],
+          dias: [
+            { ordem: 0, cidade: barcelona, percurso: 'Roma - Barcelona', descricao: 'Chegada' },
+            { ordem: 1, cidade: 'Paris', percurso: 'Barcelona - Paris', descricao: 'Passeio' }
+          ],
           hoteis: [
-            { ordem: 0, cidade: barcelona, hotel: 'Hotel Barcelona' },
+            {
+              ordem: 0,
+              cidade: barcelona,
+              hotel: 'Hotel Barcelona',
+              data_inicio: '2027-01-02',
+              data_fim: '2027-01-04',
+              noites: 2,
+              apto: 'Duplo',
+              regime: 'Café',
+              endereco: 'Rua Principal'
+            },
             {
               ordem: 1,
               cidade: 'Madrid, Provincia de Madrid, Comunidade de Madrid, Espanha',
@@ -285,11 +339,35 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
               cidade: 'Roma, Città metropolitana di Roma Capitale, Lácio, Itália',
               hotel: 'Hotel Roma'
             },
-            { ordem: 4, cidade: 'Paris, Texas, Estados Unidos', hotel: 'Hotel Texas' }
+            { ordem: 4, cidade: 'Paris, Texas, Estados Unidos', hotel: 'Hotel Texas' },
+            { ordem: 5, cidade: barcelona, hotel: 'Outro Hotel' }
           ],
           passeios: [{ ordem: 0, cidade: barcelona, passeio: 'Sagrada Família' }],
           opcionais: [
-            { cidade: 'Roma, Lácio, Itália', passeios: [{ nome: 'Fórum', descricao: 'Visita' }] }
+            {
+              cidade: 'Roma, Lácio, Itália',
+              passeios: [
+                { nome: 'Fórum', descricao: 'Visita' },
+                { nome: 'Museu', descricao: 'Arte' }
+              ]
+            }
+          ],
+          transportes: [
+            {
+              ordem: 0,
+              trecho: 'São Paulo - Roma',
+              cia_aerea: 'LATAM',
+              descricao: 'LA 123',
+              aeroporto_saida: 'GRU',
+              aeroporto_chegada: 'FCO',
+              data_voo: '2027-01-02',
+              data_fim: '2027-01-03',
+              hora_saida: '23:30',
+              hora_chegada: '14:00',
+              duracao_voo: '11h30',
+              classe_reserva: 'Econômica',
+              tarifa_nome: 'Light'
+            }
           ]
         }
       };
@@ -323,28 +401,88 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
   });
   const preview = new DOMParser().parseFromString(html, 'text/html');
   const hotels = preview.querySelector('.preview-hotels-section')!;
-  expect([...hotels.querySelectorAll('.preview-group-title')].map((el) => el.textContent)).toEqual([
+  expect([...hotels.querySelectorAll('.roteiro-card-city')].map((el) => el.textContent)).toEqual([
+    'Barcelona',
     'Barcelona',
     'Madrid',
     'Paris',
     'Roma',
     'Paris'
   ]);
-  expect([...hotels.querySelectorAll('.preview-group-block')].map((el) => el.textContent)).toEqual(
+  expect([...hotels.querySelectorAll('.roteiro-card')].map((el) => el.textContent)).toEqual(
     expect.arrayContaining([
       expect.stringContaining('Hotel Paris'),
       expect.stringContaining('Hotel Texas')
     ])
   );
-  expect(preview.querySelector('.preview-passeios-section .preview-group-title')?.textContent).toBe(
+  const firstHotel = hotels.querySelector('.roteiro-card')!;
+  for (const value of ['02-01-2027', '04-01-2027', '2', 'Duplo', 'Café', 'Rua Principal']) {
+    expect(firstHotel.textContent).toContain(value);
+  }
+  expect(hotels.querySelectorAll('.roteiro-card')[1].textContent).toContain('Outro Hotel');
+  expect(preview.querySelector('.preview-passeios-section .roteiro-card-city')?.textContent).toBe(
     'Barcelona'
   );
-  expect([...preview.querySelectorAll('h3')].map((el) => el.textContent)).toContain('Roma');
+  expect(preview.querySelectorAll('.preview-itinerary-section .roteiro-card')).toHaveLength(2);
+  expect(preview.querySelectorAll('.preview-optionals-section .roteiro-card')).toHaveLength(1);
+  const optionalTitle = preview.querySelector('.preview-optionals-section h2')!;
+  expect(optionalTitle.textContent).toContain('Passeios Opcionais');
+  expect(optionalTitle.querySelector('.roteiro-print-subtitle')?.textContent).toBe(
+    'Sugestões sem data marcada, não incluídas no valor do roteiro'
+  );
+  expect(preview.querySelector('.preview-optionals-section .roteiro-card-city')?.textContent).toBe(
+    'Roma'
+  );
+  expect(preview.querySelector('.preview-optionals-section .roteiro-card')?.textContent).toContain(
+    'Fórum'
+  );
+  expect(preview.querySelector('.preview-optionals-section .roteiro-card')?.textContent).toContain(
+    'Museu'
+  );
+  const flight = preview.querySelector('.preview-airfare-section .roteiro-card')!;
+  for (const value of [
+    'São Paulo',
+    'GRU',
+    'Roma',
+    'FCO',
+    'LATAM',
+    '02-01-2027',
+    '03-01-2027',
+    '23:30',
+    '14:00',
+    '11h30',
+    'Econômica',
+    'Light'
+  ]) {
+    expect(flight.textContent).toContain(value);
+  }
+  expect(flight.querySelector('.roteiro-flight-header span')?.textContent).toBe(
+    'TRECHO 1 — sábado, 02 de janeiro de 2027'
+  );
+  expect(flight.querySelectorAll('.roteiro-flight-header span')[1].textContent).toBe('Voo LA 123');
+  expect(flight.querySelector('.roteiro-flight-arrival-notice')?.textContent).toBe(
+    'Chegada no dia seguinte (+1)'
+  );
+  expect(flight.querySelector('.roteiro-flight-details strong')?.textContent).toBe('LATAM');
+  expect(flight.querySelectorAll('.roteiro-flight-place')).toHaveLength(2);
+  for (const section of preview.querySelectorAll('.roteiro-print-section')) {
+    expect(section.querySelector('thead h2')).toBeTruthy();
+  }
+  for (const section of [
+    '.preview-itinerary-section',
+    '.preview-hotels-section',
+    '.preview-optionals-section',
+    '.preview-airfare-section'
+  ]) {
+    expect(preview.querySelector(`${section} h2 svg`)?.getAttribute('aria-hidden')).toBe('true');
+  }
   expect(html).toContain('<h3>Dia 1 - Roma - Barcelona</h3>');
   expect(html).not.toContain(barcelona);
   button('Salvar roteiro').click();
   await vi.waitFor(() => expect(mocks.salvar).toHaveBeenCalledTimes(1));
   expect(mocks.salvar.mock.calls[0][0].hoteis[0].cidade).toBe(barcelona);
   expect(mocks.salvar.mock.calls[0][0].opcionais[0].cidade).toBe('Roma, Lácio, Itália');
+  expect(mocks.salvar.mock.calls[0][0].transportes[0].data_fim).toBe('2027-01-03');
+  expect(mocks.salvar.mock.calls[0][0].transportes[0].descricao).toBe('LA 123');
   await unmount(app);
 });

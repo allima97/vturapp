@@ -19,7 +19,8 @@
     AlertCircle,
     Trash2,
     QrCode,
-    Fingerprint
+    Fingerprint,
+    Plus
   } from '$lib/icons';
 
   import { confirmAction } from '$lib/stores/confirm';
@@ -348,7 +349,7 @@
           disabled={!passkeySupported || passkeysLoading}
           on:click={registerPasskey}
         >
-          <Fingerprint size={16} class="mr-2" />
+          <Plus size={16} class="mr-2" />
           Adicionar passkey
         </Button>
       </div>

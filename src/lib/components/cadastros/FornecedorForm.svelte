@@ -15,6 +15,7 @@
   } from '$lib/components/ui';
   import { ArrowLeft, Save, Trash2, Whatsapp } from '$lib/icons';
   import { formatDocumentoSalvo } from '$lib/features/clientes/form';
+  import { formatTelefone } from '$lib/utils/inputFormatting';
   import { validateCNPJ } from '$lib/utils/validation';
   import { toast } from '$lib/stores/ui';
   import { formatDate } from '$lib/utils/formatters';
@@ -111,11 +112,14 @@
   $: title = isCreateMode ? 'Novo fornecedor' : 'Editar fornecedor';
 
   function formatPhone(value: string) {
-    const digits = value.replace(/\D/g, '').slice(0, 11);
-    if (digits.length <= 10) {
-      return digits.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{4})(\d)/, '$1-$2');
+    if (
+      form.localizacao !== 'brasil' ||
+      value.trimStart().startsWith('+') ||
+      value.replace(/\D/g, '').length > 11
+    ) {
+      return value;
     }
-    return digits.replace(/(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d)/, '$1-$2');
+    return formatTelefone(value);
   }
 
   async function loadFornecedor(signal?: AbortSignal) {
@@ -380,6 +384,7 @@
             label="CEP"
             bind:value={form.cep}
             placeholder="00000-000"
+            mask="cep"
             class_name="w-full"
           />
         {/if}

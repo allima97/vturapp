@@ -1,6 +1,7 @@
 import { chaveIdentidadeCidade } from './catalogoOpcionais';
 import { destinoIdValido } from './destinoIdentidade';
 import { chaveNomeOpcional } from './importarOpcionais';
+import { printLocationIcon, requiresPrintContinuation } from './utils/printLayout';
 
 export type RoteiroOpcionalCidade = {
   cidade: string;
@@ -125,16 +126,35 @@ export function parseRoteiroOpcionais(value: unknown): RoteiroOpcionalCidade[] {
 
 export function buildOpcionaisHtml(
   cidades: RoteiroOpcionalCidade[],
-  escape: (text: string) => string
+  escape: (text: string) => string,
+  formatarCidade: (cidade: string) => string = (cidade) => cidade
 ): string {
-  return cidades
-    .filter((c) => c.cidade && c.passeios.length)
-    .map(
-      (c) => `
-    <article class="card">
-      <h3>${escape(c.cidade)}</h3>
-      ${c.passeios.map((p) => `<div><h4>${escape(p.nome)}</h4><p>${escape(p.descricao).replace(/\n/g, '<br>')}</p></div>`).join('')}
-    </article>`
-    )
-    .join('');
+  const grupos = new Map<string, RoteiroOpcionalCidade>();
+  for (const cidade of cidades) {
+    if (!cidade.cidade || !cidade.passeios.length) continue;
+    const chave = chaveIdentidadeCidade(cidade.cidade, cidade.cidade_id);
+    const grupo = grupos.get(chave);
+    if (grupo) grupo.passeios.push(...cidade.passeios);
+    else grupos.set(chave, { ...cidade, passeios: [...cidade.passeios] });
+  }
+  return Array.from(grupos.values(), (grupo) => {
+    const conteudo = grupo.passeios.map((p) => `${p.nome}\n${p.descricao}`).join('\n');
+    const longo = grupo.passeios.length > 6 || requiresPrintContinuation(conteudo);
+    return `
+      <article class="card roteiro-card${longo ? ' roteiro-card--long' : ''}">
+        <table class="roteiro-optional-table" role="presentation">
+          <thead><tr><td><div class="roteiro-card-city">${printLocationIcon}${escape(formatarCidade(grupo.cidade))}</div></td></tr></thead>
+          <tbody><tr><td>${grupo.passeios
+            .map(
+              (
+                p
+              ) => `<div class="roteiro-optional-item${requiresPrintContinuation(p.descricao) ? ' roteiro-optional-item--long' : ''}">
+              <h3>${escape(p.nome)}</h3>
+              ${p.descricao ? `<p>${escape(p.descricao).replace(/\n/g, '<br>')}</p>` : ''}
+            </div>`
+            )
+            .join('')}</td></tr></tbody>
+        </table>
+      </article>`;
+  }).join('');
 }

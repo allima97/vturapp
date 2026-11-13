@@ -920,6 +920,7 @@ const authGuard: Handle = async ({ event, resolve }) => {
 
   const modulo = descobrirModulo(pathname);
   if (!modulo) return resolve(event);
+  const modulosRota = pathname === '/parametros/vouchers' ? [modulo, 'Vouchers'] : [modulo];
 
   try {
     const { data: disabledRows, error: disabledErr } = await dados
@@ -939,10 +940,12 @@ const authGuard: Handle = async ({ event, resolve }) => {
         // (igual ao comportamento do store de permissões no cliente)
         const modulosConsultaDisabled = Array.from(
           new Set(
-            listarModulosComHeranca(modulo).flatMap((label) => {
-              const key = MAPA_MODULOS[label];
-              return key ? [label, key] : [label];
-            })
+            modulosRota
+              .flatMap((moduloRota) => listarModulosComHeranca(moduloRota))
+              .flatMap((label) => {
+                const key = MAPA_MODULOS[label];
+                return key ? [label, key] : [label];
+              })
           )
         );
         const modulosPermitidosDisabled = new Set<string>();
@@ -970,10 +973,12 @@ const authGuard: Handle = async ({ event, resolve }) => {
   // Reutiliza acessos ja carregados (sem segunda query a modulo_acesso)
   const modulosConsulta = Array.from(
     new Set(
-      listarModulosComHeranca(modulo).flatMap((label) => {
-        const key = MAPA_MODULOS[label];
-        return key ? [label, key] : [label];
-      })
+      modulosRota
+        .flatMap((moduloRota) => listarModulosComHeranca(moduloRota))
+        .flatMap((label) => {
+          const key = MAPA_MODULOS[label];
+          return key ? [label, key] : [label];
+        })
     )
   );
 

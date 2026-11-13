@@ -161,6 +161,7 @@
       </div>
 
       <FieldInput
+        money
         id="novo-circuito-preco-base"
         label="Preço Base"
         type="number"

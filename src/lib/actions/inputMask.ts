@@ -6,6 +6,7 @@
  * <input use:inputMask={{ type: 'cpf' }} bind:value={cpf} />
  * ```
  */
+import { formatCep, formatDocumento, formatTelefone } from '$lib/utils/inputFormatting';
 
 export type MaskType = 'cpf' | 'cnpj' | 'phone' | 'cep' | 'date' | 'rg';
 
@@ -14,16 +15,9 @@ export interface MaskParams {
 }
 
 const NON_DIGIT_RE = /\D/g;
-const CPF_FIRST_BLOCK_RE = /(\d{3})(\d)/;
 const CPF_LAST_BLOCK_RE = /(\d{3})(\d{1,2})$/;
 const CNPJ_FIRST_BLOCK_RE = /(\d{2})(\d)/;
 const CNPJ_MIDDLE_BLOCK_RE = /(\d{3})(\d)/;
-const CNPJ_SLASH_BLOCK_RE = /(\d{3})(\d)/;
-const CNPJ_LAST_BLOCK_RE = /(\d{4})(\d{1,2})$/;
-const PHONE_DDD_RE = /(\d{2})(\d)/;
-const PHONE_EIGHT_DIGIT_RE = /(\d{4})(\d{1,4})$/;
-const PHONE_NINE_DIGIT_RE = /(\d{5})(\d{1,4})$/;
-const CEP_BLOCK_RE = /(\d{5})(\d{1,3})$/;
 const DATE_FIRST_BLOCK_RE = /(\d{2})(\d)/;
 const DATE_LAST_BLOCK_RE = /(\d{2})(\d{1,4})$/;
 
@@ -32,31 +26,16 @@ function applyMask(raw: string, type: MaskType): string {
 
   switch (type) {
     case 'cpf':
-      return n
-        .slice(0, 11)
-        .replace(CPF_FIRST_BLOCK_RE, '$1.$2')
-        .replace(CPF_FIRST_BLOCK_RE, '$1.$2')
-        .replace(CPF_LAST_BLOCK_RE, '$1-$2');
+      return formatDocumento(raw, 'PF');
 
     case 'cnpj':
-      return n
-        .slice(0, 14)
-        .replace(CNPJ_FIRST_BLOCK_RE, '$1.$2')
-        .replace(CNPJ_MIDDLE_BLOCK_RE, '$1.$2')
-        .replace(CNPJ_SLASH_BLOCK_RE, '$1/$2')
-        .replace(CNPJ_LAST_BLOCK_RE, '$1-$2');
+      return formatDocumento(raw, 'PJ');
 
     case 'phone':
-      if (n.length <= 10) {
-        return n
-          .slice(0, 10)
-          .replace(PHONE_DDD_RE, '($1) $2')
-          .replace(PHONE_EIGHT_DIGIT_RE, '$1-$2');
-      }
-      return n.slice(0, 11).replace(PHONE_DDD_RE, '($1) $2').replace(PHONE_NINE_DIGIT_RE, '$1-$2');
+      return formatTelefone(raw);
 
     case 'cep':
-      return n.slice(0, 8).replace(CEP_BLOCK_RE, '$1-$2');
+      return formatCep(raw);
 
     case 'date':
       return n
@@ -77,8 +56,19 @@ function applyMask(raw: string, type: MaskType): string {
 }
 
 export function inputMask(node: HTMLInputElement, params: MaskParams) {
+  let preservePhone =
+    params.type === 'phone' &&
+    (node.value.trimStart().startsWith('+') || node.value.replace(NON_DIGIT_RE, '').length > 11);
+
   function onInput() {
     const prev = node.value;
+    if (params.type === 'phone') {
+      if (!prev) preservePhone = false;
+      if (prev.trimStart().startsWith('+') || prev.replace(NON_DIGIT_RE, '').length > 11) {
+        preservePhone = true;
+      }
+      if (preservePhone) return;
+    }
     const cursor = node.selectionStart ?? prev.length;
     const masked = applyMask(prev, params.type);
 
@@ -93,11 +83,16 @@ export function inputMask(node: HTMLInputElement, params: MaskParams) {
 
   // Aplica imediatamente se já houver valor
   if (node.value) {
-    const documentLength = params.type === 'cpf' ? 11 : params.type === 'cnpj' ? 14 : null;
+    const documentLength =
+      params.type === 'cpf' ? 11 : params.type === 'cnpj' ? 14 : params.type === 'cep' ? 8 : null;
     if (
-      documentLength === null ||
-      (/^[\d\s./-]*$/.test(node.value) &&
-        node.value.replace(NON_DIGIT_RE, '').length === documentLength)
+      params.type === 'phone'
+        ? !node.value.trimStart().startsWith('+') &&
+          /^[\d\s().-]*$/.test(node.value) &&
+          [10, 11].includes(node.value.replace(NON_DIGIT_RE, '').length)
+        : documentLength === null ||
+          (/^[\d\s./-]*$/.test(node.value) &&
+            node.value.replace(NON_DIGIT_RE, '').length === documentLength)
     ) {
       node.value = applyMask(node.value, params.type);
     }

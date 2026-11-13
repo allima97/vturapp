@@ -163,7 +163,7 @@
         <section class="card">
           <h2>3. Finalidades e Bases Legais (Art. 7 e 11)</h2>
           <div class="tabela-responsiva">
-            <table>
+            <table class="table-mobile-cards">
               <thead>
                 <tr>
                   <th>Finalidade</th>
@@ -172,30 +172,34 @@
               </thead>
               <tbody>
                 <tr
-                  ><td>Gestão de reservas e viagens</td><td>Execução de contrato (Art. 7, V)</td
+                  ><td data-label="Finalidade">Gestão de reservas e viagens</td><td
+                    data-label="Base legal">Execução de contrato (Art. 7, V)</td
                   ></tr
                 >
                 <tr
-                  ><td>Emissão de vouchers e documentos</td><td>Execução de contrato (Art. 7, V)</td
+                  ><td data-label="Finalidade">Emissão de vouchers e documentos</td><td
+                    data-label="Base legal">Execução de contrato (Art. 7, V)</td
                   ></tr
                 >
                 <tr
-                  ><td>Comunicações sobre serviços</td><td
-                    >Legítimo interesse / Consentimento (Art. 7, IX)</td
+                  ><td data-label="Finalidade">Comunicações sobre serviços</td><td
+                    data-label="Base legal">Legítimo interesse / Consentimento (Art. 7, IX)</td
                   ></tr
                 >
                 <tr
-                  ><td>Autenticação e controle de acesso</td><td
-                    >Legítimo interesse do controlador (Art. 7, IX)</td
+                  ><td data-label="Finalidade">Autenticação e controle de acesso</td><td
+                    data-label="Base legal">Legítimo interesse do controlador (Art. 7, IX)</td
                   ></tr
                 >
                 <tr
-                  ><td>Auditoria e segurança da plataforma</td><td
+                  ><td data-label="Finalidade">Auditoria e segurança da plataforma</td><td
+                    data-label="Base legal"
                     >Obrigação legal / Legítimo interesse (Art. 7, II e IX)</td
                   ></tr
                 >
                 <tr
-                  ><td>Cumprimento de obrigações fiscais</td><td>Obrigação legal (Art. 7, II)</td
+                  ><td data-label="Finalidade">Cumprimento de obrigações fiscais</td><td
+                    data-label="Base legal">Obrigação legal (Art. 7, II)</td
                   ></tr
                 >
               </tbody>

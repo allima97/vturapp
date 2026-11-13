@@ -291,7 +291,54 @@
       class="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1.1fr)_minmax(0,0.9fr)] print:grid-cols-[minmax(0,1.3fr)_minmax(0,1.1fr)_minmax(0,0.9fr)]!"
     >
       <section class="vtur-card p-4" aria-label="Produtos">
-        <div class="overflow-x-auto">
+        <div class="sm:hidden print:hidden">
+          <table class="table-mobile-cards w-full text-sm">
+            <caption class="sr-only">Venda por produto</caption>
+            <thead>
+              <tr
+                ><th>Produto</th><th>Venda Mês</th><th>% Ano anterior</th><th>Passageiros Mês</th
+                ><th>TKM Mês</th></tr
+              >
+            </thead>
+            <tbody>
+              {#each dados.produtos as p}
+                <tr>
+                  <td data-label="Produto">{p.nome}</td>
+                  <td data-label="Venda Mês">{moeda(p.venda)}</td>
+                  <td
+                    data-label="% Ano anterior"
+                    class={p.variacaoAnoAnterior != null && p.variacaoAnoAnterior < 0
+                      ? 'text-red-700'
+                      : 'text-emerald-700'}
+                  >
+                    {#if p.variacaoAnoAnterior == null}—{:else}{p.variacaoAnoAnterior < 0
+                        ? '▼'
+                        : '▲'}
+                      {percentual(p.variacaoAnoAnterior)}{/if}
+                  </td>
+                  <td data-label="Passageiros Mês">{inteiro(p.passageiros)}</td>
+                  <td data-label="TKM Mês">{p.ticketMedio == null ? '' : moeda(p.ticketMedio)}</td>
+                </tr>
+              {:else}
+                <tr><td colspan="5">Sem vendas no período.</td></tr>
+              {/each}
+              <tr>
+                <td data-label="Produto">Total</td>
+                <td data-label="Venda Mês">{moeda(dados.totalProdutos.venda)}</td>
+                <td data-label="% Ano anterior"
+                  >{percentual(dados.totalProdutos.variacaoAnoAnterior)}</td
+                >
+                <td data-label="Passageiros Mês">{inteiro(dados.totalProdutos.passageiros)}</td>
+                <td data-label="TKM Mês"
+                  >{dados.totalProdutos.ticketMedio == null
+                    ? ''
+                    : moeda(dados.totalProdutos.ticketMedio)}</td
+                >
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="hidden overflow-x-auto sm:block print:block">
           <table class="w-full min-w-[520px] text-sm">
             <caption class="sr-only">Venda por produto</caption>
             <thead>
@@ -447,7 +494,46 @@
       </div>
     {:else}
       <section class="vtur-card p-4" aria-label="Orçamentos por produto">
-        <div class="overflow-x-auto">
+        <div class="sm:hidden print:hidden">
+          <table class="table-mobile-cards w-full text-sm">
+            <caption class="sr-only">Orçamentos por produto e business</caption>
+            <thead>
+              <tr>
+                <th>Produto</th>
+                {#each ['Internacional', 'Nacional', 'Total'] as grupo}
+                  <th>{grupo}: Orçamentos Mês</th>
+                  <th>{grupo}: % Mês anterior</th>
+                  <th>{grupo}: % Conv. Mês</th>
+                {/each}
+              </tr>
+            </thead>
+            <tbody>
+              {#each [...dados.orcamentos.porProduto.map( (produto) => ({ ...produto, ehTotal: false }) ), { nome: 'Total', ...dados.orcamentos.totais, ehTotal: true }] as p}
+                <tr>
+                  <td data-label="Produto">{p.nome}</td>
+                  {#each [{ nome: 'Internacional', valores: p.internacional }, { nome: 'Nacional', valores: p.nacional }, { nome: 'Total', valores: p.total }] as grupo}
+                    <td data-label={`${grupo.nome}: Orçamentos Mês`}
+                      >{p.ehTotal || grupo.valores.quantidade
+                        ? inteiro(grupo.valores.quantidade)
+                        : ''}</td
+                    >
+                    <td data-label={`${grupo.nome}: % Mês anterior`}
+                      >{p.ehTotal || grupo.valores.quantidade
+                        ? percentual(grupo.valores.variacaoMesAnterior)
+                        : ''}</td
+                    >
+                    <td data-label={`${grupo.nome}: % Conv. Mês`}
+                      >{p.ehTotal || grupo.valores.quantidade
+                        ? percentual(grupo.valores.conversao)
+                        : ''}</td
+                    >
+                  {/each}
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
+        <div class="hidden overflow-x-auto sm:block print:block">
           <table class="w-full min-w-[720px] text-sm">
             <caption class="sr-only">Orçamentos por produto e business</caption>
             <thead>

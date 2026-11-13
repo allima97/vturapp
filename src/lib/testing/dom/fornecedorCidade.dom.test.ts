@@ -31,6 +31,24 @@ async function setup() {
   return { target, app, input, digitar };
 }
 
+it('padroniza telefone nacional e preserva número internacional do fornecedor', async () => {
+  const tela = await setup();
+  const telefone = tela.target.querySelector<HTMLInputElement>('#forn-telefone')!;
+  telefone.value = '11912345678';
+  telefone.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+  expect(telefone.value).toBe('(11) 91234-5678');
+  [...tela.target.querySelectorAll('button')]
+    .find((button) => button.textContent?.includes('Exterior'))!
+    .click();
+  flushSync();
+  telefone.value = '+34 652 99 00 47';
+  telefone.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+  expect(telefone.value).toBe('+34 652 99 00 47');
+  await unmount(tela.app);
+});
+
 it('descarta respostas antigas imediatamente ao alterar a busca', async () => {
   let responder: (value: unknown) => void = () => {};
   mocks.get

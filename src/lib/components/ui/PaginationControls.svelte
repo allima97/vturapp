@@ -20,7 +20,7 @@
       Exibindo {start}-{end} de {total}
     </div>
 
-    <div class="actions">
+    <div class="actions vtur-inline-pagination">
       <Button variant="outline" size="sm" disabled={page <= 1} on:click={() => onPrev?.()}>
         <ChevronLeft size={16} />
         Anterior

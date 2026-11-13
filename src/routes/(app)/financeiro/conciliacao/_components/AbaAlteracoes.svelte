@@ -48,16 +48,22 @@
         <tbody>
           {#each changes as item}
             <tr class="border-t border-slate-100">
-              <td class="px-3 py-2">{formatDateTime(item.changed_at)}</td>
-              <td class="px-3 py-2">{item.numero_recibo || '-'}</td>
-              <td class="px-3 py-2">{item.field}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(item.old_value)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(item.new_value)}</td>
-              <td class="px-3 py-2">{item.actor === 'user' ? 'manual' : 'cron'}</td>
-              <td class="px-3 py-2"
+              <td data-label="Quando" class="px-3 py-2">{formatDateTime(item.changed_at)}</td>
+              <td data-label="Recibo" class="px-3 py-2">{item.numero_recibo || '-'}</td>
+              <td data-label="Campo" class="px-3 py-2">{item.field}</td>
+              <td data-label="Taxa (antes)" class="px-3 py-2 text-right"
+                >{formatMoney(item.old_value)}</td
+              >
+              <td data-label="Taxa (novo)" class="px-3 py-2 text-right"
+                >{formatMoney(item.new_value)}</td
+              >
+              <td data-label="Origem" class="px-3 py-2"
+                >{item.actor === 'user' ? 'manual' : 'cron'}</td
+              >
+              <td data-label="Por" class="px-3 py-2"
                 >{item.changed_by_user?.nome_completo || item.changed_by_user?.email || '-'}</td
               >
-              <td class="px-3 py-2"
+              <td data-label="Revertido" class="px-3 py-2"
                 >{item.reverted_at ? formatDateTime(item.reverted_at) : 'Pendente'}</td
               >
             </tr>

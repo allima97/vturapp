@@ -159,6 +159,7 @@
   searchable={true}
   extraSearchKeys={['file_name', 'title', 'mime_type']}
   emptyMessage="Nenhum documento encontrado"
+  rowActionsAvailable={() => canDelete}
 >
   <svelte:fragment slot="row-actions" let:row>
     <div class="flex items-center gap-1">

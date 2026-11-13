@@ -6,6 +6,7 @@ const api = vi.hoisted(() => ({
   url: 'https://example.test/operacao/passagens',
   subscribers: new Set<(value: { url: URL }) => void>(),
   extrair: vi.fn(),
+  confirmar: vi.fn(),
   navigate(url: string) {
     this.url = new URL(url, this.url).href;
     for (const subscriber of this.subscribers) subscriber({ url: new URL(this.url) });
@@ -31,6 +32,7 @@ vi.mock('$lib/services/api', async (original) => ({
   ...(await original<typeof import('$lib/services/api')>()),
   apiFetch: api.fetch
 }));
+vi.mock('$lib/stores/confirm', () => ({ confirmAction: api.confirmar }));
 import Passagens from '../../../routes/(app)/operacao/passagens/+page.svelte';
 
 function click(target: HTMLElement, label: string) {
@@ -42,11 +44,98 @@ function click(target: HTMLElement, label: string) {
   flushSync();
 }
 
+function abrirPrimeiraPassagem(target: HTMLElement) {
+  const row = target.querySelector<HTMLTableRowElement>('tbody tr');
+  if (!row) throw new Error('Cartão de passagem não encontrado');
+  row.click();
+  flushSync();
+}
+
 afterEach(() => {
   api.fetch.mockReset();
   api.extrair.mockReset();
+  api.confirmar.mockReset();
   api.url = 'https://example.test/operacao/passagens';
   document.body.replaceChildren();
+});
+
+it('abre o cartão pelo teclado e permite excluir nos detalhes', async () => {
+  const id = '00000000-0000-4000-8000-000000000001';
+  let excluida = false;
+  api.confirmar.mockResolvedValue(true);
+  api.fetch.mockImplementation(async (_path, options) => {
+    if (options.method === 'DELETE') {
+      excluida = true;
+      return {};
+    }
+    if (options.query?.id) {
+      return { item: { id, localizador: 'ABC123', emissao: '', trechos: [], passageiros: [] } };
+    }
+    return {
+      items: excluida
+        ? []
+        : [
+            {
+              id,
+              localizador: 'ABC123',
+              primeiroPassageiro: 'Maria Exemplo',
+              quantidadePassageiros: 2,
+              dataVoo: '2027-01-27',
+              rota: [{ origem: 'MCO', destino: 'GRU' }]
+            }
+          ]
+    };
+  });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  try {
+    await vi.waitFor(() => expect(target.querySelector('tbody tr')).not.toBeNull());
+    const row = target.querySelector<HTMLTableRowElement>('tbody tr')!;
+    expect(row.textContent).toContain('MARIA EXEMPLO');
+    expect(row.textContent).toContain('27/01/2027');
+    expect(row.querySelector('button')).toBeNull();
+    row.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    flushSync();
+    await vi.waitFor(() =>
+      expect(target.querySelector<HTMLInputElement>('#passagem-localizador')?.value).toBe('ABC123')
+    );
+    expect(target.textContent).toContain('Editar');
+    expect(target.textContent).toContain('Gerar comprovante');
+    click(target, 'Excluir passagem');
+    await vi.waitFor(() => expect(target.textContent).toContain('Nenhuma passagem salva.'));
+    expect(api.confirmar).toHaveBeenCalledOnce();
+    expect(api.fetch).toHaveBeenCalledWith(
+      '/api/v1/passagens',
+      expect.objectContaining({ method: 'DELETE', query: { id } })
+    );
+    expect(new URL(api.url).pathname).toBe('/operacao/passagens');
+    expect(new URL(api.url).search).toBe('');
+  } finally {
+    await unmount(app);
+  }
+});
+
+it('mostra o ícone de adição nos botões de criação e mantém suas ações', async () => {
+  api.fetch.mockResolvedValue({ items: [] });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Passagens, { target });
+  try {
+    await vi.waitFor(() => expect(target.textContent).toContain('Nenhuma passagem salva.'));
+    const button = (label: string) =>
+      [...target.querySelectorAll('button')].find((item) => item.textContent?.trim() === label)!;
+    expect(button('Nova passagem').querySelector('svg')).not.toBeNull();
+    click(target, 'Nova passagem');
+    for (const label of ['Adicionar trecho', 'Adicionar passageiro']) {
+      expect(button(label).querySelector('svg')).not.toBeNull();
+      click(target, label);
+    }
+    expect(target.textContent).toContain('Trecho 1');
+    expect(target.textContent).toContain('Passageiro 1');
+  } finally {
+    await unmount(app);
+  }
 });
 
 it('preserva nome e sobrenome CVC na revisão e no salvamento', async () => {
@@ -317,19 +406,24 @@ it('permite importar, revisar, salvar e abrir comprovante', async () => {
 });
 
 it('abre o comprovante de passagem salva na mesma aba', async () => {
-  api.fetch.mockResolvedValue({
-    items: [{ id: '00000000-0000-4000-8000-000000000001', localizador: 'ABC123' }]
-  });
+  const id = '00000000-0000-4000-8000-000000000001';
+  api.fetch.mockImplementation(async (_path, options) =>
+    options.query?.id
+      ? { item: { id, localizador: 'ABC123', emissao: '', trechos: [], passageiros: [] } }
+      : { items: [{ id, localizador: 'ABC123' }] }
+  );
   const target = document.createElement('div');
   document.body.appendChild(target);
   const app = mount(Passagens, { target });
-  await vi.waitFor(() => expect(target.textContent).toContain('Localizador: ABC123'));
+  await vi.waitFor(() => expect(target.querySelector('tbody tr')).not.toBeNull());
   expect(target.querySelector('#passagem-localizador')).toBeNull();
+  abrirPrimeiraPassagem(target);
+  await vi.waitFor(() => expect(target.querySelector('#passagem-localizador')).not.toBeNull());
   const comprovante = [...target.querySelectorAll('a')].find(
-    (link) => link.textContent?.trim() === 'Comprovante'
+    (link) => link.textContent?.trim() === 'Gerar comprovante'
   )!;
   expect(comprovante.getAttribute('href')).toBe(
-    '/operacao/passagens/comprovante?id=00000000-0000-4000-8000-000000000001'
+    `/operacao/passagens/comprovante?id=${id}&origem=edicao`
   );
   expect(comprovante.getAttribute('target')).toBeNull();
   await unmount(app);
@@ -384,17 +478,23 @@ it('mostra passageiro, quantidade, data e rota na lista sem inventar conexões',
   const target = document.createElement('div');
   document.body.appendChild(target);
   const app = mount(Passagens, { target });
-  await vi.waitFor(() => expect(target.textContent).toContain('Localizador: ABC123'));
-  expect(target.textContent).toContain(
-    'Localizador: ABC123 → JOSÉ EXEMPLO x 04 → 27/01/2027 → Orlando / São Paulo'
-  );
-  expect(target.textContent).toContain('ANA EXEMPLO x 01 → 28/01/2027 → AAA / BBB e CCC / DDD');
+  await vi.waitFor(() => expect(target.querySelectorAll('tbody tr')).toHaveLength(4));
+  const cells = (index: number) =>
+    [...target.querySelectorAll('tbody tr')[index].querySelectorAll('td')].map((cell) =>
+      cell.textContent?.trim()
+    );
+  expect(cells(0)).toEqual(['ABC123', 'JOSÉ EXEMPLO', '04', '27/01/2027', 'Orlando / São Paulo']);
+  expect(cells(1)).toEqual(['DEF456', 'ANA EXEMPLO', '01', '28/01/2027', 'AAA / BBB e CCC / DDD']);
   await vi.waitFor(() =>
-    expect(target.textContent).toContain('MARIA EXEMPLO x 02 → 30/01/2027 → Orlando / São Paulo')
+    expect(cells(2)).toEqual(['GHI789', 'MARIA EXEMPLO', '02', '30/01/2027', 'Orlando / São Paulo'])
   );
-  expect(target.textContent).toContain(
-    'Passageiro não informado x 00 → Data não informada → Rota não informada'
-  );
+  expect(cells(3)).toEqual([
+    'JKL012',
+    'Passageiro não informado',
+    '00',
+    'Data não informada',
+    'Rota não informada'
+  ]);
   await unmount(app);
 });
 
@@ -413,10 +513,10 @@ it('mostra apenas a lista ao retornar para Passagem após abrir uma passagem', a
   const target = document.createElement('div');
   document.body.appendChild(target);
   const app = mount(Passagens, { target });
-  await vi.waitFor(() => expect(target.textContent).toContain('Localizador: ABC123'));
-  click(target, 'Abrir');
+  await vi.waitFor(() => expect(target.querySelector('tbody tr')).not.toBeNull());
+  abrirPrimeiraPassagem(target);
   expect(target.textContent).not.toContain('Passagens salvas');
-  expect(target.textContent).not.toContain('Localizador: ABC123');
+  expect(target.querySelector('tbody tr')).toBeNull();
   await vi.waitFor(() =>
     expect(target.querySelector<HTMLInputElement>('#passagem-localizador')?.value).toBe('ABC123')
   );
@@ -427,8 +527,8 @@ it('mostra apenas a lista ao retornar para Passagem após abrir uma passagem', a
   api.navigate('/operacao/passagens');
   flushSync();
   expect(target.querySelector('#passagem-localizador')).toBeNull();
-  expect(target.textContent).toContain('Localizador: ABC123');
-  expect(target.textContent).toContain('Localizador: DEF456');
+  expect(target.textContent).toContain('ABC123');
+  expect(target.textContent).toContain('DEF456');
   await unmount(app);
 });
 
@@ -609,8 +709,8 @@ it('não reabre o formulário se a consulta da passagem terminar após voltar à
   const target = document.createElement('div');
   document.body.appendChild(target);
   const app = mount(Passagens, { target });
-  await vi.waitFor(() => expect(target.textContent).toContain('Localizador: ABC123'));
-  click(target, 'Abrir');
+  await vi.waitFor(() => expect(target.querySelector('tbody tr')).not.toBeNull());
+  abrirPrimeiraPassagem(target);
   api.navigate('/operacao/passagens');
   flushSync();
   concluir({ item: { id, localizador: 'ABC123', emissao: '', trechos: [], passageiros: [] } });

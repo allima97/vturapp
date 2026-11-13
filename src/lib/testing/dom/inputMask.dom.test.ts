@@ -1,8 +1,28 @@
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { flushSync, mount, unmount } from 'svelte';
 import Harness from './harness/InputMaskHarness.svelte';
 import type { MaskType } from '$lib/actions/inputMask';
-import { formatDocumentoSalvo } from '$lib/features/clientes/form';
+import { formatDocumentoSalvo, formatTelefone } from '$lib/features/clientes/form';
+import FieldInput from '$lib/components/ui/form/FieldInput.svelte';
+import { Eye } from '$lib/icons';
+
+it('mantém o campo acessível e aciona o botão associado', async () => {
+  const onAction = vi.fn();
+  const target = document.createElement('div');
+  const app = mount(FieldInput, {
+    target,
+    props: { label: 'Senha', actionIcon: Eye, actionLabel: 'Mostrar senha', onAction }
+  });
+  flushSync();
+  const input = target.querySelector<HTMLInputElement>('input')!;
+  const button = target.querySelector<HTMLButtonElement>('button[aria-label="Mostrar senha"]')!;
+  input.value = 'teste';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  button.click();
+  expect(input.value).toBe('teste');
+  expect(onAction).toHaveBeenCalledOnce();
+  await unmount(app);
+});
 
 it.each([
   { mask: 'cpf' as const, valid: '52998224725', invalid: '52998224724', name: 'CPF' },
@@ -39,7 +59,10 @@ it.each([
 
 it.each([
   { mask: 'cpf' as const, initialValue: '123456789012' },
-  { mask: 'cnpj' as const, initialValue: 'ABC12345678000190' }
+  { mask: 'cnpj' as const, initialValue: 'ABC12345678000190' },
+  { mask: 'cep' as const, initialValue: 'ABC123456789' },
+  { mask: 'phone' as const, initialValue: '+34 652 99 00 47' },
+  { mask: 'phone' as const, initialValue: '55119912345678' }
 ])('não altera valor salvo fora do padrão na montagem: $mask', async (props) => {
   const target = document.createElement('div');
   const app = mount(Harness, { target, props });
@@ -48,6 +71,56 @@ it.each([
   expect(target.querySelector('[data-value]')?.textContent).toBe(props.initialValue);
   await unmount(app);
 });
+
+it('preserva telefone internacional salvo ao editar e retoma máscara ao limpar', async () => {
+  const target = document.createElement('div');
+  const app = mount(Harness, {
+    target,
+    props: { mask: 'phone', initialValue: '55119912345678' }
+  });
+  flushSync();
+  const input = target.querySelector<HTMLInputElement>('input')!;
+  input.value = '551199123456789';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+  expect(input.value).toBe('551199123456789');
+  input.value = '';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+  input.value = '11912345678';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+  expect(input.value).toBe('(11) 91234-5678');
+  await unmount(app);
+});
+
+it('preserva telefones internacionais digitados com DDI', async () => {
+  const target = document.createElement('div');
+  const app = mount(Harness, { target, props: { mask: 'phone' } });
+  flushSync();
+  const input = target.querySelector<HTMLInputElement>('input')!;
+  input.value = '+34 652 99 00 47';
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+  expect(input.value).toBe('+34 652 99 00 47');
+  expect(target.querySelector('[data-value]')?.textContent).toBe('+34 652 99 00 47');
+  await unmount(app);
+});
+
+it.each(['1', '11', '119', '1191234', '11912345678'])(
+  'usa a mesma formatação de telefone do cadastro para %s',
+  async (raw) => {
+    const target = document.createElement('div');
+    const app = mount(Harness, { target, props: { mask: 'phone' } });
+    flushSync();
+    const input = target.querySelector<HTMLInputElement>('input')!;
+    input.value = raw;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+    expect(input.value).toBe(formatTelefone(raw));
+    await unmount(app);
+  }
+);
 
 it('mostra erro para documento obrigatório vazio ao sair, sem validar outros campos', async () => {
   const target = document.createElement('div');
@@ -99,8 +172,8 @@ it.each<{ mask: MaskType; raw: string; expected: string }>([
 });
 
 it.each([
-  { mask: 'phone' as const, withIcon: true, prefix: null, indented: false },
-  { mask: 'cep' as const, withIcon: true, prefix: null, indented: false },
+  { mask: 'phone' as const, withIcon: true, prefix: null, indented: true },
+  { mask: 'cep' as const, withIcon: true, prefix: null, indented: true },
   { mask: 'cep' as const, withIcon: false, prefix: 'CEP', indented: true },
   { mask: undefined, withIcon: true, prefix: null, indented: true }
 ])('reserva espaço somente para elementos visíveis: %o', async (props) => {
@@ -108,6 +181,6 @@ it.each([
   const app = mount(Harness, { target, props });
   flushSync();
   expect(target.querySelector('input')?.classList.contains('pl-10')).toBe(props.indented);
-  if (props.withIcon && !props.mask) expect(target.querySelector('svg')).not.toBeNull();
+  if (props.withIcon) expect(target.querySelector('svg')).not.toBeNull();
   await unmount(app);
 });

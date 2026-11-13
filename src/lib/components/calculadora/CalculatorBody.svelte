@@ -456,7 +456,7 @@
 
     <div class="mt-3 rounded-2xl border border-slate-200 bg-white p-2.5 shadow-xs">
       <div
-        class="grid gap-2 bg-transparent"
+        class="calculator-keys grid gap-2 bg-transparent"
         style="grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(5, clamp(42px, 8vw, 52px));"
       >
         {#each calculatorKeys as key}
@@ -490,8 +490,24 @@
     </div>
   </div>
 
-  <div class="flex justify-between">
+  <div class="flex flex-col gap-2 sm:flex-row sm:justify-between">
     <Button variant="ghost" on:click={clearCalc}>Limpar</Button>
     <Button variant="primary" color="vendas" on:click={evaluateCalc}>Calcular</Button>
   </div>
 </div>
+
+<style>
+  @media (max-width: 639px) {
+    .calculator-keys {
+      grid-template-columns: minmax(0, 1fr) !important;
+      grid-template-rows: none !important;
+    }
+
+    .calculator-keys :global(.vtur-button) {
+      grid-column: auto !important;
+      grid-row: auto !important;
+      min-height: 44px;
+      width: 100%;
+    }
+  }
+</style>

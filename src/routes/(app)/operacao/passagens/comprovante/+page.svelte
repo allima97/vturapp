@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
   import Button from '$lib/components/ui/Button.svelte';
   import { nomePassageiroMaiusculo } from '$lib/passagens/nome';
+  import { formatarDataPassagem as data } from '$lib/passagens/data';
   import { resumoRotas } from '$lib/passagens/rotas';
   import {
     loadAirportCodeCityLookup,
@@ -56,19 +57,6 @@
   function aeroporto(codigo: string, informada?: string) {
     const nome = cidade(codigo, informada);
     return nome ? `${nome} (${codigo})` : codigo;
-  }
-
-  function data(value: string, completa = false) {
-    const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
-    if (!match) return value || 'Não informada';
-    const date = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
-    return new Intl.DateTimeFormat('pt-BR', {
-      timeZone: 'UTC',
-      ...(completa ? { weekday: 'long' as const } : {}),
-      day: '2-digit',
-      month: completa ? ('long' as const) : ('short' as const),
-      year: 'numeric'
-    }).format(date);
   }
 
   function horario(value: string) {

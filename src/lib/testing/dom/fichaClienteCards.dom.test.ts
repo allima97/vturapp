@@ -99,14 +99,20 @@ it('mostra as seções em abas na ordem solicitada e abre apenas a aba seleciona
   expect(resumo.textContent).not.toContain('Prospect');
   expect(target.textContent).toContain('Última compra');
   expect(target.textContent).toContain('Rua de teste');
-  const endereco = target.querySelector('[aria-label="Endereço do cliente"]')!;
-  const tags = target.querySelector('[aria-label="Tags do cliente"]')!;
-  expect(endereco.textContent?.trim()).toBe(
-    'Rua de teste, 41 · Casa 05 · Centro · São Paulo/SP · CEP: 02244010'
-  );
-  expect(tags.textContent).toContain('VIP');
-  expect(tags.textContent).toContain('Família');
-  expect(endereco.compareDocumentPosition(tags) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  const endereco = target.querySelector<HTMLElement>('[aria-label="Endereço do cliente"]')!;
+  expect([...endereco.children].map((item) => item.querySelector('p')?.textContent)).toEqual([
+    'CEP',
+    'Endereço',
+    'Cidade',
+    'Estado'
+  ]);
+  expect(endereco.textContent).toContain('02244010');
+  expect(endereco.textContent).toContain('Rua de teste, 41 · Casa 05 · Centro');
+  expect(endereco.textContent).toContain('São Paulo');
+  expect(endereco.textContent).toContain('SP');
+  expect(resumo.textContent).not.toContain('VIP');
+  expect(resumo.textContent).not.toContain('Família');
+  expect(resumo.textContent).not.toContain('Tags');
   const dados = target.querySelector('[aria-label="Dados do cliente"]')!;
   const pessoais = dados.querySelector('[aria-label="Dados pessoais"]')!;
   const contatos = dados.querySelector('[aria-label="Contatos e classificação do cliente"]')!;
@@ -117,6 +123,14 @@ it('mostra as seções em abas na ordem solicitada e abre apenas a aba seleciona
       expect(item.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
     }
   }
+  expect(endereco.classList.contains('grid-cols-2')).toBe(true);
+  expect(endereco.classList.contains('lg:grid-cols-4')).toBe(true);
+  for (const item of endereco.children) {
+    expect(item.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+  }
+  expect(
+    contatos.compareDocumentPosition(endereco) & Node.DOCUMENT_POSITION_FOLLOWING
+  ).toBeTruthy();
   expect([...pessoais.children].map((item) => item.querySelector('p')?.textContent)).toEqual([
     'Nome',
     'CPF/CNPJ',
@@ -149,11 +163,6 @@ it('mostra as seções em abas na ordem solicitada e abre apenas a aba seleciona
   ).toBeTruthy();
   const whatsapp = target.querySelector<HTMLAnchorElement>('a[href^="https://wa.me/"]')!;
   expect(whatsapp.querySelector('svg')).not.toBeNull();
-  expect(
-    target
-      .querySelector('[aria-label="Endereço do cliente"]')
-      ?.parentElement?.parentElement?.querySelector('svg')
-  ).not.toBeNull();
   for (const value of ['529.982.247-25', '11912345678', 'cliente@exemplo.com', 'Brasileira']) {
     expect(dados.textContent).toContain(value);
   }

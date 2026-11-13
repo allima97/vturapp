@@ -36,7 +36,8 @@
     FileText,
     DollarSign,
     RefreshCw,
-    Copy
+    Copy,
+    Pencil
   } from '$lib/icons';
   import { ApiError, apiFetch, apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { ensureServerSessionCookie } from '$lib/services/session';
@@ -71,6 +72,12 @@
   import { formatBRL } from './_components/formatadores';
   import { atualizarDataHotel } from './_components/hotel-datas';
   import { renderPreviewDia } from './_components/preview-dia';
+  import {
+    buildRoteiroCardSection,
+    renderPreviewFlights,
+    renderPreviewHotels,
+    renderPreviewPasseios
+  } from './_components/preview-cards';
   import { nomeCidadeNoPdf } from './_components/preview-cidade';
   import AbaItinerario from './_components/AbaItinerario.svelte';
   import CidadeRoteiro from './_components/CidadeRoteiro.svelte';
@@ -203,6 +210,7 @@
   let duplicating = $state(false);
   let previewingPdf = $state(false);
   let incluirCabecalhoRodapePdf = $state(false);
+  let editandoDadosRoteiro = $state(false);
   let abaAtiva: AbaId = $state('itinerario');
 
   function selecionarAba(key: string) {
@@ -1027,108 +1035,6 @@
     </table></div>`;
   }
 
-  function splitTrechoCities(value: string | null | undefined) {
-    const parts = String(value || '')
-      .split(/\s+-\s+/)
-      .map((part) => part.trim())
-      .filter(Boolean);
-    return {
-      origem: parts[0] || '',
-      destino: parts[1] || ''
-    };
-  }
-
-  function resolvePreviewAirlineIata(value: string | null | undefined) {
-    const normalized = String(value || '')
-      .trim()
-      .toLowerCase();
-    if (!normalized) return '';
-    if (normalized.includes('lufthansa')) return 'LH';
-    if (normalized.includes('latam')) return 'LA';
-    if (normalized.includes('gol')) return 'G3';
-    if (normalized.includes('azul')) return 'AD';
-    if (normalized.includes('sky')) return 'H2';
-    if (normalized.includes('tap')) return 'TP';
-    if (normalized.includes('iberia')) return 'IB';
-    if (normalized.includes('air france')) return 'AF';
-    if (normalized.includes('klm')) return 'KL';
-    if (normalized.includes('emirates')) return 'EK';
-    if (normalized.includes('qatar')) return 'QR';
-    if (normalized.includes('turkish')) return 'TK';
-    return String(value || '')
-      .trim()
-      .slice(0, 3)
-      .toUpperCase();
-  }
-
-  function formatFlightCity(value: string | null | undefined) {
-    const normalized = String(value || '').trim();
-    if (!normalized) return '';
-    return (
-      normalized
-        .split(/\s*-\s*/)
-        .map((part) => part.trim())
-        .filter(Boolean)[0] || normalized
-    );
-  }
-
-  function formatFlightPlace(
-    city: string | null | undefined,
-    airportCode: string | null | undefined
-  ) {
-    const cityLabel = formatFlightCity(city);
-    const code = String(airportCode || '')
-      .trim()
-      .toUpperCase();
-    if (cityLabel && code) return `${cityLabel} (${code})`;
-    if (cityLabel) return cityLabel;
-    if (code) return code;
-    return '';
-  }
-
-  function buildPreviewFlightTable(items: RotTransporte[]) {
-    if (items.length === 0) return '';
-
-    const airlineLegend = new Map<string, string>();
-    const rows = items
-      .map((item) => {
-        const trecho = splitTrechoCities(item.trecho || '');
-        const ciaCompleta = String(item.cia_aerea || '').trim();
-        const cia = resolvePreviewAirlineIata(ciaCompleta) || ciaCompleta || 'AÉREO';
-        if (ciaCompleta && cia && cia !== ciaCompleta.toUpperCase()) {
-          airlineLegend.set(cia, ciaCompleta);
-        }
-        const origem = formatFlightPlace(trecho.origem, item.aeroporto_saida) || '-';
-        const destino = formatFlightPlace(trecho.destino, item.aeroporto_chegada) || '-';
-        const horarios =
-          [String(item.hora_saida || '').trim(), String(item.hora_chegada || '').trim()]
-            .filter(Boolean)
-            .join(' / ') || '-';
-
-        return [
-          cia,
-          origem,
-          formatPreviewDate(item.data_voo || item.data_inicio),
-          destino,
-          formatPreviewDate(item.data_fim || item.data_voo || item.data_inicio),
-          horarios
-        ];
-      })
-      .filter((row) => row.length > 0);
-
-    const legendHtml =
-      airlineLegend.size > 0
-        ? `<div class="preview-legend">${Array.from(airlineLegend.entries())
-            .map(
-              ([code, name]) =>
-                `<div><b>${escapePreviewHtml(code)}</b> = ${escapePreviewHtml(name)}</div>`
-            )
-            .join('')}</div>`
-        : '';
-
-    return `${buildPreviewTable(['Cia', 'Origem', 'Saída', 'Destino', 'Chegada', 'Horários'], rows, 'flight-preview-table')}${legendHtml}`;
-  }
-
   function extractStoragePath(url?: string | null): string | null {
     if (!url) return null;
     const marker = '/quotes/';
@@ -1212,65 +1118,13 @@
     const transportesItems = transportes.filter(
       (item) => item.trecho || item.cia_aerea || item.data_voo
     );
-    const transportesHtml =
-      transportesItems.length > 0 ? buildPreviewFlightTable(transportesItems) : '';
+    const transportesHtml = renderPreviewFlights(transportesItems, formatPreviewDate);
 
     const hoteisItems = hoteis.filter((item) => item.hotel || item.cidade);
-    const groupedHoteis = Array.from(
-      hoteisItems.reduce((map, item) => {
-        const key = String(item.cidade || 'Hotéis').trim() || 'Hotéis';
-        if (!map.has(key)) map.set(key, [] as RotHotel[]);
-        map.get(key)?.push(item);
-        return map;
-      }, new Map<string, RotHotel[]>())
-    );
-    const hoteisHtml =
-      groupedHoteis.length > 0
-        ? groupedHoteis
-            .map(([cidade, itens]) => {
-              const rows = itens.map((item) => [
-                String(item.hotel || '').trim() || '-',
-                formatPreviewDate(item.data_inicio) || '-',
-                formatPreviewDate(item.data_fim) || '-',
-                Number(item.noites || 0) > 0 ? String(Number(item.noites || 0)) : '-',
-                String(item.apto || '').trim() || '-',
-                String(item.regime || '').trim() || '-'
-              ]);
-              return `<div class="preview-group-block"><div class="preview-group-title">${escapePreviewHtml(nomeCidadeNoPdf(cidade))}</div>${buildPreviewTable(['Nome hotel', 'Início', 'Fim', 'Noites', 'Acomodação', 'Regime'], rows, 'hotel-preview-table')}</div>`;
-            })
-            .join('')
-        : '';
+    const hoteisHtml = renderPreviewHotels(hoteisItems, formatPreviewDate);
 
     const passeiosItems = passeios.filter((item) => item.passeio || item.cidade);
-    const groupedPasseios = Array.from(
-      passeiosItems.reduce((map, item) => {
-        const key = String(item.cidade || 'Serviços').trim() || 'Serviços';
-        if (!map.has(key)) map.set(key, [] as RotPasseio[]);
-        map.get(key)?.push(item);
-        return map;
-      }, new Map<string, RotPasseio[]>())
-    );
-    const passeiosHtml =
-      groupedPasseios.length > 0
-        ? groupedPasseios
-            .map(([cidade, itens]) => {
-              const rows = itens.map((item) => {
-                const dataInicio = formatPreviewDate(item.data_inicio);
-                const dataFim = formatPreviewDate(item.data_fim);
-                const data =
-                  dataInicio && dataFim && dataInicio !== dataFim
-                    ? `${dataInicio} a ${dataFim}`
-                    : dataInicio || dataFim || '-';
-                return [
-                  data,
-                  String(item.passeio || '').trim() || '-',
-                  String(item.ingressos || '').trim() || '-'
-                ];
-              });
-              return `<div class="preview-group-block"><div class="preview-group-title">${escapePreviewHtml(nomeCidadeNoPdf(cidade))}</div>${buildPreviewTable(['Data', 'Descrição', 'Ingressos'], rows, 'passeio-preview-table')}</div>`;
-            })
-            .join('')
-        : '';
+    const passeiosHtml = renderPreviewPasseios(passeiosItems, formatPreviewDate);
 
     const investimentoRows = investimentos
       .filter(
@@ -1432,50 +1286,42 @@
             .card.compact h3 { margin-bottom: 6px; }
             .card h3 { margin: 0 0 8px; font-size: 15px; }
             .card p { margin: 0; line-height: 1.55; white-space: normal; }
+            .roteiro-print-section { margin-top: 24px; }
+            .roteiro-print-table { width: 100%; table-layout: fixed; border-spacing: 0; }
+            .roteiro-print-table td { padding: 0; }
+            .roteiro-print-section h2 { margin: 0 0 12px; padding: 14px 18px; border: 1px solid #9aaac2; border-radius: 18px; background: white; color: #243aa3; font: bold 22px Georgia, "Times New Roman", serif; text-align: center; }
+            .roteiro-print-title-icon { width: 1em; height: 1em; margin-right: 0.35em; vertical-align: -0.15em; }
+            .roteiro-print-subtitle { display: block; margin-top: 6px; font-size: 13px; font-weight: normal; }
+            .roteiro-card { margin: 12px 0 0; border: 1px solid #9aaac2; border-radius: 18px; background: white; color: #1f2430; font-family: Georgia, "Times New Roman", serif; overflow-wrap: anywhere; }
+            .roteiro-card h3 { font-size: 15px; line-height: 1.4; }
+            .roteiro-card-city { margin-bottom: 8px; color: #243aa3; font-size: 18px; font-weight: 700; }
+            .roteiro-card .roteiro-card-detail { margin-top: 6px; line-height: 1.4; }
+            .roteiro-optional-table { width: 100%; table-layout: fixed; border-spacing: 0; }
+            .roteiro-optional-item + .roteiro-optional-item { margin-top: 14px; }
+            .roteiro-flight { padding: 0; overflow: hidden; border-radius: 5px; font-family: Arial, sans-serif; color: #17233c; }
+            .roteiro-flight-header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 12px; padding: 9px 14px; background: #243aa3; color: white; font-weight: bold; }
+            .roteiro-flight-body { padding: 12px 14px; }
+            .roteiro-flight-route { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: center; }
+            .roteiro-flight-place strong { display: block; }
+            .roteiro-flight-code { color: #0075ca; font-size: 22px; }
+            .roteiro-flight-place p { margin-top: 5px; color: #475569; }
+            .roteiro-flight-destination { text-align: right; }
+            .roteiro-flight-duration { color: #64748b; font-size: 10px; text-align: center; }
+            .roteiro-flight-duration span { display: flex; align-items: center; width: 110px; margin: 0 auto; color: #0075ca; font-size: 18px; }
+            .roteiro-flight-duration span::before, .roteiro-flight-duration span::after { content: ''; flex: 1; height: 2px; background: #cbd5e1; }
+            .roteiro-flight-arrival-notice { display: block; color: #92400e; font-size: 10px; font-weight: 700; border: 1px solid #b45309; border-radius: 4px; padding: 3px 6px; margin-top: 4px; }
+            .roteiro-flight-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 16px; border-top: 1px dashed #dbe3ec; margin-top: 12px; padding-top: 10px; }
+            .roteiro-flight-details span { display: block; color: #64748b; font-size: 10px; font-weight: bold; }
+            .roteiro-flight-details strong { overflow-wrap: anywhere; }
+            @media (max-width: 500px) { .roteiro-flight-duration span { width: 40px; } .roteiro-flight-route { gap: 6px; } }
             .preview-table-wrap { overflow: hidden; border: 1px solid #e2e8f0; border-radius: 14px; }
             .preview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
             .preview-table thead th { text-align: left; padding: 8px; border-bottom: 1px solid #cbd5e1; background: #eef2ff; color: #1e3a8a; }
             .preview-table tbody td { padding: 8px; border-bottom: 1px solid #e2e8f0; color: #475569; vertical-align: top; }
             .preview-table tbody tr:last-child td { border-bottom: 0; }
-            .preview-group-block { margin: 0 0 12px 0; }
-            .preview-group-title { font-size: 15px; font-weight: 700; color: #334155; margin: 0 0 10px 0; }
-            .preview-legend { margin-top: 10px; font-size: 11px; color: #334155; }
-            .preview-legend div + div { margin-top: 4px; }
             .preview-footer-card { padding: 12px 14px; margin: 24px 0 12px 0; font-size: 10px; color: #64748b; }
             .preview-complement-img { margin: 12px 0 0 0; text-align: center; }
             .preview-complement-img img { max-height: 170px; max-width: 100%; }
-            .hotel-preview-table.preview-table {
-              font-size: 13px;
-              table-layout: fixed;
-              width: 100%;
-            }
-            .hotel-preview-table.preview-table thead th { font-size: 12px; }
-            .hotel-preview-table.preview-table tbody td { font-size: 13px; }
-            .hotel-preview-table.preview-table th:nth-child(1),
-            .hotel-preview-table.preview-table td:nth-child(1) { width: 24%; }
-            .hotel-preview-table.preview-table th:nth-child(2),
-            .hotel-preview-table.preview-table td:nth-child(2) { width: 13%; white-space: nowrap; }
-            .hotel-preview-table.preview-table th:nth-child(3),
-            .hotel-preview-table.preview-table td:nth-child(3) { width: 13%; white-space: nowrap; }
-            .hotel-preview-table.preview-table th:nth-child(4),
-            .hotel-preview-table.preview-table td:nth-child(4) { width: 8%; white-space: nowrap; text-align: center; }
-            .hotel-preview-table.preview-table th:nth-child(5),
-            .hotel-preview-table.preview-table td:nth-child(5) { width: 18%; }
-            .hotel-preview-table.preview-table th:nth-child(6),
-            .hotel-preview-table.preview-table td:nth-child(6) { width: 24%; }
-            .passeio-preview-table.preview-table {
-              table-layout: fixed;
-              width: 100%;
-            }
-            .passeio-preview-table.preview-table th:nth-child(1),
-            .passeio-preview-table.preview-table td:nth-child(1) { width: 20%; }
-            .passeio-preview-table.preview-table th:nth-child(2),
-            .passeio-preview-table.preview-table td:nth-child(2) { width: 60%; }
-            .passeio-preview-table.preview-table th:nth-child(3),
-            .passeio-preview-table.preview-table td:nth-child(3) { width: 20%; }
-            .flight-preview-table.preview-table { font-size: 13px; }
-            .flight-preview-table.preview-table thead th { font-size: 12px; }
-            .flight-preview-table.preview-table tbody td { font-size: 13px; }
             .meta { color: #475569; font-size: 13px; margin-bottom: 8px !important; }
             .empty { color: #64748b; font-style: italic; }
             ul { margin: 0; padding-left: 18px; }
@@ -1494,7 +1340,6 @@
               .preview-title-card,
               .preview-footer-card,
               .card,
-              .preview-group-block,
               .preview-table-wrap,
               .preview-complement-img,
               .preview-header-table,
@@ -1502,6 +1347,13 @@
                 break-inside: avoid;
                 page-break-inside: avoid;
               }
+              .roteiro-print-table thead { display: table-header-group; }
+              .roteiro-optional-table thead { display: table-header-group; }
+              .roteiro-card--long { break-inside: auto; page-break-inside: auto; }
+              .roteiro-flight.roteiro-card--long { overflow: visible; }
+              .roteiro-optional-item { break-inside: avoid; page-break-inside: avoid; }
+              .roteiro-optional-item--long { break-inside: auto; page-break-inside: auto; }
+              .roteiro-flight-header { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
             }
           </style>
         </head>
@@ -1510,20 +1362,21 @@
             <div class="toolbar"><a class="print-action" href="#" onclick="event.preventDefault(); window.print();">Imprimir / Salvar em PDF</a></div>
             ${incluirCabecalhoRodapePdf ? headerCardHtml : ''}
             ${titleCardHtml}
-            ${buildPreviewSection('Itinerário Detalhado', diasHtml)}
-            ${buildPreviewRawSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
-            ${buildPreviewRawSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
-            ${buildPreviewSection(
-              'Passeios Opcionais — sugestões sem data marcada, não incluídas no valor do roteiro',
+            ${buildRoteiroCardSection('Itinerário Detalhado', diasHtml, 'preview-itinerary-section', '', 'itinerary')}
+            ${buildRoteiroCardSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section', '', 'hotels')}
+            ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
+            ${buildRoteiroCardSection(
+              'Passeios Opcionais',
               buildOpcionaisHtml(
-                removerPasseiosIncorporados(opcionais, passeios).map((grupo) => ({
-                  ...grupo,
-                  cidade: nomeCidadeNoPdf(grupo.cidade)
-                })),
-                escapePreviewHtml
-              )
+                removerPasseiosIncorporados(opcionais, passeios),
+                escapePreviewHtml,
+                nomeCidadeNoPdf
+              ),
+              'preview-optionals-section',
+              'Sugestões sem data marcada, não incluídas no valor do roteiro',
+              'optionals'
             )}
-            ${buildPreviewRawSection('Passagem Aérea', transportesHtml, 'preview-airfare-section')}
+            ${buildRoteiroCardSection('Passagem Aérea', transportesHtml, 'preview-airfare-section', '', 'flights')}
             ${buildPreviewRawSection('Investimento', investimentoHtml, 'preview-investimento-section')}
             ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
             ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'))}
@@ -1601,7 +1454,12 @@
     ]}
     actions={[
       { label: 'Voltar', href: '/orcamentos/roteiros', variant: 'secondary', icon: ArrowLeft },
-      { label: 'Duplicar', onClick: duplicateRoteiro, variant: 'secondary', icon: Copy }
+      {
+        label: editandoDadosRoteiro ? 'Concluir edição' : 'Editar',
+        onClick: () => (editandoDadosRoteiro = !editandoDadosRoteiro),
+        variant: 'secondary',
+        icon: Pencil
+      }
     ]}
   />
 
@@ -1609,92 +1467,56 @@
   <Card title="Dados do roteiro" color="clientes" class="mb-4">
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5">
       <div class="lg:col-span-2">
-        <FieldInput
-          label="Nome"
-          required
-          bind:value={nome}
-          placeholder="Nome do roteiro"
-          id="rot-nome"
-        />
+        {#if editandoDadosRoteiro}
+          <FieldInput
+            label="Nome"
+            required
+            bind:value={nome}
+            placeholder="Nome do roteiro"
+            id="rot-nome"
+          />
+        {:else}
+          <p class="vtur-label">Nome <span class="text-red-500" aria-hidden="true">*</span></p>
+          <p id="rot-nome" class="min-h-10 px-2.5 py-2.5 text-sm break-words text-slate-900">
+            {nome || '—'}
+          </p>
+        {/if}
       </div>
       <div>
-        <FieldInput
-          label="Duração (dias)"
-          type="number"
-          min="1"
-          bind:value={duracao}
-          placeholder="Ex: 7"
-          id="rot-dur"
-        />
+        {#if editandoDadosRoteiro}
+          <FieldInput
+            label="Duração (dias)"
+            type="number"
+            min="1"
+            bind:value={duracao}
+            placeholder="Ex: 7"
+            id="rot-dur"
+          />
+        {:else}
+          <p class="vtur-label">Duração (dias)</p>
+          <p id="rot-dur" class="min-h-10 px-2.5 py-2.5 text-sm break-words text-slate-900">
+            {duracao || '—'}
+          </p>
+        {/if}
       </div>
       <div class="lg:col-span-2">
-        <FieldInput
-          id="rot-cidades-visitadas"
-          label="Cidades Visitadas"
-          bind:value={inicioCidade}
-          placeholder="Ex: São Luís • Barreirinhas • Parnaíba • Teresina"
-        />
+        {#if editandoDadosRoteiro}
+          <FieldInput
+            id="rot-cidades-visitadas"
+            label="Cidades Visitadas"
+            bind:value={inicioCidade}
+            placeholder="Ex: São Luís • Barreirinhas • Parnaíba • Teresina"
+          />
+        {:else}
+          <p class="vtur-label">Cidades Visitadas</p>
+          <p
+            id="rot-cidades-visitadas"
+            class="min-h-10 px-2.5 py-2.5 text-sm break-words text-slate-900"
+          >
+            {inicioCidade || '—'}
+          </p>
+        {/if}
       </div>
-    </div>
-
-    <div class="mt-4">
-      <FieldCheckbox
-        label="Incluir cabeçalho e rodapé no PDF"
-        helper="Inclui logo, contatos, QR Code e condições de preços (se habilitadas na aba Pagamento). Por padrão, o PDF é gerado sem esses dados."
-        bind:checked={incluirCabecalhoRodapePdf}
-        color="clientes"
-      />
-    </div>
-
-    <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center [&>*]:w-full sm:[&>*]:w-auto">
-      <Button
-        type="button"
-        variant="secondary"
-        size="sm"
-        on:click={() => goto('/orcamentos/roteiros')}>Cancelar</Button
-      >
-      <Button
-        type="button"
-        variant="secondary"
-        size="sm"
-        loading={previewingPdf}
-        on:click={handlePreviewPdf}
-      >
-        <FileText size={14} class="mr-1" />
-        Visualizar PDF
-      </Button>
-      <Button
-        type="button"
-        variant="secondary"
-        size="sm"
-        loading={duplicating}
-        on:click={duplicateRoteiro}
-      >
-        <Copy size={14} class="mr-1" />
-        Duplicar roteiro
-      </Button>
-      <Button
-        type="button"
-        variant="primary"
-        color="clientes"
-        size="sm"
-        loading={saving}
-        on:click={save}
-      >
-        <Save size={14} class="mr-1" />
-        Salvar roteiro
-      </Button>
-      <Button
-        type="button"
-        variant="secondary"
-        size="sm"
-        on:click={() => {
-          showGerarModal = true;
-        }}
-      >
-        <DollarSign size={14} class="mr-1" />
-        Gerar Orçamento
-      </Button>
     </div>
   </Card>
 
@@ -1711,148 +1533,146 @@
     }))}
   />
 
-  <!-- ──────────────────── ABA: ITINERÁRIO ───────────────────────────────── -->
-  {#if abaAtiva === 'itinerario'}
-    <AbaItinerario
-      bind:dias
-      bind:diasImportError
-      bind:diasImportMsg
-      bind:showDiasBusca
-      bind:showDiasImport
-      {sugestoes}
-      buscarDescricoes={abrirDescricoes}
-      {abrirBuscaDias}
-    />
-
-    <!-- ──────────────────── ABA: HOTÉIS ──────────────────────────────────── -->
-  {:else if abaAtiva === 'hoteis'}
-    <AbaHoteis
-      {HOTEL_CATEGORIA_OPTIONS}
-      {HOTEL_REGIME_OPTIONS}
-      {handleImportHotelText}
-      bind:hoteis
-      {hotelImportError}
-      {hotelImportMsg}
-      bind:hotelImportText
-      {onHotelDateChange}
-      {sugestoes}
-    />
-
-    <!-- ──────────────────── ABA: PASSEIOS ────────────────────────────────── -->
-  {:else if abaAtiva === 'opcionais'}
-    <AbaOpcionais
-      bind:opcionais
-      cidadesItinerario={dias.map((dia) => ({ cidade: dia.cidade, cidade_id: dia.cidade_id }))}
-      passeiosIncorporados={passeios}
-    />
-  {:else if abaAtiva === 'passeios'}
-    <AbaPasseios
-      {PASSEIO_TIPO_OPTIONS}
-      {handleImportPasseioText}
-      {passeioImportError}
-      {passeioImportMsg}
-      bind:passeioImportText
-      bind:passeios
-      {sugestoes}
-    />
-
-    <!-- ──────────────────── ABA: AÉREO ───────────────────────────────────── -->
-  {:else if abaAtiva === 'transporte'}
-    <AbaTransporte
-      {TRANSPORTE_TIPO_OPTIONS}
-      {TRANSPORTE_TIPO_VOO_OPTIONS}
-      {aereoImportError}
-      {aereoImportMsg}
-      bind:aereoImportText
-      {handleImportAereoText}
-      {onAereoValorChange}
-      bind:transportes
-    />
-
-    <!-- ──────────────────── ABA: INVESTIMENTO ────────────────────────────── -->
-  {:else if abaAtiva === 'investimento'}
-    <AbaInvestimento
-      {INVESTIMENTO_TIPO_OPTIONS}
-      bind:investimentos
-      {onInvestimentoChange}
-      {totalInvestimento}
-    />
-
-    <!-- ──────────────────── ABA: PAGAMENTO ───────────────────────────────── -->
-  {:else if abaAtiva === 'pagamento'}
-    <AbaPagamento
-      {PAGAMENTO_SERVICO_OPTIONS}
-      bind:mostrarInformacoesPdf
-      bind:mostrarPagamentoPdf
-      bind:mostrarRodapePdf
-      bind:pagamentos
-      {sugestoes}
-      {totalPagamento}
-    />
-
-    <!-- ──────────────────── ABA: INCLUSÕES ───────────────────────────────── -->
-  {:else if abaAtiva === 'inclusoes'}
-    <Card title="Inclusões / Não inclusões" color="clientes">
-      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div>
-          <label class="vtur-label" for="inclui">O roteiro inclui</label>
-          <FieldTextarea
-            id="inclui"
-            bind:value={incluiTexto}
-            rows={12}
-            class_name="w-full"
-            monospace={true}
-            placeholder="Uma inclusão por linha&#10;Ex: Passagem aérea&#10;Hotel com café da manhã&#10;Transfer aeroporto/hotel"
-          />
-          <p class="mt-1 text-xs text-slate-400">
-            {incluiTexto.split('\n').filter((l) => l.trim()).length} linha(s)
-          </p>
-        </div>
-        <div>
-          <label class="vtur-label" for="nao-inclui">O roteiro NÃO inclui</label>
-          <FieldTextarea
-            id="nao-inclui"
-            bind:value={naoIncluiTexto}
-            rows={12}
-            class_name="w-full"
-            monospace={true}
-            placeholder="Uma exclusão por linha&#10;Ex: Despesas pessoais&#10;Passeios opcionais&#10;Vistos"
-          />
-          <p class="mt-1 text-xs text-slate-400">
-            {naoIncluiTexto.split('\n').filter((l) => l.trim()).length} linha(s)
-          </p>
-        </div>
-      </div>
-    </Card>
-
-    <!-- ──────────────────── ABA: INFORMAÇÕES ─────────────────────────────── -->
-  {:else if abaAtiva === 'informacoes'}
-    <Card title="Informações importantes" color="clientes">
-      <label class="vtur-label" for="info-imp">Informações importantes</label>
-      <FieldTextarea
-        id="info-imp"
-        bind:value={informacoesImportantes}
-        rows={20}
-        class_name="w-full"
-        monospace={true}
-        placeholder="Documentos necessários, dicas, políticas de cancelamento, informações de bagagem, etc."
+  <fieldset
+    disabled={!editandoDadosRoteiro}
+    aria-label="Dados detalhados do roteiro"
+    class="min-w-0 border-0 p-0"
+  >
+    <legend class="sr-only">Dados detalhados do roteiro</legend>
+    <!-- ──────────────────── ABA: ITINERÁRIO ───────────────────────────────── -->
+    {#if abaAtiva === 'itinerario'}
+      <AbaItinerario
+        bind:dias
+        bind:diasImportError
+        bind:diasImportMsg
+        bind:showDiasBusca
+        bind:showDiasImport
+        {sugestoes}
+        buscarDescricoes={abrirDescricoes}
+        {abrirBuscaDias}
       />
-      <p class="mt-1 text-xs text-slate-400">
-        {informacoesImportantes.split('\n').filter((l) => l.trim()).length} linha(s)
-      </p>
-    </Card>
-  {/if}
 
-  <div class="mt-6">
-    <FieldCheckbox
-      label="Incluir cabeçalho e rodapé no PDF"
-      helper="Inclui logo, contatos, QR Code e condições de preços (se habilitadas na aba Pagamento). Por padrão, o PDF é gerado sem esses dados."
-      bind:checked={incluirCabecalhoRodapePdf}
-      color="clientes"
-    />
-  </div>
+      <!-- ──────────────────── ABA: HOTÉIS ──────────────────────────────────── -->
+    {:else if abaAtiva === 'hoteis'}
+      <AbaHoteis
+        {HOTEL_CATEGORIA_OPTIONS}
+        {HOTEL_REGIME_OPTIONS}
+        {handleImportHotelText}
+        bind:hoteis
+        {hotelImportError}
+        {hotelImportMsg}
+        bind:hotelImportText
+        {onHotelDateChange}
+        {sugestoes}
+      />
 
-  <!-- ─── Botão salvar flutuante ─────────────────────────────────────────── -->
+      <!-- ──────────────────── ABA: PASSEIOS ────────────────────────────────── -->
+    {:else if abaAtiva === 'opcionais'}
+      <AbaOpcionais
+        bind:opcionais
+        cidadesItinerario={dias.map((dia) => ({ cidade: dia.cidade, cidade_id: dia.cidade_id }))}
+        passeiosIncorporados={passeios}
+      />
+    {:else if abaAtiva === 'passeios'}
+      <AbaPasseios
+        {PASSEIO_TIPO_OPTIONS}
+        {handleImportPasseioText}
+        {passeioImportError}
+        {passeioImportMsg}
+        bind:passeioImportText
+        bind:passeios
+        {sugestoes}
+      />
+
+      <!-- ──────────────────── ABA: AÉREO ───────────────────────────────────── -->
+    {:else if abaAtiva === 'transporte'}
+      <AbaTransporte
+        {TRANSPORTE_TIPO_OPTIONS}
+        {TRANSPORTE_TIPO_VOO_OPTIONS}
+        {aereoImportError}
+        {aereoImportMsg}
+        bind:aereoImportText
+        {handleImportAereoText}
+        {onAereoValorChange}
+        bind:transportes
+      />
+
+      <!-- ──────────────────── ABA: INVESTIMENTO ────────────────────────────── -->
+    {:else if abaAtiva === 'investimento'}
+      <AbaInvestimento
+        {INVESTIMENTO_TIPO_OPTIONS}
+        bind:investimentos
+        {onInvestimentoChange}
+        {totalInvestimento}
+      />
+
+      <!-- ──────────────────── ABA: PAGAMENTO ───────────────────────────────── -->
+    {:else if abaAtiva === 'pagamento'}
+      <AbaPagamento
+        {PAGAMENTO_SERVICO_OPTIONS}
+        bind:mostrarInformacoesPdf
+        bind:mostrarPagamentoPdf
+        bind:mostrarRodapePdf
+        bind:pagamentos
+        {sugestoes}
+        {totalPagamento}
+      />
+
+      <!-- ──────────────────── ABA: INCLUSÕES ───────────────────────────────── -->
+    {:else if abaAtiva === 'inclusoes'}
+      <Card title="Inclusões / Não inclusões" color="clientes">
+        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div>
+            <label class="vtur-label" for="inclui">O roteiro inclui</label>
+            <FieldTextarea
+              id="inclui"
+              bind:value={incluiTexto}
+              rows={12}
+              class_name="w-full"
+              monospace={true}
+              placeholder="Uma inclusão por linha&#10;Ex: Passagem aérea&#10;Hotel com café da manhã&#10;Transfer aeroporto/hotel"
+            />
+            <p class="mt-1 text-xs text-slate-400">
+              {incluiTexto.split('\n').filter((l) => l.trim()).length} linha(s)
+            </p>
+          </div>
+          <div>
+            <label class="vtur-label" for="nao-inclui">O roteiro NÃO inclui</label>
+            <FieldTextarea
+              id="nao-inclui"
+              bind:value={naoIncluiTexto}
+              rows={12}
+              class_name="w-full"
+              monospace={true}
+              placeholder="Uma exclusão por linha&#10;Ex: Despesas pessoais&#10;Passeios opcionais&#10;Vistos"
+            />
+            <p class="mt-1 text-xs text-slate-400">
+              {naoIncluiTexto.split('\n').filter((l) => l.trim()).length} linha(s)
+            </p>
+          </div>
+        </div>
+      </Card>
+
+      <!-- ──────────────────── ABA: INFORMAÇÕES ─────────────────────────────── -->
+    {:else if abaAtiva === 'informacoes'}
+      <Card title="Informações importantes" color="clientes">
+        <label class="vtur-label" for="info-imp">Informações importantes</label>
+        <FieldTextarea
+          id="info-imp"
+          bind:value={informacoesImportantes}
+          rows={20}
+          class_name="w-full"
+          monospace={true}
+          placeholder="Documentos necessários, dicas, políticas de cancelamento, informações de bagagem, etc."
+        />
+        <p class="mt-1 text-xs text-slate-400">
+          {informacoesImportantes.split('\n').filter((l) => l.trim()).length} linha(s)
+        </p>
+      </Card>
+    {/if}
+  </fieldset>
+
+  <!-- ─── Ações do roteiro ─────────────────────────────────────────────── -->
   <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-end [&>*]:w-full sm:[&>*]:w-auto">
     <Button type="button" variant="secondary" on:click={() => goto('/orcamentos/roteiros')}
       >Cancelar</Button
@@ -1868,6 +1688,16 @@
     <Button type="button" variant="primary" color="clientes" loading={saving} on:click={save}>
       <Save size={16} class="mr-2" />
       Salvar roteiro
+    </Button>
+    <Button
+      type="button"
+      variant="secondary"
+      on:click={() => {
+        showGerarModal = true;
+      }}
+    >
+      <DollarSign size={16} class="mr-2" />
+      Gerar Orçamento
     </Button>
   </div>
 {/if}
@@ -2002,7 +1832,7 @@
               class_name="shrink-0 border border-clientes-200 bg-clientes-100 px-2.5! py-1! text-xs font-medium text-clientes-700 hover:!bg-clientes-200"
               on:click={() => addDiaBanco(dia)}
             >
-              {diaBuscaAlvo ? 'Incluir descrição' : 'Adicionar dia'}
+              <Plus size={16} class="mr-2" />{diaBuscaAlvo ? 'Incluir descrição' : 'Adicionar dia'}
             </Button>
           </div>
         {/each}

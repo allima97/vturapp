@@ -173,6 +173,32 @@ describe('Relatório de Performance (tela)', () => {
     expect(document.querySelectorAll('[role="img"][aria-label^="% ICM"]')).toHaveLength(2);
   });
 
+  it('mantém dados e totais nos cartões móveis sem alterar as tabelas de impressão', async () => {
+    await montar();
+    await vi.waitFor(() =>
+      expect(document.querySelectorAll('table.table-mobile-cards')).toHaveLength(2)
+    );
+
+    for (const section of document.querySelectorAll(
+      'section[aria-label="Produtos"], section[aria-label="Orçamentos por produto"]'
+    )) {
+      const mobile = section.querySelector('table.table-mobile-cards')!;
+      const desktop = section.querySelector('table:not(.table-mobile-cards)')!;
+      const mobileRows = [...mobile.querySelectorAll('tbody tr')];
+      const desktopRows = [...desktop.querySelectorAll('tbody tr, tfoot tr')];
+      expect(mobileRows).toHaveLength(desktopRows.length);
+      for (let i = 0; i < mobileRows.length; i++) {
+        const values = (row: Element) =>
+          [...row.querySelectorAll('td')].map((cell) =>
+            cell.textContent?.replace(/\s+/g, ' ').trim()
+          );
+        expect(values(mobileRows[i])).toEqual(values(desktopRows[i]));
+      }
+      expect(mobile.parentElement?.classList.contains('print:hidden')).toBe(true);
+      expect(desktop.parentElement?.classList.contains('print:block')).toBe(true);
+    }
+  });
+
   it('vendedor: aviso, sem chamar o relatório', async () => {
     st.perms.set({ ready: true, isSystemAdmin: false, isMaster: false, isGestor: false });
     await montar();

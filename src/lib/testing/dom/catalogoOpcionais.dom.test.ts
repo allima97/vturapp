@@ -505,12 +505,17 @@ describe('opcionais do catálogo no roteiro', () => {
     input.value = 'Lisboa';
     input.dispatchEvent(new Event('input', { bubbles: true }));
     flushSync();
+    expect(get()).toEqual([{ cidade: 'Lisboa', cidade_pendente: true, passeios: [] }]);
     resolver({
       items: [{ id: '1', cidade: 'Porto', nome: 'Tour', descricao: '' }],
       hasMore: false
     });
-    await vi.waitFor(() => expect(toast.error).toHaveBeenCalled());
-    expect(get()).toEqual([{ cidade: 'Lisboa', passeios: [] }]);
+    await vi.waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        'Uma cidade foi alterada ou removida. Tente novamente.'
+      )
+    );
+    expect(get()).toEqual([{ cidade: 'Lisboa', cidade_pendente: true, passeios: [] }]);
     await unmount(app);
   });
 

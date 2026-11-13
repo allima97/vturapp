@@ -55,7 +55,7 @@
     <div class="space-y-3">
       {#each transportes as transporte, index}
         <div class="relative rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <div class="absolute top-3 right-3 flex gap-1">
+          <div class="mb-2 flex gap-1 sm:absolute sm:top-3 sm:right-3 sm:mb-0">
             <Button
               type="button"
               variant="ghost"
@@ -138,6 +138,14 @@
               </div>
               <div>
                 <FieldInput
+                  label="Número do voo"
+                  bind:value={transporte.descricao}
+                  placeholder="Ex: LA 123"
+                  class_name="w-full"
+                />
+              </div>
+              <div>
+                <FieldInput
                   label="Data do voo"
                   type="date"
                   bind:value={transporte.data_voo}
@@ -182,6 +190,14 @@
                   label="Duração voo"
                   bind:value={transporte.duracao_voo}
                   placeholder="Ex: 11h30"
+                  class_name="w-full"
+                />
+              </div>
+              <div>
+                <FieldInput
+                  label="Data chegada"
+                  type="date"
+                  bind:value={transporte.data_fim}
                   class_name="w-full"
                 />
               </div>
@@ -245,22 +261,22 @@
               </div>
               <div>
                 <FieldInput
+                  money
                   label="Valor total (R$)"
                   type="number"
                   value={transporte.valor_total ?? ''}
                   class_name="w-full"
-                  on:input={(e) =>
-                    onAereoValorChange(index, 'valor_total', (e.target as HTMLInputElement).value)}
+                  on:moneyInput={(e) => onAereoValorChange(index, 'valor_total', e.detail)}
                 />
               </div>
               <div>
                 <FieldInput
+                  money
                   label="Taxas (R$)"
                   type="number"
                   value={transporte.taxas ?? ''}
                   class_name="w-full"
-                  on:input={(e) =>
-                    onAereoValorChange(index, 'taxas', (e.target as HTMLInputElement).value)}
+                  on:moneyInput={(e) => onAereoValorChange(index, 'taxas', e.detail)}
                 />
               </div>
               <div>

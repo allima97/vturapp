@@ -12,6 +12,7 @@ import {
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import { complementarListaOperacional } from '$lib/server/destinoOperacional';
+import { canAccessVoucher } from './scope';
 
 const MAX_VOUCHER_UPDATE_BODY_BYTES = 512 * 1024;
 const errorResponse = (message: string, status: number, success = false) =>
@@ -77,7 +78,7 @@ export async function handleVouchersIdGet(event: RequestEvent) {
       .from('vouchers')
       .select(
         `
-        id, company_id, provider, nome, codigo_sistema, codigo_fornecedor,
+        id, company_id, created_by, provider, nome, codigo_sistema, codigo_fornecedor,
         reserva_online, passageiros, tipo_acomodacao, operador, resumo,
         data_inicio, data_fim, ativo, extra_data, created_at, updated_at,
         voucher_dias(id, dia_numero, titulo, descricao, data_referencia, cidade, ordem),
@@ -89,6 +90,7 @@ export async function handleVouchersIdGet(event: RequestEvent) {
 
     if (error) throw error;
     if (!data) return errorResponse('Voucher não encontrado', 404);
+    if (!canAccessVoucher(scope, data)) return errorResponse('Voucher fora do escopo.', 403);
 
     return json({ success: true, item: data }, { headers: DYNAMIC_READ_HEADERS });
   } catch (err: unknown) {
@@ -123,13 +125,14 @@ export async function handleVouchersIdPatch(event: RequestEvent) {
     const id = event.params.id;
 
     // Verifica escopo
-    const { data: existing } = await client
+    const { data: existing, error: existingError } = await client
       .from('vouchers')
-      .select('id, company_id')
+      .select('id, company_id, created_by')
       .eq('id', id)
       .maybeSingle();
+    if (existingError) throw existingError;
     if (!existing) return errorResponse('Voucher não encontrado.', 404);
-    if (!scope.isAdmin && existing.company_id !== scope.companyId) {
+    if (!canAccessVoucher(scope, existing)) {
       return errorResponse('Voucher fora do escopo.', 403);
     }
 
@@ -235,13 +238,14 @@ export async function handleVouchersIdDelete(event: RequestEvent) {
 
     const id = event.params.id;
 
-    const { data: existing } = await client
+    const { data: existing, error: existingError } = await client
       .from('vouchers')
-      .select('id, company_id')
+      .select('id, company_id, created_by')
       .eq('id', id)
       .maybeSingle();
+    if (existingError) throw existingError;
     if (!existing) return errorResponse('Voucher não encontrado.', 404);
-    if (!scope.isAdmin && existing.company_id !== scope.companyId) {
+    if (!canAccessVoucher(scope, existing)) {
       return errorResponse('Voucher fora do escopo.', 403);
     }
 

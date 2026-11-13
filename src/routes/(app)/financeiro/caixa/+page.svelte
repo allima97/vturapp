@@ -730,20 +730,20 @@
             <tbody class="divide-y divide-slate-200">
               {#each movimentacoes.slice(0, 10) as mov}
                 <tr class="hover:bg-slate-50">
-                  <td class="px-4 py-3 text-slate-700">{formatDate(mov.data)}</td>
-                  <td class="px-4 py-3">
+                  <td data-label="Data" class="px-4 py-3 text-slate-700">{formatDate(mov.data)}</td>
+                  <td data-label="Descrição" class="px-4 py-3">
                     <p class="font-medium text-slate-900">{mov.descricao}</p>
                     {#if mov.cliente && mov.cliente !== '-'}
                       <p class="text-xs text-slate-500">{mov.cliente}</p>
                     {/if}
                   </td>
-                  <td class="px-4 py-3 text-slate-700">{mov.forma_pagamento}</td>
-                  <td class="px-4 py-3 text-right">
+                  <td data-label="Forma" class="px-4 py-3 text-slate-700">{mov.forma_pagamento}</td>
+                  <td data-label="Valor" class="px-4 py-3 text-right">
                     <span class={mov.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'}>
                       {mov.tipo === 'entrada' ? '+' : '-'}{formatCurrency(mov.valor)}
                     </span>
                   </td>
-                  <td class="px-4 py-3 text-center">
+                  <td data-label="Status" class="px-4 py-3 text-center">
                     <span
                       class="inline-flex rounded-full px-2 py-1 text-xs font-medium {getStatusBadge(
                         mov.status
@@ -828,6 +828,7 @@
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <FieldInput
+        money
         id="caixa-mov-valor"
         label="Valor"
         type="number"

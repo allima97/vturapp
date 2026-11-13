@@ -37,13 +37,19 @@
         <tbody>
           {#each executions as item}
             <tr class="border-t border-slate-100">
-              <td class="px-3 py-2">{formatDateTime(item.created_at)}</td>
-              <td class="px-3 py-2">{item.actor === 'user' ? 'manual' : 'cron'}</td>
-              <td class="px-3 py-2 text-right">{item.checked}</td>
-              <td class="px-3 py-2 text-right">{item.reconciled}</td>
-              <td class="px-3 py-2 text-right">{item.updated_taxes}</td>
-              <td class="px-3 py-2 text-right">{item.still_pending}</td>
-              <td class="px-3 py-2">{item.status}</td>
+              <td data-label="Quando" class="px-3 py-2">{formatDateTime(item.created_at)}</td>
+              <td data-label="Origem" class="px-3 py-2"
+                >{item.actor === 'user' ? 'manual' : 'cron'}</td
+              >
+              <td data-label="Checados" class="px-3 py-2 text-right">{item.checked}</td>
+              <td data-label="Conciliados" class="px-3 py-2 text-right">{item.reconciled}</td>
+              <td data-label="Taxas atualizadas" class="px-3 py-2 text-right"
+                >{item.updated_taxes}</td
+              >
+              <td data-label="Pendentes após execução" class="px-3 py-2 text-right"
+                >{item.still_pending}</td
+              >
+              <td data-label="Status" class="px-3 py-2">{item.status}</td>
             </tr>
           {/each}
         </tbody>

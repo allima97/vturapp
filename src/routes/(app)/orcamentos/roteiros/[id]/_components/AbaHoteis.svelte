@@ -50,7 +50,7 @@
     <div class="space-y-3">
       {#each hoteis as hotel, index (hotel)}
         <div class="relative rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <div class="absolute top-3 right-3 flex gap-1">
+          <div class="mb-2 flex gap-1 sm:absolute sm:top-3 sm:right-3 sm:mb-0">
             <Button
               type="button"
               variant="ghost"
@@ -224,23 +224,25 @@
               </div>
               <div>
                 <FieldInput
+                  money
                   label="Valor original (R$)"
                   type="number"
                   value={hotel.valor_original ?? ''}
                   class_name="w-full"
-                  on:input={(e) => {
-                    hotel.valor_original = Number((e.target as HTMLInputElement).value) || null;
+                  on:moneyInput={(e) => {
+                    hotel.valor_original = Number(e.detail) || null;
                   }}
                 />
               </div>
               <div>
                 <FieldInput
+                  money
                   label="Valor final (R$)"
                   type="number"
                   value={hotel.valor_final ?? ''}
                   class_name="w-full"
-                  on:input={(e) => {
-                    hotel.valor_final = Number((e.target as HTMLInputElement).value) || null;
+                  on:moneyInput={(e) => {
+                    hotel.valor_final = Number(e.detail) || null;
                   }}
                 />
               </div>

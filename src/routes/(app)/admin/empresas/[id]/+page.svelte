@@ -13,6 +13,7 @@
   import { createLoadGuard } from '$lib/utils/loadGuard';
   import { formatDocumentoSalvo } from '$lib/features/clientes/form';
   import { validateOptionalCNPJ } from '$lib/utils/validation';
+  import { Plus } from '$lib/icons';
 
   const emptyForm = {
     id: '',
@@ -338,6 +339,7 @@
         class_name="w-full"
       />
       <FieldInput
+        money
         id="billing-valor"
         label="Valor mensal"
         bind:value={form.billing_valor_mensal}
@@ -394,7 +396,7 @@
               on:click={saveMasterLink}
               loading={linkSaving}
             >
-              Adicionar vinculo
+              <Plus size={16} class="mr-2" />Adicionar vinculo
             </Button>
           </div>
         </div>

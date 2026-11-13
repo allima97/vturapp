@@ -319,20 +319,31 @@
                 class:cursor-pointer={editable}
                 class="transition-colors hover:bg-slate-50"
                 class:bg-clientes-50={item.id === selectedId}
+                tabindex={editable ? 0 : undefined}
                 on:click={() => handleRowClick(item)}
+                on:keydown={(event) => {
+                  if (editable && (event.key === 'Enter' || event.key === ' ')) {
+                    event.preventDefault();
+                    handleRowClick(item);
+                  }
+                }}
               >
-                <td class="px-4 py-3">
+                <td data-label="Nome" class="px-4 py-3">
                   <div class="font-medium text-slate-900">{item.nome_completo}</div>
                   <div class="text-xs text-slate-500">
                     {formatDocumentoSalvo(item.cpf || '', 'PF') || '-'}
                   </div>
                 </td>
-                <td class="px-4 py-3 text-slate-700">{item.grau_parentesco || '-'}</td>
-                <td class="px-4 py-3 text-slate-700">{telefoneFormatado(item.telefone) || '-'}</td>
-                <td class="px-4 py-3 text-slate-700">
+                <td data-label="Parentesco" class="px-4 py-3 text-slate-700"
+                  >{item.grau_parentesco || '-'}</td
+                >
+                <td data-label="Telefone" class="px-4 py-3 text-slate-700"
+                  >{telefoneFormatado(item.telefone) || '-'}</td
+                >
+                <td data-label="Nascimento" class="px-4 py-3 text-slate-700">
                   {formatDate(item.data_nascimento)}
                 </td>
-                <td class="px-4 py-3">
+                <td data-label="Status" class="px-4 py-3">
                   <span
                     class={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
                       item.ativo ? 'bg-green-100 text-green-700' : 'bg-slate-200 text-slate-700'

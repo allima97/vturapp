@@ -1303,6 +1303,7 @@
             disabled={!canEdit || !isEditingReciboDetails || savingRecibo}
           />
           <FieldInput
+            money
             id="recibo-valor"
             label="Valor"
             type="number"

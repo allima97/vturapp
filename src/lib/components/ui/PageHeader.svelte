@@ -107,14 +107,16 @@
       </div>
 
       {#if actions.length > 0}
-        <div class="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
+        <div
+          class="flex flex-col items-stretch gap-2 sm:shrink-0 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end"
+        >
           {#each actions as action}
             {#if action.href}
               <Button
                 href={action.href}
                 variant={action.variant || 'primary'}
                 size="sm"
-                class_name="min-h-[40px] sm:min-h-0"
+                class_name="min-h-[40px] w-full sm:min-h-0 sm:w-auto"
               >
                 {#if action.icon}
                   <svelte:component this={action.icon} size={16} class="mr-1.5" />
@@ -127,7 +129,7 @@
                 variant={action.variant || 'primary'}
                 size="sm"
                 loading={action.loading || false}
-                class_name="min-h-[40px] sm:min-h-0"
+                class_name="min-h-[40px] w-full sm:min-h-0 sm:w-auto"
               >
                 {#if action.icon}
                   <svelte:component this={action.icon} size={16} class="mr-1.5" />

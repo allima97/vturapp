@@ -9,9 +9,9 @@
   export let onNext: (() => void) | undefined = undefined;
 </script>
 
-<nav class="cursor-pagination" aria-label="Paginação de clientes">
+<nav class="cursor-pagination vtur-inline-pagination" aria-label="Paginação de clientes">
   <span aria-live="polite">Página {page}</span>
-  <div>
+  <div class="vtur-inline-pagination">
     <Button
       variant="outline"
       size="sm"
@@ -41,15 +41,5 @@
   .cursor-pagination > div {
     display: flex;
     gap: 0.5rem;
-  }
-  @media (max-width: 32rem) {
-    .cursor-pagination {
-      align-items: stretch;
-      flex-direction: column;
-    }
-    .cursor-pagination > div {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-    }
   }
 </style>

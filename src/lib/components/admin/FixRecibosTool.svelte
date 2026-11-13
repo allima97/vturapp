@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { mobileCardActions } from '$lib/actions/mobileCardActions';
   import { Search, Wrench } from '$lib/icons';
   import AlertMessage from '$lib/components/ui/AlertMessage.svelte';
   import Button from '$lib/components/ui/Button.svelte';
@@ -368,25 +369,30 @@
     </thead>
     <tbody>
       {#each rows as row}
-        <tr class={fixId === row.id ? 'bg-amber-50' : ''}>
-          <td class="font-mono font-semibold">{row.documento}</td>
-          <td>{row.movimento_data?.slice(0, 10)}</td>
+        <tr class={fixId === row.id ? 'bg-amber-50' : ''} use:mobileCardActions={true}>
+          <td data-label="Documento" class="font-mono font-semibold">{row.documento}</td>
+          <td data-label="Data">{row.movimento_data?.slice(0, 10)}</td>
           <td
+            data-label="Valor lanc."
             class="text-right font-mono {Number(row.valor_lancamentos) < 1000
               ? 'font-semibold text-red-600'
               : ''}"
           >
             {formatMoney(row.valor_lancamentos)}
           </td>
-          <td class="text-right font-mono">{formatMoney(row.valor_venda_real)}</td>
-          <td>{row.ranking_vendedor_nome || '-'}</td>
-          <td class="font-mono text-xs text-slate-500">
+          <td data-label="Valor real" class="text-right font-mono"
+            >{formatMoney(row.valor_venda_real)}</td
+          >
+          <td data-label="Vendedor atual">{row.ranking_vendedor_nome || '-'}</td>
+          <td data-label="Vínculo" class="font-mono text-xs text-slate-500">
             {row.venda_recibo_id ? row.venda_recibo_id.slice(0, 8) + '...' : '-'}
           </td>
-          <td>{row.candidatos?.length || 0}</td>
-          <td class="font-mono text-xs text-slate-400">{row.company_id?.slice(0, 8)}...</td>
-          <td class="font-mono text-xs text-slate-400">{row.id?.slice(0, 8)}...</td>
-          <td class="text-right">
+          <td data-label="Candidatos">{row.candidatos?.length || 0}</td>
+          <td data-label="Empresa" class="font-mono text-xs text-slate-400"
+            >{row.company_id?.slice(0, 8)}...</td
+          >
+          <td data-label="ID" class="font-mono text-xs text-slate-400">{row.id?.slice(0, 8)}...</td>
+          <td class="vtur-table-row-actions text-right">
             <Button variant="ghost" size="xs" on:click={() => selectRow(row)}>Selecionar</Button>
           </td>
         </tr>
@@ -489,6 +495,7 @@
       {:else}
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <FieldInput
+            money
             label="Valor bruto lançado"
             type="number"
             step="0.01"
@@ -497,6 +504,7 @@
             helper="Use quando o bruto da conciliação estiver errado."
           />
           <FieldInput
+            money
             label="Valor que deve entrar no ranking"
             type="number"
             step="0.01"

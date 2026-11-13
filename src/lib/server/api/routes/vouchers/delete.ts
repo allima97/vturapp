@@ -3,6 +3,7 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
 import {
+  ensureModuloAccess,
   getAdminClient,
   isUuid,
   requireAuthenticatedUser,
@@ -11,6 +12,7 @@ import {
 } from '$lib/server/v1';
 import { rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import { NO_STORE_HEADERS } from '$lib/server/httpCache';
+import { canAccessVoucher } from './scope';
 
 export async function handleVouchersDeleteDelete(event: RequestEvent) {
   try {
@@ -20,20 +22,29 @@ export async function handleVouchersDeleteDelete(event: RequestEvent) {
     const client = getAdminClient();
     const user = await requireAuthenticatedUser(event);
     const scope = await resolveUserScope(client, user.id);
+    if (!scope.isAdmin) {
+      ensureModuloAccess(
+        scope,
+        ['operacao_vouchers', 'vouchers', 'operacao'],
+        4,
+        'Sem permissão para excluir vouchers.'
+      );
+    }
 
     const id = String(event.url.searchParams.get('id') || '').trim();
     if (!isUuid(id))
       return json({ error: 'ID inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
 
     // Verifica escopo
-    const { data: voucher } = await client
+    const { data: voucher, error } = await client
       .from('vouchers')
-      .select('id, company_id')
+      .select('id, company_id, created_by')
       .eq('id', id)
       .maybeSingle();
+    if (error) throw error;
     if (!voucher)
       return json({ error: 'Voucher não encontrado.' }, { status: 404, headers: NO_STORE_HEADERS });
-    if (!scope.isAdmin && voucher.company_id !== scope.companyId) {
+    if (!canAccessVoucher(scope, voucher)) {
       return json({ error: 'Voucher fora do escopo.' }, { status: 403, headers: NO_STORE_HEADERS });
     }
 

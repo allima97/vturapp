@@ -442,6 +442,7 @@
         />
       </DestinoOperacional>
       <FieldInput
+        money
         id="taxa"
         label="Taxa de Consultoria (R$)"
         type="number"

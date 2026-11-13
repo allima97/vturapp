@@ -219,6 +219,7 @@
   searchable={true}
   emptyMessage="Nenhum template cadastrado"
   onRowClick={canEdit ? (row) => openEdit(row) : undefined}
+  rowActionsAvailable={() => canEdit}
 >
   <svelte:fragment slot="row-actions" let:row>
     {#if canEdit}

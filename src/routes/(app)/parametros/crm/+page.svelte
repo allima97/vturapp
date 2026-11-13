@@ -475,7 +475,6 @@
 
   $: previewDisplayUrl = previewUrl || selectedTheme?.asset_url || null;
   $: showComposer = Boolean(selectedTheme);
-  $: if (wizardStep !== 0) wizardStep = 0;
 
   // ── Load ─────────────────────────────────────────────────────────────────────
 
@@ -965,6 +964,13 @@
           {/each}
         </div>
       </div>
+
+      <div class="mt-5 flex justify-end">
+        <Button variant="primary" color="crm" disabled={!selectedTheme} on:click={nextStep}>
+          Personalizar cartão
+          <ChevronRight size={16} class="ml-1" />
+        </Button>
+      </div>
     </Card>
 
     <Dialog
@@ -1174,9 +1180,11 @@
               <div class="border-t border-slate-100 px-4 py-4">
                 {#if filteredMessages.length > 0}
                   <div class="mb-3">
-                    <p class="mb-1.5 text-sm font-medium text-slate-700">Texto rápido</p>
+                    <p class="mb-1.5 text-sm font-medium text-slate-700">
+                      Texto rápido ({filteredMessages.length})
+                    </p>
                     <div class="flex flex-wrap gap-1.5">
-                      {#each filteredMessages.slice(0, 8) as tpl}
+                      {#each filteredMessages as tpl}
                         <Button
                           variant={selectedMessageTemplateId === tpl.id ? 'primary' : 'outline'}
                           size="xs"

@@ -4,6 +4,8 @@
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import Dialog from '$lib/components/ui/Dialog.svelte';
+  import { mobileCardActions } from '$lib/actions/mobileCardActions';
+  import MobileCardField from '$lib/components/ui/MobileCardField.svelte';
   import { FieldCheckbox, FieldInput, FieldSelect, LoadingState } from '$lib/components/ui';
   import { addMonthsISODate, monthRangeFromKey, todayISODateLocal } from '$lib/date';
   import { formatDate, formatYearMonthLabel } from '$lib/utils/formatters';
@@ -564,8 +566,9 @@
         </thead>
         <tbody class="divide-y divide-slate-100">
           {#each usuarios as usuario}
-            <tr class="hover:bg-slate-50/50">
+            <tr class="hover:bg-slate-50/50" use:mobileCardActions={canEdit}>
               <td
+                data-label="Colaborador"
                 class="sticky left-0 z-10 border-r border-slate-100 bg-white px-4 py-2 font-medium text-slate-900"
               >
                 {usuario.nome_completo || usuario.email || 'Usuário'}
@@ -576,18 +579,11 @@
                 {@const feriadoTitle = formatFeriadosTitle(feriadosDia)}
                 {@const selected =
                   multiAtivo && multiUsuarioId === usuario.id && multiDatas.includes(date)}
-                <td class="p-0.5 text-center {dow === 0 || dow === 6 ? 'bg-slate-50/50' : ''}">
-                  <Button
-                    type="button"
-                    variant="unstyled"
-                    class_name="flex h-8 w-full items-center justify-center rounded-sm transition-colors hover:bg-orange-50 {selected
-                      ? 'bg-orange-100 ring-2 ring-orange-300'
-                      : ''}"
-                    on:click={() => handleCellClick(usuario, date)}
-                    title={registro
-                      ? `${registro.tipo}${registro.hora_inicio ? ' ' + formatTimeRange(registro.hora_inicio, registro.hora_fim) : ''}`
-                      : feriadoTitle}
-                  >
+                <td
+                  data-label={formatDate(date)}
+                  class="p-0.5 text-center {dow === 0 || dow === 6 ? 'bg-slate-50/50' : ''}"
+                >
+                  {#snippet conteudoDia()}
                     {#if registro?.tipo}
                       <span
                         class="inline-flex h-7 min-w-7 items-center justify-center rounded-sm px-1 text-[10px] font-bold ring-1 {TIPO_COLOR[
@@ -612,13 +608,34 @@
                         >·</span
                       >
                     {/if}
-                  </Button>
+                  {/snippet}
+                  <MobileCardField>
+                    <svelte:fragment slot="preview">
+                      {@render conteudoDia()}
+                    </svelte:fragment>
+                    <Button
+                      type="button"
+                      variant="unstyled"
+                      class_name="escala-dia-edit flex h-8 w-full items-center justify-center rounded-sm transition-colors hover:bg-orange-50 {selected
+                        ? 'bg-orange-100 ring-2 ring-orange-300'
+                        : ''}"
+                      on:click={() => handleCellClick(usuario, date)}
+                      ariaLabel={`Editar escala de ${usuario.nome_completo || usuario.email || 'usuário'} em ${formatDate(date)}`}
+                      title={registro
+                        ? `${registro.tipo}${registro.hora_inicio ? ' ' + formatTimeRange(registro.hora_inicio, registro.hora_fim) : ''}`
+                        : feriadoTitle}
+                    >
+                      {@render conteudoDia()}
+                    </Button>
+                  </MobileCardField>
                 </td>
               {/each}
-              <td class="px-2 py-2 text-center font-semibold text-slate-700"
+              <td
+                data-label="Trabalhados"
+                class="px-2 py-2 text-center font-semibold text-slate-700"
                 >{resumoPorUsuario[usuario.id]?.trabalhados || 0}</td
               >
-              <td class="px-2 py-2 text-center font-semibold text-slate-700"
+              <td data-label="Folgas" class="px-2 py-2 text-center font-semibold text-slate-700"
                 >{resumoPorUsuario[usuario.id]?.folgas || 0}</td
               >
             </tr>

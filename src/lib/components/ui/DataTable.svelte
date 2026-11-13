@@ -105,6 +105,7 @@
 
   export let extraSearchKeys: string[] = [];
   export let onRowClick: ((row: T) => void) | undefined = undefined;
+  export let rowActionsAvailable: ((row: T) => boolean) | undefined = undefined;
   export let onSelectionChange: ((selected: RowKey[]) => void) | undefined = undefined;
   export let onExport: (() => void) | undefined = undefined;
   export let onSearch: ((query: string) => void) | undefined = undefined;
@@ -120,6 +121,8 @@
   let showFilterSheet = false;
   let currentPage = 1;
   let currentPageSize = pageSize;
+  let viewportWidth = 1024;
+  let expandedRowKey: RowKey | null = null;
   let sortKey: string | null = null;
   let sortDirection: SortDirection = null;
   let selectedRows: Set<string> = new Set();
@@ -128,6 +131,19 @@
   const skeletonWidths = ['w-32', 'w-24', 'w-40', 'w-20', 'w-28', 'w-36'];
   // Fase 5.2 (acessibilidade): liga o botão "Filtros" ao painel que ele abre.
   const filterPanelId = `${uniqueFieldId('datatable')}-filtros`;
+  $: mobile = viewportWidth <= 640;
+  $: hasRowActions = Boolean(
+    $$slots['row-actions'] || $$slots.actions || $$slots['row-actions-cell']
+  );
+
+  function activateRow(row: T) {
+    if (mobile && hasRowActions && rowActionsAvailable?.(row) !== false) {
+      const key = keyExtractor(row);
+      expandedRowKey = expandedRowKey === key ? null : key;
+      return;
+    }
+    onRowClick?.(row);
+  }
 
   $: if (serverSide && page !== currentPage) {
     currentPage = Math.max(1, Number(page) || 1);
@@ -324,6 +340,8 @@
     ($$slots['row-actions'] || $$slots.actions || $$slots['row-actions-cell'] ? 1 : 0);
 </script>
 
+<svelte:window bind:innerWidth={viewportWidth} />
+
 <Card class="datatable-card overflow-hidden" padding="none">
   {#if title || searchable || filterable || exportable || $$slots['row-actions-cell']}
     <div class="flex flex-col gap-4 px-5 pt-4 pb-4 sm:flex-row sm:items-center sm:justify-between">
@@ -331,7 +349,7 @@
         <h3 class="text-lg font-semibold text-slate-900">{title}</h3>
       {/if}
 
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center">
         {#if searchable}
           <FieldInput
             label={title ? `Buscar em ${title}` : 'Buscar na tabela'}
@@ -348,7 +366,7 @@
             variant="secondary"
             on:click={() => (showFilterSheet = true)}
             ariaHaspopup="dialog"
-            class_name={`sm:hidden ${activeFilterCount > 0 ? 'vtur-button--active-filter' : ''}`}
+            class_name={`w-full sm:hidden ${activeFilterCount > 0 ? 'vtur-button--active-filter' : ''}`}
           >
             <Filter size={16} class="mr-2" />
             Filtros
@@ -376,7 +394,7 @@
         {/if}
 
         {#if exportable}
-          <Button variant="ghost" on:click={() => onExport?.()}>
+          <Button variant="ghost" class_name="w-full sm:w-auto" on:click={() => onExport?.()}>
             <Download size={16} class="mr-2" />
             Exportar
           </Button>
@@ -413,7 +431,9 @@
         {/each}
       </div>
       <div class="mt-4 flex justify-end">
-        <Button variant="ghost" size="sm" on:click={clearFilters}>Limpar filtros</Button>
+        <Button variant="ghost" size="sm" class_name="w-full sm:w-auto" on:click={clearFilters}
+          >Limpar filtros</Button
+        >
       </div>
     </div>
   {/if}
@@ -554,17 +574,28 @@
             </tr>
           {:else}
             {#each paginatedData as row (keyExtractor(row))}
+              {@const canExpand = mobile && hasRowActions && rowActionsAvailable?.(row) !== false}
               <tr
-                class={`transition-colors hover:bg-slate-50/90 ${onRowClick ? 'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-500' : ''} ${rowClass?.(row) || ''}`}
-                class:cursor-pointer={onRowClick}
-                tabindex={onRowClick ? 0 : undefined}
-                on:click={() => onRowClick?.(row)}
+                class={`transition-colors hover:bg-slate-50/90 ${onRowClick || canExpand ? 'focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-500' : ''} ${rowClass?.(row) || ''}`}
+                class:cursor-pointer={onRowClick || canExpand}
+                class:vtur-table-row-expandable={canExpand}
+                tabindex={onRowClick || canExpand ? 0 : undefined}
+                aria-expanded={canExpand ? expandedRowKey === keyExtractor(row) : undefined}
+                on:click={(event) => {
+                  if (
+                    canExpand &&
+                    event.target instanceof Element &&
+                    event.target.closest('button, a, input, select, textarea, label')
+                  )
+                    return;
+                  activateRow(row);
+                }}
                 on:keydown={(event) => {
                   // Só a própria linha: Enter/Espaço em botões e campos internos seguem o comportamento deles.
-                  if (!onRowClick || event.target !== event.currentTarget) return;
+                  if ((!onRowClick && !canExpand) || event.target !== event.currentTarget) return;
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    onRowClick(row);
+                    activateRow(row);
                   }
                 }}
               >
@@ -599,8 +630,17 @@
                     {/if}
                   </td>
                 {/each}
-                {#if $$slots['row-actions'] || $$slots.actions || $$slots['row-actions-cell']}
-                  <td class="td-actions px-6 py-3 text-right" on:click|stopPropagation>
+                {#if hasRowActions}
+                  <td
+                    class="td-actions vtur-table-row-actions px-6 py-3 text-right"
+                    class:vtur-table-row-actions--expanded={expandedRowKey === keyExtractor(row)}
+                    on:click|stopPropagation
+                  >
+                    {#if canExpand && onRowClick}
+                      <Button variant="secondary" size="sm" on:click={() => onRowClick?.(row)}>
+                        Abrir detalhes
+                      </Button>
+                    {/if}
                     <slot name="row-actions" {row} />
                     <slot name="actions" {row} />
                     <slot name="row-actions-cell" {row} />
@@ -628,7 +668,7 @@
           de <span class="font-medium">{totalRecords}</span> registros
         </div>
 
-        <div class="flex items-center gap-4">
+        <div class="vtur-table-pagination__controls flex flex-wrap items-center gap-4">
           <FieldSelect
             label="Itens por página"
             srLabel={true}
@@ -642,7 +682,9 @@
             on:change={(event) => handlePageSizeChange(getEventValue(event))}
           />
 
-          <div class="flex items-center gap-1">
+          <div
+            class="vtur-table-pagination__navigation vtur-inline-pagination flex items-center gap-1"
+          >
             <Button
               on:click={() => goToPage(1)}
               disabled={currentPage === 1}
@@ -663,7 +705,7 @@
             >
               <ChevronLeft size={16} />
             </Button>
-            <span class="px-3 py-1 text-sm" aria-live="polite"
+            <span class="px-1 py-1 text-sm sm:px-3" aria-live="polite"
               >Página {currentPage} de {totalPages}</span
             >
             <Button

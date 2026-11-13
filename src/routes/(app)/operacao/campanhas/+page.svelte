@@ -294,6 +294,7 @@
   ]}
   emptyMessage="Nenhuma campanha encontrada"
   onRowClick={(row) => openEdit(row)}
+  rowActionsAvailable={() => canEdit}
 >
   <svelte:fragment slot="row-actions" let:row>
     {#if canEdit}

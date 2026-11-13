@@ -131,26 +131,28 @@
             </div>
             <div>
               <FieldInput
+                money
                 label="Valor total com taxas (R$)"
                 type="number"
                 value={pag.valor_total_com_taxas ?? ''}
                 class_name="w-full"
-                on:input={(e) => {
+                on:moneyInput={(e) => {
                   pagamentos = updateItem(pagamentos, index, {
-                    valor_total_com_taxas: Number((e.target as HTMLInputElement).value) || null
+                    valor_total_com_taxas: Number(e.detail) || null
                   });
                 }}
               />
             </div>
             <div>
               <FieldInput
+                money
                 label="Taxas (R$)"
                 type="number"
                 value={pag.taxas ?? ''}
                 class_name="w-full"
-                on:input={(e) => {
+                on:moneyInput={(e) => {
                   pagamentos = updateItem(pagamentos, index, {
-                    taxas: Number((e.target as HTMLInputElement).value) || null
+                    taxas: Number(e.detail) || null
                   });
                 }}
               />

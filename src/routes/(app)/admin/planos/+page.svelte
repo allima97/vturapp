@@ -267,6 +267,7 @@
     />
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <FieldInput
+        money
         id="plano-valor"
         label="Mensalidade"
         type="number"

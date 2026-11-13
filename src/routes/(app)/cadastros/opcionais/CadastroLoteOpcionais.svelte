@@ -8,6 +8,7 @@
   import { apiPost } from '$lib/services/api';
   import { toast } from '$lib/stores/ui';
   import { toUserMessage } from '$lib/utils/errors';
+  import { Plus } from '$lib/icons';
 
   export let open = false;
   export let geografico = false;
@@ -144,7 +145,7 @@
       disabled={salvando || passeios.length >= MAX_OPCIONAIS_IMPORTACAO}
       on:click={adicionarPasseio}
     >
-      Adicionar outro passeio
+      <Plus size={16} class="mr-2" />Adicionar outro passeio
     </Button>
     <p class="text-sm text-slate-500">
       Até {MAX_OPCIONAIS_IMPORTACAO} passeios por vez. Nomes já cadastrados na mesma cidade serão ignorados.

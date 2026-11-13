@@ -458,11 +458,14 @@
     if (item.key === 'vendas_financeiro' && !$permissoes.isFinanceiro) return false;
     if (item.key === 'ultimas_compras' && !($permissoes.isMaster || $permissoes.isGestor))
       return false;
-    if (
-      item.key === 'vouchers_assets' &&
-      !($permissoes.isMaster || $permissoes.isGestor || $permissoes.isSystemAdmin)
-    )
-      return false;
+    if (item.key === 'vouchers_assets' && !$permissoes.isSystemAdmin) {
+      return (
+        $permissoes.isMaster ||
+        $permissoes.isGestor ||
+        permissoes.can('Parametros', 'view') ||
+        permissoes.can('Vouchers', 'view')
+      );
+    }
     if (item.key === 'fechamento' && !$permissoes.isFinanceiro) return false;
     if (item.key === 'notas_fiscais' && !$permissoes.isFinanceiro) return false;
     if (item.key === 'rel_desempenho' && !($permissoes.isMaster || $permissoes.isGestor))

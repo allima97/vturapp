@@ -87,6 +87,7 @@
           </div>
           <div>
             <FieldInput
+              money
               id={`venda-editar-pagamento-bruto-${index}`}
               label="Valor bruto"
               bind:value={pagamento.valor_bruto}
@@ -95,6 +96,7 @@
           </div>
           <div>
             <FieldInput
+              money
               id={`venda-editar-pagamento-desconto-${index}`}
               label="Desconto"
               bind:value={pagamento.desconto_valor}
@@ -103,6 +105,7 @@
           </div>
           <div>
             <FieldInput
+              money
               id={`venda-editar-pagamento-total-${index}`}
               label="Total"
               bind:value={pagamento.valor_total}
@@ -126,6 +129,7 @@
           </div>
           <div>
             <FieldInput
+              money
               id={`venda-editar-pagamento-valor-parcela-${index}`}
               label="Valor da parcela"
               bind:value={pagamento.parcelas_valor}
@@ -154,7 +158,7 @@
           <div class="mb-3 flex items-center justify-between">
             <p class="text-sm font-medium text-slate-700">Parcelas</p>
             <Button type="button" variant="ghost" on:click={() => addParcela(index)}
-              >Adicionar parcela</Button
+              ><Plus size={16} class="mr-2" />Adicionar parcela</Button
             >
           </div>
           {#if pagamento.parcelas.length === 0}
@@ -168,7 +172,12 @@
                     class_name="w-full"
                     placeholder="Número"
                   />
-                  <FieldInput bind:value={parcela.valor} class_name="w-full" placeholder="Valor" />
+                  <FieldInput
+                    money
+                    bind:value={parcela.valor}
+                    class_name="w-full"
+                    placeholder="Valor"
+                  />
                   <FieldInput type="date" bind:value={parcela.vencimento} class_name="w-full" />
                   <Button
                     type="button"

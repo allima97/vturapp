@@ -160,6 +160,7 @@
   searchable={true}
   emptyMessage="Nenhum tipo de pacote cadastrado"
   onRowClick={canEdit ? (row) => openEdit(row) : undefined}
+  rowActionsAvailable={() => canDelete}
 >
   <svelte:fragment slot="row-actions" let:row>
     {#if canDelete}

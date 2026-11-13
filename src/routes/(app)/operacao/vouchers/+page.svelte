@@ -7,28 +7,32 @@
   import Button from '$lib/components/ui/Button.svelte';
   import DataTable from '$lib/components/ui/DataTable.svelte';
   import Dialog from '$lib/components/ui/Dialog.svelte';
-  import { Plus, Ticket, FileText, ExternalLink, Copy } from '$lib/icons';
+  import { Plus, Ticket, FileText, ExternalLink, Copy, ImagePlus } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
+  import { permissoes } from '$lib/stores/permissoes';
   import { toUserMessage } from '$lib/utils/errors';
   import { formatDate } from '$lib/utils/formatters';
-  import type { VoucherRecord, VoucherAssetRecord, VoucherProvider } from '$lib/vouchers/types';
-  import { apiDelete, apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
+  import type {
+    VoucherRecord,
+    VoucherAssetRecord,
+    VoucherProvider,
+    VoucherLogoEsquerdo
+  } from '$lib/vouchers/types';
+  import { apiDelete, apiFetch, apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { escapeHtml } from '$lib/utils/html';
   import { createLoadGuard } from '$lib/utils/loadGuard';
 
   let vouchers: VoucherRecord[] = [];
   let assets: VoucherAssetRecord[] = [];
+  let logoEsquerdo: VoucherLogoEsquerdo = 'vtur';
   let loading = true;
   let showPreview = false;
   let previewVoucher: VoucherRecord | null = null;
-  let companyId: string | null = null;
   let deleteConfirmVoucher: VoucherRecord | null = null;
   let showDeleteDialog = false;
   let VoucherPreviewModal: ComponentType | null = null;
   let loadingPreviewModal = false;
-  let assetsLoaded = false;
   let duplicating = false;
-  const contextGuard = createLoadGuard();
   const dataGuard = createLoadGuard();
   const previewGuard = createLoadGuard();
 
@@ -94,43 +98,16 @@
   ];
 
   onMount(async () => {
-    if (await loadUserContext()) {
-      await loadData();
-    } else {
-      loading = false;
-    }
+    await loadData();
   });
-
-  async function loadUserContext() {
-    const request = contextGuard.next();
-    try {
-      const data = await apiGet<{ company_id?: string | null }>(
-        '/api/v1/user/context',
-        undefined,
-        request.signal
-      );
-      if (!contextGuard.isCurrent(request.seq)) return false;
-      companyId = data.company_id || null;
-      return true;
-    } catch (err) {
-      if (isCanceledApiError(err)) return false;
-      companyId = null;
-      return false;
-    }
-  }
 
   async function loadData() {
     const request = dataGuard.next();
-    if (!companyId) {
-      loading = false;
-      return;
-    }
-
     loading = true;
     try {
       const vouchersData = await apiGet<{ items?: VoucherRecord[] }>(
         '/api/v1/vouchers',
-        { company_id: companyId },
+        undefined,
         request.signal
       );
       if (!dataGuard.isCurrent(request.seq)) return;
@@ -144,7 +121,6 @@
   }
 
   async function loadPreviewDependencies() {
-    if (VoucherPreviewModal && assetsLoaded) return true;
     const request = previewGuard.next();
     loadingPreviewModal = true;
     try {
@@ -153,16 +129,13 @@
           .default;
         if (!previewGuard.isCurrent(request.seq)) return false;
       }
-      if (!assetsLoaded && companyId) {
-        const assetsData = await apiGet<{ items?: VoucherAssetRecord[] }>(
-          '/api/v1/voucher-assets',
-          { company_id: companyId },
-          request.signal
-        );
-        if (!previewGuard.isCurrent(request.seq)) return false;
-        assets = assetsData.items || [];
-        assetsLoaded = true;
-      }
+      const assetsData = await apiFetch<{
+        items?: VoucherAssetRecord[];
+        logo_esquerdo: VoucherLogoEsquerdo;
+      }>('/api/v1/voucher-assets', { signal: request.signal, noCache: true });
+      if (!previewGuard.isCurrent(request.seq)) return false;
+      assets = assetsData.items || [];
+      logoEsquerdo = assetsData.logo_esquerdo;
       return previewGuard.isCurrent(request.seq);
     } catch (err) {
       if (isCanceledApiError(err)) return false;
@@ -303,7 +276,21 @@
   subtitle="Gerenciamento de vouchers Special Tours, Europamundo e Sato Tours"
   color="clientes"
   breadcrumbs={[{ label: 'Vouchers' }]}
-  actions={[{ label: 'Novo Voucher', onClick: handleNew, variant: 'primary', icon: Plus }]}
+  actions={[
+    ...($permissoes.ready &&
+    !$permissoes.isSystemAdmin &&
+    (permissoes.can('Parametros', 'view') || permissoes.can('Vouchers', 'view'))
+      ? [
+          {
+            label: 'Parâmetros de Vouchers',
+            href: '/parametros/vouchers',
+            variant: 'outline' as const,
+            icon: ImagePlus
+          }
+        ]
+      : []),
+    { label: 'Novo Voucher', onClick: handleNew, variant: 'primary', icon: Plus }
+  ]}
 />
 
 <!-- Resumo -->
@@ -389,6 +376,7 @@
     bind:open={showPreview}
     voucher={previewVoucher}
     {assets}
+    {logoEsquerdo}
     on:edit={handleEditFromPreview}
     on:delete={handleDeleteFromPreview}
     on:duplicate={handleDuplicateFromPreview}

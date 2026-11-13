@@ -1,8 +1,9 @@
 export type VoucherProvider = 'special_tours' | 'europamundo' | 'sato_tours';
 
-export type VoucherAssetProvider = 'vtur' | VoucherProvider | 'generic';
+export type VoucherAssetProvider = 'vtur' | 'empresa' | VoucherProvider | 'generic';
 
 export type VoucherAssetKind = 'logo' | 'image' | 'app_icon';
+export type VoucherLogoEsquerdo = 'vtur' | 'empresa' | 'operadora';
 
 export type VoucherDia = {
   id?: string;
@@ -89,7 +90,7 @@ export type VoucherImportResult = {
 
 export type VoucherRecord = {
   id: string;
-  company_id: string;
+  company_id: string | null;
   provider: VoucherProvider;
   nome: string;
   status?: 'rascunho' | 'finalizado' | 'cancelado' | null;
@@ -132,7 +133,7 @@ export type VoucherForm = {
 
 export type VoucherAssetRecord = {
   id: string;
-  company_id: string;
+  company_id: string | null;
   provider: VoucherAssetProvider;
   asset_kind: VoucherAssetKind;
   label?: string | null;

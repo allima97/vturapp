@@ -5,6 +5,8 @@
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import Tabs from '$lib/components/ui/Tabs.svelte';
+  import { mobileCardActions } from '$lib/actions/mobileCardActions';
+  import MobileCardField from '$lib/components/ui/MobileCardField.svelte';
   import {
     FieldCheckbox,
     FieldInput,
@@ -37,6 +39,7 @@
     CircleOff,
     Edit2,
     GitBranch,
+    ImagePlus,
     Layout,
     Percent,
     Plus,
@@ -810,6 +813,13 @@
     if (href === '/financeiro/notas-fiscais' && !$permissoes.isFinanceiro) return false;
     if ($permissoes.isSystemAdmin)
       return href.startsWith('/perfil') && !href.startsWith('/perfil/escala');
+    if (href === '/parametros/vouchers')
+      return (
+        $permissoes.isMaster ||
+        $permissoes.isGestor ||
+        permissoes.can('Parametros', 'view') ||
+        permissoes.can('Vouchers', 'view')
+      );
     if (href.startsWith('/perfil')) return true;
     if (href.startsWith('/master')) return $permissoes.isMaster;
     const modulo = descobrirModulo(href);
@@ -967,6 +977,11 @@
   subtitle="Configure o sistema, regras de comissão e preferências do menu."
   color="financeiro"
   breadcrumbs={[{ label: 'Parâmetros' }]}
+  actions={$permissoes.ready &&
+  !$permissoes.isSystemAdmin &&
+  (permissoes.can('Parametros', 'view') || permissoes.can('Vouchers', 'view'))
+    ? [{ label: 'Vouchers', href: '/parametros/vouchers', variant: 'outline', icon: ImagePlus }]
+    : []}
 />
 
 <Tabs items={tabItems} bind:activeKey={activeTab} className="mb-6" />
@@ -1301,88 +1316,98 @@
                     >
                     <tbody class="divide-y divide-slate-200 bg-white">
                       {#each sysForm.conciliacao_tiers as tier, index}
-                        <tr>
-                          <td class="px-3 py-2"
-                            ><FieldSelect
-                              class_name="min-w-[110px]"
-                              value={tier.faixa}
-                              options={[
-                                { value: 'PRE', label: 'PRE' },
-                                { value: 'POS', label: 'POS' }
-                              ]}
-                              placeholder={null}
-                              disabled={bloqueado}
-                              on:change={(e) =>
-                                updateTierSys(
-                                  index,
-                                  'faixa',
-                                  (e.target as HTMLSelectElement).value
-                                )}
-                            /></td
+                        <tr use:mobileCardActions={!bloqueado}>
+                          <td data-label="Faixa" class="px-3 py-2"
+                            ><MobileCardField value={tier.faixa}
+                              ><FieldSelect
+                                class_name="min-w-[110px]"
+                                value={tier.faixa}
+                                options={[
+                                  { value: 'PRE', label: 'PRE' },
+                                  { value: 'POS', label: 'POS' }
+                                ]}
+                                placeholder={null}
+                                disabled={bloqueado}
+                                on:change={(e) =>
+                                  updateTierSys(
+                                    index,
+                                    'faixa',
+                                    (e.target as HTMLSelectElement).value
+                                  )}
+                              /></MobileCardField
+                            ></td
                           >
-                          <td class="px-3 py-2"
-                            ><FieldInput
-                              type="number"
-                              step="0.01"
-                              value={tier.de_pct == null ? '' : String(tier.de_pct)}
-                              class_name="min-w-[120px]"
-                              disabled={bloqueado}
-                              on:input={(e) =>
-                                updateTierSys(
-                                  index,
-                                  'de_pct',
-                                  (e.target as HTMLInputElement).value
-                                )}
-                            /></td
+                          <td data-label="De (%)" class="px-3 py-2"
+                            ><MobileCardField value={tier.de_pct}
+                              ><FieldInput
+                                type="number"
+                                step="0.01"
+                                value={tier.de_pct == null ? '' : String(tier.de_pct)}
+                                class_name="min-w-[120px]"
+                                disabled={bloqueado}
+                                on:input={(e) =>
+                                  updateTierSys(
+                                    index,
+                                    'de_pct',
+                                    (e.target as HTMLInputElement).value
+                                  )}
+                              /></MobileCardField
+                            ></td
                           >
-                          <td class="px-3 py-2"
-                            ><FieldInput
-                              type="number"
-                              step="0.01"
-                              value={tier.ate_pct == null ? '' : String(tier.ate_pct)}
-                              class_name="min-w-[120px]"
-                              disabled={bloqueado}
-                              on:input={(e) =>
-                                updateTierSys(
-                                  index,
-                                  'ate_pct',
-                                  (e.target as HTMLInputElement).value
-                                )}
-                            /></td
+                          <td data-label="Até (%)" class="px-3 py-2"
+                            ><MobileCardField value={tier.ate_pct}
+                              ><FieldInput
+                                type="number"
+                                step="0.01"
+                                value={tier.ate_pct == null ? '' : String(tier.ate_pct)}
+                                class_name="min-w-[120px]"
+                                disabled={bloqueado}
+                                on:input={(e) =>
+                                  updateTierSys(
+                                    index,
+                                    'ate_pct',
+                                    (e.target as HTMLInputElement).value
+                                  )}
+                              /></MobileCardField
+                            ></td
                           >
-                          <td class="px-3 py-2"
-                            ><FieldInput
-                              type="number"
-                              step="0.01"
-                              value={tier.inc_pct_meta == null ? '' : String(tier.inc_pct_meta)}
-                              class_name="min-w-[140px]"
-                              disabled={bloqueado}
-                              on:input={(e) =>
-                                updateTierSys(
-                                  index,
-                                  'inc_pct_meta',
-                                  (e.target as HTMLInputElement).value
-                                )}
-                            /></td
+                          <td data-label="Inc. Meta (%)" class="px-3 py-2"
+                            ><MobileCardField value={tier.inc_pct_meta}
+                              ><FieldInput
+                                type="number"
+                                step="0.01"
+                                value={tier.inc_pct_meta == null ? '' : String(tier.inc_pct_meta)}
+                                class_name="min-w-[140px]"
+                                disabled={bloqueado}
+                                on:input={(e) =>
+                                  updateTierSys(
+                                    index,
+                                    'inc_pct_meta',
+                                    (e.target as HTMLInputElement).value
+                                  )}
+                              /></MobileCardField
+                            ></td
                           >
-                          <td class="px-3 py-2"
-                            ><FieldInput
-                              type="number"
-                              step="0.01"
-                              value={tier.inc_pct_comissao == null
-                                ? ''
-                                : String(tier.inc_pct_comissao)}
-                              class_name="min-w-[160px]"
-                              disabled={bloqueado}
-                              on:input={(e) =>
-                                updateTierSys(
-                                  index,
-                                  'inc_pct_comissao',
-                                  (e.target as HTMLInputElement).value
-                                )}
-                            /></td
+                          <td data-label="Inc. Comissão (%)" class="px-3 py-2"
+                            ><MobileCardField value={tier.inc_pct_comissao}
+                              ><FieldInput
+                                type="number"
+                                step="0.01"
+                                value={tier.inc_pct_comissao == null
+                                  ? ''
+                                  : String(tier.inc_pct_comissao)}
+                                class_name="min-w-[160px]"
+                                disabled={bloqueado}
+                                on:input={(e) =>
+                                  updateTierSys(
+                                    index,
+                                    'inc_pct_comissao',
+                                    (e.target as HTMLInputElement).value
+                                  )}
+                              /></MobileCardField
+                            ></td
                           >
-                          <td class="px-3 py-2 text-right"
+                          <td data-label="Ações" class="vtur-table-row-actions px-3 py-2 text-right"
                             ><Button
                               type="button"
                               size="sm"
@@ -1416,7 +1441,7 @@
                 variant="primary"
                 color="financeiro"
                 on:click={addBand}
-                disabled={bloqueado}>+ Nova faixa</Button
+                disabled={bloqueado}><Plus size={16} class="mr-2" />Nova faixa</Button
               >
             </div>
             <div class="space-y-4">
@@ -1639,95 +1664,107 @@
                               >
                               <tbody class="divide-y divide-slate-200 bg-white">
                                 {#each band.tiers as tier, tierIndex}
-                                  <tr>
-                                    <td class="px-3 py-2"
-                                      ><FieldSelect
-                                        class_name="min-w-[110px]"
-                                        value={tier.faixa}
-                                        options={[
-                                          { value: 'PRE', label: 'PRE' },
-                                          { value: 'POS', label: 'POS' }
-                                        ]}
-                                        placeholder={null}
-                                        disabled={bloqueadoConciliacao || !band.ativo}
-                                        on:change={(e) =>
-                                          updateBandTier(
-                                            bandIndex,
-                                            tierIndex,
-                                            'faixa',
-                                            (e.target as HTMLSelectElement).value
-                                          )}
-                                      /></td
+                                  <tr use:mobileCardActions={!bloqueadoConciliacao && band.ativo}>
+                                    <td data-label="Faixa" class="px-3 py-2"
+                                      ><MobileCardField value={tier.faixa}
+                                        ><FieldSelect
+                                          class_name="min-w-[110px]"
+                                          value={tier.faixa}
+                                          options={[
+                                            { value: 'PRE', label: 'PRE' },
+                                            { value: 'POS', label: 'POS' }
+                                          ]}
+                                          placeholder={null}
+                                          disabled={bloqueadoConciliacao || !band.ativo}
+                                          on:change={(e) =>
+                                            updateBandTier(
+                                              bandIndex,
+                                              tierIndex,
+                                              'faixa',
+                                              (e.target as HTMLSelectElement).value
+                                            )}
+                                        /></MobileCardField
+                                      ></td
                                     >
-                                    <td class="px-3 py-2"
-                                      ><FieldInput
-                                        type="number"
-                                        step="0.01"
-                                        value={tier.de_pct == null ? '' : String(tier.de_pct)}
-                                        class_name="min-w-[120px]"
-                                        disabled={bloqueadoConciliacao || !band.ativo}
-                                        on:input={(e) =>
-                                          updateBandTier(
-                                            bandIndex,
-                                            tierIndex,
-                                            'de_pct',
-                                            (e.target as HTMLInputElement).value
-                                          )}
-                                      /></td
+                                    <td data-label="De (%)" class="px-3 py-2"
+                                      ><MobileCardField value={tier.de_pct}
+                                        ><FieldInput
+                                          type="number"
+                                          step="0.01"
+                                          value={tier.de_pct == null ? '' : String(tier.de_pct)}
+                                          class_name="min-w-[120px]"
+                                          disabled={bloqueadoConciliacao || !band.ativo}
+                                          on:input={(e) =>
+                                            updateBandTier(
+                                              bandIndex,
+                                              tierIndex,
+                                              'de_pct',
+                                              (e.target as HTMLInputElement).value
+                                            )}
+                                        /></MobileCardField
+                                      ></td
                                     >
-                                    <td class="px-3 py-2"
-                                      ><FieldInput
-                                        type="number"
-                                        step="0.01"
-                                        value={tier.ate_pct == null ? '' : String(tier.ate_pct)}
-                                        class_name="min-w-[120px]"
-                                        disabled={bloqueadoConciliacao || !band.ativo}
-                                        on:input={(e) =>
-                                          updateBandTier(
-                                            bandIndex,
-                                            tierIndex,
-                                            'ate_pct',
-                                            (e.target as HTMLInputElement).value
-                                          )}
-                                      /></td
+                                    <td data-label="Até (%)" class="px-3 py-2"
+                                      ><MobileCardField value={tier.ate_pct}
+                                        ><FieldInput
+                                          type="number"
+                                          step="0.01"
+                                          value={tier.ate_pct == null ? '' : String(tier.ate_pct)}
+                                          class_name="min-w-[120px]"
+                                          disabled={bloqueadoConciliacao || !band.ativo}
+                                          on:input={(e) =>
+                                            updateBandTier(
+                                              bandIndex,
+                                              tierIndex,
+                                              'ate_pct',
+                                              (e.target as HTMLInputElement).value
+                                            )}
+                                        /></MobileCardField
+                                      ></td
                                     >
-                                    <td class="px-3 py-2"
-                                      ><FieldInput
-                                        type="number"
-                                        step="0.01"
-                                        value={tier.inc_pct_meta == null
-                                          ? ''
-                                          : String(tier.inc_pct_meta)}
-                                        class_name="min-w-[140px]"
-                                        disabled={bloqueadoConciliacao || !band.ativo}
-                                        on:input={(e) =>
-                                          updateBandTier(
-                                            bandIndex,
-                                            tierIndex,
-                                            'inc_pct_meta',
-                                            (e.target as HTMLInputElement).value
-                                          )}
-                                      /></td
+                                    <td data-label="Inc. Meta (%)" class="px-3 py-2"
+                                      ><MobileCardField value={tier.inc_pct_meta}
+                                        ><FieldInput
+                                          type="number"
+                                          step="0.01"
+                                          value={tier.inc_pct_meta == null
+                                            ? ''
+                                            : String(tier.inc_pct_meta)}
+                                          class_name="min-w-[140px]"
+                                          disabled={bloqueadoConciliacao || !band.ativo}
+                                          on:input={(e) =>
+                                            updateBandTier(
+                                              bandIndex,
+                                              tierIndex,
+                                              'inc_pct_meta',
+                                              (e.target as HTMLInputElement).value
+                                            )}
+                                        /></MobileCardField
+                                      ></td
                                     >
-                                    <td class="px-3 py-2"
-                                      ><FieldInput
-                                        type="number"
-                                        step="0.01"
-                                        value={tier.inc_pct_comissao == null
-                                          ? ''
-                                          : String(tier.inc_pct_comissao)}
-                                        class_name="min-w-[160px]"
-                                        disabled={bloqueadoConciliacao || !band.ativo}
-                                        on:input={(e) =>
-                                          updateBandTier(
-                                            bandIndex,
-                                            tierIndex,
-                                            'inc_pct_comissao',
-                                            (e.target as HTMLInputElement).value
-                                          )}
-                                      /></td
+                                    <td data-label="Inc. Comissão (%)" class="px-3 py-2"
+                                      ><MobileCardField value={tier.inc_pct_comissao}
+                                        ><FieldInput
+                                          type="number"
+                                          step="0.01"
+                                          value={tier.inc_pct_comissao == null
+                                            ? ''
+                                            : String(tier.inc_pct_comissao)}
+                                          class_name="min-w-[160px]"
+                                          disabled={bloqueadoConciliacao || !band.ativo}
+                                          on:input={(e) =>
+                                            updateBandTier(
+                                              bandIndex,
+                                              tierIndex,
+                                              'inc_pct_comissao',
+                                              (e.target as HTMLInputElement).value
+                                            )}
+                                        /></MobileCardField
+                                      ></td
                                     >
-                                    <td class="px-3 py-2 text-right"
+                                    <td
+                                      data-label="Ações"
+                                      class="vtur-table-row-actions px-3 py-2 text-right"
                                       ><Button
                                         type="button"
                                         size="sm"
@@ -1974,52 +2011,62 @@
                 >
                 <tbody class="divide-y divide-slate-200 bg-white">
                   {#each ruleForm.tiers as tier, index}
-                    <tr>
-                      <td class="px-3 py-2"
-                        ><FieldSelect
-                          class_name="min-w-[110px]"
-                          value={tier.faixa}
-                          options={faixaOptions}
-                          on:change={(e) => handleRuleTierFaixaChange(index, e)}
-                        /></td
+                    <tr use:mobileCardActions>
+                      <td data-label="Faixa" class="px-3 py-2"
+                        ><MobileCardField value={tier.faixa}
+                          ><FieldSelect
+                            class_name="min-w-[110px]"
+                            value={tier.faixa}
+                            options={faixaOptions}
+                            on:change={(e) => handleRuleTierFaixaChange(index, e)}
+                          /></MobileCardField
+                        ></td
                       >
-                      <td class="px-3 py-2"
-                        ><FieldInput
-                          type="number"
-                          step="0.01"
-                          value={String(tier.de_pct)}
-                          on:input={(e) => handleRuleTierInput(index, 'de_pct', e)}
-                          class_name="min-w-[120px]"
-                        /></td
+                      <td data-label="De (%)" class="px-3 py-2"
+                        ><MobileCardField value={tier.de_pct}
+                          ><FieldInput
+                            type="number"
+                            step="0.01"
+                            value={String(tier.de_pct)}
+                            on:input={(e) => handleRuleTierInput(index, 'de_pct', e)}
+                            class_name="min-w-[120px]"
+                          /></MobileCardField
+                        ></td
                       >
-                      <td class="px-3 py-2"
-                        ><FieldInput
-                          type="number"
-                          step="0.01"
-                          value={String(tier.ate_pct)}
-                          on:input={(e) => handleRuleTierInput(index, 'ate_pct', e)}
-                          class_name="min-w-[120px]"
-                        /></td
+                      <td data-label="Até (%)" class="px-3 py-2"
+                        ><MobileCardField value={tier.ate_pct}
+                          ><FieldInput
+                            type="number"
+                            step="0.01"
+                            value={String(tier.ate_pct)}
+                            on:input={(e) => handleRuleTierInput(index, 'ate_pct', e)}
+                            class_name="min-w-[120px]"
+                          /></MobileCardField
+                        ></td
                       >
-                      <td class="px-3 py-2"
-                        ><FieldInput
-                          type="number"
-                          step="0.01"
-                          value={String(tier.inc_pct_meta)}
-                          on:input={(e) => handleRuleTierInput(index, 'inc_pct_meta', e)}
-                          class_name="min-w-[140px]"
-                        /></td
+                      <td data-label="Inc. Meta (%)" class="px-3 py-2"
+                        ><MobileCardField value={tier.inc_pct_meta}
+                          ><FieldInput
+                            type="number"
+                            step="0.01"
+                            value={String(tier.inc_pct_meta)}
+                            on:input={(e) => handleRuleTierInput(index, 'inc_pct_meta', e)}
+                            class_name="min-w-[140px]"
+                          /></MobileCardField
+                        ></td
                       >
-                      <td class="px-3 py-2"
-                        ><FieldInput
-                          type="number"
-                          step="0.01"
-                          value={String(tier.inc_pct_comissao)}
-                          on:input={(e) => handleRuleTierInput(index, 'inc_pct_comissao', e)}
-                          class_name="min-w-[160px]"
-                        /></td
+                      <td data-label="Inc. Comissão (%)" class="px-3 py-2"
+                        ><MobileCardField value={tier.inc_pct_comissao}
+                          ><FieldInput
+                            type="number"
+                            step="0.01"
+                            value={String(tier.inc_pct_comissao)}
+                            on:input={(e) => handleRuleTierInput(index, 'inc_pct_comissao', e)}
+                            class_name="min-w-[160px]"
+                          /></MobileCardField
+                        ></td
                       >
-                      <td class="px-3 py-2 text-right"
+                      <td data-label="Ações" class="vtur-table-row-actions px-3 py-2 text-right"
                         ><Button
                           type="button"
                           size="sm"

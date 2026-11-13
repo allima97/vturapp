@@ -109,16 +109,12 @@
             </div>
             <div>
               <FieldInput
+                money
                 label="Valor por pessoa (R$)"
                 type="number"
                 value={inv.valor_por_pessoa ?? ''}
                 class_name="w-full"
-                on:input={(e) =>
-                  onInvestimentoChange(
-                    index,
-                    'valor_por_pessoa',
-                    (e.target as HTMLInputElement).value
-                  )}
+                on:moneyInput={(e) => onInvestimentoChange(index, 'valor_por_pessoa', e.detail)}
               />
             </div>
             <div>
@@ -133,6 +129,7 @@
             </div>
             <div>
               <FieldInput
+                money
                 label="Valor por apto (R$)"
                 type="number"
                 value={inv.valor_por_apto ?? ''}

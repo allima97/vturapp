@@ -123,6 +123,13 @@
     if ($permissoes.isSystemAdmin) {
       return href.startsWith('/perfil') && !href.startsWith('/perfil/escala');
     }
+    if (href === '/parametros/vouchers')
+      return (
+        $permissoes.isMaster ||
+        $permissoes.isGestor ||
+        permissoes.can('Parametros', 'view') ||
+        permissoes.can('Vouchers', 'view')
+      );
     if (href.startsWith('/perfil')) return true; // perfil sempre acessível
     if (href.startsWith('/master')) return $permissoes.isMaster;
     const modulo = descobrirModulo(href);

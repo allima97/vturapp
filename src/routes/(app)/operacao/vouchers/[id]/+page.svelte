@@ -34,24 +34,29 @@
   import { fade } from 'svelte/transition';
   import { formatDate as formatDateValue } from '$lib/utils/formatters';
   import { toUserMessage } from '$lib/utils/errors';
-  import type { VoucherRecord, VoucherAssetRecord } from '$lib/vouchers/types';
-  import { apiDelete, apiGet, apiPatch, apiPost, isCanceledApiError } from '$lib/services/api';
+  import type { VoucherRecord, VoucherAssetRecord, VoucherLogoEsquerdo } from '$lib/vouchers/types';
+  import {
+    apiDelete,
+    apiFetch,
+    apiGet,
+    apiPatch,
+    apiPost,
+    isCanceledApiError
+  } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
 
   let voucher: VoucherRecord | null = null;
   let assets: VoucherAssetRecord[] = [];
+  let logoEsquerdo: VoucherLogoEsquerdo = 'vtur';
   let loading = true;
   let showDeleteDialog = false;
   let showEditor = false;
   let showPreview = false;
-  let companyId: string | null = null;
   let VoucherEditorModal: ComponentType | null = null;
   let VoucherPreviewModal: ComponentType | null = null;
   let loadingEditorModal = false;
   let loadingPreviewModal = false;
-  let assetsLoaded = false;
   let duplicating = false;
-  const contextGuard = createLoadGuard();
   const voucherGuard = createLoadGuard();
   const assetsGuard = createLoadGuard();
 
@@ -92,25 +97,9 @@
   onMount(async () => {
     const id = $page.params.id;
     if (id) {
-      await Promise.all([loadUserContext(), carregarVoucher(id)]);
+      await carregarVoucher(id);
     }
   });
-
-  async function loadUserContext() {
-    const request = contextGuard.next();
-    try {
-      const data = await apiGet<{ company_id?: string | null }>(
-        '/api/v1/user/context',
-        undefined,
-        request.signal
-      );
-      if (!contextGuard.isCurrent(request.seq)) return;
-      companyId = data.company_id || null;
-    } catch (err) {
-      if (isCanceledApiError(err)) return;
-      companyId = null;
-    }
-  }
 
   async function carregarVoucher(id: string) {
     const request = voucherGuard.next();
@@ -137,21 +126,15 @@
   }
 
   async function carregarAssets() {
-    if (assetsLoaded) return;
     const request = assetsGuard.next();
-    try {
-      const data = await apiGet<{ items?: VoucherAssetRecord[] }>(
-        '/api/v1/voucher-assets',
-        undefined,
-        request.signal
-      );
-      if (!assetsGuard.isCurrent(request.seq)) return;
-      assets = data.items || [];
-      assetsLoaded = true;
-    } catch (err) {
-      if (isCanceledApiError(err)) return;
-      assets = [];
-    }
+    const data = await apiFetch<{
+      items?: VoucherAssetRecord[];
+      logo_esquerdo: VoucherLogoEsquerdo;
+    }>('/api/v1/voucher-assets', { signal: request.signal, noCache: true });
+    if (!assetsGuard.isCurrent(request.seq)) return false;
+    assets = data.items || [];
+    logoEsquerdo = data.logo_esquerdo;
+    return true;
   }
 
   async function handleSave(event: CustomEvent) {
@@ -198,7 +181,7 @@
 
   async function openEditor() {
     try {
-      await Promise.all([loadEditorModal(), carregarAssets()]);
+      await loadEditorModal();
       showEditor = true;
     } catch (err) {
       toast.error(toUserMessage(err, 'Erro ao carregar editor de voucher.'));
@@ -207,9 +190,10 @@
 
   async function openPreview() {
     try {
-      await Promise.all([loadPreviewModal(), carregarAssets()]);
-      showPreview = true;
+      const [, loaded] = await Promise.all([loadPreviewModal(), carregarAssets()]);
+      if (loaded) showPreview = true;
     } catch (err) {
+      if (isCanceledApiError(err)) return;
       toast.error(toUserMessage(err, 'Erro ao carregar prévia do voucher.'));
     }
   }
@@ -851,7 +835,6 @@
     this={VoucherEditorModal}
     bind:open={showEditor}
     {voucher}
-    {companyId}
     {assets}
     on:save={handleSave}
     on:close={() => (showEditor = false)}
@@ -865,6 +848,7 @@
     bind:open={showPreview}
     {voucher}
     {assets}
+    {logoEsquerdo}
     on:edit={async () => {
       showPreview = false;
       await openEditor();

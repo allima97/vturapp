@@ -1,5 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import Tabs from '$lib/components/ui/Tabs.svelte';
+  import { mobileCardActions } from '$lib/actions/mobileCardActions';
 
   type Solicitacao = {
     id: string;
@@ -185,16 +187,35 @@
   </div>
 
   <!-- Abas -->
-  <div class="abas">
-    <button class="aba" class:ativa={aba === 'solicitacoes'} onclick={() => (aba = 'solicitacoes')}>
-      Solicitações de Titulares
-    </button>
-    <button class="aba" class:ativa={aba === 'atividades'} onclick={() => (aba = 'atividades')}>
-      Atividades de Tratamento (ROPA)
-    </button>
-    <button class="aba" class:ativa={aba === 'anonimizar'} onclick={() => (aba = 'anonimizar')}>
-      Anonimizar Dados
-    </button>
+  <div class="md:hidden">
+    <Tabs
+      activeKey={aba}
+      items={[
+        { key: 'solicitacoes', label: 'Solicitações de Titulares' },
+        { key: 'atividades', label: 'Atividades de Tratamento (ROPA)' },
+        { key: 'anonimizar', label: 'Anonimizar Dados' }
+      ]}
+      onSelect={(key) => {
+        if (key === 'solicitacoes' || key === 'atividades' || key === 'anonimizar') aba = key;
+      }}
+    />
+  </div>
+  <div class="hidden md:block">
+    <div class="abas">
+      <button
+        class="aba"
+        class:ativa={aba === 'solicitacoes'}
+        onclick={() => (aba = 'solicitacoes')}
+      >
+        Solicitações de Titulares
+      </button>
+      <button class="aba" class:ativa={aba === 'atividades'} onclick={() => (aba = 'atividades')}>
+        Atividades de Tratamento (ROPA)
+      </button>
+      <button class="aba" class:ativa={aba === 'anonimizar'} onclick={() => (aba = 'anonimizar')}>
+        Anonimizar Dados
+      </button>
+    </div>
   </div>
 
   {#if erroGlobal}
@@ -216,7 +237,7 @@
         <p class="info-text">Nenhuma solicitação encontrada.</p>
       {:else}
         <div class="tabela-wrap">
-          <table>
+          <table class="table-mobile-cards">
             <thead>
               <tr>
                 <th>Data</th><th>Titular</th><th>Tipo</th><th>Status</th><th>Prazo</th><th>Ações</th
@@ -225,24 +246,27 @@
             </thead>
             <tbody>
               {#each solicitacoes as s}
-                <tr class={s.prazo_vencido ? 'row-vencida' : ''}>
-                  <td>{dataFormatada(s.created_at)}</td>
-                  <td>
+                {@const temAcao = s.status !== 'concluida' && s.status !== 'recusada'}
+                <tr class={s.prazo_vencido ? 'row-vencida' : ''} use:mobileCardActions={temAcao}>
+                  <td data-label="Data">{dataFormatada(s.created_at)}</td>
+                  <td data-label="Titular">
                     <strong>{s.titular_nome}</strong><br />
                     <small>{s.titular_email}</small>
                   </td>
-                  <td><span class="badge">{TIPO_LABEL[s.tipo] ?? s.tipo}</span></td>
-                  <td
+                  <td data-label="Tipo"
+                    ><span class="badge">{TIPO_LABEL[s.tipo] ?? s.tipo}</span></td
+                  >
+                  <td data-label="Status"
                     ><span class="badge {STATUS_COR[s.status]}"
                       >{STATUS_LABEL[s.status] ?? s.status}</span
                     ></td
                   >
-                  <td class={s.prazo_vencido ? 'prazo-vencido' : ''}>
+                  <td data-label="Prazo" class={s.prazo_vencido ? 'prazo-vencido' : ''}>
                     {dataFormatada(s.prazo_legal)}
                     {#if s.prazo_vencido}<br /><small>⚠️ VENCIDO</small>{/if}
                   </td>
-                  <td>
-                    {#if s.status !== 'concluida' && s.status !== 'recusada'}
+                  <td data-label="Ações" class:vtur-table-row-actions={temAcao}>
+                    {#if temAcao}
                       <button class="btn-sm" onclick={() => abrirResponder(s)}>Responder</button>
                     {:else}
                       <small class="info-text">Concluída</small>
@@ -309,7 +333,7 @@
         <p class="info-text">Nenhuma atividade cadastrada.</p>
       {:else}
         <div class="tabela-wrap">
-          <table>
+          <table class="table-mobile-cards">
             <thead>
               <tr
                 ><th>Atividade</th><th>Finalidade</th><th>Base Legal</th><th>Dados</th><th
@@ -320,12 +344,12 @@
             <tbody>
               {#each atividades as a}
                 <tr>
-                  <td><strong>{a.nome}</strong></td>
-                  <td>{a.finalidade}</td>
-                  <td>{a.base_legal}</td>
-                  <td><small>{a.dados_tratados.join(', ')}</small></td>
-                  <td>{a.retencao_meses ? `${a.retencao_meses}m` : '—'}</td>
-                  <td>{a.ativo ? '✅' : '❌'}</td>
+                  <td data-label="Atividade"><strong>{a.nome}</strong></td>
+                  <td data-label="Finalidade">{a.finalidade}</td>
+                  <td data-label="Base Legal">{a.base_legal}</td>
+                  <td data-label="Dados"><small>{a.dados_tratados.join(', ')}</small></td>
+                  <td data-label="Retenção">{a.retencao_meses ? `${a.retencao_meses}m` : '—'}</td>
+                  <td data-label="Ativo">{a.ativo ? '✅' : '❌'}</td>
                 </tr>
               {/each}
             </tbody>

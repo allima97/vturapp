@@ -203,14 +203,22 @@
       <tbody>
         {#each logs as log}
           <tr>
-            <td class="px-5 py-3 whitespace-nowrap">{formatDateTime(log.created_at)}</td>
-            <td class="px-5 py-3">
+            <td data-label="Data" class="px-5 py-3 whitespace-nowrap"
+              >{formatDateTime(log.created_at)}</td
+            >
+            <td data-label="Módulo" class="px-5 py-3">
               <Badge color="yellow" size="sm">{log.modulo || '-'}</Badge>
             </td>
-            <td class="px-5 py-3 font-medium text-slate-900">{log.acao || '-'}</td>
-            <td class="max-w-[240px] truncate px-5 py-3">{userLabel(log)}</td>
-            <td class="px-5 py-3 font-mono text-xs text-slate-500">{log.ip || '-'}</td>
-            <td class="max-w-[420px] truncate px-5 py-3 text-xs text-slate-500">
+            <td data-label="Ação" class="px-5 py-3 font-medium text-slate-900">{log.acao || '-'}</td
+            >
+            <td data-label="Usuário" class="max-w-[240px] truncate px-5 py-3">{userLabel(log)}</td>
+            <td data-label="IP" class="px-5 py-3 font-mono text-xs text-slate-500"
+              >{log.ip || '-'}</td
+            >
+            <td
+              data-label="Detalhes"
+              class="max-w-[420px] truncate px-5 py-3 text-xs text-slate-500"
+            >
               {formatDetails(log.detalhes)}
             </td>
           </tr>

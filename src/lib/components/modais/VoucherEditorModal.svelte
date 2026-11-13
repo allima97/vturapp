@@ -93,7 +93,6 @@
 
   export let open = false;
   export let voucher: VoucherRecord | null = null;
-  export let companyId: string | null = null;
   export let assets: VoucherAssetRecord[] = [];
   $: assets;
 
@@ -576,11 +575,6 @@
 
   // ========== SALVAMENTO ==========
   async function save(finalizar = false) {
-    if (!companyId) {
-      toast.error('Selecione uma empresa');
-      return;
-    }
-
     // Validação final
     if (!form.nome.trim()) {
       validationErrors.nome = 'Nome do voucher é obrigatório';
@@ -598,7 +592,6 @@
     try {
       const payload = {
         ...form,
-        company_id: companyId,
         status: finalizar ? 'finalizado' : 'rascunho',
         dias: form.dias,
         hoteis: form.hoteis
@@ -1326,9 +1319,9 @@
                           <p class="font-medium text-slate-900">
                             {hotel.hotel || `Hotel ${i + 1}`}
                           </p>
-                          {#if hotel.cidade}
-                            <p class="text-sm text-slate-500">{hotel.cidade}</p>
-                          {/if}
+                          <p class="text-sm text-slate-500">
+                            {hotel.cidade || 'Cidade não informada'}
+                          </p>
                         </div>
                         <svelte:component
                           this={activeHotelIndexes.includes(i) ? ChevronUp : ChevronDown}

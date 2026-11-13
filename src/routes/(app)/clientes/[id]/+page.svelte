@@ -20,11 +20,15 @@
     Edit,
     FileText,
     Globe,
+    Building2,
+    Home,
     Mail,
+    Map,
     MapPin,
     Phone,
     Send,
     ShoppingCart,
+    Plus,
     Ticket,
     User,
     Whatsapp,
@@ -309,7 +313,7 @@
         label: 'Nova Venda',
         href: `/vendas/nova?cliente=${clienteId}`,
         variant: 'primary',
-        icon: ShoppingCart
+        icon: Plus
       }
     ]}
   />
@@ -550,39 +554,61 @@
           </div>
         </div>
       </div>
-      <div class="mt-5 flex items-start gap-3 border-t border-slate-100 pt-4">
-        <div
-          class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
-        >
-          <MapPin size={18} class="text-clientes-600" aria-hidden="true" />
+      <div
+        class="mt-5 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-slate-100 pt-4 lg:grid-cols-4"
+        role="group"
+        aria-label="Endereço do cliente"
+      >
+        <div class="flex min-w-0 items-start gap-3">
+          <div
+            class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+          >
+            <MapPin size={18} class="text-clientes-600" aria-hidden="true" />
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm text-slate-500">CEP</p>
+            <p class="font-medium break-words text-slate-900">{cliente.cep || '-'}</p>
+          </div>
         </div>
-        <div class="min-w-0 space-y-2">
-          <h4 class="text-sm font-semibold text-slate-800">Endereço e tags</h4>
-          <p class="min-w-0 text-sm break-words text-slate-700" aria-label="Endereço do cliente">
-            {[
-              `${cliente.endereco || 'Endereço não informado'}${cliente.numero ? `, ${cliente.numero}` : ''}`,
-              cliente.complemento,
-              cliente.bairro,
-              [cliente.cidade, cliente.estado].filter(Boolean).join('/'),
-              cliente.cep ? `CEP: ${cliente.cep}` : ''
-            ]
-              .filter(Boolean)
-              .join(' · ')}
-          </p>
-          <div class="flex flex-wrap items-center gap-2" aria-label="Tags do cliente">
-            <span class="text-sm text-slate-500">Tags:</span>
-            {#if cliente.tags && cliente.tags.length > 0}
-              <div class="flex flex-wrap gap-2">
-                {#each cliente.tags as tag}
-                  <span
-                    class="bg-clientes-100 text-clientes-700 rounded-full px-3 py-1 text-xs font-medium"
-                    >{tag}</span
-                  >
-                {/each}
-              </div>
-            {:else}
-              <span class="text-sm text-slate-500">Nenhuma tag cadastrada.</span>
-            {/if}
+        <div class="flex min-w-0 items-start gap-3">
+          <div
+            class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+          >
+            <Home size={18} class="text-clientes-600" aria-hidden="true" />
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm text-slate-500">Endereço</p>
+            <p class="font-medium break-words text-slate-900">
+              {[
+                `${cliente.endereco || 'Endereço não informado'}${cliente.numero ? `, ${cliente.numero}` : ''}`,
+                cliente.complemento,
+                cliente.bairro
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+            </p>
+          </div>
+        </div>
+        <div class="flex min-w-0 items-start gap-3">
+          <div
+            class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+          >
+            <Building2 size={18} class="text-clientes-600" aria-hidden="true" />
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm text-slate-500">Cidade</p>
+            <p class="font-medium break-words text-slate-900">{cliente.cidade || '-'}</p>
+          </div>
+        </div>
+        <div class="flex min-w-0 items-start gap-3">
+          <div
+            class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+          >
+            <Map size={18} class="text-clientes-600" aria-hidden="true" />
+          </div>
+          <div class="min-w-0">
+            <p class="text-sm text-slate-500">Estado</p>
+            <p class="font-medium break-words text-slate-900">{cliente.estado || '-'}</p>
           </div>
         </div>
       </div>
@@ -627,23 +653,34 @@
               {#each historicoVendas as venda}
                 <tr
                   class="cursor-pointer transition-colors hover:bg-slate-50"
+                  tabindex="0"
                   on:click={() => goto(`/vendas/${venda.id}`)}
+                  on:keydown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      void goto(`/vendas/${venda.id}`);
+                    }
+                  }}
                 >
-                  <td class="px-4 py-3 text-slate-700">{formatDate(venda.data_lancamento)}</td>
-                  <td class="px-4 py-3">
+                  <td data-label="Lançamento" class="px-4 py-3 text-slate-700"
+                    >{formatDate(venda.data_lancamento)}</td
+                  >
+                  <td data-label="Destino" class="px-4 py-3">
                     <div class="font-medium text-slate-900">{venda.destino_nome || '-'}</div>
                     <div class="text-xs text-slate-500">
                       {venda.destino_cidade_nome || 'Sem cidade'}
                     </div>
                   </td>
-                  <td class="px-4 py-3 text-slate-700">{formatDate(venda.data_embarque)}</td>
-                  <td class="px-4 py-3 text-right font-medium text-slate-900"
+                  <td data-label="Embarque" class="px-4 py-3 text-slate-700"
+                    >{formatDate(venda.data_embarque)}</td
+                  >
+                  <td data-label="Valor" class="px-4 py-3 text-right font-medium text-slate-900"
                     >{formatCurrency(venda.valor_total)}</td
                   >
-                  <td class="px-4 py-3 text-right text-slate-700"
+                  <td data-label="Taxas" class="px-4 py-3 text-right text-slate-700"
                     >{formatCurrency(venda.valor_taxas)}</td
                   >
-                  <td class="px-4 py-3">
+                  <td data-label="Vínculo" class="px-4 py-3">
                     <span
                       class={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${venda.origem_vinculo === 'passageiro' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}
                     >
@@ -687,18 +724,29 @@
               {#each historicoOrcamentos as orcamento}
                 <tr
                   class="cursor-pointer transition-colors hover:bg-slate-50"
+                  tabindex="0"
                   on:click={() => goto(`/orcamentos/${orcamento.id}`)}
+                  on:keydown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      void goto(`/orcamentos/${orcamento.id}`);
+                    }
+                  }}
                 >
-                  <td class="px-4 py-3 text-slate-700">{formatDate(orcamento.data_orcamento)}</td>
-                  <td class="px-4 py-3">
+                  <td data-label="Data" class="px-4 py-3 text-slate-700"
+                    >{formatDate(orcamento.data_orcamento)}</td
+                  >
+                  <td data-label="Status" class="px-4 py-3">
                     <span
                       class={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusBadge(orcamento.status)}`}
                     >
                       {getStatusLabel(orcamento.status)}
                     </span>
                   </td>
-                  <td class="px-4 py-3 text-slate-900">{orcamento.produto_nome || '-'}</td>
-                  <td class="px-4 py-3 text-right text-slate-900"
+                  <td data-label="Produto" class="px-4 py-3 text-slate-900"
+                    >{orcamento.produto_nome || '-'}</td
+                  >
+                  <td data-label="Valor" class="px-4 py-3 text-right text-slate-900"
                     >{formatCurrency(orcamento.valor)}</td
                   >
                 </tr>

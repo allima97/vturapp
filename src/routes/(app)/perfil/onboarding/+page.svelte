@@ -261,6 +261,7 @@
           bind:value={form.telefone}
           placeholder="(00) 00000-0000"
           icon={Phone}
+          mask="phone"
           class_name="w-full"
         />
         <FieldInput
@@ -269,6 +270,7 @@
           bind:value={form.whatsapp}
           placeholder="(00) 00000-0000"
           icon={Whatsapp}
+          mask="phone"
           class_name="w-full"
         />
       </div>
@@ -304,6 +306,7 @@
           placeholder="00000-000"
           maxlength={9}
           icon={MapPin}
+          mask="cep"
           helper={cepStatus}
           on:input={() => {
             cepGuard.abort();

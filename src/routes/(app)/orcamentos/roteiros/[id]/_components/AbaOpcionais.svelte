@@ -18,6 +18,7 @@
   import { toUserMessage } from '$lib/utils/errors';
   import { chaveNomeOpcional } from '$lib/importarOpcionais';
   import { untrack } from 'svelte';
+  import { Plus } from '$lib/icons';
 
   let {
     opcionais = $bindable(),
@@ -262,10 +263,10 @@
     size="sm"
     on:click={() => {
       opcionais = [...opcionais, { cidade: '', passeios: [] }];
-    }}>Adicionar cidade</Button
+    }}><Plus size={16} class="mr-2" />Adicionar cidade</Button
   >
   <Button type="button" variant="secondary" size="sm" on:click={adicionarCidadesItinerario}>
-    Adicionar cidades do itinerário
+    <Plus size={16} class="mr-2" />Adicionar cidades do itinerário
   </Button>
   <Button
     type="button"
@@ -274,7 +275,7 @@
     disabled={adicionandoTodos}
     on:click={() => adicionarTodos()}
   >
-    {adicionandoTodos
+    <Plus size={16} class="mr-2" />{adicionandoTodos
       ? 'Adicionando opcionais...'
       : 'Adicionar todos os opcionais das cidades do roteiro'}
   </Button>
@@ -350,7 +351,7 @@
               disabled={adicionandoTodos}
               on:click={() => adicionarTodos(cidade)}
             >
-              Adicionar todos os opcionais desta cidade
+              <Plus size={16} class="mr-2" />Adicionar todos os opcionais desta cidade
             </Button>
           </div>
           <h3 class="mt-4 text-sm font-semibold">
@@ -401,7 +402,7 @@
             size="sm"
             on:click={() => {
               cidade.passeios = [...cidade.passeios, { nome: '', descricao: '' }];
-            }}>Adicionar passeio opcional</Button
+            }}><Plus size={16} class="mr-2" />Adicionar passeio opcional</Button
           >
           <div class="mt-4">
             <h3 class="text-sm font-semibold">Não adicionados do catálogo</h3>
@@ -439,7 +440,8 @@
                         type="button"
                         variant="secondary"
                         size="xs"
-                        on:click={() => adicionar(cidade, item)}>Adicionar ao roteiro</Button
+                        on:click={() => adicionar(cidade, item)}
+                        ><Plus size={16} class="mr-2" />Adicionar ao roteiro</Button
                       >
                     </div>
                   </details>
@@ -459,7 +461,7 @@
         size="sm"
         on:click={() => {
           opcionais = [...opcionais, { cidade: '', passeios: [] }];
-        }}>Adicionar cidade</Button
+        }}><Plus size={16} class="mr-2" />Adicionar cidade</Button
       >
     </div>
   {/if}

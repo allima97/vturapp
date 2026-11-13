@@ -16,6 +16,7 @@ import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import { chunkArray, QUERY_IN_BATCH_SIZE } from '$lib/utils/array';
 import { complementarListaOperacional } from '$lib/server/destinoOperacional';
+import { isIndividualVoucherScope } from './scope';
 
 const MAX_VOUCHER_BODY_BYTES = 512 * 1024;
 
@@ -99,7 +100,9 @@ export async function handleVouchersGet(event: RequestEvent) {
         .order('updated_at', { ascending: false })
         .limit(500);
 
-      if (companyIdsFilter && companyIdsFilter.length > 0)
+      if (isIndividualVoucherScope(scope)) {
+        query = query.is('company_id', null).eq('created_by', user.id);
+      } else if (companyIdsFilter && companyIdsFilter.length > 0)
         query = query.in('company_id', companyIdsFilter);
       return query;
     };
@@ -160,28 +163,40 @@ export async function handleVouchersPost(event: RequestEvent) {
       bodyResult.data && typeof bodyResult.data === 'object'
         ? (bodyResult.data as VoucherCreateBody)
         : {};
+    const companyId = isIndividualVoucherScope(scope) ? null : scope.companyId;
+    if (!companyId && !isIndividualVoucherScope(scope)) {
+      return json(
+        { error: 'Selecione uma empresa para criar o voucher.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
+    }
 
-    // viagem_id é opcional (voucher avulso continua permitido); quando informado,
-    // validamos que a viagem existe e pertence à mesma empresa do voucher, para
-    // não linkar vouchers a viagens de outra empresa.
     let viagemId: string | null = null;
     const requestedViagemId = String(body.viagem_id || '').trim();
-    if (requestedViagemId && isUuid(requestedViagemId)) {
-      const { data: viagemScope } = await client
+    if (requestedViagemId) {
+      if (!isUuid(requestedViagemId)) {
+        return json({ error: 'Viagem inválida.' }, { status: 400, headers: NO_STORE_HEADERS });
+      }
+      const { data: viagemScope, error: viagemError } = await client
         .from('viagens')
         .select('id, company_id')
         .eq('id', requestedViagemId)
         .maybeSingle();
-      if (viagemScope && viagemScope.company_id === scope.companyId) {
-        viagemId = viagemScope.id;
+      if (viagemError) throw viagemError;
+      if (!companyId || !viagemScope || viagemScope.company_id !== companyId) {
+        return json(
+          { error: 'Viagem não encontrada ou fora do escopo.' },
+          { status: 403, headers: NO_STORE_HEADERS }
+        );
       }
+      viagemId = viagemScope.id;
     }
 
     const { data: voucher, error: voucherError } = await client
       .from('vouchers')
       .insert([
         {
-          company_id: scope.companyId,
+          company_id: companyId,
           created_by: user.id,
           viagem_id: viagemId,
           provider: body.provider || 'special_tours',

@@ -26,8 +26,7 @@
     Plus,
     Search,
     SlidersHorizontal,
-    SquareCheckBig,
-    Tag
+    SquareCheckBig
   } from '$lib/icons';
 
   type TodoStatus = 'novo' | 'agendado' | 'em_andamento' | 'concluido';
@@ -586,7 +585,7 @@
   color="operacao"
   breadcrumbs={[{ label: 'Tarefas' }]}
   actions={[
-    { label: 'Nova categoria', onClick: openNewCategory, variant: 'secondary', icon: Tag },
+    { label: 'Nova categoria', onClick: openNewCategory, variant: 'secondary', icon: Plus },
     { label: 'Nova tarefa', onClick: openNewTask, variant: 'primary', icon: Plus }
   ]}
 />

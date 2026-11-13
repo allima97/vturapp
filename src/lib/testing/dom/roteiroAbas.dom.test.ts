@@ -59,12 +59,13 @@ describe('roteiro: aba Investimento', () => {
     flushSync();
     expect(t.get()).toHaveLength(2);
 
-    const valor = t.target.querySelector('input[type="number"]') as HTMLInputElement;
-    valor.value = '150';
+    const valor = t.target.querySelector<HTMLInputElement>('input[inputmode="decimal"]')!;
+    valor.value = '15031';
     valor.dispatchEvent(new Event('input', { bubbles: true }));
     flushSync();
-    expect(t.get()[0].valor_por_pessoa).toBe(150);
-    expect(t.target.querySelector('[data-testid="total"]')!.textContent).toBe('150');
+    expect(valor.value).toBe('150,31');
+    expect(t.get()[0].valor_por_pessoa).toBe(150.31);
+    expect(t.target.querySelector('[data-testid="total"]')!.textContent).toBe('150.31');
 
     const tipo = t.target.querySelector('select') as HTMLSelectElement;
     tipo.value = 'Por casal';
@@ -75,7 +76,7 @@ describe('roteiro: aba Investimento', () => {
 
     t.botao('Mover linha de investimento para baixo', 0).click();
     flushSync();
-    expect(t.get()[1].valor_por_pessoa).toBe(150);
+    expect(t.get()[1].valor_por_pessoa).toBe(150.31);
 
     t.botao('Remover linha de investimento', 1).click();
     flushSync();
@@ -191,6 +192,30 @@ describe('roteiro: aba Itinerário', () => {
 });
 
 describe('roteiro: abas Hotéis, Passeios e Aéreo', () => {
+  it('permite informar a data de chegada do trecho', () => {
+    const t = montar(ServicosHarness);
+    const painel = [...t.target.querySelectorAll<HTMLDetailsElement>('details')].find((item) =>
+      item.textContent?.includes('GRU → LIS')
+    )!;
+    const chegada = painel.querySelectorAll<HTMLInputElement>('input[type="date"]')[1];
+    chegada.value = '2027-08-12';
+    chegada.dispatchEvent(new Event('input', { bubbles: true }));
+    chegada.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(t.get().transportes[0].data_fim).toBe('2027-08-12');
+    t.fim();
+  });
+
+  it('permite informar o número do voo', () => {
+    const t = montar(ServicosHarness);
+    const voo = t.target.querySelector<HTMLInputElement>('input[placeholder="Ex: LA 123"]')!;
+    voo.value = 'LA 123';
+    voo.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+    expect(t.get().transportes[0].descricao).toBe('LA 123');
+    t.fim();
+  });
+
   it('inicia os itens recolhidos, mostra os nomes e permite expandir e recolher', () => {
     const t = montar(ServicosHarness);
     const paineis = [...t.target.querySelectorAll<HTMLDetailsElement>('details')];

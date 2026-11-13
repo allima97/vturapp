@@ -1,6 +1,7 @@
 import { VTUR_LOGO_URL } from '$lib/brand';
 import { normalizeVoucherExtraData, splitLinesFromMultilineText } from './extraData';
 import { addDaysISODate } from '$lib/date';
+import { printLocationIcon, requiresPrintContinuation } from '$lib/utils/printLayout';
 import type {
   VoucherAssetRecord,
   VoucherAppInfo,
@@ -8,7 +9,8 @@ import type {
   VoucherHotel,
   VoucherPassengerDetail,
   VoucherRecord,
-  VoucherTransferInfo
+  VoucherTransferInfo,
+  VoucherLogoEsquerdo
 } from './types';
 
 const ISO_DATE_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -326,19 +328,17 @@ function buildHotelDateRange(hotel: VoucherHotel) {
 function buildUnifiedHotelCard(
   hotel: VoucherHotel,
   options: {
-    showCity?: boolean;
     addressLabel?: string;
     periodLabel?: string;
   } = {}
 ) {
-  const showCity = options.showCity !== false;
   const addressLabel = options.addressLabel || 'Endereço';
   const periodLabel = options.periodLabel || 'Check In/Out';
   const period = buildHotelDateRange(hotel);
 
   return `
     <article class="sheet-card voucher-hotel-card">
-      ${showCity && textValue(hotel.cidade) ? `<div class="voucher-hotel-city">${escapeHtml(hotel.cidade || '-')}</div>` : ''}
+      ${textValue(hotel.cidade) ? `<div class="voucher-hotel-city">${printLocationIcon}${escapeHtml(hotel.cidade)}</div>` : ''}
       ${textValue(hotel.hotel) ? `<div class="voucher-hotel-detail voucher-hotel-name"><strong>Hotel:</strong> ${escapeHtml(hotel.hotel)}</div>` : ''}
       ${period ? `<div class="voucher-hotel-detail voucher-hotel-period"><strong>${escapeHtml(periodLabel)}:</strong> ${escapeHtml(period)}</div>` : ''}
       ${textValue(hotel.endereco) ? `<div class="voucher-hotel-detail"><strong>${escapeHtml(addressLabel)}:</strong> ${escapeHtml(hotel.endereco)}</div>` : ''}
@@ -346,12 +346,6 @@ function buildUnifiedHotelCard(
       ${textValue(hotel.observacao) ? `<div class="voucher-hotel-note">${escapeHtml(hotel.observacao || '')}</div>` : ''}
     </article>`;
 }
-
-type ProgramPrintBlock = {
-  heading: string;
-  description: string;
-  units: number;
-};
 
 function splitTextIntoPrintableChunks(value?: string | null, maxChars = 1400) {
   const normalized = textValue(value).replace(/\s+/g, ' ').trim();
@@ -391,18 +385,6 @@ function splitTextIntoPrintableChunks(value?: string | null, maxChars = 1400) {
 
   pushCurrent();
   return chunks.length ? chunks : [normalized];
-}
-
-function buildProgramPrintBlocks(items: VoucherDia[]) {
-  return items.flatMap((dia) => {
-    const heading = buildDayHeading(dia);
-    const chunks = splitTextIntoPrintableChunks(dia.descricao, 1200);
-    return chunks.map((chunk, index) => ({
-      heading: index === 0 ? heading : `${heading} (continuação)`,
-      description: chunk,
-      units: Math.max(1, Math.ceil(String(chunk || '').length / 850))
-    }));
-  });
 }
 
 function paginateByUnits<T>(
@@ -448,52 +430,82 @@ function buildAppPrintUnits(app: VoucherAppInfo) {
 }
 
 function renderProgramSections(params: {
+  header: string;
   providerName: string;
   routeTitle: string;
   referenceLabel?: string | null;
   referenceValue?: string | null;
   dias: VoucherDia[];
 }) {
-  const blocks = buildProgramPrintBlocks(params.dias);
-  if (!blocks.length) return '';
+  if (!params.dias.length) return '';
 
-  const pageLimit = (pageIndex: number) => (pageIndex === 0 ? 6 : 7);
-  const pages = paginateByUnits(blocks, (item) => item.units, pageLimit);
-  return pages
-    .map(
-      (pageBlocks, pageIndex) => `
-        <section class="sheet">
-          ${buildSpecialHeader(params.providerName)}
-          ${buildBand('PROGRAMA DE VIAGEM')}
-          ${
-            pageIndex === 0
-              ? `<div class="sheet-card sheet-card-center">
-                  <div class="route-title">${escapeHtml(params.routeTitle)}</div>
-                  ${
-                    textValue(params.referenceLabel) && textValue(params.referenceValue)
-                      ? `<div class="route-ref">${escapeHtml(params.referenceLabel || '')}: ${escapeHtml(params.referenceValue || '')}</div>`
-                      : ''
-                  }
-                </div>`
-              : ''
-          }
-          <div class="program-list">
-            ${pageBlocks
-              .map(
-                (block) => `
-                  <article class="program-card">
-                    <div class="program-heading">${escapeHtml(block.heading)}</div>
-                    <div class="program-description">${escapeHtml(block.description || '').replace(/\n/g, '<br/>')}</div>
-                  </article>`
-              )
-              .join('')}
-          </div>
-        </section>`
-    )
-    .join('');
+  return `
+    <section class="sheet">
+      <table class="program-print-table" role="presentation">
+        <thead>
+          <tr><td>
+            ${params.header}
+            ${buildBand('PROGRAMA DE VIAGEM')}
+          </td></tr>
+        </thead>
+        <tbody>
+          <tr><td>
+            <div class="sheet-card sheet-card-center">
+              <div class="route-title">${escapeHtml(params.routeTitle)}</div>
+              ${
+                textValue(params.referenceLabel) && textValue(params.referenceValue)
+                  ? `<div class="route-ref">${escapeHtml(params.referenceLabel || '')}: ${escapeHtml(params.referenceValue || '')}</div>`
+                  : ''
+              }
+            </div>
+          </td></tr>
+          ${params.dias
+            .map(
+              (dia) => `
+                <tr class="program-print-row"><td>
+                  <article class="program-card${requiresPrintContinuation(textValue(dia.descricao)) ? ' program-card--long' : ''}">
+                    <div class="program-heading">${escapeHtml(buildDayHeading(dia))}</div>
+                    <div class="program-description">${escapeHtml(textValue(dia.descricao)).replace(/\n/g, '<br/>')}</div>
+                  </article>
+                </td></tr>`
+            )
+            .join('')}
+        </tbody>
+      </table>
+    </section>`;
 }
 
+const programPrintStyles = `
+  .program-print-table {
+    width: 100%;
+    table-layout: fixed;
+    border-spacing: 0;
+  }
+  .program-print-table td {
+    padding: 0;
+  }
+  .program-print-row td {
+    padding-top: 16px;
+  }
+  .program-description {
+    overflow-wrap: anywhere;
+  }
+  @media print {
+    .program-print-table thead {
+      display: table-header-group;
+    }
+    .program-print-row td {
+      padding-top: 12px;
+    }
+    .program-card--long {
+      break-inside: auto !important;
+      page-break-inside: auto !important;
+    }
+  }
+`;
+
 function renderHotelSections(params: {
+  header: string;
   providerName: string;
   hoteis: VoucherHotel[];
   renderCard: (hotel: VoucherHotel) => string;
@@ -510,7 +522,7 @@ function renderHotelSections(params: {
     .map(
       (pageHotels) => `
         <section class="sheet">
-          ${buildSpecialHeader(params.providerName)}
+          ${params.header}
           ${buildBand('LISTA DE HOTÉIS')}
           <div class="voucher-hotel-list hotel-list-standalone">
             ${pageHotels.map((hotel) => params.renderCard(hotel)).join('')}
@@ -521,22 +533,38 @@ function renderHotelSections(params: {
 }
 
 function renderEuropamundoPassengerSections(params: {
+  header: string;
   routeTitle: string;
   infoTable: string;
   passageiros: VoucherPassengerDetail[];
+  emergencySection: string;
+  transferSection: string;
 }) {
-  const pageLimit = (pageIndex: number) => (pageIndex === 0 ? 13 : 17);
+  const compactFirstPage = Boolean(params.emergencySection || params.transferSection);
+  const pageLimit = (pageIndex: number) =>
+    pageIndex === 0 ? (params.transferSection ? 3 : params.emergencySection ? 6 : 13) : 17;
+  const passengerUnits = (passageiro: VoucherPassengerDetail) =>
+    compactFirstPage
+      ? Math.max(
+          1,
+          Math.ceil(textValue(passageiro.nome).length / 24),
+          Math.ceil(textValue(passageiro.passenger_id).length / 10),
+          Math.ceil(textValue(passageiro.tipo).length / 12),
+          Math.ceil(textValue(passageiro.passaporte).length / 14),
+          Math.ceil(textValue(passageiro.nacionalidade).length / 14)
+        )
+      : 1;
   const pages = rebalanceTrailingSparsePage(
-    paginateByUnits(params.passageiros, () => 1, pageLimit),
-    () => 1,
+    paginateByUnits(params.passageiros, passengerUnits, pageLimit),
+    passengerUnits,
     pageLimit,
-    2
+    compactFirstPage ? 0 : 2
   );
 
   if (!pages.length) {
     return `
-      <section class="sheet">
-        ${buildSpecialHeader('Europamundo')}
+      <section class="sheet trip-summary${params.transferSection ? ' trip-summary--with-transfers' : ''}">
+        ${params.header}
         ${buildBand('DADOS DE SUA VIAGEM')}
         <div class="sheet-card sheet-card-center">
           <div class="route-title">${escapeHtml(params.routeTitle)}</div>
@@ -544,14 +572,16 @@ function renderEuropamundoPassengerSections(params: {
         <div class="sheet-card">
           ${params.infoTable}
         </div>
+        ${params.transferSection}
+        ${params.emergencySection}
       </section>`;
   }
 
   return pages
     .map(
       (pageRows, pageIndex) => `
-        <section class="sheet">
-          ${buildSpecialHeader('Europamundo')}
+        <section class="sheet${pageIndex === 0 ? ` trip-summary${params.transferSection ? ' trip-summary--with-transfers' : ''}` : ''}">
+          ${params.header}
           ${buildBand('DADOS DE SUA VIAGEM')}
           ${
             pageIndex === 0
@@ -595,6 +625,8 @@ function renderEuropamundoPassengerSections(params: {
               </table>
             </div>
           </div>
+          ${pageIndex === 0 ? params.transferSection : ''}
+          ${pageIndex === 0 ? params.emergencySection : ''}
         </section>`
     )
     .join('');
@@ -615,8 +647,54 @@ function buildEuropamundoTransferBlocks(
 ) {
   const detailsLines = splitLinesFromMultilineText(transfer?.detalhes);
   const notesLines = splitLinesFromMultilineText(transfer?.notas);
-  const detailGroups = splitLinesIntoPrintableGroups(detailsLines, 820);
-  const noteGroups = splitLinesIntoPrintableGroups(notesLines, 820);
+  const wrapLines = (lines: string[]) =>
+    lines.flatMap((line) => {
+      const chunks: string[] = [];
+      let remaining = line;
+      while (remaining) {
+        let width = 0;
+        let end = 0;
+        for (const character of remaining) {
+          const units = /[MWmw@%]/.test(character)
+            ? 1.6
+            : (character.codePointAt(0) ?? 0) >= 0x2e80
+              ? 2
+              : 1;
+          if (width + units > 40) break;
+          width += units;
+          end += character.length;
+        }
+        if (end === remaining.length) {
+          chunks.push(remaining);
+          break;
+        }
+        const lastSpace = remaining.lastIndexOf(' ', end);
+        if (lastSpace > 0) end = lastSpace;
+        chunks.push(remaining.slice(0, end).trim());
+        remaining = remaining.slice(end).trim();
+      }
+      return chunks;
+    });
+  const detailsWrapped = wrapLines(detailsLines);
+  const notesWrapped = wrapLines(notesLines);
+  // Count short lines as well as long text so the emergency card retains room.
+  const firstPageLines = 16;
+  const detailsLimit = Math.min(
+    detailsWrapped.length,
+    firstPageLines - Math.min(notesWrapped.length, 3)
+  );
+  const notesLimit = Math.min(notesWrapped.length, firstPageLines - detailsLimit);
+  const makeGroups = (original: string[], wrapped: string[], limit: number) => {
+    if (!wrapped.length) return [] as string[][];
+    if (wrapped.length <= limit) return [original];
+    const groups = [wrapped.slice(0, limit)];
+    for (let index = limit; index < wrapped.length; index += 6) {
+      groups.push(wrapped.slice(index, index + 6));
+    }
+    return groups;
+  };
+  const detailGroups = makeGroups(detailsLines, detailsWrapped, detailsLimit);
+  const noteGroups = makeGroups(notesLines, notesWrapped, notesLimit);
   const totalBlocks = Math.max(
     detailGroups.length,
     noteGroups.length,
@@ -638,56 +716,65 @@ function buildEuropamundoTransferBlocks(
   }));
 }
 
-function renderEuropamundoTransferSections(params: {
-  providerName?: string;
+function renderVoucherTransferSections(params: {
+  header: string;
   transferIn?: VoucherTransferInfo | null;
   transferOut?: VoucherTransferInfo | null;
 }) {
-  const blocks = [
-    ...buildEuropamundoTransferBlocks(
-      'TRANSFER IN',
-      params.transferIn,
-      'Notas traslado de chegada'
-    ),
-    ...buildEuropamundoTransferBlocks('TRANSFER OUT', params.transferOut, 'Notas traslado de saída')
-  ];
-
-  if (!blocks.length) return '';
-
-  const pages = paginateByUnits(blocks, () => 1, 2);
-  return pages
+  const arrivals = buildEuropamundoTransferBlocks(
+    'TRANSFER IN',
+    params.transferIn,
+    'Notas traslado de chegada'
+  );
+  const departures = buildEuropamundoTransferBlocks(
+    'TRANSFER OUT',
+    params.transferOut,
+    'Notas traslado de saída'
+  );
+  const firstBlocks = [arrivals[0], departures[0]].filter(
+    (block): block is EuropamundoTransferBlock => Boolean(block)
+  );
+  const continuationBlocks = [...arrivals.slice(1), ...departures.slice(1)];
+  const renderBlocks = (blocks: EuropamundoTransferBlock[]) => `
+    <div class="europa-transfer-grid europa-transfer-grid--print-safe">
+      ${blocks
+        .map(
+          (block) => `
+            <article class="sheet-card europa-transfer-card">
+              <div class="europa-transfer-title">${escapeHtml(block.title)}</div>
+              ${
+                block.detailsLines.length
+                  ? `<div class="europa-transfer-content">${block.detailsLines.map((line) => `<div>${escapeHtml(line)}</div>`).join('')}</div>`
+                  : ''
+              }
+              ${block.phone ? `<div class="europa-transfer-phone">Telefone do transferista: ${escapeHtml(block.phone)}</div>` : ''}
+              ${
+                block.notesLines.length
+                  ? `<div class="europa-transfer-notes-title">${escapeHtml(block.notesTitle)}</div>${renderBulletListFromLines(block.notesLines)}`
+                  : ''
+              }
+            </article>`
+        )
+        .join('')}
+    </div>`;
+  const first = firstBlocks.length
+    ? `<div class="trip-transfers">${buildBand('TRASLADOS')}${renderBlocks(firstBlocks)}</div>`
+    : '';
+  const continuation = paginateByUnits(continuationBlocks, () => 1, 2)
     .map(
       (pageBlocks) => `
         <section class="sheet">
-          ${buildSpecialHeader(params.providerName || 'Europamundo')}
+          ${params.header}
           ${buildBand('TRASLADOS')}
-          <div class="europa-transfer-grid europa-transfer-grid--print-safe">
-            ${pageBlocks
-              .map(
-                (block) => `
-                  <article class="sheet-card europa-transfer-card">
-                    <div class="europa-transfer-title">${escapeHtml(block.title)}</div>
-                    ${
-                      block.detailsLines.length
-                        ? `<div class="europa-transfer-content">${block.detailsLines.map((line) => `<div>${escapeHtml(line)}</div>`).join('')}</div>`
-                        : ''
-                    }
-                    ${block.phone ? `<div class="europa-transfer-phone">Telefone do transferista: ${escapeHtml(block.phone)}</div>` : ''}
-                    ${
-                      block.notesLines.length
-                        ? `<div class="europa-transfer-notes-title">${escapeHtml(block.notesTitle)}</div>${renderBulletListFromLines(block.notesLines)}`
-                        : ''
-                    }
-                  </article>`
-              )
-              .join('')}
-          </div>
+          ${renderBlocks(pageBlocks)}
         </section>`
     )
     .join('');
+  return { first, continuation };
 }
 
 function renderBulletListSections(params: {
+  header: string;
   providerName: string;
   title: string;
   content?: string | null;
@@ -700,7 +787,7 @@ function renderBulletListSections(params: {
     .map(
       (group, pageIndex) => `
         <section class="sheet">
-          ${buildSpecialHeader(params.providerName)}
+          ${params.header}
           ${buildBand(params.title)}
           <div class="sheet-card ${escapeHtml(params.cardClass || '').trim()}">
             ${pageIndex > 0 ? `<div class="europa-section-continuation">Continuação</div>` : ''}
@@ -712,6 +799,7 @@ function renderBulletListSections(params: {
 }
 
 function renderEuropamundoAppSections(params: {
+  header: string;
   apps: VoucherAppInfo[];
   assets?: VoucherAssetRecord[];
 }) {
@@ -723,7 +811,7 @@ function renderEuropamundoAppSections(params: {
     .map(
       (pageApps) => `
         <section class="sheet">
-          ${buildSpecialHeader('Europamundo')}
+          ${params.header}
           ${buildBand('APPS RECOMENDADOS')}
           <div class="europa-apps-grid">
             ${pageApps.map((app) => buildEuropamundoAppCard(app, params.assets || [])).join('')}
@@ -733,21 +821,40 @@ function renderEuropamundoAppSections(params: {
     .join('');
 }
 
-function buildSpecialHeader(providerName: string) {
-  const isEuropamundo = textValue(providerName).toLowerCase() === 'europamundo';
-  const providerClass = isEuropamundo ? ' voucher-header--europamundo' : '';
-  const providerLogoClass = isEuropamundo ? ' voucher-header-logo--europamundo' : '';
+function buildSpecialHeader(
+  providerName: string,
+  provider: string,
+  assets: VoucherAssetRecord[],
+  logoEsquerdo: VoucherLogoEsquerdo
+) {
+  const logo = (owner: string) =>
+    sortAssets(
+      assets.filter(
+        (asset) =>
+          asset.provider === owner &&
+          asset.asset_kind === 'logo' &&
+          asset.ativo &&
+          textValue(asset.preview_url)
+      )
+    )[0]?.preview_url;
+  const providerLogo = logo(provider);
+  const leftLogo =
+    logoEsquerdo === 'vtur'
+      ? VTUR_LOGO_URL
+      : logo(logoEsquerdo === 'empresa' ? 'empresa' : provider);
+  const leftAlt =
+    logoEsquerdo === 'vtur' ? 'VTur' : logoEsquerdo === 'empresa' ? 'Minha empresa' : providerName;
   return `
-    <div class="voucher-header${providerClass}">
+    <div class="voucher-header">
       <div class="voucher-header-logo">
-        <img src="${VTUR_LOGO_URL}" alt="VTur" />
+        ${leftLogo ? `<img src="${escapeHtml(leftLogo)}" alt="${escapeHtml(leftAlt)}" />` : `<div class="voucher-header-placeholder">Logo ${escapeHtml(leftAlt)} não cadastrado</div>`}
       </div>
       <div class="voucher-header-center">
         <div class="voucher-header-title">VOUCHER</div>
         <div class="voucher-header-subtitle">Documentação da Viagem</div>
       </div>
-      <div class="voucher-header-logo voucher-header-logo-right${providerLogoClass}">
-        ${`<div class="voucher-header-placeholder">${escapeHtml(providerName)}</div>`}
+      <div class="voucher-header-logo voucher-header-logo-right">
+        ${providerLogo ? `<img src="${escapeHtml(providerLogo)}" alt="${escapeHtml(providerName)}" />` : `<div class="voucher-header-placeholder">${escapeHtml(providerName)}</div>`}
       </div>
     </div>`;
 }
@@ -755,6 +862,69 @@ function buildSpecialHeader(providerName: string) {
 function buildBand(title: string) {
   return `<div class="voucher-band">${escapeHtml(title)}</div>`;
 }
+
+const compactTransferPrintStyles = `
+  .trip-summary--with-transfers .voucher-band {
+    font-size: 17px;
+    margin-top: 5px !important;
+    padding: 5px 8px !important;
+  }
+  .trip-summary--with-transfers .sheet-card {
+    margin-top: 5px !important;
+    padding: 7px 10px !important;
+  }
+  .trip-summary--with-transfers .info-label,
+  .trip-summary--with-transfers .info-value {
+    font-size: 13px;
+    line-height: 1.25;
+    padding: 4px 8px !important;
+  }
+  .trip-summary--with-transfers .route-title,
+  .trip-summary--with-transfers .europa-passenger-title,
+  .trip-summary--with-transfers .europa-transfer-title {
+    font-size: 15px;
+  }
+  .trip-summary--with-transfers .europa-passenger-table {
+    font-size: 12px;
+  }
+  .trip-summary--with-transfers .europa-passenger-table th,
+  .trip-summary--with-transfers .europa-passenger-table td {
+    padding: 4px 6px;
+  }
+  .trip-summary--with-transfers .emergency-card {
+    font-size: 12px !important;
+    line-height: 1.2 !important;
+  }
+  .trip-summary--with-transfers .emergency-card p {
+    margin: 0 0 3px !important;
+  }
+  .trip-summary--with-transfers .europa-transfer-grid {
+    gap: 8px !important;
+    margin-top: 5px !important;
+  }
+  .trip-summary--with-transfers .europa-transfer-card {
+    margin-top: 0 !important;
+    font-size: 12px;
+    line-height: 1.25;
+  }
+  .trip-summary--with-transfers .europa-transfer-content {
+    gap: 2px;
+    margin-top: 4px;
+    line-height: 1.25;
+  }
+  .trip-summary--with-transfers .europa-transfer-phone,
+  .trip-summary--with-transfers .europa-transfer-notes-title,
+  .trip-summary--with-transfers .voucher-bullet-list {
+    margin-top: 4px;
+  }
+  .trip-summary--with-transfers .voucher-bullet-list {
+    padding-left: 16px;
+    line-height: 1.25;
+  }
+  .trip-summary--with-transfers .voucher-bullet-list li + li {
+    margin-top: 2px;
+  }
+`;
 
 function buildInfoRow(label: string, content: string) {
   return `
@@ -767,14 +937,26 @@ function buildInfoRow(label: string, content: string) {
 function buildSpecialToursPreviewDocument(
   voucher: VoucherRecord,
   assets: VoucherAssetRecord[],
+  logoEsquerdo: VoucherLogoEsquerdo,
   options?: { providerAsset?: 'special_tours' | 'sato_tours'; providerName?: string }
 ) {
   const providerAsset = options?.providerAsset || 'special_tours';
   const providerName = options?.providerName || 'Special Tours';
+  const header = buildSpecialHeader(providerName, providerAsset, assets, logoEsquerdo);
   const providerImages = pickAssetUrls(assets, providerAsset, 'image');
   const routeTitle = buildRouteTitle(voucher);
   const extraData = normalizeVoucherExtraData(voucher.extra_data, voucher.provider);
+  const transfers = renderVoucherTransferSections({
+    header,
+    transferIn: extraData.traslado_chegada,
+    transferOut: extraData.traslado_saida
+  });
   const passengerLines = splitPassengerLines(voucher.passageiros);
+  const passengerPages = paginateByUnits(
+    passengerLines,
+    (line) => Math.ceil(line.length / 40),
+    (pageIndex) => (pageIndex === 0 ? (transfers.first ? 3 : 8) : 20)
+  );
   const dias = normalizePreviewDays(
     (voucher.voucher_dias || []) as VoucherDia[],
     voucher.data_inicio
@@ -798,9 +980,9 @@ function buildSpecialToursPreviewDocument(
     <div class="info-table">
       ${buildInfoRow(
         'Passageiros:',
-        passengerLines.length
-          ? passengerLines.map((line) => `<div>${escapeHtml(line)}</div>`).join('')
-          : `<div>-</div>`
+        passengerPages[0]?.length
+          ? passengerPages[0].map((line) => `<div>${escapeHtml(line)}</div>`).join('')
+          : '<div>-</div>'
       )}
       ${buildInfoRow('Tipo Acomodação:', escapeHtml(voucher.tipo_acomodacao || '-'))}
       ${buildInfoRow('Identificador:', escapeHtml(voucher.reserva_online || '-'))}
@@ -809,6 +991,7 @@ function buildSpecialToursPreviewDocument(
     </div>`;
 
   const programSection = renderProgramSections({
+    header,
     providerName,
     routeTitle,
     referenceLabel: voucher.reserva_online ? 'S/REF' : '',
@@ -816,18 +999,12 @@ function buildSpecialToursPreviewDocument(
     dias
   });
 
-  const transfersSection = renderEuropamundoTransferSections({
-    providerName,
-    transferIn: extraData.traslado_chegada,
-    transferOut: extraData.traslado_saida
-  });
-
   const hotelSection = renderHotelSections({
+    header,
     providerName,
     hoteis,
     renderCard: (hotel) =>
       buildUnifiedHotelCard(hotel, {
-        showCity: false,
         addressLabel: 'Endereço / Address',
         periodLabel: 'Check In/Out'
       })
@@ -836,7 +1013,7 @@ function buildSpecialToursPreviewDocument(
   const appSection = providerImages.length
     ? `
       <section class="sheet sheet-keep-together">
-        ${buildSpecialHeader(providerName)}
+        ${header}
         <div class="sheet-keep-together-block">
           ${buildBand('BAIXE O APLICATIVO CONQUISTA')}
           <div class="provider-images">
@@ -861,8 +1038,7 @@ function buildSpecialToursPreviewDocument(
     : escapeHtml(emergencyOffice);
 
   const emergencySection = `
-    <section class="sheet">
-      ${buildSpecialHeader(providerName)}
+    <div class="trip-emergency">
       ${buildBand('TELEFONE DE EMERGÊNCIA')}
       <div class="sheet-card emergency-card">
         <p>Nos adicione no seu WhatsApp e em caso de emergência durante a sua viagem,<br/>ou qualquer outra dúvida, entre em contato conosco.</p>
@@ -872,7 +1048,7 @@ function buildSpecialToursPreviewDocument(
         ${emergencyWhatsapp ? `<p>WhatsApp emergências: ${escapeHtml(emergencyWhatsapp)}</p>` : ''}
         ${voucher.reserva_online ? `<p class="emergency-id">IDENTIFICADOR: ${escapeHtml(voucher.reserva_online)}</p>` : ''}
       </div>
-    </section>`;
+    </div>`;
 
   return `<!doctype html>
 <html lang="pt-BR">
@@ -928,9 +1104,6 @@ function buildSpecialToursPreviewDocument(
         padding: 18px 20px;
         width: 100%;
       }
-      .voucher-header--europamundo {
-        grid-template-columns: 190px 1fr 190px;
-      }
       .voucher-header-logo {
         display: flex;
         align-items: center;
@@ -941,13 +1114,11 @@ function buildSpecialToursPreviewDocument(
         justify-content: flex-end;
       }
       .voucher-header-logo img {
-        max-width: 120px;
+        width: 120px;
+        height: 78px;
+        max-width: 100%;
         max-height: 78px;
         object-fit: contain;
-      }
-      .voucher-header-logo--europamundo img {
-        max-width: 160px;
-        max-height: 92px;
       }
       .voucher-header-placeholder {
         min-width: 92px;
@@ -1070,6 +1241,7 @@ function buildSpecialToursPreviewDocument(
       .europa-transfer-card {
         break-inside: avoid-page;
         page-break-inside: avoid;
+        overflow-wrap: anywhere;
       }
       .europa-transfer-content {
         display: grid;
@@ -1165,19 +1337,52 @@ function buildSpecialToursPreviewDocument(
       .emergency-card a {
         color: #2b47a8;
       }
+      .trip-summary .voucher-band {
+        margin-top: 10px;
+        padding: 8px 16px;
+      }
+      .trip-summary .sheet-card {
+        margin-top: 10px;
+        padding: 12px 16px;
+      }
+      .trip-summary .info-label,
+      .trip-summary .info-value {
+        min-height: 0;
+        padding: 8px 10px;
+      }
+      .trip-summary .emergency-card {
+        padding: 12px 16px;
+        font-size: 15px;
+        line-height: 1.4;
+      }
+      .trip-summary .emergency-card p {
+        margin-bottom: 5px;
+      }
       @media screen and (max-width: 720px) {
         .document {
           width: calc(100vw - 18px);
           padding: 12px 0 24px;
         }
         .voucher-header {
-          grid-template-columns: 1fr;
-          justify-items: center;
-          text-align: center;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr);
+          gap: 8px;
+          padding: 10px 8px;
         }
         .voucher-header-logo,
         .voucher-header-logo-right {
           justify-content: center;
+          min-height: 0;
+        }
+        .voucher-header-logo img {
+          width: min(100%, 120px);
+          height: 70px;
+        }
+        .voucher-header-title {
+          font-size: clamp(18px, 5vw, 32px);
+        }
+        .voucher-header-subtitle {
+          font-size: clamp(10px, 2.4vw, 16px);
+          margin-top: 4px;
         }
         .info-row {
           grid-template-columns: 1fr;
@@ -1222,9 +1427,6 @@ function buildSpecialToursPreviewDocument(
           grid-template-columns: 150px 1fr 150px !important;
           align-items: center !important;
         }
-        .voucher-header--europamundo {
-          grid-template-columns: 190px 1fr 190px !important;
-        }
         .voucher-header-logo {
           justify-content: flex-start !important;
         }
@@ -1254,6 +1456,14 @@ function buildSpecialToursPreviewDocument(
         .sheet-card {
           margin-top: 12px !important;
           padding: 18px 20px !important;
+        }
+        .trip-summary .voucher-band {
+          margin-top: 8px !important;
+          padding: 7px 12px !important;
+        }
+        .trip-summary .sheet-card {
+          margin-top: 8px !important;
+          padding: 10px 14px !important;
         }
         .program-list,
         .provider-images,
@@ -1285,7 +1495,17 @@ function buildSpecialToursPreviewDocument(
           padding: 12px 14px !important;
         }
         .emergency-card {
-          padding: 28px 24px !important;
+          padding: 10px 16px !important;
+          font-size: 13px !important;
+          line-height: 1.3 !important;
+        }
+        .emergency-card p {
+          margin: 0 0 4px !important;
+        }
+        .trip-summary .info-label,
+        .trip-summary .info-value {
+          min-height: 0 !important;
+          padding: 7px 10px !important;
         }
         .voucher-header,
         .voucher-band,
@@ -1295,7 +1515,6 @@ function buildSpecialToursPreviewDocument(
           page-break-inside: avoid !important;
         }
         .sheet-card,
-        .program-card,
         .europa-transfer-card,
         .voucher-hotel-card,
         .sheet-keep-together,
@@ -1303,36 +1522,65 @@ function buildSpecialToursPreviewDocument(
           break-inside: auto !important;
           page-break-inside: auto !important;
         }
+        .program-card {
+          break-inside: avoid-page !important;
+          page-break-inside: avoid !important;
+        }
         .voucher-header,
         .voucher-band,
         .sheet-card,
         .program-card {
           box-shadow: none;
         }
+        ${compactTransferPrintStyles}
       }
+      ${programPrintStyles}
     </style>
   </head>
   <body>
     <main class="document">
-      <section class="sheet">
-        ${buildSpecialHeader(providerName)}
+      <section class="sheet trip-summary${transfers.first ? ' trip-summary--with-transfers' : ''}">
+        ${header}
         ${buildBand('DADOS DE SUA VIAGEM')}
         ${buildBand(routeTitle)}
         <div class="sheet-card">
           ${infoTable}
         </div>
+        ${transfers.first}
+        ${emergencySection}
       </section>
-      ${transfersSection}
+      ${passengerPages
+        .slice(1)
+        .map(
+          (page) => `<section class="sheet trip-summary">
+            ${header}
+            ${buildBand('DADOS DE SUA VIAGEM')}
+            <div class="sheet-card">
+              <div class="info-table">
+                ${buildInfoRow(
+                  'Passageiros (continuação):',
+                  page.map((line) => `<div>${escapeHtml(line)}</div>`).join('')
+                )}
+              </div>
+            </div>
+          </section>`
+        )
+        .join('')}
+      ${transfers.continuation}
       ${programSection}
       ${hotelSection}
       ${appSection}
-      ${emergencySection}
     </main>
   </body>
 </html>`;
 }
 
-function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: VoucherAssetRecord[]) {
+function buildEuropamundoPreviewDocument(
+  voucher: VoucherRecord,
+  assets: VoucherAssetRecord[],
+  logoEsquerdo: VoucherLogoEsquerdo
+) {
+  const header = buildSpecialHeader('Europamundo', 'europamundo', assets, logoEsquerdo);
   const extraData = normalizeVoucherExtraData(voucher.extra_data, 'europamundo');
   const passageiros = (extraData.passageiros_detalhes || [])
     .slice()
@@ -1358,18 +1606,14 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
       ${buildInfoRow('Tipo de Quarto:', escapeHtml(voucher.tipo_acomodacao || '-'))}
     </div>`;
 
-  const tripDataSections = renderEuropamundoPassengerSections({
-    routeTitle,
-    infoTable,
-    passageiros
-  });
-
-  const transfersSection = renderEuropamundoTransferSections({
+  const transfers = renderVoucherTransferSections({
+    header,
     transferIn: extraData.traslado_chegada,
     transferOut: extraData.traslado_saida
   });
 
   const programSection = renderProgramSections({
+    header,
     providerName: 'Europamundo',
     routeTitle,
     referenceLabel: voucher.reserva_online ? 'LOCALIZADOR' : '',
@@ -1378,17 +1622,18 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
   });
 
   const hotelsSection = renderHotelSections({
+    header,
     providerName: 'Europamundo',
     hoteis,
     renderCard: (hotel) =>
       buildUnifiedHotelCard(hotel, {
-        showCity: true,
         addressLabel: 'Endereço',
         periodLabel: 'Check In/Out'
       })
   });
 
   const importantInfoSection = renderBulletListSections({
+    header,
     providerName: 'Europamundo',
     title: 'INFORMAÇÕES IMPORTANTES',
     content: extraData.informacoes_importantes,
@@ -1396,6 +1641,7 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
   });
 
   const appsSection = renderEuropamundoAppSections({
+    header,
     apps,
     assets
   });
@@ -1405,8 +1651,7 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
     textValue(extraData.emergencia?.emergencia_24h) ||
     textValue(extraData.emergencia?.whatsapp)
       ? `
-        <section class="sheet">
-          ${buildSpecialHeader('Europamundo')}
+        <div class="trip-emergency">
           ${buildBand('TELEFONE DE EMERGÊNCIA')}
           <div class="sheet-card emergency-card">
             <p>Apenas para passageiros em viagem:</p>
@@ -1427,8 +1672,17 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
             }
             ${voucher.reserva_online ? `<p class="emergency-id">LOCALIZADOR: ${escapeHtml(voucher.reserva_online)}</p>` : ''}
           </div>
-        </section>`
+        </div>`
       : '';
+
+  const tripDataSections = renderEuropamundoPassengerSections({
+    header,
+    routeTitle,
+    infoTable,
+    passageiros,
+    emergencySection,
+    transferSection: transfers.first
+  });
 
   return `<!doctype html>
 <html lang="pt-BR">
@@ -1478,14 +1732,11 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
       }
       .voucher-header {
         display: grid;
-        grid-template-columns: 150px 1fr 150px;
+        grid-template-columns: 190px 1fr 190px;
         align-items: center;
         gap: 18px;
         padding: 18px 20px;
         width: 100%;
-      }
-      .voucher-header--europamundo {
-        grid-template-columns: 190px 1fr 190px;
       }
       .voucher-header-logo {
         display: flex;
@@ -1497,13 +1748,11 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
         justify-content: flex-end;
       }
       .voucher-header-logo img {
-        max-width: 120px;
-        max-height: 78px;
+        width: 180px;
+        height: 100px;
+        max-width: 100%;
+        max-height: 100px;
         object-fit: contain;
-      }
-      .voucher-header-logo--europamundo img {
-        max-width: 160px;
-        max-height: 92px;
       }
       .voucher-header-placeholder {
         min-width: 92px;
@@ -1661,6 +1910,9 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
         break-inside: avoid-page;
         page-break-inside: avoid;
       }
+      .europa-transfer-card {
+        overflow-wrap: anywhere;
+      }
       .europa-transfer-content {
         display: grid;
         gap: 8px;
@@ -1709,19 +1961,59 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
         font-weight: 700;
         font-style: italic;
       }
+      .trip-summary .voucher-band {
+        margin-top: 10px;
+        padding: 8px 16px;
+      }
+      .trip-summary .sheet-card {
+        margin-top: 10px;
+        padding: 12px 16px;
+      }
+      .trip-summary .info-label,
+      .trip-summary .info-value {
+        min-height: 0;
+        padding: 8px 10px;
+      }
+      .trip-summary .emergency-card {
+        padding: 12px 16px;
+        font-size: 15px;
+        line-height: 1.4;
+      }
+      .trip-summary .emergency-card p {
+        margin-bottom: 5px;
+      }
+      .trip-summary .europa-passenger-table-wrap {
+        margin-top: 8px;
+      }
+      .trip-summary .europa-passenger-table th,
+      .trip-summary .europa-passenger-table td {
+        padding: 6px 8px;
+      }
       @media screen and (max-width: 720px) {
         .document {
           width: calc(100vw - 18px);
           padding: 12px 0 24px;
         }
         .voucher-header {
-          grid-template-columns: 1fr;
-          justify-items: center;
-          text-align: center;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr);
+          gap: 8px;
+          padding: 10px 8px;
         }
         .voucher-header-logo,
         .voucher-header-logo-right {
           justify-content: center;
+          min-height: 0;
+        }
+        .voucher-header-logo img {
+          width: 100%;
+          height: 70px;
+        }
+        .voucher-header-title {
+          font-size: clamp(18px, 5vw, 32px);
+        }
+        .voucher-header-subtitle {
+          font-size: clamp(10px, 2.4vw, 16px);
+          margin-top: 4px;
         }
         .info-row {
           grid-template-columns: 1fr;
@@ -1763,11 +2055,8 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
           page-break-before: always !important;
         }
         .voucher-header {
-          grid-template-columns: 150px 1fr 150px !important;
-          align-items: center !important;
-        }
-        .voucher-header--europamundo {
           grid-template-columns: 190px 1fr 190px !important;
+          align-items: center !important;
         }
         .voucher-header-logo {
           justify-content: flex-start !important;
@@ -1793,6 +2082,14 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
         .sheet-card {
           margin-top: 12px !important;
           padding: 18px 20px !important;
+        }
+        .trip-summary .voucher-band {
+          margin-top: 8px !important;
+          padding: 7px 12px !important;
+        }
+        .trip-summary .sheet-card {
+          margin-top: 8px !important;
+          padding: 10px 14px !important;
         }
         .program-list,
         .voucher-hotel-list,
@@ -1828,7 +2125,21 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
           min-width: 34px !important;
         }
         .emergency-card {
-          padding: 28px 24px !important;
+          padding: 10px 16px !important;
+          font-size: 13px !important;
+          line-height: 1.3 !important;
+        }
+        .emergency-card p {
+          margin: 0 0 4px !important;
+        }
+        .trip-emergency {
+          break-inside: avoid-page;
+          page-break-inside: avoid;
+        }
+        .trip-summary .info-label,
+        .trip-summary .info-value {
+          min-height: 0 !important;
+          padding: 7px 10px !important;
         }
         .voucher-header,
         .voucher-band {
@@ -1836,7 +2147,6 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
           page-break-inside: avoid !important;
           box-shadow: none;
         }
-        .program-card,
         .sheet-card,
         .voucher-hotel-card,
         .europa-transfer-card,
@@ -1847,18 +2157,24 @@ function buildEuropamundoPreviewDocument(voucher: VoucherRecord, assets: Voucher
           page-break-inside: auto !important;
           box-shadow: none;
         }
+        .program-card {
+          break-inside: avoid-page !important;
+          page-break-inside: avoid !important;
+          box-shadow: none;
+        }
+        ${compactTransferPrintStyles}
       }
+      ${programPrintStyles}
     </style>
   </head>
   <body>
     <main class="document">
       ${tripDataSections}
-      ${transfersSection}
+      ${transfers.continuation}
       ${programSection}
       ${hotelsSection}
       ${importantInfoSection}
       ${appsSection}
-      ${emergencySection}
     </main>
   </body>
 </html>`;
@@ -2005,6 +2321,7 @@ function buildGenericVoucherPreviewDocument(voucher: VoucherRecord, assets: Vouc
               ${hoteis
                 .map(
                   (hotel) => `<div class="hotel">
+                    ${textValue(hotel.cidade) ? `<div>${printLocationIcon}<b>Cidade:</b> ${escapeHtml(hotel.cidade)}</div>` : ''}
                     <div><b>Hotel:</b> ${escapeHtml(hotel.hotel || '-')}</div>
                     ${hotel.endereco ? `<div><b>Endereço:</b> ${escapeHtml(hotel.endereco)}</div>` : ''}
                     ${hotel.telefone ? `<div><b>Telefone:</b> ${escapeHtml(hotel.telefone)}</div>` : ''}
@@ -2022,19 +2339,20 @@ function buildGenericVoucherPreviewDocument(voucher: VoucherRecord, assets: Vouc
 
 export function buildVoucherPreviewDocument(
   voucher: VoucherRecord,
-  assets: VoucherAssetRecord[] = []
+  assets: VoucherAssetRecord[] = [],
+  logoEsquerdo: VoucherLogoEsquerdo = 'vtur'
 ) {
   if (voucher.provider === 'special_tours') {
-    return buildSpecialToursPreviewDocument(voucher, assets);
+    return buildSpecialToursPreviewDocument(voucher, assets, logoEsquerdo);
   }
   if (voucher.provider === 'sato_tours') {
-    return buildSpecialToursPreviewDocument(voucher, assets, {
+    return buildSpecialToursPreviewDocument(voucher, assets, logoEsquerdo, {
       providerAsset: 'sato_tours',
       providerName: 'Sato Tours'
     });
   }
   if (voucher.provider === 'europamundo') {
-    return buildEuropamundoPreviewDocument(voucher, assets);
+    return buildEuropamundoPreviewDocument(voucher, assets, logoEsquerdo);
   }
   return buildGenericVoucherPreviewDocument(voucher, assets);
 }

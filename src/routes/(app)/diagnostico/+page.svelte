@@ -142,14 +142,14 @@
       <tbody>
         {#each apiTests as test}
           <tr class="border-b border-slate-100">
-            <td class="py-2 font-mono text-xs">{test.name}</td>
-            <td class="py-2">
+            <td data-label="API" class="py-2 font-mono text-xs">{test.name}</td>
+            <td data-label="Status" class="py-2">
               <span class:text-green-600={test.status === 'OK'}>
                 {test.status}
               </span>
             </td>
-            <td class="py-2 text-slate-600">{test.detail}</td>
-            <td class="py-2">{test.time}ms</td>
+            <td data-label="Detalhes" class="py-2 text-slate-600">{test.detail}</td>
+            <td data-label="Tempo" class="py-2">{test.time}ms</td>
           </tr>
         {/each}
         {#if apiTests.length === 0}

@@ -55,36 +55,71 @@
           {#each filteredRecords as row}
             <tr
               class="cursor-pointer border-t border-slate-100 hover:bg-slate-50"
+              tabindex="0"
               on:click={() => openDetails(row)}
+              on:keydown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  openDetails(row);
+                }
+              }}
             >
-              <td class="px-3 py-2">{formatDate(row.movimento_data)}</td>
-              <td class="px-3 py-2">{formatDocumentoConciliacao(row)}</td>
-              <td class="px-3 py-2">{statusImportLabel(row.status)}</td>
-              <td class="px-3 py-2">{row.venda_recibo_id ? 'Sim' : 'Não'}</td>
-              <td class="px-3 py-2">{row.ranking_vendedor?.nome_completo || 'Não atribuído'}</td>
-              <td class="px-3 py-2"
+              <td data-label="Data" class="px-3 py-2">{formatDate(row.movimento_data)}</td>
+              <td data-label="Documento" class="px-3 py-2">{formatDocumentoConciliacao(row)}</td>
+              <td data-label="Status" class="px-3 py-2">{statusImportLabel(row.status)}</td>
+              <td data-label="Recibo encontrado" class="px-3 py-2"
+                >{row.venda_recibo_id ? 'Sim' : 'Não'}</td
+              >
+              <td data-label="Vendedor ranking" class="px-3 py-2"
+                >{row.ranking_vendedor?.nome_completo || 'Não atribuído'}</td
+              >
+              <td data-label="Ranking" class="px-3 py-2"
                 >{exigeRanking(row.status)
                   ? row.ranking_vendedor_id
                     ? 'OK'
                     : 'Pendente'
                   : '-'}</td
               >
-              <td class="px-3 py-2"
+              <td data-label="Meta dif." class="px-3 py-2"
                 >{resolveMetaDifLabel(row.percentual_comissao_loja, row.ranking_produto?.nome)}</td
               >
-              <td class="px-3 py-2 text-right">{formatMoney(row.valor_lancamentos)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.valor_taxas)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.valor_descontos)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.valor_abatimentos)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.valor_nao_comissionavel)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.valor_venda_real)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.valor_comissao_loja)}</td>
-              <td class="px-3 py-2 text-right">{formatPercent(row.percentual_comissao_loja)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.sistema_valor_total)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.sistema_valor_taxas)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.diff_total)}</td>
-              <td class="px-3 py-2 text-right">{formatMoney(row.diff_taxas)}</td>
-              <td class="px-3 py-2">{row.conciliado ? 'Sim' : 'Não'}</td>
+              <td data-label="Lançamentos" class="px-3 py-2 text-right"
+                >{formatMoney(row.valor_lancamentos)}</td
+              >
+              <td data-label="Taxas (arq)" class="px-3 py-2 text-right"
+                >{formatMoney(row.valor_taxas)}</td
+              >
+              <td data-label="Descontos" class="px-3 py-2 text-right"
+                >{formatMoney(row.valor_descontos)}</td
+              >
+              <td data-label="Abatimentos" class="px-3 py-2 text-right"
+                >{formatMoney(row.valor_abatimentos)}</td
+              >
+              <td data-label="Não comissionável" class="px-3 py-2 text-right"
+                >{formatMoney(row.valor_nao_comissionavel)}</td
+              >
+              <td data-label="Venda real" class="px-3 py-2 text-right"
+                >{formatMoney(row.valor_venda_real)}</td
+              >
+              <td data-label="Comissão loja" class="px-3 py-2 text-right"
+                >{formatMoney(row.valor_comissao_loja)}</td
+              >
+              <td data-label="% loja" class="px-3 py-2 text-right"
+                >{formatPercent(row.percentual_comissao_loja)}</td
+              >
+              <td data-label="Total (sist)" class="px-3 py-2 text-right"
+                >{formatMoney(row.sistema_valor_total)}</td
+              >
+              <td data-label="Taxas (sist)" class="px-3 py-2 text-right"
+                >{formatMoney(row.sistema_valor_taxas)}</td
+              >
+              <td data-label="Diff total" class="px-3 py-2 text-right"
+                >{formatMoney(row.diff_total)}</td
+              >
+              <td data-label="Diff taxas" class="px-3 py-2 text-right"
+                >{formatMoney(row.diff_taxas)}</td
+              >
+              <td data-label="Conciliado" class="px-3 py-2">{row.conciliado ? 'Sim' : 'Não'}</td>
             </tr>
           {/each}
         </tbody>

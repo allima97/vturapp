@@ -158,6 +158,7 @@
     {
       label: 'Adicionar em lote',
       variant: 'secondary',
+      icon: Plus,
       onClick: () => (loteOpen = true)
     },
     {
@@ -305,7 +306,7 @@
           </div>
         {/each}
       </div>
-      <div class="mt-4 flex items-center gap-2">
+      <div class="vtur-inline-pagination mt-4 flex items-center gap-2">
         {#if pagina > 1}<Button
             type="button"
             variant="secondary"

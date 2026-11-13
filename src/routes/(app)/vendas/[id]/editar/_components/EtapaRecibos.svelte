@@ -201,6 +201,7 @@
           </div>
           <div>
             <FieldInput
+              money
               id={`venda-editar-recibo-total-${index}`}
               label="Valor total"
               bind:value={recibo.valor_total}
@@ -211,6 +212,7 @@
           </div>
           <div>
             <FieldInput
+              money
               id={`venda-editar-recibo-taxas-${index}`}
               label="Taxas"
               bind:value={recibo.valor_taxas}
@@ -219,6 +221,7 @@
           </div>
           <div>
             <FieldInput
+              money
               id={`venda-editar-recibo-du-${index}`}
               label="DU"
               bind:value={recibo.valor_du}
@@ -227,6 +230,7 @@
           </div>
           <div>
             <FieldInput
+              money
               id={`venda-editar-recibo-rav-${index}`}
               label="RAV/RAC"
               bind:value={recibo.valor_rav}

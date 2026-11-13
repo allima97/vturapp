@@ -8,6 +8,8 @@
   import Dialog from '$lib/components/ui/Dialog.svelte';
   import DataTable from '$lib/components/ui/DataTable.svelte';
   import LoadingState from '$lib/components/ui/LoadingState.svelte';
+  import MobileCardField from '$lib/components/ui/MobileCardField.svelte';
+  import { mobileCardActions } from '$lib/actions/mobileCardActions';
   import AbaAlteracoes from './_components/AbaAlteracoes.svelte';
   import AbaExecucoes from './_components/AbaExecucoes.svelte';
   import AbaRegistros from './_components/AbaRegistros.svelte';
@@ -551,23 +553,20 @@
     return { linhas, ignored: 0 };
   }
 
-  function parseImportTextForPreview() {
-    const cacheKey = `${importMode}::${importFallbackDate || ''}::${importText}`;
+  function parseImportTextForPreview(text: string, mode: typeof importMode, fallbackDate: string) {
+    const cacheKey = `${mode}::${fallbackDate || ''}::${text}`;
     if (importParseCacheResult && importParseCacheKey === cacheKey) {
       return importParseCacheResult;
     }
 
     let result: { linhas: ConciliacaoLinhaInput[]; ignored: number };
-    if (importMode !== 'rextur') {
+    if (mode !== 'rextur') {
       importParseError = '';
-      result = parseConciliacaoImportText(importText, null);
+      result = parseConciliacaoImportText(text, null);
     } else {
       try {
         importParseError = '';
-        result = parseRexturConciliacaoImportText(
-          importText,
-          importFallbackDate || todayISODateLocal()
-        );
+        result = parseRexturConciliacaoImportText(text, fallbackDate || todayISODateLocal());
       } catch (error: unknown) {
         importParseError = toUserMessage(error, 'Não foi possível ler a Reserva Fácil Rextur.');
         result = { linhas: [] as ConciliacaoLinhaInput[], ignored: 0 };
@@ -583,7 +582,7 @@
     // Keep this dependency explicit so the preview recomputes when lookup matches arrive.
     const _lookupMatches = importLookupMatches;
 
-    const parsed = parseImportTextForPreview();
+    const parsed = parseImportTextForPreview(importText, importMode, importFallbackDate);
     importIgnored = parsed.ignored;
 
     const signature = parsed.linhas
@@ -2303,20 +2302,27 @@
         <tbody>
           {#each operationLogs as item}
             <tr class="border-t border-slate-100">
-              <td class="px-3 py-2">{formatDateTime(item.created_at)}</td>
-              <td class="px-3 py-2">{item.action}</td>
-              <td class="px-3 py-2">{item.month}</td>
-              <td class="px-3 py-2 text-right">{item.duplicateGroups}</td>
+              <td data-label="Quando" class="px-3 py-2">{formatDateTime(item.created_at)}</td>
+              <td data-label="Ação" class="px-3 py-2">{item.action}</td>
+              <td data-label="Mês" class="px-3 py-2">{item.month}</td>
+              <td data-label="Grupos duplicados" class="px-3 py-2 text-right"
+                >{item.duplicateGroups}</td
+              >
               <td
+                data-label="Duplicados removidos"
                 class="px-3 py-2 text-right font-semibold {item.duplicatesRemoved > 0
                   ? 'text-orange-700'
                   : 'text-slate-700'}">{item.duplicatesRemoved}</td
               >
-              <td class="px-3 py-2 text-right">{item.checked || item.recalculatedChecked}</td>
-              <td class="px-3 py-2 text-right">{item.reconciled}</td>
-              <td class="px-3 py-2 text-right">{item.recalculated}</td>
-              <td class="px-3 py-2 text-right">{item.updatedTaxes}</td>
-              <td class="px-3 py-2">
+              <td data-label="Checados" class="px-3 py-2 text-right"
+                >{item.checked || item.recalculatedChecked}</td
+              >
+              <td data-label="Conciliados" class="px-3 py-2 text-right">{item.reconciled}</td>
+              <td data-label="Recalculados" class="px-3 py-2 text-right">{item.recalculated}</td>
+              <td data-label="Taxas atualizadas" class="px-3 py-2 text-right"
+                >{item.updatedTaxes}</td
+              >
+              <td data-label="Status" class="px-3 py-2">
                 <span
                   class="rounded-full px-2 py-1 text-xs font-semibold {item.status === 'success'
                     ? 'bg-green-100 text-green-700'
@@ -2325,7 +2331,7 @@
                   {item.status === 'success' ? 'OK' : 'Erro'}
                 </span>
               </td>
-              <td class="px-3 py-2">{item.message}</td>
+              <td data-label="Mensagem" class="px-3 py-2">{item.message}</td>
             </tr>
           {/each}
         </tbody>
@@ -2489,9 +2495,10 @@
                     : diffSeverity === 'warning'
                       ? 'bg-orange-50'
                       : ''}"
+                  use:mobileCardActions
                 >
-                  <td class="px-3 py-2">{formatDate(row.movimento_data)}</td>
-                  <td class="px-3 py-2">
+                  <td data-label="Data" class="px-3 py-2">{formatDate(row.movimento_data)}</td>
+                  <td data-label="Documento" class="px-3 py-2">
                     {formatDocumentoConciliacao(row)}
                     {#if row.tem_diferenca}
                       <span
@@ -2505,110 +2512,144 @@
                       >
                     {/if}
                   </td>
-                  <td class="px-3 py-2">{statusImportLabel(row.status)}</td>
-                  <td class="px-3 py-2">{row.descricao || '-'}</td>
-                  <td class="px-3 py-2">
+                  <td data-label="Status" class="px-3 py-2">{statusImportLabel(row.status)}</td>
+                  <td data-label="Descrição" class="px-3 py-2">{row.descricao || '-'}</td>
+                  <td data-label="Vendedor ranking" class="px-3 py-2">
                     {#if exigeRanking(row.status)}
-                      <FieldSelect
-                        id={`import-vendedor-${index}`}
-                        label="Vendedor"
-                        srLabel
-                        value={row.ranking_vendedor_id || ''}
-                        options={vendedores.map((vendedor) => ({
-                          value: vendedor.id,
-                          label: vendedor.nome_completo
-                        }))}
-                        placeholder="Selecione..."
-                        class_name="w-[210px]"
-                        on:change={(event) => handleImportVendedorChange(index, event)}
-                      />
+                      <MobileCardField
+                        value={vendedores.find(
+                          (vendedor) => vendedor.id === row.ranking_vendedor_id
+                        )?.nome_completo || 'Selecione...'}
+                      >
+                        <FieldSelect
+                          id={`import-vendedor-${index}`}
+                          label="Vendedor"
+                          srLabel
+                          value={row.ranking_vendedor_id || ''}
+                          options={vendedores.map((vendedor) => ({
+                            value: vendedor.id,
+                            label: vendedor.nome_completo
+                          }))}
+                          placeholder="Selecione..."
+                          class_name="w-[210px]"
+                          on:change={(event) => handleImportVendedorChange(index, event)}
+                        />
+                      </MobileCardField>
                     {:else}
                       <span class="text-slate-500">Ignorado</span>
                     {/if}
                   </td>
-                  <td class="px-3 py-2">
+                  <td data-label="Meta dif." class="px-3 py-2">
                     {#if exigeRanking(row.status) && produtosMeta.length > 0}
-                      <FieldSelect
-                        id={`import-produto-${index}`}
-                        label="Produto diferenciado"
-                        srLabel
-                        value={row.ranking_produto_id || ''}
-                        options={[
-                          { value: '', label: 'Não' },
-                          ...produtosMeta.map((produto) => ({
-                            value: produto.id,
-                            label: produto.nome
-                          }))
-                        ]}
-                        placeholder={null}
-                        class_name="w-[170px]"
-                        on:change={(event) => handleImportProdutoChange(index, event)}
-                      />
+                      <MobileCardField
+                        value={row.ranking_produto_id
+                          ? produtosMeta.find((produto) => produto.id === row.ranking_produto_id)
+                              ?.nome || '-'
+                          : 'Não'}
+                      >
+                        <FieldSelect
+                          id={`import-produto-${index}`}
+                          label="Produto diferenciado"
+                          srLabel
+                          value={row.ranking_produto_id || ''}
+                          options={[
+                            { value: '', label: 'Não' },
+                            ...produtosMeta.map((produto) => ({
+                              value: produto.id,
+                              label: produto.nome
+                            }))
+                          ]}
+                          placeholder={null}
+                          class_name="w-[170px]"
+                          on:change={(event) => handleImportProdutoChange(index, event)}
+                        />
+                      </MobileCardField>
                     {:else}
                       <span>{row.meta_dif || '-'}</span>
                     {/if}
                   </td>
-                  <td class="px-3 py-2"
-                    ><FieldInput
-                      label="Lançamentos"
-                      srLabel
-                      class_name="w-[130px]"
-                      value={String(row.valor_lancamentos ?? 0).replace('.', ',')}
-                      on:change={(event) =>
-                        handleImportMoneyChange(index, 'valor_lancamentos', event)}
-                    /></td
+                  <td data-label="Lançamentos" class="px-3 py-2"
+                    ><MobileCardField value={formatMoney(row.valor_lancamentos)}
+                      ><FieldInput
+                        money
+                        label="Lançamentos"
+                        srLabel
+                        class_name="w-[130px]"
+                        value={String(row.valor_lancamentos ?? 0).replace('.', ',')}
+                        on:change={(event) =>
+                          handleImportMoneyChange(index, 'valor_lancamentos', event)}
+                      /></MobileCardField
+                    ></td
                   >
-                  <td class="px-3 py-2"
-                    ><FieldInput
-                      label="Taxas"
-                      srLabel
-                      class_name="w-[130px]"
-                      value={String(row.valor_taxas ?? 0).replace('.', ',')}
-                      on:change={(event) => handleImportMoneyChange(index, 'valor_taxas', event)}
-                    /></td
+                  <td data-label="Taxas" class="px-3 py-2"
+                    ><MobileCardField value={formatMoney(row.valor_taxas)}
+                      ><FieldInput
+                        money
+                        label="Taxas"
+                        srLabel
+                        class_name="w-[130px]"
+                        value={String(row.valor_taxas ?? 0).replace('.', ',')}
+                        on:change={(event) => handleImportMoneyChange(index, 'valor_taxas', event)}
+                      /></MobileCardField
+                    ></td
                   >
-                  <td class="px-3 py-2"
-                    ><FieldInput
-                      label="Descontos"
-                      srLabel
-                      class_name="w-[130px]"
-                      value={String(row.valor_descontos ?? 0).replace('.', ',')}
-                      on:change={(event) =>
-                        handleImportMoneyChange(index, 'valor_descontos', event)}
-                    /></td
+                  <td data-label="Descontos" class="px-3 py-2"
+                    ><MobileCardField value={formatMoney(row.valor_descontos)}
+                      ><FieldInput
+                        money
+                        label="Descontos"
+                        srLabel
+                        class_name="w-[130px]"
+                        value={String(row.valor_descontos ?? 0).replace('.', ',')}
+                        on:change={(event) =>
+                          handleImportMoneyChange(index, 'valor_descontos', event)}
+                      /></MobileCardField
+                    ></td
                   >
-                  <td class="px-3 py-2"
-                    ><FieldInput
-                      label="Abatimentos"
-                      srLabel
-                      class_name="w-[130px]"
-                      value={String(row.valor_abatimentos ?? 0).replace('.', ',')}
-                      on:change={(event) =>
-                        handleImportMoneyChange(index, 'valor_abatimentos', event)}
-                    /></td
+                  <td data-label="Abatimentos" class="px-3 py-2"
+                    ><MobileCardField value={formatMoney(row.valor_abatimentos)}
+                      ><FieldInput
+                        money
+                        label="Abatimentos"
+                        srLabel
+                        class_name="w-[130px]"
+                        value={String(row.valor_abatimentos ?? 0).replace('.', ',')}
+                        on:change={(event) =>
+                          handleImportMoneyChange(index, 'valor_abatimentos', event)}
+                      /></MobileCardField
+                    ></td
                   >
-                  <td class="px-3 py-2"
-                    ><FieldInput
-                      label="Não comissionável"
-                      srLabel
-                      class_name="w-[150px]"
-                      value={String(row.valor_nao_comissionavel ?? 0).replace('.', ',')}
-                      on:change={(event) =>
-                        handleImportMoneyChange(index, 'valor_nao_comissionavel', event)}
-                    /></td
+                  <td data-label="Não comissionável" class="px-3 py-2"
+                    ><MobileCardField value={formatMoney(row.valor_nao_comissionavel)}
+                      ><FieldInput
+                        money
+                        label="Não comissionável"
+                        srLabel
+                        class_name="w-[150px]"
+                        value={String(row.valor_nao_comissionavel ?? 0).replace('.', ',')}
+                        on:change={(event) =>
+                          handleImportMoneyChange(index, 'valor_nao_comissionavel', event)}
+                      /></MobileCardField
+                    ></td
                   >
-                  <td class="px-3 py-2 text-right">{formatMoney(row.valor_venda_real)}</td>
-                  <td class="px-3 py-2"
-                    ><FieldInput
-                      label="Comissão loja"
-                      srLabel
-                      class_name="w-[130px]"
-                      value={String(row.valor_comissao_loja ?? 0).replace('.', ',')}
-                      on:change={(event) =>
-                        handleImportMoneyChange(index, 'valor_comissao_loja', event)}
-                    /></td
+                  <td data-label="Venda real" class="px-3 py-2 text-right"
+                    >{formatMoney(row.valor_venda_real)}</td
                   >
-                  <td class="px-3 py-2 text-right">{formatPercent(row.percentual_comissao_loja)}</td
+                  <td data-label="Comissão loja" class="px-3 py-2"
+                    ><MobileCardField value={formatMoney(row.valor_comissao_loja)}
+                      ><FieldInput
+                        money
+                        label="Comissão loja"
+                        srLabel
+                        class_name="w-[130px]"
+                        value={String(row.valor_comissao_loja ?? 0).replace('.', ',')}
+                        on:change={(event) =>
+                          handleImportMoneyChange(index, 'valor_comissao_loja', event)}
+                      /></MobileCardField
+                    ></td
+                  >
+                  <td data-label="% loja" class="px-3 py-2 text-right"
+                    >{formatPercent(row.percentual_comissao_loja)}</td
                   >
                 </tr>
               {/each}
@@ -2845,39 +2886,75 @@
             {#each visaoGeralFiltrados as row}
               <tr
                 class="cursor-pointer border-t border-slate-100 hover:bg-slate-50"
+                tabindex="0"
+                role="button"
                 on:click={() => openDetails(row)}
+                on:keydown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    openDetails(row);
+                  }
+                }}
               >
-                <td class="px-3 py-2">{formatDate(row.movimento_data)}</td>
-                <td class="px-3 py-2">{formatDocumentoConciliacao(row)}</td>
-                <td class="px-3 py-2">{statusImportLabel(row.status)}</td>
-                <td class="px-3 py-2">{row.venda_recibo_id ? 'Sim' : 'Não'}</td>
-                <td class="px-3 py-2">{row.ranking_vendedor?.nome_completo || 'Não atribuído'}</td>
-                <td class="px-3 py-2"
+                <td data-label="Data" class="px-3 py-2">{formatDate(row.movimento_data)}</td>
+                <td data-label="Documento" class="px-3 py-2">{formatDocumentoConciliacao(row)}</td>
+                <td data-label="Status" class="px-3 py-2">{statusImportLabel(row.status)}</td>
+                <td data-label="Recibo encontrado" class="px-3 py-2"
+                  >{row.venda_recibo_id ? 'Sim' : 'Não'}</td
+                >
+                <td data-label="Vendedor ranking" class="px-3 py-2"
+                  >{row.ranking_vendedor?.nome_completo || 'Não atribuído'}</td
+                >
+                <td data-label="Ranking" class="px-3 py-2"
                   >{exigeRanking(row.status)
                     ? row.ranking_vendedor_id
                       ? 'OK'
                       : 'Pendente'
                     : '-'}</td
                 >
-                <td class="px-3 py-2"
+                <td data-label="Meta dif." class="px-3 py-2"
                   >{resolveMetaDifLabel(
                     row.percentual_comissao_loja,
                     row.ranking_produto?.nome
                   )}</td
                 >
-                <td class="px-3 py-2 text-right">{formatMoney(row.valor_lancamentos)}</td>
-                <td class="px-3 py-2 text-right">{formatMoney(row.valor_taxas)}</td>
-                <td class="px-3 py-2 text-right">{formatMoney(row.valor_descontos)}</td>
-                <td class="px-3 py-2 text-right">{formatMoney(row.valor_abatimentos)}</td>
-                <td class="px-3 py-2 text-right">{formatMoney(row.valor_nao_comissionavel)}</td>
-                <td class="px-3 py-2 text-right">{formatMoney(row.valor_venda_real)}</td>
-                <td class="px-3 py-2 text-right">{formatMoney(row.valor_comissao_loja)}</td>
-                <td class="px-3 py-2 text-right">{formatPercent(row.percentual_comissao_loja)}</td>
-                <td class="px-3 py-2 text-right">{formatMoney(row.sistema_valor_total)}</td>
-                <td class="px-3 py-2 text-right">{formatMoney(row.sistema_valor_taxas)}</td>
-                <td class="px-3 py-2 text-right">{formatMoney(row.diff_total)}</td>
-                <td class="px-3 py-2 text-right">{formatMoney(row.diff_taxas)}</td>
-                <td class="px-3 py-2">{row.conciliado ? 'Sim' : 'Não'}</td>
+                <td data-label="Lançamentos" class="px-3 py-2 text-right"
+                  >{formatMoney(row.valor_lancamentos)}</td
+                >
+                <td data-label="Taxas (arq)" class="px-3 py-2 text-right"
+                  >{formatMoney(row.valor_taxas)}</td
+                >
+                <td data-label="Descontos" class="px-3 py-2 text-right"
+                  >{formatMoney(row.valor_descontos)}</td
+                >
+                <td data-label="Abatimentos" class="px-3 py-2 text-right"
+                  >{formatMoney(row.valor_abatimentos)}</td
+                >
+                <td data-label="Não comissionável" class="px-3 py-2 text-right"
+                  >{formatMoney(row.valor_nao_comissionavel)}</td
+                >
+                <td data-label="Venda real" class="px-3 py-2 text-right"
+                  >{formatMoney(row.valor_venda_real)}</td
+                >
+                <td data-label="Comissão loja" class="px-3 py-2 text-right"
+                  >{formatMoney(row.valor_comissao_loja)}</td
+                >
+                <td data-label="% loja" class="px-3 py-2 text-right"
+                  >{formatPercent(row.percentual_comissao_loja)}</td
+                >
+                <td data-label="Total (sist)" class="px-3 py-2 text-right"
+                  >{formatMoney(row.sistema_valor_total)}</td
+                >
+                <td data-label="Taxas (sist)" class="px-3 py-2 text-right"
+                  >{formatMoney(row.sistema_valor_taxas)}</td
+                >
+                <td data-label="Diff total" class="px-3 py-2 text-right"
+                  >{formatMoney(row.diff_total)}</td
+                >
+                <td data-label="Diff taxas" class="px-3 py-2 text-right"
+                  >{formatMoney(row.diff_taxas)}</td
+                >
+                <td data-label="Conciliado" class="px-3 py-2">{row.conciliado ? 'Sim' : 'Não'}</td>
               </tr>
             {/each}
           </tbody>
@@ -3022,80 +3099,121 @@
           </div>
           <div class="grid gap-3 md:grid-cols-3">
             <FieldInput
+              money
               id="conciliacao-valor-lancamentos"
               label="Valor lançamentos"
               bind:value={detalheValorLancamentos}
               disabled={detailsReadOnly}
-              on:input={recalculateDetailMetrics}
+              on:moneyInput={(event) => {
+                detalheValorLancamentos = event.detail;
+                recalculateDetailMetrics();
+              }}
             />
             <FieldInput
+              money
               id="conciliacao-valor-taxas"
               label="Valor taxas"
               bind:value={detalheValorTaxas}
               disabled={detailsReadOnly}
-              on:input={recalculateDetailMetrics}
+              on:moneyInput={(event) => {
+                detalheValorTaxas = event.detail;
+                recalculateDetailMetrics();
+              }}
             />
             <FieldInput
+              money
               id="conciliacao-valor-descontos"
               label="Valor descontos"
               bind:value={detalheValorDescontos}
               disabled={detailsReadOnly}
-              on:input={recalculateDetailMetrics}
+              on:moneyInput={(event) => {
+                detalheValorDescontos = event.detail;
+                recalculateDetailMetrics();
+              }}
             />
             <FieldInput
+              money
               id="conciliacao-valor-abatimentos"
               label="Valor abatimentos"
               bind:value={detalheValorAbatimentos}
               disabled={detailsReadOnly}
-              on:input={recalculateDetailMetrics}
+              on:moneyInput={(event) => {
+                detalheValorAbatimentos = event.detail;
+                recalculateDetailMetrics();
+              }}
             />
             <FieldInput
+              money
               id="conciliacao-valor-nao-comissionavel"
               label="Valor não comissionável"
               bind:value={detalheValorNaoComissionavel}
               disabled={detailsReadOnly}
-              on:input={recalculateDetailMetrics}
+              on:moneyInput={(event) => {
+                detalheValorNaoComissionavel = event.detail;
+                recalculateDetailMetrics();
+              }}
             />
             <FieldInput
+              money
               id="conciliacao-valor-saldo"
               label="Valor saldo"
               bind:value={detalheValorSaldo}
               disabled={detailsReadOnly}
-              on:input={recalculateDetailMetrics}
+              on:moneyInput={(event) => {
+                detalheValorSaldo = event.detail;
+                recalculateDetailMetrics();
+              }}
             />
             <FieldInput
+              money
               id="conciliacao-valor-calculada-loja"
               label="Valor calculada loja"
               bind:value={detalheValorCalculadaLoja}
               disabled={detailsReadOnly}
-              on:input={recalculateDetailMetrics}
+              on:moneyInput={(event) => {
+                detalheValorCalculadaLoja = event.detail;
+                recalculateDetailMetrics();
+              }}
             />
             <FieldInput
+              money
               id="conciliacao-valor-visao-master"
               label="Valor visão master"
               bind:value={detalheValorVisaoMaster}
               disabled={detailsReadOnly}
-              on:input={recalculateDetailMetrics}
+              on:moneyInput={(event) => {
+                detalheValorVisaoMaster = event.detail;
+                recalculateDetailMetrics();
+              }}
             />
             <FieldInput
+              money
               id="conciliacao-valor-opfax"
               label="Valor OPFAX"
               bind:value={detalheValorOpfax}
               disabled={detailsReadOnly}
-              on:input={recalculateDetailMetrics}
+              on:moneyInput={(event) => {
+                detalheValorOpfax = event.detail;
+                recalculateDetailMetrics();
+              }}
             />
             <FieldInput
+              money
               id="conciliacao-valor-venda-real"
               label="Valor venda real"
               bind:value={detalheValorVendaReal}
               disabled={true}
             />
             <FieldInput
+              money
               id="conciliacao-valor-comissao-loja"
               label="Valor comissão loja"
               bind:value={detalheValorComissaoLoja}
               disabled={detailsReadOnly}
-              on:input={recalculateDetailMetrics}
+              on:moneyInput={(event) => {
+                detalheValorComissaoLoja = event.detail;
+                recalculateDetailMetrics();
+              }}
             />
             <FieldInput
               id="conciliacao-percentual-comissao-loja"
@@ -3230,19 +3348,29 @@
                 ? 'bg-red-50'
                 : 'bg-orange-50'}"
             >
-              <td class="px-3 py-2 font-medium">{diff.documento}</td>
-              <td class="px-3 py-2 text-right">{formatCurrency(diff.valor_importacao)}</td>
-              <td class="px-3 py-2 text-right">{formatCurrency(diff.valor_sistema)}</td>
+              <td data-label="Documento" class="px-3 py-2 font-medium">{diff.documento}</td>
+              <td data-label="Valor importação" class="px-3 py-2 text-right"
+                >{formatCurrency(diff.valor_importacao)}</td
+              >
+              <td data-label="Valor sistema" class="px-3 py-2 text-right"
+                >{formatCurrency(diff.valor_sistema)}</td
+              >
               <td
+                data-label="Diferença de valor"
                 class="px-3 py-2 text-right font-semibold {diff.diff_total > 0
                   ? 'text-green-700'
                   : diff.diff_total < 0
                     ? 'text-red-700'
                     : ''}">{diff.diff_total > 0 ? '+' : ''}{formatCurrency(diff.diff_total)}</td
               >
-              <td class="px-3 py-2 text-right">{formatCurrency(diff.taxas_importacao)}</td>
-              <td class="px-3 py-2 text-right">{formatCurrency(diff.taxas_sistema)}</td>
+              <td data-label="Taxas importação" class="px-3 py-2 text-right"
+                >{formatCurrency(diff.taxas_importacao)}</td
+              >
+              <td data-label="Taxas sistema" class="px-3 py-2 text-right"
+                >{formatCurrency(diff.taxas_sistema)}</td
+              >
               <td
+                data-label="Diferença de taxas"
                 class="px-3 py-2 text-right font-semibold {diff.diff_taxas > 0
                   ? 'text-green-700'
                   : diff.diff_taxas < 0

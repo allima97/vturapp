@@ -14,6 +14,7 @@
   import { apiFetch, ApiError } from '$lib/services/api';
   import { toUserMessage } from '$lib/utils/errors';
   import { nomePassageiroMaiusculo } from '$lib/passagens/nome';
+  import { Plus } from '$lib/icons';
   import { resumoRotas, type TrechoRota } from '$lib/passagens/rotas';
   import {
     loadAirportCodeCityLookup,
@@ -84,6 +85,7 @@
   let pedidoAbertura = 0;
   let loading = true;
   let saving = false;
+  let excluindo = false;
   let error = '';
   let erroAbertura = '';
   let cidades: AirportCodeCityLookup = {};
@@ -146,7 +148,7 @@
     return cidades[codigo.trim().toUpperCase()] || '';
   }
 
-  function resumoLista(item: ListaItem) {
+  function dadosLista(item: ListaItem) {
     const nome = item.primeiroPassageiro
       ? nomePassageiroMaiusculo(item.primeiroPassageiro)
       : 'Passageiro não informado';
@@ -168,7 +170,11 @@
       (codigo, informada) =>
         informada?.trim() || cidadeSugerida(codigo) || codigo || 'Não informado'
     );
-    return `${nome} x ${quantidade} → ${dataFormatada} → ${rota || 'Rota não informada'}`;
+    return { nome, quantidade, data: dataFormatada, rota: rota || 'Rota não informada' };
+  }
+
+  function abrirPassagem(itemId: string) {
+    void goto(`/operacao/passagens?editar=${encodeURIComponent(itemId)}`);
   }
 
   function formatarAeroporto(event: Event, trecho: TrechoPassagem, campo: 'origem' | 'destino') {
@@ -405,22 +411,30 @@
     }
   }
   async function excluir(itemId: string) {
-    if (!(await confirmAction('Deseja excluir esta passagem?'))) return;
+    if (excluindo) return;
+    excluindo = true;
     try {
+      if (!(await confirmAction('Deseja excluir esta passagem?'))) return;
       await apiFetch('/api/v1/passagens', {
         method: 'DELETE',
         query: { id: itemId },
         redirectOnForbidden: false
       });
-      if (id === itemId) {
-        editando = false;
-        id = '';
-        form = vazio();
-      }
       toast.success('Passagem excluída.');
       await carregar();
+      if (id === itemId) {
+        try {
+          await goto('/operacao/passagens');
+        } catch (err) {
+          toast.error(
+            toUserMessage(err, 'Passagem excluída, mas não foi possível retornar à lista.')
+          );
+        }
+      }
     } catch (err) {
       toast.error(toUserMessage(err, 'Não foi possível excluir a passagem.'));
+    } finally {
+      excluindo = false;
     }
   }
 </script>
@@ -436,7 +450,7 @@
     <Card title="Passagens salvas" color="operacao">
       <svelte:fragment slot="actions">
         <Button color="operacao" on:click={iniciarNovaPassagem} disabled={loading || !!error}
-          >Nova passagem</Button
+          ><Plus size={16} class="mr-1.5" />Nova passagem</Button
         >
       </svelte:fragment>
       {#if loading}
@@ -446,35 +460,46 @@
       {:else if !items.length}
         <p class="text-sm text-slate-500">Nenhuma passagem salva.</p>
       {:else}
-        <ul class="divide-y divide-slate-200">
-          {#each items as item (item.id)}
-            <li class="flex flex-wrap items-center justify-between gap-3 py-3">
-              <div class="min-w-0">
-                <span class="font-medium text-slate-900">Localizador: {item.localizador}</span>
-                <span class="text-sm text-slate-700"> → {resumoLista(item)}</span>
-              </div>
-              <div class="flex flex-wrap gap-2">
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  on:click={() => goto(`/operacao/passagens?editar=${encodeURIComponent(item.id)}`)}
-                  >Abrir</Button
+        <div class="vtur-table-shell">
+          <table class="table-mobile-cards vtur-table w-full text-sm">
+            <caption class="sr-only">Passagens salvas</caption>
+            <thead class="vtur-table__head">
+              <tr>
+                <th class="px-6 py-3 text-left">Localizador</th>
+                <th class="px-6 py-3 text-left">Passageiro</th>
+                <th class="px-6 py-3 text-left">Passageiros</th>
+                <th class="px-6 py-3 text-left">Data do voo</th>
+                <th class="px-6 py-3 text-left">Rota</th>
+              </tr>
+            </thead>
+            <tbody class="vtur-table__body">
+              {#each items as item (item.id)}
+                {@const dados = dadosLista(item)}
+                <tr
+                  class="cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-blue-500"
+                  tabindex="0"
+                  on:click={() => abrirPassagem(item.id)}
+                  on:keydown={(event) => {
+                    if (event.target !== event.currentTarget) return;
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      abrirPassagem(item.id);
+                    }
+                  }}
                 >
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  href={`/operacao/passagens/comprovante?id=${encodeURIComponent(item.id)}`}
-                  >Comprovante</Button
-                >
-                <Button variant="danger" size="sm" on:click={() => excluir(item.id)}>Excluir</Button
-                >
-              </div>
-            </li>
-          {/each}
-        </ul>
+                  <td class="px-6 py-3" data-label="Localizador">{item.localizador}</td>
+                  <td class="px-6 py-3" data-label="Passageiro">{dados.nome}</td>
+                  <td class="px-6 py-3" data-label="Passageiros">{dados.quantidade}</td>
+                  <td class="px-6 py-3" data-label="Data do voo">{dados.data}</td>
+                  <td class="px-6 py-3" data-label="Rota">{dados.rota}</td>
+                </tr>
+              {/each}
+            </tbody>
+          </table>
+        </div>
       {/if}
       {#if !loading && !error && (pagina > 1 || hasMore)}
-        <div class="mt-4 flex flex-wrap items-center justify-end gap-3">
+        <div class="vtur-inline-pagination mt-4 flex flex-wrap items-center justify-end gap-3">
           <Button
             variant="secondary"
             size="sm"
@@ -620,7 +645,7 @@
                 variant="secondary"
                 size="sm"
                 disabled={saving}
-                on:click={adicionarTrecho}>Adicionar trecho</Button
+                on:click={adicionarTrecho}><Plus size={16} class="mr-2" />Adicionar trecho</Button
               >{/if}
           </div>
           {#each form.trechos as trecho, i (trecho)}
@@ -754,7 +779,7 @@
                 size="sm"
                 disabled={saving}
                 on:click={() => (form.passageiros = [...form.passageiros, passageiroVazio()])}
-                >Adicionar passageiro</Button
+                ><Plus size={16} class="mr-2" />Adicionar passageiro</Button
               >{/if}
           </div>
 
@@ -854,6 +879,10 @@
               variant="secondary"
               href={`/operacao/passagens/comprovante?id=${encodeURIComponent(id)}&origem=edicao`}
               >Gerar comprovante</Button
+            ><Button
+              variant="danger"
+              disabled={saving || processandoArquivo || excluindo}
+              on:click={() => excluir(id)}>Excluir passagem</Button
             >{/if}
         </div>
 

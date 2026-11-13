@@ -10,7 +10,7 @@
     CheckCircle
   } from '$lib/icons';
   import Button from '$lib/components/ui/Button.svelte';
-  import { FieldInput, FieldSelect } from '$lib/components/ui';
+  import { FieldInput, FieldSelect, Tabs } from '$lib/components/ui';
 
   // ─── Tipos ────────────────────────────────────────────────────────────────
   interface FaixaCredito {
@@ -302,7 +302,19 @@
     <div class="space-y-4 rounded-xl border border-indigo-100 bg-indigo-50/60 p-5">
       <div class="flex flex-wrap items-center justify-between gap-2">
         <h5 class="text-base font-semibold text-indigo-800">⚙️ Configurar Formas de Pagamento</h5>
-        <div class="flex gap-2">
+        <div class="w-full md:hidden">
+          <Tabs
+            activeKey={abaConfig}
+            items={[
+              { key: 'padrao', label: 'Pacotes / Hotel / Aéreo / Seguro' },
+              { key: 'ingressos', label: 'Ingressos (Disney / Universal)' }
+            ]}
+            onSelect={(key) => {
+              if (key === 'padrao' || key === 'ingressos') abaConfig = key;
+            }}
+          />
+        </div>
+        <div class="hidden gap-2 md:flex">
           <Button
             type="button"
             variant="ghost"
@@ -475,6 +487,7 @@
       <!-- Valores Agência e Concorrente lado a lado -->
       <div class="grid grid-cols-1 gap-3 2xl:grid-cols-2">
         <FieldInput
+          money
           id="conc-valor-agencia"
           label="Valor da agência (R$)"
           type="number"
@@ -486,6 +499,7 @@
           class_name={fieldClass}
         />
         <FieldInput
+          money
           id="conc-valor-concorrente"
           label="Concorrente (R$)"
           type="number"
@@ -521,6 +535,7 @@
       />
 
       <FieldInput
+        money
         id="conc-taxas"
         label="Taxas (R$)"
         type="number"

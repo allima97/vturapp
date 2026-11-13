@@ -55,7 +55,9 @@ it('formata dados e abre, edita, cancela e cadastra acompanhantes', async () => 
   );
   expect(novo.getAttribute('aria-expanded')).toBe('false');
 
-  target.querySelector<HTMLTableRowElement>('tbody tr')!.click();
+  const linha = target.querySelector<HTMLTableRowElement>('tbody tr')!;
+  expect(linha.tabIndex).toBe(0);
+  linha.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
   flushSync();
   expect(target.querySelector<HTMLInputElement>('#acomp-cpf')?.value).toBe('529.982.247-25');
   expect(target.querySelector<HTMLInputElement>('#acomp-telefone')?.value).toBe('(11) 98765-4321');

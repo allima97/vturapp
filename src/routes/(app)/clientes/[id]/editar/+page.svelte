@@ -11,7 +11,8 @@
     FieldSelect,
     FieldTextarea,
     LoadingState,
-    PageHeader
+    PageHeader,
+    Tabs
   } from '$lib/components/ui';
   import AcompanhantesManager from '$lib/components/clientes/AcompanhantesManager.svelte';
   import {
@@ -250,7 +251,19 @@
     ]}
   />
 
-  <div class="mb-6 flex flex-wrap gap-3">
+  <div class="mb-6 md:hidden">
+    <Tabs
+      activeKey={abaAtiva}
+      items={[
+        { key: 'dados', label: 'Dados do cliente' },
+        { key: 'acompanhantes', label: 'Acompanhantes' }
+      ]}
+      onSelect={(key) => {
+        if (key === 'dados' || key === 'acompanhantes') abaAtiva = key;
+      }}
+    />
+  </div>
+  <div class="mb-6 hidden flex-wrap gap-3 md:flex">
     <Button
       type="button"
       variant={abaAtiva === 'dados' ? 'selected' : 'secondary'}

@@ -833,7 +833,7 @@
               <tbody class="divide-y divide-slate-100">
                 {#each orcamento.itens as item}
                   <tr class="hover:bg-slate-50">
-                    <td class="px-3 py-3 text-slate-900">
+                    <td data-label="Descrição" class="px-3 py-3 text-slate-900">
                       <p class="font-medium">
                         {item.title || item.descricao || 'Item'}
                       </p>
@@ -863,18 +863,18 @@
                         </div>
                       {/if}
                     </td>
-                    <td class="px-3 py-3 text-center">
+                    <td data-label="Tipo" class="px-3 py-3 text-center">
                       <span class="rounded-full bg-slate-100 px-2 py-1 text-xs capitalize">
                         {item.item_type || 'servico'}
                       </span>
                     </td>
-                    <td class="px-3 py-3 text-center text-slate-700"
+                    <td data-label="Qtd" class="px-3 py-3 text-center text-slate-700"
                       >{item.quantity || item.quantidade || 1}</td
                     >
-                    <td class="px-3 py-3 text-right text-slate-700">
+                    <td data-label="Valor Unit." class="px-3 py-3 text-right text-slate-700">
                       {formatCurrency(item.unit_price || item.valor_unitario || 0)}
                     </td>
-                    <td class="px-3 py-3 text-right font-medium text-slate-900">
+                    <td data-label="Total" class="px-3 py-3 text-right font-medium text-slate-900">
                       {formatCurrency(item.total_amount || item.valor_total || 0)}
                     </td>
                   </tr>
@@ -991,6 +991,7 @@
             </div>
 
             <FieldInput
+              money
               label="Desconto no PDF (R$)"
               type="number"
               min="0"

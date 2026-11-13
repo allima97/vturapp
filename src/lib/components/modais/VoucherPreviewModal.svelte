@@ -4,7 +4,11 @@
   import Button from '../ui/Button.svelte';
   import LoadingState from '../ui/LoadingState.svelte';
   import { buildVoucherPreviewDocument } from '../../vouchers/preview';
-  import type { VoucherRecord, VoucherAssetRecord } from '../../vouchers/types';
+  import type {
+    VoucherRecord,
+    VoucherAssetRecord,
+    VoucherLogoEsquerdo
+  } from '../../vouchers/types';
   import { createEventDispatcher } from 'svelte';
   import { isMobile } from '$lib/stores/ui';
   import { onMount } from 'svelte';
@@ -12,6 +16,7 @@
   export let open = false;
   export let voucher: VoucherRecord | null = null;
   export let assets: VoucherAssetRecord[] = [];
+  export let logoEsquerdo: VoucherLogoEsquerdo = 'vtur';
 
   let sidebarCollapsed = false;
 
@@ -41,7 +46,7 @@
 
   let iframe: HTMLIFrameElement;
 
-  $: docHtml = open && voucher ? buildVoucherPreviewDocument(voucher, assets) : '';
+  $: docHtml = open && voucher ? buildVoucherPreviewDocument(voucher, assets, logoEsquerdo) : '';
 
   const dispatch = createEventDispatcher();
 

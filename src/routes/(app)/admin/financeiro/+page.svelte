@@ -274,6 +274,7 @@
       class_name="w-full"
     />
     <FieldInput
+      money
       id="bill-valor"
       label="Mensalidade (R$)"
       type="number"

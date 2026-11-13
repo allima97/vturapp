@@ -200,6 +200,7 @@
   searchable={true}
   emptyMessage="Nenhum câmbio registrado"
   onRowClick={canEdit ? (row) => openEdit(row) : undefined}
+  rowActionsAvailable={() => canDelete}
 >
   <svelte:fragment slot="row-actions" let:row>
     {#if canDelete}

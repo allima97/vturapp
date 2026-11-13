@@ -356,6 +356,7 @@
               bind:value={settings.whatsapp}
               icon={Whatsapp}
               placeholder="(00) 00000-0000"
+              mask={settings.whatsapp_codigo_pais.replace(/\D/g, '') === '55' ? 'phone' : undefined}
               helper="Código do país + número (ex: 55 + 11 99999-9999)"
               class_name="w-full"
             />

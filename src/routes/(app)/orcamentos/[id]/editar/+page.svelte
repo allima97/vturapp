@@ -428,6 +428,7 @@
             bind:value={formData.cliente_telefone}
             icon={Whatsapp}
             placeholder="(00) 00000-0000"
+            mask="phone"
           />
           <FieldInput
             label="E-mail"
@@ -621,6 +622,7 @@
 
               <div class="md:col-span-2">
                 <FieldInput
+                  money
                   id={`orcamento-editar-item-valor-${index}`}
                   label="Valor Unit."
                   type="number"
@@ -628,7 +630,10 @@
                   min="0"
                   step="0.01"
                   class_name="w-full"
-                  on:input={() => recalcularItem(index)}
+                  on:moneyInput={(event) => {
+                    item.unit_price = Number(event.detail) || 0;
+                    recalcularItem(index);
+                  }}
                 />
               </div>
 

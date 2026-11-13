@@ -11,6 +11,7 @@
   import { Users, RefreshCw, UserCheck, UserX, Search } from '$lib/icons';
   import { formatDate } from '$lib/utils/formatters';
   import { toUserMessage } from '$lib/utils/errors';
+  import { mobileCardActions } from '$lib/actions/mobileCardActions';
 
   type Usuario = {
     id: string;
@@ -198,11 +199,15 @@
         </thead>
         <tbody class="divide-y divide-slate-200">
           {#each usuariosFiltrados as usuario}
-            <tr class="hover:bg-slate-50">
-              <td class="px-4 py-3 font-medium text-slate-900">{usuario.nome_completo || '-'}</td>
-              <td class="px-4 py-3 text-slate-600">{usuario.email || '-'}</td>
-              <td class="px-4 py-3 text-slate-600">{getTipoNome(usuario) || '-'}</td>
-              <td class="px-4 py-3 text-center">
+            <tr class="hover:bg-slate-50" use:mobileCardActions={canEdit}>
+              <td data-label="Nome" class="px-4 py-3 font-medium text-slate-900"
+                >{usuario.nome_completo || '-'}</td
+              >
+              <td data-label="E-mail" class="px-4 py-3 text-slate-600">{usuario.email || '-'}</td>
+              <td data-label="Tipo" class="px-4 py-3 text-slate-600"
+                >{getTipoNome(usuario) || '-'}</td
+              >
+              <td data-label="Na equipe" class="px-4 py-3 text-center">
                 {#if isNaEquipe(usuario.id)}
                   <span
                     class="inline-flex rounded-full bg-green-100 px-2.5 py-1 text-xs font-semibold text-green-700"
@@ -216,7 +221,7 @@
                 {/if}
               </td>
               {#if canEdit}
-                <td class="px-4 py-3 text-center">
+                <td class="vtur-table-row-actions px-4 py-3 text-center">
                   <Button
                     variant={isNaEquipe(usuario.id) ? 'secondary' : 'primary'}
                     size="sm"
@@ -252,19 +257,23 @@
         <tbody class="divide-y divide-slate-200">
           {#each convites as convite}
             <tr class="hover:bg-slate-50">
-              <td class="px-4 py-3 text-slate-900">{convite.invited_email}</td>
-              <td class="px-4 py-3 text-slate-600">{convite.invited_by_name || '-'}</td>
-              <td class="px-4 py-3">
+              <td data-label="E-mail convidado" class="px-4 py-3 text-slate-900"
+                >{convite.invited_email}</td
+              >
+              <td data-label="Convidado por" class="px-4 py-3 text-slate-600"
+                >{convite.invited_by_name || '-'}</td
+              >
+              <td data-label="Status" class="px-4 py-3">
                 <span
                   class="inline-flex rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700"
                 >
                   {convite.status === 'pending' ? 'Pendente' : convite.status}
                 </span>
               </td>
-              <td class="px-4 py-3 text-slate-600">
+              <td data-label="Criado em" class="px-4 py-3 text-slate-600">
                 {formatDate(convite.created_at)}
               </td>
-              <td class="px-4 py-3 text-slate-600">
+              <td data-label="Expira em" class="px-4 py-3 text-slate-600">
                 {formatDate(convite.expires_at)}
               </td>
             </tr>

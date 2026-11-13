@@ -20,7 +20,8 @@ vi.mock('./root', () => ({
   handleVoucherAssetsGet: spy('handleVoucherAssetsGet'),
   handleVoucherAssetsPost: spy('handleVoucherAssetsPost'),
   handleVoucherAssetsPatch: spy('handleVoucherAssetsPatch'),
-  handleVoucherAssetsDelete: spy('handleVoucherAssetsDelete')
+  handleVoucherAssetsDelete: spy('handleVoucherAssetsDelete'),
+  handleVoucherSettingsPatch: spy('handleVoucherSettingsPatch')
 }));
 
 import { apiApp } from '../../app';
@@ -30,6 +31,7 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/voucher-assets', 'handleVoucherAssetsGet', {}],
   ['POST', '/api/v1/voucher-assets', 'handleVoucherAssetsPost', {}],
   ['PATCH', '/api/v1/voucher-assets', 'handleVoucherAssetsPatch', {}],
+  ['PATCH', '/api/v1/voucher-assets/settings', 'handleVoucherSettingsPatch', {}],
   ['DELETE', '/api/v1/voucher-assets', 'handleVoucherAssetsDelete', {}]
 ];
 

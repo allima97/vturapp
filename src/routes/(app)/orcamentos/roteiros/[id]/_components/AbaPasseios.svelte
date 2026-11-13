@@ -129,7 +129,7 @@
     <div class="space-y-3">
       {#each passeios as passeio, index (passeio)}
         <div class="relative rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <div class="absolute top-3 right-3 flex gap-1">
+          <div class="mb-2 flex gap-1 sm:absolute sm:top-3 sm:right-3 sm:mb-0">
             <Button
               type="button"
               variant="ghost"
@@ -277,26 +277,28 @@
               </div>
               <div>
                 <FieldInput
+                  money
                   label="Valor original (R$)"
                   type="number"
                   value={passeio.valor_original ?? ''}
                   class_name="w-full"
-                  on:input={(e) => {
+                  on:moneyInput={(e) => {
                     passeios = updateItem(passeios, index, {
-                      valor_original: Number((e.target as HTMLInputElement).value) || null
+                      valor_original: Number(e.detail) || null
                     });
                   }}
                 />
               </div>
               <div>
                 <FieldInput
+                  money
                   label="Valor final (R$)"
                   type="number"
                   value={passeio.valor_final ?? ''}
                   class_name="w-full"
-                  on:input={(e) => {
+                  on:moneyInput={(e) => {
                     passeios = updateItem(passeios, index, {
-                      valor_final: Number((e.target as HTMLInputElement).value) || null
+                      valor_final: Number(e.detail) || null
                     });
                   }}
                 />

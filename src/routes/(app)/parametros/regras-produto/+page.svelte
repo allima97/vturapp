@@ -240,6 +240,7 @@
   searchable={true}
   emptyMessage="Nenhuma regra por produto cadastrada"
   onRowClick={canEdit ? (row) => openEdit(row) : undefined}
+  rowActionsAvailable={() => canDelete}
 >
   <svelte:fragment slot="row-actions" let:row>
     {#if canDelete}

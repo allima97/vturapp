@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { mobileCardActions } from '$lib/actions/mobileCardActions';
   import { onMount } from 'svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
@@ -122,12 +123,8 @@
 
   function parseMoney(value: unknown) {
     if (typeof value === 'number') return Number.isFinite(value) ? value : 0;
-    const parsed = Number(
-      String(value ?? '')
-        .replace(/\s/g, '')
-        .replace(/\./g, '')
-        .replace(',', '.')
-    );
+    const raw = String(value ?? '').replace(/\s/g, '');
+    const parsed = Number(raw.includes(',') ? raw.replace(/\./g, '').replace(',', '.') : raw);
     return Number.isFinite(parsed) ? parsed : 0;
   }
 
@@ -573,7 +570,10 @@
           </tr>
         {:else}
           {#each rows as row}
-            <tr class="hover:bg-slate-50">
+            <tr
+              class="hover:bg-slate-50"
+              use:mobileCardActions={canEdit || (canDelete && Boolean(row.meta))}
+            >
               <td data-label="Vendedor" class="px-5 py-4">
                 <div class="font-semibold text-slate-900">
                   {row.vendedor.nome_completo || 'Vendedor'}
@@ -609,7 +609,7 @@
                   >
                 {/if}
               </td>
-              <td data-label="Ações" class="px-5 py-4">
+              <td data-label="Ações" class="vtur-table-row-actions px-5 py-4">
                 <div class="flex justify-end gap-2">
                   {#if canEdit}
                     <Button
@@ -682,6 +682,7 @@
       />
 
       <FieldInput
+        money
         id="meta-geral"
         label="Meta de vendas"
         type="number"
@@ -738,15 +739,16 @@
                 required={true}
               />
               <FieldInput
+                money
                 label="Meta"
                 type="number"
                 step="0.01"
                 min="0"
                 prefix="R$"
                 value={item.valor}
-                on:input={(event) =>
+                on:moneyInput={(event) =>
                   updateProdutoRow('form', index, {
-                    valor: (event.currentTarget as HTMLInputElement).value
+                    valor: event.detail
                   })}
               />
               <Button
@@ -865,15 +867,16 @@
                 required={true}
               />
               <FieldInput
+                money
                 label={bulkForm.modo === 'total_loja' ? 'Meta total' : 'Meta por vendedor'}
                 type="number"
                 step="0.01"
                 min="0"
                 prefix="R$"
                 value={item.valor}
-                on:input={(event) =>
+                on:moneyInput={(event) =>
                   updateProdutoRow('bulk', index, {
-                    valor: (event.currentTarget as HTMLInputElement).value
+                    valor: event.detail
                   })}
               />
               <Button

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { mobileCardActions } from '$lib/actions/mobileCardActions';
   import { dev } from '$app/environment';
   import { onDestroy, onMount } from 'svelte';
   import type { ChartData, TooltipItem } from 'chart.js';
@@ -1288,7 +1289,7 @@
           <p class="py-8 text-center text-sm text-slate-400">{followUpEmptyLabel}</p>
         {:else}
           <div class="overflow-x-auto">
-            <table class="min-w-full text-left text-sm">
+            <table class="table-mobile-cards min-w-full text-left text-sm">
               <thead class="bg-slate-50 text-xs tracking-wide text-slate-500 uppercase">
                 <tr>
                   <th class="px-3 py-2 font-semibold">Cliente</th>
@@ -1301,16 +1302,22 @@
               <tbody class="divide-y divide-slate-100">
                 {#each followUps as item}
                   {@const whatsappLink = getFollowUpWhatsAppLink(item)}
-                  <tr class="transition-colors hover:bg-slate-50">
-                    <td class="px-3 py-3 font-medium text-slate-900">{getFollowUpCliente(item)}</td>
-                    <td class="px-3 py-3 text-slate-600">{getFollowUpDestino(item) || '-'}</td>
-                    <td class="px-3 py-3 text-slate-600"
+                  <tr class="transition-colors hover:bg-slate-50" use:mobileCardActions={true}>
+                    <td data-label="Cliente" class="px-3 py-3 font-medium text-slate-900"
+                      >{getFollowUpCliente(item)}</td
+                    >
+                    <td data-label="Destino" class="px-3 py-3 text-slate-600"
+                      >{getFollowUpDestino(item) || '-'}</td
+                    >
+                    <td data-label="Embarque" class="px-3 py-3 text-slate-600"
                       >{formatDate(
                         item.data_inicio || item.data_embarque || item.venda?.data_embarque
                       )}</td
                     >
-                    <td class="px-3 py-3 text-slate-600">{formatDate(getFollowUpRetorno(item))}</td>
-                    <td class="px-3 py-3">
+                    <td data-label="Retorno" class="px-3 py-3 text-slate-600"
+                      >{formatDate(getFollowUpRetorno(item))}</td
+                    >
+                    <td class="vtur-table-row-actions px-3 py-3">
                       <div class="flex justify-end gap-1">
                         {#if whatsappLink}
                           <Button

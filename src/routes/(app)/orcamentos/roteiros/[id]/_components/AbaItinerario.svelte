@@ -74,7 +74,7 @@
     <div class="space-y-2">
       {#each dias as dia, index (dia)}
         <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
-          <div class="flex items-start justify-between gap-2">
+          <div class="dia-cabecalho flex items-start justify-between gap-2">
             <details class="min-w-0 flex-1">
               <summary
                 class="flex cursor-pointer list-none items-center justify-between gap-3 text-sm font-semibold"
@@ -93,7 +93,7 @@
                   <span class="indicador-mais">+</span><span class="indicador-menos">−</span>
                 </span>
               </summary>
-              <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div class="dia-campos mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <CidadeRoteiro bind:destino={dias[index]} fieldId={`dia-cidade-${index}`} />
                 <FieldInput
                   label="Percurso"
@@ -122,7 +122,7 @@
                 </Button>
               </div>
             </details>
-            <div class="flex items-center gap-1">
+            <div class="dia-acoes flex items-center gap-1">
               <Button
                 type="button"
                 variant="ghost"
@@ -192,5 +192,38 @@
   }
   details[open] > summary .indicador-menos {
     display: inline;
+  }
+
+  @media (max-width: 640px) {
+    .dia-cabecalho {
+      position: relative;
+    }
+
+    .dia-cabecalho > details > summary {
+      min-height: 40px;
+      padding-right: 136px;
+    }
+
+    .dia-campos {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .dia-cabecalho,
+    .dia-acoes {
+      flex-wrap: nowrap !important;
+    }
+
+    .dia-acoes {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: auto !important;
+      flex: none;
+    }
+
+    .dia-acoes :global(button) {
+      width: 40px !important;
+      min-width: 40px !important;
+    }
   }
 </style>

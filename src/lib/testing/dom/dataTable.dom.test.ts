@@ -2,6 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { flushSync, mount, tick, unmount } from 'svelte';
 import DataTable from '$lib/components/ui/DataTable.svelte';
+import DataTableActionsHarness from './harness/DataTableActionsHarness.svelte';
 
 let app: ReturnType<typeof mount> | null = null;
 let target: HTMLElement | null = null;
@@ -35,6 +36,7 @@ afterEach(() => {
   if (app) unmount(app);
   target?.remove();
   app = null;
+  vi.unstubAllGlobals();
 });
 
 describe('DataTable: acessibilidade', () => {
@@ -44,6 +46,103 @@ describe('DataTable: acessibilidade', () => {
     const busca = document.querySelector<HTMLInputElement>('input[placeholder="Buscar..."]')!;
     const rotulo = document.querySelector(`label[for="${busca.id}"]`);
     expect(rotulo?.textContent?.trim()).toBe('Buscar em Clientes');
+  });
+
+  describe('DataTable: ações dos cartões', () => {
+    it('revela ações no mobile sem executar a abertura e permite acioná-las por teclado', () => {
+      vi.stubGlobal('innerWidth', 375);
+      const onOpen = vi.fn();
+      const onDelete = vi.fn();
+      target = document.createElement('div');
+      document.body.appendChild(target);
+      app = mount(DataTableActionsHarness, { target, props: { onOpen, onDelete } });
+      flushSync();
+
+      const [first, second] = target.querySelectorAll<HTMLTableRowElement>('tbody tr');
+      expect(first.getAttribute('aria-expanded')).toBe('false');
+      first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+      flushSync();
+      expect(first.getAttribute('aria-expanded')).toBe('true');
+      expect(onOpen).not.toHaveBeenCalled();
+      (first.querySelector('button') as HTMLButtonElement).click();
+      expect(onOpen).toHaveBeenCalledWith({ id: 'a', nome: 'Ana' });
+      (first.querySelectorAll('button')[1] as HTMLButtonElement).click();
+      expect(onDelete).toHaveBeenCalledWith({ id: 'a', nome: 'Ana' });
+
+      second.click();
+      flushSync();
+      expect(first.getAttribute('aria-expanded')).toBe('false');
+      expect(second.getAttribute('aria-expanded')).toBe('true');
+    });
+
+    it('mantém a abertura direta da linha no desktop', () => {
+      const onOpen = vi.fn();
+      target = document.createElement('div');
+      document.body.appendChild(target);
+      app = mount(DataTableActionsHarness, {
+        target,
+        props: { onOpen, onDelete: vi.fn() }
+      });
+      flushSync();
+
+      const row = target.querySelector<HTMLTableRowElement>('tbody tr')!;
+      row.click();
+      expect(onOpen).toHaveBeenCalledWith({ id: 'a', nome: 'Ana' });
+      expect(row.hasAttribute('aria-expanded')).toBe(false);
+    });
+
+    it('permite revelar ações mesmo quando a linha não tem página de detalhes', () => {
+      vi.stubGlobal('innerWidth', 375);
+      const onDelete = vi.fn();
+      target = document.createElement('div');
+      document.body.appendChild(target);
+      app = mount(DataTableActionsHarness, {
+        target,
+        props: { onOpen: vi.fn(), onDelete, clickable: false }
+      });
+      flushSync();
+
+      const row = target.querySelector<HTMLTableRowElement>('tbody tr')!;
+      row.click();
+      flushSync();
+      expect(row.getAttribute('aria-expanded')).toBe('true');
+      expect(row.querySelectorAll('button')).toHaveLength(1);
+      row.querySelector('button')!.click();
+      expect(onDelete).toHaveBeenCalledWith({ id: 'a', nome: 'Ana' });
+    });
+
+    it('não oferece ações inexistentes e abre detalhes diretamente quando permitido', () => {
+      vi.stubGlobal('innerWidth', 375);
+      const onOpen = vi.fn();
+      target = document.createElement('div');
+      document.body.appendChild(target);
+      app = mount(DataTableActionsHarness, {
+        target,
+        props: { onOpen, onDelete: vi.fn(), actionsFor: (row: { id: string }) => row.id === 'a' }
+      });
+      flushSync();
+      const [first, second] = target.querySelectorAll<HTMLTableRowElement>('tbody tr');
+      expect(first.getAttribute('aria-expanded')).toBe('false');
+      expect(second.hasAttribute('aria-expanded')).toBe(false);
+      second.click();
+      expect(onOpen).toHaveBeenCalledWith({ id: 'b', nome: 'Bruno' });
+    });
+
+    it('não torna interativa uma linha sem detalhes nem ações permitidas', () => {
+      vi.stubGlobal('innerWidth', 375);
+      target = document.createElement('div');
+      document.body.appendChild(target);
+      app = mount(DataTableActionsHarness, {
+        target,
+        props: { onOpen: vi.fn(), onDelete: vi.fn(), clickable: false, actionsFor: () => false }
+      });
+      flushSync();
+      const row = target.querySelector<HTMLTableRowElement>('tbody tr')!;
+      expect(row.hasAttribute('aria-expanded')).toBe(false);
+      expect(row.hasAttribute('tabindex')).toBe(false);
+      row.click();
+      expect(row.hasAttribute('aria-expanded')).toBe(false);
+    });
   });
 
   it('botão Filtros diz se o painel está aberto e aponta para ele', async () => {
@@ -95,5 +194,28 @@ describe('DataTable: acessibilidade', () => {
   it('carregando: tabela marcada como ocupada', () => {
     montar({ loading: true });
     expect(document.querySelector('table')?.getAttribute('aria-busy')).toBe('true');
+  });
+
+  it('navega entre páginas e respeita os limites da tabela', () => {
+    montar({ pageSize: 1 });
+    const botao = (label: string) =>
+      document.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)!;
+    const pagina = () =>
+      document.querySelector('.vtur-table-pagination__navigation span')?.textContent;
+
+    expect(botao('Página anterior').disabled).toBe(true);
+    botao('Próxima página').click();
+    flushSync();
+    expect(pagina()).toContain('Página 2 de 3');
+    expect(document.querySelector('tbody')?.textContent).toContain('Bruno');
+
+    botao('Última página').click();
+    flushSync();
+    expect(pagina()).toContain('Página 3 de 3');
+    expect(botao('Próxima página').disabled).toBe(true);
+
+    botao('Primeira página').click();
+    flushSync();
+    expect(pagina()).toContain('Página 1 de 3');
   });
 });

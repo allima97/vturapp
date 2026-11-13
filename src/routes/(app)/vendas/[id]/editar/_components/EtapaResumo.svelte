@@ -68,24 +68,28 @@
 
   <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
     <FieldInput
+      money
       id="venda-editar-total"
       label="Valor total da venda"
       bind:value={venda.valor_total}
       class_name="w-full"
     />
     <FieldInput
+      money
       id="venda-editar-total-bruto"
       label="Valor total bruto"
       bind:value={venda.valor_total_bruto}
       class_name="w-full"
     />
     <FieldInput
+      money
       id="venda-editar-total-pago"
       label="Valor total pago"
       bind:value={venda.valor_total_pago}
       class_name="w-full"
     />
     <FieldInput
+      money
       id="venda-editar-nao-comissionado"
       label="Valor não comissionado"
       bind:value={venda.valor_nao_comissionado}

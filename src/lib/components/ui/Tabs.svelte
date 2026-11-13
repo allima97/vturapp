@@ -20,7 +20,7 @@
   export let onSelect: ((key: string) => void) | undefined = undefined;
   export let className = '';
   export let idPrefix = '';
-  export let mobileDropdown = false;
+  export let mobileDropdown = true;
 
   function selectTab(key: string, disabled?: boolean) {
     if (disabled) return;
@@ -52,7 +52,9 @@
   >
     {#each items as item}
       <option value={item.key} disabled={item.disabled}>
-        {item.label}{item.badge != null && item.badge !== '' && item.badge !== 0 ? ` (${item.badge})` : ''}
+        {item.label}{item.badge != null && item.badge !== '' && item.badge !== 0
+          ? ` (${item.badge})`
+          : ''}
       </option>
     {/each}
   </select>

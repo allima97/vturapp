@@ -11,6 +11,8 @@
     LoadingState,
     SimpleTable
   } from '$lib/components/ui';
+  import { mobileCardActions } from '$lib/actions/mobileCardActions';
+  import MobileCardField from '$lib/components/ui/MobileCardField.svelte';
   import Dialog from '$lib/components/ui/Dialog.svelte';
   import { CheckCircle2, CircleOff, Edit2, GitBranch, Percent, Plus, Trash2 } from '$lib/icons';
   import { apiFetch, apiGet, isCanceledApiError } from '$lib/services/api';
@@ -679,52 +681,62 @@
               </thead>
               <tbody class="divide-y divide-slate-200 bg-white">
                 {#each form.tiers as tier, index}
-                  <tr>
-                    <td class="px-3 py-2">
-                      <FieldSelect
-                        class_name="min-w-[110px]"
-                        value={tier.faixa}
-                        options={faixaOptions}
-                        on:change={(event) => handleTierFaixaChange(index, event)}
-                      />
+                  <tr use:mobileCardActions>
+                    <td data-label="Faixa" class="px-3 py-2">
+                      <MobileCardField value={tier.faixa}>
+                        <FieldSelect
+                          class_name="min-w-[110px]"
+                          value={tier.faixa}
+                          options={faixaOptions}
+                          on:change={(event) => handleTierFaixaChange(index, event)}
+                        />
+                      </MobileCardField>
                     </td>
-                    <td class="px-3 py-2">
-                      <FieldInput
-                        type="number"
-                        step="0.01"
-                        value={String(tier.de_pct)}
-                        on:input={(event) => handleTierInput(index, 'de_pct', event)}
-                        class_name="min-w-[120px]"
-                      />
+                    <td data-label="De (%)" class="px-3 py-2">
+                      <MobileCardField value={tier.de_pct}>
+                        <FieldInput
+                          type="number"
+                          step="0.01"
+                          value={String(tier.de_pct)}
+                          on:input={(event) => handleTierInput(index, 'de_pct', event)}
+                          class_name="min-w-[120px]"
+                        />
+                      </MobileCardField>
                     </td>
-                    <td class="px-3 py-2">
-                      <FieldInput
-                        type="number"
-                        step="0.01"
-                        value={String(tier.ate_pct)}
-                        on:input={(event) => handleTierInput(index, 'ate_pct', event)}
-                        class_name="min-w-[120px]"
-                      />
+                    <td data-label="Até (%)" class="px-3 py-2">
+                      <MobileCardField value={tier.ate_pct}>
+                        <FieldInput
+                          type="number"
+                          step="0.01"
+                          value={String(tier.ate_pct)}
+                          on:input={(event) => handleTierInput(index, 'ate_pct', event)}
+                          class_name="min-w-[120px]"
+                        />
+                      </MobileCardField>
                     </td>
-                    <td class="px-3 py-2">
-                      <FieldInput
-                        type="number"
-                        step="0.01"
-                        value={String(tier.inc_pct_meta)}
-                        on:input={(event) => handleTierInput(index, 'inc_pct_meta', event)}
-                        class_name="min-w-[140px]"
-                      />
+                    <td data-label="Inc. Meta (%)" class="px-3 py-2">
+                      <MobileCardField value={tier.inc_pct_meta}>
+                        <FieldInput
+                          type="number"
+                          step="0.01"
+                          value={String(tier.inc_pct_meta)}
+                          on:input={(event) => handleTierInput(index, 'inc_pct_meta', event)}
+                          class_name="min-w-[140px]"
+                        />
+                      </MobileCardField>
                     </td>
-                    <td class="px-3 py-2">
-                      <FieldInput
-                        type="number"
-                        step="0.01"
-                        value={String(tier.inc_pct_comissao)}
-                        on:input={(event) => handleTierInput(index, 'inc_pct_comissao', event)}
-                        class_name="min-w-[160px]"
-                      />
+                    <td data-label="Inc. Comissão (%)" class="px-3 py-2">
+                      <MobileCardField value={tier.inc_pct_comissao}>
+                        <FieldInput
+                          type="number"
+                          step="0.01"
+                          value={String(tier.inc_pct_comissao)}
+                          on:input={(event) => handleTierInput(index, 'inc_pct_comissao', event)}
+                          class_name="min-w-[160px]"
+                        />
+                      </MobileCardField>
                     </td>
-                    <td class="px-3 py-2 text-right">
+                    <td data-label="Ações" class="vtur-table-row-actions px-3 py-2 text-right">
                       <Button
                         type="button"
                         size="sm"

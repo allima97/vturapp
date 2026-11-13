@@ -58,10 +58,9 @@
   } from '$lib/vouchers/extraData';
   import { addDaysISODate, diffDaysISODate } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
-  import { apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
+  import { apiPost } from '$lib/services/api';
   import DestinoOperacional from '$lib/components/DestinoOperacional.svelte';
   import { campoGeografico } from '$lib/config/destinosGeograficos';
-  import { createLoadGuard } from '$lib/utils/loadGuard';
   import type {
     VoucherProvider,
     VoucherDia,
@@ -75,7 +74,6 @@
   let currentStep = 0;
   let loading = true;
   let saving = false;
-  let companyId: string | null = null;
   // Quando o voucher é criado a partir da tela de detalhe de uma viagem
   // (botão "Adicionar Voucher"), a viagem chega via query param e o voucher
   // deve ser vinculado a ela (vouchers.viagem_id).
@@ -160,31 +158,9 @@
     dias: [],
     hoteis: []
   };
-  const contextGuard = createLoadGuard();
-
-  onMount(async () => {
-    if (await loadUserContext()) {
-      loading = false;
-    }
+  onMount(() => {
+    loading = false;
   });
-
-  async function loadUserContext() {
-    const request = contextGuard.next();
-    try {
-      const data = await apiGet<{ company_id?: string | null }>(
-        '/api/v1/user/context',
-        undefined,
-        request.signal
-      );
-      if (!contextGuard.isCurrent(request.seq)) return false;
-      companyId = data.company_id || null;
-      return true;
-    } catch (err) {
-      if (isCanceledApiError(err)) return false;
-      companyId = null;
-      return true;
-    }
-  }
 
   // ============ HELPERS ============
 
@@ -543,11 +519,6 @@
 
   // ============ SALVAMENTO ============
   async function saveVoucher(finalizar = false) {
-    if (!companyId) {
-      toast.error('Selecione uma empresa');
-      return;
-    }
-
     if (!form.nome.trim()) {
       validationErrors.nome = 'Nome do voucher é obrigatório';
       currentStep = 0;
@@ -559,7 +530,6 @@
 
     try {
       const payload = {
-        company_id: companyId,
         provider: form.provider,
         nome: form.nome,
         codigo_sistema: form.codigo_sistema || null,

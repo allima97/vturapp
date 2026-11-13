@@ -41,16 +41,16 @@
   }
 
   const TIPOS = [
-    { value: 'aereo', label: 'Aéreo' },  
+    { value: 'aereo', label: 'Aéreo' },
     { value: 'cruzeiro', label: 'Cruzeiro' },
     { value: 'hotel', label: 'Hotel' },
     { value: 'ingresso', label: 'Ingresso' },
     { value: 'pacote', label: 'Pacote' },
-    { value: 'servico', label: 'Passeio' },   
+    { value: 'servico', label: 'Passeio' },
     { value: 'seguro', label: 'Seguro' },
     { value: 'show', label: 'Show' },
     { value: 'transfer', label: 'Transfer' },
-    { value: 'rodoviario', label: 'Rodoviário' },    
+    { value: 'rodoviario', label: 'Rodoviário' },
     { value: 'outro', label: 'Outro' }
   ];
 
@@ -192,6 +192,7 @@
   searchable={true}
   emptyMessage="Nenhum tipo de produto cadastrado"
   onRowClick={canEdit ? (row) => openEdit(row) : undefined}
+  rowActionsAvailable={() => canDelete}
 >
   <svelte:fragment slot="row-actions" let:row>
     {#if canDelete}
