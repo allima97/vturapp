@@ -76,7 +76,7 @@
   function tituloTrecho(transporte: RotTransporte, index: number): string {
     const trecho = String(transporte.trecho ?? '').trim() || `Trecho ${index + 1}`;
     const data = formatarDataResumo(transporte.data_voo || transporte.data_inicio);
-    return data ? `${data} - ${trecho}` : trecho;
+    return data ? `${trecho} - ${data}` : trecho;
   }
 </script>
 

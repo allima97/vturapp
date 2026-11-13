@@ -188,14 +188,14 @@ describe('roteiro: aba Itinerário', () => {
     data.dispatchEvent(new Event('change', { bubbles: true }));
     flushSync();
     expect(dias[0].querySelector('summary')!.textContent).toContain(
-      '10-08-2027 - São Paulo - Roma'
+      'São Paulo - Roma - 10-08-2027'
     );
     expect(dias[0].open).toBe(true);
 
     dias[0].querySelector('summary')!.click();
     expect(dias[0].open).toBe(false);
     expect(dias[0].querySelector('summary')!.textContent).toContain(
-      '10-08-2027 - São Paulo - Roma'
+      'São Paulo - Roma - 10-08-2027'
     );
     dias[0].querySelector('summary')!.click();
     expect((t.target.querySelector('input') as HTMLInputElement).value).toBe('Lisboa');
@@ -211,7 +211,7 @@ describe('roteiro: aba Itinerário', () => {
     dataSemPercurso.dispatchEvent(new Event('input', { bubbles: true }));
     dataSemPercurso.dispatchEvent(new Event('change', { bubbles: true }));
     flushSync();
-    expect(dias[1].querySelector('summary')!.textContent).toContain('11-08-2027 - Dia 2');
+    expect(dias[1].querySelector('summary')!.textContent).toContain('Dia 2 - 11-08-2027');
 
     t.botao('Remover dia').click();
     flushSync();
@@ -303,7 +303,7 @@ describe('roteiro: abas Hotéis, Passeios e Aéreo', () => {
     t.fim();
   });
 
-  it('mostra a data do voo antes do trecho no resumo', () => {
+  it('mostra a data do voo após o trecho no resumo', () => {
     const t = montar(ServicosHarness);
     const painel = [...t.target.querySelectorAll<HTMLDetailsElement>('details')].find((item) =>
       item.textContent?.includes('GRU → LIS')
@@ -313,7 +313,7 @@ describe('roteiro: abas Hotéis, Passeios e Aéreo', () => {
     data.dispatchEvent(new Event('input', { bubbles: true }));
     data.dispatchEvent(new Event('change', { bubbles: true }));
     flushSync();
-    expect(painel.querySelector('summary')!.textContent).toContain('10-08-2027 - GRU → LIS');
+    expect(painel.querySelector('summary')!.textContent).toContain('GRU → LIS - 10-08-2027');
     expect(t.get().transportes[0].data_voo).toBe('2027-08-10');
     t.fim();
   });

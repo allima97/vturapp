@@ -32,7 +32,7 @@
     const data = String(dia.data ?? '').trim();
     if (!data) return percurso;
     const formatada = formatISODateBR(data);
-    return `${formatada === '-' ? data : formatada.replaceAll('/', '-')} - ${percurso}`;
+    return `${percurso} - ${formatada === '-' ? data : formatada.replaceAll('/', '-')}`;
   }
 </script>
 
