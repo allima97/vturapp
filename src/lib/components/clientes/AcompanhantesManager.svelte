@@ -294,6 +294,7 @@
         <thead class="bg-slate-50">
           <tr>
             <th class="px-4 py-3 text-left font-semibold text-slate-600">Nome</th>
+            <th class="px-4 py-3 text-left font-semibold text-slate-600">CPF</th>
             <th class="px-4 py-3 text-left font-semibold text-slate-600">Parentesco</th>
             <th class="px-4 py-3 text-left font-semibold text-slate-600">Telefone</th>
             <th class="px-4 py-3 text-left font-semibold text-slate-600">Nascimento</th>
@@ -303,7 +304,7 @@
         <tbody class="divide-y divide-slate-200">
           {#if loading}
             <tr>
-              <td colspan="5" class="px-4 py-8">
+              <td colspan="6" class="px-4 py-8">
                 <LoadingState compact={true} />
               </td>
             </tr>
@@ -330,10 +331,10 @@
               >
                 <td data-label="Nome" class="px-4 py-3">
                   <div class="font-medium text-slate-900">{item.nome_completo}</div>
-                  <div class="text-xs text-slate-500">
-                    {formatDocumentoSalvo(item.cpf || '', 'PF') || '-'}
-                  </div>
                 </td>
+                <td data-label="CPF" class="px-4 py-3 text-slate-700"
+                  >{formatDocumentoSalvo(item.cpf || '', 'PF') || '-'}</td
+                >
                 <td data-label="Parentesco" class="px-4 py-3 text-slate-700"
                   >{item.grau_parentesco || '-'}</td
                 >

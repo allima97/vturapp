@@ -47,6 +47,7 @@ it('formata dados e abre, edita, cancela e cadastra acompanhantes', async () => 
   });
   await vi.waitFor(() => expect(target.textContent).toContain('Ana'));
   expect(target.textContent).toContain('529.982.247-25');
+  expect(target.querySelector('[data-label="CPF"]')?.textContent?.trim()).toBe('529.982.247-25');
   expect(target.textContent).toContain('(11) 98765-4321');
   expect(target.querySelector('#acomp-nome')).toBeNull();
   const novo = button(target, 'Novo');
@@ -104,6 +105,7 @@ it('formata dados também na consulta sem permitir edição', async () => {
   const app = mount(AcompanhantesManager, { target, props: { clienteId: 'cliente-1' } });
   await vi.waitFor(() => expect(target.textContent).toContain('Ana'));
   expect(target.textContent).toContain('529.982.247-25');
+  expect(target.querySelector('[data-label="CPF"]')?.textContent?.trim()).toBe('529.982.247-25');
   expect(target.textContent).toContain('(11) 98765-4321');
   target.querySelector<HTMLTableRowElement>('tbody tr')!.click();
   flushSync();
