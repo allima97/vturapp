@@ -1007,7 +1007,7 @@
 
             <FieldInput
               money
-              label="Desconto no PDF (R$)"
+              label={`Desconto no PDF (${orcamento.currency || 'BRL'})`}
               type="number"
               min="0"
               step="0.01"

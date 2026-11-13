@@ -16,6 +16,7 @@ import { invalidateQuoteReadModels } from '$lib/server/readModelCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import { complementarListaOperacional } from '$lib/server/destinoOperacional';
 import { lerDetalhes, rawDetalhes, validarDetalhes } from '$lib/quote/detalhesItem';
+import { validadeDoOrcamento, validadeInformadaValida } from '$lib/quote/validade';
 
 const MAX_ORCAMENTO_CREATE_BODY_BYTES = 512 * 1024;
 
@@ -29,6 +30,7 @@ type OrcamentoCreateBody = {
   status?: unknown;
   status_negociacao?: unknown;
   currency?: unknown;
+  valid_until?: unknown;
   data_embarque?: unknown;
   data_final?: unknown;
   notes?: unknown;
@@ -87,6 +89,12 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
       String(body.client_whatsapp || body.cliente_telefone || '').trim() || null;
     const clientEmail = String(body.client_email || '').trim() || null;
 
+    if (!validadeInformadaValida(body.valid_until)) {
+      return json(
+        { error: 'Data de validade inválida.' },
+        { status: 400, headers: NO_STORE_HEADERS }
+      );
+    }
     if (!clientId && !clientName) {
       return json(
         { error: 'Informe o nome do cliente.' },
@@ -170,7 +178,9 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
         status_negociacao: body.status_negociacao || 'Enviado',
         total: total,
         currency: body.currency || 'BRL',
-        raw_json: {},
+        raw_json: validadeDoOrcamento({ valid_until: body.valid_until })
+          ? { valid_until: body.valid_until }
+          : {},
         created_by: user.id,
         data_embarque: body.data_embarque || null,
         data_final: body.data_final || null,

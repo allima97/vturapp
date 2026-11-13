@@ -212,7 +212,7 @@ export async function handleOrcamentosSavePost(event: RequestEvent) {
     });
     const { data: existingQuote, error: quoteCheckError } = await client
       .from('quote')
-      .select('id, created_by')
+      .select('id, created_by, raw_json')
       .eq('id', quoteId)
       .maybeSingle();
     if (quoteCheckError) throw quoteCheckError;
@@ -359,7 +359,16 @@ export async function handleOrcamentosSavePost(event: RequestEvent) {
       updated_at: new Date().toISOString()
     };
     if (body?.raw_json && typeof body.raw_json === 'object' && !Array.isArray(body.raw_json)) {
-      quotePayload.raw_json = body.raw_json;
+      const currentRaw =
+        existingQuote.raw_json &&
+        typeof existingQuote.raw_json === 'object' &&
+        !Array.isArray(existingQuote.raw_json)
+          ? existingQuote.raw_json
+          : {};
+      quotePayload.raw_json = {
+        ...('valid_until' in currentRaw ? { valid_until: currentRaw.valid_until } : {}),
+        ...body.raw_json
+      };
     }
 
     const { error: quoteError } = await client.from('quote').update(quotePayload).eq('id', quoteId);

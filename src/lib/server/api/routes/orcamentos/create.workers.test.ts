@@ -22,11 +22,14 @@ vi.mock('$lib/server/v1', async (original) => ({
   parseUuidList: () => [],
   fetchVendedorIdsByCompanyIds: async () => [],
   ensureModuloAccess: () => undefined,
+  normalizeText: (value: unknown) => String(value ?? '').toLowerCase(),
   isUuid: (value: string) => /^[0-9a-f-]{36}$/i.test(value)
 }));
 
 import { handleOrcamentosCreatePost } from './create';
 import { handleOrcamentosIdGet, handleOrcamentosIdPatch } from './id';
+import { handleOrcamentosListGet } from './list';
+import { handleOrcamentosSavePost } from './save';
 
 beforeAll(async () => {
   await applyD1Migrations(
@@ -56,6 +59,7 @@ it.each([
         status: 'pendente',
         status_negociacao: 'novo',
         currency,
+        valid_until: '2027-07-15',
         itens: [
           {
             title: 'Hotel',
@@ -89,7 +93,22 @@ it.each([
     .bind(data.id)
     .first<{ currency: string; raw_json: string }>();
   expect(quote!.currency).toBe(expected);
-  expect(JSON.parse(quote!.raw_json)).toEqual({});
+  expect(JSON.parse(quote!.raw_json)).toEqual({ valid_until: '2027-07-15' });
+  const url = new URL(`https://vtur.app/api/v1/orcamentos/${data.id}`);
+  const detail = await handleOrcamentosIdGet({
+    url,
+    params: { id: data.id },
+    request: new Request(url)
+  } as Parameters<typeof handleOrcamentosIdGet>[0]);
+  expect(await detail.json()).toMatchObject({ valid_until: '2027-07-15' });
+  const listUrl = new URL('https://vtur.app/api/v1/orcamentos/list');
+  const list = await handleOrcamentosListGet({
+    url: listUrl,
+    request: new Request(listUrl)
+  } as Parameters<typeof handleOrcamentosListGet>[0]);
+  expect(await list.json()).toEqual(
+    expect.arrayContaining([expect.objectContaining({ id: data.id, data_validade: '2027-07-15' })])
+  );
   const items = await env.DB.prepare(
     'SELECT title, currency, raw, total_amount, start_date, end_date FROM legado_quote_item WHERE quote_id = ?'
   )
@@ -114,6 +133,35 @@ it.each([
   });
 });
 
+it('preserva a validade ao salvar metadados do orçamento em outro fluxo', async () => {
+  const quoteId = crypto.randomUUID();
+  await env.DB.prepare(
+    "INSERT INTO legado_quote (id, created_by, status, status_negociacao, currency, raw_json) VALUES (?, ?, 'pendente', 'novo', 'BRL', ?)"
+  )
+    .bind(quoteId, state.userId, JSON.stringify({ valid_until: '2027-07-15' }))
+    .run();
+  const url = new URL('https://vtur.app/api/v1/orcamentos/save');
+  const response = await handleOrcamentosSavePost({
+    url,
+    request: new Request(url, {
+      method: 'POST',
+      headers: { origin: 'https://vtur.app', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        quote_id: quoteId,
+        client_name: 'Cliente',
+        items: [],
+        raw_json: { origem: 'teste' }
+      })
+    }),
+    platform: { env: { DB: env.DB } }
+  } as Parameters<typeof handleOrcamentosSavePost>[0]);
+  expect(response.status).toBe(200);
+  const saved = await env.DB.prepare('SELECT raw_json FROM legado_quote WHERE id = ?')
+    .bind(quoteId)
+    .first<{ raw_json: string }>();
+  expect(JSON.parse(saved!.raw_json)).toEqual({ valid_until: '2027-07-15', origem: 'teste' });
+});
+
 it('valida os detalhes antes de criar um orçamento', async () => {
   const response = await handleOrcamentosCreatePost({
     request: new Request('https://vtur.app/api/v1/orcamentos/create', {
@@ -135,8 +183,8 @@ it('atualiza detalhes sem perder o item, dados existentes ou segmentos', async (
   const itemId = crypto.randomUUID();
   await env.DB.batch([
     env.DB.prepare(
-      "INSERT INTO legado_quote (id, created_by, status, status_negociacao, currency, raw_json) VALUES (?, ?, 'pendente', 'novo', 'BRL', '{}')"
-    ).bind(quoteId, state.userId),
+      "INSERT INTO legado_quote (id, created_by, status, status_negociacao, currency, raw_json) VALUES (?, ?, 'pendente', 'novo', 'BRL', ?)"
+    ).bind(quoteId, state.userId, JSON.stringify({ roteiro_id: 'preservado' })),
     env.DB.prepare(
       "INSERT INTO legado_quote_item (id, quote_id, item_type, title, currency, raw) VALUES (?, ?, 'hotel', 'Hotel', 'BRL', ?)"
     ).bind(itemId, quoteId, JSON.stringify({ importacao: { preservada: true } })),
@@ -165,19 +213,20 @@ it('atualiza detalhes sem perder o item, dados existentes ou segmentos', async (
       }
     }
   };
-  const patch = (itens: unknown[]) =>
+  const patch = (itens: unknown[], valid_until = '2027-07-20') =>
     handleOrcamentosIdPatch({
       url,
       params: { id: quoteId },
       request: new Request(url, {
         method: 'PATCH',
         headers: { origin: 'https://vtur.app', 'content-type': 'application/json' },
-        body: JSON.stringify({ total: 300, itens })
+        body: JSON.stringify({ total: 300, itens, valid_until })
       }),
       platform: { env: { DB: env.DB } }
     } as Parameters<typeof handleOrcamentosIdPatch>[0]);
 
   expect((await patch([{ ...item, end_date: '2027-08-10' }])).status).toBe(400);
+  expect((await patch([item], '2027-02-30')).status).toBe(400);
   expect((await patch([item])).status).toBe(200);
   const get = await handleOrcamentosIdGet({
     url,
@@ -186,6 +235,7 @@ it('atualiza detalhes sem perder o item, dados existentes ou segmentos', async (
   } as Parameters<typeof handleOrcamentosIdGet>[0]);
   expect(await get.json()).toMatchObject({
     total: 300,
+    valid_until: '2027-07-20',
     itens: [
       {
         id: itemId,
@@ -195,6 +245,13 @@ it('atualiza detalhes sem perder o item, dados existentes ou segmentos', async (
         segments: [{ segment_type: 'circuit_day' }]
       }
     ]
+  });
+  const saved = await env.DB.prepare('SELECT raw_json FROM legado_quote WHERE id = ?')
+    .bind(quoteId)
+    .first<{ raw_json: string }>();
+  expect(JSON.parse(saved!.raw_json)).toEqual({
+    roteiro_id: 'preservado',
+    valid_until: '2027-07-20'
   });
 });
 

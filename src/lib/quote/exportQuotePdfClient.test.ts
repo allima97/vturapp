@@ -65,10 +65,10 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
     expect(html).toContain('11-08-2027 a 13-08-2027');
-    expect(html).toContain('<strong>Categoria:</strong> 4 estrelas');
-    expect(html).toContain('<strong>Crianças:</strong> 0');
-    expect(html).toContain('Acomodação: <strong>Duplo</strong>');
-    expect(html).toContain('Regime: <strong>Café da manhã</strong>');
+    expect(html).toContain('Categoria: 4 estrelas');
+    expect(html).toContain('Crianças: 0');
+    expect(html).toContain('Acomodação: Duplo');
+    expect(html).toContain('Regime: Café da manhã');
   });
 
   it('agrupa serviços por cidade, usa o nome curto e mantém a ordem dos grupos e itens', () => {
@@ -202,6 +202,128 @@ describe('identidade dos orçamentos e circuitos', () => {
     }
     expect(html).not.toContain('São Paulo, São Paulo, Brasil');
     expect(html).not.toContain('Roma, Itália');
+  });
+
+  it('apresenta tabelas por cidade, subtotais por moeda e resumo sem somar moedas diferentes', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1', currency: 'BRL', created_at: '2027-07-01' },
+      items: [
+        {
+          item_type: 'hotel',
+          title: 'Hotel',
+          city_name: 'Paris, França',
+          currency: 'EUR',
+          quantity: 1,
+          total_amount: 750,
+          start_date: '2027-08-16',
+          end_date: '2027-08-21'
+        },
+        {
+          item_type: 'passeio',
+          title: 'Passeio',
+          city_name: 'Paris, França',
+          currency: 'EUR',
+          quantity: 2,
+          total_amount: 200,
+          start_date: '2027-08-19',
+          end_date: '2027-08-19'
+        },
+        {
+          item_type: 'servico',
+          title: 'Transfer',
+          city_name: 'Paris, França',
+          currency: 'BRL',
+          quantity: 1,
+          total_amount: 300
+        },
+        {
+          item_type: 'passagem',
+          title: 'Passagem',
+          currency: 'BRL',
+          total_amount: 6500,
+          taxes_amount: 100
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: true,
+      discount: 50
+    });
+    expect(html).toContain('Descrição / detalhes');
+    expect(html).toContain('Subtotal — Paris');
+    expect(html).toContain('€ 950,00');
+    expect(html).toContain('R$ 300,00');
+    expect(html).toContain('16-08-2027 a 21-08-2027');
+    expect(html).toContain('<td>Passagens aéreas</td><td>BRL</td>');
+    expect(html).toContain('<td>Serviços e demais produtos</td><td>EUR</td>');
+    expect(html).toContain('R$ 6.850,00');
+    expect(html).not.toContain('R$ 7.800,00');
+    expect(html).toContain('<strong>Emissão:</strong> 01/07/2027');
+    expect(html).not.toContain('Validade somente para');
+  });
+
+  it('oculta valores e subtotais de itens quando selecionado e não inventa validade', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: {
+        id: 'quote-1',
+        currency: 'EUR',
+        created_at: '2027-07-01',
+        valid_until: '2027-07-15'
+      },
+      items: [
+        {
+          item_type: 'hotel',
+          title: 'Hotel',
+          city_name: 'Roma, Itália',
+          quantity: 2,
+          total_amount: 500
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+    const group = html.slice(
+      html.indexOf('<section class="orc-city-section">'),
+      html.indexOf('<section class="orc-financial-section">')
+    );
+    expect(group).toContain('<th>Qtd.</th>');
+    expect(group).not.toContain('Subtotal');
+    expect(group).not.toContain('500,00');
+    expect(html).toContain('<td>Produtos</td><td>EUR</td>');
+    expect(html).not.toContain('<td>Serviços e demais produtos</td><td>EUR</td>');
+    expect(html).toContain('<strong>Validade:</strong> 15-07-2027');
+    expect(html).toContain('Válido até: 15-07-2027');
+  });
+
+  it('mantém o tipo informado em serviços importados e a moeda padrão do orçamento', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1', currency: 'EUR' },
+      items: [
+        {
+          item_type: 'Trem',
+          title: 'Viagem de trem',
+          city_name: 'Paris',
+          quantity: 1,
+          total_amount: 90
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: true
+    });
+    expect(html).toContain('class="orc-service-type">Trem</td>');
+    expect(html).toContain('€ 90,00');
+    expect(html).not.toContain('R$ 90,00');
   });
 });
 

@@ -29,6 +29,7 @@ import {
 } from '$lib/server/readModelCache';
 import { resolveQuoteCreatorScope } from '$lib/server/orcamentos';
 import { chunkArray, QUERY_IN_BATCH_SIZE, uniqueCleanStrings } from '$lib/utils/array';
+import { validadeDoOrcamento } from '$lib/quote/validade';
 
 type OrcamentoRow = {
   id: string;
@@ -37,6 +38,7 @@ type OrcamentoRow = {
   status_negociacao: string | null;
   total: number | null;
   currency: string | null;
+  raw_json?: unknown;
   client_id: string | null;
   client_name?: string | null;
   client_whatsapp?: string | null;
@@ -171,6 +173,7 @@ export async function handleOrcamentosListGet(event: RequestEvent) {
         status_negociacao,
         total,
         currency,
+        raw_json,
         client_id,
         client_name,
         client_whatsapp,
@@ -181,7 +184,7 @@ export async function handleOrcamentosListGet(event: RequestEvent) {
         cliente:client_id (id, nome, cpf, email)
       `;
     const fallbackSelect =
-      'id, created_at, status, status_negociacao, total, currency, client_id, client_name, client_whatsapp, client_email, created_by, last_interaction_at, last_interaction_notes';
+      'id, created_at, status, status_negociacao, total, currency, raw_json, client_id, client_name, client_whatsapp, client_email, created_by, last_interaction_at, last_interaction_notes';
 
     const buildQuoteQuery = (selectClause: string, creatorIdsFilter?: string[]) => {
       let query = client
@@ -412,7 +415,7 @@ export async function handleOrcamentosListGet(event: RequestEvent) {
         ),
         created_at: row.created_at || null,
         data_criacao: row.created_at?.slice(0, 10) || null,
-        data_validade: addDays(row.created_at, 30),
+        data_validade: validadeDoOrcamento(row.raw_json) || addDays(row.created_at, 30),
         valor_total: Number(row.total || 0),
         status: status,
         status_negociacao: row.status_negociacao || row.status,

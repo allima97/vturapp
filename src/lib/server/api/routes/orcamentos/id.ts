@@ -18,6 +18,7 @@ import { complementarListaOperacional } from '$lib/server/destinoOperacional';
 import { modulosOperacionaisGeograficosAtivos } from '$lib/config/destinosGeograficos';
 import { prepareWrite } from '$lib/server/data/query';
 import { lerDetalhes, rawDetalhes, validarDetalhes } from '$lib/quote/detalhesItem';
+import { validadeDoOrcamento, validadeInformadaValida } from '$lib/quote/validade';
 
 const QUOTE_SELECT_FIELDS =
   'id, created_at, updated_at, created_by, client_id, client_name, client_whatsapp, client_email, status, status_negociacao, currency, total, data_embarque, data_final, last_interaction_at, last_interaction_notes';
@@ -36,6 +37,7 @@ type OrcamentoUpdateBody = {
   status_negociacao?: unknown;
   total?: unknown;
   currency?: unknown;
+  valid_until?: unknown;
   client_id?: unknown;
   client_name?: unknown;
   cliente_nome?: unknown;
@@ -59,6 +61,7 @@ type OrcamentoUpdatePayload = {
   client_email?: string | null;
   data_embarque?: unknown;
   data_final?: unknown;
+  raw_json?: Record<string, unknown>;
 };
 
 type ClienteScopeRow = {
@@ -99,7 +102,7 @@ export async function handleOrcamentosIdGet(event: RequestEvent) {
 
     const { data: quote, error: quoteError } = await client
       .from('quote')
-      .select(QUOTE_SELECT_FIELDS)
+      .select(`${QUOTE_SELECT_FIELDS}, raw_json`)
       .eq('id', id)
       .maybeSingle();
     if (quoteError) throw quoteError;
@@ -186,6 +189,7 @@ export async function handleOrcamentosIdGet(event: RequestEvent) {
         data_criacao: quote.created_at?.slice(0, 10),
         data_embarque: quote.data_embarque || null,
         data_final: quote.data_final || null,
+        valid_until: validadeDoOrcamento(quote.raw_json),
         last_interaction_at: quote.last_interaction_at || null,
         last_interaction_notes: quote.last_interaction_notes || null,
         vendedor,
@@ -224,7 +228,7 @@ export async function handleOrcamentosIdPatch(event: RequestEvent) {
 
     const { data: existingQuote, error: existingError } = await client
       .from('quote')
-      .select('id, created_by, currency')
+      .select('id, created_by, currency, raw_json')
       .eq('id', id)
       .maybeSingle();
     if (existingError) throw existingError;
@@ -237,6 +241,20 @@ export async function handleOrcamentosIdPatch(event: RequestEvent) {
         ? (bodyResult.data as OrcamentoUpdateBody)
         : {};
     const updateData: OrcamentoUpdatePayload = { updated_at: new Date().toISOString() };
+    if (body.valid_until !== undefined) {
+      if (!validadeInformadaValida(body.valid_until))
+        return errorResponse('Data de validade inválida.', 400);
+      const raw =
+        existingQuote.raw_json &&
+        typeof existingQuote.raw_json === 'object' &&
+        !Array.isArray(existingQuote.raw_json)
+          ? existingQuote.raw_json
+          : {};
+      updateData.raw_json = {
+        ...raw,
+        valid_until: validadeDoOrcamento({ valid_until: body.valid_until })
+      };
+    }
     if (body.status !== undefined) updateData.status = body.status;
     if (body.status_negociacao !== undefined) updateData.status_negociacao = body.status_negociacao;
     if (body.total !== undefined) updateData.total = body.total;
