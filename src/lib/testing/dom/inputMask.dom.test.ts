@@ -72,6 +72,49 @@ it.each([
   await unmount(app);
 });
 
+it.each(['11h 30min', '14:00 (+1)'])(
+  'preserva horário ou duração legada %s até edição intencional',
+  async (initialValue) => {
+    const target = document.createElement('div');
+    const app = mount(Harness, { target, props: { mask: 'time', initialValue } });
+    flushSync();
+    const input = target.querySelector<HTMLInputElement>('input')!;
+    expect(input.value).toBe(initialValue);
+    expect(target.querySelector('[data-value]')?.textContent).toBe(initialValue);
+    if (initialValue.includes('(+1)')) {
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      flushSync();
+      expect(input.value).toBe(initialValue);
+    }
+    input.value = '0950';
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+    expect(input.value).toBe('09:50');
+    expect(target.querySelector('[data-value]')?.textContent).toBe('09:50');
+    await unmount(app);
+  }
+);
+
+it.each([
+  ['9:50', '09:50'],
+  ['9h 05min', '09:05'],
+  ['9h 5min', '09:05'],
+  ['1135', '11:35'],
+  ['12', '12'],
+  ['', '']
+])('formata tempo digitado ou colado %s como %s', async (raw, expected) => {
+  const target = document.createElement('div');
+  const app = mount(Harness, { target, props: { mask: 'time' } });
+  flushSync();
+  const input = target.querySelector<HTMLInputElement>('input')!;
+  input.value = raw;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  flushSync();
+  expect(input.value).toBe(expected);
+  expect(target.querySelector('[data-value]')?.textContent).toBe(expected);
+  await unmount(app);
+});
+
 it('preserva telefone internacional salvo ao editar e retoma máscara ao limpar', async () => {
   const target = document.createElement('div');
   const app = mount(Harness, {

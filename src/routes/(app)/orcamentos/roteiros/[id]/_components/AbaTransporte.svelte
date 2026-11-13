@@ -12,6 +12,7 @@
     updateItem
   } from './tipos';
   import { ChevronDown, ChevronUp, Plus, Trash2 } from '$lib/icons';
+  import { formatHorario } from '$lib/utils/inputFormatting';
 
   let {
     TRANSPORTE_TIPO_OPTIONS,
@@ -32,6 +33,40 @@
     onAereoValorChange: (index: number, field: 'valor_total' | 'taxas', rawValue: string) => void;
     transportes: RotTransporte[];
   } = $props();
+
+  function deslocamentoChegada(valor: string | null | undefined) {
+    return String(valor || '').match(/\s*\(\s*[+-]\d+\s*\)\s*$/)?.[0] || '';
+  }
+
+  function horarioExibido(valor: string | null | undefined) {
+    const original = String(valor || '');
+    const semDeslocamento = original
+      .slice(0, original.length - deslocamentoChegada(original).length)
+      .trim();
+    const horas = semDeslocamento.match(/^(\d{1,2})\s*h$/i);
+    if (horas) return `${horas[1].padStart(2, '0')}:00`;
+    if (
+      !/^(?:\d{1,4}|\d{1,2}\s*:\s*\d{0,2}|\d{1,2}\s*h\s*\d{1,2}\s*(?:min|m)?)$/i.test(
+        semDeslocamento
+      )
+    )
+      return original;
+    return formatHorario(semDeslocamento);
+  }
+
+  function atualizarHorario(
+    event: Event,
+    transporte: RotTransporte,
+    campo: 'hora_saida' | 'hora_chegada' | 'duracao_voo'
+  ) {
+    const input = event.target;
+    if (!(input instanceof HTMLInputElement)) return;
+    const deslocamento =
+      campo === 'hora_chegada' && !deslocamentoChegada(input.value)
+        ? deslocamentoChegada(transporte.hora_chegada)
+        : '';
+    transporte[campo] = input.value ? `${input.value}${deslocamento}` : '';
+  }
 </script>
 
 <Card title="Passagem Aérea" color="clientes">
@@ -172,7 +207,9 @@
               <div>
                 <FieldInput
                   label="Hora saída"
-                  bind:value={transporte.hora_saida}
+                  value={horarioExibido(transporte.hora_saida)}
+                  mask="time"
+                  on:input={(event) => atualizarHorario(event, transporte, 'hora_saida')}
                   placeholder="HH:MM"
                   class_name="w-full"
                 />
@@ -188,8 +225,10 @@
               <div>
                 <FieldInput
                   label="Duração voo"
-                  bind:value={transporte.duracao_voo}
-                  placeholder="Ex: 11h30"
+                  value={horarioExibido(transporte.duracao_voo)}
+                  mask="time"
+                  on:input={(event) => atualizarHorario(event, transporte, 'duracao_voo')}
+                  placeholder="HH:MM"
                   class_name="w-full"
                 />
               </div>
@@ -204,7 +243,12 @@
               <div>
                 <FieldInput
                   label="Hora chegada"
-                  bind:value={transporte.hora_chegada}
+                  value={horarioExibido(transporte.hora_chegada)}
+                  mask="time"
+                  helper={deslocamentoChegada(transporte.hora_chegada)
+                    ? `Chegada em outro dia: ${deslocamentoChegada(transporte.hora_chegada).trim()}`
+                    : null}
+                  on:input={(event) => atualizarHorario(event, transporte, 'hora_chegada')}
                   placeholder="HH:MM"
                   class_name="w-full"
                 />

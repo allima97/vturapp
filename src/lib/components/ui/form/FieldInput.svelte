@@ -196,6 +196,7 @@
           id={fieldId}
           {name}
           {type}
+          inputmode={mask === 'time' ? 'numeric' : undefined}
           bind:value
           placeholder={placeholder || ''}
           {disabled}

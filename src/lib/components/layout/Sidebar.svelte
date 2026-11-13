@@ -670,11 +670,6 @@
     return prefix?.href ?? null;
   })();
 
-  function isActive(href?: string): boolean {
-    if (!href) return false;
-    return href === activeHref;
-  }
-
   function toggleSection(title: string) {
     collapsed = { ...collapsed, [title]: !collapsed[title] };
     saveUiPref(
@@ -942,15 +937,15 @@
                     href={item.href}
                     title={item.name}
                     class="vtur-sidebar__item"
-                    class:vtur-sidebar__item--active={isActive(item.href)}
-                    aria-current={isActive(item.href) ? 'page' : undefined}
+                    class:vtur-sidebar__item--active={item.href === activeHref}
+                    aria-current={item.href === activeHref ? 'page' : undefined}
                     on:click={handleItemClick}
                   >
                     <div class="vtur-sidebar__item-main">
                       <svelte:component
                         this={item.icon}
                         size={22}
-                        class="vtur-sidebar__item-icon {isActive(item.href) ? 'text-blue-600' : ''}"
+                        class="vtur-sidebar__item-icon"
                       />
                       <span class="vtur-sidebar__item-label">{item.name}</span>
                     </div>
@@ -974,15 +969,15 @@
                 href={item.href}
                 title={item.name}
                 class="vtur-sidebar__item"
-                class:vtur-sidebar__item--active={isActive(item.href)}
-                aria-current={isActive(item.href) ? 'page' : undefined}
+                class:vtur-sidebar__item--active={item.href === activeHref}
+                aria-current={item.href === activeHref ? 'page' : undefined}
                 on:click={handleItemClick}
               >
                 <div class="vtur-sidebar__item-main">
                   <svelte:component
                     this={item.icon}
                     size={22}
-                    class="vtur-sidebar__item-icon {isActive(item.href) ? 'text-blue-600' : ''}"
+                    class="vtur-sidebar__item-icon"
                   />
                   <span class="vtur-sidebar__item-label">{item.name}</span>
                 </div>
@@ -1003,15 +998,15 @@
                 href={item.href}
                 title={item.name}
                 class="vtur-sidebar__item"
-                class:vtur-sidebar__item--active={isActive(item.href)}
-                aria-current={isActive(item.href) ? 'page' : undefined}
+                class:vtur-sidebar__item--active={item.href === activeHref}
+                aria-current={item.href === activeHref ? 'page' : undefined}
                 on:click={handleItemClick}
               >
                 <div class="vtur-sidebar__item-main">
                   <svelte:component
                     this={item.icon}
                     size={22}
-                    class="vtur-sidebar__item-icon {isActive(item.href) ? 'text-blue-600' : ''}"
+                    class="vtur-sidebar__item-icon"
                   />
                   <span class="vtur-sidebar__item-label">{item.name}</span>
                 </div>

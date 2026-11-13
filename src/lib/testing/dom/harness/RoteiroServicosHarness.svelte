@@ -7,17 +7,24 @@
     newHotel,
     newPasseio,
     newTransporte,
-    type RotPasseio
+    type RotPasseio,
+    type RotTransporte
   } from '../../../../routes/(app)/orcamentos/roteiros/[id]/_components/tipos';
 
   let {
     expose,
-    passeiosIniciais = [{ ...newPasseio(0), passeio: 'Sagrada Família' }]
-  }: { expose: (get: () => unknown) => void; passeiosIniciais?: RotPasseio[] } = $props();
+    passeiosIniciais = [{ ...newPasseio(0), passeio: 'Sagrada Família' }],
+    transportesIniciais = [{ ...newTransporte(0), trecho: 'GRU → LIS' }]
+  }: {
+    expose: (get: () => unknown) => void;
+    passeiosIniciais?: RotPasseio[];
+    transportesIniciais?: RotTransporte[];
+  } = $props();
   let hoteis = $state([{ ...newHotel(0), hotel: 'Hotel Ciutat Vella' }]);
   // svelte-ignore state_referenced_locally
   let passeios = $state(passeiosIniciais);
-  let transportes = $state([{ ...newTransporte(0), trecho: 'GRU → LIS' }]);
+  // svelte-ignore state_referenced_locally
+  let transportes = $state(transportesIniciais);
   let hotelImportText = $state('');
   let passeioImportText = $state('');
   let aereoImportText = $state('');

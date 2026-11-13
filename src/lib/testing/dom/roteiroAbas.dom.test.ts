@@ -10,6 +10,7 @@ import InvestimentoHarness from './harness/RoteiroInvestimentoHarness.svelte';
 import ItinerarioHarness from './harness/RoteiroItinerarioHarness.svelte';
 import ServicosHarness from './harness/RoteiroServicosHarness.svelte';
 import TabsHarness from './harness/RoteiroTabsHarness.svelte';
+import { newTransporte } from '../../../routes/(app)/orcamentos/roteiros/[id]/_components/tipos';
 
 type AnyRecord = Record<string, any>;
 
@@ -192,6 +193,74 @@ describe('roteiro: aba Itinerário', () => {
 });
 
 describe('roteiro: abas Hotéis, Passeios e Aéreo', () => {
+  it('exibe horários importados no formato solicitado sem perder o aviso de outro dia', async () => {
+    let get: () => unknown = () => undefined;
+    const target = document.createElement('div');
+    const app = mount(ServicosHarness, {
+      target,
+      props: {
+        expose: (fn: typeof get) => (get = fn),
+        transportesIniciais: [
+          {
+            ...newTransporte(0),
+            trecho: 'GRU → LIS',
+            hora_saida: '9:50',
+            hora_chegada: '11:35 (+1)',
+            duracao_voo: '11h 30min'
+          }
+        ]
+      }
+    });
+    flushSync();
+    const inputByLabel = (label: string) => {
+      const el = [...target.querySelectorAll('label')].find(
+        (item) => item.textContent?.trim() === label
+      )!;
+      return target.querySelector<HTMLInputElement>(`#${el.htmlFor}`)!;
+    };
+    expect(inputByLabel('Hora saída').value).toBe('09:50');
+    expect(inputByLabel('Hora chegada').value).toBe('11:35');
+    expect(inputByLabel('Duração voo').value).toBe('11:30');
+    expect(target.textContent).toContain('Chegada em outro dia: (+1)');
+    expect(get()).toMatchObject({
+      transportes: [{ hora_chegada: '11:35 (+1)', duracao_voo: '11h 30min' }]
+    });
+    const chegada = inputByLabel('Hora chegada');
+    chegada.value = '1200';
+    chegada.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+    expect(chegada.value).toBe('12:00');
+    expect(get()).toMatchObject({ transportes: [{ hora_chegada: '12:00 (+1)' }] });
+    await unmount(app);
+  });
+
+  it('formata automaticamente saída, chegada e duração enquanto o usuário digita', () => {
+    const t = montar(ServicosHarness);
+    const painel = [...t.target.querySelectorAll<HTMLDetailsElement>('details')].find((item) =>
+      item.textContent?.includes('GRU → LIS')
+    )!;
+    const campos = [
+      { label: 'Hora saída', digits: '0950', value: '09:50', key: 'hora_saida' },
+      { label: 'Hora chegada', digits: '1135', value: '11:35', key: 'hora_chegada' },
+      { label: 'Duração voo', digits: '1230', value: '12:30', key: 'duracao_voo' }
+    ];
+    for (const campo of campos) {
+      const label = [...painel.querySelectorAll('label')].find(
+        (el) => el.textContent?.trim() === campo.label
+      )!;
+      const input = painel.querySelector<HTMLInputElement>(`#${label.htmlFor}`)!;
+      expect(input.inputMode).toBe('numeric');
+      for (const digit of campo.digits) {
+        input.value += digit;
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        flushSync();
+      }
+      expect(input.value).toBe(campo.value);
+      expect(t.get().transportes[0][campo.key]).toBe(campo.value);
+    }
+    t.fim();
+  });
+
   it('permite informar a data de chegada do trecho', () => {
     const t = montar(ServicosHarness);
     const painel = [...t.target.querySelectorAll<HTMLDetailsElement>('details')].find((item) =>

@@ -2,6 +2,19 @@ function onlyDigits(value: string) {
   return value.replace(/\D/g, '');
 }
 
+export function formatHorario(value: string) {
+  const separated = value.match(/^\s*(\d{1,2})\s*([:hH])\s*(\d{0,2})(?:\s*(?:min|m))?\s*$/i);
+  if (separated) {
+    const minutes =
+      separated[2].toLowerCase() === 'h' && separated[3]
+        ? separated[3].padStart(2, '0')
+        : separated[3];
+    return `${separated[1].padStart(2, '0')}:${minutes}`;
+  }
+  const digits = onlyDigits(value).slice(0, 4);
+  return digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits;
+}
+
 export function formatTelefone(value: string) {
   const digits = onlyDigits(value).slice(0, 11);
   if (digits.length <= 2) return digits ? `(${digits}` : '';

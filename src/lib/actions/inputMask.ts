@@ -6,9 +6,14 @@
  * <input use:inputMask={{ type: 'cpf' }} bind:value={cpf} />
  * ```
  */
-import { formatCep, formatDocumento, formatTelefone } from '$lib/utils/inputFormatting';
+import {
+  formatCep,
+  formatDocumento,
+  formatHorario,
+  formatTelefone
+} from '$lib/utils/inputFormatting';
 
-export type MaskType = 'cpf' | 'cnpj' | 'phone' | 'cep' | 'date' | 'rg';
+export type MaskType = 'cpf' | 'cnpj' | 'phone' | 'cep' | 'date' | 'rg' | 'time';
 
 export interface MaskParams {
   type: MaskType;
@@ -43,6 +48,9 @@ function applyMask(raw: string, type: MaskType): string {
         .replace(DATE_FIRST_BLOCK_RE, '$1/$2')
         .replace(DATE_LAST_BLOCK_RE, '$1/$2');
 
+    case 'time':
+      return formatHorario(raw);
+
     case 'rg':
       return n
         .slice(0, 9)
@@ -62,6 +70,7 @@ export function inputMask(node: HTMLInputElement, params: MaskParams) {
 
   function onInput() {
     const prev = node.value;
+    if (params.type === 'time' && /\(\s*[+-]\d+\s*\)/.test(prev)) return;
     if (params.type === 'phone') {
       if (!prev) preservePhone = false;
       if (prev.trimStart().startsWith('+') || prev.replace(NON_DIGIT_RE, '').length > 11) {
@@ -82,7 +91,7 @@ export function inputMask(node: HTMLInputElement, params: MaskParams) {
   }
 
   // Aplica imediatamente se já houver valor
-  if (node.value) {
+  if (node.value && params.type !== 'time') {
     const documentLength =
       params.type === 'cpf' ? 11 : params.type === 'cnpj' ? 14 : params.type === 'cep' ? 8 : null;
     if (
