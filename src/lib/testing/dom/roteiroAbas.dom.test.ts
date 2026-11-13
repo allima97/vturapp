@@ -179,11 +179,36 @@ describe('roteiro: aba Itinerário', () => {
     expect(t.get().dias[0].percurso).toBe('São Paulo - Roma');
     expect(dias[0].querySelector('summary')!.textContent).toContain('São Paulo - Roma');
 
+    const data = dias[0].querySelector<HTMLInputElement>('input[type="date"]')!;
+    data.value = '2027-08-10';
+    data.dispatchEvent(new Event('input', { bubbles: true }));
+    data.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(dias[0].querySelector('summary')!.textContent).toContain(
+      '10-08-2027 - São Paulo - Roma'
+    );
+    expect(dias[0].open).toBe(true);
+
     dias[0].querySelector('summary')!.click();
     expect(dias[0].open).toBe(false);
+    expect(dias[0].querySelector('summary')!.textContent).toContain(
+      '10-08-2027 - São Paulo - Roma'
+    );
     dias[0].querySelector('summary')!.click();
     expect((t.target.querySelector('input') as HTMLInputElement).value).toBe('Lisboa');
+    data.value = '';
+    data.dispatchEvent(new Event('input', { bubbles: true }));
+    data.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
     expect(dias[0].querySelector('summary')!.textContent).toContain('São Paulo - Roma');
+    expect(dias[0].querySelector('summary')!.textContent).not.toContain('10-08-2027');
+
+    const dataSemPercurso = dias[1].querySelector<HTMLInputElement>('input[type="date"]')!;
+    dataSemPercurso.value = '2027-08-11';
+    dataSemPercurso.dispatchEvent(new Event('input', { bubbles: true }));
+    dataSemPercurso.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(dias[1].querySelector('summary')!.textContent).toContain('11-08-2027 - Dia 2');
 
     t.botao('Remover dia').click();
     flushSync();

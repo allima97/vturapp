@@ -5,6 +5,7 @@
   import { type RotDia, addItem, moveDown, moveUp, newDia, removeItem } from './tipos';
   import CidadeRoteiro from './CidadeRoteiro.svelte';
   import { ChevronDown, ChevronUp, FileText, Plus, Trash2 } from '$lib/icons';
+  import { formatISODateBR } from '$lib/date';
 
   let {
     dias = $bindable(),
@@ -25,6 +26,14 @@
     buscarDescricoes?: (dia: RotDia) => void;
     abrirBuscaDias?: () => void;
   } = $props();
+
+  function tituloDia(dia: RotDia, index: number) {
+    const percurso = String(dia.percurso ?? '').trim() || `Dia ${index + 1}`;
+    const data = String(dia.data ?? '').trim();
+    if (!data) return percurso;
+    const formatada = formatISODateBR(data);
+    return `${formatada === '-' ? data : formatada.replaceAll('/', '-')} - ${percurso}`;
+  }
 </script>
 
 <Card title="Itinerário dia a dia" color="clientes">
@@ -85,9 +94,7 @@
                   >
                     {index + 1}
                   </span>
-                  <span class="truncate"
-                    >{String(dia.percurso ?? '').trim() || `Dia ${index + 1}`}</span
-                  >
+                  <span class="truncate">{tituloDia(dia, index)}</span>
                 </span>
                 <span aria-hidden="true" class="text-lg">
                   <span class="indicador-mais">+</span><span class="indicador-menos">−</span>
