@@ -59,8 +59,10 @@ function cityTitle(city: string) {
   return `<div class="roteiro-card-city">${printLocationIcon}${escapeHtml(nomeCidadeNoPdf(city))}</div>`;
 }
 
-function field(label: string, value: string) {
-  return `<p class="roteiro-card-detail"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(value || '-')}</p>`;
+function field(label: string, value: string, highlightValue = false) {
+  const labelHtml = `${escapeHtml(label)}:`;
+  const valueHtml = escapeHtml(value || '-');
+  return `<p class="roteiro-card-detail">${highlightValue ? `${labelHtml} <strong>${valueHtml}</strong>` : `<strong>${labelHtml}</strong> ${valueHtml}`}</p>`;
 }
 
 function card(content: string, text: string) {
@@ -76,12 +78,12 @@ export function renderPreviewHotels(items: RotHotel[], formatDate: FormatDate) {
         const period = start || end ? `${start || '-'} a ${end || '-'}` : '-';
         const content = [
           cityTitle(city),
-          field('Hotel', text(hotel.hotel)),
-          field('Check In/Out', period),
-          field('Noites', hotel.noites && hotel.noites > 0 ? String(hotel.noites) : '-'),
-          field('Acomodação', text(hotel.apto)),
-          field('Regime', text(hotel.regime)),
-          text(hotel.endereco) ? field('Endereço', text(hotel.endereco)) : ''
+          field('Hotel', text(hotel.hotel), true),
+          field('Check In/Out', period, true),
+          field('Noites', hotel.noites && hotel.noites > 0 ? String(hotel.noites) : '-', true),
+          field('Acomodação', text(hotel.apto), true),
+          field('Regime', text(hotel.regime), true),
+          text(hotel.endereco) ? field('Endereço', text(hotel.endereco), true) : ''
         ].join('');
         return card(
           content,

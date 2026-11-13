@@ -419,10 +419,25 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
   for (const value of ['02-01-2027', '04-01-2027', '2', 'Duplo', 'Café', 'Rua Principal']) {
     expect(firstHotel.textContent).toContain(value);
   }
+  const hotelFields = [...firstHotel.querySelectorAll('.roteiro-card-detail')];
+  for (const [index, [label, value]] of [
+    ['Hotel:', 'Hotel Barcelona'],
+    ['Check In/Out:', '02-01-2027 a 04-01-2027'],
+    ['Noites:', '2'],
+    ['Acomodação:', 'Duplo'],
+    ['Regime:', 'Café'],
+    ['Endereço:', 'Rua Principal']
+  ].entries()) {
+    expect(hotelFields[index].firstChild?.textContent?.trim()).toBe(label);
+    expect(hotelFields[index].querySelector('strong')?.textContent).toBe(value);
+  }
   expect(hotels.querySelectorAll('.roteiro-card')[1].textContent).toContain('Outro Hotel');
   expect(preview.querySelector('.preview-passeios-section .roteiro-card-city')?.textContent).toBe(
     'Barcelona'
   );
+  expect(
+    preview.querySelector('.preview-passeios-section .roteiro-card-detail strong')?.textContent
+  ).toBe('Passeio:');
   expect(preview.querySelectorAll('.preview-itinerary-section .roteiro-card')).toHaveLength(2);
   expect(preview.querySelectorAll('.preview-optionals-section .roteiro-card')).toHaveLength(1);
   const optionalTitle = preview.querySelector('.preview-optionals-section h2')!;
