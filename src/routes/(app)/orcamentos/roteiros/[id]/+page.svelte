@@ -79,6 +79,8 @@
     renderPreviewPasseios
   } from './_components/preview-cards';
   import { nomeCidadeNoPdf } from './_components/preview-cidade';
+  import { roteiroCardStyles } from '$lib/utils/printLayout';
+  import { roteiroFlightStyles } from '$lib/quote/printFlights';
   import AbaItinerario from './_components/AbaItinerario.svelte';
   import CidadeRoteiro from './_components/CidadeRoteiro.svelte';
   import AbaTransporte from './_components/AbaTransporte.svelte';
@@ -1291,34 +1293,11 @@
             .roteiro-print-table td { padding: 0; }
             .roteiro-print-section h2 { margin: 0 0 12px; padding: 14px 18px; border: 1px solid #9aaac2; border-radius: 18px; background: white; color: #243aa3; font: bold 22px Georgia, "Times New Roman", serif; text-align: center; }
             .roteiro-print-title-icon { width: 1em; height: 1em; margin-right: 0.35em; vertical-align: -0.15em; }
-            .roteiro-flight-plane { width: 1em; height: 1em; vertical-align: -0.15em; }
             .roteiro-print-subtitle { display: block; margin-top: 6px; font-size: 13px; font-weight: normal; }
-            .roteiro-card { margin: 12px 0 0; border: 1px solid #9aaac2; border-radius: 18px; background: white; color: #1f2430; font-family: Georgia, "Times New Roman", serif; overflow-wrap: anywhere; }
-            .roteiro-card h3 { font-size: 15px; line-height: 1.4; }
-            .roteiro-card-city { margin-bottom: 8px; color: #243aa3; font-size: 18px; font-weight: 700; }
-            .roteiro-card .roteiro-card-detail { margin-top: 6px; line-height: 1.4; }
+            ${roteiroCardStyles}
             .roteiro-optional-table { width: 100%; table-layout: fixed; border-spacing: 0; }
             .roteiro-optional-item + .roteiro-optional-item { margin-top: 14px; }
-            .roteiro-flight { padding: 0; overflow: hidden; border-radius: 5px; font-family: Arial, sans-serif; color: #17233c; }
-            .roteiro-flight-header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 12px; padding: 9px 14px; background: #243aa3; color: white; font-weight: bold; }
-            .roteiro-flight-body { padding: 12px 14px; }
-            .roteiro-flight-route { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: center; }
-            .roteiro-flight-place strong { display: block; }
-            .roteiro-flight-code { color: #0075ca; font-size: 22px; }
-            .roteiro-flight-place p { margin-top: 5px; color: #475569; }
-            .roteiro-flight-destination { text-align: right; }
-            .roteiro-flight-duration { color: #64748b; font-size: 10px; text-align: center; }
-            .roteiro-flight-duration span { display: flex; align-items: center; width: 110px; margin: 0 auto; color: #0075ca; font-size: 18px; }
-            .roteiro-flight-duration span::before, .roteiro-flight-duration span::after { content: ''; flex: 1; height: 2px; background: currentColor; }
-            .roteiro-flight-duration .roteiro-flight-plane { flex: none; }
-            .roteiro-flight-arrival-notice { display: block; color: #92400e; font-size: 10px; font-weight: 700; border: 1px solid #b45309; border-radius: 4px; padding: 3px 6px; margin-top: 4px; }
-            .roteiro-flight-details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; border-top: 1px dashed #dbe3ec; margin-top: 12px; padding-top: 10px; }
-            .roteiro-flight-detail-companhia { grid-column: 1; }
-            .roteiro-flight-detail-classe { grid-column: 2; text-align: center; }
-            .roteiro-flight-detail-tarifa { grid-column: 3; text-align: right; }
-            .roteiro-flight-details span { display: block; color: #64748b; font-size: 10px; font-weight: bold; }
-            .roteiro-flight-details strong { overflow-wrap: anywhere; }
-            @media (max-width: 500px) { .roteiro-flight-duration span { width: 40px; } .roteiro-flight-route { gap: 6px; } }
+            ${roteiroFlightStyles}
             .preview-table-wrap { overflow: hidden; border: 1px solid #e2e8f0; border-radius: 14px; }
             .preview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
             .preview-table thead th { text-align: left; padding: 8px; border-bottom: 1px solid #cbd5e1; background: #eef2ff; color: #1e3a8a; }

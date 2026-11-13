@@ -11,9 +11,18 @@ import { VTUR_LOGO_URL } from '$lib/brand';
 
 import { construirLinkWhatsApp } from '$lib/whatsapp';
 import { safeOpenNewTab } from '$lib/security/url';
-import { formatISODateBR } from '$lib/date';
+import { diffDaysISODate, formatISODateBR } from '$lib/date';
 import { apiFetch } from '$lib/services/api';
-import { resumoDetalhes } from '$lib/quote/detalhesItem';
+import { lerDetalhes, resumoDetalhes } from '$lib/quote/detalhesItem';
+import { renderPreviewFlights, roteiroFlightStyles } from '$lib/quote/printFlights';
+import { chaveIdentidadeCidade } from '$lib/catalogoOpcionais';
+import {
+  nomeCidadeNoPdf,
+  printCardField,
+  printCityTitle,
+  requiresPrintContinuation,
+  roteiroCardStyles
+} from '$lib/utils/printLayout';
 
 // ---------------------------------------------------------------------------
 // TIPOS
@@ -40,6 +49,8 @@ export type QuoteItemForPdf = {
   title?: string | null;
   product_name?: string | null;
   city_name?: string | null;
+  cidade_id?: string | null;
+  destino_geografico_id?: string | null;
   quantity?: number | null;
   unit_price?: number | null;
   total_amount?: number | null;
@@ -102,8 +113,6 @@ function textVal(value?: string | null): string {
 }
 
 const CURRENCY_FORMATTERS = new Map<string, Intl.NumberFormat>();
-const AIRLINE_IATA_CODE_RE = /^[A-Z0-9]{2,3}$/i;
-const AIRPORT_IATA_CODE_RE = /^[A-Z]{3}$/;
 
 function getCurrencyFormatter(currency: string): Intl.NumberFormat {
   const cached = CURRENCY_FORMATTERS.get(currency);
@@ -138,7 +147,7 @@ function normalizeText(value?: string | null): string {
 
 function splitTrechoCities(value?: string | null) {
   const parts: string[] = [];
-  for (const part of String(value || '').split(/\s+-\s+/)) {
+  for (const part of String(value || '').split(/\s*(?:→|->)\s*|\s+-\s+/)) {
     const trimmed = part.trim();
     if (trimmed) parts.push(trimmed);
   }
@@ -146,53 +155,6 @@ function splitTrechoCities(value?: string | null) {
     origem: parts[0] || '',
     destino: parts[1] || ''
   };
-}
-
-function resolveAirlineIata(value?: string | null) {
-  const normalized = normalizeText(value);
-  if (!normalized) return '';
-  if (normalized.includes('lufthansa')) return 'LH';
-  if (normalized.includes('latam')) return 'LA';
-  if (normalized.includes('gol')) return 'G3';
-  if (normalized.includes('azul')) return 'AD';
-  if (normalized.includes('sky')) return 'H2';
-  if (normalized.includes('tap')) return 'TP';
-  if (normalized.includes('iberia')) return 'IB';
-  if (normalized.includes('ita airways') || normalized.includes('ita')) return 'AZ';
-  if (normalized.includes('air dolomiti')) return 'EN';
-  if (normalized.includes('air france')) return 'AF';
-  if (normalized.includes('klm')) return 'KL';
-  if (normalized.includes('emirates')) return 'EK';
-  if (normalized.includes('qatar')) return 'QR';
-  if (normalized.includes('turkish')) return 'TK';
-  const raw = String(value || '').trim();
-  return AIRLINE_IATA_CODE_RE.test(raw) ? raw.toUpperCase() : raw.slice(0, 3).toUpperCase();
-}
-
-function formatFlightCity(value?: string | null) {
-  const raw = String(value || '').trim();
-  if (!raw) return '';
-  for (const part of raw.split(/\s*-\s*/)) {
-    const trimmed = part.trim();
-    if (trimmed) return trimmed;
-  }
-  return raw;
-}
-
-function formatFlightPlace(city?: string | null, airport?: string | null) {
-  const cityLabel = formatFlightCity(city);
-  const airportLabel = String(airport || '').trim();
-  if (
-    airportLabel &&
-    (airportLabel.includes('(') || airportLabel.includes(' - ') || airportLabel.length > 3)
-  ) {
-    return airportLabel;
-  }
-  const code = airportLabel.toUpperCase();
-  if (cityLabel && AIRPORT_IATA_CODE_RE.test(code)) return `${cityLabel} (${code})`;
-  if (cityLabel) return cityLabel;
-  if (code) return code;
-  return '-';
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -231,44 +193,6 @@ function getFlightDataList(item: QuoteItemForPdf): Record<string, unknown>[] {
   if (aereoImport.data_voo || aereoImport.hora_saida || aereoImport.aeroporto_saida)
     return [aereoImport];
   return [];
-}
-
-function buildFlightRows(item: QuoteItemForPdf) {
-  const airlineLegend = new Map<string, string>();
-  const rows = getFlightDataList(item).map((data) => {
-    const trecho = splitTrechoCities(String(data.trecho || ''));
-    const ciaCompleta = String(data.cia_aerea || '').trim();
-    const cia = resolveAirlineIata(ciaCompleta) || ciaCompleta || 'AÉREO';
-    if (ciaCompleta && cia && cia !== ciaCompleta.toUpperCase()) {
-      airlineLegend.set(cia, ciaCompleta);
-    }
-
-    const origem = formatFlightPlace(
-      String(data.cidade_saida || trecho.origem || ''),
-      String(data.aeroporto_saida || '')
-    );
-    const destino = formatFlightPlace(
-      String(data.cidade_chegada || trecho.destino || ''),
-      String(data.aeroporto_chegada || '')
-    );
-    const horariosParts: string[] = [];
-    for (const value of [data.hora_saida, data.hora_chegada]) {
-      const trimmed = String(value || '').trim();
-      if (trimmed) horariosParts.push(trimmed);
-    }
-    const horarios = horariosParts.join(' / ') || '-';
-
-    return [
-      cia,
-      origem,
-      formatDateBR(String(data.data_voo || data.data_inicio || '')),
-      destino,
-      formatDateBR(String(data.data_fim || data.data_voo || data.data_inicio || '')),
-      horarios
-    ];
-  });
-
-  return { rows, airlineLegend };
 }
 
 function isFlightQuoteItem(item: QuoteItemForPdf) {
@@ -411,7 +335,7 @@ async function externalImageToDataUrl(url: string): Promise<string | null> {
 
 function renderGenericItemHtml(item: QuoteItemForPdf, showItemValues: boolean) {
   const label = textVal(item.title || item.product_name || item.item_type || 'Item');
-  const city = textVal(item.city_name);
+  const city = nomeCidadeNoPdf(textVal(item.city_name));
   const start = formatDateBR(item.start_date);
   const end = formatDateBR(item.end_date);
   const period = start && end && start !== end ? `${start} – ${end}` : start || '';
@@ -428,78 +352,156 @@ function renderGenericItemHtml(item: QuoteItemForPdf, showItemValues: boolean) {
   </div>`;
 }
 
+function formatRoteiroDate(value?: string | null) {
+  return formatDateBR(value).replace(/\//g, '-');
+}
+
+function renderServiceItem(item: QuoteItemForPdf, showItemValues: boolean) {
+  const detalhes = lerDetalhes(item);
+  const hotel = item.item_type === 'hotel';
+  const labels: Record<string, string> = {
+    hotel: 'Hotel',
+    servico: 'Serviço',
+    pacote: 'Pacote',
+    passagem: 'Passagem',
+    passeio: 'Passeio',
+    aluguel_carro: 'Aluguel de carro',
+    ingresso: 'Ingresso',
+    transfer: 'Transfer',
+    seguro: 'Seguro',
+    outro: 'Serviço'
+  };
+  const label = labels[item.item_type || ''] || 'Serviço';
+  const inicio = formatRoteiroDate(item.start_date);
+  const fim = formatRoteiroDate(item.end_date);
+  const periodo = inicio && fim && inicio !== fim ? `${inicio} a ${fim}` : inicio || fim;
+  const noites = hotel ? diffDaysISODate(item.start_date, item.end_date) : null;
+  const fields = [
+    printCardField(label, textVal(item.title || item.product_name || item.item_type), hotel),
+    periodo ? printCardField(hotel ? 'Check In/Out' : 'Data', periodo, hotel) : '',
+    noites !== null && noites > 0 ? printCardField('Noites', String(noites), true) : '',
+    detalhes.categoria ? printCardField('Categoria', detalhes.categoria) : '',
+    hotel && detalhes.tipo_apartamento
+      ? printCardField('Acomodação', detalhes.tipo_apartamento, true)
+      : '',
+    hotel && detalhes.quantidade_apartamentos !== null
+      ? printCardField('Apartamentos', String(detalhes.quantidade_apartamentos))
+      : '',
+    hotel && detalhes.regime ? printCardField('Regime', detalhes.regime, true) : '',
+    detalhes.adultos !== null ? printCardField('Adultos', String(detalhes.adultos)) : '',
+    detalhes.criancas !== null ? printCardField('Crianças', String(detalhes.criancas)) : '',
+    item.quantity != null ? printCardField('Quantidade', String(item.quantity)) : '',
+    showItemValues
+      ? printCardField(
+          'Valor',
+          formatCurrency(Number(item.total_amount ?? 0), item.currency || 'BRL')
+        )
+      : ''
+  ];
+  return `<div class="orc-city-item${requiresPrintContinuation(fields.join('')) ? ' orc-city-item--long' : ''}">${fields.join('')}</div>`;
+}
+
+function renderGroupedItems(items: QuoteItemForPdf[], showItemValues: boolean) {
+  type CityGroup = { city: string; items: QuoteItemForPdf[] };
+  const groups = new Map<string, CityGroup>();
+  const sections: Array<CityGroup | QuoteItemForPdf> = [];
+  for (const item of items) {
+    if (
+      (isFlightQuoteItem(item) && getFlightDataList(item).length > 0) ||
+      isCircuitQuoteItem(item)
+    ) {
+      sections.push(item);
+      continue;
+    }
+    const city = textVal(item.city_name);
+    const cityId = item.destino_geografico_id
+      ? `geo:${item.destino_geografico_id}`
+      : item.cidade_id
+        ? `cidade:${item.cidade_id}`
+        : null;
+    const key = chaveIdentidadeCidade(city, cityId);
+    let group = groups.get(key);
+    if (!group) {
+      group = { city: city || 'Cidade não informada', items: [] };
+      groups.set(key, group);
+      sections.push(group);
+    }
+    group.items.push(item);
+  }
+  return sections
+    .map((section) => {
+      if (!('items' in section)) {
+        return isFlightQuoteItem(section)
+          ? renderFlightItemHtml(section, showItemValues)
+          : renderCircuitItemHtml(section, showItemValues);
+      }
+      const content = section.items.map((item) => renderServiceItem(item, showItemValues)).join('');
+      const long = section.items.length > 6 || requiresPrintContinuation(content);
+      return `<article class="roteiro-card${long ? ' roteiro-card--long' : ''}">
+      <table class="orc-city-table" role="presentation">
+        <thead><tr><td>${printCityTitle(section.city)}</td></tr></thead>
+        <tbody><tr><td>${content}</td></tr></tbody>
+      </table>
+    </article>`;
+    })
+    .join('');
+}
+
 function renderDetalhesItem(item: QuoteItemForPdf) {
-  const detalhes = resumoDetalhes(item);
-  return detalhes.length ? `<div class="orc-item-meta">${escHtml(detalhes.join(' · '))}</div>` : '';
+  return resumoDetalhes(item)
+    .map((detalhe) => {
+      const separator = detalhe.indexOf(':');
+      return printCardField(detalhe.slice(0, separator), detalhe.slice(separator + 1).trim());
+    })
+    .join('');
 }
 
 function renderPeriodoItem(item: QuoteItemForPdf) {
-  const inicio = formatDateBR(item.start_date);
-  const fim = formatDateBR(item.end_date);
-  const periodo = inicio && fim && inicio !== fim ? `${inicio} – ${fim}` : inicio || fim;
-  return periodo ? `<div class="orc-item-meta">${escHtml(periodo)}</div>` : '';
+  const inicio = formatRoteiroDate(item.start_date);
+  const fim = formatRoteiroDate(item.end_date);
+  const periodo = inicio && fim && inicio !== fim ? `${inicio} a ${fim}` : inicio || fim;
+  return periodo ? printCardField('Data', periodo) : '';
 }
 
 function renderFlightItemHtml(item: QuoteItemForPdf, showItemValues: boolean) {
-  const { rows, airlineLegend } = buildFlightRows(item);
-  if (rows.length === 0) return renderGenericItemHtml(item, showItemValues);
-
+  const flights = getFlightDataList(item).map((data) => {
+    const trecho = splitTrechoCities(String(data.trecho || ''));
+    const origem = String(data.cidade_saida || trecho.origem || '');
+    const destino = String(data.cidade_chegada || trecho.destino || '');
+    return {
+      trecho: String(data.trecho || ''),
+      cidade_saida: nomeCidadeNoPdf(origem),
+      cidade_chegada: nomeCidadeNoPdf(destino),
+      cia_aerea: String(data.cia_aerea || ''),
+      descricao: String(data.numero_voo || data.descricao || ''),
+      data_inicio: String(data.data_inicio || ''),
+      data_fim: String(data.data_fim || ''),
+      data_voo: String(data.data_voo || ''),
+      classe_reserva: String(data.classe_reserva || ''),
+      hora_saida: String(data.hora_saida || ''),
+      aeroporto_saida: String(data.aeroporto_saida || ''),
+      duracao_voo: String(data.duracao_voo || ''),
+      hora_chegada: String(data.hora_chegada || ''),
+      aeroporto_chegada: String(data.aeroporto_chegada || ''),
+      tarifa_nome: String(data.tarifa_nome || '')
+    };
+  });
+  if (flights.length === 0) return renderGenericItemHtml(item, showItemValues);
   const amount = Number(item.total_amount ?? 0);
   const taxes = Number(item.taxes_amount ?? 0);
   const currency = item.currency || 'BRL';
-  let legendHtml = '';
-  if (airlineLegend.size > 0) {
-    let legendItems = '';
-    for (const [code, name] of airlineLegend) {
-      legendItems += `<div><b>${escHtml(code)}</b> = ${escHtml(name)}</div>`;
-    }
-    legendHtml = `<div class="orc-flight-legend">${legendItems}</div>`;
-  }
-  let rowsHtml = '';
-  for (const row of rows) {
-    let cellsHtml = '';
-    for (const cell of row) {
-      cellsHtml += `<td>${escHtml(cell || '-')}</td>`;
-    }
-    rowsHtml += `<tr>${cellsHtml}</tr>`;
-  }
-
-  return `<div class="orc-section-card orc-flight-card">
-    <div class="orc-section-title orc-flight-title">Passagem Aérea</div>
-    <div class="orc-flight-table-wrap">
-      <table class="orc-flight-table">
-        <thead>
-          <tr>
-            <th>Cia</th>
-            <th>Origem</th>
-            <th>Saída</th>
-            <th>Destino</th>
-            <th>Chegada</th>
-            <th>Horários</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rowsHtml}
-        </tbody>
-      </table>
-    </div>
-    ${legendHtml}
-    ${renderPeriodoItem(item)}
-    ${renderDetalhesItem(item)}
-    ${
-      showItemValues
-        ? `<div class="orc-flight-values">
-      <span>Valor: ${escHtml(formatCurrency(amount, currency))}</span>
-      ${taxes > 0 ? `<span>Taxas: ${escHtml(formatCurrency(taxes, currency))}</span>` : ''}
-    </div>`
-        : ''
-    }
-  </div>`;
+  const extra = [
+    renderPeriodoItem(item),
+    renderDetalhesItem(item),
+    showItemValues ? printCardField('Valor', formatCurrency(amount, currency)) : '',
+    showItemValues && taxes > 0 ? printCardField('Taxas', formatCurrency(taxes, currency)) : ''
+  ].join('');
+  return renderPreviewFlights(flights, formatRoteiroDate, extra);
 }
 
 function renderCircuitItemHtml(item: QuoteItemForPdf, showItemValues: boolean) {
   const label = textVal(item.title || item.product_name || item.item_type || 'Circuito');
-  const city = textVal(item.city_name);
+  const city = nomeCidadeNoPdf(textVal(item.city_name));
   const amount = Number(item.total_amount ?? 0);
   const currency = item.currency || 'BRL';
   const days = getCircuitDaySegments(item);
@@ -513,20 +515,19 @@ function renderCircuitItemHtml(item: QuoteItemForPdf, showItemValues: boolean) {
     const descricao = textVal(String(data.descricao || ''));
     const dayTitle = titulo ? `Dia ${diaNumero} - ${titulo}` : `Dia ${diaNumero}`;
     daysHtml += `<div class="orc-circuit-day">
-      <div class="orc-circuit-day-title">${escHtml(dayTitle)}</div>
-      ${descricao ? `<div class="orc-circuit-day-desc">${escHtml(descricao).replace(/\n/g, '<br/>')}</div>` : ''}
+      <h3>${escHtml(dayTitle)}</h3>
+      ${descricao ? `<p>${escHtml(descricao).replace(/\n/g, '<br/>')}</p>` : ''}
     </div>`;
   }
 
-  return `<div class="orc-section-card">
-    <div class="orc-section-title orc-section-title--blue">${escHtml(label)}</div>
-    <div class="orc-section-divider"></div>
-    ${city ? `<div class="orc-item-meta">${escHtml(city)}</div>` : ''}
+  return `<article class="roteiro-card${requiresPrintContinuation(daysHtml) ? ' roteiro-card--long' : ''}">
+    ${city ? printCityTitle(city) : ''}
+    <h3>${escHtml(label)}</h3>
     ${renderPeriodoItem(item)}
     ${renderDetalhesItem(item)}
     ${daysHtml}
-    ${showItemValues ? `<div class="orc-item-value">${escHtml(formatCurrency(amount, currency))}</div>` : ''}
-  </div>`;
+    ${showItemValues ? printCardField('Valor', formatCurrency(amount, currency)) : ''}
+  </article>`;
 }
 
 function renderAllItemsTableHtml(items: QuoteItemForPdf[], showItemValues: boolean) {
@@ -698,13 +699,7 @@ export function buildQuotePreviewHtmlSync(params: {
       itensHtml += renderAllItemsTableHtml(items, showItemValues);
     }
     if (showBudgetDetails) {
-      for (const item of items) {
-        itensHtml += isFlightQuoteItem(item)
-          ? renderFlightItemHtml(item, showItemValues)
-          : isCircuitQuoteItem(item)
-            ? renderCircuitItemHtml(item, showItemValues)
-            : renderGenericItemHtml(item, showItemValues);
-      }
+      itensHtml += renderGroupedItems(items, showItemValues);
     }
     if (!showBudgetItems && !showBudgetDetails) {
       itensHtml = '';
@@ -771,9 +766,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-item-meta { font-size: 11px; color: #64748b; margin: 2px 0 0 0; }
     .orc-item-value { font-size: 11px; color: #0f172a; margin: 2px 0 0 0; text-align: right; }
     .orc-item-divider { height: 1px; background: #f1f5f9; margin: 2px 0; }
-    .orc-circuit-day { border: 1px solid #d9e2ec; border-radius: 8px; background: #f8fafc; padding: 8px 10px; margin: 8px 0 0 0; }
-    .orc-circuit-day-title { font-size: 12px; font-weight: 700; color: #1e293b; margin: 0 0 4px 0; }
-    .orc-circuit-day-desc { font-size: 11px; line-height: 1.5; color: #334155; }
+    .orc-circuit-day { margin: 14px 0 0 0; }
     .orc-items-table-wrap { border: 1px solid #d9e2ec; border-radius: 8px; overflow: hidden; }
     .orc-items-table { width: 100%; border-collapse: collapse; font-size: 11px; }
     .orc-items-table th { background: #f1f5f9; color: #334155; text-align: left; padding: 7px 8px; border-bottom: 1px solid #d9e2ec; }
@@ -781,17 +774,11 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-items-table tbody tr:last-child td { border-bottom: 0; }
     .orc-items-table .text-right { text-align: right; }
     .orc-empty { font-size: 12px; color: #94a3b8; padding: 8px 0; }
-
-    /* Passagem aérea */
-    .orc-flight-card { padding: 18px 20px 20px 20px; }
-    .orc-flight-title { color: #0f172a; font-size: 18px; margin: 0 0 14px 0; }
-    .orc-flight-table-wrap { border: 1px solid #cbd5e1; border-radius: 12px; overflow: hidden; }
-    .orc-flight-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-    .orc-flight-table thead th { background: #e8eefb; color: #1e3a8a; padding: 8px 8px; text-align: left; font-weight: 700; border-bottom: 1px solid #cbd5e1; }
-    .orc-flight-table tbody td { padding: 8px 8px; border-bottom: 1px solid #dbe3f0; color: #334155; }
-    .orc-flight-table tbody tr:last-child td { border-bottom: 0; }
-    .orc-flight-legend { margin: 10px 0 0 0; font-size: 10px; color: #0f172a; }
-    .orc-flight-values { display: flex; justify-content: flex-end; gap: 16px; margin: 10px 0 0 0; font-size: 10px; font-weight: 700; color: #0f172a; }
+    ${roteiroCardStyles}
+    ${roteiroFlightStyles}
+    .orc-city-table { width: 100%; table-layout: fixed; border-spacing: 0; }
+    .orc-city-table td { padding: 0; }
+    .orc-city-item + .orc-city-item { margin-top: 14px; padding-top: 14px; border-top: 1px solid #e2e8f0; }
 
     /* Rodapé */
     .orc-footer-list { margin: 0 0 0 14px; padding: 0; font-size: 9px; color: #334155; }
@@ -808,6 +795,9 @@ export function buildQuotePreviewHtmlSync(params: {
       .toolbar { display: none; }
       .shell { max-width: none; padding: 0; }
       .orc-header-card, .orc-title-row, .orc-section-card { border-radius: 0; box-shadow: none; }
+      .roteiro-card, .orc-city-item { break-inside: avoid; page-break-inside: avoid; }
+      .roteiro-card--long, .orc-city-item--long { break-inside: auto; page-break-inside: auto; }
+      .orc-city-table thead { display: table-header-group; }
     }`;
 
   return `<!doctype html>
