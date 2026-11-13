@@ -8,14 +8,17 @@ import type { RotHotel, RotPasseio, RotTransporte } from './tipos';
 type FormatDate = (value: string | null | undefined) => string;
 type SectionIcon = 'itinerary' | 'hotels' | 'optionals' | 'flights';
 
-const sectionIcons: Record<SectionIcon, string> = {
+const sectionIcons: Record<Exclude<SectionIcon, 'flights'>, string> = {
   itinerary:
     '<circle cx="5" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="M5 7v2c0 3 3 3 6 3s6 0 6 3v2"/>',
   hotels: '<path d="M4 21V5l8-3 8 3v16M2 21h20M10 21v-4h4v4M8 8h1m6 0h1M8 12h1m6 0h1"/>',
   optionals:
-    '<circle cx="7" cy="16" r="4"/><circle cx="17" cy="16" r="4"/><path d="M3 16 5 7h3l3 9m2 0 3-9h3l2 9M9 10h6"/>',
-  flights: '<path d="m2 14 8 1 4 7 2-1-2-7 6-4c3-2 2-4-1-3l-7 3-5-5-2 1 3 6-5 2z"/>'
+    '<circle cx="7" cy="16" r="4"/><circle cx="17" cy="16" r="4"/><path d="M3 16 5 7h3l3 9m2 0 3-9h3l2 9M9 10h6"/>'
 };
+
+function flightPlane(className = '') {
+  return `<span${className ? ` class="${className}"` : ''} aria-hidden="true">✈</span>`;
+}
 
 export function buildRoteiroCardSection(
   title: string,
@@ -25,9 +28,12 @@ export function buildRoteiroCardSection(
   icon?: SectionIcon
 ) {
   if (!content.trim()) return '';
-  const iconHtml = icon
-    ? `<svg class="roteiro-print-title-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${sectionIcons[icon]}</svg>`
-    : '';
+  const iconHtml =
+    icon === 'flights'
+      ? flightPlane('roteiro-print-title-icon roteiro-print-title-plane')
+      : icon
+        ? `<svg class="roteiro-print-title-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${sectionIcons[icon]}</svg>`
+        : '';
   return `<section class="roteiro-print-section ${escapeHtml(sectionClass)}"><table class="roteiro-print-table" role="presentation">
     <thead><tr><td><h2>${iconHtml}${escapeHtml(title)}${subtitle ? `<span class="roteiro-print-subtitle">${escapeHtml(subtitle)}</span>` : ''}</h2></td></tr></thead>
     <tbody><tr><td>${content}</td></tr></tbody>
@@ -161,11 +167,11 @@ export function renderPreviewFlights(items: RotTransporte[], formatDate: FormatD
         )
         .join('');
       const flightDate = formatarDataPassagem(item.data_voo || item.data_inicio, true);
-      const content = `<div class="roteiro-flight-header"><span>TRECHO ${index + 1} — ${escapeHtml(flightDate)}</span><span>Voo ${escapeHtml(text(item.descricao) || 'Não informado')}</span></div>
+      const content = `<div class="roteiro-flight-header"><span>TRECHO ${index + 1} — ${escapeHtml(flightDate)}</span><span>Voo ${flightPlane()} ${escapeHtml(text(item.descricao) || 'Não informado')}</span></div>
         <div class="roteiro-flight-body">
           <div class="roteiro-flight-route">
             ${flightPlace(from, item.aeroporto_saida, departure, 'Saída')}
-            <div class="roteiro-flight-duration"><strong>DURAÇÃO: ${escapeHtml(duration || 'Não informada')}</strong><span aria-hidden="true">✈</span>${arrivalNotice ? `<small class="roteiro-flight-arrival-notice">${escapeHtml(arrivalNotice)}</small>` : ''}</div>
+            <div class="roteiro-flight-duration"><strong>DURAÇÃO: ${escapeHtml(duration || 'Não informada')}</strong>${flightPlane()}${arrivalNotice ? `<small class="roteiro-flight-arrival-notice">${escapeHtml(arrivalNotice)}</small>` : ''}</div>
             ${flightPlace(to, item.aeroporto_chegada, arrival, 'Chegada', true)}
           </div>
           <div class="roteiro-flight-details">${details}</div>

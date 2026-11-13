@@ -1291,6 +1291,7 @@
             .roteiro-print-table td { padding: 0; }
             .roteiro-print-section h2 { margin: 0 0 12px; padding: 14px 18px; border: 1px solid #9aaac2; border-radius: 18px; background: white; color: #243aa3; font: bold 22px Georgia, "Times New Roman", serif; text-align: center; }
             .roteiro-print-title-icon { width: 1em; height: 1em; margin-right: 0.35em; vertical-align: -0.15em; }
+            .roteiro-print-title-plane { display: inline-block; font-family: Arial, sans-serif; font-weight: normal; }
             .roteiro-print-subtitle { display: block; margin-top: 6px; font-size: 13px; font-weight: normal; }
             .roteiro-card { margin: 12px 0 0; border: 1px solid #9aaac2; border-radius: 18px; background: white; color: #1f2430; font-family: Georgia, "Times New Roman", serif; overflow-wrap: anywhere; }
             .roteiro-card h3 { font-size: 15px; line-height: 1.4; }
