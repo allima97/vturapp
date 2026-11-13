@@ -1,6 +1,7 @@
 // Migrado para Hono de src/routes/api/v1/admin/email/test/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import { json, type RequestEvent } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 import { buildFromEmails, loadEmailSettings } from '$lib/server/admin';
 import { fetchWithTimeout } from '$lib/server/fetchWithTimeout';
 import { checkPersistentRateLimit } from '$lib/server/persistentRateLimit';
@@ -151,7 +152,8 @@ export async function handleAdminEmailTestPost(event: RequestEvent) {
 
     const apiKey =
       cleanText(bodySettings.resend_api_key) ||
-      (looksLikeResendSmtp(bodySettings) ? cleanText(bodySettings.smtp_pass) : '');
+      (looksLikeResendSmtp(bodySettings) ? cleanText(bodySettings.smtp_pass) : '') ||
+      cleanText(event.platform?.env?.RESEND_API_KEY || env.RESEND_API_KEY);
     if (!apiKey) {
       return new Response('Resend nao configurado.', { status: 400, headers: NO_STORE_HEADERS });
     }
