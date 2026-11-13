@@ -463,9 +463,11 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
   expect(flightLabel.textContent).toBe('Voo  LA 123');
   const flightPlane = flightLabel.querySelector('svg[aria-hidden="true"] path')!;
   expect(flightPlane.getAttribute('transform')).toBe('rotate(-35 12 12)');
-  expect(
-    flight.querySelector('.roteiro-flight-duration svg[aria-hidden="true"] path')?.outerHTML
-  ).toBe(flightPlane.outerHTML);
+  const durationPlane = flight.querySelector(
+    '.roteiro-flight-duration svg[aria-hidden="true"] path'
+  )!;
+  expect(durationPlane.getAttribute('d')).toBe(flightPlane.getAttribute('d'));
+  expect(durationPlane.getAttribute('transform')).toBeNull();
   expect(flight.querySelector('.roteiro-flight-arrival-notice')?.textContent).toBe(
     'Chegada no dia seguinte (+1)'
   );

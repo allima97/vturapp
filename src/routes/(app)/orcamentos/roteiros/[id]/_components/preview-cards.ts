@@ -16,8 +16,8 @@ const sectionIcons: Record<Exclude<SectionIcon, 'flights'>, string> = {
     '<circle cx="7" cy="16" r="4"/><circle cx="17" cy="16" r="4"/><path d="M3 16 5 7h3l3 9m2 0 3-9h3l2 9M9 10h6"/>'
 };
 
-function flightPlane(className = '') {
-  return `<svg class="roteiro-flight-plane${className ? ` ${className}` : ''}" xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 28 28" fill="currentColor" aria-hidden="true" focusable="false"><path transform="rotate(-35 12 12)" d="M22 12c0-.7-1-1.3-2-1.4L15 10 9 3H6l4 6.5-5-.2L3 7H1l1.5 5L1 17h2l2-2.3 5-.2L6 21h3l6-7 5-.6c1-.1 2-.7 2-1.4z"/></svg>`;
+function flightPlane(className = '', tilted = true) {
+  return `<svg class="roteiro-flight-plane${className ? ` ${className}` : ''}" xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 28 28" fill="currentColor" aria-hidden="true" focusable="false"><path${tilted ? ' transform="rotate(-35 12 12)"' : ''} d="M22 12c0-.7-1-1.3-2-1.4L15 10 9 3H6l4 6.5-5-.2L3 7H1l1.5 5L1 17h2l2-2.3 5-.2L6 21h3l6-7 5-.6c1-.1 2-.7 2-1.4z"/></svg>`;
 }
 
 export function buildRoteiroCardSection(
@@ -171,7 +171,7 @@ export function renderPreviewFlights(items: RotTransporte[], formatDate: FormatD
         <div class="roteiro-flight-body">
           <div class="roteiro-flight-route">
             ${flightPlace(from, item.aeroporto_saida, departure, 'Saída')}
-            <div class="roteiro-flight-duration"><strong>DURAÇÃO: ${escapeHtml(duration || 'Não informada')}</strong><span>${flightPlane()}</span>${arrivalNotice ? `<small class="roteiro-flight-arrival-notice">${escapeHtml(arrivalNotice)}</small>` : ''}</div>
+            <div class="roteiro-flight-duration"><strong>DURAÇÃO: ${escapeHtml(duration || 'Não informada')}</strong><span>${flightPlane('', false)}</span>${arrivalNotice ? `<small class="roteiro-flight-arrival-notice">${escapeHtml(arrivalNotice)}</small>` : ''}</div>
             ${flightPlace(to, item.aeroporto_chegada, arrival, 'Chegada', true)}
           </div>
           <div class="roteiro-flight-details">${details}</div>
