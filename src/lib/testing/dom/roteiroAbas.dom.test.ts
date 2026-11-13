@@ -114,6 +114,9 @@ describe('roteiro: datas dos hotéis', () => {
       data_fim: '2027-08-15',
       noites: 4
     });
+    expect(card.querySelector('summary')!.textContent).toContain(
+      'Hotel Ciutat Vella - Período de 11-08-2027 a 15-08-2027'
+    );
     expect(card.open).toBe(true);
     expect(card.querySelectorAll('input[type="date"]')[1]).toBe(saida);
     t.fim();
@@ -297,6 +300,21 @@ describe('roteiro: abas Hotéis, Passeios e Aéreo', () => {
     chegada.dispatchEvent(new Event('change', { bubbles: true }));
     flushSync();
     expect(t.get().transportes[0].data_fim).toBe('2027-08-12');
+    t.fim();
+  });
+
+  it('mostra a data do voo antes do trecho no resumo', () => {
+    const t = montar(ServicosHarness);
+    const painel = [...t.target.querySelectorAll<HTMLDetailsElement>('details')].find((item) =>
+      item.textContent?.includes('GRU → LIS')
+    )!;
+    const data = painel.querySelector<HTMLInputElement>('input[type="date"]')!;
+    data.value = '2027-08-10';
+    data.dispatchEvent(new Event('input', { bubbles: true }));
+    data.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(painel.querySelector('summary')!.textContent).toContain('10-08-2027 - GRU → LIS');
+    expect(t.get().transportes[0].data_voo).toBe('2027-08-10');
     t.fim();
   });
 

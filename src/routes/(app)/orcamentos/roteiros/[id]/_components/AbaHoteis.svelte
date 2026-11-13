@@ -27,6 +27,18 @@
     onHotelDateChange: (index: number, field: 'data_inicio' | 'data_fim', value: string) => void;
     sugestoes: Record<string, string[]>;
   } = $props();
+
+  function formatarDataResumo(value: string): string {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    return match ? `${match[3]}-${match[2]}-${match[1]}` : '';
+  }
+
+  function tituloHotel(hotel: RotHotel, index: number): string {
+    const nome = String(hotel.hotel ?? '').trim() || `Hotel ${index + 1}`;
+    const entrada = formatarDataResumo(hotel.data_inicio);
+    const saida = formatarDataResumo(hotel.data_fim);
+    return entrada && saida ? `${nome} - Período de ${entrada} a ${saida}` : nome;
+  }
 </script>
 
 <Card title="Hotéis" color="clientes">
@@ -98,9 +110,7 @@
             <summary
               class="flex cursor-pointer list-none items-center justify-between gap-3 pr-28 text-sm font-semibold"
             >
-              <span class="truncate"
-                >{String(hotel.hotel ?? '').trim() || `Hotel ${index + 1}`}</span
-              >
+              <span class="truncate">{tituloHotel(hotel, index)}</span>
               <span aria-hidden="true" class="text-lg">
                 <span class="indicador-mais">+</span><span class="indicador-menos">−</span>
               </span>

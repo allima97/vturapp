@@ -67,6 +67,17 @@
         : '';
     transporte[campo] = input.value ? `${input.value}${deslocamento}` : '';
   }
+
+  function formatarDataResumo(value: string): string {
+    const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+    return match ? `${match[3]}-${match[2]}-${match[1]}` : '';
+  }
+
+  function tituloTrecho(transporte: RotTransporte, index: number): string {
+    const trecho = String(transporte.trecho ?? '').trim() || `Trecho ${index + 1}`;
+    const data = formatarDataResumo(transporte.data_voo || transporte.data_inicio);
+    return data ? `${data} - ${trecho}` : trecho;
+  }
 </script>
 
 <Card title="Passagem Aérea" color="clientes">
@@ -138,9 +149,7 @@
             <summary
               class="flex cursor-pointer list-none items-center justify-between gap-3 pr-28 text-sm font-semibold"
             >
-              <span class="truncate"
-                >{String(transporte.trecho ?? '').trim() || `Trecho ${index + 1}`}</span
-              >
+              <span class="truncate">{tituloTrecho(transporte, index)}</span>
               <span aria-hidden="true" class="text-lg">
                 <span class="indicador-mais">+</span><span class="indicador-menos">−</span>
               </span>
