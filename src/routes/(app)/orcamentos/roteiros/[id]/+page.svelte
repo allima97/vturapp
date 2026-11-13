@@ -1309,7 +1309,7 @@
             .roteiro-flight-destination { text-align: right; }
             .roteiro-flight-duration { color: #64748b; font-size: 10px; text-align: center; }
             .roteiro-flight-duration span { display: flex; align-items: center; width: 110px; margin: 0 auto; color: #0075ca; font-size: 18px; }
-            .roteiro-flight-duration span::before, .roteiro-flight-duration span::after { content: ''; flex: 1; height: 2px; background: #cbd5e1; }
+            .roteiro-flight-duration span::before, .roteiro-flight-duration span::after { content: ''; flex: 1; height: 2px; background: currentColor; }
             .roteiro-flight-duration .roteiro-flight-plane { flex: none; }
             .roteiro-flight-arrival-notice { display: block; color: #92400e; font-size: 10px; font-weight: 700; border: 1px solid #b45309; border-radius: 4px; padding: 3px 6px; margin-top: 4px; }
             .roteiro-flight-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 16px; border-top: 1px dashed #dbe3ec; margin-top: 12px; padding-top: 10px; }
