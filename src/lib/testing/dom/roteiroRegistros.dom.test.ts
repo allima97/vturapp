@@ -460,12 +460,12 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
     'TRECHO 1 — sábado, 02 de janeiro de 2027'
   );
   const flightLabel = flight.querySelectorAll('.roteiro-flight-header > span')[1];
-  expect(flightLabel.textContent).toBe('Voo ✈ LA 123');
-  const flightPlane = flightLabel.querySelector('[aria-hidden="true"]');
-  expect(flightPlane?.textContent).toBe('✈');
-  expect(flight.querySelector('.roteiro-flight-duration [aria-hidden="true"]')?.textContent).toBe(
-    flightPlane?.textContent
-  );
+  expect(flightLabel.textContent).toBe('Voo  LA 123');
+  const flightPlane = flightLabel.querySelector('svg[aria-hidden="true"] path')!;
+  expect(flightPlane.getAttribute('transform')).toBe('rotate(-35 12 12)');
+  expect(
+    flight.querySelector('.roteiro-flight-duration svg[aria-hidden="true"] path')?.outerHTML
+  ).toBe(flightPlane.outerHTML);
   expect(flight.querySelector('.roteiro-flight-arrival-notice')?.textContent).toBe(
     'Chegada no dia seguinte (+1)'
   );
@@ -481,8 +481,10 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
   ]) {
     expect(preview.querySelector(`${section} h2 svg`)?.getAttribute('aria-hidden')).toBe('true');
   }
-  const flightTitleIcon = preview.querySelector('.preview-airfare-section h2 [aria-hidden="true"]');
-  expect(flightTitleIcon?.textContent).toBe(flightPlane?.textContent);
+  const flightTitleIcon = preview.querySelector(
+    '.preview-airfare-section h2 svg.roteiro-print-title-icon[aria-hidden="true"] path'
+  );
+  expect(flightTitleIcon?.outerHTML).toBe(flightPlane.outerHTML);
   expect(html).toContain('<h3>Dia 1 - Roma - Barcelona</h3>');
   expect(html).not.toContain(barcelona);
   button('Salvar roteiro').click();

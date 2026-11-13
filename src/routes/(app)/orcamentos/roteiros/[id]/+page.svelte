@@ -1291,7 +1291,7 @@
             .roteiro-print-table td { padding: 0; }
             .roteiro-print-section h2 { margin: 0 0 12px; padding: 14px 18px; border: 1px solid #9aaac2; border-radius: 18px; background: white; color: #243aa3; font: bold 22px Georgia, "Times New Roman", serif; text-align: center; }
             .roteiro-print-title-icon { width: 1em; height: 1em; margin-right: 0.35em; vertical-align: -0.15em; }
-            .roteiro-print-title-plane { display: inline-block; font-family: Arial, sans-serif; font-weight: normal; }
+            .roteiro-flight-plane { width: 1em; height: 1em; vertical-align: -0.15em; }
             .roteiro-print-subtitle { display: block; margin-top: 6px; font-size: 13px; font-weight: normal; }
             .roteiro-card { margin: 12px 0 0; border: 1px solid #9aaac2; border-radius: 18px; background: white; color: #1f2430; font-family: Georgia, "Times New Roman", serif; overflow-wrap: anywhere; }
             .roteiro-card h3 { font-size: 15px; line-height: 1.4; }
@@ -1310,6 +1310,7 @@
             .roteiro-flight-duration { color: #64748b; font-size: 10px; text-align: center; }
             .roteiro-flight-duration span { display: flex; align-items: center; width: 110px; margin: 0 auto; color: #0075ca; font-size: 18px; }
             .roteiro-flight-duration span::before, .roteiro-flight-duration span::after { content: ''; flex: 1; height: 2px; background: #cbd5e1; }
+            .roteiro-flight-duration .roteiro-flight-plane { flex: none; }
             .roteiro-flight-arrival-notice { display: block; color: #92400e; font-size: 10px; font-weight: 700; border: 1px solid #b45309; border-radius: 4px; padding: 3px 6px; margin-top: 4px; }
             .roteiro-flight-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 16px; border-top: 1px dashed #dbe3ec; margin-top: 12px; padding-top: 10px; }
             .roteiro-flight-details span { display: block; color: #64748b; font-size: 10px; font-weight: bold; }

@@ -27,9 +27,9 @@ describe('trechos aéreos no PDF do roteiro', () => {
     );
     const [first, second] = html.split('</article>');
     expect(first).toContain('TRECHO 1 — sábado, 02 de janeiro de 2027');
-    expect(first).toContain('<span>Voo <span aria-hidden="true">✈</span> TP 123</span>');
+    expect(first).toMatch(/<span>Voo <svg[^>]*>.*?<\/svg> TP 123<\/span>/);
     expect(second).toContain('TRECHO 2 — domingo, 03 de janeiro de 2027');
-    expect(second).toContain('<span>Voo <span aria-hidden="true">✈</span> Não informado</span>');
+    expect(second).toMatch(/<span>Voo <svg[^>]*>.*?<\/svg> Não informado<\/span>/);
     for (const value of [
       'TRECHO 1',
       'GRU',
@@ -84,7 +84,7 @@ describe('trechos aéreos no PDF do roteiro', () => {
     expect(html).toContain('&lt;Roma&gt;');
     expect(html).not.toContain('<Roma>');
     expect(html).not.toContain('<cia>');
-    expect(html).toContain('Voo <span aria-hidden="true">✈</span> &lt;voo&gt;');
+    expect(html).toMatch(/Voo <svg[^>]*>.*?<\/svg> &lt;voo&gt;/);
     expect(html).not.toContain('<voo>');
   });
 

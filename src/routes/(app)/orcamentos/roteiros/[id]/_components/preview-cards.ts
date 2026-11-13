@@ -17,7 +17,7 @@ const sectionIcons: Record<Exclude<SectionIcon, 'flights'>, string> = {
 };
 
 function flightPlane(className = '') {
-  return `<span${className ? ` class="${className}"` : ''} aria-hidden="true">✈</span>`;
+  return `<svg class="roteiro-flight-plane${className ? ` ${className}` : ''}" xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 28 28" fill="currentColor" aria-hidden="true" focusable="false"><path transform="rotate(-35 12 12)" d="M22 12c0-.7-1-1.3-2-1.4L15 10 9 3H6l4 6.5-5-.2L3 7H1l1.5 5L1 17h2l2-2.3 5-.2L6 21h3l6-7 5-.6c1-.1 2-.7 2-1.4z"/></svg>`;
 }
 
 export function buildRoteiroCardSection(
@@ -30,7 +30,7 @@ export function buildRoteiroCardSection(
   if (!content.trim()) return '';
   const iconHtml =
     icon === 'flights'
-      ? flightPlane('roteiro-print-title-icon roteiro-print-title-plane')
+      ? flightPlane('roteiro-print-title-icon')
       : icon
         ? `<svg class="roteiro-print-title-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${sectionIcons[icon]}</svg>`
         : '';
@@ -171,7 +171,7 @@ export function renderPreviewFlights(items: RotTransporte[], formatDate: FormatD
         <div class="roteiro-flight-body">
           <div class="roteiro-flight-route">
             ${flightPlace(from, item.aeroporto_saida, departure, 'Saída')}
-            <div class="roteiro-flight-duration"><strong>DURAÇÃO: ${escapeHtml(duration || 'Não informada')}</strong>${flightPlane()}${arrivalNotice ? `<small class="roteiro-flight-arrival-notice">${escapeHtml(arrivalNotice)}</small>` : ''}</div>
+            <div class="roteiro-flight-duration"><strong>DURAÇÃO: ${escapeHtml(duration || 'Não informada')}</strong><span>${flightPlane()}</span>${arrivalNotice ? `<small class="roteiro-flight-arrival-notice">${escapeHtml(arrivalNotice)}</small>` : ''}</div>
             ${flightPlace(to, item.aeroporto_chegada, arrival, 'Chegada', true)}
           </div>
           <div class="roteiro-flight-details">${details}</div>
