@@ -12,6 +12,7 @@ import { VTUR_LOGO_URL } from '$lib/brand';
 import { construirLinkWhatsApp } from '$lib/whatsapp';
 import { safeOpenNewTab } from '$lib/security/url';
 import { formatISODateBR } from '$lib/date';
+import { apiFetch } from '$lib/services/api';
 
 // ---------------------------------------------------------------------------
 // TIPOS
@@ -64,23 +65,8 @@ export type QuoteForPdf = {
 
 type QuotePreviewRow = QuoteForPdf & {
   cliente?: { nome?: string | null } | null;
-};
-
-type QuoteItemSegmentRow = {
-  quote_item_id?: string | null;
-  segment_type?: string | null;
-  data?: Record<string, unknown> | null;
-  order_index?: number | null;
-};
-
-type DadosQueryResult = PromiseLike<{ data: unknown; error?: { message?: string } | null }> & {
-  eq: (column: string, value: unknown) => DadosQueryResult;
-  in: (column: string, values: readonly string[]) => DadosQueryResult;
-  order: (column: string, options: { ascending: boolean }) => DadosQueryResult;
-  maybeSingle: () => Promise<{
-    data: Record<string, unknown> | null;
-    error?: { message?: string } | null;
-  }>;
+  itens: QuoteItemForPdf[];
+  pdf_settings: QuotePdfSettings;
 };
 
 type DadosPreviewStorage = {
@@ -93,11 +79,7 @@ type DadosPreviewStorage = {
   };
 };
 
-type PreviewUser = { id: string; email?: string | null };
-
 type DadosPreviewClient = {
-  from: (table: string) => any;
-  auth: { getUser: () => Promise<{ data: { user: PreviewUser | null } }> };
   storage: DadosPreviewStorage;
 };
 
@@ -851,79 +833,17 @@ export async function openQuotePreview(params: {
     discount = 0
   } = params;
 
-  // 1. Autenticação
-  const { data: authData } = await dados.auth.getUser();
-  const userId = authData?.user?.id;
-  if (!userId) throw new Error('Usuário não autenticado.');
-
-  // 2. Dados do orçamento
-  const { data: quote, error: quoteError } = await dados
-    .from('quote')
-    .select(
-      'id, created_at, currency, total, status, client_name, raw_json, cliente:client_id (nome)'
-    )
-    .eq('id', quoteId)
-    .maybeSingle();
-  const quoteRow = quote as QuotePreviewRow | null;
-  if (quoteError || !quoteRow) throw new Error('Orçamento não encontrado.');
-
-  // 3. Itens
-  const { data: items, error: itemsError } = await dados
-    .from('quote_item')
-    .select(
-      'id, item_type, title, product_name, city_name, quantity, unit_price, total_amount, taxes_amount, start_date, end_date, currency, order_index, raw'
-    )
-    .eq('quote_id', quoteId)
-    .order('order_index', { ascending: true });
-  if (itemsError) throw new Error('Erro ao carregar itens do orçamento.');
-
-  const itemRows: QuoteItemForPdf[] = [];
-  for (const item of (items ?? []) as QuoteItemForPdf[]) {
-    itemRows.push({
-      ...item,
-      segments: []
-    });
-  }
-  const itemIds: string[] = [];
-  for (const item of itemRows) {
-    if (item.id) itemIds.push(item.id);
-  }
-  if (itemIds.length > 0) {
-    const { data: segments } = await dados
-      .from('quote_item_segment')
-      .select('quote_item_id, segment_type, data, order_index')
-      .in('quote_item_id', itemIds)
-      .order('order_index', { ascending: true });
-    const segmentRows = (segments ?? []) as QuoteItemSegmentRow[];
-
-    const segmentsByItem = new Map<string, NonNullable<QuoteItemForPdf['segments']>>();
-    for (const segment of segmentRows) {
-      const itemId = String(segment.quote_item_id || '');
-      if (!itemId) continue;
-      const current = segmentsByItem.get(itemId) || [];
-      current.push({
-        segment_type: segment.segment_type ?? null,
-        data: segment.data ?? {},
-        order_index: segment.order_index ?? 0
-      });
-      segmentsByItem.set(itemId, current);
+  const quoteRow = await apiFetch<QuotePreviewRow>(
+    `/api/v1/orcamentos/${encodeURIComponent(quoteId)}`,
+    {
+      query: { preview_pdf: 1 },
+      noCache: true,
+      redirectOnForbidden: false,
+      redirectOnUnauthorized: false
     }
-
-    for (const item of itemRows) {
-      if (item.id && segmentsByItem.has(item.id)) item.segments = segmentsByItem.get(item.id) || [];
-    }
-  }
-
-  // 4. Parâmetros PDF
-  const { data: settings } = await dados
-    .from('quote_print_settings')
-    .select(
-      'imagem_complementar_url, imagem_complementar_path, consultor_nome, filial_nome, endereco_linha1, endereco_linha2, endereco_linha3, telefone, whatsapp, whatsapp_codigo_pais, email, rodape_texto'
-    )
-    .eq('owner_user_id', userId)
-    .maybeSingle();
-
-  const pdfSettings: QuotePdfSettings = settings ?? {};
+  );
+  const itemRows = quoteRow.itens;
+  const pdfSettings = quoteRow.pdf_settings;
 
   // 5. Resolve URLs assinadas (token na query string — funciona sem cookie)
   const complementSignedUrl = await resolveStorageUrl(

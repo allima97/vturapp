@@ -101,7 +101,8 @@ export async function handleOrcamentosIdGet(event: RequestEvent) {
     }
 
     // As 3 queries são completamente independentes entre si — executar em paralelo.
-    const [{ data: items }, clienteResult, vendedorResult] = await Promise.all([
+    const previewPdf = event.url.searchParams.get('preview_pdf') === '1';
+    const [itemsResult, clienteResult, vendedorResult, settingsResult] = await Promise.all([
       client
         .from('quote_item')
         .select(QUOTE_ITEM_SELECT_FIELDS)
@@ -116,8 +117,21 @@ export async function handleOrcamentosIdGet(event: RequestEvent) {
         : Promise.resolve({ data: null }),
       quote.created_by
         ? client.from('users').select('nome_completo').eq('id', quote.created_by).maybeSingle()
-        : Promise.resolve({ data: null })
+        : Promise.resolve({ data: null }),
+      previewPdf
+        ? client
+            .from('quote_print_settings')
+            .select(
+              'imagem_complementar_url, imagem_complementar_path, consultor_nome, filial_nome, endereco_linha1, endereco_linha2, endereco_linha3, telefone, whatsapp, whatsapp_codigo_pais, email, rodape_texto'
+            )
+            .eq('owner_user_id', user.id)
+            .maybeSingle()
+        : Promise.resolve({ data: null, error: null })
     ]);
+    if (previewPdf && itemsResult.error) throw itemsResult.error;
+    if (previewPdf && clienteResult.error) throw clienteResult.error;
+    if (settingsResult.error) throw settingsResult.error;
+    const items = itemsResult.data;
     const itemIds = (items || []).map((item: any) => item.id).filter(Boolean);
     const { data: itemSegments, error: itemSegmentsError } =
       itemIds.length > 0
@@ -168,7 +182,8 @@ export async function handleOrcamentosIdGet(event: RequestEvent) {
         last_interaction_at: quote.last_interaction_at || null,
         last_interaction_notes: quote.last_interaction_notes || null,
         vendedor,
-        itens: itemsWithSegments
+        itens: itemsWithSegments,
+        ...(previewPdf ? { pdf_settings: settingsResult.data ?? {} } : {})
       },
       { headers: DYNAMIC_READ_HEADERS }
     );
