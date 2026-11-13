@@ -35,6 +35,41 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).not.toContain('old-logo');
     expect(html).not.toContain('old/logo');
   });
+
+  it('exibe período e detalhes dos produtos no PDF', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        {
+          item_type: 'hotel',
+          title: 'Hotel',
+          start_date: '2027-08-11',
+          end_date: '2027-08-13',
+          raw: {
+            detalhes_orcamento: {
+              categoria: '4 estrelas',
+              adultos: 2,
+              criancas: 0,
+              tipo_apartamento: 'Duplo',
+              quantidade_apartamentos: 1,
+              regime: 'Café da manhã'
+            }
+          }
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+    expect(html).toContain('11/08/2027 – 13/08/2027');
+    expect(html).toContain('Categoria: 4 estrelas');
+    expect(html).toContain('Crianças: 0');
+    expect(html).toContain('Apartamento: Duplo');
+    expect(html).toContain('Regime: Café da manhã');
+  });
 });
 
 describe('prévia do orçamento', () => {

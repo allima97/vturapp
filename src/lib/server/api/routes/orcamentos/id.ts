@@ -15,12 +15,16 @@ import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateQuoteReadModels } from '$lib/server/readModelCache';
 import { isQuoteCreatorAllowed, resolveQuoteCreatorScope } from '$lib/server/orcamentos';
 import { complementarListaOperacional } from '$lib/server/destinoOperacional';
+import { modulosOperacionaisGeograficosAtivos } from '$lib/config/destinosGeograficos';
+import { prepareWrite } from '$lib/server/data/query';
+import { lerDetalhes, rawDetalhes, validarDetalhes } from '$lib/quote/detalhesItem';
 
 const QUOTE_SELECT_FIELDS =
   'id, created_at, updated_at, created_by, client_id, client_name, client_whatsapp, client_email, status, status_negociacao, currency, total, data_embarque, data_final, last_interaction_at, last_interaction_notes';
 
 const QUOTE_ITEM_SELECT_FIELDS =
-  'id, quote_id, item_type, title, product_name, city_name, cidade_id, quantity, unit_price, total_amount, taxes_amount, start_date, end_date, currency, confidence, raw, order_index, created_at, updated_at';
+  'id, quote_id, item_type, title, product_name, city_name, cidade_id, quantity, unit_price, total_amount, taxes_amount, start_date, end_date, currency, confidence, raw, order_index, created_at, updated_at' +
+  (modulosOperacionaisGeograficosAtivos ? ', destino_geografico_id' : '');
 const QUOTE_ITEM_SEGMENT_SELECT_FIELDS = 'id, quote_item_id, segment_type, data, order_index';
 
 const MAX_ORCAMENTO_UPDATE_BODY_BYTES = 256 * 1024;
@@ -70,6 +74,9 @@ type OrcamentoUpdateItem = Record<string, unknown> & {
   unit_price?: unknown;
   total_amount?: unknown;
   city_name?: unknown;
+  start_date?: unknown;
+  end_date?: unknown;
+  raw?: unknown;
 };
 
 export async function handleOrcamentosIdGet(event: RequestEvent) {
@@ -217,7 +224,7 @@ export async function handleOrcamentosIdPatch(event: RequestEvent) {
 
     const { data: existingQuote, error: existingError } = await client
       .from('quote')
-      .select('id, created_by')
+      .select('id, created_by, currency')
       .eq('id', id)
       .maybeSingle();
     if (existingError) throw existingError;
@@ -267,39 +274,116 @@ export async function handleOrcamentosIdPatch(event: RequestEvent) {
     if (body.data_embarque !== undefined) updateData.data_embarque = body.data_embarque;
     if (body.data_final !== undefined) updateData.data_final = body.data_final;
 
-    const { data, error } = await client
-      .from('quote')
-      .update(updateData)
-      .eq('id', id)
-      .select(QUOTE_SELECT_FIELDS)
-      .single();
-    if (error) throw error;
-
-    if (body.itens && Array.isArray(body.itens)) {
-      await client.from('quote_item').delete().eq('quote_id', id);
+    if (body.itens !== undefined) {
+      if (
+        !Array.isArray(body.itens) ||
+        body.itens.length === 0 ||
+        body.itens.some((item) => !item || typeof item !== 'object' || Array.isArray(item))
+      )
+        return errorResponse('Informe itens válidos para o orçamento.', 400);
+      const itens = body.itens as OrcamentoUpdateItem[];
+      for (const [index, item] of itens.entries()) {
+        const erro = validarDetalhes({
+          ...lerDetalhes(item),
+          item_type: String(item.item_type || 'servico')
+        });
+        if (erro) return errorResponse(`Item ${index + 1}: ${erro}`, 400);
+      }
       const preparados = await complementarListaOperacional(
-        body.itens as OrcamentoUpdateItem[],
+        itens,
         event.platform?.env?.DB,
         event.platform?.env?.GEO_DB,
         'city_name'
       );
       if (!preparados.ok) return errorResponse(preparados.error, preparados.status);
-      const itensParaInserir = preparados.itens.map((item, index: number) => ({
-        quote_id: id,
-        title: item.title || '',
-        product_name: item.product_name || null,
-        item_type: item.item_type || 'servico',
-        quantity: item.quantity || 1,
-        unit_price: item.unit_price || 0,
-        total_amount: item.total_amount || 0,
-        city_name: item.city_name || null,
-        ...(item.destino_geografico_id
-          ? { destino_geografico_id: item.destino_geografico_id }
-          : {}),
-        order_index: index
-      }));
-      await client.from('quote_item').insert(itensParaInserir);
+      const { data: existingItems, error: itemsError } = await client
+        .from('quote_item')
+        .select('id, raw')
+        .eq('quote_id', id);
+      if (itemsError) throw itemsError;
+      const porId = new Map<string, Record<string, unknown>>(
+        (existingItems || []).map((item: { id: string; raw: Record<string, unknown> | null }) => [
+          item.id,
+          item.raw || {}
+        ])
+      );
+      const db = event.platform?.env?.DB;
+      if (!db) throw new Error('Banco de dados indisponível.');
+      const idsMantidos = new Set<string>();
+      const statements: D1PreparedStatement[] = [];
+      for (const [index, item] of preparados.itens.entries()) {
+        const itemId = String(item.id || '').trim();
+        if (itemId && (!porId.has(itemId) || idsMantidos.has(itemId)))
+          return errorResponse(`Item ${index + 1}: identificador inválido.`, 400);
+        if (itemId) idsMantidos.add(itemId);
+        const detalhes = { ...lerDetalhes(item), item_type: String(item.item_type || 'servico') };
+        const values = prepareWrite(
+          'quote_item',
+          {
+            ...(!itemId ? { id: crypto.randomUUID(), quote_id: id } : {}),
+            title: item.title || '',
+            product_name: item.product_name || null,
+            item_type: detalhes.item_type,
+            quantity: item.quantity || 1,
+            unit_price: item.unit_price || 0,
+            total_amount: item.total_amount || 0,
+            city_name: item.city_name || null,
+            destino_geografico_id: item.destino_geografico_id || null,
+            order_index: index,
+            currency: body.currency || existingQuote.currency || 'BRL',
+            start_date: detalhes.start_date,
+            end_date: detalhes.end_date,
+            raw: { ...(porId.get(itemId) || {}), detalhes_orcamento: rawDetalhes(detalhes) }
+          },
+          itemId ? 'update' : 'insert'
+        );
+        const keys = Object.keys(values);
+        if (itemId) {
+          statements.push(
+            db
+              .prepare(
+                `UPDATE legado_quote_item SET ${keys.map((key) => `"${key}" = ?`).join(', ')} WHERE id = ? AND quote_id = ?`
+              )
+              .bind(...keys.map((key) => values[key]), itemId, id)
+          );
+        } else {
+          statements.push(
+            db
+              .prepare(
+                `INSERT INTO legado_quote_item (${keys.map((key) => `"${key}"`).join(', ')}) VALUES (${keys.map(() => '?').join(', ')})`
+              )
+              .bind(...keys.map((key) => values[key]))
+          );
+        }
+      }
+      for (const itemId of porId.keys()) {
+        if (!idsMantidos.has(itemId))
+          statements.push(
+            db
+              .prepare('DELETE FROM legado_quote_item WHERE id = ? AND quote_id = ?')
+              .bind(itemId, id)
+          );
+      }
+      const quoteValues = prepareWrite('quote', updateData, 'update');
+      const quoteKeys = Object.keys(quoteValues);
+      statements.push(
+        db
+          .prepare(
+            `UPDATE legado_quote SET ${quoteKeys.map((key) => `"${key}" = ?`).join(', ')} WHERE id = ?`
+          )
+          .bind(...quoteKeys.map((key) => quoteValues[key]), id)
+      );
+      await db.batch(statements);
+    } else {
+      const { error } = await client.from('quote').update(updateData).eq('id', id);
+      if (error) throw error;
     }
+    const { data, error } = await client
+      .from('quote')
+      .select(QUOTE_SELECT_FIELDS)
+      .eq('id', id)
+      .single();
+    if (error) throw error;
 
     invalidateQuoteReadModels({
       companyIds: quoteScope.companyIds,

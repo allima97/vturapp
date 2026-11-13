@@ -13,6 +13,7 @@ import { construirLinkWhatsApp } from '$lib/whatsapp';
 import { safeOpenNewTab } from '$lib/security/url';
 import { formatISODateBR } from '$lib/date';
 import { apiFetch } from '$lib/services/api';
+import { resumoDetalhes } from '$lib/quote/detalhesItem';
 
 // ---------------------------------------------------------------------------
 // TIPOS
@@ -422,8 +423,21 @@ function renderGenericItemHtml(item: QuoteItemForPdf, showItemValues: boolean) {
     <div class="orc-section-title orc-section-title--blue">${escHtml(label)}</div>
     <div class="orc-section-divider"></div>
     ${meta ? `<div class="orc-item-meta">${escHtml(meta)}</div>` : ''}
+    ${renderDetalhesItem(item)}
     ${showItemValues ? `<div class="orc-item-value">${escHtml(formatCurrency(amount, currency))}</div>` : ''}
   </div>`;
+}
+
+function renderDetalhesItem(item: QuoteItemForPdf) {
+  const detalhes = resumoDetalhes(item);
+  return detalhes.length ? `<div class="orc-item-meta">${escHtml(detalhes.join(' · '))}</div>` : '';
+}
+
+function renderPeriodoItem(item: QuoteItemForPdf) {
+  const inicio = formatDateBR(item.start_date);
+  const fim = formatDateBR(item.end_date);
+  const periodo = inicio && fim && inicio !== fim ? `${inicio} – ${fim}` : inicio || fim;
+  return periodo ? `<div class="orc-item-meta">${escHtml(periodo)}</div>` : '';
 }
 
 function renderFlightItemHtml(item: QuoteItemForPdf, showItemValues: boolean) {
@@ -470,6 +484,8 @@ function renderFlightItemHtml(item: QuoteItemForPdf, showItemValues: boolean) {
       </table>
     </div>
     ${legendHtml}
+    ${renderPeriodoItem(item)}
+    ${renderDetalhesItem(item)}
     ${
       showItemValues
         ? `<div class="orc-flight-values">
@@ -506,6 +522,8 @@ function renderCircuitItemHtml(item: QuoteItemForPdf, showItemValues: boolean) {
     <div class="orc-section-title orc-section-title--blue">${escHtml(label)}</div>
     <div class="orc-section-divider"></div>
     ${city ? `<div class="orc-item-meta">${escHtml(city)}</div>` : ''}
+    ${renderPeriodoItem(item)}
+    ${renderDetalhesItem(item)}
     ${daysHtml}
     ${showItemValues ? `<div class="orc-item-value">${escHtml(formatCurrency(amount, currency))}</div>` : ''}
   </div>`;

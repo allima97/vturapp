@@ -26,7 +26,7 @@ vi.mock('$lib/server/v1', async (original) => ({
 }));
 
 import { handleOrcamentosCreatePost } from './create';
-import { handleOrcamentosIdGet } from './id';
+import { handleOrcamentosIdGet, handleOrcamentosIdPatch } from './id';
 
 beforeAll(async () => {
   await applyD1Migrations(
@@ -57,7 +57,25 @@ it.each([
         status_negociacao: 'novo',
         currency,
         itens: [
-          { title: 'Hotel', item_type: 'hotel', quantity: 2, unit_price: 150, total_amount: 300 }
+          {
+            title: 'Hotel',
+            item_type: 'hotel',
+            quantity: 2,
+            unit_price: 150,
+            total_amount: 300,
+            start_date: '2027-08-11',
+            end_date: '2027-08-13',
+            raw: {
+              detalhes_orcamento: {
+                categoria: '4 estrelas',
+                adultos: 2,
+                criancas: 0,
+                tipo_apartamento: 'Duplo',
+                quantidade_apartamentos: 1,
+                regime: 'Café da manhã'
+              }
+            }
+          }
         ]
       })
     }),
@@ -73,7 +91,7 @@ it.each([
   expect(quote!.currency).toBe(expected);
   expect(JSON.parse(quote!.raw_json)).toEqual({});
   const items = await env.DB.prepare(
-    'SELECT title, currency, raw, total_amount FROM legado_quote_item WHERE quote_id = ?'
+    'SELECT title, currency, raw, total_amount, start_date, end_date FROM legado_quote_item WHERE quote_id = ?'
   )
     .bind(data.id)
     .all<{ title: string; currency: string; raw: string; total_amount: number }>();
@@ -83,7 +101,101 @@ it.each([
     currency: expected,
     total_amount: 300
   });
-  expect(JSON.parse(items.results[0].raw)).toEqual({});
+  expect(items.results[0]).toMatchObject({ start_date: '2027-08-11', end_date: '2027-08-13' });
+  expect(JSON.parse(items.results[0].raw)).toEqual({
+    detalhes_orcamento: {
+      categoria: '4 estrelas',
+      adultos: 2,
+      criancas: 0,
+      tipo_apartamento: 'Duplo',
+      quantidade_apartamentos: 1,
+      regime: 'Café da manhã'
+    }
+  });
+});
+
+it('valida os detalhes antes de criar um orçamento', async () => {
+  const response = await handleOrcamentosCreatePost({
+    request: new Request('https://vtur.app/api/v1/orcamentos/create', {
+      method: 'POST',
+      headers: { origin: 'https://vtur.app', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        client_name: 'Cliente',
+        itens: [{ title: 'Hotel', item_type: 'hotel' }]
+      })
+    }),
+    platform: { env: { DB: env.DB } }
+  } as Parameters<typeof handleOrcamentosCreatePost>[0]);
+  expect(response.status).toBe(400);
+  expect(await response.json()).toMatchObject({ error: expect.stringContaining('datas') });
+});
+
+it('atualiza detalhes sem perder o item, dados existentes ou segmentos', async () => {
+  const quoteId = crypto.randomUUID();
+  const itemId = crypto.randomUUID();
+  await env.DB.batch([
+    env.DB.prepare(
+      "INSERT INTO legado_quote (id, created_by, status, status_negociacao, currency, raw_json) VALUES (?, ?, 'pendente', 'novo', 'BRL', '{}')"
+    ).bind(quoteId, state.userId),
+    env.DB.prepare(
+      "INSERT INTO legado_quote_item (id, quote_id, item_type, title, currency, raw) VALUES (?, ?, 'hotel', 'Hotel', 'BRL', ?)"
+    ).bind(itemId, quoteId, JSON.stringify({ importacao: { preservada: true } })),
+    env.DB.prepare(
+      "INSERT INTO legado_quote_item_segment (id, quote_item_id, segment_type, data) VALUES (?, ?, 'circuit_day', '{}')"
+    ).bind(crypto.randomUUID(), itemId)
+  ]);
+  const url = new URL(`https://vtur.app/api/v1/orcamentos/${quoteId}`);
+  const item = {
+    id: itemId,
+    title: 'Hotel',
+    item_type: 'hotel',
+    quantity: 2,
+    unit_price: 150,
+    total_amount: 300,
+    start_date: '2027-08-11',
+    end_date: '2027-08-13',
+    raw: {
+      detalhes_orcamento: {
+        categoria: '4 estrelas',
+        adultos: 2,
+        criancas: 0,
+        tipo_apartamento: 'Duplo',
+        quantidade_apartamentos: 1,
+        regime: 'Café da manhã'
+      }
+    }
+  };
+  const patch = (itens: unknown[]) =>
+    handleOrcamentosIdPatch({
+      url,
+      params: { id: quoteId },
+      request: new Request(url, {
+        method: 'PATCH',
+        headers: { origin: 'https://vtur.app', 'content-type': 'application/json' },
+        body: JSON.stringify({ total: 300, itens })
+      }),
+      platform: { env: { DB: env.DB } }
+    } as Parameters<typeof handleOrcamentosIdPatch>[0]);
+
+  expect((await patch([{ ...item, end_date: '2027-08-10' }])).status).toBe(400);
+  expect((await patch([item])).status).toBe(200);
+  const get = await handleOrcamentosIdGet({
+    url,
+    params: { id: quoteId },
+    request: new Request(url)
+  } as Parameters<typeof handleOrcamentosIdGet>[0]);
+  expect(await get.json()).toMatchObject({
+    total: 300,
+    itens: [
+      {
+        id: itemId,
+        start_date: '2027-08-11',
+        end_date: '2027-08-13',
+        raw: { importacao: { preservada: true }, detalhes_orcamento: item.raw.detalhes_orcamento },
+        segments: [{ segment_type: 'circuit_day' }]
+      }
+    ]
+  });
 });
 
 it('retorna itens, segmentos e configurações próprias apenas para prévia autorizada', async () => {

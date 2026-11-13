@@ -4,6 +4,14 @@
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
   import DestinoOperacional from '$lib/components/DestinoOperacional.svelte';
+  import DetalhesItem from '$lib/components/orcamentos/DetalhesItem.svelte';
+  import {
+    detalhesVazios,
+    rawDetalhes,
+    tiposItem,
+    validarDetalhes,
+    type DetalhesItem as CamposDetalhesItem
+  } from '$lib/quote/detalhesItem';
   import { campoGeografico } from '$lib/config/destinosGeograficos';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
@@ -15,7 +23,7 @@
   import { apiFetch, apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
 
   // ─── Tipos ───────────────────────────────────────────────────────────────────
-  interface ItemOrcamento {
+  interface ItemOrcamento extends CamposDetalhesItem {
     title: string;
     product_name: string;
     item_type: string;
@@ -78,7 +86,8 @@
       total_amount: 0,
       city_name: '',
       destino_geografico_id: '',
-      order_index: index
+      order_index: index,
+      ...detalhesVazios()
     };
   }
 
@@ -207,6 +216,10 @@
     if (!hasItensValidos) {
       errors.itens = 'Adicione pelo menos um item válido com descrição e valor';
     }
+    for (const [index, item] of formData.itens.entries()) {
+      const erro = validarDetalhes(item);
+      if (erro) errors[`item-${index}`] = `Item ${index + 1}: ${erro}`;
+    }
 
     return Object.keys(errors).length === 0;
   }
@@ -239,6 +252,9 @@
           unit_price: item.unit_price,
           total_amount: item.total_amount,
           city_name: item.city_name,
+          start_date: item.start_date,
+          end_date: item.end_date,
+          raw: { detalhes_orcamento: rawDetalhes(item) },
           ...campoGeografico(item.destino_geografico_id),
           order_index: item.order_index
         }))
@@ -261,17 +277,6 @@
   function formatCurrency(value: number): string {
     return BRL_CURRENCY_FORMATTER.format(value || 0);
   }
-
-  const tiposItem = [
-    { value: 'servico', label: 'Serviço' },
-    { value: 'pacote', label: 'Pacote' },
-    { value: 'hotel', label: 'Hotel' },
-    { value: 'passagem', label: 'Passagem' },
-    { value: 'passeio', label: 'Passeio' },
-    { value: 'transfer', label: 'Transfer' },
-    { value: 'seguro', label: 'Seguro' },
-    { value: 'outro', label: 'Outro' }
-  ];
 </script>
 
 <svelte:head>
@@ -514,6 +519,12 @@
                 {formatCurrency(item.total_amount)}
               </div>
             </div>
+            <DetalhesItem bind:item prefixo={`orcamento-novo-item-${index}`} />
+            {#if errors[`item-${index}`]}
+              <p role="alert" class="text-sm text-red-600 md:col-span-12">
+                {errors[`item-${index}`]}
+              </p>
+            {/if}
           </div>
 
           {#if formData.itens.length > 1}

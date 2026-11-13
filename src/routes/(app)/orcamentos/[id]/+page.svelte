@@ -38,6 +38,7 @@
   } from '$lib/utils/formatters';
   import { toUserMessage } from '$lib/utils/errors';
   import { ensureServerSessionCookie } from '$lib/services/session';
+  import { resumoDetalhes } from '$lib/quote/detalhesItem';
 
   import { confirmAction } from '$lib/stores/confirm';
   import { ApiError, apiDelete, apiFetch, apiPatch, isCanceledApiError } from '$lib/services/api';
@@ -72,6 +73,8 @@
     valor_total?: number | null;
     segments?: OrcamentoItemSegmento[] | null;
     raw?: Record<string, unknown> | null;
+    start_date?: string | null;
+    end_date?: string | null;
   }
 
   interface OrcamentoItemSegmento {
@@ -841,6 +844,18 @@
                         <p class="text-sm text-slate-500">
                           {item.city_name || item.cidade}
                         </p>
+                      {/if}
+                      {#if item.start_date || item.end_date}
+                        <p class="text-sm text-slate-500">
+                          {formatDate(item.start_date || item.end_date || null)}{item.start_date &&
+                          item.end_date &&
+                          item.end_date !== item.start_date
+                            ? ` a ${formatDate(item.end_date)}`
+                            : ''}
+                        </p>
+                      {/if}
+                      {#if resumoDetalhes(item).length}
+                        <p class="text-sm text-slate-500">{resumoDetalhes(item).join(' · ')}</p>
                       {/if}
                       {#if isCircuitItem(item) && getCircuitDays(item).length > 0}
                         <div class="mt-3 space-y-2">

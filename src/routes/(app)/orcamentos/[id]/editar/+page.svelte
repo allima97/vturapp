@@ -5,6 +5,15 @@
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
   import DestinoOperacional from '$lib/components/DestinoOperacional.svelte';
+  import DetalhesItem from '$lib/components/orcamentos/DetalhesItem.svelte';
+  import {
+    detalhesVazios,
+    lerDetalhes,
+    rawDetalhes,
+    tiposItem,
+    validarDetalhes,
+    type DetalhesItem as CamposDetalhesItem
+  } from '$lib/quote/detalhesItem';
   import { campoGeografico } from '$lib/config/destinosGeograficos';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
@@ -19,7 +28,7 @@
   const orcamentoId = $page.params.id ?? '';
 
   // ─── Tipos ───────────────────────────────────────────────────────────────────
-  interface ItemOrcamento {
+  interface ItemOrcamento extends CamposDetalhesItem {
     id: string;
     title: string;
     product_name: string;
@@ -83,7 +92,8 @@
       total_amount: 0,
       city_name: '',
       destino_geografico_id: '',
-      order_index: index
+      order_index: index,
+      ...detalhesVazios()
     };
   }
 
@@ -161,7 +171,8 @@
           total_amount: Number(item.total_amount ?? item.valor_total ?? 0),
           city_name: String(item.city_name ?? item.cidade ?? ''),
           destino_geografico_id: String(item.destino_geografico_id ?? ''),
-          order_index: Number(item.order_index ?? index)
+          order_index: Number(item.order_index ?? index),
+          ...lerDetalhes(item)
         })
       );
 
@@ -303,6 +314,10 @@
     if (!formData.valid_until) errors.valid_until = 'Data de validade é obrigatória';
     const hasItensValidos = formData.itens.some((i) => i.title?.trim() && i.total_amount > 0);
     if (!hasItensValidos) errors.itens = 'Adicione pelo menos um item válido com descrição e valor';
+    for (const [index, item] of formData.itens.entries()) {
+      const erro = validarDetalhes(item);
+      if (erro) errors[`item-${index}`] = `Item ${index + 1}: ${erro}`;
+    }
     return Object.keys(errors).length === 0;
   }
 
@@ -334,6 +349,9 @@
           unit_price: item.unit_price,
           total_amount: item.total_amount,
           city_name: item.city_name,
+          start_date: item.start_date,
+          end_date: item.end_date,
+          raw: { detalhes_orcamento: rawDetalhes(item) },
           ...campoGeografico(item.destino_geografico_id),
           order_index: item.order_index
         }))
@@ -369,17 +387,6 @@
   function formatCurrency(value: number): string {
     return getCurrencyFormatter(formData.currency || 'BRL').format(value || 0);
   }
-
-  const tiposItem = [
-    { value: 'servico', label: 'Serviço' },
-    { value: 'pacote', label: 'Pacote' },
-    { value: 'hotel', label: 'Hotel' },
-    { value: 'passagem', label: 'Passagem' },
-    { value: 'passeio', label: 'Passeio' },
-    { value: 'transfer', label: 'Transfer' },
-    { value: 'seguro', label: 'Seguro' },
-    { value: 'outro', label: 'Outro' }
-  ];
 
   const statusOptions = [
     { value: 'novo', label: 'Novo' },
@@ -645,6 +652,12 @@
                   {formatCurrency(item.total_amount)}
                 </div>
               </div>
+              <DetalhesItem bind:item prefixo={`orcamento-editar-item-${index}`} />
+              {#if errors[`item-${index}`]}
+                <p role="alert" class="text-sm text-red-600 md:col-span-12">
+                  {errors[`item-${index}`]}
+                </p>
+              {/if}
             </div>
 
             {#if formData.itens.length > 1}

@@ -15,6 +15,7 @@ import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateQuoteReadModels } from '$lib/server/readModelCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import { complementarListaOperacional } from '$lib/server/destinoOperacional';
+import { lerDetalhes, rawDetalhes, validarDetalhes } from '$lib/quote/detalhesItem';
 
 const MAX_ORCAMENTO_CREATE_BODY_BYTES = 512 * 1024;
 
@@ -50,6 +51,9 @@ type OrcamentoCreateItem = Record<string, unknown> & {
   quantidade?: unknown;
   unit_price?: unknown;
   valor_unitario?: unknown;
+  start_date?: unknown;
+  end_date?: unknown;
+  raw?: unknown;
 };
 
 type ClienteScopeRow = {
@@ -124,7 +128,30 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
         { status: 400, headers: NO_STORE_HEADERS }
       );
     }
+    if (body.itens.some((item) => !item || typeof item !== 'object' || Array.isArray(item))) {
+      return json({ error: 'Item inválido.' }, { status: 400, headers: NO_STORE_HEADERS });
+    }
     const itens = body.itens as OrcamentoCreateItem[];
+    for (const [index, item] of itens.entries()) {
+      const detalhes = { ...lerDetalhes(item), item_type: String(item.item_type || 'servico') };
+      const erro = validarDetalhes(detalhes);
+      if (erro)
+        return json(
+          { error: `Item ${index + 1}: ${erro}` },
+          { status: 400, headers: NO_STORE_HEADERS }
+        );
+    }
+    const preparados = await complementarListaOperacional(
+      itens,
+      event.platform?.env?.DB,
+      event.platform?.env?.GEO_DB,
+      'city_name'
+    );
+    if (!preparados.ok)
+      return json(
+        { error: preparados.error },
+        { status: preparados.status, headers: NO_STORE_HEADERS }
+      );
 
     // quote nao tem company_id — usa created_by como FK auth.users
     const total = itens.reduce((acc: number, item) => {
@@ -162,17 +189,6 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
       );
     }
 
-    const preparados = await complementarListaOperacional(
-      itens,
-      event.platform?.env?.DB,
-      event.platform?.env?.GEO_DB,
-      'city_name'
-    );
-    if (!preparados.ok)
-      return json(
-        { error: preparados.error },
-        { status: preparados.status, headers: NO_STORE_HEADERS }
-      );
     const itensParaInserir = preparados.itens.map((item, index: number) => ({
       quote_id: quote.id,
       title: item.title || item.descricao || `Item ${index + 1}`,
@@ -185,7 +201,14 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
       quantity: item.quantity || item.quantidade || 1,
       unit_price: item.unit_price || item.valor_unitario || 0,
       currency: body.currency || 'BRL',
-      raw: {}
+      start_date: item.start_date,
+      end_date: item.end_date,
+      raw: {
+        detalhes_orcamento: rawDetalhes({
+          ...lerDetalhes(item),
+          item_type: String(item.item_type || 'servico')
+        })
+      }
     }));
 
     const { error: itemsError } = await client.from('quote_item').insert(itensParaInserir);
