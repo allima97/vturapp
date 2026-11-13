@@ -56,6 +56,20 @@ describe('trechos aéreos no PDF do roteiro', () => {
     expect(second).not.toContain('LA — LATAM');
   });
 
+  it('mantém a tarifa na posição própria quando a classe não é informada', () => {
+    const html = renderPreviewFlights(
+      [{ ...newTransporte(0), cia_aerea: 'LATAM', tarifa_nome: 'FULL' }],
+      (date) => date || ''
+    );
+    expect(html).toContain(
+      '<div class="roteiro-flight-detail-companhia"><span>COMPANHIA</span><strong>LATAM</strong></div>'
+    );
+    expect(html).toContain(
+      '<div class="roteiro-flight-detail-tarifa"><span>TARIFA</span><strong>FULL</strong></div>'
+    );
+    expect(html).not.toContain('roteiro-flight-detail-classe');
+  });
+
   it('usa a data de início quando a data do voo não está preenchida', () => {
     const html = renderPreviewFlights(
       [{ ...newTransporte(0), data_inicio: '2027-01-03' }],

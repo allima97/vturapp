@@ -156,14 +156,14 @@ export function renderPreviewFlights(items: RotTransporte[], formatDate: FormatD
                 ? `Chegada ${-days} dias antes (${days})`
                 : '';
       const details = [
-        ['COMPANHIA', airline],
-        ['CLASSE', text(item.classe_reserva)],
-        ['TARIFA', text(item.tarifa_nome)]
+        ['COMPANHIA', airline, 'companhia'],
+        ['CLASSE', text(item.classe_reserva), 'classe'],
+        ['TARIFA', text(item.tarifa_nome), 'tarifa']
       ]
         .filter(([, value]) => value)
         .map(
-          ([label, value]) =>
-            `<div><span>${label}</span><strong>${escapeHtml(value)}</strong></div>`
+          ([label, value, position]) =>
+            `<div class="roteiro-flight-detail-${position}"><span>${label}</span><strong>${escapeHtml(value)}</strong></div>`
         )
         .join('');
       const flightDate = formatarDataPassagem(item.data_voo || item.data_inicio, true);

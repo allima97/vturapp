@@ -1312,7 +1312,10 @@
             .roteiro-flight-duration span::before, .roteiro-flight-duration span::after { content: ''; flex: 1; height: 2px; background: currentColor; }
             .roteiro-flight-duration .roteiro-flight-plane { flex: none; }
             .roteiro-flight-arrival-notice { display: block; color: #92400e; font-size: 10px; font-weight: 700; border: 1px solid #b45309; border-radius: 4px; padding: 3px 6px; margin-top: 4px; }
-            .roteiro-flight-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 16px; border-top: 1px dashed #dbe3ec; margin-top: 12px; padding-top: 10px; }
+            .roteiro-flight-details { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; border-top: 1px dashed #dbe3ec; margin-top: 12px; padding-top: 10px; }
+            .roteiro-flight-detail-companhia { grid-column: 1; }
+            .roteiro-flight-detail-classe { grid-column: 2; text-align: center; }
+            .roteiro-flight-detail-tarifa { grid-column: 3; text-align: right; }
             .roteiro-flight-details span { display: block; color: #64748b; font-size: 10px; font-weight: bold; }
             .roteiro-flight-details strong { overflow-wrap: anywhere; }
             @media (max-width: 500px) { .roteiro-flight-duration span { width: 40px; } .roteiro-flight-route { gap: 6px; } }
