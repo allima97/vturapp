@@ -143,6 +143,7 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
         status_negociacao: body.status_negociacao || 'Enviado',
         total: total,
         currency: body.currency || 'BRL',
+        raw_json: {},
         created_by: user.id,
         data_embarque: body.data_embarque || null,
         data_final: body.data_final || null,
@@ -182,7 +183,9 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
       city_name: item.city_name || item.cidade || null,
       ...(item.destino_geografico_id ? { destino_geografico_id: item.destino_geografico_id } : {}),
       quantity: item.quantity || item.quantidade || 1,
-      unit_price: item.unit_price || item.valor_unitario || 0
+      unit_price: item.unit_price || item.valor_unitario || 0,
+      currency: body.currency || 'BRL',
+      raw: {}
     }));
 
     const { error: itemsError } = await client.from('quote_item').insert(itensParaInserir);
