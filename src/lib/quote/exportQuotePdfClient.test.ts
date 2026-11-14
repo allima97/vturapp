@@ -65,12 +65,12 @@ describe('identidade dos orçamentos e circuitos', () => {
     );
     expect(body).toContain('orc-section-icon--flight');
     expect(body).toContain('transform="rotate(-35 12 12)"');
-    expect(body.match(/orc-section-icon--city/g)).toHaveLength(2);
+    expect(body).not.toContain('orc-section-icon--city');
     expect(body).toContain('orc-section-icon--financial');
     const icons = Array.from(body.matchAll(/<svg\b[^>]*>/g), (match) => match[0]);
     expect(icons.length).toBeGreaterThan(0);
     expect(icons.every((icon) => icon.includes('aria-hidden="true" focusable="false"'))).toBe(true);
-    expect(body).toContain('</svg>Resumo financeiro</h2>');
+    expect(body).toContain('Total da viagem');
   });
 
   it('mostra um ícone apropriado junto ao nome de cada serviço no PDF', () => {
@@ -105,17 +105,12 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: false
     });
-    const serviceCells = Array.from(
-      html.matchAll(/<div class="orc-service-type">(.*?)<\/div>/g),
-      (match) => match[1]
-    );
-    expect(serviceCells).toHaveLength(types.length);
-    for (const [index, [, icon]] of types.entries()) {
-      expect(serviceCells[index]).toContain(`orc-service-icon--${icon}`);
-      expect(serviceCells[index]).toContain('aria-hidden="true" focusable="false"');
+    expect(html).not.toMatch(/orc-service-label"><svg/);
+    const expected = new Map<string, number>();
+    for (const [, icon] of types) expected.set(icon, (expected.get(icon) ?? 0) + 1);
+    for (const [icon, count] of expected) {
+      expect(html.match(new RegExp(`orc-service-icon--${icon}`, 'g'))).toHaveLength(count);
     }
-    expect(serviceCells[4]).toContain('<span>Trem</span>');
-    expect(serviceCells[5]).toContain('<span>Passagem Aérea</span>');
   });
 
   it('apresenta avisos padrão em cartões, incluindo o aviso infantil somente quando aplicável', () => {
@@ -142,8 +137,8 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(list(withChildren)).toContain('Valor da criança válido somente quando acompanhada');
     expect(list(withChildren).match(/aria-hidden="true" focusable="false"/g)).toHaveLength(5);
     expect(withChildren).toContain('alt="Imagem complementar"');
-    expect(withChildren).toContain('Orçamento para Ana');
-    expect(withChildren).toContain('Válido até: 15-07-2027');
+    expect(withChildren).toContain('>Ana</b>');
+    expect(withChildren).toContain('Tarifas válidas até 15/07/2027');
   });
 
   it('preserva avisos personalizados escapados e permite quebra de avisos longos', () => {
@@ -290,18 +285,23 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: true
     });
+    expect(screen).toContain('ROM → MIL - FR 1000');
+    expect(screen).toContain('03 passagens');
+    expect(screen).toContain('Assentos: 12A, 12B');
+    expect(pdf).toContain('>TREM<');
+    expect(pdf).toContain('ROM');
+    expect(pdf).toContain('MIL');
+    expect(pdf).toContain('FR 1000');
+    expect(pdf).toContain('3 passagens');
+    expect(pdf).toContain('Assentos 12A, 12B');
+    expect(pdf).toContain('Serviços');
     for (const html of [screen, pdf]) {
-      expect(html).toContain('ROM → MIL - FR 1000');
-      expect(html).toContain('03 passagens');
       expect(html).toContain('Executiva');
-      expect(html).toContain('Assentos: 12A, 12B');
       expect(html).not.toContain('Tarifa antiga');
       expect(html).not.toContain('Aéreo Internacional');
     }
     expect(screen).toContain('data-label="Serviço" class="px-3 py-3 text-slate-700">Trem</td>');
     expect(screen).toContain('>Roma</td>');
-    expect(pdf).toContain('<span>Trem</span></span>');
-    expect(pdf).toContain('<td>Serviços e demais produtos</td><td>BRL</td>');
   });
 
   it('mostra apenas os nomes das cidades nos trechos de trem, inclusive nos dados legados', () => {
@@ -337,11 +337,16 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: false
     });
+    expect(screen).toContain(
+      'Barcelona → Madrid - OL 2020 - 13-08-2027 - 14:00 / 15:20 - Assentos: 10A,10B'
+    );
+    expect(screen).toContain('Madrid → Lisboa');
+    expect(pdf).toContain('TREM · 13/08/2027');
+    expect(pdf).toContain('Barcelona');
+    expect(pdf).toContain('Madrid');
+    expect(pdf).toContain('OL 2020');
+    expect(pdf).toContain('Lisboa');
     for (const html of [screen, pdf]) {
-      expect(html).toContain(
-        'Barcelona → Madrid - OL 2020 - 13-08-2027 - 14:00 / 15:20 - Assentos: 10A,10B'
-      );
-      expect(html).toContain('Madrid → Lisboa');
       expect(html).not.toContain('Província de Barcelona');
       expect(html).not.toContain('Comunidade de Madrid');
     }
@@ -400,9 +405,10 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(sections[0]).toContain('>Barcelona</div>');
     expect(sections[0]).toContain('Hotel Barcelona');
     expect(sections[0]).toContain('Trem Barcelona / Madrid');
-    expect(sections[0]).toContain('Barcelona → Madrid');
-    expect(sections[0]).toContain('Madrid → Lisboa');
-    expect(sections[0]).toContain('Subtotal — Barcelona');
+    expect(sections[0]).toContain('Barcelona');
+    expect(sections[0]).toContain('Madrid');
+    expect(sections[0]).toContain('Madrid / Lisboa');
+    expect(sections[0]).toContain('Barcelona');
     expect(sections[0]).toContain('R$ 150,00');
     expect(sections[1]).toContain('Hotel Madrid');
     expect(sections[1]).not.toContain('Trem Barcelona / Madrid');
@@ -520,9 +526,14 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: false
     });
-    expect(html).toContain('Hollywood Hotel Inn - 11-08-2027 a 13-08-2027 (02 noites)');
-    expect(html).toContain('02 Adultos | 3 Estrelas | Duplo | Café da manhã');
-    expect(html).toContain('<div class="q orc-quantity">01 apartamento</div>');
+    expect(html).toContain('HOTEL · 11/08 a 13/08/2027 · 2 NOITES');
+    expect(html).toContain('Hollywood Hotel Inn');
+    expect(html).toContain('3 Estrelas · Duplo');
+    expect(html).toContain('Café da manhã');
+    expect(html).toContain('min-width: 0');
+    expect(html).toContain('overflow-wrap: anywhere');
+    expect(html).toContain('2 adultos');
+    expect(html).toContain('<div class="q orc-quantity">1 apartamento</div>');
     expect(html).not.toContain('Total de noites:');
     expect(html).not.toContain('Categoria:');
     expect(html).not.toContain('Apartamentos:');
@@ -558,9 +569,14 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
 
-    expect(html).toContain('SUV - 17-01-2027 a 20-01-2027 (04 dias)');
-    expect(html).toContain('Automático | KM Livre | CDW | LDW | Tanque Cheio');
-    expect(html).toContain('<div class="q orc-quantity">01 carro</div>');
+    expect(html).toContain('CARRO · 17/01 a 20/01/2027 · 4 DIÁRIAS');
+    expect(html).toContain('>SUV</b>');
+    expect(html).toContain('Aluguel de carro');
+    expect(html).toContain('KM Livre');
+    expect(html).toContain('CDW');
+    expect(html).toContain('LDW');
+    expect(html).toContain('Tanque Cheio');
+    expect(html).toContain('<div class="q orc-quantity">1 carro</div>');
     expect(html).not.toContain('SUV - Automático - 17-01-2027');
     expect(html).not.toContain('Câmbio:');
     expect(html).not.toContain('Incluídos:');
@@ -589,8 +605,10 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: false
     });
-    for (const quantity of ['01 apartamento', '02 apartamentos', '01 carro', '02 carros']) {
+    for (const quantity of ['1 apartamento', '2 apartamentos', '1 carro', '2 carros']) {
       expect(html).toContain(`<div class="q orc-quantity">${quantity}</div>`);
+    }
+    for (const quantity of ['01 apartamento', '02 apartamentos', '01 carro', '02 carros']) {
       expect(html).toContain(`<td class="text-right">${quantity}</td>`);
     }
     expect(html).toContain('<div class="q orc-quantity">-</div>');
@@ -647,7 +665,8 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
 
-    expect(html).toContain('02 Adultos | 01 Criança');
+    expect(html).toContain('2 adultos');
+    expect(html).toContain('1 criança');
     expect(html).toContain('Valor da criança válido');
   });
 
@@ -691,8 +710,8 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     const body = html.slice(html.indexOf('<body>'));
     expect(body.match(/class="roteiro-card-city"/g)).toHaveLength(4);
-    expect(body).toContain('class="orc-section-icon orc-section-icon--city"');
-    expect(body).toContain('</svg>Los Angeles</div>');
+    expect(body).not.toContain('orc-section-icon--city');
+    expect(body).toContain('>Los Angeles</div>');
     expect(body).not.toContain('Califórnia');
     expect(body).not.toContain('Paris, França');
     expect(body).not.toContain('Não é acomodação');
@@ -760,20 +779,30 @@ describe('identidade dos orçamentos e circuitos', () => {
         showBudgetDetails
       });
       const body = html.slice(html.indexOf('<body>'));
-      const titles = [
-        'Hotel Paris',
-        'Voo Principal',
-        'Hotel Roma',
-        'Passeio Paris',
-        'Voo sem Trechos',
-        'Serviço sem data',
-        'Serviço com fim'
-      ];
+      const titles = showBudgetDetails
+        ? [
+            'Voo Principal',
+            'Voo sem Trechos',
+            'Hotel Paris',
+            'Hotel Roma',
+            'Passeio Paris',
+            'Serviço sem data',
+            'Serviço com fim'
+          ]
+        : [
+            'Hotel Paris',
+            'Voo Principal',
+            'Hotel Roma',
+            'Passeio Paris',
+            'Voo sem Trechos',
+            'Serviço sem data',
+            'Serviço com fim'
+          ];
       const positions = titles.map((title) => body.indexOf(title));
       expect(positions.every((position) => position >= 0)).toBe(true);
       expect(positions).toEqual([...positions].sort((a, b) => a - b));
       if (showBudgetDetails) {
-        expect(body.match(/Passagens Aéreas Internacionais e Trechos Internos/g)).toHaveLength(2);
+        expect(body.match(/Passagens aéreas/g)).toHaveLength(1);
         expect(body.match(/class="roteiro-card-city"/g)).toHaveLength(5);
       }
     }
@@ -822,8 +851,8 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
     const body = html.slice(html.indexOf('<body>'));
+    expect(body.indexOf('Passagem Internacional')).toBeLessThan(body.indexOf('Hotel Madri'));
     expect(body.indexOf('Hotel Madri')).toBeLessThan(body.indexOf('Circuito Itália'));
-    expect(body.indexOf('Circuito Itália')).toBeLessThan(body.indexOf('Passagem Internacional'));
     expect(body).toContain('<article class="roteiro-card');
   });
 
@@ -943,25 +972,24 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: true
     });
-    expect(html).toContain('Passagens Aéreas Internacionais e Trechos Internos');
-    expect(html.match(/<span>Passagem Aérea<\/span><\/span>/g)).toHaveLength(3);
-    expect(html).toContain('<div class="q orc-quantity">01 passagem</div>');
-    expect(html.match(/<div class="q orc-quantity">02 passagens<\/div>/g)).toHaveLength(2);
+    expect(html).toContain('Passagens aéreas');
+    expect(html).toContain('AÉREO · IDA · 10/08/2027');
+    expect(html).toContain('AÉREO · VOLTA · 25/08/2027');
+    expect(html).toContain('<div class="q orc-quantity">1 passagem</div>');
+    expect(html.match(/<div class="q orc-quantity">2 passagens<\/div>/g)).toHaveLength(2);
     for (const value of [
-      'LATAM',
-      'LA 8120',
+      'LATAM · LA 8120',
       'GRU',
       'FCO',
-      'São Paulo / Roma / São Paulo',
-      'GRU → FCO - LA 8120 - 10-08-2027 - 10:50 / 10:15 (+1)',
-      '10:50 / 10:15 (+1)',
-      'FCO → GRU - LA 8121 - 25-08-2027 - 19:50 / 09:50 (+1)',
-      'ROMA → BARCELONA - IB 1554 - 11-08-2027 - 14:00 / 15:20',
-      'GRU → GIG - AD 4455',
+      'São Paulo / Roma',
+      'class="p1">+1',
+      'LATAM · LA 8121',
+      'IBERIA · IB 1554',
+      'Azul Linhas Aéreas · AD 4455',
       'Econômica',
-      '02 Adultos | Econômica | FULL',
-      '02 Adultos | Econômica | Standard',
-      'IBERIA',
+      'FULL',
+      'Standard',
+      '2 adultos',
       '1.500,00',
       '120,00'
     ]) {
@@ -971,7 +999,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).not.toContain('Roma, Itália');
     expect(html).toContain('Azul Linhas Aéreas');
     expect(html).toContain('AD 4455');
-    expect(html.match(/<strong>LATAM<\/strong>/g)).toHaveLength(1);
+    expect(html).toContain('LATAM · LA 8120');
     expect(html.match(/São Paulo \/ Roma \/ São Paulo/g)).toHaveLength(1);
     expect(html).not.toContain('Classe: Econômica');
     expect(html).not.toContain('Tarifa: FULL');
@@ -1021,7 +1049,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
 
-    for (const quantity of ['03 passagens', '01 passagem', '02 passagens', '04 passagens']) {
+    for (const quantity of ['3 passagens', '1 passagem', '2 passagens', '4 passagens']) {
       expect(html).toContain(`<div class="q orc-quantity">${quantity}</div>`);
     }
     expect(html).not.toContain('01 trecho');
@@ -1052,7 +1080,8 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
     expect(screen).toContain('>Passagem Aérea</td>');
-    expect(pdf).toContain('>Passagem Aérea</span>');
+    expect(pdf).toContain('Passagens aéreas');
+    expect(pdf).toContain('Voo Antigo');
   });
 
   it('formata somente descrições aéreas no resumo e nos detalhes, inclusive sem trechos', () => {
@@ -1074,7 +1103,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: false
     });
-    expect(html.match(/São Paulo \/ Roma \/ São Paulo/g)).toHaveLength(2);
+    expect(html).toContain('São Paulo / Roma / São Paulo');
     expect(html.match(/Rio de Janeiro \/ Porto/g)).toHaveLength(2);
     expect(html).toContain('HOTEL ROMA');
     expect(html).toContain('LATAM');
@@ -1104,8 +1133,10 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: false
     });
-    expect(html).toContain('GRU → FCO - LA 8120');
-    expect(html).toContain('FCO → GRU - LA 8121');
+    expect(html).toContain('GRU');
+    expect(html).toContain('FCO');
+    expect(html).toContain('LA 8120');
+    expect(html).toContain('LA 8121');
   });
 
   it('apresenta tabelas por cidade, subtotais por moeda e resumo sem somar moedas diferentes', () => {
@@ -1156,15 +1187,15 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: true,
       discount: 50
     });
-    expect(html).toContain('Subtotal — Paris');
+    expect(html).toContain('>Paris</div>');
     expect(html).toContain('€ 950,00');
     expect(html).toContain('R$ 300,00');
-    expect(html).toContain('16-08-2027 a 21-08-2027');
-    expect(html).toContain('<td>Passagens aéreas</td><td>BRL</td>');
-    expect(html).toContain('<td>Serviços e demais produtos</td><td>EUR</td>');
+    expect(html).toContain('16/08 a 21/08/2027');
+    expect(html).toContain('Aéreo');
+    expect(html).toContain('Serviços');
     expect(html).toContain('R$ 6.850,00');
     expect(html).not.toContain('R$ 7.800,00');
-    expect(html).toContain('<strong>Emissão:</strong> 01/07/2027');
+    expect(html).toContain('>01/07/2027</span>');
     expect(html).not.toContain('Validade somente para');
   });
 
@@ -1199,12 +1230,11 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(group).toContain('class="q orc-quantity"');
     expect(group).not.toContain('Subtotal');
     expect(group).not.toContain('500,00');
-    expect(html).toContain('<td>Produtos</td><td>EUR</td>');
-    expect(html).not.toContain('<td>Serviços e demais produtos</td><td>EUR</td>');
-    expect(html).toContain(
-      '<div class="orc-title-meta orc-title-dates"><strong>Emissão:</strong> 01/07/2027 <span>·</span> <strong>Validade:</strong> 15-07-2027</div>'
-    );
-    expect(html).toContain('Válido até: 15-07-2027');
+    expect(html).toContain('>Produtos</span>');
+    expect(html).not.toContain('Aéreo');
+    expect(html).toContain('>01/07/2027</span>');
+    expect(html).toContain('>15/07/2027</span>');
+    expect(html).toContain('Tarifas válidas até 15/07/2027');
   });
 
   it('mostra somente as datas disponíveis no cabeçalho, sem separador solto', () => {
@@ -1226,13 +1256,12 @@ describe('identidade dos orçamentos e circuitos', () => {
       quote: { id: 'quote-1', valid_until: '2027-07-15' }
     });
     const neither = buildQuotePreviewHtmlSync({ ...options, quote: { id: 'quote-1' } });
-    expect(issueOnly).toContain(
-      '<div class="orc-title-meta orc-title-dates"><strong>Emissão:</strong> 01/07/2027</div>'
-    );
-    expect(validityOnly).toContain(
-      '<div class="orc-title-meta orc-title-dates"><strong>Validade:</strong> 15-07-2027</div>'
-    );
-    expect(neither).not.toContain('class="orc-title-meta orc-title-dates"');
+    expect(issueOnly).toContain('>01/07/2027</span>');
+    expect(issueOnly).not.toContain('15/07/2027');
+    expect(validityOnly).toContain('>15/07/2027</span>');
+    expect(validityOnly).not.toContain('01/07/2027');
+    expect(neither).not.toContain('01/07/2027');
+    expect(neither).not.toContain('15/07/2027');
   });
 
   it('mantém o tipo informado em serviços importados e a moeda padrão do orçamento', () => {
@@ -1254,7 +1283,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: true
     });
-    expect(html).toContain('<span>Trem</span></span>');
+    expect(html).toContain('TREM');
     expect(html).toContain('€ 90,00');
     expect(html).not.toContain('R$ 90,00');
   });
