@@ -598,20 +598,32 @@ function passageirosDoOrcamento(items: QuoteItemForPdf[]) {
   return passagens ? `${passagens} ${passagens === 1 ? 'passageiro' : 'passageiros'}` : '';
 }
 
-function totalDaFaixa(
-  items: QuoteItemForPdf[],
-  currency: string,
-  discount: number,
-  showItemValues: boolean
-) {
-  if (!showItemValues) return '—';
-  const amount = items
-    .filter((item) => (item.currency || currency) === currency)
-    .reduce(
-      (sum, item) => sum + Number(item.total_amount ?? 0) + Number(item.taxes_amount ?? 0),
-      0
-    );
-  return formatCurrency(Math.max(amount - discount, 0), currency);
+function totaisDaViagem(items: QuoteItemForPdf[], currency: string, discount: number) {
+  const totals = new Map<string, { flights: number; services: number; taxes: number }>();
+  for (const item of items) {
+    const itemCurrency = item.currency || currency;
+    const group = totals.get(itemCurrency) || { flights: 0, services: 0, taxes: 0 };
+    if (isFlightQuoteItem(item)) group.flights += Number(item.total_amount ?? 0);
+    else group.services += Number(item.total_amount ?? 0);
+    group.taxes += Number(item.taxes_amount ?? 0);
+    totals.set(itemCurrency, group);
+  }
+  if (!totals.size) totals.set(currency, { flights: 0, services: 0, taxes: 0 });
+  return Array.from(totals, ([code, group]) => {
+    const appliedDiscount = code === currency ? discount : 0;
+    return {
+      code,
+      group,
+      appliedDiscount,
+      total: Math.max(group.flights + group.services + group.taxes - appliedDiscount, 0)
+    };
+  });
+}
+
+function totalDaFaixa(items: QuoteItemForPdf[], currency: string, discount: number) {
+  return totaisDaViagem(items, currency, discount)
+    .map(({ code, total }) => formatCurrency(total, code))
+    .join(' · ');
 }
 
 function passageirosSemZero(item: QuoteItemForPdf) {
@@ -1300,29 +1312,19 @@ function renderFinancialSummary(
   discount: number,
   showItemValues: boolean
 ) {
-  const totals = new Map<string, { flights: number; services: number; taxes: number }>();
-  for (const item of items) {
-    const itemCurrency = item.currency || currency;
-    const group = totals.get(itemCurrency) || { flights: 0, services: 0, taxes: 0 };
-    if (isFlightQuoteItem(item)) group.flights += Number(item.total_amount ?? 0);
-    else group.services += Number(item.total_amount ?? 0);
-    group.taxes += Number(item.taxes_amount ?? 0);
-    totals.set(itemCurrency, group);
-  }
-  if (!totals.size) totals.set(currency, { flights: 0, services: 0, taxes: 0 });
-
+  const totals = totaisDaViagem(items, currency, discount);
   const discountNotice =
-    discount > 0 && !totals.has(currency)
+    discount > 0 && !totals.some((entry) => entry.code === currency)
       ? `<p class="orc-summary-note">Desconto informado em ${escHtml(currency)} não aplicado: não há itens nessa moeda.</p>`
       : '';
-  const cards = Array.from(totals, ([code, group]) => {
-    const appliedDiscount = code === currency ? discount : 0;
-    const total = Math.max(group.flights + group.services + group.taxes - appliedDiscount, 0);
-    const detail = showItemValues
-      ? `· Aéreo ${formatCurrency(group.flights, code)} + Serviços ${formatCurrency(group.services + group.taxes, code)}${appliedDiscount ? ` · desconto ${formatCurrency(appliedDiscount, code)}` : ''}`
-      : 'Produtos';
-    return `<div class="card tot" style="padding:12px 14px;background:#EEF2F7"><span>Total da viagem <span class="mu" style="font-size:8.5pt;font-weight:normal">${escHtml(detail)}</span></span><span>${escHtml(formatCurrency(total, code))}</span></div>`;
-  }).join('');
+  const cards = totals
+    .map(({ code, group, appliedDiscount, total }) => {
+      const detail = showItemValues
+        ? `· Aéreo ${formatCurrency(group.flights, code)} + Serviços ${formatCurrency(group.services + group.taxes, code)}${appliedDiscount ? ` · desconto ${formatCurrency(appliedDiscount, code)}` : ''}`
+        : 'Produtos';
+      return `<div class="card tot" style="padding:12px 14px;background:#EEF2F7"><span>Total da viagem <span class="mu" style="font-size:8.5pt;font-weight:normal">${escHtml(detail)}</span></span><span>${escHtml(formatCurrency(total, code))}</span></div>`;
+    })
+    .join('');
   return `<section class="orc-financial-section">${cards}${discountNotice}</section>`;
 }
 
@@ -1405,7 +1407,7 @@ export function buildQuotePreviewHtmlSync(params: {
     <div class="card"><h1 style="margin:0 0 2px">Proposta de viagem</h1><div class="mu">Para <b style="color:#1F2937">${escHtml(clientName)}</b>${cities.length ? ` · ${escHtml(cities.join(' e '))}` : ''}</div></div>`;
 
   const viajantes = passageirosDoOrcamento(items);
-  const totalFaixa = totalDaFaixa(items, currency, safeDiscount, showItemValues);
+  const totalFaixa = totalDaFaixa(items, currency, safeDiscount);
   const bandHtml = `
     <div class="band">
       <div><b>PERÍODO</b><span>${escHtml(period || '—')}</span></div>
