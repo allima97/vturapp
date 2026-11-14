@@ -34,6 +34,8 @@ const QUOTE_ITEM_SELECT_FIELDS =
   (modulosOperacionaisGeograficosAtivos ? ', destino_geografico_id' : '');
 const QUOTE_ITEM_SEGMENT_SELECT_FIELDS = 'id, quote_item_id, segment_type, data, order_index';
 
+type QuoteItemRow = Record<string, unknown> & { id: string };
+
 const MAX_ORCAMENTO_UPDATE_BODY_BYTES = 256 * 1024;
 const errorResponse = (message: string, status: number) =>
   json({ error: message }, { status, headers: NO_STORE_HEADERS });
@@ -147,8 +149,8 @@ export async function handleOrcamentosIdGet(event: RequestEvent) {
     if (previewPdf && itemsResult.error) throw itemsResult.error;
     if (previewPdf && clienteResult.error) throw clienteResult.error;
     if (settingsResult.error) throw settingsResult.error;
-    const items = itemsResult.data;
-    const itemIds = (items || []).map((item: any) => item.id).filter(Boolean);
+    const items = (itemsResult.data || []) as QuoteItemRow[];
+    const itemIds = items.map((item) => item.id);
     const { data: itemSegments, error: itemSegmentsError } =
       itemIds.length > 0
         ? await client
@@ -168,7 +170,7 @@ export async function handleOrcamentosIdGet(event: RequestEvent) {
       segmentMap.set(itemId, list);
     }
 
-    const itemsWithSegments = (items || []).map((item: any) => ({
+    const itemsWithSegments = items.map((item) => ({
       ...item,
       segments: segmentMap.get(String(item.id || '')) || []
     }));

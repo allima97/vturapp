@@ -818,6 +818,17 @@
       </Card>
 
       <Card header="Itens do Orçamento" color="clientes">
+        <svelte:fragment slot="actions">
+          <Button
+            href={`/orcamentos/${orcamentoId}/editar`}
+            variant="primary"
+            size="sm"
+            title="Editar orçamento"
+          >
+            <Edit size={15} class="mr-1.5" />
+            Editar orçamento
+          </Button>
+        </svelte:fragment>
         {#if orcamento.itens && orcamento.itens.length > 0}
           <div class="overflow-x-visible md:overflow-x-auto">
             <table class="table-mobile-cards w-full">

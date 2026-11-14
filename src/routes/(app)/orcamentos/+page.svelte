@@ -4,7 +4,7 @@
   import DataTable from '$lib/components/ui/DataTable.svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Button from '$lib/components/ui/Button.svelte';
-  import { Plus, FileText, Send, ShoppingCart, AlertCircle } from '$lib/icons';
+  import { Plus, FileText, Send, ShoppingCart, AlertCircle, Edit } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { diffDaysISODate, todayISODateLocal } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
@@ -515,4 +515,16 @@
   onExport={handleExport}
   onFilterChange={handleFiltroChange}
   emptyMessage="Nenhum orçamento encontrado para o escopo atual"
-/>
+>
+  <svelte:fragment slot="row-actions" let:row>
+    <Button
+      href={`/orcamentos/${row.id}/editar`}
+      variant="secondary"
+      size="sm"
+      title={`Editar orçamento ${row.codigo}`}
+    >
+      <Edit size={15} class="mr-1.5" />
+      Editar
+    </Button>
+  </svelte:fragment>
+</DataTable>
