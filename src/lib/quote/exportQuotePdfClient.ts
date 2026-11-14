@@ -957,10 +957,14 @@ export function buildQuotePreviewHtmlSync(params: {
       <div class="orc-title-left">
         <div class="orc-title-kicker">Proposta de viagem</div>
         <div class="orc-title">Orçamento da sua viagem</div>
-        <div class="orc-title-meta"><strong>Para:</strong> ${escHtml(clientName)}${dateLabel ? ` <span>·</span> <strong>Emissão:</strong> ${escHtml(dateLabel)}` : ''}</div>
+        <div class="orc-title-meta"><strong>Para:</strong> ${escHtml(clientName)}</div>
+        ${
+          dateLabel || validity
+            ? `<div class="orc-title-meta orc-title-dates">${dateLabel ? `<strong>Emissão:</strong> ${escHtml(dateLabel)}` : ''}${dateLabel && validity ? ' <span>·</span> ' : ''}${validity ? `<strong>Validade:</strong> ${escHtml(validity)}` : ''}</div>`
+            : ''
+        }
         ${period ? `<div class="orc-title-meta"><strong>Período:</strong> ${escHtml(period)}</div>` : ''}
         ${cities.length ? `<div class="orc-title-meta"><strong>Destinos:</strong> ${escHtml(cities.join(', '))}</div>` : ''}
-        ${validity ? `<div class="orc-title-meta"><strong>Validade:</strong> ${escHtml(validity)}</div>` : ''}
       </div>
     </div>`;
 
@@ -1027,6 +1031,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-title-kicker { color: #243aa3; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
     .orc-title { font-size: 21px; font-weight: 700; color: #243aa3; line-height: 1.2; margin-top: 4px; }
     .orc-title-meta { color: #334155; font-size: 12px; line-height: 1.5; margin-top: 5px; }
+    .orc-title-dates { white-space: nowrap; }
 
     /* Seção genérica */
     .orc-section-card { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 12px 14px; margin: 0 0 12px 0; }

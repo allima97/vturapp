@@ -642,8 +642,38 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(group).not.toContain('500,00');
     expect(html).toContain('<td>Produtos</td><td>EUR</td>');
     expect(html).not.toContain('<td>Serviços e demais produtos</td><td>EUR</td>');
-    expect(html).toContain('<strong>Validade:</strong> 15-07-2027');
+    expect(html).toContain(
+      '<div class="orc-title-meta orc-title-dates"><strong>Emissão:</strong> 01/07/2027 <span>·</span> <strong>Validade:</strong> 15-07-2027</div>'
+    );
     expect(html).toContain('Válido até: 15-07-2027');
+  });
+
+  it('mostra somente as datas disponíveis no cabeçalho, sem separador solto', () => {
+    const options = {
+      items: [],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: false,
+      showItemValues: false
+    };
+    const issueOnly = buildQuotePreviewHtmlSync({
+      ...options,
+      quote: { id: 'quote-1', created_at: '2027-07-01' }
+    });
+    const validityOnly = buildQuotePreviewHtmlSync({
+      ...options,
+      quote: { id: 'quote-1', valid_until: '2027-07-15' }
+    });
+    const neither = buildQuotePreviewHtmlSync({ ...options, quote: { id: 'quote-1' } });
+    expect(issueOnly).toContain(
+      '<div class="orc-title-meta orc-title-dates"><strong>Emissão:</strong> 01/07/2027</div>'
+    );
+    expect(validityOnly).toContain(
+      '<div class="orc-title-meta orc-title-dates"><strong>Validade:</strong> 15-07-2027</div>'
+    );
+    expect(neither).not.toContain('class="orc-title-meta orc-title-dates"');
   });
 
   it('mantém o tipo informado em serviços importados e a moeda padrão do orçamento', () => {
