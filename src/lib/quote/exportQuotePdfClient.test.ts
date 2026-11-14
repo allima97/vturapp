@@ -30,9 +30,12 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     expect(html).toContain('.orc-title { font-size: 21px; font-weight: 700; color: #243aa3;');
     expect(html).toContain('.orc-city-table thead th { background: #243aa3;');
-    expect(html).toContain(
-      '.orc-title-row, .orc-city-section, .orc-financial-section { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 16px; }'
-    );
+    expect(html).toContain('.orc-title-row { background: white; border: 1px solid #DDE3EC;');
+    expect(html).toContain('.sh { background: #EEF2F7;');
+    expect(html).toContain('.sh small { color: #6B7280;');
+    expect(html).toContain('.card.tot { background: #EEF2F7;');
+    expect(html).toContain('print-color-adjust: exact;');
+    expect(html).toContain('-webkit-print-color-adjust: exact;');
   });
 
   it('mostra ícones decorativos para voos, cidades e resumo financeiro', () => {
@@ -61,10 +64,10 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     const body = html.slice(
       html.indexOf('<body>'),
-      html.indexOf('<div class="orc-section-card orc-footer-card">')
+      html.indexOf('<div class="card inf orc-footer-card">')
     );
     expect(body).toContain('orc-section-icon--flight');
-    expect(body).toContain('transform="rotate(-35 12 12)"');
+    expect(body).toContain('M17.8 19.2');
     expect(body).not.toContain('orc-section-icon--city');
     expect(body).toContain('orc-section-icon--financial');
     const icons = Array.from(body.matchAll(/<svg\b[^>]*>/g), (match) => match[0]);
@@ -241,11 +244,11 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('data-label="Cidade"');
     expect(html).toContain('>Roma</td>');
     expect(html).toContain('02 apartamentos');
-    expect(html).toContain('R$ 150,00');
+    expect(html).toContain('R$ 150,00');
     expect(html).not.toContain('Subtotal — Roma');
     expect(html).toContain('Dia 1 - Roma');
     expect(html).toContain('>2</td>');
-    expect(html).toContain('>R$ 50,00</td>');
+    expect(html).toContain('>R$ 50,00</td>');
   });
 
   it('apresenta trem como trem com trechos e quantidades de passageiros, sem classificá-lo como aéreo', () => {
@@ -402,14 +405,14 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     const sections = html.match(/<section class="orc-city-section">[\s\S]*?<\/section>/g)!;
     expect(sections).toHaveLength(2);
-    expect(sections[0]).toContain('>Barcelona</div>');
+    expect(sections[0]).toContain('<span class="l">Barcelona');
     expect(sections[0]).toContain('Hotel Barcelona');
     expect(sections[0]).toContain('Trem Barcelona / Madrid');
     expect(sections[0]).toContain('Barcelona');
     expect(sections[0]).toContain('Madrid');
-    expect(sections[0]).toContain('Madrid / Lisboa');
+    expect(sections[0]).toContain('Lisboa');
     expect(sections[0]).toContain('Barcelona');
-    expect(sections[0]).toContain('R$ 150,00');
+    expect(sections[0]).toContain('R$ 150,00');
     expect(sections[1]).toContain('Hotel Madrid');
     expect(sections[1]).not.toContain('Trem Barcelona / Madrid');
   });
@@ -440,9 +443,9 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     const sections = html.match(/<section class="orc-city-section">[\s\S]*?<\/section>/g)!;
     expect(sections).toHaveLength(1);
-    expect(sections[0]).toContain('>Paris</div>');
+    expect(sections[0]).toContain('<span class="l">Paris');
     expect(sections[0]).toContain('Hotel');
-    expect(sections[0]).toContain('Trem Antigo');
+    expect(sections[0]).toContain('Trem antigo');
   });
 
   it('não agrupa cidades distintas com o mesmo nome quando possuem identificadores diferentes', () => {
@@ -528,7 +531,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     expect(html).toContain('HOTEL · 11/08 a 13/08/2027 · 2 NOITES');
     expect(html).toContain('Hollywood Hotel Inn');
-    expect(html).toContain('3 Estrelas · Duplo');
+    expect(html).toContain('3 estrelas · Duplo');
     expect(html).toContain('Café da manhã');
     expect(html).toContain('min-width: 0');
     expect(html).toContain('overflow-wrap: anywhere');
@@ -570,12 +573,11 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
 
     expect(html).toContain('CARRO · 17/01 a 20/01/2027 · 4 DIÁRIAS');
-    expect(html).toContain('>SUV</b>');
+    expect(html).toContain('>SUV automático</b>');
     expect(html).toContain('Aluguel de carro');
-    expect(html).toContain('KM Livre');
-    expect(html).toContain('CDW');
-    expect(html).toContain('LDW');
-    expect(html).toContain('Tanque Cheio');
+    expect(html).toContain('KM livre');
+    expect(html).toContain('CDW + LDW');
+    expect(html).toContain('Tanque cheio');
     expect(html).toContain('<div class="q orc-quantity">1 carro</div>');
     expect(html).not.toContain('SUV - Automático - 17-01-2027');
     expect(html).not.toContain('Câmbio:');
@@ -709,9 +711,9 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
     const body = html.slice(html.indexOf('<body>'));
-    expect(body.match(/class="roteiro-card-city"/g)).toHaveLength(4);
+    expect(body.match(/class="l"/g)).toHaveLength(4);
     expect(body).not.toContain('orc-section-icon--city');
-    expect(body).toContain('>Los Angeles</div>');
+    expect(body).toContain('<span class="l">Los Angeles');
     expect(body).not.toContain('Califórnia');
     expect(body).not.toContain('Paris, França');
     expect(body).not.toContain('Não é acomodação');
@@ -737,7 +739,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     };
     const html = buildQuotePreviewHtmlSync({ ...options, showBudgetDetails: true });
     const body = html.slice(html.indexOf('<body>'));
-    expect(body.match(/class="roteiro-card-city"/g)).toHaveLength(2);
+    expect(body.match(/class="l"/g)).toHaveLength(2);
     expect(body).not.toContain('Texas');
     expect(body).not.toContain('França');
     const hidden = buildQuotePreviewHtmlSync({ ...options, showBudgetDetails: false });
@@ -803,7 +805,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       expect(positions).toEqual([...positions].sort((a, b) => a - b));
       if (showBudgetDetails) {
         expect(body.match(/Passagens aéreas/g)).toHaveLength(1);
-        expect(body.match(/class="roteiro-card-city"/g)).toHaveLength(5);
+        expect(body.match(/class="l"/g)).toHaveLength(6);
       }
     }
 
@@ -1135,8 +1137,66 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     expect(html).toContain('GRU');
     expect(html).toContain('FCO');
+    expect(html).toContain('São Paulo / Roma');
     expect(html).toContain('LA 8120');
     expect(html).toContain('LA 8121');
+  });
+
+  it('mostra o nome da cidade de cada aeroporto na rota, com o código como reserva', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        {
+          item_type: 'passagem',
+          title: 'Trechos',
+          raw: {
+            aereo_import: {
+              segmentos: [
+                { aeroporto_saida: 'GRU', aeroporto_chegada: 'FCO', numero_voo: 'LA 1' },
+                { aeroporto_saida: 'FCO', aeroporto_chegada: 'BCN', numero_voo: 'AZ 2' },
+                { aeroporto_saida: 'LAX', aeroporto_chegada: 'LAS', numero_voo: 'AA 3' },
+                {
+                  aeroporto_saida: 'GRU',
+                  aeroporto_chegada: 'FCO',
+                  cidade_saida: 'Guarulhos, São Paulo',
+                  cidade_chegada: 'Roma, Itália',
+                  numero_voo: 'LA 4'
+                },
+                { aeroporto_saida: 'ZZZ', aeroporto_chegada: 'QQQ', numero_voo: 'XX 9' }
+              ]
+            }
+          }
+        },
+        {
+          item_type: 'trem',
+          title: 'Trem Roma / Milão',
+          city_name: 'Roma',
+          raw: {
+            aereo_import: {
+              segmentos: [{ aeroporto_saida: 'FCO', aeroporto_chegada: 'MXP', numero_voo: 'FR 1' }]
+            }
+          }
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+
+    expect(html).toContain('São Paulo / Roma');
+    expect(html).toContain('Roma / Barcelona');
+    expect(html).toContain('Los Angeles / Las Vegas');
+    expect(html).toContain('Guarulhos / Roma');
+    expect(html).toContain('ZZZ');
+    expect(html).toContain('QQQ');
+    expect(html).toContain('GRU');
+    expect(html).toContain('FCO');
+    expect(html).toContain('Roma / Milão');
+    expect(html).not.toContain('GRU / FCO');
+    expect(html).not.toContain('LAX / LAS');
   });
 
   it('apresenta tabelas por cidade, subtotais por moeda e resumo sem somar moedas diferentes', () => {
@@ -1187,14 +1247,14 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: true,
       discount: 50
     });
-    expect(html).toContain('>Paris</div>');
-    expect(html).toContain('€ 950,00');
-    expect(html).toContain('R$ 300,00');
+    expect(html).toContain('<span class="l">Paris');
+    expect(html).toContain('€ 950,00');
+    expect(html).toContain('R$ 300,00');
     expect(html).toContain('16/08 a 21/08/2027');
     expect(html).toContain('Aéreo');
     expect(html).toContain('Serviços');
-    expect(html).toContain('R$ 6.850,00');
-    expect(html).not.toContain('R$ 7.800,00');
+    expect(html).toContain('R$ 6.850,00');
+    expect(html).not.toContain('R$ 7.800,00');
     expect(html).toContain('>01/07/2027</span>');
     expect(html).not.toContain('Validade somente para');
   });
@@ -1284,8 +1344,8 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: true
     });
     expect(html).toContain('TREM');
-    expect(html).toContain('€ 90,00');
-    expect(html).not.toContain('R$ 90,00');
+    expect(html).toContain('€ 90,00');
+    expect(html).not.toContain('R$ 90,00');
   });
 });
 

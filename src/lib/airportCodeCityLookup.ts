@@ -49,6 +49,14 @@ export function getAirportCodeCityLookupCache() {
   return airportLookupCache || {};
 }
 
+export function cityForAirportCode(code: string) {
+  const normalized = String(code || '')
+    .trim()
+    .toUpperCase();
+  if (!IATA_CODE_PATTERN.test(normalized)) return '';
+  return getAirportCodeCityLookupCache()[normalized] || PORTUGUESE_AIRPORT_CITIES[normalized] || '';
+}
+
 export async function loadAirportCodeCityLookup(): Promise<AirportCodeCityLookup> {
   if (airportLookupCache) return airportLookupCache;
   if (airportLookupPromise) return airportLookupPromise;

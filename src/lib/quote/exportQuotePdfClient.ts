@@ -1,3 +1,4 @@
+import { cityForAirportCode, loadAirportCodeCityLookup } from '$lib/airportCodeCityLookup';
 import { VTUR_LOGO_URL } from '$lib/brand';
 /**
  * exportQuotePdfClient.ts — vtur-svelte
@@ -20,7 +21,6 @@ import {
   resumoDetalhes
 } from '$lib/quote/detalhesItem';
 import { chaveIdentidadeCidade } from '$lib/catalogoOpcionais';
-import { flightPlane } from '$lib/quote/printFlights';
 import { defaultQuoteFooter } from '$lib/quote/defaultFooter';
 import {
   nomeCidadeNoPdf,
@@ -133,7 +133,7 @@ function formatCurrency(value: number, currency = 'BRL'): string {
   if (!Number.isFinite(value)) {
     return formatter.format(0);
   }
-  return formatter.format(value);
+  return formatter.format(value).replace(/[\u00a0\u202f]/g, ' ');
 }
 
 function formatDateBR(value?: string | null): string {
@@ -161,6 +161,29 @@ function splitTrechoCities(value?: string | null) {
     origem: parts[0] || '',
     destino: parts[1] || ''
   };
+}
+
+function codigoIata(value: string) {
+  const token = textVal(value).split(',')[0].trim();
+  return /^[A-Za-z]{3}$/.test(token) ? token.toUpperCase() : '';
+}
+
+function cidadeDoTrecho(storedCity: string, place: string) {
+  const stored = textVal(storedCity);
+  if (stored && !codigoIata(stored)) return nomeCidadeNoPdf(stored);
+  const code = codigoIata(place) || codigoIata(stored);
+  const city = code ? cityForAirportCode(code) : '';
+  if (city) return nomeCidadeNoPdf(city);
+  return nomeCidadeNoPdf(stored || place);
+}
+
+function siglaDoTrecho(place: string, storedCity: string, train: boolean) {
+  if (train) return nomeCidadeNoPdf(textVal(place) || textVal(storedCity));
+  return (
+    codigoIata(place) ||
+    codigoIata(storedCity) ||
+    nomeCidadeNoPdf(textVal(place) || textVal(storedCity))
+  );
 }
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -478,6 +501,17 @@ function faixaDatas(start?: string | null, end?: string | null) {
   return `${formatDateBR(from)} a ${formatDateBR(to)}`;
 }
 
+function faixaResumo(start?: string | null, end?: string | null) {
+  const inicio = parseISODateParts(start);
+  const fim = parseISODateParts(end);
+  if (!inicio) return '';
+  if (!fim || inicio.iso === fim.iso) return formatDateBR(inicio.iso);
+  if (inicio.year === fim.year && inicio.month === fim.month) {
+    return `${inicio.day} a ${formatDateBR(fim.iso)}`;
+  }
+  return faixaDatas(inicio.iso, fim.iso);
+}
+
 function rotuloEstadia(item: QuoteItemForPdf, prefix: string, modo: 'noites' | 'diarias') {
   const dias = diasItem(textVal(item.item_type), textVal(item.start_date), textVal(item.end_date));
   const contagem =
@@ -487,6 +521,38 @@ function rotuloEstadia(item: QuoteItemForPdf, prefix: string, modo: 'noites' | '
         : `${dias} ${dias === 1 ? 'DIÁRIA' : 'DIÁRIAS'}`
       : '';
   return [prefix, faixaDatas(item.start_date, item.end_date), contagem].filter(Boolean).join(' · ');
+}
+
+function etiquetasCarro(labels: string[]) {
+  const sigla = /^[A-Z0-9]{2,5}$/;
+  const frase = (value: string) =>
+    value
+      .split(/\s+/)
+      .map((word, index) =>
+        sigla.test(word)
+          ? word
+          : index === 0
+            ? word.charAt(0).toUpperCase() + word.slice(1).toLocaleLowerCase('pt-BR')
+            : word.toLocaleLowerCase('pt-BR')
+      )
+      .join(' ');
+  const tags: string[] = [];
+  const siglas: string[] = [];
+  const flush = () => {
+    if (siglas.length) tags.push(siglas.splice(0).join(' + '));
+  };
+  for (const label of labels) {
+    const text = textVal(label);
+    if (!text) continue;
+    if (sigla.test(text)) {
+      siglas.push(text);
+      continue;
+    }
+    flush();
+    tags.push(frase(text));
+  }
+  flush();
+  return tags;
 }
 
 function etiquetas(labels: string[]) {
@@ -619,19 +685,25 @@ function renderServiceItem(
       : [label.toUpperCase(), faixaDatas(item.start_date, item.end_date)]
           .filter(Boolean)
           .join(' · ');
+  const estrelas = textVal(details.categoria).replace(/estrelas/gi, 'estrelas');
   const linhaCinza = hospedagem
-    ? [textVal(details.categoria), textVal(details.tipo_apartamento)].filter(Boolean).join(' · ')
+    ? [estrelas, textVal(details.tipo_apartamento)].filter(Boolean).join(' · ')
     : carro
       ? 'Aluguel de carro'
       : fields
           .filter((field) => !passageirosSemZero(item).includes(quantidadeSemZero(field)))
           .join(' · ');
+  const cambio = textVal(details.cambio);
+  const titulo =
+    carro && cambio && !normalizeText(title).includes(normalizeText(cambio))
+      ? `${title} ${cambio.toLocaleLowerCase('pt-BR')}`
+      : title;
   const tags = hospedagem
     ? [textVal(details.regime), passageirosSemZero(item)]
     : carro
-      ? details.incluidos
+      ? etiquetasCarro(details.incluidos)
       : [passageirosSemZero(item)];
-  const pdf = `${cabecalho ? `<div class="lb">${escHtml(cabecalho)}</div>` : ''}<b>${escHtml(title)}</b>${linhaCinza ? `<div class="mu">${escHtml(linhaCinza)}</div>` : ''}${etiquetas(tags)}`;
+  const pdf = `${cabecalho ? `<div class="lb">${escHtml(cabecalho)}</div>` : ''}<b>${escHtml(titulo)}</b>${linhaCinza ? `<div class="mu sm">${escHtml(linhaCinza)}</div>` : ''}${etiquetas(tags)}`;
   return `<div class="row orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}"><div>${serviceIconSvg(iconType)}</div><div>${pdf}</div><div class="q orc-quantity">${escHtml(quantidadeSemZero(quantity))}</div>${showItemValues ? `<div class="v">${escHtml(formatCurrency(Number(item.total_amount ?? 0), item.currency || defaultCurrency))}</div>` : '<div class="v"></div>'}</div>`;
 }
 
@@ -691,10 +763,19 @@ function orderQuoteSections(items: QuoteItemForPdf[]): QuotePdfSection[] {
 function resumoAereo(items: QuoteItemForPdf[]) {
   const phrases: string[] = [];
   for (const item of items) {
-    const legs = getFlightDataList(item).map((data) => ({
-      from: nomeCidadeNoPdf(String(data.cidade_saida || data.aeroporto_saida || '')),
-      to: nomeCidadeNoPdf(String(data.cidade_chegada || data.aeroporto_chegada || ''))
-    }));
+    const legs = getFlightDataList(item).map((data) => {
+      const trecho = splitTrechoCities(String(data.trecho || ''));
+      return {
+        from: cidadeDoTrecho(
+          String(data.cidade_saida || ''),
+          String(data.aeroporto_saida || trecho.origem || '')
+        ),
+        to: cidadeDoTrecho(
+          String(data.cidade_chegada || ''),
+          String(data.aeroporto_chegada || trecho.destino || '')
+        )
+      };
+    });
     const idaEVolta =
       legs.length === 2 &&
       normalizeText(legs[0].to) === normalizeText(legs[1].from) &&
@@ -746,7 +827,7 @@ function periodoDoGrupo(items: QuoteItemForPdf[]) {
     .map((date) => parseISODateParts(typeof date === 'string' ? date : null)?.iso)
     .filter((date): date is string => Boolean(date))
     .sort();
-  return dates.length ? faixaDatas(dates[0], dates[dates.length - 1]) : '';
+  return dates.length ? faixaResumo(dates[0], dates[dates.length - 1]) : '';
 }
 
 function renderGroupedItems(
@@ -801,17 +882,15 @@ function renderGroupedItems(
 }
 
 function renderCityTable(title: string, content: string, isCity = false, subtotal = '', note = '') {
-  const sectionTitle = isCity
-    ? renderQuoteCityTitle(title)
-    : `<span class="orc-table-section-title">${escHtml(title)}</span>`;
-  return `<section class="orc-city-section"><div class="sh"><div>${sectionTitle}${note ? `<small> · ${escHtml(note)}</small>` : ''}</div>${subtotal ? `<span>${escHtml(subtotal)}</span>` : ''}</div>${content}</section>`;
+  const heading = escHtml(isCity ? nomeCidadeNoPdf(title) : title);
+  return `<section class="orc-city-section"><div class="sh"><span class="l">${heading}${note ? ` <small>· ${escHtml(note)}</small>` : ''}</span>${subtotal ? `<span>${escHtml(subtotal)}</span>` : ''}</div>${content}</section>`;
 }
 
-const financialIcon = `<svg class="orc-section-icon orc-section-icon--financial" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M5 9h1m12 6h1"/></svg>`;
-const infoIcon = `<svg class="orc-section-icon orc-info-icon--estimate" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/></svg>`;
-const childIcon = `<svg class="orc-section-icon orc-info-icon--children" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="5" r="2"/><path d="M8 11l2-3h4l2 3M12 8v6m-2 0-1 7m5-7 1 7"/></svg>`;
-const reservationIcon = `<svg class="orc-section-icon orc-info-icon--reservations" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18m-12 3 6 5m0-5-6 5"/></svg>`;
-const tagIcon = `<svg class="orc-section-icon orc-info-icon--fares" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 4h9l9 9-8 8-10-10z"/><circle cx="7.5" cy="8" r="1"/></svg>`;
+const financialIcon = `<svg class="orc-section-icon orc-section-icon--financial" width="13" height="13" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M5 9h1m12 6h1"/></svg>`;
+const infoIcon = `<svg class="orc-section-icon orc-info-icon--estimate" width="13" height="13" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/></svg>`;
+const childIcon = `<svg class="orc-section-icon orc-info-icon--children" width="13" height="13" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="5" r="2"/><path d="M8 11l2-3h4l2 3M12 8v6m-2 0-1 7m5-7 1 7"/></svg>`;
+const reservationIcon = `<svg class="orc-section-icon orc-info-icon--reservations" width="13" height="13" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18m-12 3 6 5m0-5-6 5"/></svg>`;
+const tagIcon = `<svg class="orc-section-icon orc-info-icon--fares" width="13" height="13" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 4h9l9 9-8 8-10-10z"/><circle cx="7.5" cy="8" r="1"/></svg>`;
 const defaultFooterItems = [
   { text: defaultQuoteFooter.exchange, icon: financialIcon },
   { text: defaultQuoteFooter.children, icon: childIcon },
@@ -824,13 +903,13 @@ const defaultFooterIcons = new Map(
 );
 
 const serviceIcons = new Map<string, [string, string]>([
-  [
-    'hotel',
-    ['hotel', '<path d="M4 21V5h16v16M2 21h20M8 5V3h8v2M8 9h2m4 0h2M8 13h2m4 0h2M10 21v-4h4v4"/>']
-  ],
+  ['hotel', ['hotel', '<path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/>']],
   [
     'aluguel_carro',
-    ['car', '<path d="M4 17v2m16-2v2M3 16v-4l2-5h14l2 5v4H3zm0-4h18M7 14h2m6 0h2"/>']
+    [
+      'car',
+      '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10l-2.7-3.4A2 2 0 0 0 13.7 6H8.3a2 2 0 0 0-1.6.8L4 10l-2 .6C1.4 10.9 1 11.6 1 12.3V16c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>'
+    ]
   ],
   [
     'ingresso',
@@ -840,7 +919,7 @@ const serviceIcons = new Map<string, [string, string]>([
     'trem',
     [
       'train',
-      '<rect x="5" y="3" width="14" height="16" rx="3"/><path d="M5 11h14M8 7h8M8 19l-2 3m10-3 2 3M8 15h1m6 0h1"/>'
+      '<rect x="4" y="3" width="16" height="16" rx="2"/><path d="M4 11h16M12 3v8M8 19l-2 3M18 22l-2-3M8 15h0M16 15h0"/>'
     ]
   ],
   [
@@ -870,17 +949,19 @@ const serviceIcons = new Map<string, [string, string]>([
 
 function serviceIconSvg(type: string) {
   const iconType = type === 'hospedagem' ? 'hotel' : type === 'seguro_viagem' ? 'seguro' : type;
-  if (iconType === 'passagem' || iconType === 'passagem-section')
-    return flightPlane(
-      iconType === 'passagem-section'
-        ? 'orc-section-icon orc-section-icon--flight orc-service-icon orc-service-icon--flight'
-        : 'orc-service-icon orc-service-icon--flight'
-    );
-  const [name, shape] = serviceIcons.get(iconType) ?? [
-    'service',
-    '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V4h6v3M3 13h18m-10 0v2h2v-2"/>'
-  ];
-  return `<svg class="orc-service-icon orc-service-icon--${name}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${shape}</svg>`;
+  const flight = iconType === 'passagem' || iconType === 'passagem-section';
+  const [name, shape] = flight
+    ? [
+        'flight',
+        '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>'
+      ]
+    : (serviceIcons.get(iconType) ?? [
+        'service',
+        '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V4h6v3M3 13h18m-10 0v2h2v-2"/>'
+      ]);
+  const section =
+    iconType === 'passagem-section' ? ' orc-section-icon orc-section-icon--flight' : '';
+  return `<svg class="orc-service-icon orc-service-icon--${name}${section}" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${shape}</svg>`;
 }
 
 function renderServiceLabel(label: string) {
@@ -984,10 +1065,8 @@ function renderFlightItemHtml(
   const amount = Number(item.total_amount ?? 0);
   const taxes = Number(item.taxes_amount ?? 0);
   const currency = item.currency || defaultCurrency;
-  const title = formatarDescricaoItem(
-    item.item_type || '',
-    textVal(item.title || item.product_name)
-  );
+  const tituloOriginal = textVal(item.title || item.product_name);
+  const title = formatarDescricaoItem(item.item_type || '', tituloOriginal);
   const isTrain = normalizeText(item.item_type) === 'trem';
   const service = isTrain ? 'Trem' : 'Passagem Aérea';
   const quantityLabel = formatFlightQuantity(item);
@@ -1068,18 +1147,10 @@ function renderFlightItemHtml(
     .map((flight, index) => {
       const fromCode = textVal(flight.aeroporto_saida);
       const toCode = textVal(flight.aeroporto_chegada);
-      const fromCity = nomeCidadeNoPdf(textVal(flight.cidade_saida) || fromCode);
-      const toCity = nomeCidadeNoPdf(textVal(flight.cidade_chegada) || toCode);
-      const from = isTrain
-        ? fromCity || fromCode
-        : /^[A-Za-z]{3}$/.test(fromCode)
-          ? fromCode.toUpperCase()
-          : fromCode || fromCity;
-      const to = isTrain
-        ? toCity || toCode
-        : /^[A-Za-z]{3}$/.test(toCode)
-          ? toCode.toUpperCase()
-          : toCode || toCity;
+      const fromCity = cidadeDoTrecho(flight.cidade_saida, fromCode);
+      const toCity = cidadeDoTrecho(flight.cidade_chegada, toCode);
+      const from = siglaDoTrecho(fromCode, flight.cidade_saida, isTrain);
+      const to = siglaDoTrecho(toCode, flight.cidade_chegada, isTrain);
       const date = formatDateBR(flight.data_voo || flight.data_inicio);
       const kind = isTrain ? 'TREM' : 'AÉREO';
       const sentido = roundTrip ? (index === 0 ? 'IDA' : 'VOLTA') : '';
@@ -1091,34 +1162,43 @@ function renderFlightItemHtml(
       const plus = offset != null && offset > 0 ? `<span class="p1">+${offset}</span>` : '';
       const depart = textVal(flight.hora_saida).replace(/\s*\(\+\d+\)\s*$/, '');
       const arrive = textVal(flight.hora_chegada).replace(/\s*\(\+\d+\)\s*$/, '');
-      const carrier = [textVal(flight.cia_aerea), textVal(flight.descricao)]
-        .filter(Boolean)
-        .join(' · ');
+      const carrier = isTrain
+        ? [index === 0 ? tituloOriginal : '', textVal(flight.descricao)].filter(Boolean).join(' · ')
+        : [textVal(flight.cia_aerea), textVal(flight.descricao)].filter(Boolean).join(' · ');
       const cities =
-        fromCity || toCity
+        !isTrain && (fromCity || toCity)
           ? `<div class="itn">${escHtml([fromCity || from, toCity || to].filter(Boolean).join(' / '))}</div>`
           : '';
-      return `${index ? '<div class="lb" style="margin-top:8px">' : '<div class="lb">'}${escHtml(label)}</div><div class="rt">${escHtml(from)} ${depart ? `<span class="mu">${escHtml(depart)}</span>` : ''}<i></i>${escHtml(to)} <span class="mu">${escHtml(arrive)} ${plus}</span></div>${cities}${carrier ? `<div class="mu">${escHtml(carrier)}</div>` : ''}`;
+      const saida = depart ? `<span class="mu">${escHtml(depart)}</span>` : '';
+      const chegada =
+        arrive || plus ? `<span class="mu">${escHtml(arrive)}${plus ? ` ${plus}` : ''}</span>` : '';
+      const rota =
+        from || to || depart || arrive
+          ? `<div class="rt">${escHtml(from)} ${saida}<i></i>${escHtml(to)} ${chegada}</div>`
+          : '';
+      return `${index ? '<div class="lb" style="margin-top:8px">' : '<div class="lb">'}${escHtml(label)}</div>${rota}${cities}${carrier ? `<div class="mu sm">${escHtml(carrier)}</div>` : ''}`;
     })
     .join('');
   const tags = etiquetas([
     ...distinct(flights.map((flight) => flight.classe_reserva)),
     ...(isTrain ? [] : distinct(flights.map((flight) => flight.tarifa_nome))),
-    passageirosSemZero(item),
+    ...(isTrain ? [] : [passageirosSemZero(item)]),
     ...distinct(flights.map((flight) => (flight.assentos ? `Assentos ${flight.assentos}` : '')))
   ]);
   const rotas = flights.map((flight) =>
     normalizeText(
       [
-        nomeCidadeNoPdf(textVal(flight.cidade_saida)),
-        nomeCidadeNoPdf(textVal(flight.cidade_chegada))
+        cidadeDoTrecho(flight.cidade_saida, flight.aeroporto_saida),
+        cidadeDoTrecho(flight.cidade_chegada, flight.aeroporto_chegada)
       ]
         .filter(Boolean)
         .join(' / ')
     )
   );
   const nome =
-    title && !rotas.includes(normalizeText(title)) ? `<div><b>${escHtml(title)}</b></div>` : '';
+    !isTrain && title && !rotas.includes(normalizeText(title))
+      ? `<div><b>${escHtml(title)}</b></div>`
+      : '';
   return `<div class="row orc-city-item"><div>${serviceIconSvg(iconType === 'passagem' ? 'passagem-section' : iconType)}</div><div>${legs}${nome}${tags}</div><div class="q orc-quantity">${escHtml(quantidadeSemZero(quantityLabel))}</div>${showItemValues ? `<div class="v">${escHtml(formatCurrency(amount, currency))}</div>` : '<div class="v"></div>'}</div>`;
 }
 
@@ -1239,9 +1319,9 @@ function renderFinancialSummary(
     const appliedDiscount = code === currency ? discount : 0;
     const total = Math.max(group.flights + group.services + group.taxes - appliedDiscount, 0);
     const detail = showItemValues
-      ? `Aéreo ${formatCurrency(group.flights, code)} + Serviços ${formatCurrency(group.services + group.taxes, code)}${appliedDiscount ? ` · desconto ${formatCurrency(appliedDiscount, code)}` : ''}`
+      ? `· Aéreo ${formatCurrency(group.flights, code)} + Serviços ${formatCurrency(group.services + group.taxes, code)}${appliedDiscount ? ` · desconto ${formatCurrency(appliedDiscount, code)}` : ''}`
       : 'Produtos';
-    return `<div class="card tot" style="background:#EEF2F7"><span>Total da viagem <span class="mu">${escHtml(detail)}</span></span><span>${escHtml(formatCurrency(total, code))}</span></div>`;
+    return `<div class="card tot" style="padding:12px 14px;background:#EEF2F7"><span>Total da viagem <span class="mu" style="font-size:8.5pt;font-weight:normal">${escHtml(detail)}</span></span><span>${escHtml(formatCurrency(total, code))}</span></div>`;
   }).join('');
   return `<section class="orc-financial-section">${cards}${discountNotice}</section>`;
 }
@@ -1319,10 +1399,10 @@ export function buildQuotePreviewHtmlSync(params: {
 
   // Cabeçalho
   const headerHtml = `
-    <div class="card"><div class="hd"><img src="${VTUR_LOGO_URL}" class="orc-logo" alt="VTur" /><div class="c">${consultor ? `<b>${escHtml(consultor)}</b> · ` : ''}Consultor de viagens${contatos ? `<br><span class="mu">${escHtml(contatos)}</span>` : ''}</div></div></div>`;
+    <div class="card"><div class="hd"><img src="${VTUR_LOGO_URL}" alt="VTur" /><div class="c">${consultor ? `<b style="color:#1B2C80;font-size:10pt">${escHtml(consultor)}</b> · ` : ''}Consultor de viagens${contatos ? `<br><span class="mu">${escHtml(contatos)}</span>` : ''}</div></div></div>`;
 
   const titleHtml = `
-    <div class="card orc-title-row"><h1 class="orc-title">Proposta de viagem</h1><div class="mu">Para <b style="color:#1F2937">${escHtml(clientName)}</b>${cities.length ? ` · ${escHtml(cities.join(' e '))}` : ''}</div></div>`;
+    <div class="card"><h1 style="margin:0 0 2px">Proposta de viagem</h1><div class="mu">Para <b style="color:#1F2937">${escHtml(clientName)}</b>${cities.length ? ` · ${escHtml(cities.join(' e '))}` : ''}</div></div>`;
 
   const viajantes = passageirosDoOrcamento(items);
   const totalFaixa = totalDaFaixa(items, currency, safeDiscount, showItemValues);
@@ -1359,8 +1439,8 @@ export function buildQuotePreviewHtmlSync(params: {
   // Rodapé
   const footerHtml = `
     <div class="two">
-      <div class="card orc-section-card orc-footer-card inf" style="margin:0">
-        <b class="orc-footer-title">Informações importantes</b>
+      <div class="card inf orc-footer-card" style="margin:0">
+        <b style="color:#1B2C80;font-size:9pt">Informações importantes</b>
         <ul class="orc-footer-list">${footerLinesHtml}</ul>
         ${complementUrl ? `<div class="orc-complement-img"><img src="${escHtml(complementUrl)}" alt="Imagem complementar" /></div>` : ''}
       </div>
@@ -1369,6 +1449,7 @@ export function buildQuotePreviewHtmlSync(params: {
 
   const css = `
     *, *::before, *::after { box-sizing: border-box; }
+    html, body, body * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     body { font-family: Arial, Helvetica, sans-serif; margin: 0; background: #fff; color: #1F2937; font-size: 9.4pt; }
     .pg { padding: 9mm 13mm 6mm; }
     .mu { color: #6B7280; }
@@ -1377,7 +1458,15 @@ export function buildQuotePreviewHtmlSync(params: {
     .hd img { height: 40px; }
     .hd .c { text-align: right; font-size: 8.3pt; line-height: 1.5; }
     .hd .c b { color: #1B2C80; font-size: 10pt; }
-    h1.orc-title { font-size: 17pt; color: #1B2C80; margin: 0 0 2px; }
+    h1 { font-size: 17pt; color: #1B2C80; margin: 14px 0 2px; }
+    .rt .mu { font-weight: normal; }
+    .mu.sm { font-size: 8pt; }
+    .sh .l { display: flex; gap: 8px; align-items: center; }
+    .inf { font-size: 7.8pt; color: #4B5563; line-height: 1.5; }
+    .inf p { margin: 0 0 4px; }
+    .orc-footer-list { display: block; gap: 0; margin: 4px 0 0; padding: 0; list-style: none; font-size: 7.9pt; line-height: 1.35; color: inherit; }
+    .orc-footer-list li, .ii { display: flex; gap: 8px; align-items: center; padding: 2px 0; margin-top: 1px; background: transparent; border: 0; font-size: 7.9pt; line-height: 1.35; }
+    .orc-footer-list svg, .ii svg { flex: 0 0 auto; }
     .tag { display: inline-block; background: #EEF2F7; color: #1B2C80; border-radius: 20px; padding: 2px 8px; font-size: 7.5pt; margin: 4px 4px 0 0; }
     .lb { color: #6B7280; font-size: 7.5pt; font-weight: bold; }
     .rt { display: flex; align-items: center; gap: 6px; font-weight: bold; }
@@ -1408,7 +1497,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-header-divider { height: 1px; background: #dbe3f0; margin: 10px 0 0 0; }
 
     /* Título */
-    .orc-title-row, .orc-city-section, .orc-financial-section { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 16px; }
+    .orc-title-row { background: white; border: 1px solid #DDE3EC; border-radius: 12px; padding: 16px; }
     .orc-title-row { margin: 0 0 16px 0; }
     .orc-title-kicker { color: #243aa3; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
     .orc-title { font-size: 21px; font-weight: 700; color: #243aa3; line-height: 1.2; margin-top: 4px; }
@@ -1462,10 +1551,9 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-summary-note { color: #475569; font-size: 11px; }
 
     /* Rodapé */
-    .orc-footer-card { padding: 16px; }
-    .orc-footer-title { margin: 0 0 14px; color: #243aa3; font: bold 18px Arial, sans-serif; }
-    .orc-footer-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 12px; color: #334155; }
-    .orc-footer-list li { display: flex; align-items: center; gap: 8px; padding: 2px 0; background: #fff; border: 0; line-height: 1.35; overflow-wrap: anywhere; }
+    .orc-footer-card.inf { padding: 11px 14px; margin: 0; border: 1px solid #DDE3EC; border-radius: 12px; background: #fff; }
+    .orc-footer-list { display: block; margin: 4px 0 0; padding: 0; list-style: none; font-size: 7.9pt; color: inherit; }
+    .orc-footer-list li { display: flex; align-items: center; gap: 8px; padding: 2px 0; margin-top: 1px; background: transparent; border: 0; line-height: 1.35; overflow-wrap: anywhere; }
     .band { margin: 0 0 8px; break-inside: avoid; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1.3fr; border-radius: 12px; overflow: hidden; border: 1px solid #DDE3EC; }
     .band > div { padding: 10px 12px; border-right: 1px solid #DDE3EC; background: #fff; }
     .band b { display: block; font-size: 7pt; color: #6B7280; letter-spacing: 1px; margin-bottom: 3px; }
@@ -1475,18 +1563,21 @@ export function buildQuotePreviewHtmlSync(params: {
     .band .tt span { color: #fff; font-size: 14pt; }
     .band .val span { color: #C62828; }
     .sec { border: 1px solid #DDE3EC; border-radius: 12px; margin: 0 0 8px; overflow: hidden; break-inside: avoid; background: #fff; }
-    .sh { background: #EEF2F7; display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; font-weight: bold; color: #1B2C80; }
-    .orc-city-section { overflow: visible; }
-    .sh { align-items: flex-start; }
-    .sh .roteiro-card-city, .orc-table-section-title { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
-    .row { display: grid; grid-template-columns: 22px minmax(0, 1fr) minmax(72px, auto) minmax(72px, auto); gap: 8px; padding: 6px 12px; border-top: 1px solid #EEF2F7; }
+    .orc-city-section { background: #fff; border: 1px solid #DDE3EC; border-radius: 12px; padding: 0; margin: 0 0 8px; overflow: hidden; }
+    .orc-financial-section { background: transparent; border: 0; padding: 0; margin: 0; }
+    .card.tot { background: #EEF2F7; border: 1px solid #DDE3EC; color: #1B2C80; }
+    .sh { background: #EEF2F7; display: flex; justify-content: space-between; align-items: center; width: 100%; margin: 0; padding: 8px 12px; font-weight: bold; color: #1B2C80; }
+    .sh .l { display: flex; gap: 8px; align-items: center; min-width: 0; }
+    .sh > span:last-child { flex: none; color: #1B2C80; font-weight: bold; }
+    .sh small { color: #6B7280; font-weight: normal; }
+    .row { display: grid; grid-template-columns: 22px 1fr 90px 90px; gap: 8px; padding: 6px 12px; border-top: 1px solid #EEF2F7; }
     .row > div { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
     .row strong, .orc-service-label, .orc-service-label span, .orc-flight-row-details, .orc-flight-segment { white-space: normal; overflow-wrap: anywhere; }
     .sh + .row { border-top: 0; }
     .q { color: #6B7280; font-size: 8.3pt; }
     .v, .orc-value { text-align: right; font-weight: bold; }
     .orc-subtotal { display: flex; justify-content: space-between; gap: 12px; padding: 8px 12px; background: #EEF2F7; font-weight: bold; color: #1B2C80; }
-    .orc-footer-list .orc-section-icon { width: 16px; height: 16px; }
+    .orc-footer-list .orc-section-icon { width: 13px; height: 13px; }
     .orc-complement-img { margin: 12px 0 0 0; text-align: center; }
     .orc-complement-img img { max-height: 170px; max-width: 100%; }
     .orc-validity-box { border: 1px solid #d1d5db; border-radius: 8px; margin: 10px 0 0 0; padding: 8px; text-align: center; }
@@ -1500,11 +1591,18 @@ export function buildQuotePreviewHtmlSync(params: {
 
     @media print {
       @page { size: A4; margin: 0; }
+      html, body, body * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       body { background: white; }
       .toolbar { display: none; }
       .shell { max-width: none; padding: 0; }
-      .orc-header-card, .orc-title-row, .orc-section-card, .orc-city-section, .orc-financial-section { border-radius: 0; box-shadow: none; }
-      .orc-city-section, .row, .row > div { overflow: visible; }
+      .sh { background: #EEF2F7; color: #1B2C80; }
+      .sh small { color: #6B7280; }
+      .band .tt, .cta, .p1 { color: #fff; }
+      .band .tt, .cta { background: #243AA3; }
+      .card.tot, .tag, .orc-subtotal { background: #EEF2F7; }
+      .p1 { background: #C62828; }
+      .orc-header-card, .orc-title-row, .orc-section-card, .orc-city-section, .orc-financial-section { box-shadow: none; }
+      .row, .row > div { overflow: visible; }
       .roteiro-card { break-inside: avoid; page-break-inside: avoid; }
       .orc-city-item { break-inside: auto; page-break-inside: auto; }
       .roteiro-card--long, .orc-city-item--long { break-inside: auto; page-break-inside: auto; }
@@ -1588,7 +1686,8 @@ export async function openQuotePreview(params: {
   // 7. Converte todas as imagens para data URL antes de montar o HTML
   // Necessário porque o blob: HTML abre em origem isolada (null) e imagens
   // externas com token na URL seriam bloqueadas pelo browser
-  const [complementUrl, qrUrl] = await Promise.all([
+  const [, complementUrl, qrUrl] = await Promise.all([
+    loadAirportCodeCityLookup(),
     storageImageToDataUrl(
       dados,
       pdfSettings.imagem_complementar_path ||
