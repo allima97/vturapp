@@ -238,6 +238,108 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(hidden).not.toContain('Hotel americano');
   });
 
+  it('apresenta passagens primeiro e cidades pela primeira data dos seus serviços', () => {
+    const items = [
+      { item_type: 'hotel', title: 'Hotel Paris', city_name: 'Paris', start_date: '2027-08-20' },
+      {
+        item_type: 'passagem',
+        title: 'Voo principal',
+        raw: { aereo_import: { segmentos: [{ cia_aerea: 'LATAM', numero_voo: 'LA 8120' }] } }
+      },
+      { item_type: 'hotel', title: 'Hotel Roma', city_name: 'Roma', start_date: '2027-08-12' },
+      {
+        item_type: 'servico',
+        title: 'Passeio Paris',
+        city_name: 'Paris',
+        start_date: '2027-08-10'
+      },
+      { item_type: 'passagem', title: 'Voo sem trechos' },
+      { item_type: 'servico', title: 'Serviço sem data', city_name: 'Lisboa' },
+      { item_type: 'servico', title: 'Serviço com fim', city_name: 'Madri', end_date: '2027-08-25' }
+    ];
+    const options = {
+      quote: { id: 'quote-1' },
+      items,
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showItemValues: false
+    };
+
+    for (const showBudgetDetails of [false, true]) {
+      const html = buildQuotePreviewHtmlSync({
+        ...options,
+        showBudgetItems: !showBudgetDetails,
+        showBudgetDetails
+      });
+      const body = html.slice(html.indexOf('<body>'));
+      const titles = [
+        'Voo principal',
+        'Voo sem trechos',
+        'Hotel Paris',
+        'Passeio Paris',
+        'Hotel Roma',
+        'Serviço com fim',
+        'Serviço sem data'
+      ];
+      const positions = titles.map((title) => body.indexOf(title));
+      expect(positions.every((position) => position >= 0)).toBe(true);
+      expect(positions).toEqual([...positions].sort((a, b) => a - b));
+      if (showBudgetDetails) {
+        expect(body.match(/Passagens Aéreas Internacionais e Trechos Internos/g)).toHaveLength(1);
+        expect(body.match(/class="roteiro-card-city"/g)).toHaveLength(4);
+      }
+    }
+
+    expect(items[0].title).toBe('Hotel Paris');
+  });
+
+  it('ordena cidades sem passagens e mantém a ordem original para datas iguais ou ausentes', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        { item_type: 'servico', title: 'Sem data A', city_name: 'A' },
+        { item_type: 'hotel', title: 'Cidade B', city_name: 'B', start_date: '2027-08-10' },
+        { item_type: 'hotel', title: 'Cidade C', city_name: 'C', start_date: '2027-08-10' },
+        { item_type: 'servico', title: 'Sem data D', city_name: 'D' }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+    const body = html.slice(html.indexOf('<body>'));
+    const positions = ['Cidade B', 'Cidade C', 'Sem data A', 'Sem data D'].map((title) =>
+      body.indexOf(title)
+    );
+    expect(positions.every((position) => position >= 0)).toBe(true);
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+    expect(body).not.toContain('Passagens Aéreas Internacionais e Trechos Internos');
+  });
+
+  it('mantém circuitos na sequência cronológica após as passagens', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        { item_type: 'hotel', title: 'Hotel Madri', city_name: 'Madri', start_date: '2027-08-20' },
+        { item_type: 'circuito', title: 'Circuito Itália', start_date: '2027-08-10' },
+        { item_type: 'passagem', title: 'Passagem internacional' }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+    const body = html.slice(html.indexOf('<body>'));
+    expect(body.indexOf('Passagem internacional')).toBeLessThan(body.indexOf('Circuito Itália'));
+    expect(body.indexOf('Circuito Itália')).toBeLessThan(body.indexOf('Hotel Madri'));
+    expect(body).toContain('<article class="roteiro-card');
+  });
+
   it('apresenta passagens na tabela padrão de serviços sem perder dados e valores', () => {
     const html = buildQuotePreviewHtmlSync({
       quote: { id: 'quote-1' },

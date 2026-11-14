@@ -460,27 +460,23 @@ function renderServiceItem(
   </tr>`;
 }
 
-function renderGroupedItems(
-  items: QuoteItemForPdf[],
-  showItemValues: boolean,
-  defaultCurrency: string
-) {
-  type CityGroup = { kind: 'city'; city: string; items: QuoteItemForPdf[] };
-  type FlightGroup = { kind: 'flights'; items: QuoteItemForPdf[] };
+type QuotePdfSection =
+  | { kind: 'city'; city: string; items: QuoteItemForPdf[] }
+  | { kind: 'flights'; items: QuoteItemForPdf[] }
+  | { kind: 'circuit'; items: QuoteItemForPdf[] };
+
+function orderQuoteSections(items: QuoteItemForPdf[]): QuotePdfSection[] {
+  const flights: QuotePdfSection = { kind: 'flights', items: [] };
+  type CityGroup = Extract<QuotePdfSection, { kind: 'city' }>;
   const groups = new Map<string, CityGroup>();
-  const sections: Array<CityGroup | FlightGroup | QuoteItemForPdf> = [];
+  const sections: QuotePdfSection[] = [];
   for (const item of items) {
-    if (isFlightQuoteItem(item) && getFlightDataList(item).length > 0) {
-      const previous = sections.at(-1);
-      if (previous && 'kind' in previous && previous.kind === 'flights') {
-        previous.items.push(item);
-      } else {
-        sections.push({ kind: 'flights', items: [item] });
-      }
+    if (isFlightQuoteItem(item)) {
+      flights.items.push(item);
       continue;
     }
     if (isCircuitQuoteItem(item)) {
-      sections.push(item);
+      sections.push({ kind: 'circuit', items: [item] });
       continue;
     }
     const city = textVal(item.city_name);
@@ -498,35 +494,59 @@ function renderGroupedItems(
     }
     group.items.push(item);
   }
+
+  const sectionStart = (section: QuotePdfSection) =>
+    section.items
+      .map(
+        (item) => parseISODateParts(item.start_date)?.iso || parseISODateParts(item.end_date)?.iso
+      )
+      .filter((date): date is string => Boolean(date))
+      .sort()[0];
+
+  sections.sort((a, b) => {
+    const startA = sectionStart(a);
+    const startB = sectionStart(b);
+    return startA && startB ? startA.localeCompare(startB) : startA ? -1 : startB ? 1 : 0;
+  });
+  return flights.items.length ? [flights, ...sections] : sections;
+}
+
+function renderGroupedItems(
+  sections: QuotePdfSection[],
+  showItemValues: boolean,
+  defaultCurrency: string
+) {
   return sections
     .map((section) => {
-      if ('kind' in section) {
-        if (section.kind === 'flights') {
-          const content = section.items
-            .map((item) => renderFlightItemHtml(item, showItemValues, defaultCurrency))
-            .join('');
-          return renderCityTable(
-            'Passagens Aéreas Internacionais e Trechos Internos',
-            content,
-            showItemValues
-          );
-        }
+      if (section.kind === 'flights') {
         const content = section.items
-          .map((item) => renderServiceItem(item, showItemValues, defaultCurrency))
+          .map((item) =>
+            getFlightDataList(item).length
+              ? renderFlightItemHtml(item, showItemValues, defaultCurrency)
+              : renderServiceItem(item, showItemValues, defaultCurrency)
+          )
           .join('');
-        const totals = new Map<string, number>();
-        for (const item of section.items) {
-          const currency = item.currency || defaultCurrency;
-          totals.set(currency, (totals.get(currency) || 0) + Number(item.total_amount ?? 0));
-        }
-        const subtotal = showItemValues
-          ? `<tr class="orc-subtotal"><td colspan="3">Subtotal — ${escHtml(nomeCidadeNoPdf(section.city))}</td><td class="orc-value">${Array.from(totals, ([currency, value]) => escHtml(formatCurrency(value, currency))).join('<br>')}</td></tr>`
-          : '';
-        return renderCityTable(section.city, `${content}${subtotal}`, showItemValues, true);
+        return renderCityTable(
+          'Passagens Aéreas Internacionais e Trechos Internos',
+          content,
+          showItemValues
+        );
       }
-      return isFlightQuoteItem(section)
-        ? renderFlightItemHtml(section, showItemValues, defaultCurrency)
-        : renderCircuitItemHtml(section, showItemValues, defaultCurrency);
+      if (section.kind === 'circuit')
+        return renderCircuitItemHtml(section.items[0], showItemValues, defaultCurrency);
+
+      const content = section.items
+        .map((item) => renderServiceItem(item, showItemValues, defaultCurrency))
+        .join('');
+      const totals = new Map<string, number>();
+      for (const item of section.items) {
+        const currency = item.currency || defaultCurrency;
+        totals.set(currency, (totals.get(currency) || 0) + Number(item.total_amount ?? 0));
+      }
+      const subtotal = showItemValues
+        ? `<tr class="orc-subtotal"><td colspan="3">Subtotal — ${escHtml(nomeCidadeNoPdf(section.city))}</td><td class="orc-value">${Array.from(totals, ([currency, value]) => escHtml(formatCurrency(value, currency))).join('<br>')}</td></tr>`
+        : '';
+      return renderCityTable(section.city, `${content}${subtotal}`, showItemValues, true);
     })
     .join('');
 }
@@ -939,11 +959,16 @@ export function buildQuotePreviewHtmlSync(params: {
   if (items.length === 0) {
     itensHtml = '<div class="orc-empty">Sem itens neste orçamento.</div>';
   } else {
+    const sections = orderQuoteSections(items);
     if (showBudgetItems) {
-      itensHtml += renderAllItemsTableHtml(items, showItemValues, currency);
+      itensHtml += renderAllItemsTableHtml(
+        sections.flatMap((section) => section.items),
+        showItemValues,
+        currency
+      );
     }
     if (showBudgetDetails) {
-      itensHtml += renderGroupedItems(items, showItemValues, currency);
+      itensHtml += renderGroupedItems(sections, showItemValues, currency);
     }
     if (!showBudgetItems && !showBudgetDetails) {
       itensHtml = '';
