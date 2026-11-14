@@ -66,9 +66,65 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     expect(html).toContain('11-08-2027 a 13-08-2027');
     expect(html).toContain('Categoria: 4 estrelas');
-    expect(html).toContain('Crianças: 0');
+    expect(html).toContain('Adultos: 2');
+    expect(html).not.toContain('Crianças: 0');
+    expect(html).not.toContain('Valor da criança válido');
     expect(html).toContain('Acomodação: Duplo');
     expect(html).toContain('Regime: Café da manhã');
+  });
+
+  it('omite categorias de passageiros sem quantidade no PDF', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        {
+          item_type: 'servico',
+          title: 'Transfer',
+          raw: {
+            detalhes_orcamento: {
+              adultos: 0,
+              criancas: 0
+            }
+          }
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+
+    expect(html).not.toContain('Adultos: 0');
+    expect(html).not.toContain('Crianças: 0');
+  });
+
+  it('mantém a observação de criança quando há crianças no orçamento', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        {
+          item_type: 'hotel',
+          title: 'Hotel',
+          raw: {
+            detalhes_orcamento: {
+              adultos: 2,
+              criancas: 1
+            }
+          }
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+
+    expect(html).toContain('Crianças: 1');
+    expect(html).toContain('Valor da criança válido');
   });
 
   it('agrupa serviços por cidade, usa o nome curto e mantém a ordem dos grupos e itens', () => {
@@ -153,6 +209,8 @@ describe('identidade dos orçamentos e circuitos', () => {
       items: [
         {
           item_type: 'passagem',
+          title: 'SÃO PAULO / ROMA / SÃO PAULO',
+          quantity: 1,
           total_amount: 1500,
           taxes_amount: 120,
           segments: [
@@ -160,18 +218,36 @@ describe('identidade dos orçamentos e circuitos', () => {
               segment_type: 'flight',
               data: {
                 tipo_voo: 'Internacional',
-                trecho: 'São Paulo - Roma',
+                trecho: 'GRU - FCO',
                 cidade_saida: 'São Paulo, São Paulo, Brasil',
                 cidade_chegada: 'Roma, Itália',
                 cia_aerea: 'LATAM',
-                numero_voo: 'LA123',
+                numero_voo: 'LA 8120',
                 aeroporto_saida: 'GRU',
                 aeroporto_chegada: 'FCO',
                 data_voo: '2027-08-10',
                 data_fim: '2027-08-11',
-                hora_saida: '22:10',
-                hora_chegada: '13:00',
-                classe_reserva: 'Econômica'
+                hora_saida: '10:50',
+                hora_chegada: '10:15',
+                classe_reserva: 'Econômica',
+                tarifa_nome: 'FULL'
+              }
+            },
+            {
+              segment_type: 'flight',
+              data: {
+                tipo_voo: 'Internacional',
+                trecho: 'FCO - GRU',
+                cia_aerea: 'LATAM',
+                numero_voo: 'LA 8121',
+                aeroporto_saida: 'FCO',
+                aeroporto_chegada: 'GRU',
+                data_voo: '2027-08-25',
+                data_fim: '2027-08-26',
+                hora_saida: '19:50',
+                hora_chegada: '09:50',
+                classe_reserva: 'Econômica',
+                tarifa_nome: 'FULL'
               }
             }
           ]
@@ -214,16 +290,15 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('<td class="orc-quantity">01 passagem</td>');
     expect(html).toContain('<td class="orc-quantity">01 trecho</td>');
     for (const value of [
-      'São Paulo',
-      'Roma',
       'LATAM',
-      'LA123',
+      'LA 8120',
       'GRU',
       'FCO',
-      '22:10',
-      '13:00',
+      'SÃO PAULO / ROMA / SÃO PAULO',
+      'GRU -&gt; FCO - LA 8120 - 10-08-2027 - 10:50 / 10:15 (+1)',
+      '10:50 / 10:15 (+1)',
+      'FCO -&gt; GRU - LA 8121 - 25-08-2027 - 19:50 / 09:50 (+1)',
       'Econômica',
-      'Chegada no dia seguinte (+1)',
       '1.500,00',
       '120,00'
     ]) {
@@ -233,6 +308,10 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).not.toContain('Roma, Itália');
     expect(html).toContain('Azul Linhas Aéreas');
     expect(html).toContain('AD 4455');
+    expect(html.match(/<strong>LATAM<\/strong>/g)).toHaveLength(1);
+    expect(html.match(/SÃO PAULO \/ ROMA \/ SÃO PAULO/g)).toHaveLength(1);
+    expect(html.match(/Classe: Econômica \| Tarifa: FULL/g)).toHaveLength(1);
+    expect(html).not.toContain('Chegada no dia seguinte');
   });
 
   it('apresenta tabelas por cidade, subtotais por moeda e resumo sem somar moedas diferentes', () => {

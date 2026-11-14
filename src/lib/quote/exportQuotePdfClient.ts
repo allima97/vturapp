@@ -394,8 +394,8 @@ function renderServiceItem(
       ? `Apartamentos: ${detalhes.quantidade_apartamentos}`
       : '',
     hotel && detalhes.regime ? `Regime: ${detalhes.regime}` : '',
-    detalhes.adultos !== null ? `Adultos: ${detalhes.adultos}` : '',
-    detalhes.criancas !== null ? `Crianças: ${detalhes.criancas}` : ''
+    detalhes.adultos !== null && detalhes.adultos > 0 ? `Adultos: ${detalhes.adultos}` : '',
+    detalhes.criancas !== null && detalhes.criancas > 0 ? `Crianças: ${detalhes.criancas}` : ''
   ].filter(Boolean);
   const title = textVal(item.title || item.product_name || item.item_type || 'Item');
   const quantity = item.quantity == null ? '-' : String(item.quantity);
@@ -553,57 +553,70 @@ function renderFlightItemHtml(
       : 'Passagem Aérea';
   const quantity = Math.max(0, Math.trunc(Number(item.quantity ?? 1)));
   const quantityLabel = `${String(quantity).padStart(2, '0')} ${isDomestic ? (quantity === 1 ? 'trecho' : 'trechos') : quantity === 1 ? 'passagem' : 'passagens'}${/ida\s*(?:e|\/|-)\s*volta/i.test(title) ? ' (ida e volta)' : ''}`;
-  const content = flights
-    .map((flight) => {
-      const route =
-        textVal(flight.trecho) ||
-        [
-          textVal(flight.aeroporto_saida) || flight.cidade_saida,
-          textVal(flight.aeroporto_chegada) || flight.cidade_chegada
-        ]
+  const distinct = (values: string[]) =>
+    Array.from(
+      new Map(
+        values
+          .map((value) => textVal(value))
           .filter(Boolean)
-          .join(' → ');
-      const departureDate = formatRoteiroDate(flight.data_voo || flight.data_inicio);
-      const arrivalDate = formatRoteiroDate(
-        flight.data_fim || flight.data_voo || flight.data_inicio
-      );
-      const offsetDays = diffDaysISODate(
-        flight.data_voo || flight.data_inicio,
-        flight.data_fim || flight.data_voo || flight.data_inicio
-      );
-      const arrivalNotice =
-        offsetDays === 1
-          ? 'Chegada no dia seguinte (+1)'
-          : offsetDays && offsetDays > 1
-            ? `Chegada ${offsetDays} dias depois (+${offsetDays})`
-            : '';
-      const times = [
-        departureDate,
-        textVal(flight.hora_saida),
-        arrivalDate && arrivalDate !== departureDate ? `→ ${arrivalDate}` : '',
-        textVal(flight.hora_chegada)
-      ]
-        .filter(Boolean)
-        .join(' • ');
-      const details = [
+          .map((value) => [normalizeText(value), value])
+      ).values()
+    );
+  const carriers = distinct(flights.map((flight) => flight.cia_aerea));
+  const fareDetails = distinct(
+    flights
+      .map((flight) =>
         [
           textVal(flight.classe_reserva) ? `Classe: ${textVal(flight.classe_reserva)}` : '',
           textVal(flight.tarifa_nome) ? `Tarifa: ${textVal(flight.tarifa_nome)}` : ''
         ]
           .filter(Boolean)
-          .join(' | '),
-        showItemValues && taxes > 0 ? `Taxas: ${formatCurrency(taxes, currency)}` : ''
+          .join(' | ')
+      )
+      .filter(Boolean)
+  );
+  const segments = flights
+    .map((flight) => {
+      const routeText = textVal(flight.trecho);
+      const routeParts = splitTrechoCities(routeText);
+      const route =
+        routeParts.origem && routeParts.destino
+          ? `${routeParts.origem} -> ${routeParts.destino}`
+          : routeText ||
+            [
+              textVal(flight.aeroporto_saida) || flight.cidade_saida,
+              textVal(flight.aeroporto_chegada) || flight.cidade_chegada
+            ]
+              .filter(Boolean)
+              .join(' -> ');
+      const departureDate = formatRoteiroDate(flight.data_voo || flight.data_inicio);
+      const offsetDays = diffDaysISODate(
+        flight.data_voo || flight.data_inicio,
+        flight.data_fim || flight.data_voo || flight.data_inicio
+      );
+      const arrivalTime = [
+        textVal(flight.hora_chegada),
+        offsetDays ? `(${offsetDays > 0 ? '+' : ''}${offsetDays})` : ''
+      ]
+        .filter(Boolean)
+        .join(' ');
+      const times = [
+        textVal(flight.hora_saida) && arrivalTime
+          ? `${textVal(flight.hora_saida)} / ${arrivalTime}`
+          : textVal(flight.hora_saida) || arrivalTime
       ].filter(Boolean);
-      const flightNumber = textVal(flight.descricao);
-      const carrier = textVal(flight.cia_aerea) || title || 'Passagem Aérea';
-      return `<div class="orc-flight-row-details">
-        <strong>${escHtml(carrier)}</strong>
-        ${title && normalizeText(title) !== normalizeText(carrier) ? `<div>${escHtml(title)}</div>` : ''}
-        <div>${escHtml([route, flightNumber, times].filter(Boolean).join(' - '))}${arrivalNotice ? ` <strong class="orc-flight-arrival-notice">${escHtml(arrivalNotice)}</strong>` : ''}</div>
-        ${details.map((detail) => `<div class="orc-service-details">${escHtml(detail)}</div>`).join('')}
-      </div>`;
+      return [route, textVal(flight.descricao), departureDate, ...times]
+        .filter(Boolean)
+        .join(' - ');
     })
-    .join('');
+    .filter(Boolean);
+  const content = `<div class="orc-flight-row-details">
+    ${carriers.length ? `<strong>${carriers.map(escHtml).join(' / ')}</strong>` : ''}
+    ${title ? `<div>${escHtml(title)}</div>` : ''}
+    ${segments.map((segment) => `<div class="orc-flight-segment">${escHtml(segment)}</div>`).join('')}
+    ${fareDetails.map((detail) => `<div class="orc-service-details">${escHtml(detail)}</div>`).join('')}
+    ${showItemValues && taxes > 0 ? `<div class="orc-service-details">Taxas: ${escHtml(formatCurrency(taxes, currency))}</div>` : ''}
+  </div>`;
   return `<tr class="orc-city-item">
     <td class="orc-service-type">${escHtml(service)}</td>
     <td>${content}</td>
@@ -802,6 +815,7 @@ export function buildQuotePreviewHtmlSync(params: {
   }
 
   const footerText = textVal(settings.rodape_texto);
+  const hasChildren = items.some((item) => (lerDetalhes(item).criancas || 0) > 0);
   const footerLines = footerText
     ? footerText.split(/\r?\n/).reduce((lines, line) => {
         const trimmed = line.trim();
@@ -810,7 +824,11 @@ export function buildQuotePreviewHtmlSync(params: {
       }, [] as string[])
     : [
         'Preços em real (R$) convertido ao câmbio do dia sujeito a alteração e disponibilidade da tarifa.',
-        'Valor da criança válido somente quando acompanhada de dois adultos pagantes no mesmo apartamento.',
+        ...(hasChildren
+          ? [
+              'Valor da criança válido somente quando acompanhada de dois adultos pagantes no mesmo apartamento.'
+            ]
+          : []),
         'Este orçamento é apenas uma tomada de preço.',
         'Os serviços citados não estão reservados; a compra somente poderá ser confirmada após a confirmação dos fornecedores.',
         'Este orçamento foi feito com base na menor tarifa para os serviços solicitados, podendo sofrer alteração devido à disponibilidade de lugares no ato da compra.'
@@ -962,8 +980,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-service-type { font-weight: 700; }
     .orc-service-details { color: #475569; line-height: 1.5; margin-top: 4px; }
     .orc-subtotal { background: #edf2f7; color: #112b4d; font-weight: 700; }
-    .orc-flight-row-details + .orc-flight-row-details { margin-top: 8px; padding-top: 8px; border-top: 1px solid #dbe3ec; }
-    .orc-flight-arrival-notice { color: #a64b13; }
+    .orc-flight-segment + .orc-flight-segment { margin-top: 2px; }
     .orc-financial-section h2 { color: #112b4d; font: bold 18px Arial, sans-serif; margin: 0 0 10px; }
     .orc-summary-note { color: #475569; font-size: 11px; }
 

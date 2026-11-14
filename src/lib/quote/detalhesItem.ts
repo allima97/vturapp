@@ -121,8 +121,10 @@ export function resumoDetalhes(item: {
   const detalhes = lerDetalhes(item);
   const resumo: string[] = [];
   if (detalhes.categoria) resumo.push(`Categoria: ${detalhes.categoria}`);
-  if (detalhes.adultos !== null) resumo.push(`Adultos: ${detalhes.adultos}`);
-  if (detalhes.criancas !== null) resumo.push(`Crianças: ${detalhes.criancas}`);
+  if (detalhes.adultos !== null && detalhes.adultos > 0)
+    resumo.push(`Adultos: ${detalhes.adultos}`);
+  if (detalhes.criancas !== null && detalhes.criancas > 0)
+    resumo.push(`Crianças: ${detalhes.criancas}`);
   if (detalhes.tipo_apartamento) resumo.push(`Apartamento: ${detalhes.tipo_apartamento}`);
   if (detalhes.quantidade_apartamentos !== null)
     resumo.push(`Apartamentos: ${detalhes.quantidade_apartamentos}`);
