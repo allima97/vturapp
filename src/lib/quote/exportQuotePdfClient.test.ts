@@ -65,7 +65,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     );
     expect(body).toContain('orc-section-icon--flight');
     expect(body).toContain('transform="rotate(-35 12 12)"');
-    expect(body.match(/orc-section-icon--city/g)).toHaveLength(2);
+    expect(body).not.toContain('orc-section-icon--city');
     expect(body).toContain('orc-section-icon--financial');
     const icons = Array.from(body.matchAll(/<svg\b[^>]*>/g), (match) => match[0]);
     expect(icons.length).toBeGreaterThan(0);
@@ -105,17 +105,16 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: false
     });
-    const serviceCells = Array.from(
-      html.matchAll(/<div class="orc-service-type">(.*?)<\/div>/g),
-      (match) => match[1]
-    );
-    expect(serviceCells).toHaveLength(types.length);
+    const rows = html.split('class="row orc-city-item').slice(1);
+    expect(rows).toHaveLength(types.length);
     for (const [index, [, icon]] of types.entries()) {
-      expect(serviceCells[index]).toContain(`orc-service-icon--${icon}`);
-      expect(serviceCells[index]).toContain('aria-hidden="true" focusable="false"');
+      const typeCell = rows[index].split('class="orc-service-type"')[1]?.split('</div>')[0] ?? '';
+      expect(typeCell).not.toContain('<svg');
+      expect(rows[index].match(new RegExp(`orc-service-icon--${icon}`, 'g'))).toHaveLength(1);
+      expect(rows[index]).toContain('aria-hidden="true" focusable="false"');
     }
-    expect(serviceCells[4]).toContain('<span>Trem</span>');
-    expect(serviceCells[5]).toContain('<span>Passagem Aérea</span>');
+    expect(rows[4]).toContain('<span>Trem</span>');
+    expect(rows[5]).toContain('<span>Passagem Aérea</span>');
   });
 
   it('apresenta avisos padrão em cartões, incluindo o aviso infantil somente quando aplicável', () => {
@@ -521,6 +520,8 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
     expect(html).toContain('Hollywood Hotel Inn - 11-08-2027 a 13-08-2027 (02 noites)');
+    expect(html).toContain('min-width: 0');
+    expect(html).toContain('overflow-wrap: anywhere');
     expect(html).toContain('02 Adultos | 3 Estrelas | Duplo | Café da manhã');
     expect(html).toContain('<div class="q orc-quantity">01 apartamento</div>');
     expect(html).not.toContain('Total de noites:');
@@ -691,8 +692,8 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     const body = html.slice(html.indexOf('<body>'));
     expect(body.match(/class="roteiro-card-city"/g)).toHaveLength(4);
-    expect(body).toContain('class="orc-section-icon orc-section-icon--city"');
-    expect(body).toContain('</svg>Los Angeles</div>');
+    expect(body).not.toContain('orc-section-icon--city');
+    expect(body).toContain('>Los Angeles</div>');
     expect(body).not.toContain('Califórnia');
     expect(body).not.toContain('Paris, França');
     expect(body).not.toContain('Não é acomodação');

@@ -514,7 +514,7 @@ function renderServiceItem(
   const content = `<strong>${escHtml(title)}${periodo ? ` - ${escHtml(periodo)}` : ''}</strong>${fields.length ? `<div class="orc-service-details">${fields.map(escHtml).join(' | ')}</div>` : ''}`;
   if (showUnitValue) return renderScreenItemRow(item, label, content, quantity, defaultCurrency);
   const iconType = flight && type !== 'trem' ? 'passagem' : type;
-  return `<div class="row orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}"><div>${serviceIconSvg(iconType)}</div><div><div class="orc-service-type">${renderServiceLabel(label, iconType)}</div>${content}</div><div class="q orc-quantity">${escHtml(quantity)}</div>${showItemValues ? `<div class="v orc-value">${escHtml(formatCurrency(Number(item.total_amount ?? 0), item.currency || defaultCurrency))}</div>` : '<div class="v"></div>'}</div>`;
+  return `<div class="row orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}"><div>${serviceIconSvg(iconType)}</div><div><div class="orc-service-type">${renderServiceLabel(label)}</div>${content}</div><div class="q orc-quantity">${escHtml(quantity)}</div>${showItemValues ? `<div class="v orc-value">${escHtml(formatCurrency(Number(item.total_amount ?? 0), item.currency || defaultCurrency))}</div>` : '<div class="v"></div>'}</div>`;
 }
 
 type QuotePdfSection =
@@ -623,7 +623,6 @@ function renderCityTable(title: string, content: string, isCity = false) {
   return `<section class="orc-city-section"><div class="sh">${sectionTitle}</div>${content}</section>`;
 }
 
-const cityIcon = `<svg class="orc-section-icon orc-section-icon--city" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="10" height="18" rx="1"/><path d="M13 8h7v13H3M6 7h1m2 0h1M6 11h1m2 0h1M6 15h1m2 0h1M16 12h1m-1 4h1"/></svg>`;
 const financialIcon = `<svg class="orc-section-icon orc-section-icon--financial" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M5 9h1m12 6h1"/></svg>`;
 const infoIcon = `<svg class="orc-section-icon orc-info-icon--estimate" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/></svg>`;
 const childIcon = `<svg class="orc-section-icon orc-info-icon--children" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="5" r="2"/><path d="M8 11l2-3h4l2 3M12 8v6m-2 0-1 7m5-7 1 7"/></svg>`;
@@ -690,7 +689,7 @@ function serviceIconSvg(type: string) {
   if (iconType === 'passagem' || iconType === 'passagem-section')
     return flightPlane(
       iconType === 'passagem-section'
-        ? 'orc-section-icon orc-section-icon--flight'
+        ? 'orc-section-icon orc-section-icon--flight orc-service-icon orc-service-icon--flight'
         : 'orc-service-icon orc-service-icon--flight'
     );
   const [name, shape] = serviceIcons.get(iconType) ?? [
@@ -700,12 +699,12 @@ function serviceIconSvg(type: string) {
   return `<svg class="orc-service-icon orc-service-icon--${name}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${shape}</svg>`;
 }
 
-function renderServiceLabel(label: string, type: string) {
-  return `<span class="orc-service-label">${serviceIconSvg(type)}<span>${escHtml(label)}</span></span>`;
+function renderServiceLabel(label: string) {
+  return `<span class="orc-service-label"><span>${escHtml(label)}</span></span>`;
 }
 
 function renderQuoteCityTitle(city: string) {
-  return `<div class="roteiro-card-city">${cityIcon}${escHtml(nomeCidadeNoPdf(city))}</div>`;
+  return `<div class="roteiro-card-city">${escHtml(nomeCidadeNoPdf(city))}</div>`;
 }
 
 export function renderQuoteItemsForScreen(items: QuoteItemForPdf[], currency: string) {
@@ -875,7 +874,7 @@ function renderFlightItemHtml(
   </div>`;
   if (showUnitValue) return renderScreenItemRow(item, service, content, quantityLabel, currency);
   const iconType = isTrain ? 'trem' : 'passagem';
-  return `<div class="row orc-city-item"><div>${serviceIconSvg(iconType === 'passagem' ? 'passagem-section' : iconType)}</div><div><div class="orc-service-type">${renderServiceLabel(service, iconType)}</div>${content}</div><div class="q orc-quantity">${escHtml(quantityLabel)}</div>${showItemValues ? `<div class="v orc-value">${escHtml(formatCurrency(amount, currency))}</div>` : '<div class="v"></div>'}</div>`;
+  return `<div class="row orc-city-item"><div>${serviceIconSvg(iconType === 'passagem' ? 'passagem-section' : iconType)}</div><div><div class="orc-service-type">${renderServiceLabel(service)}</div>${content}</div><div class="q orc-quantity">${escHtml(quantityLabel)}</div>${showItemValues ? `<div class="v orc-value">${escHtml(formatCurrency(amount, currency))}</div>` : '<div class="v"></div>'}</div>`;
 }
 
 function renderCircuitItemHtml(
@@ -1270,7 +1269,12 @@ export function buildQuotePreviewHtmlSync(params: {
     .pg-band .val span { color: #C62828; }
     .sec { border: 1px solid #DDE3EC; border-radius: 12px; margin: 0 0 8px; overflow: hidden; break-inside: avoid; background: #fff; }
     .sh { background: #EEF2F7; display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; font-weight: bold; color: #1B2C80; }
-    .row { display: grid; grid-template-columns: 22px 1fr 90px 90px; gap: 8px; padding: 6px 12px; border-top: 1px solid #EEF2F7; }
+    .orc-city-section { overflow: visible; }
+    .sh { align-items: flex-start; }
+    .sh .roteiro-card-city, .orc-table-section-title { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+    .row { display: grid; grid-template-columns: 22px minmax(0, 1fr) minmax(72px, auto) minmax(72px, auto); gap: 8px; padding: 6px 12px; border-top: 1px solid #EEF2F7; }
+    .row > div { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+    .row strong, .orc-service-label, .orc-service-label span, .orc-flight-row-details, .orc-flight-segment { white-space: normal; overflow-wrap: anywhere; }
     .sh + .row { border-top: 0; }
     .q { color: #6B7280; font-size: 8.3pt; }
     .v, .orc-value { text-align: right; font-weight: bold; }
@@ -1283,7 +1287,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-validity-date { font-size: 10px; color: #dc2626; margin: 3px 0 0 0; }
 
     @media screen and (max-width: 640px) {
-      .orc-city-section, .orc-financial-section { overflow-x: auto; }
+      .orc-financial-section { overflow-x: auto; }
       .orc-city-table { min-width: 580px; }
     }
 
@@ -1293,7 +1297,9 @@ export function buildQuotePreviewHtmlSync(params: {
       .toolbar { display: none; }
       .shell { max-width: none; padding: 0; }
       .orc-header-card, .orc-title-row, .orc-section-card, .orc-city-section, .orc-financial-section { border-radius: 0; box-shadow: none; }
-      .roteiro-card, .orc-city-item { break-inside: avoid; page-break-inside: avoid; }
+      .orc-city-section, .row, .row > div { overflow: visible; }
+      .roteiro-card { break-inside: avoid; page-break-inside: avoid; }
+      .orc-city-item { break-inside: auto; page-break-inside: auto; }
       .roteiro-card--long, .orc-city-item--long { break-inside: auto; page-break-inside: auto; }
       .orc-footer-list li { break-inside: avoid; page-break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
       .orc-footer-list .orc-footer-item--long { break-inside: auto; page-break-inside: auto; }
