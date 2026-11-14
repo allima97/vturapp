@@ -28,6 +28,7 @@ function flightType(value: string) {
   const normalized = value.trim().toLowerCase();
   if (normalized.includes('interno')) return 'Voo Interno';
   if (normalized.includes('fretamento')) return 'Fretamento';
+  if (normalized.includes('internacional')) return 'Internacional';
   if (normalized.includes('nacional')) return 'Nacional';
   return 'Internacional';
 }

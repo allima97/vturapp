@@ -96,7 +96,9 @@ describe('identidade dos orçamentos e circuitos', () => {
               cia_aerea: 'Trenitalia',
               numero_voo: 'FR 1000',
               aeroporto_saida: 'ROM',
-              aeroporto_chegada: 'MIL'
+              aeroporto_chegada: 'MIL',
+              classe_reserva: 'Executiva',
+              tarifa_nome: 'Tarifa antiga'
             }
           ]
         }
@@ -116,6 +118,8 @@ describe('identidade dos orçamentos e circuitos', () => {
     for (const html of [screen, pdf]) {
       expect(html).toContain('ROM → MIL - FR 1000');
       expect(html).toContain('03 passagens');
+      expect(html).toContain('Executiva');
+      expect(html).not.toContain('Tarifa antiga');
       expect(html).not.toContain('Aéreo Internacional');
     }
     expect(screen).toContain('data-label="Serviço" class="px-3 py-3 text-slate-700">Trem</td>');

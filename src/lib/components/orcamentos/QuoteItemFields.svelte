@@ -35,9 +35,11 @@
   }
 
   function alterarTipo() {
-    if (item.item_type === 'passagem' || item.item_type === 'trem') {
+    if (item.item_type === 'passagem') {
       item.city_name = '';
       item.destino_geografico_id = '';
+    }
+    if (item.item_type === 'passagem' || item.item_type === 'trem') {
       item.title = formatarDescricaoItem(item.item_type, item.title);
     }
     atualizarItem();
@@ -100,7 +102,7 @@
   on:input={atualizarInput}
   on:change={atualizarItem}
 >
-  <div class="md:col-span-3">
+  <div class={item.item_type === 'trem' ? 'min-w-0 md:col-span-12 xl:col-span-2' : 'md:col-span-3'}>
     <FieldSelect
       id={`${prefix}-tipo`}
       label="Tipo"
@@ -112,8 +114,10 @@
     />
   </div>
 
-  {#if item.item_type !== 'passagem' && item.item_type !== 'trem'}
-    <div class="md:col-span-4">
+  {#if item.item_type !== 'passagem'}
+    <div
+      class={item.item_type === 'trem' ? 'min-w-0 md:col-span-12 xl:col-span-3' : 'md:col-span-4'}
+    >
       <DestinoOperacional
         fieldId={`${prefix}-destino`}
         label="Destino"
@@ -132,15 +136,19 @@
   {/if}
 
   <div
-    class={item.item_type === 'passagem' || item.item_type === 'trem'
+    class={item.item_type === 'passagem'
       ? 'md:col-span-9'
-      : 'md:col-span-5'}
+      : item.item_type === 'trem'
+        ? 'min-w-0 md:col-span-12 xl:col-span-3'
+        : 'md:col-span-5'}
   >
     <FieldInput
       id={`${prefix}-descricao`}
       label="Descrição"
       bind:value={item.title}
-      placeholder="Ex.: Passagem aérea ida e volta"
+      placeholder={item.item_type === 'trem'
+        ? 'Ex.: Roma / Milão'
+        : 'Ex.: Passagem aérea ida e volta'}
       class_name="w-full"
       required
       on:blur={() => {
@@ -348,7 +356,9 @@
       </div>
     </div>
   {:else if item.item_type === 'passagem' || item.item_type === 'trem'}
-    <div class="md:col-span-3">
+    <div
+      class={item.item_type === 'trem' ? 'min-w-0 md:col-span-12 xl:col-span-2' : 'md:col-span-3'}
+    >
       <FieldInput
         id={`${prefix}-data-saida`}
         label="Data de saída"
@@ -357,7 +367,9 @@
         class_name="w-full"
       />
     </div>
-    <div class="md:col-span-3">
+    <div
+      class={item.item_type === 'trem' ? 'min-w-0 md:col-span-12 xl:col-span-2' : 'md:col-span-3'}
+    >
       <FieldInput
         id={`${prefix}-data-chegada`}
         label="Data de chegada"
@@ -366,6 +378,9 @@
         class_name="w-full"
       />
     </div>
+    {#if item.item_type === 'trem'}
+      <FlightSegments idPrefix={`${prefix}-voo`} isTrain bind:segments={item.flightSegments} />
+    {/if}
     <div class="md:col-span-12">
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div class="grid grid-cols-2 gap-2">
@@ -447,7 +462,9 @@
         {formatCurrency(calcularTotaisItem(item).total_amount)}
       </div>
     </div>
-    <FlightSegments idPrefix={`${prefix}-voo`} bind:segments={item.flightSegments} />
+    {#if item.item_type === 'passagem'}
+      <FlightSegments idPrefix={`${prefix}-voo`} bind:segments={item.flightSegments} />
+    {/if}
   {:else if ['servico', 'passeio', 'show', 'transfer'].includes(item.item_type)}
     <div class="md:col-span-3">
       <FieldInput

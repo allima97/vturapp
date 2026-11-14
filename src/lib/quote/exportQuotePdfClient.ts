@@ -712,14 +712,14 @@ function renderFlightItemHtml(
   );
   const flightType = normalizeText(flights[0].tipo_voo);
   const isDomestic = flightType === 'nacional' || flightType.includes('interno');
-  const service =
-    normalizeText(item.item_type) === 'trem'
-      ? 'Trem'
-      : isDomestic
-        ? 'Voo Interno'
-        : flightType === 'internacional'
-          ? 'Aéreo Internacional'
-          : 'Passagem Aérea';
+  const isTrain = normalizeText(item.item_type) === 'trem';
+  const service = isTrain
+    ? 'Trem'
+    : isDomestic
+      ? 'Voo Interno'
+      : flightType === 'internacional'
+        ? 'Aéreo Internacional'
+        : 'Passagem Aérea';
   const quantityLabel = formatFlightQuantity(item);
   const distinct = (values: string[]) =>
     Array.from(
@@ -734,7 +734,9 @@ function renderFlightItemHtml(
   const fareDetails = distinct(
     flights
       .map((flight) =>
-        [textVal(flight.classe_reserva), textVal(flight.tarifa_nome)].filter(Boolean).join(' | ')
+        [textVal(flight.classe_reserva), isTrain ? '' : textVal(flight.tarifa_nome)]
+          .filter(Boolean)
+          .join(' | ')
       )
       .filter(Boolean)
   );
