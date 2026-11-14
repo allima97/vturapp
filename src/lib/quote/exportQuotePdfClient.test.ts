@@ -66,6 +66,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     expect(html).toContain('Hollywood Hotel Inn - 11-08-2027 a 13-08-2027 (02 noites)');
     expect(html).toContain('02 Adultos | 3 Estrelas | Duplo | Café da manhã');
+    expect(html).toContain('<td class="orc-quantity">01 apartamento</td>');
     expect(html).not.toContain('Total de noites:');
     expect(html).not.toContain('Categoria:');
     expect(html).not.toContain('Apartamentos:');
@@ -103,9 +104,41 @@ describe('identidade dos orçamentos e circuitos', () => {
 
     expect(html).toContain('SUV - 17-01-2027 a 20-01-2027 (04 dias)');
     expect(html).toContain('Automático | KM Livre | CDW | LDW | Tanque Cheio');
+    expect(html).toContain('<td class="orc-quantity">01 carro</td>');
     expect(html).not.toContain('SUV - Automático - 17-01-2027');
     expect(html).not.toContain('Câmbio:');
     expect(html).not.toContain('Incluídos:');
+  });
+
+  it('identifica apartamentos e carros no singular e plural no resumo e nos detalhes', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        {
+          item_type: 'hotel',
+          title: 'Hotel dois apartamentos',
+          quantity: 1,
+          raw: { detalhes_orcamento: { quantidade_apartamentos: 2 } }
+        },
+        { item_type: 'hospedagem', title: 'Hotel antigo', quantity: 1 },
+        { item_type: 'aluguel_carro', title: 'Carros', quantity: 2 },
+        { item_type: 'aluguel_carro', title: 'Carro', quantity: 1 },
+        { item_type: 'hotel', title: 'Hotel sem quantidade' },
+        { item_type: 'servico', title: 'Serviço', quantity: 2 }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: true,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+    for (const quantity of ['01 apartamento', '02 apartamentos', '01 carro', '02 carros']) {
+      expect(html).toContain(`<td class="orc-quantity">${quantity}</td>`);
+      expect(html).toContain(`<td class="text-right">${quantity}</td>`);
+    }
+    expect(html).toContain('<td class="orc-quantity">-</td>');
+    expect(html).toContain('<td class="orc-quantity">2</td>');
   });
 
   it('omite categorias de passageiros sem quantidade no PDF', () => {

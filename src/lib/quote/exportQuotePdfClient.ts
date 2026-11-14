@@ -398,6 +398,28 @@ function formatFlightQuantity(item: QuoteItemForPdf) {
   return `${String(quantity).padStart(2, '0')} ${quantity === 1 ? 'passagem' : 'passagens'}`;
 }
 
+function formatLodgingOrCarQuantity(item: QuoteItemForPdf): string | null {
+  const type = normalizeText(item.item_type);
+  const hotel = type === 'hotel' || type === 'hospedagem';
+  if (!hotel && type !== 'aluguel_carro') return null;
+
+  const rawDetails = asRecord(asRecord(item.raw).detalhes_orcamento);
+  const apartments = rawDetails.quantidade_apartamentos;
+  const quantity =
+    hotel && apartments != null && apartments !== ''
+      ? lerDetalhes(item).quantidade_apartamentos
+      : item.quantity;
+  if (quantity == null) return '-';
+  const unit = hotel
+    ? quantity === 1
+      ? 'apartamento'
+      : 'apartamentos'
+    : quantity === 1
+      ? 'carro'
+      : 'carros';
+  return `${String(quantity).padStart(2, '0')} ${unit}`;
+}
+
 function getServiceDetails(item: QuoteItemForPdf) {
   const type = normalizeText(item.item_type);
   const details = lerDetalhes(item);
@@ -481,9 +503,7 @@ function renderServiceItem(
   const title = getServiceTitle(item);
   const quantity = flight
     ? formatFlightQuantity(item)
-    : item.quantity == null
-      ? '-'
-      : String(item.quantity);
+    : (formatLodgingOrCarQuantity(item) ?? (item.quantity == null ? '-' : String(item.quantity)));
   return `<tr class="orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}">
     <td class="orc-service-type">${escHtml(label)}</td>
     <td><strong>${escHtml(title)}${periodo ? ` - ${escHtml(periodo)}` : ''}</strong>${fields.length ? `<div class="orc-service-details">${fields.map(escHtml).join(' | ')}</div>` : ''}</td>
@@ -776,13 +796,14 @@ function renderAllItemsTableHtml(
     const qty = isFlightQuoteItem(item)
       ? getFlightPassengerQuantity(item)
       : Number(item.quantity ?? 1);
+    const quantity = formatLodgingOrCarQuantity(item) ?? String(Number.isFinite(qty) ? qty : 1);
     const unit = Number(item.unit_price ?? 0);
     const total = Number(item.total_amount ?? 0);
     const currency = item.currency || defaultCurrency;
     rowsHtml += `<tr>
       <td>${escHtml(label)}</td>
       <td>${escHtml(type)}</td>
-      <td class="text-right">${escHtml(String(Number.isFinite(qty) ? qty : 1))}</td>
+      <td class="text-right">${escHtml(quantity)}</td>
       ${showItemValues ? `<td class="text-right">${escHtml(formatCurrency(unit, currency))}</td>` : ''}
       ${showItemValues ? `<td class="text-right">${escHtml(formatCurrency(total, currency))}</td>` : ''}
     </tr>`;
