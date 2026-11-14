@@ -1,3 +1,5 @@
+import { addDaysISODate, parseISODateParts } from '$lib/date';
+
 export type QuoteFlightSegment = {
   tipo_voo: string;
   trecho: string;
@@ -12,7 +14,26 @@ export type QuoteFlightSegment = {
   hora_chegada: string;
   aeroporto_chegada: string;
   tarifa_nome: string;
+  cidade_saida_id: string;
+  cidade_chegada_id: string;
+  assentos: string;
 };
+
+export function trainArrival(segment: QuoteFlightSegment) {
+  const date = parseISODateParts(segment.data_voo);
+  const departure = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(segment.hora_saida);
+  const duration = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(segment.duracao_voo);
+  if (!date || !departure || !duration) return null;
+  const minutes =
+    Number(departure[1]) * 60 +
+    Number(departure[2]) +
+    Number(duration[1]) * 60 +
+    Number(duration[2]);
+  return {
+    data_fim: addDaysISODate(date.iso, Math.floor(minutes / 1440)),
+    hora_chegada: `${String(Math.floor((minutes % 1440) / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`
+  };
+}
 
 function record(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
@@ -62,7 +83,10 @@ function toFlightSegment(value: unknown): QuoteFlightSegment {
     data_fim: text(segment.data_fim),
     hora_chegada: flightTime(text(segment.hora_chegada)),
     aeroporto_chegada: text(segment.aeroporto_chegada),
-    tarifa_nome: text(segment.tarifa_nome)
+    tarifa_nome: text(segment.tarifa_nome),
+    cidade_saida_id: text(segment.cidade_saida_id),
+    cidade_chegada_id: text(segment.cidade_chegada_id),
+    assentos: text(segment.assentos)
   };
 }
 
@@ -80,7 +104,10 @@ export function newQuoteFlightSegment(): QuoteFlightSegment {
     data_fim: '',
     hora_chegada: '',
     aeroporto_chegada: '',
-    tarifa_nome: ''
+    tarifa_nome: '',
+    cidade_saida_id: '',
+    cidade_chegada_id: '',
+    assentos: ''
   };
 }
 

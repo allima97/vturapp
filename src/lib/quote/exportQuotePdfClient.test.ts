@@ -30,6 +30,9 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     expect(html).toContain('.orc-title { font-size: 21px; font-weight: 700; color: #243aa3;');
     expect(html).toContain('.orc-city-table thead th { background: #243aa3;');
+    expect(html).toContain(
+      '.orc-title-row, .orc-city-section { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 16px; }'
+    );
   });
 
   it('apresenta itens na tela com os detalhes do PDF e valores unitários, escapando conteúdo', () => {
@@ -98,6 +101,7 @@ describe('identidade dos orçamentos e circuitos', () => {
               aeroporto_saida: 'ROM',
               aeroporto_chegada: 'MIL',
               classe_reserva: 'Executiva',
+              assentos: '12A, 12B',
               tarifa_nome: 'Tarifa antiga'
             }
           ]
@@ -119,6 +123,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       expect(html).toContain('ROM → MIL - FR 1000');
       expect(html).toContain('03 passagens');
       expect(html).toContain('Executiva');
+      expect(html).toContain('Assentos: 12A, 12B');
       expect(html).not.toContain('Tarifa antiga');
       expect(html).not.toContain('Aéreo Internacional');
     }
@@ -608,8 +613,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('<th>Serviço</th>');
     expect(html).toContain('<th>Descrição / Detalhes</th>');
     expect(html).toContain('<th>Qtd.</th>');
-    expect(html).toContain('<td class="orc-service-type">Aéreo Internacional</td>');
-    expect(html).toContain('<td class="orc-service-type">Voo Interno</td>');
+    expect(html.match(/<td class="orc-service-type">Passagem Aérea<\/td>/g)).toHaveLength(3);
     expect(html).toContain('<td class="orc-quantity">01 passagem</td>');
     expect(html.match(/<td class="orc-quantity">02 passagens<\/td>/g)).toHaveLength(2);
     for (const value of [
@@ -685,6 +689,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: false
     });
+
     for (const quantity of ['03 passagens', '01 passagem', '02 passagens', '04 passagens']) {
       expect(html).toContain(`<td class="orc-quantity">${quantity}</td>`);
     }
@@ -697,9 +702,26 @@ describe('identidade dos orçamentos e circuitos', () => {
       ['Voo Antigo', 4]
     ] as const) {
       expect(html).toContain(
-        `<td>${title}</td>\n      <td>passagem</td>\n      <td class="text-right">${quantity}</td>`
+        `<td>${title}</td>\n      <td>Passagem Aérea</td>\n      <td class="text-right">${quantity}</td>`
       );
     }
+  });
+
+  it('usa Passagem Aérea também para voos legados sem trechos na tela e no PDF', () => {
+    const items = [{ item_type: 'voo_interno', title: 'Voo antigo', quantity: 1 }];
+    const screen = renderQuoteItemsForScreen(items, 'BRL');
+    const pdf = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items,
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: true,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+    expect(screen).toContain('>Passagem Aérea</td>');
+    expect(pdf).toContain('>Passagem Aérea</td>');
   });
 
   it('formata somente descrições aéreas no resumo e nos detalhes, inclusive sem trechos', () => {

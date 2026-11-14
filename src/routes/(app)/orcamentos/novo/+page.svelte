@@ -65,6 +65,7 @@
   };
 
   let saving = false;
+  let formElement: HTMLFormElement;
   let errors: Record<string, string> = {};
 
   // ─── Busca de cliente (lazy) ─────────────────────────────────────────────────
@@ -217,6 +218,13 @@
       const erro = validarDetalhes(item);
       if (erro) errors[`item-${index}`] = `Item ${index + 1}: ${erro}`;
     }
+    if (
+      formElement?.querySelector(
+        '[data-train-city] input[aria-invalid="true"], [data-train-city] input:invalid'
+      )
+    ) {
+      errors.itens = 'Selecione as cidades dos trechos de trem na lista de sugestões.';
+    }
 
     return Object.keys(errors).length === 0;
   }
@@ -292,7 +300,11 @@
   breadcrumbs={[{ label: 'Orçamentos', href: '/orcamentos' }, { label: 'Novo Orçamento' }]}
 />
 
-<form on:submit|preventDefault={() => handleSubmit(false)} class="space-y-6">
+<form
+  bind:this={formElement}
+  on:submit|preventDefault={() => handleSubmit(false)}
+  class="space-y-6"
+>
   <!-- ── Dados do Cliente ─────────────────────────────────────────────────── -->
   <Card header="Dados do Cliente" color="orcamentos">
     <div class="space-y-4">

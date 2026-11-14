@@ -500,7 +500,10 @@ function renderServiceItem(
     seguro_viagem: 'Seguro Viagem',
     outro: 'Serviço'
   };
-  const label = labels[type] || textVal(item.item_type) || 'Serviço';
+  const label =
+    flight && type !== 'trem'
+      ? 'Passagem Aérea'
+      : labels[type] || textVal(item.item_type) || 'Serviço';
   const periodo = formatServicePeriod(item);
   const fields = getServiceDetails(item);
   const title = getServiceTitle(item);
@@ -699,7 +702,8 @@ function renderFlightItemHtml(
       duracao_voo: String(data.duracao_voo || ''),
       hora_chegada: String(data.hora_chegada || ''),
       aeroporto_chegada: String(data.aeroporto_chegada || ''),
-      tarifa_nome: String(data.tarifa_nome || '')
+      tarifa_nome: String(data.tarifa_nome || ''),
+      assentos: String(data.assentos || '')
     };
   });
   if (flights.length === 0) return renderGenericItemHtml(item, showItemValues, defaultCurrency);
@@ -710,16 +714,8 @@ function renderFlightItemHtml(
     item.item_type || '',
     textVal(item.title || item.product_name)
   );
-  const flightType = normalizeText(flights[0].tipo_voo);
-  const isDomestic = flightType === 'nacional' || flightType.includes('interno');
   const isTrain = normalizeText(item.item_type) === 'trem';
-  const service = isTrain
-    ? 'Trem'
-    : isDomestic
-      ? 'Voo Interno'
-      : flightType === 'internacional'
-        ? 'Aéreo Internacional'
-        : 'Passagem Aérea';
+  const service = isTrain ? 'Trem' : 'Passagem Aérea';
   const quantityLabel = formatFlightQuantity(item);
   const distinct = (values: string[]) =>
     Array.from(
@@ -766,7 +762,13 @@ function renderFlightItemHtml(
           ? `${textVal(flight.hora_saida).replace(/\s*\(\+\d+\)\s*$/, '')} / ${arrivalTime}`
           : textVal(flight.hora_saida).replace(/\s*\(\+\d+\)\s*$/, '') || arrivalTime
       ].filter(Boolean);
-      return [route, textVal(flight.descricao), departureDate, ...times]
+      return [
+        route,
+        textVal(flight.descricao),
+        departureDate,
+        ...times,
+        isTrain && textVal(flight.assentos) ? `Assentos: ${textVal(flight.assentos)}` : ''
+      ]
         .filter(Boolean)
         .join(' - ');
     })
@@ -842,7 +844,7 @@ function renderAllItemsTableHtml(
       item.item_type || '',
       textVal(item.title || item.product_name || item.item_type || 'Item')
     );
-    const type = textVal(item.item_type || 'servico');
+    const type = isFlightQuoteItem(item) ? 'Passagem Aérea' : textVal(item.item_type || 'servico');
     const qty =
       isFlightQuoteItem(item) || normalizeText(item.item_type) === 'trem'
         ? getFlightPassengerQuantity(item)
@@ -1124,7 +1126,8 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-header-divider { height: 1px; background: #dbe3f0; margin: 10px 0 0 0; }
 
     /* Título */
-    .orc-title-row { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 16px; margin: 0 0 16px 0; }
+    .orc-title-row, .orc-city-section { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 16px; }
+    .orc-title-row { margin: 0 0 16px 0; }
     .orc-title-kicker { color: #243aa3; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
     .orc-title { font-size: 21px; font-weight: 700; color: #243aa3; line-height: 1.2; margin-top: 4px; }
     .orc-title-meta { color: #334155; font-size: 12px; line-height: 1.5; margin-top: 5px; }
@@ -1184,7 +1187,7 @@ export function buildQuotePreviewHtmlSync(params: {
       body { background: white; }
       .toolbar { display: none; }
       .shell { max-width: none; padding: 0; }
-      .orc-header-card, .orc-title-row, .orc-section-card { border-radius: 0; box-shadow: none; }
+      .orc-header-card, .orc-title-row, .orc-section-card, .orc-city-section { border-radius: 0; box-shadow: none; }
       .roteiro-card, .orc-city-item { break-inside: avoid; page-break-inside: avoid; }
       .roteiro-card--long, .orc-city-item--long { break-inside: auto; page-break-inside: auto; }
       .orc-city-table thead { display: table-header-group; }

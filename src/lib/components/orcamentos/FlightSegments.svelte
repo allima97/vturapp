@@ -1,8 +1,9 @@
 <script lang="ts">
   import { FieldInput, FieldSelect } from '$lib/components/ui';
+  import TrainCity from '$lib/components/orcamentos/TrainCity.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import { Plus, Trash2 } from '$lib/icons';
-  import { newQuoteFlightSegment, type QuoteFlightSegment } from '$lib/quote/flights';
+  import { newQuoteFlightSegment, trainArrival, type QuoteFlightSegment } from '$lib/quote/flights';
 
   let {
     idPrefix,
@@ -30,8 +31,33 @@
 
   function updateSegment(event: Event, index: number, field: keyof QuoteFlightSegment) {
     const value = (event.target as HTMLInputElement | HTMLSelectElement).value;
+    segments = segments.map((segment, segmentIndex) => {
+      if (segmentIndex !== index) return segment;
+      const updated = { ...segment, [field]: value };
+      if (isTrain && ['data_voo', 'hora_saida', 'duracao_voo'].includes(field)) {
+        const arrival = trainArrival(updated);
+        if (arrival) return { ...updated, ...arrival };
+        const previous = trainArrival(segment);
+        if (
+          previous &&
+          segment.data_fim === previous.data_fim &&
+          segment.hora_chegada === previous.hora_chegada
+        )
+          return { ...updated, data_fim: '', hora_chegada: '' };
+      }
+      return updated;
+    });
+  }
+
+  function updateCity(
+    index: number,
+    field: 'aeroporto_saida' | 'aeroporto_chegada',
+    value: string,
+    id: string
+  ) {
+    const idField = field === 'aeroporto_saida' ? 'cidade_saida_id' : 'cidade_chegada_id';
     segments = segments.map((segment, segmentIndex) =>
-      segmentIndex === index ? { ...segment, [field]: value } : segment
+      segmentIndex === index ? { ...segment, [field]: value, [idField]: id } : segment
     );
   }
 </script>
@@ -72,119 +98,172 @@
             </Button>
           </div>
 
-          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-12">
             {#if !isTrain}
-              <FieldSelect
-                id={`${idPrefix}-tipo-voo-${index}`}
-                label="Tipo de voo"
-                value={segment.tipo_voo}
-                options={[
-                  { value: 'Nacional', label: 'Nacional' },
-                  { value: 'Internacional', label: 'Internacional' },
-                  { value: 'Voo Interno', label: 'Voo Interno' },
-                  { value: 'Fretamento', label: 'Fretamento' }
-                ]}
-                placeholder={null}
-                class_name="w-full"
-                on:change={(event) => updateSegment(event, index, 'tipo_voo')}
-              />
+              <div class="min-w-0 lg:col-span-3">
+                <FieldSelect
+                  id={`${idPrefix}-tipo-voo-${index}`}
+                  label="Tipo de voo"
+                  value={segment.tipo_voo}
+                  options={[
+                    { value: 'Nacional', label: 'Nacional' },
+                    { value: 'Internacional', label: 'Internacional' },
+                    { value: 'Voo Interno', label: 'Voo Interno' },
+                    { value: 'Fretamento', label: 'Fretamento' }
+                  ]}
+                  placeholder={null}
+                  class_name="w-full"
+                  on:change={(event) => updateSegment(event, index, 'tipo_voo')}
+                />
+              </div>
             {/if}
-            <FieldInput
-              id={`${idPrefix}-cia-aerea-${index}`}
-              label={isTrain ? 'Fornecedor' : 'Companhia aérea'}
-              value={segment.cia_aerea}
-              placeholder={isTrain ? 'Ex.: Trenitalia' : 'Ex.: LATAM Airlines'}
-              class_name="w-full"
-              on:input={(event) => updateSegment(event, index, 'cia_aerea')}
-            />
-            <FieldInput
-              id={`${idPrefix}-numero-voo-${index}`}
-              label={isTrain ? 'Número do Trem' : 'Número do voo'}
-              value={segment.numero_voo}
-              placeholder={isTrain ? 'Ex.: FR 1000' : 'Ex.: LA 8120'}
-              class_name="w-full"
-              on:input={(event) => updateSegment(event, index, 'numero_voo')}
-            />
-            <FieldSelect
-              id={`${idPrefix}-classe-${index}`}
-              label="Classe de reserva"
-              value={segment.classe_reserva}
-              options={[
-                { value: 'Econômica', label: 'Econômica' },
-                { value: 'Econômica Premium', label: 'Econômica Premium' },
-                { value: 'Executiva', label: 'Executiva' },
-                { value: 'Primeira Classe', label: 'Primeira Classe' }
-              ]}
-              placeholder="Selecione"
-              class_name="w-full"
-              on:change={(event) => updateSegment(event, index, 'classe_reserva')}
-            />
-            <FieldInput
-              id={`${idPrefix}-aeroporto-saida-${index}`}
-              label={isTrain ? 'Cidade de saída' : 'Aeroporto de saída'}
-              value={segment.aeroporto_saida}
-              placeholder={isTrain ? 'Ex.: Roma' : 'Ex.: GRU'}
-              class_name="w-full"
-              on:input={(event) => updateSegment(event, index, 'aeroporto_saida')}
-            />
-            <FieldInput
-              id={`${idPrefix}-data-voo-${index}`}
-              label="Data de saída"
-              type="date"
-              value={segment.data_voo}
-              class_name="w-full"
-              on:input={(event) => updateSegment(event, index, 'data_voo')}
-            />
-            <FieldInput
-              id={`${idPrefix}-hora-saida-${index}`}
-              label="Hora de saída"
-              type="time"
-              value={displayTime(segment.hora_saida)}
-              class_name="w-full"
-              on:input={(event) => updateSegment(event, index, 'hora_saida')}
-            />
-            <FieldInput
-              id={`${idPrefix}-duracao-${index}`}
-              label={isTrain ? 'Duração da viagem' : 'Duração do voo'}
-              type="time"
-              value={displayTime(segment.duracao_voo)}
-              class_name="w-full"
-              on:input={(event) => updateSegment(event, index, 'duracao_voo')}
-            />
-            <FieldInput
-              id={`${idPrefix}-aeroporto-chegada-${index}`}
-              label={isTrain ? 'Cidade de chegada' : 'Aeroporto de chegada'}
-              value={segment.aeroporto_chegada}
-              placeholder={isTrain ? 'Ex.: Milão' : 'Ex.: FCO'}
-              class_name="w-full"
-              on:input={(event) => updateSegment(event, index, 'aeroporto_chegada')}
-            />
-            <FieldInput
-              id={`${idPrefix}-data-chegada-${index}`}
-              label="Data de chegada"
-              type="date"
-              value={segment.data_fim}
-              class_name="w-full"
-              on:input={(event) => updateSegment(event, index, 'data_fim')}
-            />
-            <FieldInput
-              id={`${idPrefix}-hora-chegada-${index}`}
-              label="Hora de chegada"
-              type="time"
-              value={displayTime(segment.hora_chegada)}
-              class_name="w-full"
-              on:input={(event) => updateSegment(event, index, 'hora_chegada')}
-            />
-            {#if !isTrain}
+            <div class={isTrain ? 'min-w-0 lg:col-span-4' : 'min-w-0 lg:col-span-3'}>
               <FieldInput
-                id={`${idPrefix}-tarifa-${index}`}
-                label="Tarifa"
-                value={segment.tarifa_nome}
-                placeholder="Ex.: FULL"
+                id={`${idPrefix}-cia-aerea-${index}`}
+                label={isTrain ? 'Fornecedor' : 'Companhia aérea'}
+                value={segment.cia_aerea}
+                placeholder={isTrain ? 'Ex.: Trenitalia' : 'Ex.: LATAM Airlines'}
                 class_name="w-full"
-                on:input={(event) => updateSegment(event, index, 'tarifa_nome')}
+                on:input={(event) => updateSegment(event, index, 'cia_aerea')}
               />
-            {/if}
+            </div>
+            <div class={isTrain ? 'min-w-0 lg:col-span-4' : 'min-w-0 lg:col-span-3'}>
+              <FieldInput
+                id={`${idPrefix}-numero-voo-${index}`}
+                label={isTrain ? 'Número do Trem' : 'Número do voo'}
+                value={segment.numero_voo}
+                placeholder={isTrain ? 'Ex.: FR 1000' : 'Ex.: LA 8120'}
+                class_name="w-full"
+                on:input={(event) => updateSegment(event, index, 'numero_voo')}
+              />
+            </div>
+            <div class={isTrain ? 'min-w-0 lg:col-span-4' : 'min-w-0 lg:col-span-3'}>
+              <FieldSelect
+                id={`${idPrefix}-classe-${index}`}
+                label="Classe de reserva"
+                value={segment.classe_reserva}
+                options={[
+                  { value: 'Econômica', label: 'Econômica' },
+                  { value: 'Econômica Premium', label: 'Econômica Premium' },
+                  { value: 'Executiva', label: 'Executiva' },
+                  { value: 'Primeira Classe', label: 'Primeira Classe' }
+                ]}
+                placeholder="Selecione"
+                class_name="w-full"
+                on:change={(event) => updateSegment(event, index, 'classe_reserva')}
+              />
+            </div>
+            <div class="min-w-0 lg:col-span-3">
+              {#if isTrain}
+                <TrainCity
+                  fieldId={`${idPrefix}-aeroporto-saida-${index}`}
+                  label="Cidade de saída"
+                  value={segment.aeroporto_saida}
+                  destinoId={segment.cidade_saida_id}
+                  onChange={(value, id) => updateCity(index, 'aeroporto_saida', value, id)}
+                />
+              {:else}
+                <FieldInput
+                  id={`${idPrefix}-aeroporto-saida-${index}`}
+                  label="Aeroporto de saída"
+                  value={segment.aeroporto_saida}
+                  placeholder="Ex.: GRU"
+                  class_name="w-full"
+                  on:input={(event) => updateSegment(event, index, 'aeroporto_saida')}
+                />
+              {/if}
+            </div>
+            <div class="min-w-0 lg:col-span-3">
+              <FieldInput
+                id={`${idPrefix}-data-voo-${index}`}
+                label="Data de saída"
+                type="date"
+                value={segment.data_voo}
+                class_name="w-full"
+                on:input={(event) => updateSegment(event, index, 'data_voo')}
+              />
+            </div>
+            <div class="min-w-0 lg:col-span-3">
+              <FieldInput
+                id={`${idPrefix}-hora-saida-${index}`}
+                label="Hora de saída"
+                type="time"
+                value={displayTime(segment.hora_saida)}
+                class_name="w-full"
+                on:input={(event) => updateSegment(event, index, 'hora_saida')}
+              />
+            </div>
+            <div class="min-w-0 lg:col-span-3">
+              <FieldInput
+                id={`${idPrefix}-duracao-${index}`}
+                label={isTrain ? 'Duração da viagem' : 'Duração do voo'}
+                type="time"
+                value={displayTime(segment.duracao_voo)}
+                class_name="w-full"
+                on:input={(event) => updateSegment(event, index, 'duracao_voo')}
+              />
+            </div>
+            <div class="min-w-0 lg:col-span-3">
+              {#if isTrain}
+                <TrainCity
+                  fieldId={`${idPrefix}-aeroporto-chegada-${index}`}
+                  label="Cidade de chegada"
+                  value={segment.aeroporto_chegada}
+                  destinoId={segment.cidade_chegada_id}
+                  onChange={(value, id) => updateCity(index, 'aeroporto_chegada', value, id)}
+                />
+              {:else}
+                <FieldInput
+                  id={`${idPrefix}-aeroporto-chegada-${index}`}
+                  label="Aeroporto de chegada"
+                  value={segment.aeroporto_chegada}
+                  placeholder="Ex.: FCO"
+                  class_name="w-full"
+                  on:input={(event) => updateSegment(event, index, 'aeroporto_chegada')}
+                />
+              {/if}
+            </div>
+            <div class="min-w-0 lg:col-span-3">
+              <FieldInput
+                id={`${idPrefix}-data-chegada-${index}`}
+                label="Data de chegada"
+                type="date"
+                value={segment.data_fim}
+                class_name="w-full"
+                on:input={(event) => updateSegment(event, index, 'data_fim')}
+              />
+            </div>
+            <div class="min-w-0 lg:col-span-3">
+              <FieldInput
+                id={`${idPrefix}-hora-chegada-${index}`}
+                label="Hora de chegada"
+                type="time"
+                value={displayTime(segment.hora_chegada)}
+                class_name="w-full"
+                on:input={(event) => updateSegment(event, index, 'hora_chegada')}
+              />
+            </div>
+            <div class="min-w-0 lg:col-span-3">
+              {#if isTrain}
+                <FieldInput
+                  id={`${idPrefix}-assentos-${index}`}
+                  label="Assentos (opcional)"
+                  value={segment.assentos}
+                  placeholder="Ex.: 12A, 12B"
+                  class_name="w-full"
+                  on:input={(event) => updateSegment(event, index, 'assentos')}
+                />
+              {:else}
+                <FieldInput
+                  id={`${idPrefix}-tarifa-${index}`}
+                  label="Tarifa"
+                  value={segment.tarifa_nome}
+                  placeholder="Ex.: FULL"
+                  class_name="w-full"
+                  on:input={(event) => updateSegment(event, index, 'tarifa_nome')}
+                />
+              {/if}
+            </div>
           </div>
         </div>
       {/each}

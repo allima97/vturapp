@@ -23,6 +23,7 @@
   export let validando = false;
   export let somenteGeonames = false;
   export let validarInicial = true;
+  export let permitirValorLegado = false;
 
   const dispatch = createEventDispatcher<{ select: Destino; edit: void }>();
   let input: HTMLInputElement;
@@ -40,8 +41,9 @@
   let resolvendo = Boolean(destinoId) && validarInicial;
   let validacaoFalhou = false;
   let referenciaIndisponivel = false;
+  let valorLegado = permitirValorLegado && Boolean((value ?? '').trim()) && !destinoId;
 
-  $: invalido = validacaoFalhou || (Boolean((value ?? '').trim()) && !destinoId);
+  $: invalido = validacaoFalhou || (Boolean((value ?? '').trim()) && !destinoId && !valorLegado);
   $: validando = resolvendo;
   $: valid = !resolvendo && !invalido && (!required || Boolean((value ?? '').trim() && destinoId));
   $: if (input) {
@@ -101,6 +103,7 @@
 
   function digitar(event: Event) {
     value = (event.currentTarget as HTMLInputElement).value;
+    valorLegado = false;
     destinoId = '';
     resolvendo = false;
     validacaoFalhou = false;
@@ -117,6 +120,7 @@
   }
 
   function selecionar(destino: Destino) {
+    valorLegado = false;
     sequencia++;
     if (timer) clearTimeout(timer);
     value = destino.label;

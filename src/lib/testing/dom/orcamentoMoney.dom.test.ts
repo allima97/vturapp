@@ -532,7 +532,13 @@ it('mostra os tipos e a classe de reserva definidos para trechos aéreos', async
       value: string;
       dispatchEvent: (event: Event) => boolean;
     };
+    flightType.value = 'Voo Interno';
+    flightType.dispatchEvent(new Event('input', { bubbles: true }));
+    flightType.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
     flightType.value = 'Internacional';
+    flightType.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
     flightType.dispatchEvent(new Event('change', { bubbles: true }));
     flushSync();
     addSegment.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -553,9 +559,76 @@ it('mostra os tipos e a classe de reserva definidos para trechos aéreos', async
   }
 });
 
+it('preserva o tipo internacional selecionado ao editar um trecho antes interno', async () => {
+  api.fetch.mockResolvedValue({
+    client_name: 'Cliente',
+    valid_until: '2027-01-30',
+    currency: 'BRL',
+    itens: [
+      {
+        id: 'voo-1',
+        item_type: 'passagem',
+        title: 'São Paulo / Roma',
+        quantity: 1,
+        unit_price: 100,
+        total_amount: 100,
+        start_date: '2027-08-11',
+        end_date: '2027-08-13',
+        raw: {
+          detalhes_orcamento: { adultos: 1, adultos_valor: 100 },
+          aereo_import: {
+            segmentos: [{ tipo_voo: 'Voo Interno', numero_voo: 'LA 8120' }]
+          }
+        }
+      }
+    ]
+  });
+  api.patch.mockResolvedValue({});
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(EditPage, { target });
+  try {
+    await vi.waitFor(() =>
+      expect(target.querySelector('#orcamento-editar-item-0-voo-tipo-voo-0')).toBeTruthy()
+    );
+    const select = target.querySelector('#orcamento-editar-item-0-voo-tipo-voo-0') as Element & {
+      value: string;
+      dispatchEvent: (event: Event) => boolean;
+    };
+    expect(select.value).toBe('Voo Interno');
+    select.value = 'Internacional';
+    select.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(select.value).toBe('Internacional');
+    target
+      .querySelector('form')!
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await vi.waitFor(() =>
+      expect(api.patch).toHaveBeenCalledWith(
+        '/api/v1/orcamentos/orcamento-1',
+        expect.objectContaining({
+          itens: [
+            expect.objectContaining({
+              raw: expect.objectContaining({
+                aereo_import: {
+                  segmentos: [expect.objectContaining({ tipo_voo: 'Internacional' })]
+                }
+              })
+            })
+          ]
+        })
+      )
+    );
+  } finally {
+    await unmount(app);
+  }
+});
+
 it('permite criar trem com campos, trechos e cálculo de passagem aérea', async () => {
   api.post.mockResolvedValue({});
-  api.get.mockResolvedValue([{ label: 'Milão, Itália' }]);
+  api.get.mockResolvedValue([{ label: 'Milão, Itália' }, { label: 'Roma, Itália' }]);
   const target = document.createElement('div');
   document.body.appendChild(target);
   const app = mount(Page, { target });
@@ -623,7 +696,8 @@ it('permite criar trem com campos, trechos e cálculo de passagem aérea', async
       'duracao-0',
       'aeroporto-chegada-0',
       'data-chegada-0',
-      'hora-chegada-0'
+      'hora-chegada-0',
+      'assentos-0'
     ]);
     expect(
       segmentFields.map((field) =>
@@ -639,12 +713,31 @@ it('permite criar trem com campos, trechos e cálculo de passagem aérea', async
       'Duração da viagem',
       'Cidade de chegada',
       'Data de chegada',
-      'Hora de chegada'
+      'Hora de chegada',
+      'Assentos (opcional)'
     ]);
     type('#orcamento-novo-item-0-voo-cia-aerea-0', 'Trenitalia');
     type('#orcamento-novo-item-0-voo-numero-voo-0', 'FR 1000');
     type('#orcamento-novo-item-0-voo-aeroporto-saida-0', 'Roma');
+    await vi.waitFor(() =>
+      expect(
+        target.querySelector('#orcamento-novo-item-0-voo-aeroporto-saida-0 ~ div li button')
+      ).toBeTruthy()
+    );
+    [...target.querySelectorAll('#orcamento-novo-item-0-voo-aeroporto-saida-0 ~ div li button')]
+      .find((button) => button.textContent?.includes('Roma, Itália'))!
+      .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    flushSync();
     type('#orcamento-novo-item-0-voo-aeroporto-chegada-0', 'Milão');
+    await vi.waitFor(() =>
+      expect(
+        target.querySelector('#orcamento-novo-item-0-voo-aeroporto-chegada-0 ~ div li button')
+      ).toBeTruthy()
+    );
+    [...target.querySelectorAll('#orcamento-novo-item-0-voo-aeroporto-chegada-0 ~ div li button')]
+      .find((button) => button.textContent?.includes('Milão, Itália'))!
+      .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    flushSync();
     target
       .querySelector('form')!
       .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
@@ -665,8 +758,8 @@ it('permite criar trem com campos, trechos e cálculo de passagem aérea', async
                     expect.objectContaining({
                       cia_aerea: 'Trenitalia',
                       numero_voo: 'FR 1000',
-                      aeroporto_saida: 'Roma',
-                      aeroporto_chegada: 'Milão'
+                      aeroporto_saida: 'Roma, Itália',
+                      aeroporto_chegada: 'Milão, Itália'
                     })
                   ]
                 }
@@ -682,6 +775,7 @@ it('permite criar trem com campos, trechos e cálculo de passagem aérea', async
 });
 
 it('edita trechos de trem já salvos sem perder dados ocultos antigos', async () => {
+  api.get.mockResolvedValue([{ label: 'Veneza, Itália' }]);
   api.fetch.mockResolvedValue({
     client_name: 'Cliente',
     valid_until: '2027-01-30',
@@ -739,6 +833,17 @@ it('edita trechos de trem já salvos sem perder dados ocultos antigos', async ()
     city.value = 'Veneza';
     city.dispatchEvent(new Event('input', { bubbles: true }));
     flushSync();
+    await vi.waitFor(() =>
+      expect(
+        target.querySelector('#orcamento-editar-item-0-voo-aeroporto-chegada-0 ~ div li button')
+      ).toBeTruthy()
+    );
+    target
+      .querySelector<HTMLButtonElement>(
+        '#orcamento-editar-item-0-voo-aeroporto-chegada-0 ~ div li button'
+      )!
+      .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
+    flushSync();
     target
       .querySelector('form')!
       .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
@@ -756,7 +861,7 @@ it('edita trechos de trem já salvos sem perder dados ocultos antigos', async ()
                     expect.objectContaining({
                       cia_aerea: 'Trenitalia',
                       aeroporto_saida: 'Roma',
-                      aeroporto_chegada: 'Veneza',
+                      aeroporto_chegada: 'Veneza, Itália',
                       tipo_voo: 'Internacional',
                       tarifa_nome: 'Legado'
                     })
