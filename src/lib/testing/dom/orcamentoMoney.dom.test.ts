@@ -1,7 +1,8 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { flushSync, mount, unmount } from 'svelte';
 
-const api = vi.hoisted(() => ({ post: vi.fn(), fetch: vi.fn(), patch: vi.fn() }));
+const api = vi.hoisted(() => ({ post: vi.fn(), fetch: vi.fn(), patch: vi.fn(), get: vi.fn() }));
+const preview = vi.hoisted(() => ({ open: vi.fn(), client: {} }));
 vi.mock('$app/navigation', () => ({ goto: vi.fn() }));
 vi.mock('$app/stores', async () => {
   const { readable } = await import('svelte/store');
@@ -17,7 +18,13 @@ vi.mock('$lib/services/api', async (original) => ({
   ...(await original<typeof import('$lib/services/api')>()),
   apiPost: api.post,
   apiFetch: api.fetch,
-  apiPatch: api.patch
+  apiPatch: api.patch,
+  apiGet: api.get
+}));
+vi.mock('$lib/db/browserData', () => ({ createBrowserDataClient: () => preview.client }));
+vi.mock('$lib/quote/exportQuotePdfClient', async (original) => ({
+  ...(await original<typeof import('$lib/quote/exportQuotePdfClient')>()),
+  openQuotePreview: preview.open
 }));
 
 import Page from '../../../routes/(app)/orcamentos/novo/+page.svelte';
@@ -121,6 +128,93 @@ it('mostra os itens em uma tabela padrão, na ordem manual e antes das ações',
       itemsCard.compareDocumentPosition(actionHeading) & Node.DOCUMENT_POSITION_FOLLOWING
     ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
     expect(itemsCard.parentElement?.className).not.toContain('lg:col-span-2');
+  } finally {
+    await unmount(app);
+  }
+});
+
+it('organiza as ações e abre os formulários sem perder as opções do PDF', async () => {
+  api.fetch.mockImplementation((path: string) =>
+    Promise.resolve(
+      path.endsWith('/interacao')
+        ? { interacoes: [] }
+        : { client_name: 'Cliente', currency: 'BRL', status: 'pendente', itens: [] }
+    )
+  );
+  api.get.mockResolvedValue({ interacoes: [] });
+  preview.open.mockResolvedValue(undefined);
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(DetailPage, { target });
+  try {
+    await vi.waitFor(() =>
+      expect([...target.querySelectorAll('h3')].some((h) => h.textContent === 'Ações')).toBe(true)
+    );
+    const heading = [...target.querySelectorAll('h3')].find((h) => h.textContent === 'Ações')!;
+    const card = heading.closest('.vtur-card')!;
+    const buttons = [...card.querySelectorAll('button')];
+    expect(buttons.map((button) => button.textContent?.trim())).toEqual([
+      'Opções do PDF',
+      'Aprovar',
+      'Rejeitar',
+      'Registrar interações',
+      'Visualizar PDF',
+      'Enviar ao Cliente'
+    ]);
+    expect(buttons.every((button) => button.parentElement === buttons[0].parentElement)).toBe(true);
+    expect(target.querySelector('[title="Editar orçamento"]')).toBeNull();
+    expect(target.querySelectorAll('a[href="/orcamentos/orcamento-1/editar"]')).toHaveLength(1);
+    expect(target.querySelector('#quote-pdf-options')).toBeNull();
+    expect(buttons[0].getAttribute('aria-expanded')).toBe('false');
+    buttons[0].click();
+    flushSync();
+    const select = target.querySelector('#quote-pdf-options')!.querySelectorAll('select')[2];
+    select.value = 'sim';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(buttons[0].getAttribute('aria-expanded')).toBe('true');
+    buttons[0].click();
+    flushSync();
+    expect(target.querySelector('#quote-pdf-options')).toBeNull();
+    buttons[4].click();
+    await vi.waitFor(() =>
+      expect(preview.open).toHaveBeenCalledWith(
+        expect.objectContaining({ quoteId: 'orcamento-1', showItemValues: true })
+      )
+    );
+    buttons[0].click();
+    flushSync();
+    expect(target.querySelector('#quote-pdf-options')?.querySelectorAll('select')[2]?.value).toBe(
+      'sim'
+    );
+    buttons[3].click();
+    await vi.waitFor(() => expect(document.body.textContent).toContain('Registrar Nova Interação'));
+  } finally {
+    await unmount(app);
+  }
+});
+
+it('preserva a ação de criar venda e oculta decisões após aprovação', async () => {
+  api.fetch.mockImplementation((path: string) =>
+    Promise.resolve(
+      path.endsWith('/interacao')
+        ? { interacoes: [] }
+        : { client_name: 'Cliente', status: 'aprovado', itens: [] }
+    )
+  );
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(DetailPage, { target });
+  try {
+    await vi.waitFor(() =>
+      expect([...target.querySelectorAll('h3')].some((h) => h.textContent === 'Ações')).toBe(true)
+    );
+    const card = [...target.querySelectorAll('h3')]
+      .find((heading) => heading.textContent === 'Ações')!
+      .closest('.vtur-card')!;
+    expect(
+      [...card.querySelectorAll('button')].map((button) => button.textContent?.trim())
+    ).toEqual(['Opções do PDF', 'Registrar interações', 'Visualizar PDF', 'Criar Venda']);
   } finally {
     await unmount(app);
   }

@@ -17,6 +17,7 @@
     XCircle,
     FileText,
     Printer,
+    Settings2,
     Trash2,
     ShoppingCart,
     User,
@@ -116,6 +117,7 @@
   let exportShowBudgetItems: 'sim' | 'nao' = 'nao';
   let exportShowBudgetDetails: 'sim' | 'nao' = 'sim';
   let exportShowItemValues: 'sim' | 'nao' = 'nao';
+  let showPdfOptions = false;
   $: exportDescontoNum = (() => {
     const v = String(exportDesconto).replace(',', '.').trim();
     const n = parseFloat(v);
@@ -817,17 +819,6 @@
       </Card>
 
       <Card header="Itens do Orçamento" color="clientes">
-        <svelte:fragment slot="actions">
-          <Button
-            href={`/orcamentos/${orcamentoId}/editar`}
-            variant="primary"
-            size="sm"
-            title="Editar orçamento"
-          >
-            <Edit size={15} class="mr-1.5" />
-            Editar orçamento
-          </Button>
-        </svelte:fragment>
         {#if orcamento.itens && orcamento.itens.length > 0}
           <div class="quote-items overflow-x-visible md:overflow-x-auto">
             <!-- eslint-disable-next-line svelte/no-at-html-tags -- o renderizador compartilhado escapa os dados dos itens -->
@@ -850,43 +841,49 @@
 
     <div class="space-y-6">
       <Card header="Ações" color="clientes">
-        <div class="space-y-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <Button
+            variant="secondary"
+            ariaExpanded={showPdfOptions}
+            ariaControls="quote-pdf-options"
+            on:click={() => (showPdfOptions = !showPdfOptions)}
+          >
+            <Settings2 size={16} class="mr-2" />
+            Opções do PDF
+          </Button>
+
+          {#if STATUS_COM_ACOES_DECISAO.has(statusAtual)}
+            <Button variant="primary" color="vendas" on:click={handleAprovar} loading={processando}>
+              <CheckCircle size={16} class="mr-2" />
+              Aprovar
+            </Button>
+
+            <Button variant="danger" on:click={handleRejeitar} loading={processando}>
+              <XCircle size={16} class="mr-2" />
+              Rejeitar
+            </Button>
+          {/if}
+
+          <Button variant="secondary" color="clientes" on:click={openInteracaoModal}>
+            <MessageCircle size={16} class="mr-2" />
+            Registrar interações
+          </Button>
+
+          <Button variant="secondary" on:click={handleImprimir} loading={previewingPdf}>
+            <Printer size={16} class="mr-2" />
+            {previewingPdf ? 'Gerando...' : 'Visualizar PDF'}
+          </Button>
+
           {#if statusAtual === 'pendente' || statusAtual === 'novo'}
             <Button
               variant="primary"
               color="clientes"
               on:click={handleEnviar}
               loading={processando}
-              class_name="w-full justify-center"
             >
               <Send size={16} class="mr-2" />
               Enviar ao Cliente
             </Button>
-          {/if}
-
-          {#if STATUS_COM_ACOES_DECISAO.has(statusAtual)}
-            <div class="grid grid-cols-2 gap-3">
-              <Button
-                variant="primary"
-                color="vendas"
-                on:click={handleAprovar}
-                loading={processando}
-                class_name="w-full justify-center"
-              >
-                <CheckCircle size={16} class="mr-2" />
-                Aprovar
-              </Button>
-
-              <Button
-                variant="danger"
-                on:click={handleRejeitar}
-                loading={processando}
-                class_name="w-full justify-center"
-              >
-                <XCircle size={16} class="mr-2" />
-                Rejeitar
-              </Button>
-            </div>
           {/if}
 
           {#if podeCriarVenda}
@@ -894,32 +891,26 @@
               variant="primary"
               color="vendas"
               on:click={() => goto(`/vendas/nova?orcamento=${orcamentoId}`)}
-              class_name="w-full justify-center"
             >
               <ShoppingCart size={16} class="mr-2" />
               Criar Venda
             </Button>
           {/if}
+        </div>
 
-          {#if orcamentoConvertido}
-            <div
-              class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
-            >
-              Este orçamento já foi convertido em venda.
-            </div>
-          {/if}
-
-          <Button
-            variant="secondary"
-            color="clientes"
-            on:click={openInteracaoModal}
-            class_name="w-full justify-center"
+        {#if orcamentoConvertido}
+          <div
+            class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
           >
-            <MessageCircle size={16} class="mr-2" />
-            Registrar Interação
-          </Button>
+            Este orçamento já foi convertido em venda.
+          </div>
+        {/if}
 
-          <div class="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+        {#if showPdfOptions}
+          <div
+            id="quote-pdf-options"
+            class="mt-3 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3"
+          >
             <div>
               <p class="text-sm font-semibold text-slate-900">Opções do PDF</p>
               <p class="text-xs text-slate-500">
@@ -988,20 +979,8 @@
                 <option value="nao">Não</option>
               </select>
             </div>
-
-            <Button
-              variant="secondary"
-              on:click={handleImprimir}
-              loading={previewingPdf}
-              class_name="w-full justify-center"
-            >
-              <Printer size={16} class="mr-2" />
-              {previewingPdf ? 'Gerando...' : 'Visualizar PDF'}
-            </Button>
           </div>
-          <!-- Editar e Excluir ficam no cabeçalho da página, junto com Voltar,
-               em vez de duplicados aqui embaixo. -->
-        </div>
+        {/if}
       </Card>
 
       {#if orcamento.notes || orcamento.observacoes}
