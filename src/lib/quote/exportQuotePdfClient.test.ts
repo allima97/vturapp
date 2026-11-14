@@ -106,7 +106,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
     const serviceCells = Array.from(
-      html.matchAll(/<td class="orc-service-type">(.*?)<\/td>/g),
+      html.matchAll(/<div class="orc-service-type">(.*?)<\/div>/g),
       (match) => match[1]
     );
     expect(serviceCells).toHaveLength(types.length);
@@ -300,7 +300,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     }
     expect(screen).toContain('data-label="Serviço" class="px-3 py-3 text-slate-700">Trem</td>');
     expect(screen).toContain('>Roma</td>');
-    expect(pdf).toContain('<span>Trem</span></span></td>');
+    expect(pdf).toContain('<span>Trem</span></span>');
     expect(pdf).toContain('<td>Serviços e demais produtos</td><td>BRL</td>');
   });
 
@@ -522,7 +522,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     expect(html).toContain('Hollywood Hotel Inn - 11-08-2027 a 13-08-2027 (02 noites)');
     expect(html).toContain('02 Adultos | 3 Estrelas | Duplo | Café da manhã');
-    expect(html).toContain('<td class="orc-quantity">01 apartamento</td>');
+    expect(html).toContain('<div class="q orc-quantity">01 apartamento</div>');
     expect(html).not.toContain('Total de noites:');
     expect(html).not.toContain('Categoria:');
     expect(html).not.toContain('Apartamentos:');
@@ -560,7 +560,7 @@ describe('identidade dos orçamentos e circuitos', () => {
 
     expect(html).toContain('SUV - 17-01-2027 a 20-01-2027 (04 dias)');
     expect(html).toContain('Automático | KM Livre | CDW | LDW | Tanque Cheio');
-    expect(html).toContain('<td class="orc-quantity">01 carro</td>');
+    expect(html).toContain('<div class="q orc-quantity">01 carro</div>');
     expect(html).not.toContain('SUV - Automático - 17-01-2027');
     expect(html).not.toContain('Câmbio:');
     expect(html).not.toContain('Incluídos:');
@@ -590,11 +590,11 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
     for (const quantity of ['01 apartamento', '02 apartamentos', '01 carro', '02 carros']) {
-      expect(html).toContain(`<td class="orc-quantity">${quantity}</td>`);
+      expect(html).toContain(`<div class="q orc-quantity">${quantity}</div>`);
       expect(html).toContain(`<td class="text-right">${quantity}</td>`);
     }
-    expect(html).toContain('<td class="orc-quantity">-</td>');
-    expect(html).toContain('<td class="orc-quantity">2</td>');
+    expect(html).toContain('<div class="q orc-quantity">-</div>');
+    expect(html).toContain('<div class="q orc-quantity">2</div>');
   });
 
   it('omite categorias de passageiros sem quantidade no PDF', () => {
@@ -944,12 +944,9 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: true
     });
     expect(html).toContain('Passagens Aéreas Internacionais e Trechos Internos');
-    expect(html).toContain('<th>Serviço</th>');
-    expect(html).toContain('<th>Descrição / Detalhes</th>');
-    expect(html).toContain('<th>Qtd.</th>');
-    expect(html.match(/<span>Passagem Aérea<\/span><\/span><\/td>/g)).toHaveLength(3);
-    expect(html).toContain('<td class="orc-quantity">01 passagem</td>');
-    expect(html.match(/<td class="orc-quantity">02 passagens<\/td>/g)).toHaveLength(2);
+    expect(html.match(/<span>Passagem Aérea<\/span><\/span>/g)).toHaveLength(3);
+    expect(html).toContain('<div class="q orc-quantity">01 passagem</div>');
+    expect(html.match(/<div class="q orc-quantity">02 passagens<\/div>/g)).toHaveLength(2);
     for (const value of [
       'LATAM',
       'LA 8120',
@@ -1025,7 +1022,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
 
     for (const quantity of ['03 passagens', '01 passagem', '02 passagens', '04 passagens']) {
-      expect(html).toContain(`<td class="orc-quantity">${quantity}</td>`);
+      expect(html).toContain(`<div class="q orc-quantity">${quantity}</div>`);
     }
     expect(html).not.toContain('01 trecho');
     expect(html).not.toContain('03 passagens (ida e volta)');
@@ -1055,7 +1052,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
     expect(screen).toContain('>Passagem Aérea</td>');
-    expect(pdf).toContain('>Passagem Aérea</td>');
+    expect(pdf).toContain('>Passagem Aérea</span>');
   });
 
   it('formata somente descrições aéreas no resumo e nos detalhes, inclusive sem trechos', () => {
@@ -1159,7 +1156,6 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: true,
       discount: 50
     });
-    expect(html).toContain('Descrição / Detalhes');
     expect(html).toContain('Subtotal — Paris');
     expect(html).toContain('€ 950,00');
     expect(html).toContain('R$ 300,00');
@@ -1200,7 +1196,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       html.indexOf('<section class="orc-city-section">'),
       html.indexOf('<section class="orc-financial-section">')
     );
-    expect(group).toContain('<th>Qtd.</th>');
+    expect(group).toContain('class="q orc-quantity"');
     expect(group).not.toContain('Subtotal');
     expect(group).not.toContain('500,00');
     expect(html).toContain('<td>Produtos</td><td>EUR</td>');
@@ -1258,7 +1254,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: true
     });
-    expect(html).toContain('<span>Trem</span></span></td>');
+    expect(html).toContain('<span>Trem</span></span>');
     expect(html).toContain('€ 90,00');
     expect(html).not.toContain('R$ 90,00');
   });
