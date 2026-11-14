@@ -507,12 +507,14 @@ function renderServiceItem(
   const quantity = flight
     ? formatFlightQuantity(item)
     : (formatLodgingOrCarQuantity(item) ?? (item.quantity == null ? '-' : String(item.quantity)));
+  if (showUnitValue) {
+    const content = `<strong>${escHtml(title)}${periodo ? ` - ${escHtml(periodo)}` : ''}</strong>${fields.length ? `<div class="orc-service-details">${fields.map(escHtml).join(' | ')}</div>` : ''}`;
+    return renderScreenItemRow(item, label, content, quantity, defaultCurrency);
+  }
   return `<tr class="orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}">
     <td class="orc-service-type">${escHtml(label)}</td>
-    ${showUnitValue ? `<td>${escHtml(nomeCidadeNoPdf(textVal(item.city_name)) || '—')}</td>` : ''}
     <td><strong>${escHtml(title)}${periodo ? ` - ${escHtml(periodo)}` : ''}</strong>${fields.length ? `<div class="orc-service-details">${fields.map(escHtml).join(' | ')}</div>` : ''}</td>
     <td class="orc-quantity">${escHtml(quantity)}</td>
-    ${showUnitValue ? `<td class="orc-value">${escHtml(formatCurrency(Number(item.unit_price ?? 0), item.currency || defaultCurrency))}</td>` : ''}
     ${showItemValues ? `<td class="orc-value">${escHtml(formatCurrency(Number(item.total_amount ?? 0), item.currency || defaultCurrency))}</td>` : ''}
   </tr>`;
 }
@@ -557,8 +559,7 @@ function orderQuoteSections(items: QuoteItemForPdf[]): QuotePdfSection[] {
 function renderGroupedItems(
   sections: QuotePdfSection[],
   showItemValues: boolean,
-  defaultCurrency: string,
-  showUnitValue = false
+  defaultCurrency: string
 ) {
   return sections
     .map((section) => {
@@ -566,30 +567,22 @@ function renderGroupedItems(
         const content = section.items
           .map((item) =>
             getFlightDataList(item).length
-              ? renderFlightItemHtml(item, showItemValues, defaultCurrency, showUnitValue)
-              : renderServiceItem(item, showItemValues, defaultCurrency, true, showUnitValue)
+              ? renderFlightItemHtml(item, showItemValues, defaultCurrency)
+              : renderServiceItem(item, showItemValues, defaultCurrency, true)
           )
           .join('');
         return renderCityTable(
           section.kind === 'train' ? 'Trem' : 'Passagens Aéreas Internacionais e Trechos Internos',
           content,
           showItemValues,
-          false,
-          showUnitValue
+          false
         );
       }
       if (section.kind === 'circuit')
-        return renderCircuitItemHtml(
-          section.items[0],
-          showItemValues,
-          defaultCurrency,
-          showUnitValue
-        );
+        return renderCircuitItemHtml(section.items[0], showItemValues, defaultCurrency);
 
       const content = section.items
-        .map((item) =>
-          renderServiceItem(item, showItemValues, defaultCurrency, false, showUnitValue)
-        )
+        .map((item) => renderServiceItem(item, showItemValues, defaultCurrency))
         .join('');
       const totals = new Map<string, number>();
       for (const item of section.items) {
@@ -597,36 +590,24 @@ function renderGroupedItems(
         totals.set(currency, (totals.get(currency) || 0) + Number(item.total_amount ?? 0));
       }
       const subtotal = showItemValues
-        ? `<tr class="orc-subtotal"><td colspan="${showUnitValue ? 5 : 3}">Subtotal — ${escHtml(nomeCidadeNoPdf(section.city))}</td><td class="orc-value">${Array.from(totals, ([currency, value]) => escHtml(formatCurrency(value, currency))).join('<br>')}</td></tr>`
+        ? `<tr class="orc-subtotal"><td colspan="3">Subtotal — ${escHtml(nomeCidadeNoPdf(section.city))}</td><td class="orc-value">${Array.from(totals, ([currency, value]) => escHtml(formatCurrency(value, currency))).join('<br>')}</td></tr>`
         : '';
-      return renderCityTable(
-        section.city,
-        `${content}${subtotal}`,
-        showItemValues,
-        true,
-        showUnitValue
-      );
+      return renderCityTable(section.city, `${content}${subtotal}`, showItemValues, true);
     })
     .join('');
 }
 
-function renderCityTable(
-  title: string,
-  content: string,
-  showItemValues: boolean,
-  isCity = false,
-  showUnitValue = false
-) {
-  const columnCount = 3 + Number(showItemValues) + 2 * Number(showUnitValue);
+function renderCityTable(title: string, content: string, showItemValues: boolean, isCity = false) {
+  const columnCount = 3 + Number(showItemValues);
   const sectionTitle = isCity
     ? printCityTitle(title)
     : `<div class="orc-table-section-title">${escHtml(title)}</div>`;
   return `<section class="orc-city-section">
     <table class="orc-city-table">
-      <colgroup><col style="width:${showUnitValue ? 13 : 18}%">${showUnitValue ? '<col style="width:13%">' : ''}<col style="width:${showUnitValue ? 34 : showItemValues ? 50 : 70}%"><col style="width:${showUnitValue ? 12 : 14}%">${showUnitValue ? '<col style="width:14%">' : ''}${showItemValues ? `<col style="width:${showUnitValue ? 14 : 18}%">` : ''}</colgroup>
+      <colgroup><col style="width:18%"><col style="width:${showItemValues ? 50 : 70}%"><col style="width:14%">${showItemValues ? '<col style="width:18%">' : ''}</colgroup>
       <thead>
         <tr><th class="orc-city-heading" colspan="${columnCount}">${sectionTitle}</th></tr>
-        <tr><th>Serviço</th>${showUnitValue ? '<th>Cidade</th>' : ''}<th>Descrição / Detalhes</th><th>Qtd.</th>${showUnitValue ? '<th class="orc-value">Valor Unit.</th>' : ''}${showItemValues ? `<th class="orc-value">${showUnitValue ? 'Total' : 'Valor'}</th>` : ''}</tr>
+        <tr><th>Serviço</th><th>Descrição / Detalhes</th><th>Qtd.</th>${showItemValues ? '<th class="orc-value">Valor</th>' : ''}</tr>
       </thead>
       <tbody>${content}</tbody>
     </table>
@@ -634,7 +615,46 @@ function renderCityTable(
 }
 
 export function renderQuoteItemsForScreen(items: QuoteItemForPdf[], currency: string) {
-  return renderGroupedItems(orderQuoteSections(items), true, currency, true);
+  const rows = items
+    .map((item) => {
+      if (normalizeText(item.item_type) === 'trem' || isFlightQuoteItem(item)) {
+        return getFlightDataList(item).length
+          ? renderFlightItemHtml(item, true, currency, true)
+          : renderServiceItem(item, true, currency, true, true);
+      }
+      if (isCircuitQuoteItem(item)) return renderCircuitItemHtml(item, true, currency, true);
+      return renderServiceItem(item, true, currency, false, true);
+    })
+    .join('');
+  return `<table class="table-mobile-cards w-full">
+    <thead><tr class="border-b border-slate-200">
+      <th class="px-3 py-3 text-left text-sm font-semibold text-slate-600">Cidade</th>
+      <th class="px-3 py-3 text-left text-sm font-semibold text-slate-600">Serviço</th>
+      <th class="px-3 py-3 text-left text-sm font-semibold text-slate-600">Descrição / Detalhes</th>
+      <th class="px-3 py-3 text-right text-sm font-semibold text-slate-600">Valor Unit.</th>
+      <th class="px-3 py-3 text-center text-sm font-semibold text-slate-600">Qtd</th>
+      <th class="px-3 py-3 text-right text-sm font-semibold text-slate-600">Total</th>
+    </tr></thead>
+    <tbody class="divide-y divide-slate-100">${rows}</tbody>
+  </table>`;
+}
+
+function renderScreenItemRow(
+  item: QuoteItemForPdf,
+  service: string,
+  content: string,
+  quantity: string,
+  defaultCurrency: string
+) {
+  const currency = item.currency || defaultCurrency;
+  return `<tr class="hover:bg-slate-50">
+    <td data-label="Cidade" class="px-3 py-3 text-slate-900">${escHtml(nomeCidadeNoPdf(textVal(item.city_name)) || '—')}</td>
+    <td data-label="Serviço" class="px-3 py-3 text-slate-700">${escHtml(service)}</td>
+    <td data-label="Descrição / Detalhes" class="px-3 py-3 text-slate-900"><div>${content}</div></td>
+    <td data-label="Valor Unit." class="px-3 py-3 text-right text-slate-700">${escHtml(formatCurrency(Number(item.unit_price ?? 0), currency))}</td>
+    <td data-label="Qtd" class="px-3 py-3 text-center text-slate-700">${escHtml(quantity)}</td>
+    <td data-label="Total" class="px-3 py-3 text-right font-medium text-slate-900">${escHtml(formatCurrency(Number(item.total_amount ?? 0), currency))}</td>
+  </tr>`;
 }
 
 function renderDetalhesItem(item: QuoteItemForPdf) {
@@ -757,12 +777,11 @@ function renderFlightItemHtml(
     ${serviceDetails ? `<div class="orc-service-details">${escHtml(serviceDetails)}</div>` : ''}
     ${showItemValues && taxes > 0 ? `<div class="orc-service-details">Taxas: ${escHtml(formatCurrency(taxes, currency))}</div>` : ''}
   </div>`;
+  if (showUnitValue) return renderScreenItemRow(item, service, content, quantityLabel, currency);
   return `<tr class="orc-city-item">
     <td class="orc-service-type">${escHtml(service)}</td>
-    ${showUnitValue ? `<td>${escHtml(nomeCidadeNoPdf(textVal(item.city_name)) || '—')}</td>` : ''}
     <td>${content}</td>
     <td class="orc-quantity">${escHtml(quantityLabel)}</td>
-    ${showUnitValue ? `<td class="orc-value">${escHtml(formatCurrency(Number(item.unit_price ?? 0), currency))}</td>` : ''}
     ${showItemValues ? `<td class="orc-value">${escHtml(formatCurrency(amount, currency))}</td>` : ''}
   </tr>`;
 }
@@ -794,15 +813,8 @@ function renderCircuitItemHtml(
   }
 
   if (showUnitValue) {
-    const content = `<tr class="orc-city-item">
-      <td class="orc-service-type">Circuito</td>
-      <td>${escHtml(city || '—')}</td>
-      <td><strong>${escHtml(label)}</strong>${renderPeriodoItem(item)}${renderDetalhesItem(item)}${daysHtml}</td>
-      <td class="orc-quantity">${escHtml(String(item.quantity ?? '-'))}</td>
-      <td class="orc-value">${escHtml(formatCurrency(Number(item.unit_price ?? 0), currency))}</td>
-      <td class="orc-value">${escHtml(formatCurrency(amount, currency))}</td>
-    </tr>`;
-    return renderCityTable(city || 'Circuito', content, true, Boolean(city), true);
+    const content = `<strong>${escHtml(label)}</strong>${renderPeriodoItem(item)}${renderDetalhesItem(item)}${daysHtml}`;
+    return renderScreenItemRow(item, 'Circuito', content, String(item.quantity ?? '-'), currency);
   }
 
   return `<article class="roteiro-card${requiresPrintContinuation(daysHtml) ? ' roteiro-card--long' : ''}">

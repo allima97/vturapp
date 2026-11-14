@@ -29,7 +29,7 @@ afterEach(() => {
   document.body.replaceChildren();
 });
 
-it('mostra itens agrupados como no PDF, em largura integral e antes das ações', async () => {
+it('mostra os itens em uma tabela padrão, na ordem manual e antes das ações', async () => {
   api.fetch.mockImplementation((path: string) =>
     Promise.resolve(
       path.endsWith('/interacao')
@@ -93,13 +93,26 @@ it('mostra itens agrupados como no PDF, em largura integral e antes das ações'
     ]) {
       expect(text).toContain(value);
     }
-    expect(items.querySelectorAll('thead tr:last-child th')).toHaveLength(12);
+    expect(items.querySelectorAll('table')).toHaveLength(1);
+    expect([...items.querySelectorAll('thead th')].map((cell) => cell.textContent?.trim())).toEqual(
+      ['Cidade', 'Serviço', 'Descrição / Detalhes', 'Valor Unit.', 'Qtd', 'Total']
+    );
+    const rows = [...items.querySelectorAll('tbody tr')];
+    expect(rows).toHaveLength(2);
+    expect([...rows[0].querySelectorAll('td')].map((cell) => cell.textContent?.trim())).toEqual([
+      'Roma',
+      'Hotel',
+      expect.stringContaining('Hotel Roma'),
+      'R$ 300,00',
+      '01 apartamento',
+      'R$ 300,00'
+    ]);
     expect(
-      [...items.querySelectorAll('thead tr:last-child')][0]
-        .querySelectorAll('th')[1]
-        ?.textContent?.trim()
-    ).toBe('Cidade');
-    expect(items.textContent).toContain('Roma');
+      [...rows[1].querySelectorAll('td')].map((cell) => cell.getAttribute('data-label'))
+    ).toEqual(['Cidade', 'Serviço', 'Descrição / Detalhes', 'Valor Unit.', 'Qtd', 'Total']);
+    expect(rows[1].querySelector('td')?.textContent?.trim()).toBe('—');
+    expect(text).not.toContain('Subtotal');
+    expect(text).not.toContain('Passagens Aéreas Internacionais e Trechos Internos');
     const itemsCard = items.closest('.vtur-card')!;
     const actionHeading = [...target.querySelectorAll('h3')].find(
       (heading) => heading.textContent === 'Ações'
