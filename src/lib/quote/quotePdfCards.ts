@@ -387,7 +387,8 @@ function legLabel(kind: ItemKind, leg: Leg, roundTrip: boolean, index: number): 
 function isRoundTrip(legs: Leg[]): boolean {
   if (legs.length !== 2) return false;
   const [going, back] = legs;
-  const same = (a: string, b: string) => normalizeText(a) && normalizeText(a) === normalizeText(b);
+  const same = (a: string, b: string) =>
+    Boolean(normalizeText(a) && normalizeText(a) === normalizeText(b));
   return (
     (same(going.originCode, back.destCode) && same(going.destCode, back.originCode)) ||
     (same(going.originCity, back.destCity) && same(going.destCity, back.originCity))

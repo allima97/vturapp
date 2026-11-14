@@ -1,4 +1,3 @@
-import { VTUR_LOGO_URL } from '$lib/brand';
 /**
  * exportQuotePdfClient.ts — vtur-svelte
  *
@@ -133,6 +132,92 @@ export function buildQuotePreviewHtmlSync(params: {
     showItemValues: params.showItemValues,
     discount: params.discount
   });
+}
+
+function extractStoragePath(url?: string | null): string | null {
+  if (!url) return null;
+  const marker = '/quotes/';
+  const idx = url.indexOf(marker);
+  return idx === -1 ? null : url.slice(idx + marker.length);
+}
+
+async function resolveStorageUrl(
+  dados: {
+    storage: {
+      from: (bucket: string) => {
+        createSignedUrl: (
+          path: string,
+          ttl: number
+        ) => Promise<{ data?: { signedUrl?: string } | null }>;
+      };
+    };
+  },
+  url?: string | null,
+  path?: string | null
+): Promise<string | null> {
+  const storagePath = path || extractStoragePath(url);
+  if (storagePath) {
+    try {
+      const { data } = await dados.storage.from('quotes').createSignedUrl(storagePath, 3600);
+      if (data?.signedUrl) return data.signedUrl;
+    } catch {
+      // segue para a URL pública
+    }
+  }
+  return url ?? null;
+}
+
+function blobToDataUrl(blob: Blob, fallbackMime?: string): Promise<string> {
+  return new Promise<string>((resolve) => {
+    let finalBlob = blob;
+    if (fallbackMime && (!blob.type || blob.type === 'application/octet-stream')) {
+      finalBlob = new Blob([blob], { type: fallbackMime });
+    }
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result ?? ''));
+    reader.onerror = () => resolve('');
+    reader.readAsDataURL(finalBlob);
+  });
+}
+
+function guessMimeFromPath(path: string): string {
+  const lower = path.toLowerCase();
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.gif')) return 'image/gif';
+  return 'image/png';
+}
+
+async function storageImageToDataUrl(
+  dados: Pick<DadosPreviewClient, 'storage'>,
+  storagePath: string | null,
+  fallbackUrl: string | null
+): Promise<string | null> {
+  if (storagePath) {
+    try {
+      const { data: blob, error } = await dados.storage.from('quotes').download(storagePath);
+      if (!error && blob) {
+        const dataUrl = await blobToDataUrl(blob, guessMimeFromPath(storagePath));
+        if (dataUrl) return dataUrl;
+      }
+    } catch {
+      // tenta a URL assinada
+    }
+  }
+  if (fallbackUrl) return externalImageToDataUrl(fallbackUrl);
+  return null;
+}
+
+async function externalImageToDataUrl(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await blobToDataUrl(blob, guessMimeFromPath(url));
+  } catch {
+    return null;
+  }
 }
 
 // ---------------------------------------------------------------------------
