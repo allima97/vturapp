@@ -4,6 +4,7 @@
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import QuoteItemFields from '$lib/components/orcamentos/QuoteItemFields.svelte';
   import {
+    formatarDescricaoItem,
     novoItemOrcamento,
     recalcularTotaisItem,
     rawDetalhes,
@@ -221,8 +222,8 @@
         valid_until: formData.valid_until,
         notes: formData.notes,
         itens: formData.itens.map((item) => ({
-          title: item.title,
-          product_name: item.product_name || item.title,
+          title: formatarDescricaoItem(item.item_type, item.title),
+          product_name: item.product_name || formatarDescricaoItem(item.item_type, item.title),
           item_type: item.item_type,
           quantity: item.quantity,
           unit_price: item.unit_price,

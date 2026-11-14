@@ -274,8 +274,8 @@ describe('identidade dos orçamentos e circuitos', () => {
       });
       const body = html.slice(html.indexOf('<body>'));
       const titles = [
-        'Voo principal',
-        'Voo sem trechos',
+        'Voo Principal',
+        'Voo sem Trechos',
         'Hotel Paris',
         'Passeio Paris',
         'Hotel Roma',
@@ -335,7 +335,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
     const body = html.slice(html.indexOf('<body>'));
-    expect(body.indexOf('Passagem internacional')).toBeLessThan(body.indexOf('Circuito Itália'));
+    expect(body.indexOf('Passagem Internacional')).toBeLessThan(body.indexOf('Circuito Itália'));
     expect(body.indexOf('Circuito Itália')).toBeLessThan(body.indexOf('Hotel Madri'));
     expect(body).toContain('<article class="roteiro-card');
   });
@@ -469,7 +469,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       'LA 8120',
       'GRU',
       'FCO',
-      'SÃO PAULO / ROMA / SÃO PAULO',
+      'São Paulo / Roma / São Paulo',
       'GRU → FCO - LA 8120 - 10-08-2027 - 10:50 / 10:15 (+1)',
       '10:50 / 10:15 (+1)',
       'FCO → GRU - LA 8121 - 25-08-2027 - 19:50 / 09:50 (+1)',
@@ -489,10 +489,35 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('Azul Linhas Aéreas');
     expect(html).toContain('AD 4455');
     expect(html.match(/<strong>LATAM<\/strong>/g)).toHaveLength(1);
-    expect(html.match(/SÃO PAULO \/ ROMA \/ SÃO PAULO/g)).toHaveLength(1);
+    expect(html.match(/São Paulo \/ Roma \/ São Paulo/g)).toHaveLength(1);
     expect(html).not.toContain('Classe: Econômica');
     expect(html).not.toContain('Tarifa: FULL');
     expect(html).not.toContain('Chegada no dia seguinte');
+  });
+
+  it('formata somente descrições aéreas no resumo e nos detalhes, inclusive sem trechos', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        {
+          item_type: 'passagem',
+          title: 'SÃO PAULO / ROMA / SÃO PAULO',
+          raw: { aereo_import: { segmentos: [{ cia_aerea: 'LATAM' }] } }
+        },
+        { item_type: 'passagem', title: 'RIO DE JANEIRO / PORTO' },
+        { item_type: 'hotel', title: 'HOTEL ROMA', city_name: 'Roma' }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: true,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+    expect(html.match(/São Paulo \/ Roma \/ São Paulo/g)).toHaveLength(2);
+    expect(html.match(/Rio de Janeiro \/ Porto/g)).toHaveLength(2);
+    expect(html).toContain('HOTEL ROMA');
+    expect(html).toContain('LATAM');
   });
 
   it('preserva trajetos legados quando os aeroportos não foram informados', () => {

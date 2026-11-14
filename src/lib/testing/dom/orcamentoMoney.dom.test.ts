@@ -209,6 +209,91 @@ it('mostra os tipos e a classe de reserva definidos para trechos aéreos', async
   }
 });
 
+it('formata a descrição aérea ao sair do campo e ao salvar', async () => {
+  api.post.mockResolvedValue({});
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Page, { target });
+  try {
+    flushSync();
+    const type = (selector: string, value: string) => {
+      const input = target.querySelector<HTMLInputElement>(selector)!;
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      flushSync();
+      return input;
+    };
+    type('input[placeholder="Digite o nome do cliente"]', 'Cliente teste');
+    const description = type('#orcamento-novo-item-0-descricao', 'SÃO PAULO / ROMA / SÃO PAULO');
+    description.dispatchEvent(new Event('blur'));
+    flushSync();
+    expect(description.value).toBe('SÃO PAULO / ROMA / SÃO PAULO');
+    const typeSelect = target.querySelector('#orcamento-novo-item-0-tipo') as Element & {
+      value: string;
+      dispatchEvent: (event: Event) => boolean;
+    };
+    typeSelect.value = 'passagem';
+    typeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(description.value).toBe('São Paulo / Roma / São Paulo');
+    type('#orcamento-novo-item-0-descricao', 'RIO DE JANEIRO / ROMA');
+    description.dispatchEvent(new Event('blur'));
+    flushSync();
+    expect(description.value).toBe('Rio de Janeiro / Roma');
+    type('#orcamento-novo-item-0-data-saida', '2027-08-10');
+    type('#orcamento-novo-item-0-data-chegada', '2027-08-25');
+    type('#orcamento-novo-item-0-valor-adultos', '10000');
+    type('#orcamento-novo-item-0-descricao', 'SÃO PAULO / ROMA / SÃO PAULO');
+    target
+      .querySelector('form')!
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await vi.waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith(
+        '/api/v1/orcamentos/create',
+        expect.objectContaining({
+          itens: [expect.objectContaining({ title: 'São Paulo / Roma / São Paulo' })]
+        })
+      )
+    );
+  } finally {
+    await unmount(app);
+  }
+});
+
+it('apresenta descrições aéreas antigas formatadas na edição', async () => {
+  api.fetch.mockResolvedValue({
+    client_name: 'Cliente',
+    valid_until: '2027-08-01',
+    currency: 'BRL',
+    itens: [
+      {
+        id: 'item-voo',
+        title: 'SÃO PAULO / ROMA',
+        item_type: 'passagem',
+        quantity: 1,
+        unit_price: 150,
+        total_amount: 150,
+        start_date: '2027-08-11',
+        end_date: '2027-08-13',
+        raw: { detalhes_orcamento: { adultos: 1, adultos_valor: 150 } }
+      }
+    ]
+  });
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(EditPage, { target });
+  try {
+    await vi.waitFor(() =>
+      expect(
+        target.querySelector<HTMLInputElement>('#orcamento-editar-item-0-descricao')?.value
+      ).toBe('São Paulo / Roma')
+    );
+    expect(target.querySelector('summary')?.textContent).toContain('São Paulo / Roma');
+  } finally {
+    await unmount(app);
+  }
+});
+
 it('exige detalhes do hotel antes de salvar e envia os campos específicos', async () => {
   api.post.mockResolvedValue({});
   const target = document.createElement('div');

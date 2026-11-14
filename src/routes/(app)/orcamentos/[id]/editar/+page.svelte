@@ -5,6 +5,7 @@
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import QuoteItemFields from '$lib/components/orcamentos/QuoteItemFields.svelte';
   import {
+    formatarDescricaoItem,
     lerDetalhes,
     novoItemOrcamento,
     recalcularTotaisItem,
@@ -138,7 +139,10 @@
       const itensCarregados: ItemOrcamento[] = (Array.isArray(data.itens) ? data.itens : []).map(
         (item: Record<string, unknown>, index: number) => ({
           id: String(item.id ?? ''),
-          title: String(item.title ?? item.descricao ?? ''),
+          title: formatarDescricaoItem(
+            String(item.item_type ?? 'servico'),
+            String(item.title ?? item.descricao ?? '')
+          ),
           product_name: String(item.product_name ?? item.produto ?? ''),
           item_type: String(item.item_type ?? 'servico'),
           isOpen: false,
@@ -319,8 +323,8 @@
         total: valorTotal,
         itens: formData.itens.map((item) => ({
           id: item.id || undefined,
-          title: item.title,
-          product_name: item.product_name || item.title,
+          title: formatarDescricaoItem(item.item_type, item.title),
+          product_name: item.product_name || formatarDescricaoItem(item.item_type, item.title),
           item_type: item.item_type,
           quantity: item.quantity,
           unit_price: item.unit_price,

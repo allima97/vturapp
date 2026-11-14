@@ -1,5 +1,6 @@
 import { diffDaysISODate, parseISODateParts } from '$lib/date';
-import type { QuoteFlightSegment } from '$lib/quote/flights';
+import { titleCaseNome } from '$lib/normalizeText';
+import { supportsFlightSegments, type QuoteFlightSegment } from '$lib/quote/flights';
 
 export type DetalhesItem = {
   start_date: string;
@@ -48,6 +49,10 @@ export const tiposItem = [
   { value: 'seguro', label: 'Seguro Viagem' },
   { value: 'outro', label: 'Outro' }
 ];
+
+export function formatarDescricaoItem(tipo: string, descricao: string) {
+  return supportsFlightSegments(tipo) ? titleCaseNome(descricao) : descricao;
+}
 
 export function detalhesVazios(): DetalhesItem {
   return {
@@ -478,7 +483,7 @@ export function resumoItemOrcamento(
   const type = tipoNormalizado(item.item_type);
   const tipo = tiposItem.find((option) => option.value === type)?.label || item.item_type || 'Item';
   const cidade = item.city_name.trim();
-  const descricao = item.title.trim() || 'Novo item';
+  const descricao = formatarDescricaoItem(item.item_type, item.title).trim() || 'Novo item';
   const inicio = dataResumo(item.start_date);
   const fim = dataResumo(item.end_date);
   let periodo = inicio && fim && inicio !== fim ? `${inicio} a ${fim}` : inicio || fim;

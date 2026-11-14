@@ -115,7 +115,7 @@ describe('cálculos por tipo de item do orçamento', () => {
       'Aluguel de Carro · Los Angeles · SUV - Automático · 17-01-2027 a 20-01-2027 (04 dias)'
     );
     expect(resumoItemOrcamento(passagemIdaEVolta)).toBe(
-      'Passagem Aérea · Roma · SÃO PAULO / ROMA / SÃO PAULO · 10-08-2027 a 25-08-2027'
+      'Passagem Aérea · Roma · São Paulo / Roma / São Paulo · 10-08-2027 a 25-08-2027'
     );
     expect(resumoItemOrcamento(passagemSomenteSaida)).toBe(
       'Passagem Aérea · Barcelona · Roma - Barcelona · 11-08-2027'

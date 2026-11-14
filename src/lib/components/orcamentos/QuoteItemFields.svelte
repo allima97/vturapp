@@ -6,6 +6,7 @@
   import {
     calcularTotaisItem,
     diasItem,
+    formatarDescricaoItem,
     recalcularTotaisItem,
     tiposItem,
     type ItemOrcamento
@@ -31,6 +32,7 @@
     if (item.item_type === 'passagem') {
       item.city_name = '';
       item.destino_geografico_id = '';
+      item.title = formatarDescricaoItem(item.item_type, item.title);
     }
     atualizarItem();
   }
@@ -131,6 +133,10 @@
       placeholder="Ex.: Passagem aérea ida e volta"
       class_name="w-full"
       required
+      on:blur={() => {
+        item.title = formatarDescricaoItem(item.item_type, item.title);
+        atualizarItem();
+      }}
     />
   </div>
 

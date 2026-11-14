@@ -13,7 +13,12 @@ import { construirLinkWhatsApp } from '$lib/whatsapp';
 import { safeOpenNewTab } from '$lib/security/url';
 import { diffDaysISODate, formatISODateBR, parseISODateParts } from '$lib/date';
 import { apiFetch } from '$lib/services/api';
-import { diasItem, lerDetalhes, resumoDetalhes } from '$lib/quote/detalhesItem';
+import {
+  diasItem,
+  formatarDescricaoItem,
+  lerDetalhes,
+  resumoDetalhes
+} from '$lib/quote/detalhesItem';
 import { chaveIdentidadeCidade } from '$lib/catalogoOpcionais';
 import {
   nomeCidadeNoPdf,
@@ -400,7 +405,10 @@ function getServiceDetails(item: QuoteItemForPdf) {
 }
 
 function getServiceTitle(item: QuoteItemForPdf) {
-  const title = textVal(item.title || item.product_name || item.item_type || 'Item');
+  const title = formatarDescricaoItem(
+    item.item_type || '',
+    textVal(item.title || item.product_name || item.item_type || 'Item')
+  );
   if (normalizeText(item.item_type) !== 'aluguel_carro') return title;
 
   const cambio = textVal(lerDetalhes(item).cambio);
@@ -616,7 +624,10 @@ function renderFlightItemHtml(
   const amount = Number(item.total_amount ?? 0);
   const taxes = Number(item.taxes_amount ?? 0);
   const currency = item.currency || defaultCurrency;
-  const title = textVal(item.title || item.product_name);
+  const title = formatarDescricaoItem(
+    item.item_type || '',
+    textVal(item.title || item.product_name)
+  );
   const flightType = normalizeText(flights[0].tipo_voo);
   const isDomestic = flightType === 'nacional' || flightType.includes('interno');
   const service = isDomestic
@@ -734,7 +745,10 @@ function renderAllItemsTableHtml(
 
   let rowsHtml = '';
   for (const item of items) {
-    const label = textVal(item.title || item.product_name || item.item_type || 'Item');
+    const label = formatarDescricaoItem(
+      item.item_type || '',
+      textVal(item.title || item.product_name || item.item_type || 'Item')
+    );
     const type = textVal(item.item_type || 'servico');
     const qty = Number(item.quantity ?? 1);
     const unit = Number(item.unit_price ?? 0);
