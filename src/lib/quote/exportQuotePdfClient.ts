@@ -629,7 +629,7 @@ function renderCityTable(title: string, content: string, showItemValues: boolean
     : `<div class="orc-table-section-title">${escHtml(title)}</div>`;
   return `<section class="orc-city-section">
     <table class="orc-city-table">
-      <colgroup><col style="width:18%"><col style="width:${showItemValues ? 50 : 70}%"><col style="width:14%">${showItemValues ? '<col style="width:18%">' : ''}</colgroup>
+      <colgroup><col style="width:18%"><col style="width:${showItemValues ? 48 : 64}%"><col style="width:${showItemValues ? 16 : 18}%">${showItemValues ? '<col style="width:18%">' : ''}</colgroup>
       <thead>
         <tr><th class="orc-city-heading" colspan="${columnCount}">${sectionTitle}</th></tr>
         <tr><th>Serviço</th><th>Descrição / Detalhes</th><th>Qtd.</th>${showItemValues ? '<th class="orc-value">Valor</th>' : ''}</tr>
@@ -1188,6 +1188,15 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-city-heading .roteiro-card-city svg { display: none; }
     .orc-table-section-title { margin: 0 0 8px; border-left: 4px solid #c45b1b; padding-left: 9px; color: #112b4d; font: bold 18px Arial, sans-serif; }
     .orc-city-table tbody tr:nth-child(even):not(.orc-subtotal) { background: #f7f9fc; }
+    .orc-city-section .orc-city-table { border-collapse: separate; border-spacing: 0; }
+    .orc-city-section .orc-city-table th, .orc-city-section .orc-city-table td { border: 0; }
+    .orc-city-section .orc-city-table thead tr:nth-child(2) th { padding: 9px 10px; font-size: 11px; letter-spacing: .03em; }
+    .orc-city-section .orc-city-table thead tr:nth-child(2) th:first-child { border-radius: 6px 0 0 6px; }
+    .orc-city-section .orc-city-table thead tr:nth-child(2) th:last-child { border-radius: 0 6px 6px 0; }
+    .orc-city-section .orc-city-table tbody tr:nth-child(even):not(.orc-subtotal) { background: transparent; }
+    .orc-city-section .orc-city-table tbody td { border-bottom: 1px solid #e2e8f0; padding: 11px 10px; line-height: 1.45; }
+    .orc-city-section .orc-city-table tbody tr:last-child td { border-bottom: 0; }
+    .orc-city-section .orc-city-table .orc-subtotal td { border-top: 1px solid #e2e8f0; }
     .orc-city-table .orc-value { text-align: right; }
     .orc-service-type { font-weight: 700; }
     .orc-service-details { color: #475569; line-height: 1.5; margin-top: 4px; }
@@ -1204,6 +1213,11 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-validity-box { border: 1px solid #d1d5db; border-radius: 8px; margin: 10px 0 0 0; padding: 8px; text-align: center; }
     .orc-validity-client { font-size: 10px; color: #0f172a; }
     .orc-validity-date { font-size: 10px; color: #dc2626; margin: 3px 0 0 0; }
+
+    @media screen and (max-width: 640px) {
+      .orc-city-section { overflow-x: auto; }
+      .orc-city-section .orc-city-table { min-width: 580px; }
+    }
 
     @media print {
       @page { margin: 12mm; }
