@@ -463,7 +463,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('<td class="orc-service-type">Aéreo Internacional</td>');
     expect(html).toContain('<td class="orc-service-type">Voo Interno</td>');
     expect(html).toContain('<td class="orc-quantity">01 passagem</td>');
-    expect(html).toContain('<td class="orc-quantity">01 trecho</td>');
+    expect(html.match(/<td class="orc-quantity">02 passagens<\/td>/g)).toHaveLength(2);
     for (const value of [
       'LATAM',
       'LA 8120',
@@ -493,6 +493,65 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).not.toContain('Classe: Econômica');
     expect(html).not.toContain('Tarifa: FULL');
     expect(html).not.toContain('Chegada no dia seguinte');
+  });
+
+  it('conta passageiros em todos os voos, inclusive sem trechos, e preserva quantidades legadas', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        {
+          item_type: 'passagem',
+          title: 'Ida e volta',
+          quantity: 99,
+          raw: {
+            detalhes_orcamento: { adultos: 1, criancas: 1, infant: 1 },
+            aereo_import: { segmentos: [{ tipo_voo: 'Internacional' }] }
+          }
+        },
+        {
+          item_type: 'passagem',
+          title: 'Voo nacional',
+          quantity: 8,
+          raw: {
+            detalhes_orcamento: { adultos: 1, criancas: 0, infant: 0 },
+            aereo_import: { segmentos: [{ tipo_voo: 'Nacional' }] }
+          }
+        },
+        {
+          item_type: 'passagem',
+          title: 'Voo sem segmentos',
+          quantity: 1,
+          raw: { detalhes_orcamento: { adultos: 2, criancas: 0, infant: 0 } }
+        },
+        {
+          item_type: 'passagem',
+          title: 'Voo antigo',
+          quantity: 4,
+          raw: { aereo_import: { segmentos: [{ tipo_voo: 'Voo Interno' }] } }
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: true,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+    for (const quantity of ['03 passagens', '01 passagem', '02 passagens', '04 passagens']) {
+      expect(html).toContain(`<td class="orc-quantity">${quantity}</td>`);
+    }
+    expect(html).not.toContain('01 trecho');
+    expect(html).not.toContain('03 passagens (ida e volta)');
+    for (const [title, quantity] of [
+      ['Ida e Volta', 3],
+      ['Voo Nacional', 1],
+      ['Voo sem Segmentos', 2],
+      ['Voo Antigo', 4]
+    ] as const) {
+      expect(html).toContain(
+        `<td>${title}</td>\n      <td>passagem</td>\n      <td class="text-right">${quantity}</td>`
+      );
+    }
   });
 
   it('formata somente descrições aéreas no resumo e nos detalhes, inclusive sem trechos', () => {

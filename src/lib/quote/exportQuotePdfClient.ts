@@ -379,6 +379,25 @@ function getPassengerDetails(item: QuoteItemForPdf) {
   ].filter(Boolean);
 }
 
+function getFlightPassengerQuantity(item: QuoteItemForPdf) {
+  const rawDetails = asRecord(asRecord(item.raw).detalhes_orcamento);
+  const hasPassengerCounts = ['adultos', 'criancas', 'infant'].some(
+    (key) => rawDetails[key] !== undefined && rawDetails[key] !== null && rawDetails[key] !== ''
+  );
+  if (!hasPassengerCounts) return Math.max(0, Math.trunc(Number(item.quantity ?? 1)));
+
+  const details = lerDetalhes(item);
+  return [details.adultos, details.criancas, details.infant].reduce<number>(
+    (total, count) => total + Math.max(0, count || 0),
+    0
+  );
+}
+
+function formatFlightQuantity(item: QuoteItemForPdf) {
+  const quantity = getFlightPassengerQuantity(item);
+  return `${String(quantity).padStart(2, '0')} ${quantity === 1 ? 'passagem' : 'passagens'}`;
+}
+
 function getServiceDetails(item: QuoteItemForPdf) {
   const type = normalizeText(item.item_type);
   const details = lerDetalhes(item);
@@ -437,7 +456,8 @@ function formatServicePeriod(item: QuoteItemForPdf) {
 function renderServiceItem(
   item: QuoteItemForPdf,
   showItemValues: boolean,
-  defaultCurrency: string
+  defaultCurrency: string,
+  flight = false
 ) {
   const type = normalizeText(item.item_type);
   const labels: Record<string, string> = {
@@ -459,7 +479,11 @@ function renderServiceItem(
   const periodo = formatServicePeriod(item);
   const fields = getServiceDetails(item);
   const title = getServiceTitle(item);
-  const quantity = item.quantity == null ? '-' : String(item.quantity);
+  const quantity = flight
+    ? formatFlightQuantity(item)
+    : item.quantity == null
+      ? '-'
+      : String(item.quantity);
   return `<tr class="orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}">
     <td class="orc-service-type">${escHtml(label)}</td>
     <td><strong>${escHtml(title)}${periodo ? ` - ${escHtml(periodo)}` : ''}</strong>${fields.length ? `<div class="orc-service-details">${fields.map(escHtml).join(' | ')}</div>` : ''}</td>
@@ -531,7 +555,7 @@ function renderGroupedItems(
           .map((item) =>
             getFlightDataList(item).length
               ? renderFlightItemHtml(item, showItemValues, defaultCurrency)
-              : renderServiceItem(item, showItemValues, defaultCurrency)
+              : renderServiceItem(item, showItemValues, defaultCurrency, true)
           )
           .join('');
         return renderCityTable(
@@ -635,8 +659,7 @@ function renderFlightItemHtml(
     : flightType === 'internacional'
       ? 'Aéreo Internacional'
       : 'Passagem Aérea';
-  const quantity = Math.max(0, Math.trunc(Number(item.quantity ?? 1)));
-  const quantityLabel = `${String(quantity).padStart(2, '0')} ${isDomestic ? (quantity === 1 ? 'trecho' : 'trechos') : quantity === 1 ? 'passagem' : 'passagens'}${/ida\s*(?:e|\/|-)\s*volta/i.test(title) ? ' (ida e volta)' : ''}`;
+  const quantityLabel = formatFlightQuantity(item);
   const distinct = (values: string[]) =>
     Array.from(
       new Map(
@@ -750,7 +773,9 @@ function renderAllItemsTableHtml(
       textVal(item.title || item.product_name || item.item_type || 'Item')
     );
     const type = textVal(item.item_type || 'servico');
-    const qty = Number(item.quantity ?? 1);
+    const qty = isFlightQuoteItem(item)
+      ? getFlightPassengerQuantity(item)
+      : Number(item.quantity ?? 1);
     const unit = Number(item.unit_price ?? 0);
     const total = Number(item.total_amount ?? 0);
     const currency = item.currency || defaultCurrency;
