@@ -82,14 +82,6 @@
               on:change={(event) => updateSegment(event, index, 'tipo_voo')}
             />
             <FieldInput
-              id={`${idPrefix}-trecho-${index}`}
-              label="Trecho"
-              value={segment.trecho}
-              placeholder="Ex.: GRU → FCO"
-              class_name="w-full"
-              on:input={(event) => updateSegment(event, index, 'trecho')}
-            />
-            <FieldInput
               id={`${idPrefix}-cia-aerea-${index}`}
               label="Companhia aérea"
               value={segment.cia_aerea}
@@ -104,6 +96,28 @@
               placeholder="Ex.: LA 8120"
               class_name="w-full"
               on:input={(event) => updateSegment(event, index, 'numero_voo')}
+            />
+            <FieldSelect
+              id={`${idPrefix}-classe-${index}`}
+              label="Classe de reserva"
+              value={segment.classe_reserva}
+              options={[
+                { value: 'Econômica', label: 'Econômica' },
+                { value: 'Econômica Premium', label: 'Econômica Premium' },
+                { value: 'Executiva', label: 'Executiva' },
+                { value: 'Primeira Classe', label: 'Primeira Classe' }
+              ]}
+              placeholder="Selecione"
+              class_name="w-full"
+              on:change={(event) => updateSegment(event, index, 'classe_reserva')}
+            />
+            <FieldInput
+              id={`${idPrefix}-aeroporto-saida-${index}`}
+              label="Aeroporto de saída"
+              value={segment.aeroporto_saida}
+              placeholder="Ex.: GRU"
+              class_name="w-full"
+              on:input={(event) => updateSegment(event, index, 'aeroporto_saida')}
             />
             <FieldInput
               id={`${idPrefix}-data-voo-${index}`}
@@ -122,20 +136,20 @@
               on:input={(event) => updateSegment(event, index, 'hora_saida')}
             />
             <FieldInput
-              id={`${idPrefix}-aeroporto-saida-${index}`}
-              label="Aeroporto de saída"
-              value={segment.aeroporto_saida}
-              placeholder="Ex.: GRU"
-              class_name="w-full"
-              on:input={(event) => updateSegment(event, index, 'aeroporto_saida')}
-            />
-            <FieldInput
               id={`${idPrefix}-duracao-${index}`}
               label="Duração do voo"
               type="time"
               value={displayTime(segment.duracao_voo)}
               class_name="w-full"
               on:input={(event) => updateSegment(event, index, 'duracao_voo')}
+            />
+            <FieldInput
+              id={`${idPrefix}-aeroporto-chegada-${index}`}
+              label="Aeroporto de chegada"
+              value={segment.aeroporto_chegada}
+              placeholder="Ex.: FCO"
+              class_name="w-full"
+              on:input={(event) => updateSegment(event, index, 'aeroporto_chegada')}
             />
             <FieldInput
               id={`${idPrefix}-data-chegada-${index}`}
@@ -152,28 +166,6 @@
               value={displayTime(segment.hora_chegada)}
               class_name="w-full"
               on:input={(event) => updateSegment(event, index, 'hora_chegada')}
-            />
-            <FieldInput
-              id={`${idPrefix}-aeroporto-chegada-${index}`}
-              label="Aeroporto de chegada"
-              value={segment.aeroporto_chegada}
-              placeholder="Ex.: FCO"
-              class_name="w-full"
-              on:input={(event) => updateSegment(event, index, 'aeroporto_chegada')}
-            />
-            <FieldSelect
-              id={`${idPrefix}-classe-${index}`}
-              label="Classe de reserva"
-              value={segment.classe_reserva}
-              options={[
-                { value: 'Econômica', label: 'Econômica' },
-                { value: 'Econômica Premium', label: 'Econômica Premium' },
-                { value: 'Executiva', label: 'Executiva' },
-                { value: 'Primeira Classe', label: 'Primeira Classe' }
-              ]}
-              placeholder="Selecione"
-              class_name="w-full"
-              on:change={(event) => updateSegment(event, index, 'classe_reserva')}
             />
             <FieldInput
               id={`${idPrefix}-tarifa-${index}`}

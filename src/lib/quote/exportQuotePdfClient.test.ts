@@ -362,7 +362,7 @@ describe('identidade dos orçamentos e circuitos', () => {
               segment_type: 'flight',
               data: {
                 tipo_voo: 'Internacional',
-                trecho: 'GRU - FCO',
+                trecho: 'São Paulo - Roma',
                 cidade_saida: 'São Paulo, São Paulo, Brasil',
                 cidade_chegada: 'Roma, Itália',
                 cia_aerea: 'LATAM',
@@ -406,7 +406,6 @@ describe('identidade dos orçamentos e circuitos', () => {
               segmentos: [
                 {
                   tipo_voo: 'Nacional',
-                  trecho: 'GRU → GIG',
                   cia_aerea: 'Azul Linhas Aéreas',
                   numero_voo: 'AD 4455',
                   data_voo: '2027-08-12',
@@ -471,10 +470,11 @@ describe('identidade dos orçamentos e circuitos', () => {
       'GRU',
       'FCO',
       'SÃO PAULO / ROMA / SÃO PAULO',
-      'GRU -&gt; FCO - LA 8120 - 10-08-2027 - 10:50 / 10:15 (+1)',
+      'GRU → FCO - LA 8120 - 10-08-2027 - 10:50 / 10:15 (+1)',
       '10:50 / 10:15 (+1)',
-      'FCO -&gt; GRU - LA 8121 - 25-08-2027 - 19:50 / 09:50 (+1)',
-      'ROMA -&gt; BARCELONA - IB 1554 - 11-08-2027 - 14:00 / 15:20',
+      'FCO → GRU - LA 8121 - 25-08-2027 - 19:50 / 09:50 (+1)',
+      'ROMA → BARCELONA - IB 1554 - 11-08-2027 - 14:00 / 15:20',
+      'GRU → GIG - AD 4455',
       'Econômica',
       '02 Adultos | Econômica | FULL',
       '02 Adultos | Econômica | Standard',
@@ -493,6 +493,34 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).not.toContain('Classe: Econômica');
     expect(html).not.toContain('Tarifa: FULL');
     expect(html).not.toContain('Chegada no dia seguinte');
+  });
+
+  it('preserva trajetos legados quando os aeroportos não foram informados', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        {
+          item_type: 'passagem',
+          title: 'Voo antigo',
+          raw: {
+            aereo_import: {
+              segmentos: [
+                { trecho: 'GRU -> FCO', numero_voo: 'LA 8120' },
+                { trecho: 'FCO - GRU', aeroporto_saida: 'FCO', numero_voo: 'LA 8121' }
+              ]
+            }
+          }
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+    expect(html).toContain('GRU → FCO - LA 8120');
+    expect(html).toContain('FCO → GRU - LA 8121');
   });
 
   it('apresenta tabelas por cidade, subtotais por moeda e resumo sem somar moedas diferentes', () => {

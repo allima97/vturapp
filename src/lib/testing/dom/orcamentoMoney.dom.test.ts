@@ -148,6 +148,24 @@ it('mostra os tipos e a classe de reserva definidos para trechos aéreos', async
     addSegment.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     flushSync();
     expect(
+      [...target.querySelectorAll('[id^="orcamento-novo-item-0-voo-"]')].map((field) => field.id)
+    ).toEqual(
+      [
+        'tipo-voo',
+        'cia-aerea',
+        'numero-voo',
+        'classe',
+        'aeroporto-saida',
+        'data-voo',
+        'hora-saida',
+        'duracao',
+        'aeroporto-chegada',
+        'data-chegada',
+        'hora-chegada',
+        'tarifa'
+      ].map((field) => `orcamento-novo-item-0-voo-${field}-0`)
+    );
+    expect(
       [...target.querySelectorAll('#orcamento-novo-item-0-voo-tipo-voo-0 option')].map(
         (option) => option.textContent
       )

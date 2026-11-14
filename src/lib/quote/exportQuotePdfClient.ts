@@ -647,16 +647,12 @@ function renderFlightItemHtml(
     .map((flight) => {
       const routeText = textVal(flight.trecho);
       const routeParts = splitTrechoCities(routeText);
-      const route =
-        routeParts.origem && routeParts.destino
-          ? `${routeParts.origem} -> ${routeParts.destino}`
-          : routeText ||
-            [
-              textVal(flight.aeroporto_saida) || flight.cidade_saida,
-              textVal(flight.aeroporto_chegada) || flight.cidade_chegada
-            ]
-              .filter(Boolean)
-              .join(' -> ');
+      const route = [
+        textVal(flight.aeroporto_saida) || routeParts.origem || flight.cidade_saida,
+        textVal(flight.aeroporto_chegada) || routeParts.destino || flight.cidade_chegada
+      ]
+        .filter(Boolean)
+        .join(' → ');
       const departureDate = formatRoteiroDate(flight.data_voo || flight.data_inicio);
       const offsetDays = diffDaysISODate(
         flight.data_voo || flight.data_inicio,
