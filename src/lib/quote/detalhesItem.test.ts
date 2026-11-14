@@ -4,7 +4,8 @@ import {
   novoItemOrcamento,
   rawDetalhes,
   recalcularTotaisItem,
-  resumoDetalhes
+  resumoDetalhes,
+  resumoItemOrcamento
 } from './detalhesItem';
 
 describe('cálculos por tipo de item do orçamento', () => {
@@ -77,5 +78,47 @@ describe('cálculos por tipo de item do orçamento', () => {
         raw: { detalhes_orcamento: { adultos: 1, criancas: 0, infant: 0 } }
       })
     ).toEqual(['Adultos: 1']);
+  });
+
+  it('resume tipo, destino, descrição, datas e duração antes de abrir o item', () => {
+    const hotel = novoItemOrcamento(0);
+    hotel.item_type = 'hotel';
+    hotel.city_name = 'Los Angeles';
+    hotel.title = 'Hollywood Hotel Inn';
+    hotel.start_date = '2027-01-17';
+    hotel.end_date = '2027-01-20';
+
+    const carro = novoItemOrcamento(1);
+    carro.item_type = 'aluguel_carro';
+    carro.city_name = 'Los Angeles';
+    carro.title = 'SUV - Automático';
+    carro.start_date = '2027-01-17';
+    carro.end_date = '2027-01-20';
+
+    const passagemIdaEVolta = novoItemOrcamento(2);
+    passagemIdaEVolta.item_type = 'passagem';
+    passagemIdaEVolta.city_name = 'Roma';
+    passagemIdaEVolta.title = 'SÃO PAULO / ROMA / SÃO PAULO';
+    passagemIdaEVolta.start_date = '2027-08-10';
+    passagemIdaEVolta.end_date = '2027-08-25';
+
+    const passagemSomenteSaida = novoItemOrcamento(3);
+    passagemSomenteSaida.item_type = 'passagem';
+    passagemSomenteSaida.city_name = 'Barcelona';
+    passagemSomenteSaida.title = 'Roma - Barcelona';
+    passagemSomenteSaida.start_date = '2027-08-11';
+
+    expect(resumoItemOrcamento(hotel)).toBe(
+      'Hotel · Los Angeles · Hollywood Hotel Inn · 17-01-2027 a 20-01-2027 (3 noites)'
+    );
+    expect(resumoItemOrcamento(carro)).toBe(
+      'Aluguel de Carro · Los Angeles · SUV - Automático · 17-01-2027 a 20-01-2027 (04 dias)'
+    );
+    expect(resumoItemOrcamento(passagemIdaEVolta)).toBe(
+      'Passagem Aérea · Roma · SÃO PAULO / ROMA / SÃO PAULO · 10-08-2027 a 25-08-2027'
+    );
+    expect(resumoItemOrcamento(passagemSomenteSaida)).toBe(
+      'Passagem Aérea · Barcelona · Roma - Barcelona · 11-08-2027'
+    );
   });
 });

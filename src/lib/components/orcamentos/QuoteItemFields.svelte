@@ -20,7 +20,7 @@
     { value: 'Serviço Compartilhado', label: 'Serviço Compartilhado' },
     { value: 'Serviço Privativo', label: 'Serviço Privativo' }
   ];
-  const itensCarro = ['CDW', 'LDW', 'Tanque Cheio'];
+  const itensCarro = ['KM Livre', 'CDW', 'LDW', 'Tanque Cheio'];
 
   function atualizarItem() {
     recalcularTotaisItem(item);
@@ -32,6 +32,31 @@
       item.city_name = '';
       item.destino_geografico_id = '';
     }
+    atualizarItem();
+  }
+
+  function atualizarCambio(event: Event) {
+    event.stopPropagation();
+    item = {
+      ...item,
+      cambio: (event.target as HTMLSelectElement).value
+    };
+    atualizarItem();
+  }
+
+  function alterarIncluido(event: Event) {
+    event.stopPropagation();
+    const checkbox = event.target as HTMLInputElement;
+    const incluidos = new Set(item.incluidos);
+    if (checkbox.checked) incluidos.add(checkbox.value);
+    else incluidos.delete(checkbox.value);
+    item = {
+      ...item,
+      incluidos: [
+        ...itensCarro.filter((incluido) => incluidos.has(incluido)),
+        ...[...incluidos].filter((incluido) => !itensCarro.includes(incluido))
+      ]
+    };
     atualizarItem();
   }
 
@@ -222,13 +247,14 @@
       <FieldSelect
         id={`${prefix}-cambio`}
         label="Câmbio"
-        bind:value={item.cambio}
+        value={item.cambio}
         options={[
           { value: 'Manual', label: 'Manual' },
           { value: 'Automático', label: 'Automático' }
         ]}
         placeholder="Selecione"
         class_name="w-full"
+        on:change={atualizarCambio}
       />
     </div>
     <div class="md:col-span-9">
@@ -239,8 +265,9 @@
             <input
               type="checkbox"
               value={incluido}
-              bind:group={item.incluidos}
+              checked={item.incluidos.includes(incluido)}
               class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              on:change={alterarIncluido}
             />
             {incluido}
           </label>

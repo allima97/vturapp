@@ -356,3 +356,92 @@ it('carrega e preserva os detalhes de hotel ao editar o orçamento', async () =>
     await unmount(app);
   }
 });
+
+it('permite alterar câmbio e itens incluídos ao editar aluguel de carro', async () => {
+  api.fetch.mockResolvedValue({
+    client_name: 'Cliente',
+    valid_until: '2027-01-30',
+    currency: 'BRL',
+    itens: [
+      {
+        id: 'item-carro',
+        title: 'SUV - Automático',
+        item_type: 'aluguel_carro',
+        city_name: 'Los Angeles',
+        quantity: 1,
+        unit_price: 700,
+        total_amount: 700,
+        start_date: '2027-01-17',
+        end_date: '2027-01-20',
+        raw: {
+          detalhes_orcamento: {
+            cambio: 'Automático',
+            incluidos: ['CDW']
+          }
+        }
+      }
+    ]
+  });
+  api.patch.mockResolvedValue({});
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(EditPage, { target });
+  try {
+    await vi.waitFor(() =>
+      expect(target.querySelector('#orcamento-editar-item-0-cambio')).toBeTruthy()
+    );
+    const change = target.querySelector('#orcamento-editar-item-0-cambio') as Element & {
+      value: string;
+      disabled: boolean;
+      dispatchEvent: (event: Event) => boolean;
+    };
+    target
+      .querySelector('details summary')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    flushSync();
+
+    expect(change.disabled).toBe(false);
+    expect(
+      [...change.querySelectorAll('option')].map((option) => option.getAttribute('value'))
+    ).toEqual(['', 'Manual', 'Automático']);
+    expect(change.value).toBe('Automático');
+
+    change.value = 'Manual';
+    change.dispatchEvent(new Event('change', { bubbles: true }));
+    const included = [...target.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')];
+    expect(included.map((input) => input.value)).toEqual([
+      'KM Livre',
+      'CDW',
+      'LDW',
+      'Tanque Cheio'
+    ]);
+    included.find((input) => input.value === 'KM Livre')!.click();
+    included.find((input) => input.value === 'LDW')!.click();
+    flushSync();
+
+    target
+      .querySelector('form')!
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await vi.waitFor(() =>
+      expect(api.patch).toHaveBeenCalledWith(
+        '/api/v1/orcamentos/orcamento-1',
+        expect.objectContaining({
+          itens: [
+            expect.objectContaining({
+              id: 'item-carro',
+              raw: {
+                detalhes_orcamento: {
+                  cambio: 'Manual',
+                  incluidos: ['KM Livre', 'CDW', 'LDW']
+                },
+                aereo_import: null
+              }
+            })
+          ]
+        })
+      )
+    );
+  } finally {
+    await unmount(app);
+  }
+});

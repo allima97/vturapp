@@ -473,12 +473,22 @@ function dataResumo(value: string) {
 }
 
 export function resumoItemOrcamento(
-  item: Pick<ItemOrcamento, 'city_name' | 'title' | 'start_date' | 'end_date'>
+  item: Pick<ItemOrcamento, 'city_name' | 'title' | 'start_date' | 'end_date' | 'item_type'>
 ) {
+  const type = tipoNormalizado(item.item_type);
+  const tipo = tiposItem.find((option) => option.value === type)?.label || item.item_type || 'Item';
   const cidade = item.city_name.trim();
   const descricao = item.title.trim() || 'Novo item';
   const inicio = dataResumo(item.start_date);
   const fim = dataResumo(item.end_date);
-  const periodo = inicio && fim && inicio !== fim ? `${inicio} a ${fim}` : inicio || fim;
-  return [cidade, descricao, periodo].filter(Boolean).join(' · ');
+  let periodo = inicio && fim && inicio !== fim ? `${inicio} a ${fim}` : inicio || fim;
+  const dias = diasItem(type, item.start_date, item.end_date);
+
+  if (periodo && isHotel(type) && dias !== null && dias > 0) {
+    periodo += ` (${dias} ${dias === 1 ? 'noite' : 'noites'})`;
+  } else if (periodo && isCar(type) && dias !== null) {
+    periodo += ` (${String(dias).padStart(2, '0')} ${dias === 1 ? 'dia' : 'dias'})`;
+  }
+
+  return [tipo, cidade, descricao, periodo].filter(Boolean).join(' · ');
 }
