@@ -5,6 +5,7 @@
   import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
   import DestinoOperacional from '$lib/components/DestinoOperacional.svelte';
   import DetalhesItem from '$lib/components/orcamentos/DetalhesItem.svelte';
+  import FlightSegments from '$lib/components/orcamentos/FlightSegments.svelte';
   import {
     detalhesVazios,
     rawDetalhes,
@@ -13,6 +14,7 @@
     type DetalhesItem as CamposDetalhesItem
   } from '$lib/quote/detalhesItem';
   import { campoGeografico } from '$lib/config/destinosGeograficos';
+  import { supportsFlightSegments, type QuoteFlightSegment } from '$lib/quote/flights';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import { FieldInput, FieldSelect, FieldTextarea } from '$lib/components/ui';
@@ -33,6 +35,7 @@
     city_name: string;
     destino_geografico_id?: string;
     order_index: number;
+    flightSegments: QuoteFlightSegment[];
   }
 
   interface ClienteOption {
@@ -87,6 +90,7 @@
       city_name: '',
       destino_geografico_id: '',
       order_index: index,
+      flightSegments: [],
       ...detalhesVazios()
     };
   }
@@ -254,7 +258,12 @@
           city_name: item.city_name,
           start_date: item.start_date,
           end_date: item.end_date,
-          raw: { detalhes_orcamento: rawDetalhes(item) },
+          raw: {
+            detalhes_orcamento: rawDetalhes(item),
+            ...(supportsFlightSegments(item.item_type)
+              ? { aereo_import: { segmentos: item.flightSegments } }
+              : {})
+          },
           ...campoGeografico(item.destino_geografico_id),
           order_index: item.order_index
         }))
@@ -520,6 +529,12 @@
               </div>
             </div>
             <DetalhesItem bind:item prefixo={`orcamento-novo-item-${index}`} />
+            {#if supportsFlightSegments(item.item_type)}
+              <FlightSegments
+                idPrefix={`orcamento-novo-item-${index}-voo`}
+                bind:segments={item.flightSegments}
+              />
+            {/if}
             {#if errors[`item-${index}`]}
               <p role="alert" class="text-sm text-red-600 md:col-span-12">
                 {errors[`item-${index}`]}

@@ -6,6 +6,7 @@
   import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
   import DestinoOperacional from '$lib/components/DestinoOperacional.svelte';
   import DetalhesItem from '$lib/components/orcamentos/DetalhesItem.svelte';
+  import FlightSegments from '$lib/components/orcamentos/FlightSegments.svelte';
   import {
     detalhesVazios,
     lerDetalhes,
@@ -15,6 +16,11 @@
     type DetalhesItem as CamposDetalhesItem
   } from '$lib/quote/detalhesItem';
   import { campoGeografico } from '$lib/config/destinosGeograficos';
+  import {
+    readQuoteFlightSegments,
+    supportsFlightSegments,
+    type QuoteFlightSegment
+  } from '$lib/quote/flights';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import { FieldInput, FieldSelect, FieldTextarea, LoadingState } from '$lib/components/ui';
@@ -39,6 +45,7 @@
     city_name: string;
     destino_geografico_id: string;
     order_index: number;
+    flightSegments: QuoteFlightSegment[];
   }
 
   interface ClienteOption {
@@ -93,6 +100,7 @@
       city_name: '',
       destino_geografico_id: '',
       order_index: index,
+      flightSegments: [],
       ...detalhesVazios()
     };
   }
@@ -172,6 +180,7 @@
           city_name: String(item.city_name ?? item.cidade ?? ''),
           destino_geografico_id: String(item.destino_geografico_id ?? ''),
           order_index: Number(item.order_index ?? index),
+          flightSegments: readQuoteFlightSegments(item.raw),
           ...lerDetalhes(item)
         })
       );
@@ -351,7 +360,12 @@
           city_name: item.city_name,
           start_date: item.start_date,
           end_date: item.end_date,
-          raw: { detalhes_orcamento: rawDetalhes(item) },
+          raw: {
+            detalhes_orcamento: rawDetalhes(item),
+            aereo_import: supportsFlightSegments(item.item_type)
+              ? { segmentos: item.flightSegments }
+              : null
+          },
           ...campoGeografico(item.destino_geografico_id),
           order_index: item.order_index
         }))
@@ -653,6 +667,12 @@
                 </div>
               </div>
               <DetalhesItem bind:item prefixo={`orcamento-editar-item-${index}`} />
+              {#if supportsFlightSegments(item.item_type)}
+                <FlightSegments
+                  idPrefix={`orcamento-editar-item-${index}-voo`}
+                  bind:segments={item.flightSegments}
+                />
+              {/if}
               {#if errors[`item-${index}`]}
                 <p role="alert" class="text-sm text-red-600 md:col-span-12">
                   {errors[`item-${index}`]}

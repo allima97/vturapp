@@ -133,6 +133,63 @@ it.each([
   });
 });
 
+it('preserva os trechos aéreos estruturados ao criar orçamento', async () => {
+  const segmento = {
+    tipo_voo: 'Internacional',
+    trecho: 'GRU → FCO',
+    cia_aerea: 'LATAM Airlines',
+    numero_voo: 'LA 8120',
+    data_voo: '2027-08-10',
+    hora_saida: '17:50',
+    aeroporto_saida: 'GRU',
+    data_fim: '2027-08-11',
+    hora_chegada: '10:15',
+    aeroporto_chegada: 'FCO',
+    classe_reserva: 'Econômica',
+    tarifa_nome: 'FULL'
+  };
+  const response = await handleOrcamentosCreatePost({
+    request: new Request('https://vtur.app/api/v1/orcamentos/create', {
+      method: 'POST',
+      headers: { origin: 'https://vtur.app', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        client_name: 'Cliente de teste',
+        valid_until: '2027-07-15',
+        itens: [
+          {
+            title: 'Passagem Aérea Ida e Volta',
+            item_type: 'passagem',
+            quantity: 1,
+            unit_price: 6500,
+            total_amount: 6500,
+            start_date: '2027-08-10',
+            end_date: '2027-08-11',
+            raw: {
+              detalhes_orcamento: {
+                categoria: 'Econômica',
+                adultos: 1,
+                criancas: 0
+              },
+              aereo_import: { segmentos: [segmento] }
+            }
+          }
+        ]
+      })
+    }),
+    platform: { env: { DB: env.DB } }
+  } as Parameters<typeof handleOrcamentosCreatePost>[0]);
+
+  expect(response.status).toBe(201);
+  const { data } = await response.json<{ data: { id: string } }>();
+  const item = await env.DB.prepare('SELECT raw FROM legado_quote_item WHERE quote_id = ?')
+    .bind(data.id)
+    .first<{ raw: string }>();
+  expect(JSON.parse(item!.raw)).toMatchObject({
+    aereo_import: { segmentos: [segmento] },
+    detalhes_orcamento: { categoria: 'Econômica', adultos: 1, criancas: 0 }
+  });
+});
+
 it('preserva a validade ao salvar metadados do orçamento em outro fluxo', async () => {
   const quoteId = crypto.randomUUID();
   await env.DB.prepare(

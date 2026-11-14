@@ -147,7 +147,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(hidden).not.toContain('Hotel americano');
   });
 
-  it('apresenta trechos aéreos no mesmo cartão dos roteiros, sem perder dados e valores', () => {
+  it('apresenta passagens na tabela padrão de serviços sem perder dados e valores', () => {
     const html = buildQuotePreviewHtmlSync({
       quote: { id: 'quote-1' },
       items: [
@@ -159,6 +159,7 @@ describe('identidade dos orçamentos e circuitos', () => {
             {
               segment_type: 'flight',
               data: {
+                tipo_voo: 'Internacional',
                 trecho: 'São Paulo - Roma',
                 cidade_saida: 'São Paulo, São Paulo, Brasil',
                 cidade_chegada: 'Roma, Itália',
@@ -174,6 +175,27 @@ describe('identidade dos orçamentos e circuitos', () => {
               }
             }
           ]
+        },
+        {
+          item_type: 'passagem',
+          title: 'Voo doméstico',
+          quantity: 1,
+          total_amount: 180,
+          raw: {
+            aereo_import: {
+              segmentos: [
+                {
+                  tipo_voo: 'Nacional',
+                  trecho: 'GRU → GIG',
+                  cia_aerea: 'Azul Linhas Aéreas',
+                  numero_voo: 'AD 4455',
+                  data_voo: '2027-08-12',
+                  aeroporto_saida: 'GRU',
+                  aeroporto_chegada: 'GIG'
+                }
+              ]
+            }
+          }
         }
       ],
       settings: {},
@@ -183,7 +205,14 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: true
     });
-    expect(html).toContain('roteiro-flight-header');
+    expect(html).toContain('Passagens Aéreas Internacionais e Trechos Internos');
+    expect(html).toContain('<th>Serviço</th>');
+    expect(html).toContain('<th>Descrição / Detalhes</th>');
+    expect(html).toContain('<th>Qtd.</th>');
+    expect(html).toContain('<td class="orc-service-type">Aéreo Internacional</td>');
+    expect(html).toContain('<td class="orc-service-type">Voo Interno</td>');
+    expect(html).toContain('<td class="orc-quantity">01 passagem</td>');
+    expect(html).toContain('<td class="orc-quantity">01 trecho</td>');
     for (const value of [
       'São Paulo',
       'Roma',
@@ -202,6 +231,8 @@ describe('identidade dos orçamentos e circuitos', () => {
     }
     expect(html).not.toContain('São Paulo, São Paulo, Brasil');
     expect(html).not.toContain('Roma, Itália');
+    expect(html).toContain('Azul Linhas Aéreas');
+    expect(html).toContain('AD 4455');
   });
 
   it('apresenta tabelas por cidade, subtotais por moeda e resumo sem somar moedas diferentes', () => {
@@ -252,7 +283,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: true,
       discount: 50
     });
-    expect(html).toContain('Descrição / detalhes');
+    expect(html).toContain('Descrição / Detalhes');
     expect(html).toContain('Subtotal — Paris');
     expect(html).toContain('€ 950,00');
     expect(html).toContain('R$ 300,00');

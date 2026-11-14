@@ -351,7 +351,13 @@ export async function handleOrcamentosIdPatch(event: RequestEvent) {
             currency: body.currency || existingQuote.currency || 'BRL',
             start_date: detalhes.start_date,
             end_date: detalhes.end_date,
-            raw: { ...(porId.get(itemId) || {}), detalhes_orcamento: rawDetalhes(detalhes) }
+            raw: {
+              ...(porId.get(itemId) || {}),
+              ...(item.raw && typeof item.raw === 'object' && !Array.isArray(item.raw)
+                ? item.raw
+                : {}),
+              detalhes_orcamento: rawDetalhes(detalhes)
+            }
           },
           itemId ? 'update' : 'insert'
         );

@@ -58,6 +58,12 @@ type OrcamentoCreateItem = Record<string, unknown> & {
   raw?: unknown;
 };
 
+function record(value: unknown): Record<string, unknown> {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? Object.fromEntries(Object.entries(value))
+    : {};
+}
+
 type ClienteScopeRow = {
   id?: unknown;
   company_id?: unknown;
@@ -214,6 +220,7 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
       start_date: item.start_date,
       end_date: item.end_date,
       raw: {
+        ...record(item.raw),
         detalhes_orcamento: rawDetalhes({
           ...lerDetalhes(item),
           item_type: String(item.item_type || 'servico')
