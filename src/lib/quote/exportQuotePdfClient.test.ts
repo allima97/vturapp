@@ -166,6 +166,46 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(list).not.toContain('Preços em real');
   });
 
+  it('associa ícones aos avisos padrão mesmo quando vêm configurados e reordenados', () => {
+    const notices = [
+      [
+        'Este orçamento foi feito com base na menor tarifa para os serviços solicitados, podendo sofrer alteração devido à disponibilidade de lugares no ato da compra.',
+        'orc-info-icon--fares'
+      ],
+      [
+        'Valor da criança válido somente quando acompanhada de dois adultos pagantes no mesmo apartamento.',
+        'orc-info-icon--children'
+      ],
+      [
+        'Preços em real (R$) convertido ao câmbio do dia sujeito a alteração e disponibilidade da tarifa.',
+        'orc-section-icon--financial'
+      ],
+      [
+        'Os serviços citados não estão reservados; a compra somente poderá ser confirmada após a confirmação dos fornecedores.',
+        'orc-info-icon--reservations'
+      ],
+      ['Este orçamento é apenas uma tomada de preço.', 'orc-info-icon--estimate'],
+      ['Outro aviso <personalizado>', 'orc-info-icon--estimate']
+    ];
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [],
+      settings: { rodape_texto: notices.map(([text]) => text).join('\r\n') },
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: false,
+      showItemValues: false
+    });
+    const list = html.split('<ul class="orc-footer-list">')[1].split('</ul>')[0];
+    const rows = Array.from(list.matchAll(/<li>(.*?)<\/li>/g), (match) => match[1]);
+    expect(rows).toHaveLength(notices.length);
+    for (const [index, [, icon]] of notices.entries()) {
+      expect(rows[index]).toContain(icon);
+    }
+    expect(rows[5]).toContain('Outro aviso &lt;personalizado&gt;');
+  });
+
   it('apresenta itens na tela com os detalhes do PDF e valores unitários, escapando conteúdo', () => {
     const html = renderQuoteItemsForScreen(
       [

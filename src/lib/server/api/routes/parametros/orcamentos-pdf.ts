@@ -1,4 +1,5 @@
 import { VTUR_LOGO_PATH } from '$lib/brand';
+import { defaultQuoteFooterText } from '$lib/quote/defaultFooter';
 // Migrado para Hono de src/routes/api/v1/parametros/orcamentos-pdf/+server.ts — corpo IDÊNTICO ao original
 // (só nome/assinatura do handler e caminhos de import mudaram). Ver src/lib/server/api/app.ts.
 import { registrarLog } from '$lib/server/auditLog';
@@ -16,13 +17,6 @@ import { invalidateQuoteReadModels } from '$lib/server/readModelCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 
 const MAX_PARAMETROS_ORCAMENTOS_PDF_BODY_BYTES = 128 * 1024;
-
-const DEFAULT_FOOTER =
-  'Preços em real (R$) convertido ao câmbio do dia sujeito a alteração e disponibilidade da tarifa.\n' +
-  'Valor da criança válido somente quando acompanhada de dois adultos pagantes no mesmo apartamento.\n' +
-  'Este orçamento é apenas uma tomada de preço.\n' +
-  'Os serviços citados não estão reservados; a compra somente poderá ser confirmada após a confirmação dos fornecedores.\n' +
-  'Este orçamento foi feito com base na menor tarifa para os serviços solicitados, podendo sofrer alteração devido à disponibilidade de lugares no ato da compra.';
 
 export async function handleParametrosOrcamentosPdfGet(event: RequestEvent) {
   try {
@@ -74,7 +68,7 @@ export async function handleParametrosOrcamentosPdfGet(event: RequestEvent) {
           whatsapp: data?.whatsapp || '',
           whatsapp_codigo_pais: data?.whatsapp_codigo_pais || '',
           email: data?.email || userRow?.email || '',
-          rodape_texto: data?.rodape_texto || DEFAULT_FOOTER
+          rodape_texto: data?.rodape_texto || defaultQuoteFooterText
         }
       },
       { headers: DYNAMIC_READ_HEADERS }
@@ -128,7 +122,8 @@ export async function handleParametrosOrcamentosPdfPost(event: RequestEvent) {
       whatsapp: String(settings?.whatsapp || '').trim() || null,
       whatsapp_codigo_pais: String(settings?.whatsapp_codigo_pais || '').trim() || null,
       email: String(settings?.email || '').trim() || null,
-      rodape_texto: String(settings?.rodape_texto || DEFAULT_FOOTER).trim() || DEFAULT_FOOTER
+      rodape_texto:
+        String(settings?.rodape_texto || defaultQuoteFooterText).trim() || defaultQuoteFooterText
     };
 
     // Inclui campos de imagem apenas quando presentes no body (para não sobrescrever com null)

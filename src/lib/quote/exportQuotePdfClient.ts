@@ -21,6 +21,7 @@ import {
 } from '$lib/quote/detalhesItem';
 import { chaveIdentidadeCidade } from '$lib/catalogoOpcionais';
 import { flightPlane } from '$lib/quote/printFlights';
+import { defaultQuoteFooter } from '$lib/quote/defaultFooter';
 import {
   nomeCidadeNoPdf,
   printCardField,
@@ -641,9 +642,20 @@ function renderCityTable(title: string, content: string, showItemValues: boolean
 
 const cityIcon = `<svg class="orc-section-icon orc-section-icon--city" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="10" height="18" rx="1"/><path d="M13 8h7v13H3M6 7h1m2 0h1M6 11h1m2 0h1M6 15h1m2 0h1M16 12h1m-1 4h1"/></svg>`;
 const financialIcon = `<svg class="orc-section-icon orc-section-icon--financial" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M5 9h1m12 6h1"/></svg>`;
-const infoIcon = `<svg class="orc-section-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/></svg>`;
-const childIcon = `<svg class="orc-section-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="5" r="2"/><path d="M8 11l2-3h4l2 3M12 8v6m-2 0-1 7m5-7 1 7"/></svg>`;
-const tagIcon = `<svg class="orc-section-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 4h9l9 9-8 8-10-10z"/><circle cx="7.5" cy="8" r="1"/></svg>`;
+const infoIcon = `<svg class="orc-section-icon orc-info-icon--estimate" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/></svg>`;
+const childIcon = `<svg class="orc-section-icon orc-info-icon--children" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="5" r="2"/><path d="M8 11l2-3h4l2 3M12 8v6m-2 0-1 7m5-7 1 7"/></svg>`;
+const reservationIcon = `<svg class="orc-section-icon orc-info-icon--reservations" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 10h18m-12 3 6 5m0-5-6 5"/></svg>`;
+const tagIcon = `<svg class="orc-section-icon orc-info-icon--fares" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 4h9l9 9-8 8-10-10z"/><circle cx="7.5" cy="8" r="1"/></svg>`;
+const defaultFooterItems = [
+  { text: defaultQuoteFooter.exchange, icon: financialIcon },
+  { text: defaultQuoteFooter.children, icon: childIcon },
+  { text: defaultQuoteFooter.estimate, icon: infoIcon },
+  { text: defaultQuoteFooter.reservations, icon: reservationIcon },
+  { text: defaultQuoteFooter.fares, icon: tagIcon }
+];
+const defaultFooterIcons = new Map(
+  defaultFooterItems.map(({ text, icon }) => [normalizeText(text), icon])
+);
 
 const serviceIcons = new Map<string, [string, string]>([
   [
@@ -1090,30 +1102,8 @@ export function buildQuotePreviewHtmlSync(params: {
         .split(/\r?\n/)
         .map((line) => line.trim())
         .filter(Boolean)
-        .map((text) => ({ text, icon: infoIcon }))
-    : [
-        {
-          text: 'Preços em real (R$) convertido ao câmbio do dia sujeito a alteração e disponibilidade da tarifa.',
-          icon: financialIcon
-        },
-        ...(hasChildren
-          ? [
-              {
-                text: 'Valor da criança válido somente quando acompanhada de dois adultos pagantes no mesmo apartamento.',
-                icon: childIcon
-              }
-            ]
-          : []),
-        { text: 'Este orçamento é apenas uma tomada de preço.', icon: infoIcon },
-        {
-          text: 'Os serviços citados não estão reservados; a compra somente poderá ser confirmada após a confirmação dos fornecedores.',
-          icon: infoIcon
-        },
-        {
-          text: 'Este orçamento foi feito com base na menor tarifa para os serviços solicitados, podendo sofrer alteração devido à disponibilidade de lugares no ato da compra.',
-          icon: tagIcon
-        }
-      ];
+        .map((text) => ({ text, icon: defaultFooterIcons.get(normalizeText(text)) || infoIcon }))
+    : defaultFooterItems.filter(({ text }) => hasChildren || text !== defaultQuoteFooter.children);
   let footerLinesHtml = '';
   for (const line of footerLines) {
     footerLinesHtml += `<li${requiresPrintContinuation(line.text) ? ' class="orc-footer-item--long"' : ''}>${line.icon}<span>${escHtml(line.text)}</span></li>`;
