@@ -17,7 +17,13 @@ import { isQuoteCreatorAllowed, resolveQuoteCreatorScope } from '$lib/server/orc
 import { complementarListaOperacional } from '$lib/server/destinoOperacional';
 import { modulosOperacionaisGeograficosAtivos } from '$lib/config/destinosGeograficos';
 import { prepareWrite } from '$lib/server/data/query';
-import { lerDetalhes, rawDetalhes, validarDetalhes } from '$lib/quote/detalhesItem';
+import {
+  dadosItemParaValidacao,
+  lerDetalhes,
+  rawDetalhes,
+  totaisDoItem,
+  validarDetalhes
+} from '$lib/quote/detalhesItem';
 import { validadeDoOrcamento, validadeInformadaValida } from '$lib/quote/validade';
 
 const QUOTE_SELECT_FIELDS =
@@ -301,12 +307,14 @@ export async function handleOrcamentosIdPatch(event: RequestEvent) {
         return errorResponse('Informe itens válidos para o orçamento.', 400);
       const itens = body.itens as OrcamentoUpdateItem[];
       for (const [index, item] of itens.entries()) {
-        const erro = validarDetalhes({
-          ...lerDetalhes(item),
-          item_type: String(item.item_type || 'servico')
-        });
+        const erro = validarDetalhes(dadosItemParaValidacao(item));
         if (erro) return errorResponse(`Item ${index + 1}: ${erro}`, 400);
+        Object.assign(item, totaisDoItem(item));
       }
+      updateData.total = itens.reduce(
+        (sum, item) => sum + Number(item.total_amount ?? item.valor_total ?? 0),
+        0
+      );
       const preparados = await complementarListaOperacional(
         itens,
         event.platform?.env?.DB,

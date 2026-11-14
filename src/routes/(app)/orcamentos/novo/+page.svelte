@@ -2,19 +2,17 @@
   import { goto } from '$app/navigation';
   import { onMount, onDestroy } from 'svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
-  import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
-  import DestinoOperacional from '$lib/components/DestinoOperacional.svelte';
-  import DetalhesItem from '$lib/components/orcamentos/DetalhesItem.svelte';
-  import FlightSegments from '$lib/components/orcamentos/FlightSegments.svelte';
+  import QuoteItemFields from '$lib/components/orcamentos/QuoteItemFields.svelte';
   import {
-    detalhesVazios,
+    novoItemOrcamento,
+    recalcularTotaisItem,
     rawDetalhes,
-    tiposItem,
+    resumoItemOrcamento,
     validarDetalhes,
-    type DetalhesItem as CamposDetalhesItem
+    type ItemOrcamento
   } from '$lib/quote/detalhesItem';
   import { campoGeografico } from '$lib/config/destinosGeograficos';
-  import { supportsFlightSegments, type QuoteFlightSegment } from '$lib/quote/flights';
+  import { supportsFlightSegments } from '$lib/quote/flights';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import { FieldInput, FieldSelect, FieldTextarea } from '$lib/components/ui';
@@ -25,19 +23,6 @@
   import { apiFetch, apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
 
   // ─── Tipos ───────────────────────────────────────────────────────────────────
-  interface ItemOrcamento extends CamposDetalhesItem {
-    title: string;
-    product_name: string;
-    item_type: string;
-    quantity: number;
-    unit_price: number;
-    total_amount: number;
-    city_name: string;
-    destino_geografico_id?: string;
-    order_index: number;
-    flightSegments: QuoteFlightSegment[];
-  }
-
   interface ClienteOption {
     id: string;
     nome: string;
@@ -80,36 +65,23 @@
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
   function makeItem(index: number): ItemOrcamento {
-    return {
-      title: '',
-      product_name: '',
-      item_type: 'servico',
-      quantity: 1,
-      unit_price: 0,
-      total_amount: 0,
-      city_name: '',
-      destino_geografico_id: '',
-      order_index: index,
-      flightSegments: [],
-      ...detalhesVazios()
-    };
+    return novoItemOrcamento(index);
   }
 
-  /** Recalcula total_amount de cada item sem reatribuir o array inteiro */
   function recalcularItem(index: number) {
     const item = formData.itens[index];
-    formData.itens[index] = {
-      ...item,
-      total_amount: (item.quantity || 0) * (item.unit_price || 0)
-    };
-    // Força reatividade do Svelte sem re-criar o array
+    recalcularTotaisItem(item);
+    formData.itens[index] = { ...item };
     formData.itens = formData.itens;
   }
 
   $: valorTotal = formData.itens.reduce((acc, item) => acc + (item.total_amount || 0), 0);
 
   function addItem() {
-    formData.itens = [...formData.itens, makeItem(formData.itens.length)];
+    formData.itens = [
+      ...formData.itens.map((item) => ({ ...item, isOpen: false })),
+      makeItem(formData.itens.length)
+    ];
   }
 
   function removeItem(index: number) {
@@ -450,95 +422,30 @@
   <Card header="Itens do Orçamento" color="orcamentos">
     <div class="space-y-3">
       {#each formData.itens as item, index}
-        <div class="flex items-start gap-3 rounded-lg border border-slate-100 bg-slate-50 p-4">
-          <div class="grid flex-1 grid-cols-1 gap-3 md:grid-cols-12">
-            <div class="md:col-span-4">
-              <FieldInput
-                id={`orcamento-novo-item-titulo-${index}`}
-                label="Descrição"
-                bind:value={item.title}
-                class_name="w-full"
-                placeholder="Ex: Passagem Aérea Ida e Volta"
-                required
-              />
-            </div>
-
-            <div class="md:col-span-2">
-              <FieldSelect
-                id={`orcamento-novo-item-tipo-${index}`}
-                label="Tipo"
-                bind:value={item.item_type}
-                options={tiposItem}
-                placeholder={null}
-                class_name="w-full"
-              />
-            </div>
-
-            <div class="md:col-span-2">
-              <DestinoOperacional
-                fieldId={`orcamento-novo-item-destino-${index}`}
-                label="Destino"
-                bind:value={item.city_name}
-                bind:destinoId={item.destino_geografico_id}
+        <div class="flex items-start gap-3">
+          <div class="min-w-0 flex-1">
+            <details bind:open={item.isOpen} class="rounded-lg border border-slate-200 bg-slate-50">
+              <summary
+                class="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 text-sm font-medium text-slate-800"
               >
-                <CidadeDestinoAutocomplete
-                  id={`orcamento-novo-item-destino-${index}`}
-                  label="Destino"
-                  bind:value={item.city_name}
-                  placeholder="Cidade"
-                  class_name="w-full"
+                <span class="min-w-0 truncate">{resumoItemOrcamento(item)}</span>
+                <span
+                  class="shrink-0 rounded-full border border-slate-300 bg-white px-2 py-0.5 text-base leading-none"
+                >
+                  {item.isOpen ? '-' : '+'}
+                </span>
+              </summary>
+              <div class="border-t border-slate-200 p-4">
+                <QuoteItemFields
+                  bind:item
+                  prefix={`orcamento-novo-item-${index}`}
+                  currency={formData.currency}
+                  onChange={() => recalcularItem(index)}
                 />
-              </DestinoOperacional>
-            </div>
-
-            <div class="md:col-span-1">
-              <FieldInput
-                id={`orcamento-novo-item-quantidade-${index}`}
-                label="Qtd"
-                type="number"
-                bind:value={item.quantity}
-                min="1"
-                class_name="w-full"
-                on:input={() => recalcularItem(index)}
-              />
-            </div>
-
-            <div class="md:col-span-2">
-              <FieldInput
-                money
-                id={`orcamento-novo-item-valor-${index}`}
-                label="Valor Unit."
-                type="number"
-                bind:value={item.unit_price}
-                min="0"
-                step="0.01"
-                class_name="w-full"
-                on:moneyInput={(event) => {
-                  item.unit_price = Number(event.detail) || 0;
-                  recalcularItem(index);
-                }}
-              />
-            </div>
-
-            <div class="md:col-span-1">
-              <p class="mb-1 block text-xs font-medium text-slate-500">Total</p>
-              <div
-                class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-right text-sm font-semibold text-slate-800"
-              >
-                {formatCurrency(item.total_amount)}
               </div>
-            </div>
-            <DetalhesItem bind:item prefixo={`orcamento-novo-item-${index}`} />
-            {#if supportsFlightSegments(item.item_type)}
-              <FlightSegments
-                idPrefix={`orcamento-novo-item-${index}-voo`}
-                bind:segments={item.flightSegments}
-              />
-            {/if}
+            </details>
             {#if errors[`item-${index}`]}
-              <p role="alert" class="text-sm text-red-600 md:col-span-12">
-                {errors[`item-${index}`]}
-              </p>
+              <p role="alert" class="mt-2 text-sm text-red-600">{errors[`item-${index}`]}</p>
             {/if}
           </div>
 
@@ -548,7 +455,7 @@
               on:click={() => removeItem(index)}
               variant="ghost"
               size="sm"
-              class_name="mt-5 shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+              class_name="mt-2 shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50"
               ariaLabel="Remover item"
               title="Remover item"
             >

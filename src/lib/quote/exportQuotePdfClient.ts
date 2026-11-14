@@ -365,38 +365,27 @@ function renderServiceItem(
   showItemValues: boolean,
   defaultCurrency: string
 ) {
-  const detalhes = lerDetalhes(item);
   const type = normalizeText(item.item_type);
-  const hotel = type === 'hotel' || type === 'hospedagem';
   const labels: Record<string, string> = {
     hotel: 'Hotel',
     hospedagem: 'Hospedagem',
     servico: 'Serviço',
     pacote: 'Pacote',
-    passagem: 'Passagem',
+    passagem: 'Passagem Aérea',
     passeio: 'Passeio',
-    aluguel_carro: 'Aluguel de carro',
+    show: 'Show',
+    aluguel_carro: 'Aluguel de Carro',
     ingresso: 'Ingresso',
-    transfer: 'Transfer',
-    seguro: 'Seguro',
+    transfer: 'Traslado',
+    seguro: 'Seguro Viagem',
+    seguro_viagem: 'Seguro Viagem',
     outro: 'Serviço'
   };
   const label = labels[type] || textVal(item.item_type) || 'Serviço';
   const inicio = formatRoteiroDate(item.start_date);
   const fim = formatRoteiroDate(item.end_date);
   const periodo = inicio && fim && inicio !== fim ? `${inicio} a ${fim}` : inicio || fim;
-  const noites = hotel ? diffDaysISODate(item.start_date, item.end_date) : null;
-  const fields = [
-    noites !== null && noites > 0 ? `${noites} ${noites === 1 ? 'noite' : 'noites'}` : '',
-    detalhes.categoria ? `Categoria: ${detalhes.categoria}` : '',
-    hotel && detalhes.tipo_apartamento ? `Acomodação: ${detalhes.tipo_apartamento}` : '',
-    hotel && detalhes.quantidade_apartamentos !== null
-      ? `Apartamentos: ${detalhes.quantidade_apartamentos}`
-      : '',
-    hotel && detalhes.regime ? `Regime: ${detalhes.regime}` : '',
-    detalhes.adultos !== null && detalhes.adultos > 0 ? `Adultos: ${detalhes.adultos}` : '',
-    detalhes.criancas !== null && detalhes.criancas > 0 ? `Crianças: ${detalhes.criancas}` : ''
-  ].filter(Boolean);
+  const fields = resumoDetalhes(item);
   const title = textVal(item.title || item.product_name || item.item_type || 'Item');
   const quantity = item.quantity == null ? '-' : String(item.quantity);
   return `<tr class="orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}">
@@ -595,26 +584,30 @@ function renderFlightItemHtml(
         flight.data_fim || flight.data_voo || flight.data_inicio
       );
       const arrivalTime = [
-        textVal(flight.hora_chegada),
+        textVal(flight.hora_chegada).replace(/\s*\(\+\d+\)\s*$/, ''),
         offsetDays ? `(${offsetDays > 0 ? '+' : ''}${offsetDays})` : ''
       ]
         .filter(Boolean)
         .join(' ');
       const times = [
         textVal(flight.hora_saida) && arrivalTime
-          ? `${textVal(flight.hora_saida)} / ${arrivalTime}`
-          : textVal(flight.hora_saida) || arrivalTime
+          ? `${textVal(flight.hora_saida).replace(/\s*\(\+\d+\)\s*$/, '')} / ${arrivalTime}`
+          : textVal(flight.hora_saida).replace(/\s*\(\+\d+\)\s*$/, '') || arrivalTime
       ].filter(Boolean);
       return [route, textVal(flight.descricao), departureDate, ...times]
         .filter(Boolean)
         .join(' - ');
     })
     .filter(Boolean);
+  const passengerDetails = resumoDetalhes(item).filter((detail) =>
+    /^(Adultos|Crianças|Infant):/.test(detail)
+  );
   const content = `<div class="orc-flight-row-details">
     ${carriers.length ? `<strong>${carriers.map(escHtml).join(' / ')}</strong>` : ''}
     ${title ? `<div>${escHtml(title)}</div>` : ''}
     ${segments.map((segment) => `<div class="orc-flight-segment">${escHtml(segment)}</div>`).join('')}
     ${fareDetails.map((detail) => `<div class="orc-service-details">${escHtml(detail)}</div>`).join('')}
+    ${passengerDetails.length ? `<div class="orc-service-details">${passengerDetails.map(escHtml).join(' · ')}</div>` : ''}
     ${showItemValues && taxes > 0 ? `<div class="orc-service-details">Taxas: ${escHtml(formatCurrency(taxes, currency))}</div>` : ''}
   </div>`;
   return `<tr class="orc-city-item">

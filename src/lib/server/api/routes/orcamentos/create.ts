@@ -15,7 +15,13 @@ import { NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateQuoteReadModels } from '$lib/server/readModelCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
 import { complementarListaOperacional } from '$lib/server/destinoOperacional';
-import { lerDetalhes, rawDetalhes, validarDetalhes } from '$lib/quote/detalhesItem';
+import {
+  dadosItemParaValidacao,
+  lerDetalhes,
+  rawDetalhes,
+  totaisDoItem,
+  validarDetalhes
+} from '$lib/quote/detalhesItem';
 import { validadeDoOrcamento, validadeInformadaValida } from '$lib/quote/validade';
 
 const MAX_ORCAMENTO_CREATE_BODY_BYTES = 512 * 1024;
@@ -147,13 +153,13 @@ export async function handleOrcamentosCreatePost(event: RequestEvent) {
     }
     const itens = body.itens as OrcamentoCreateItem[];
     for (const [index, item] of itens.entries()) {
-      const detalhes = { ...lerDetalhes(item), item_type: String(item.item_type || 'servico') };
-      const erro = validarDetalhes(detalhes);
+      const erro = validarDetalhes(dadosItemParaValidacao(item));
       if (erro)
         return json(
           { error: `Item ${index + 1}: ${erro}` },
           { status: 400, headers: NO_STORE_HEADERS }
         );
+      Object.assign(item, totaisDoItem(item));
     }
     const preparados = await complementarListaOperacional(
       itens,

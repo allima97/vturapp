@@ -64,6 +64,7 @@ it.each([
           {
             title: 'Hotel',
             item_type: 'hotel',
+            city_name: 'Roma',
             quantity: 2,
             unit_price: 150,
             total_amount: 300,
@@ -75,7 +76,7 @@ it.each([
                 adultos: 2,
                 criancas: 0,
                 tipo_apartamento: 'Duplo',
-                quantidade_apartamentos: 1,
+                quantidade_apartamentos: 2,
                 regime: 'Café da manhã'
               }
             }
@@ -127,7 +128,7 @@ it.each([
       adultos: 2,
       criancas: 0,
       tipo_apartamento: 'Duplo',
-      quantidade_apartamentos: 1,
+      quantidade_apartamentos: 2,
       regime: 'Café da manhã'
     }
   });
@@ -186,7 +187,14 @@ it('preserva os trechos aéreos estruturados ao criar orçamento', async () => {
     .first<{ raw: string }>();
   expect(JSON.parse(item!.raw)).toMatchObject({
     aereo_import: { segmentos: [segmento] },
-    detalhes_orcamento: { categoria: 'Econômica', adultos: 1, criancas: 0 }
+    detalhes_orcamento: {
+      adultos: 1,
+      adultos_valor: 6500,
+      criancas: 0,
+      criancas_valor: 0,
+      infant: null,
+      infant_valor: 0
+    }
   });
 });
 
@@ -254,6 +262,7 @@ it('atualiza detalhes sem perder o item, dados existentes ou segmentos', async (
     id: itemId,
     title: 'Hotel',
     item_type: 'hotel',
+    city_name: 'Roma',
     quantity: 2,
     unit_price: 150,
     total_amount: 300,
@@ -265,7 +274,7 @@ it('atualiza detalhes sem perder o item, dados existentes ou segmentos', async (
         adultos: 2,
         criancas: 0,
         tipo_apartamento: 'Duplo',
-        quantidade_apartamentos: 1,
+        quantidade_apartamentos: 2,
         regime: 'Café da manhã'
       }
     }

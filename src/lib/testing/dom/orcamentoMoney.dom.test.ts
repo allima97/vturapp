@@ -35,6 +35,11 @@ it('calcula e salva o preço unitário digitado por centavos', async () => {
   const app = mount(Page, { target });
   try {
     flushSync();
+    expect(target.querySelector('details')?.open).toBe(false);
+    target
+      .querySelector('details summary')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    flushSync();
     const type = (selector: string, value: string) => {
       const input = target.querySelector<HTMLInputElement>(selector)!;
       input.value = value;
@@ -43,14 +48,18 @@ it('calcula e salva o preço unitário digitado por centavos', async () => {
       return input;
     };
     type('input[placeholder="Digite o nome do cliente"]', 'Cliente teste');
-    type('#orcamento-novo-item-titulo-0', 'Passeio');
-    type('#orcamento-novo-item-quantidade-0', '2');
-    type('#orcamento-novo-item-0-inicio', '2027-08-10');
-    type('#orcamento-novo-item-0-fim', '2027-08-10');
-    type('#orcamento-novo-item-0-categoria', 'Standard');
+    type('#orcamento-novo-item-0-descricao', 'Passeio');
+    type('#orcamento-novo-item-0-destino', 'Roma');
+    type('#orcamento-novo-item-0-data-inicial', '2027-08-10');
+    type('#orcamento-novo-item-0-data-final', '2027-08-10');
+    const category = target.querySelector('#orcamento-novo-item-0-categoria') as Element & {
+      value: string;
+    };
+    category.value = 'Serviço Compartilhado';
+    category.dispatchEvent(new Event('change', { bubbles: true }));
     type('#orcamento-novo-item-0-adultos', '2');
     type('#orcamento-novo-item-0-criancas', '0');
-    expect(type('#orcamento-novo-item-valor-0', '123456').value).toBe('1.234,56');
+    expect(type('#orcamento-novo-item-0-valor-adultos', '123456').value).toBe('1.234,56');
     expect(target.textContent).toContain('2.469,12');
     target
       .querySelector('form')!
@@ -66,12 +75,117 @@ it('calcula e salva o preço unitário digitado por centavos', async () => {
               total_amount: 2469.12,
               start_date: '2027-08-10',
               end_date: '2027-08-10',
-              raw: { detalhes_orcamento: { categoria: 'Standard', adultos: 2, criancas: 0 } }
+              city_name: 'Roma',
+              raw: {
+                detalhes_orcamento: {
+                  categoria: 'Serviço Compartilhado',
+                  adultos: 2,
+                  adultos_valor: 1234.56,
+                  criancas: 0,
+                  criancas_valor: 0,
+                  infant: 0,
+                  infant_valor: 0
+                }
+              }
             })
           ]
         })
       )
     );
+  } finally {
+    await unmount(app);
+  }
+});
+
+it('recolhe o item incluído ao adicionar outro item', async () => {
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Page, { target });
+  try {
+    flushSync();
+    const firstItem = target.querySelector('details')!;
+    firstItem.querySelector('summary')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    flushSync();
+    expect(firstItem.open).toBe(true);
+
+    const addButton = [...target.querySelectorAll('button')].find((button) =>
+      button.textContent?.includes('Adicionar Item')
+    )!;
+    addButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    flushSync();
+
+    expect([...target.querySelectorAll('details')].map((item) => item.open)).toEqual([
+      false,
+      false
+    ]);
+  } finally {
+    await unmount(app);
+  }
+});
+
+it('mostra os tipos e a classe de reserva definidos para trechos aéreos', async () => {
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Page, { target });
+  try {
+    flushSync();
+    target
+      .querySelector('details summary')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    flushSync();
+    const type = target.querySelector('#orcamento-novo-item-0-tipo') as Element & {
+      value: string;
+      dispatchEvent: (event: Event) => boolean;
+    };
+    type.value = 'passagem';
+    type.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(target.querySelector('#orcamento-novo-item-0-destino')).toBeNull();
+
+    const addSegment = [...target.querySelectorAll('button')].find((button) =>
+      button.textContent?.includes('Adicionar trecho')
+    )!;
+    addSegment.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    flushSync();
+    expect(
+      [...target.querySelectorAll('#orcamento-novo-item-0-voo-tipo-voo-0 option')].map(
+        (option) => option.textContent
+      )
+    ).toEqual(['Nacional', 'Internacional', 'Voo Interno', 'Fretamento']);
+    expect(
+      [...target.querySelectorAll('#orcamento-novo-item-0-voo-classe-0 option')].map(
+        (option) => option.textContent
+      )
+    ).toEqual(['Selecione', 'Econômica', 'Econômica Premium', 'Executiva', 'Primeira Classe']);
+    expect(
+      target.querySelector<HTMLInputElement>('#orcamento-novo-item-0-voo-duracao-0')?.type
+    ).toBe('time');
+
+    const airline = target.querySelector<HTMLInputElement>(
+      '#orcamento-novo-item-0-voo-cia-aerea-0'
+    )!;
+    airline.value = 'LATAM';
+    airline.dispatchEvent(new Event('input', { bubbles: true }));
+    const flightType = target.querySelector('#orcamento-novo-item-0-voo-tipo-voo-0') as Element & {
+      value: string;
+      dispatchEvent: (event: Event) => boolean;
+    };
+    flightType.value = 'Internacional';
+    flightType.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    addSegment.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    flushSync();
+
+    expect(
+      target.querySelector<HTMLInputElement>('#orcamento-novo-item-0-voo-cia-aerea-0')?.value
+    ).toBe('LATAM');
+    expect(
+      (
+        target.querySelector('#orcamento-novo-item-0-voo-tipo-voo-0') as
+          | (Element & { value: string })
+          | null
+      )?.value
+    ).toBe('Internacional');
   } finally {
     await unmount(app);
   }
@@ -84,6 +198,10 @@ it('exige detalhes do hotel antes de salvar e envia os campos específicos', asy
   const app = mount(Page, { target });
   try {
     flushSync();
+    target
+      .querySelector('details summary')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    flushSync();
     const type = (selector: string, value: string) => {
       const input = target.querySelector<HTMLInputElement>(selector)!;
       input.value = value;
@@ -91,29 +209,30 @@ it('exige detalhes do hotel antes de salvar e envia os campos específicos', asy
       flushSync();
     };
     const change = (selector: string, value: string) => {
-      const select = [...target.querySelectorAll('select')].find((item) => item.matches(selector))!;
+      const select = target.querySelector(selector) as Element & { value: string };
       select.value = value;
       select.dispatchEvent(new Event('change', { bubbles: true }));
       flushSync();
     };
     type('input[placeholder="Digite o nome do cliente"]', 'Cliente teste');
-    type('#orcamento-novo-item-titulo-0', 'Hotel');
-    type('#orcamento-novo-item-valor-0', '10000');
-    change('#orcamento-novo-item-tipo-0', 'hotel');
+    type('#orcamento-novo-item-0-descricao', 'Hotel');
+    change('#orcamento-novo-item-0-tipo', 'hotel');
+    type('#orcamento-novo-item-0-valor-unitario', '10000');
     target
       .querySelector('form')!
       .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     flushSync();
     expect(api.post).not.toHaveBeenCalled();
     expect(target.textContent).toContain('Informe as datas de início e fim');
-    type('#orcamento-novo-item-0-inicio', '2027-08-11');
-    type('#orcamento-novo-item-0-fim', '2027-08-13');
+    type('#orcamento-novo-item-0-destino', 'Roma');
+    type('#orcamento-novo-item-0-checkin', '2027-08-11');
+    type('#orcamento-novo-item-0-checkout', '2027-08-13');
     type('#orcamento-novo-item-0-categoria', '4 estrelas');
     type('#orcamento-novo-item-0-adultos', '2');
     type('#orcamento-novo-item-0-criancas', '0');
-    type('#orcamento-novo-item-0-apto', 'Duplo');
-    type('#orcamento-novo-item-0-qtd-apto', '1');
-    change('#orcamento-novo-item-0-regime', 'Café da manhã');
+    type('#orcamento-novo-item-0-apartamento', 'Duplo');
+    type('#orcamento-novo-item-0-quantidade-apartamentos', '1');
+    type('#orcamento-novo-item-0-regime', 'Café da manhã');
     target
       .querySelector('form')!
       .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
@@ -123,6 +242,10 @@ it('exige detalhes do hotel antes de salvar e envia os campos específicos', asy
         expect.objectContaining({
           itens: [
             expect.objectContaining({
+              city_name: 'Roma',
+              quantity: 1,
+              unit_price: 100,
+              total_amount: 100,
               start_date: '2027-08-11',
               end_date: '2027-08-13',
               raw: {
@@ -155,12 +278,14 @@ it('carrega e preserva os detalhes de hotel ao editar o orçamento', async () =>
         id: 'item-1',
         title: 'Hotel',
         item_type: 'hotel',
+        city_name: 'Roma',
         quantity: 1,
         unit_price: 150,
         total_amount: 150,
         start_date: '2027-08-11',
         end_date: '2027-08-13',
         raw: {
+          aereo_import: null,
           detalhes_orcamento: {
             categoria: '4 estrelas',
             adultos: 2,
@@ -179,17 +304,23 @@ it('carrega e preserva os detalhes de hotel ao editar o orçamento', async () =>
   const app = mount(EditPage, { target });
   try {
     await vi.waitFor(() =>
-      expect(target.querySelector<HTMLInputElement>('#orcamento-editar-item-0-inicio')?.value).toBe(
-        '2027-08-11'
-      )
+      expect(
+        target.querySelector<HTMLInputElement>('#orcamento-editar-item-0-checkin')?.value
+      ).toBe('2027-08-11')
     );
+    target
+      .querySelector('details summary')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    flushSync();
     expect(target.querySelector<HTMLInputElement>('#orcamento-editar-item-0-criancas')!.value).toBe(
       '0'
     );
-    expect(target.querySelector<HTMLInputElement>('#orcamento-editar-item-0-apto')!.value).toBe(
-      'Duplo'
-    );
-    const apartamento = target.querySelector<HTMLInputElement>('#orcamento-editar-item-0-apto')!;
+    expect(
+      target.querySelector<HTMLInputElement>('#orcamento-editar-item-0-apartamento')!.value
+    ).toBe('Duplo');
+    const apartamento = target.querySelector<HTMLInputElement>(
+      '#orcamento-editar-item-0-apartamento'
+    )!;
     apartamento.value = 'Triplo';
     apartamento.dispatchEvent(new Event('input', { bubbles: true }));
     flushSync();
@@ -206,6 +337,7 @@ it('carrega e preserva os detalhes de hotel ao editar o orçamento', async () =>
               start_date: '2027-08-11',
               end_date: '2027-08-13',
               raw: {
+                aereo_import: null,
                 detalhes_orcamento: {
                   categoria: '4 estrelas',
                   adultos: 2,

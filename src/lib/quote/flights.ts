@@ -24,20 +24,42 @@ function text(value: unknown): string {
   return typeof value === 'string' ? value : '';
 }
 
+function flightType(value: string) {
+  const normalized = value.trim().toLowerCase();
+  if (normalized.includes('interno')) return 'Voo Interno';
+  if (normalized.includes('fretamento')) return 'Fretamento';
+  if (normalized.includes('nacional')) return 'Nacional';
+  return 'Internacional';
+}
+
+function reservationClass(value: string) {
+  const normalized = value.trim().toLowerCase();
+  if (normalized.includes('premium')) return 'Econômica Premium';
+  if (normalized.includes('executiva')) return 'Executiva';
+  if (normalized.includes('primeira')) return 'Primeira Classe';
+  return normalized ? 'Econômica' : '';
+}
+
+function flightTime(value: string) {
+  const clean = value.replace(/\s*\(\+\d+\)\s*$/, '').trim();
+  const match = clean.match(/^(\d{1,2})\s*(?::|h)?\s*(\d{2})$/i);
+  return match ? `${match[1].padStart(2, '0')}:${match[2]}` : clean;
+}
+
 function toFlightSegment(value: unknown): QuoteFlightSegment {
   const segment = record(value);
   return {
-    tipo_voo: text(segment.tipo_voo) || 'Internacional',
+    tipo_voo: flightType(text(segment.tipo_voo)),
     trecho: text(segment.trecho),
     cia_aerea: text(segment.cia_aerea),
     numero_voo: text(segment.numero_voo) || text(segment.descricao),
     data_voo: text(segment.data_voo) || text(segment.data_inicio),
-    classe_reserva: text(segment.classe_reserva),
-    hora_saida: text(segment.hora_saida),
+    classe_reserva: reservationClass(text(segment.classe_reserva)),
+    hora_saida: flightTime(text(segment.hora_saida)),
     aeroporto_saida: text(segment.aeroporto_saida),
-    duracao_voo: text(segment.duracao_voo),
+    duracao_voo: flightTime(text(segment.duracao_voo)),
     data_fim: text(segment.data_fim),
-    hora_chegada: text(segment.hora_chegada),
+    hora_chegada: flightTime(text(segment.hora_chegada)),
     aeroporto_chegada: text(segment.aeroporto_chegada),
     tarifa_nome: text(segment.tarifa_nome)
   };
@@ -45,7 +67,7 @@ function toFlightSegment(value: unknown): QuoteFlightSegment {
 
 export function newQuoteFlightSegment(): QuoteFlightSegment {
   return {
-    tipo_voo: 'Internacional',
+    tipo_voo: 'Nacional',
     trecho: '',
     cia_aerea: '',
     numero_voo: '',

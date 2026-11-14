@@ -19,6 +19,19 @@
   function removeSegment(index: number) {
     segments = segments.filter((_, segmentIndex) => segmentIndex !== index);
   }
+
+  function displayTime(value: string) {
+    const clean = value.replace(/\s*\(\+\d+\)\s*$/, '');
+    const match = clean.match(/(\d{1,2}):?(\d{2})/);
+    return match ? `${match[1].padStart(2, '0')}:${match[2]}` : '';
+  }
+
+  function updateSegment(event: Event, index: number, field: keyof QuoteFlightSegment) {
+    const value = (event.target as HTMLInputElement | HTMLSelectElement).value;
+    segments = segments.map((segment, segmentIndex) =>
+      segmentIndex === index ? { ...segment, [field]: value } : segment
+    );
+  }
 </script>
 
 <div class="md:col-span-12">
@@ -57,97 +70,118 @@
             <FieldSelect
               id={`${idPrefix}-tipo-voo-${index}`}
               label="Tipo de voo"
-              bind:value={segment.tipo_voo}
+              value={segment.tipo_voo}
               options={[
+                { value: 'Nacional', label: 'Nacional' },
                 { value: 'Internacional', label: 'Internacional' },
-                { value: 'Nacional', label: 'Nacional / voo interno' }
+                { value: 'Voo Interno', label: 'Voo Interno' },
+                { value: 'Fretamento', label: 'Fretamento' }
               ]}
               placeholder={null}
               class_name="w-full"
+              on:change={(event) => updateSegment(event, index, 'tipo_voo')}
             />
             <FieldInput
               id={`${idPrefix}-trecho-${index}`}
               label="Trecho"
-              bind:value={segment.trecho}
+              value={segment.trecho}
               placeholder="Ex.: GRU → FCO"
               class_name="w-full"
+              on:input={(event) => updateSegment(event, index, 'trecho')}
             />
             <FieldInput
               id={`${idPrefix}-cia-aerea-${index}`}
               label="Companhia aérea"
-              bind:value={segment.cia_aerea}
+              value={segment.cia_aerea}
               placeholder="Ex.: LATAM Airlines"
               class_name="w-full"
+              on:input={(event) => updateSegment(event, index, 'cia_aerea')}
             />
             <FieldInput
               id={`${idPrefix}-numero-voo-${index}`}
               label="Número do voo"
-              bind:value={segment.numero_voo}
+              value={segment.numero_voo}
               placeholder="Ex.: LA 8120"
               class_name="w-full"
+              on:input={(event) => updateSegment(event, index, 'numero_voo')}
             />
             <FieldInput
               id={`${idPrefix}-data-voo-${index}`}
               label="Data de saída"
               type="date"
-              bind:value={segment.data_voo}
+              value={segment.data_voo}
               class_name="w-full"
+              on:input={(event) => updateSegment(event, index, 'data_voo')}
             />
             <FieldInput
               id={`${idPrefix}-hora-saida-${index}`}
               label="Hora de saída"
               type="time"
-              bind:value={segment.hora_saida}
+              value={displayTime(segment.hora_saida)}
               class_name="w-full"
+              on:input={(event) => updateSegment(event, index, 'hora_saida')}
             />
             <FieldInput
               id={`${idPrefix}-aeroporto-saida-${index}`}
               label="Aeroporto de saída"
-              bind:value={segment.aeroporto_saida}
+              value={segment.aeroporto_saida}
               placeholder="Ex.: GRU"
               class_name="w-full"
+              on:input={(event) => updateSegment(event, index, 'aeroporto_saida')}
             />
             <FieldInput
               id={`${idPrefix}-duracao-${index}`}
               label="Duração do voo"
-              bind:value={segment.duracao_voo}
-              placeholder="Ex.: 11h20"
+              type="time"
+              value={displayTime(segment.duracao_voo)}
               class_name="w-full"
+              on:input={(event) => updateSegment(event, index, 'duracao_voo')}
             />
             <FieldInput
               id={`${idPrefix}-data-chegada-${index}`}
               label="Data de chegada"
               type="date"
-              bind:value={segment.data_fim}
+              value={segment.data_fim}
               class_name="w-full"
+              on:input={(event) => updateSegment(event, index, 'data_fim')}
             />
             <FieldInput
               id={`${idPrefix}-hora-chegada-${index}`}
               label="Hora de chegada"
               type="time"
-              bind:value={segment.hora_chegada}
+              value={displayTime(segment.hora_chegada)}
               class_name="w-full"
+              on:input={(event) => updateSegment(event, index, 'hora_chegada')}
             />
             <FieldInput
               id={`${idPrefix}-aeroporto-chegada-${index}`}
               label="Aeroporto de chegada"
-              bind:value={segment.aeroporto_chegada}
+              value={segment.aeroporto_chegada}
               placeholder="Ex.: FCO"
               class_name="w-full"
+              on:input={(event) => updateSegment(event, index, 'aeroporto_chegada')}
             />
-            <FieldInput
+            <FieldSelect
               id={`${idPrefix}-classe-${index}`}
               label="Classe de reserva"
-              bind:value={segment.classe_reserva}
-              placeholder="Ex.: Econômica"
+              value={segment.classe_reserva}
+              options={[
+                { value: 'Econômica', label: 'Econômica' },
+                { value: 'Econômica Premium', label: 'Econômica Premium' },
+                { value: 'Executiva', label: 'Executiva' },
+                { value: 'Primeira Classe', label: 'Primeira Classe' }
+              ]}
+              placeholder="Selecione"
               class_name="w-full"
+              on:change={(event) => updateSegment(event, index, 'classe_reserva')}
             />
             <FieldInput
               id={`${idPrefix}-tarifa-${index}`}
               label="Tarifa"
-              bind:value={segment.tarifa_nome}
+              value={segment.tarifa_nome}
               placeholder="Ex.: FULL"
               class_name="w-full"
+              on:input={(event) => updateSegment(event, index, 'tarifa_nome')}
             />
           </div>
         </div>
