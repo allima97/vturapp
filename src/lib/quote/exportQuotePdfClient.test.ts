@@ -31,8 +31,139 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('.orc-title { font-size: 21px; font-weight: 700; color: #243aa3;');
     expect(html).toContain('.orc-city-table thead th { background: #243aa3;');
     expect(html).toContain(
-      '.orc-title-row, .orc-city-section { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 16px; }'
+      '.orc-title-row, .orc-city-section, .orc-financial-section { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 16px; }'
     );
+  });
+
+  it('mostra ícones decorativos para voos, cidades e resumo financeiro', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        {
+          item_type: 'passagem',
+          title: 'Voo',
+          raw: { aereo_import: { segmentos: [{ aeroporto_saida: 'GRU' }] } }
+        },
+        { item_type: 'hotel', title: 'Hotel', city_name: 'Roma, Itália' },
+        {
+          item_type: 'circuito',
+          title: 'Circuito',
+          city_name: 'Paris, França',
+          segments: [{ segment_type: 'circuit_day', data: { titulo: 'Dia 1' } }]
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: true
+    });
+    const body = html.slice(
+      html.indexOf('<body>'),
+      html.indexOf('<div class="orc-section-card orc-footer-card">')
+    );
+    expect(body).toContain('orc-section-icon--flight');
+    expect(body).toContain('transform="rotate(-35 12 12)"');
+    expect(body.match(/orc-section-icon--city/g)).toHaveLength(2);
+    expect(body).toContain('orc-section-icon--financial');
+    const icons = Array.from(body.matchAll(/<svg\b[^>]*>/g), (match) => match[0]);
+    expect(icons.length).toBeGreaterThan(0);
+    expect(icons.every((icon) => icon.includes('aria-hidden="true" focusable="false"'))).toBe(true);
+    expect(body).toContain('</svg>Resumo financeiro</h2>');
+  });
+
+  it('mostra um ícone apropriado junto ao nome de cada serviço no PDF', () => {
+    const types = [
+      ['hotel', 'hotel'],
+      ['hospedagem', 'hotel'],
+      ['aluguel_carro', 'car'],
+      ['ingresso', 'ticket'],
+      ['trem', 'train'],
+      ['passagem', 'flight'],
+      ['passeio', 'tour'],
+      ['transfer', 'transfer'],
+      ['show', 'show'],
+      ['seguro_viagem', 'insurance'],
+      ['pacote', 'package'],
+      ['desconhecido', 'service']
+    ];
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: types.map(([item_type]) => ({
+        item_type,
+        title: 'Teste',
+        city_name: 'Roma',
+        ...(item_type === 'trem' || item_type === 'passagem'
+          ? { raw: { aereo_import: { segmentos: [{ aeroporto_saida: 'ROM' }] } } }
+          : {})
+      })),
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+    const serviceCells = Array.from(
+      html.matchAll(/<td class="orc-service-type">(.*?)<\/td>/g),
+      (match) => match[1]
+    );
+    expect(serviceCells).toHaveLength(types.length);
+    for (const [index, [, icon]] of types.entries()) {
+      expect(serviceCells[index]).toContain(`orc-service-icon--${icon}`);
+      expect(serviceCells[index]).toContain('aria-hidden="true" focusable="false"');
+    }
+    expect(serviceCells[4]).toContain('<span>Trem</span>');
+    expect(serviceCells[5]).toContain('<span>Passagem Aérea</span>');
+  });
+
+  it('apresenta avisos padrão em cartões, incluindo o aviso infantil somente quando aplicável', () => {
+    const options = {
+      quote: { id: 'quote-1', client_name: 'Ana', valid_until: '2027-07-15' },
+      items: [],
+      settings: {},
+      qrUrl: null,
+      complementUrl: 'https://example.com/image.png',
+      showBudgetItems: false,
+      showBudgetDetails: false,
+      showItemValues: false
+    };
+    const withoutChildren = buildQuotePreviewHtmlSync(options);
+    const withChildren = buildQuotePreviewHtmlSync({
+      ...options,
+      items: [{ item_type: 'hotel', raw: { detalhes_orcamento: { criancas: 1 } } }]
+    });
+    const list = (html: string) => html.split('<ul class="orc-footer-list">')[1].split('</ul>')[0];
+
+    expect(list(withoutChildren).match(/<li>/g)).toHaveLength(4);
+    expect(list(withChildren).match(/<li>/g)).toHaveLength(5);
+    expect(list(withoutChildren)).not.toContain('Valor da criança');
+    expect(list(withChildren)).toContain('Valor da criança válido somente quando acompanhada');
+    expect(list(withChildren).match(/aria-hidden="true" focusable="false"/g)).toHaveLength(5);
+    expect(withChildren).toContain('alt="Imagem complementar"');
+    expect(withChildren).toContain('Orçamento para Ana');
+    expect(withChildren).toContain('Válido até: 15-07-2027');
+  });
+
+  it('preserva avisos personalizados escapados e permite quebra de avisos longos', () => {
+    const longText = 'a'.repeat(5001);
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [],
+      settings: { rodape_texto: `Primeiro <aviso>\n\n${longText}` },
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: false,
+      showItemValues: false
+    });
+    const list = html.split('<ul class="orc-footer-list">')[1].split('</ul>')[0];
+    expect(list.match(/<li(?: class="[^"]+")?>/g)).toHaveLength(2);
+    expect(list).toContain('<span>Primeiro &lt;aviso&gt;</span>');
+    expect(list).toContain(`<li class="orc-footer-item--long">`);
+    expect(list).toContain(longText);
+    expect(list).not.toContain('Preços em real');
   });
 
   it('apresenta itens na tela com os detalhes do PDF e valores unitários, escapando conteúdo', () => {
@@ -129,7 +260,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     }
     expect(screen).toContain('data-label="Serviço" class="px-3 py-3 text-slate-700">Trem</td>');
     expect(screen).toContain('>Roma</td>');
-    expect(pdf).toContain('<td class="orc-service-type">Trem</td>');
+    expect(pdf).toContain('<span>Trem</span></span></td>');
     expect(pdf).toContain('<td>Serviços e demais produtos</td><td>BRL</td>');
   });
 
@@ -520,9 +651,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     const body = html.slice(html.indexOf('<body>'));
     expect(body.match(/class="roteiro-card-city"/g)).toHaveLength(4);
-    expect(body).toContain(
-      'focusable="false" style="vertical-align: -0.125em; margin-right: 0.3em"'
-    );
+    expect(body).toContain('class="orc-section-icon orc-section-icon--city"');
     expect(body).toContain('</svg>Los Angeles</div>');
     expect(body).not.toContain('Califórnia');
     expect(body).not.toContain('Paris, França');
@@ -778,7 +907,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('<th>Serviço</th>');
     expect(html).toContain('<th>Descrição / Detalhes</th>');
     expect(html).toContain('<th>Qtd.</th>');
-    expect(html.match(/<td class="orc-service-type">Passagem Aérea<\/td>/g)).toHaveLength(3);
+    expect(html.match(/<span>Passagem Aérea<\/span><\/span><\/td>/g)).toHaveLength(3);
     expect(html).toContain('<td class="orc-quantity">01 passagem</td>');
     expect(html.match(/<td class="orc-quantity">02 passagens<\/td>/g)).toHaveLength(2);
     for (const value of [
@@ -1089,7 +1218,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: true
     });
-    expect(html).toContain('class="orc-service-type">Trem</td>');
+    expect(html).toContain('<span>Trem</span></span></td>');
     expect(html).toContain('€ 90,00');
     expect(html).not.toContain('R$ 90,00');
   });

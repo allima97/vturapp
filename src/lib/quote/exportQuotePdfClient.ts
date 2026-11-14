@@ -20,10 +20,10 @@ import {
   resumoDetalhes
 } from '$lib/quote/detalhesItem';
 import { chaveIdentidadeCidade } from '$lib/catalogoOpcionais';
+import { flightPlane } from '$lib/quote/printFlights';
 import {
   nomeCidadeNoPdf,
   printCardField,
-  printCityTitle,
   requiresPrintContinuation,
   roteiroCardStyles
 } from '$lib/utils/printLayout';
@@ -515,7 +515,7 @@ function renderServiceItem(
     return renderScreenItemRow(item, label, content, quantity, defaultCurrency);
   }
   return `<tr class="orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}">
-    <td class="orc-service-type">${escHtml(label)}</td>
+    <td class="orc-service-type">${renderServiceLabel(label, flight && type !== 'trem' ? 'passagem' : type)}</td>
     <td><strong>${escHtml(title)}${periodo ? ` - ${escHtml(periodo)}` : ''}</strong>${fields.length ? `<div class="orc-service-details">${fields.map(escHtml).join(' | ')}</div>` : ''}</td>
     <td class="orc-quantity">${escHtml(quantity)}</td>
     ${showItemValues ? `<td class="orc-value">${escHtml(formatCurrency(Number(item.total_amount ?? 0), item.currency || defaultCurrency))}</td>` : ''}
@@ -625,8 +625,8 @@ function renderGroupedItems(
 function renderCityTable(title: string, content: string, showItemValues: boolean, isCity = false) {
   const columnCount = 3 + Number(showItemValues);
   const sectionTitle = isCity
-    ? printCityTitle(title)
-    : `<div class="orc-table-section-title">${escHtml(title)}</div>`;
+    ? renderQuoteCityTitle(title)
+    : `<div class="orc-table-section-title">${flightPlane('orc-section-icon orc-section-icon--flight')}${escHtml(title)}</div>`;
   return `<section class="orc-city-section">
     <table class="orc-city-table">
       <colgroup><col style="width:18%"><col style="width:${showItemValues ? 48 : 64}%"><col style="width:${showItemValues ? 16 : 18}%">${showItemValues ? '<col style="width:18%">' : ''}</colgroup>
@@ -637,6 +637,74 @@ function renderCityTable(title: string, content: string, showItemValues: boolean
       <tbody>${content}</tbody>
     </table>
   </section>`;
+}
+
+const cityIcon = `<svg class="orc-section-icon orc-section-icon--city" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="10" height="18" rx="1"/><path d="M13 8h7v13H3M6 7h1m2 0h1M6 11h1m2 0h1M6 15h1m2 0h1M16 12h1m-1 4h1"/></svg>`;
+const financialIcon = `<svg class="orc-section-icon orc-section-icon--financial" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M5 9h1m12 6h1"/></svg>`;
+const infoIcon = `<svg class="orc-section-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6"/></svg>`;
+const childIcon = `<svg class="orc-section-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="5" r="2"/><path d="M8 11l2-3h4l2 3M12 8v6m-2 0-1 7m5-7 1 7"/></svg>`;
+const tagIcon = `<svg class="orc-section-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 4h9l9 9-8 8-10-10z"/><circle cx="7.5" cy="8" r="1"/></svg>`;
+
+const serviceIcons = new Map<string, [string, string]>([
+  [
+    'hotel',
+    ['hotel', '<path d="M4 21V5h16v16M2 21h20M8 5V3h8v2M8 9h2m4 0h2M8 13h2m4 0h2M10 21v-4h4v4"/>']
+  ],
+  [
+    'aluguel_carro',
+    ['car', '<path d="M4 17v2m16-2v2M3 16v-4l2-5h14l2 5v4H3zm0-4h18M7 14h2m6 0h2"/>']
+  ],
+  [
+    'ingresso',
+    ['ticket', '<path d="M3 8V5h18v3a3 3 0 0 0 0 6v3H3v-3a3 3 0 0 0 0-6zm9-2v2m0 2v2m0 2v2"/>']
+  ],
+  [
+    'trem',
+    [
+      'train',
+      '<rect x="5" y="3" width="14" height="16" rx="3"/><path d="M5 11h14M8 7h8M8 19l-2 3m10-3 2 3M8 15h1m6 0h1"/>'
+    ]
+  ],
+  [
+    'passeio',
+    [
+      'tour',
+      '<path d="M12 22s-7-6-7-12a7 7 0 1 1 14 0c0 6-7 12-7 12z"/><circle cx="12" cy="10" r="2"/>'
+    ]
+  ],
+  [
+    'transfer',
+    [
+      'transfer',
+      '<rect x="4" y="4" width="16" height="14" rx="2"/><path d="M4 11h16M7 18v2m10-2v2M7 15h2m6 0h2"/>'
+    ]
+  ],
+  [
+    'show',
+    [
+      'show',
+      '<path d="M10 17V5l9-2v12M10 8l9-2"/><ellipse cx="7" cy="18" rx="3" ry="2"/><ellipse cx="16" cy="16" rx="3" ry="2"/>'
+    ]
+  ],
+  ['seguro', ['insurance', '<path d="M12 3 20 6v5c0 5-3 8-8 10-5-2-8-5-8-10V6zM9 12l2 2 4-4"/>']],
+  ['pacote', ['package', '<path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"/>']]
+]);
+
+function renderServiceLabel(label: string, type: string) {
+  const iconType = type === 'hospedagem' ? 'hotel' : type === 'seguro_viagem' ? 'seguro' : type;
+  const [name, shape] = serviceIcons.get(iconType) ?? [
+    'service',
+    '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V4h6v3M3 13h18m-10 0v2h2v-2"/>'
+  ];
+  const icon =
+    type === 'passagem'
+      ? flightPlane('orc-service-icon orc-service-icon--flight')
+      : `<svg class="orc-service-icon orc-service-icon--${name}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${shape}</svg>`;
+  return `<span class="orc-service-label">${icon}<span>${escHtml(label)}</span></span>`;
+}
+
+function renderQuoteCityTitle(city: string) {
+  return `<div class="roteiro-card-city">${cityIcon}${escHtml(nomeCidadeNoPdf(city))}</div>`;
 }
 
 export function renderQuoteItemsForScreen(items: QuoteItemForPdf[], currency: string) {
@@ -806,7 +874,7 @@ function renderFlightItemHtml(
   </div>`;
   if (showUnitValue) return renderScreenItemRow(item, service, content, quantityLabel, currency);
   return `<tr class="orc-city-item">
-    <td class="orc-service-type">${escHtml(service)}</td>
+    <td class="orc-service-type">${renderServiceLabel(service, isTrain ? 'trem' : 'passagem')}</td>
     <td>${content}</td>
     <td class="orc-quantity">${escHtml(quantityLabel)}</td>
     ${showItemValues ? `<td class="orc-value">${escHtml(formatCurrency(amount, currency))}</td>` : ''}
@@ -845,7 +913,7 @@ function renderCircuitItemHtml(
   }
 
   return `<article class="roteiro-card${requiresPrintContinuation(daysHtml) ? ' roteiro-card--long' : ''}">
-    ${city ? printCityTitle(city) : ''}
+    ${city ? renderQuoteCityTitle(city) : ''}
     <h3>${escHtml(label)}</h3>
     ${renderPeriodoItem(item)}
     ${renderDetalhesItem(item)}
@@ -943,7 +1011,7 @@ function renderFinancialSummary(
   return `<section class="orc-financial-section">
     <table class="orc-city-table orc-financial-table">
       <colgroup><col style="width:55%"><col style="width:18%"><col style="width:27%"></colgroup>
-      <thead><tr><th class="orc-financial-heading" colspan="3"><h2>Resumo financeiro</h2></th></tr>
+      <thead><tr><th class="orc-financial-heading" colspan="3"><h2>${financialIcon}Resumo financeiro</h2></th></tr>
         <tr><th>Categoria</th><th>Moeda</th><th class="orc-value">Valor total</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>${discountNotice}
@@ -1018,25 +1086,37 @@ export function buildQuotePreviewHtmlSync(params: {
   const footerText = textVal(settings.rodape_texto);
   const hasChildren = items.some((item) => (lerDetalhes(item).criancas || 0) > 0);
   const footerLines = footerText
-    ? footerText.split(/\r?\n/).reduce((lines, line) => {
-        const trimmed = line.trim();
-        if (trimmed) lines.push(trimmed);
-        return lines;
-      }, [] as string[])
+    ? footerText
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((text) => ({ text, icon: infoIcon }))
     : [
-        'Preços em real (R$) convertido ao câmbio do dia sujeito a alteração e disponibilidade da tarifa.',
+        {
+          text: 'Preços em real (R$) convertido ao câmbio do dia sujeito a alteração e disponibilidade da tarifa.',
+          icon: financialIcon
+        },
         ...(hasChildren
           ? [
-              'Valor da criança válido somente quando acompanhada de dois adultos pagantes no mesmo apartamento.'
+              {
+                text: 'Valor da criança válido somente quando acompanhada de dois adultos pagantes no mesmo apartamento.',
+                icon: childIcon
+              }
             ]
           : []),
-        'Este orçamento é apenas uma tomada de preço.',
-        'Os serviços citados não estão reservados; a compra somente poderá ser confirmada após a confirmação dos fornecedores.',
-        'Este orçamento foi feito com base na menor tarifa para os serviços solicitados, podendo sofrer alteração devido à disponibilidade de lugares no ato da compra.'
+        { text: 'Este orçamento é apenas uma tomada de preço.', icon: infoIcon },
+        {
+          text: 'Os serviços citados não estão reservados; a compra somente poderá ser confirmada após a confirmação dos fornecedores.',
+          icon: infoIcon
+        },
+        {
+          text: 'Este orçamento foi feito com base na menor tarifa para os serviços solicitados, podendo sofrer alteração devido à disponibilidade de lugares no ato da compra.',
+          icon: tagIcon
+        }
       ];
   let footerLinesHtml = '';
   for (const line of footerLines) {
-    footerLinesHtml += `<li>${escHtml(line)}</li>`;
+    footerLinesHtml += `<li${requiresPrintContinuation(line.text) ? ' class="orc-footer-item--long"' : ''}>${line.icon}<span>${escHtml(line.text)}</span></li>`;
   }
 
   // Cabeçalho
@@ -1113,9 +1193,8 @@ export function buildQuotePreviewHtmlSync(params: {
 
   // Rodapé
   const footerHtml = `
-    <div class="orc-section-card">
-      <div class="orc-section-title orc-section-title--blue">Informações importantes</div>
-      <div class="orc-section-divider"></div>
+    <div class="orc-section-card orc-footer-card">
+      <div class="orc-footer-title">Informações importantes</div>
       <ul class="orc-footer-list">
         ${footerLinesHtml}
       </ul>
@@ -1149,7 +1228,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-header-divider { height: 1px; background: #dbe3f0; margin: 10px 0 0 0; }
 
     /* Título */
-    .orc-title-row, .orc-city-section { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 16px; }
+    .orc-title-row, .orc-city-section, .orc-financial-section { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 16px; }
     .orc-title-row { margin: 0 0 16px 0; }
     .orc-title-kicker { color: #243aa3; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
     .orc-title { font-size: 21px; font-weight: 700; color: #243aa3; line-height: 1.2; margin-top: 4px; }
@@ -1178,36 +1257,36 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-empty { font-size: 12px; color: #94a3b8; padding: 8px 0; }
     ${roteiroCardStyles}
     .orc-city-section, .orc-financial-section { margin: 18px 0; }
-    .orc-city-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 12px; overflow-wrap: anywhere; }
-    .orc-city-table th, .orc-city-table td { border: 1px solid #dbe3ec; padding: 8px; text-align: left; vertical-align: top; }
+    .orc-city-table { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; font-family: Arial, sans-serif; font-size: 12px; overflow-wrap: anywhere; }
+    .orc-city-table th, .orc-city-table td { border: 0; text-align: left; vertical-align: top; }
     .orc-city-table thead th { background: #243aa3; color: white; font-weight: 700; }
     .orc-city-table thead tr:not(:first-child) th { text-transform: uppercase; }
     .orc-city-table thead .orc-city-heading { background: transparent; border: 0; padding: 0; }
     .orc-city-table thead .orc-financial-heading { background: transparent; border: 0; padding: 0; }
-    .orc-city-heading .roteiro-card-city { margin: 0 0 8px; border-left: 4px solid #c45b1b; padding-left: 9px; color: #112b4d; font: bold 18px Arial, sans-serif; }
-    .orc-city-heading .roteiro-card-city svg { display: none; }
-    .orc-table-section-title { margin: 0 0 8px; border-left: 4px solid #c45b1b; padding-left: 9px; color: #112b4d; font: bold 18px Arial, sans-serif; }
-    .orc-city-table tbody tr:nth-child(even):not(.orc-subtotal) { background: #f7f9fc; }
-    .orc-city-section .orc-city-table { border-collapse: separate; border-spacing: 0; }
-    .orc-city-section .orc-city-table th, .orc-city-section .orc-city-table td { border: 0; }
-    .orc-city-section .orc-city-table thead tr:nth-child(2) th { padding: 9px 10px; font-size: 11px; letter-spacing: .03em; }
-    .orc-city-section .orc-city-table thead tr:nth-child(2) th:first-child { border-radius: 6px 0 0 6px; }
-    .orc-city-section .orc-city-table thead tr:nth-child(2) th:last-child { border-radius: 0 6px 6px 0; }
-    .orc-city-section .orc-city-table tbody tr:nth-child(even):not(.orc-subtotal) { background: transparent; }
-    .orc-city-section .orc-city-table tbody td { border-bottom: 1px solid #e2e8f0; padding: 11px 10px; line-height: 1.45; }
-    .orc-city-section .orc-city-table tbody tr:last-child td { border-bottom: 0; }
-    .orc-city-section .orc-city-table .orc-subtotal td { border-top: 1px solid #e2e8f0; }
+    .orc-city-heading .roteiro-card-city, .orc-table-section-title, .orc-financial-section h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; color: #112b4d; font: bold 18px Arial, sans-serif; }
+    .roteiro-card .roteiro-card-city { display: flex; align-items: center; gap: 8px; }
+    .orc-section-icon { width: 20px; height: 20px; flex: none; color: #243aa3; }
+    .orc-city-table thead tr:nth-child(2) th { padding: 9px 10px; font-size: 11px; letter-spacing: .03em; }
+    .orc-city-table thead tr:nth-child(2) th:first-child { border-radius: 6px 0 0 6px; }
+    .orc-city-table thead tr:nth-child(2) th:last-child { border-radius: 0 6px 6px 0; }
+    .orc-city-table tbody td { border-bottom: 1px solid #e2e8f0; padding: 11px 10px; line-height: 1.45; }
+    .orc-city-table tbody tr:last-child td { border-bottom: 0; }
+    .orc-city-table .orc-subtotal td { border-top: 1px solid #e2e8f0; }
     .orc-city-table .orc-value { text-align: right; }
     .orc-service-type { font-weight: 700; }
+    .orc-service-label { display: flex; align-items: flex-start; gap: 6px; }
+    .orc-service-icon { width: 16px; height: 16px; flex: none; color: #243aa3; }
     .orc-service-details { color: #475569; line-height: 1.5; margin-top: 4px; }
     .orc-subtotal { background: #edf2f7; color: #112b4d; font-weight: 700; }
     .orc-flight-segment + .orc-flight-segment { margin-top: 2px; }
-    .orc-financial-section h2 { color: #112b4d; font: bold 18px Arial, sans-serif; margin: 0 0 10px; }
     .orc-summary-note { color: #475569; font-size: 11px; }
 
     /* Rodapé */
-    .orc-footer-list { margin: 0 0 0 14px; padding: 0; font-size: 9px; color: #334155; }
-    .orc-footer-list li { margin: 0 0 3px 0; }
+    .orc-footer-card { padding: 16px; }
+    .orc-footer-title { margin: 0 0 14px; color: #243aa3; font: bold 18px Arial, sans-serif; }
+    .orc-footer-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 12px; color: #334155; }
+    .orc-footer-list li { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; line-height: 1.45; overflow-wrap: anywhere; }
+    .orc-footer-list .orc-section-icon { width: 16px; height: 16px; }
     .orc-complement-img { margin: 12px 0 0 0; text-align: center; }
     .orc-complement-img img { max-height: 170px; max-width: 100%; }
     .orc-validity-box { border: 1px solid #d1d5db; border-radius: 8px; margin: 10px 0 0 0; padding: 8px; text-align: center; }
@@ -1215,8 +1294,8 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-validity-date { font-size: 10px; color: #dc2626; margin: 3px 0 0 0; }
 
     @media screen and (max-width: 640px) {
-      .orc-city-section { overflow-x: auto; }
-      .orc-city-section .orc-city-table { min-width: 580px; }
+      .orc-city-section, .orc-financial-section { overflow-x: auto; }
+      .orc-city-table { min-width: 580px; }
     }
 
     @media print {
@@ -1224,9 +1303,11 @@ export function buildQuotePreviewHtmlSync(params: {
       body { background: white; }
       .toolbar { display: none; }
       .shell { max-width: none; padding: 0; }
-      .orc-header-card, .orc-title-row, .orc-section-card, .orc-city-section { border-radius: 0; box-shadow: none; }
+      .orc-header-card, .orc-title-row, .orc-section-card, .orc-city-section, .orc-financial-section { border-radius: 0; box-shadow: none; }
       .roteiro-card, .orc-city-item { break-inside: avoid; page-break-inside: avoid; }
       .roteiro-card--long, .orc-city-item--long { break-inside: auto; page-break-inside: auto; }
+      .orc-footer-list li { break-inside: avoid; page-break-inside: avoid; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .orc-footer-list .orc-footer-item--long { break-inside: auto; page-break-inside: auto; }
       .orc-city-table thead { display: table-header-group; }
       .orc-items-table th, .orc-city-table th, .orc-city-table .orc-subtotal, .orc-city-item:nth-child(even) { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
     }`;

@@ -124,9 +124,10 @@ it('mostra os itens em uma tabela padrão, na ordem manual e antes das ações',
     const actionHeading = [...target.querySelectorAll('h3')].find(
       (heading) => heading.textContent === 'Ações'
     )!;
-    expect(
-      itemsCard.compareDocumentPosition(actionHeading) & Node.DOCUMENT_POSITION_FOLLOWING
-    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(itemsCard.contains(actionHeading)).toBe(true);
+    expect(items.compareDocumentPosition(actionHeading) & Node.DOCUMENT_POSITION_FOLLOWING).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
     expect(itemsCard.parentElement?.className).not.toContain('lg:col-span-2');
   } finally {
     await unmount(app);

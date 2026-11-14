@@ -836,153 +836,158 @@
             <p>Nenhum item no orçamento</p>
           </div>
         {/if}
+        <div class="mt-4 border-t border-slate-200 pt-4">
+          <h3 class="mb-3 text-sm font-semibold text-slate-900">Ações</h3>
+          <div class="flex flex-wrap items-center gap-3">
+            <Button
+              variant="secondary"
+              ariaExpanded={showPdfOptions}
+              ariaControls="quote-pdf-options"
+              on:click={() => (showPdfOptions = !showPdfOptions)}
+            >
+              <Settings2 size={16} class="mr-2" />
+              Opções do PDF
+            </Button>
+
+            {#if STATUS_COM_ACOES_DECISAO.has(statusAtual)}
+              <Button
+                variant="primary"
+                color="vendas"
+                on:click={handleAprovar}
+                loading={processando}
+              >
+                <CheckCircle size={16} class="mr-2" />
+                Aprovar
+              </Button>
+
+              <Button variant="danger" on:click={handleRejeitar} loading={processando}>
+                <XCircle size={16} class="mr-2" />
+                Rejeitar
+              </Button>
+            {/if}
+
+            <Button variant="secondary" color="clientes" on:click={openInteracaoModal}>
+              <MessageCircle size={16} class="mr-2" />
+              Registrar interações
+            </Button>
+
+            <Button variant="secondary" on:click={handleImprimir} loading={previewingPdf}>
+              <Printer size={16} class="mr-2" />
+              {previewingPdf ? 'Gerando...' : 'Visualizar PDF'}
+            </Button>
+
+            {#if statusAtual === 'pendente' || statusAtual === 'novo'}
+              <Button
+                variant="primary"
+                color="clientes"
+                on:click={handleEnviar}
+                loading={processando}
+              >
+                <Send size={16} class="mr-2" />
+                Enviar ao Cliente
+              </Button>
+            {/if}
+
+            {#if podeCriarVenda}
+              <Button
+                variant="primary"
+                color="vendas"
+                on:click={() => goto(`/vendas/nova?orcamento=${orcamentoId}`)}
+              >
+                <ShoppingCart size={16} class="mr-2" />
+                Criar Venda
+              </Button>
+            {/if}
+          </div>
+
+          {#if orcamentoConvertido}
+            <div
+              class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
+            >
+              Este orçamento já foi convertido em venda.
+            </div>
+          {/if}
+
+          {#if showPdfOptions}
+            <div
+              id="quote-pdf-options"
+              class="mt-3 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3"
+            >
+              <div>
+                <p class="text-sm font-semibold text-slate-900">Opções do PDF</p>
+                <p class="text-xs text-slate-500">
+                  Escolha quais seções aparecem na saída do orçamento.
+                </p>
+              </div>
+
+              <FieldInput
+                money
+                label={`Desconto no PDF (${orcamento.currency || 'BRL'})`}
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0,00"
+                bind:value={exportDesconto}
+                helper="Aplicado apenas no PDF exportado, não altera o orçamento."
+              />
+
+              <div>
+                <label
+                  for="export-show-budget-items"
+                  class="mb-1 block text-sm font-medium text-slate-700"
+                >
+                  Mostrar Itens do orçamento?
+                </label>
+                <select
+                  id="export-show-budget-items"
+                  class="focus:border-clientes-400 focus:ring-clientes-100 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:outline-hidden"
+                  bind:value={exportShowBudgetItems}
+                >
+                  <option value="sim">Sim</option>
+                  <option value="nao">Não</option>
+                </select>
+              </div>
+
+              <div>
+                <label
+                  for="export-show-budget-details"
+                  class="mb-1 block text-sm font-medium text-slate-700"
+                >
+                  Mostrar Detalhes do orçamento?
+                </label>
+                <select
+                  id="export-show-budget-details"
+                  class="focus:border-clientes-400 focus:ring-clientes-100 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:outline-hidden"
+                  bind:value={exportShowBudgetDetails}
+                >
+                  <option value="sim">Sim</option>
+                  <option value="nao">Não</option>
+                </select>
+              </div>
+
+              <div>
+                <label
+                  for="export-show-item-values"
+                  class="mb-1 block text-sm font-medium text-slate-700"
+                >
+                  Mostrar preços por produto?
+                </label>
+                <select
+                  id="export-show-item-values"
+                  class="focus:border-clientes-400 focus:ring-clientes-100 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:outline-hidden"
+                  bind:value={exportShowItemValues}
+                >
+                  <option value="sim">Sim</option>
+                  <option value="nao">Não</option>
+                </select>
+              </div>
+            </div>
+          {/if}
+        </div>
       </Card>
     </div>
 
     <div class="space-y-6">
-      <Card header="Ações" color="clientes">
-        <div class="flex flex-wrap items-center gap-3">
-          <Button
-            variant="secondary"
-            ariaExpanded={showPdfOptions}
-            ariaControls="quote-pdf-options"
-            on:click={() => (showPdfOptions = !showPdfOptions)}
-          >
-            <Settings2 size={16} class="mr-2" />
-            Opções do PDF
-          </Button>
-
-          {#if STATUS_COM_ACOES_DECISAO.has(statusAtual)}
-            <Button variant="primary" color="vendas" on:click={handleAprovar} loading={processando}>
-              <CheckCircle size={16} class="mr-2" />
-              Aprovar
-            </Button>
-
-            <Button variant="danger" on:click={handleRejeitar} loading={processando}>
-              <XCircle size={16} class="mr-2" />
-              Rejeitar
-            </Button>
-          {/if}
-
-          <Button variant="secondary" color="clientes" on:click={openInteracaoModal}>
-            <MessageCircle size={16} class="mr-2" />
-            Registrar interações
-          </Button>
-
-          <Button variant="secondary" on:click={handleImprimir} loading={previewingPdf}>
-            <Printer size={16} class="mr-2" />
-            {previewingPdf ? 'Gerando...' : 'Visualizar PDF'}
-          </Button>
-
-          {#if statusAtual === 'pendente' || statusAtual === 'novo'}
-            <Button
-              variant="primary"
-              color="clientes"
-              on:click={handleEnviar}
-              loading={processando}
-            >
-              <Send size={16} class="mr-2" />
-              Enviar ao Cliente
-            </Button>
-          {/if}
-
-          {#if podeCriarVenda}
-            <Button
-              variant="primary"
-              color="vendas"
-              on:click={() => goto(`/vendas/nova?orcamento=${orcamentoId}`)}
-            >
-              <ShoppingCart size={16} class="mr-2" />
-              Criar Venda
-            </Button>
-          {/if}
-        </div>
-
-        {#if orcamentoConvertido}
-          <div
-            class="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
-          >
-            Este orçamento já foi convertido em venda.
-          </div>
-        {/if}
-
-        {#if showPdfOptions}
-          <div
-            id="quote-pdf-options"
-            class="mt-3 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-3"
-          >
-            <div>
-              <p class="text-sm font-semibold text-slate-900">Opções do PDF</p>
-              <p class="text-xs text-slate-500">
-                Escolha quais seções aparecem na saída do orçamento.
-              </p>
-            </div>
-
-            <FieldInput
-              money
-              label={`Desconto no PDF (${orcamento.currency || 'BRL'})`}
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0,00"
-              bind:value={exportDesconto}
-              helper="Aplicado apenas no PDF exportado, não altera o orçamento."
-            />
-
-            <div>
-              <label
-                for="export-show-budget-items"
-                class="mb-1 block text-sm font-medium text-slate-700"
-              >
-                Mostrar Itens do orçamento?
-              </label>
-              <select
-                id="export-show-budget-items"
-                class="focus:border-clientes-400 focus:ring-clientes-100 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:outline-hidden"
-                bind:value={exportShowBudgetItems}
-              >
-                <option value="sim">Sim</option>
-                <option value="nao">Não</option>
-              </select>
-            </div>
-
-            <div>
-              <label
-                for="export-show-budget-details"
-                class="mb-1 block text-sm font-medium text-slate-700"
-              >
-                Mostrar Detalhes do orçamento?
-              </label>
-              <select
-                id="export-show-budget-details"
-                class="focus:border-clientes-400 focus:ring-clientes-100 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:outline-hidden"
-                bind:value={exportShowBudgetDetails}
-              >
-                <option value="sim">Sim</option>
-                <option value="nao">Não</option>
-              </select>
-            </div>
-
-            <div>
-              <label
-                for="export-show-item-values"
-                class="mb-1 block text-sm font-medium text-slate-700"
-              >
-                Mostrar preços por produto?
-              </label>
-              <select
-                id="export-show-item-values"
-                class="focus:border-clientes-400 focus:ring-clientes-100 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:outline-hidden"
-                bind:value={exportShowItemValues}
-              >
-                <option value="sim">Sim</option>
-                <option value="nao">Não</option>
-              </select>
-            </div>
-          </div>
-        {/if}
-      </Card>
-
       {#if orcamento.notes || orcamento.observacoes}
         <Card header="Observações e Condições" color="clientes">
           <div class="prose prose-slate max-w-none">
