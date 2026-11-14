@@ -511,16 +511,10 @@ function renderServiceItem(
   const quantity = flight
     ? formatFlightQuantity(item)
     : (formatLodgingOrCarQuantity(item) ?? (item.quantity == null ? '-' : String(item.quantity)));
-  if (showUnitValue) {
-    const content = `<strong>${escHtml(title)}${periodo ? ` - ${escHtml(periodo)}` : ''}</strong>${fields.length ? `<div class="orc-service-details">${fields.map(escHtml).join(' | ')}</div>` : ''}`;
-    return renderScreenItemRow(item, label, content, quantity, defaultCurrency);
-  }
-  return `<tr class="orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}">
-    <td class="orc-service-type">${renderServiceLabel(label, flight && type !== 'trem' ? 'passagem' : type)}</td>
-    <td><strong>${escHtml(title)}${periodo ? ` - ${escHtml(periodo)}` : ''}</strong>${fields.length ? `<div class="orc-service-details">${fields.map(escHtml).join(' | ')}</div>` : ''}</td>
-    <td class="orc-quantity">${escHtml(quantity)}</td>
-    ${showItemValues ? `<td class="orc-value">${escHtml(formatCurrency(Number(item.total_amount ?? 0), item.currency || defaultCurrency))}</td>` : ''}
-  </tr>`;
+  const content = `<strong>${escHtml(title)}${periodo ? ` - ${escHtml(periodo)}` : ''}</strong>${fields.length ? `<div class="orc-service-details">${fields.map(escHtml).join(' | ')}</div>` : ''}`;
+  if (showUnitValue) return renderScreenItemRow(item, label, content, quantity, defaultCurrency);
+  const iconType = flight && type !== 'trem' ? 'passagem' : type;
+  return `<div class="row orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}"><div>${serviceIconSvg(iconType)}</div><div><div class="orc-service-type">${renderServiceLabel(label, iconType)}</div>${content}</div><div class="q orc-quantity">${escHtml(quantity)}</div>${showItemValues ? `<div class="v orc-value">${escHtml(formatCurrency(Number(item.total_amount ?? 0), item.currency || defaultCurrency))}</div>` : '<div class="v"></div>'}</div>`;
 }
 
 type QuotePdfSection =
@@ -594,7 +588,6 @@ function renderGroupedItems(
         return renderCityTable(
           'Passagens Aéreas Internacionais e Trechos Internos',
           content,
-          showItemValues,
           false
         );
       }
@@ -616,28 +609,18 @@ function renderGroupedItems(
         totals.set(currency, (totals.get(currency) || 0) + Number(item.total_amount ?? 0));
       }
       const subtotal = showItemValues
-        ? `<tr class="orc-subtotal"><td colspan="3">Subtotal — ${escHtml(nomeCidadeNoPdf(section.city))}</td><td class="orc-value">${Array.from(totals, ([currency, value]) => escHtml(formatCurrency(value, currency))).join('<br>')}</td></tr>`
+        ? `<div class="orc-subtotal"><span>Subtotal — ${escHtml(nomeCidadeNoPdf(section.city))}</span><span class="orc-value">${Array.from(totals, ([currency, value]) => escHtml(formatCurrency(value, currency))).join('<br>')}</span></div>`
         : '';
-      return renderCityTable(section.city, `${content}${subtotal}`, showItemValues, true);
+      return renderCityTable(section.city, `${content}${subtotal}`, true);
     })
     .join('');
 }
 
-function renderCityTable(title: string, content: string, showItemValues: boolean, isCity = false) {
-  const columnCount = 3 + Number(showItemValues);
+function renderCityTable(title: string, content: string, isCity = false) {
   const sectionTitle = isCity
     ? renderQuoteCityTitle(title)
-    : `<div class="orc-table-section-title">${flightPlane('orc-section-icon orc-section-icon--flight')}${escHtml(title)}</div>`;
-  return `<section class="orc-city-section">
-    <table class="orc-city-table">
-      <colgroup><col style="width:18%"><col style="width:${showItemValues ? 48 : 64}%"><col style="width:${showItemValues ? 16 : 18}%">${showItemValues ? '<col style="width:18%">' : ''}</colgroup>
-      <thead>
-        <tr><th class="orc-city-heading" colspan="${columnCount}">${sectionTitle}</th></tr>
-        <tr><th>Serviço</th><th>Descrição / Detalhes</th><th>Qtd.</th>${showItemValues ? '<th class="orc-value">Valor</th>' : ''}</tr>
-      </thead>
-      <tbody>${content}</tbody>
-    </table>
-  </section>`;
+    : `<div class="orc-table-section-title">${escHtml(title)}</div>`;
+  return `<section class="orc-city-section"><div class="sh">${sectionTitle}</div>${content}</section>`;
 }
 
 const cityIcon = `<svg class="orc-section-icon orc-section-icon--city" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="3" width="10" height="18" rx="1"/><path d="M13 8h7v13H3M6 7h1m2 0h1M6 11h1m2 0h1M6 15h1m2 0h1M16 12h1m-1 4h1"/></svg>`;
@@ -702,17 +685,23 @@ const serviceIcons = new Map<string, [string, string]>([
   ['pacote', ['package', '<path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"/>']]
 ]);
 
-function renderServiceLabel(label: string, type: string) {
+function serviceIconSvg(type: string) {
   const iconType = type === 'hospedagem' ? 'hotel' : type === 'seguro_viagem' ? 'seguro' : type;
+  if (iconType === 'passagem' || iconType === 'passagem-section')
+    return flightPlane(
+      iconType === 'passagem-section'
+        ? 'orc-section-icon orc-section-icon--flight'
+        : 'orc-service-icon orc-service-icon--flight'
+    );
   const [name, shape] = serviceIcons.get(iconType) ?? [
     'service',
     '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V4h6v3M3 13h18m-10 0v2h2v-2"/>'
   ];
-  const icon =
-    type === 'passagem'
-      ? flightPlane('orc-service-icon orc-service-icon--flight')
-      : `<svg class="orc-service-icon orc-service-icon--${name}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${shape}</svg>`;
-  return `<span class="orc-service-label">${icon}<span>${escHtml(label)}</span></span>`;
+  return `<svg class="orc-service-icon orc-service-icon--${name}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${shape}</svg>`;
+}
+
+function renderServiceLabel(label: string, type: string) {
+  return `<span class="orc-service-label">${serviceIconSvg(type)}<span>${escHtml(label)}</span></span>`;
 }
 
 function renderQuoteCityTitle(city: string) {
@@ -885,12 +874,8 @@ function renderFlightItemHtml(
     ${showItemValues && taxes > 0 ? `<div class="orc-service-details">Taxas: ${escHtml(formatCurrency(taxes, currency))}</div>` : ''}
   </div>`;
   if (showUnitValue) return renderScreenItemRow(item, service, content, quantityLabel, currency);
-  return `<tr class="orc-city-item">
-    <td class="orc-service-type">${renderServiceLabel(service, isTrain ? 'trem' : 'passagem')}</td>
-    <td>${content}</td>
-    <td class="orc-quantity">${escHtml(quantityLabel)}</td>
-    ${showItemValues ? `<td class="orc-value">${escHtml(formatCurrency(amount, currency))}</td>` : ''}
-  </tr>`;
+  const iconType = isTrain ? 'trem' : 'passagem';
+  return `<div class="row orc-city-item"><div>${serviceIconSvg(iconType === 'passagem' ? 'passagem-section' : iconType)}</div><div><div class="orc-service-type">${renderServiceLabel(service, iconType)}</div>${content}</div><div class="q orc-quantity">${escHtml(quantityLabel)}</div>${showItemValues ? `<div class="v orc-value">${escHtml(formatCurrency(amount, currency))}</div>` : '<div class="v"></div>'}</div>`;
 }
 
 function renderCircuitItemHtml(
@@ -1020,13 +1005,13 @@ function renderFinancialSummary(
     discount > 0 && !totals.has(currency)
       ? `<p class="orc-summary-note">Desconto informado em ${escHtml(currency)} não aplicado: não há itens nessa moeda.</p>`
       : '';
-  return `<section class="orc-financial-section">
+  return `<section class="orc-financial-section"><div class="card tot" style="background:#EEF2F7">
+    <h2>${financialIcon}Resumo financeiro</h2>
+    <div class="tot">Total da viagem</div>
     <table class="orc-city-table orc-financial-table">
-      <colgroup><col style="width:55%"><col style="width:18%"><col style="width:27%"></colgroup>
-      <thead><tr><th class="orc-financial-heading" colspan="3"><h2>${financialIcon}Resumo financeiro</h2></th></tr>
-        <tr><th>Categoria</th><th>Moeda</th><th class="orc-value">Valor total</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>${discountNotice}
+    </div>
   </section>`;
 }
 
@@ -1275,7 +1260,21 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-footer-card { padding: 16px; }
     .orc-footer-title { margin: 0 0 14px; color: #243aa3; font: bold 18px Arial, sans-serif; }
     .orc-footer-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; font-size: 12px; color: #334155; }
-    .orc-footer-list li { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; line-height: 1.45; overflow-wrap: anywhere; }
+    .orc-footer-list li { display: flex; align-items: center; gap: 8px; padding: 2px 0; background: #fff; border: 0; line-height: 1.35; overflow-wrap: anywhere; }
+    .pg-band { margin: 0 0 8px; break-inside: avoid; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1.3fr; border-radius: 12px; overflow: hidden; border: 1px solid #DDE3EC; }
+    .pg-band > div { padding: 10px 12px; border-right: 1px solid #DDE3EC; background: #fff; }
+    .pg-band b { display: block; font-size: 7pt; color: #6B7280; letter-spacing: 1px; margin-bottom: 3px; }
+    .pg-band span { font-weight: bold; color: #1B2C80; font-size: 9.5pt; }
+    .pg-band .tt { background: #243AA3; }
+    .pg-band .tt b, .pg-band .tt span { color: #fff; }
+    .pg-band .val span { color: #C62828; }
+    .sec { border: 1px solid #DDE3EC; border-radius: 12px; margin: 0 0 8px; overflow: hidden; break-inside: avoid; background: #fff; }
+    .sh { background: #EEF2F7; display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; font-weight: bold; color: #1B2C80; }
+    .row { display: grid; grid-template-columns: 22px 1fr 90px 90px; gap: 8px; padding: 6px 12px; border-top: 1px solid #EEF2F7; }
+    .sh + .row { border-top: 0; }
+    .q { color: #6B7280; font-size: 8.3pt; }
+    .v, .orc-value { text-align: right; font-weight: bold; }
+    .orc-subtotal { display: flex; justify-content: space-between; gap: 12px; padding: 8px 12px; background: #EEF2F7; font-weight: bold; color: #1B2C80; }
     .orc-footer-list .orc-section-icon { width: 16px; height: 16px; }
     .orc-complement-img { margin: 12px 0 0 0; text-align: center; }
     .orc-complement-img img { max-height: 170px; max-width: 100%; }
