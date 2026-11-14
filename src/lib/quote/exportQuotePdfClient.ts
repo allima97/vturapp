@@ -525,36 +525,52 @@ function renderServiceItem(
 type QuotePdfSection =
   | { kind: 'city'; city: string; key: string; items: QuoteItemForPdf[] }
   | { kind: 'flights'; items: QuoteItemForPdf[] }
-  | { kind: 'train'; items: QuoteItemForPdf[] }
   | { kind: 'circuit'; items: QuoteItemForPdf[] };
 
 function orderQuoteSections(items: QuoteItemForPdf[]): QuotePdfSection[] {
   const sections: QuotePdfSection[] = [];
   for (const item of items) {
     const previous = sections[sections.length - 1];
-    if (normalizeText(item.item_type) === 'trem') {
-      if (previous?.kind === 'train') previous.items.push(item);
-      else sections.push({ kind: 'train', items: [item] });
-      continue;
-    }
+    const isTrain = normalizeText(item.item_type) === 'trem';
     if (isFlightQuoteItem(item)) {
       if (previous?.kind === 'flights') previous.items.push(item);
       else sections.push({ kind: 'flights', items: [item] });
       continue;
     }
-    if (isCircuitQuoteItem(item)) {
+    if (!isTrain && isCircuitQuoteItem(item)) {
       sections.push({ kind: 'circuit', items: [item] });
       continue;
     }
-    const city = textVal(item.city_name);
-    const cityId = item.destino_geografico_id
-      ? `geo:${item.destino_geografico_id}`
-      : item.cidade_id
-        ? `cidade:${item.cidade_id}`
-        : null;
+    const firstSegment = isTrain ? getFlightDataList(item)[0] : undefined;
+    const origin = firstSegment
+      ? textVal(String(firstSegment.aeroporto_saida || '')) ||
+        splitTrechoCities(String(firstSegment.trecho || '')).origem ||
+        textVal(String(firstSegment.cidade_saida || ''))
+      : '';
+    const city = origin || textVal(item.city_name);
+    const originId = textVal(String(firstSegment?.cidade_saida_id || ''));
+    const cityId = origin
+      ? originId
+        ? `geo:${originId}`
+        : null
+      : item.destino_geografico_id
+        ? `geo:${item.destino_geografico_id}`
+        : item.cidade_id
+          ? `cidade:${item.cidade_id}`
+          : null;
     const key = chaveIdentidadeCidade(city, cityId);
-    if (previous?.kind === 'city' && previous.key === key) previous.items.push(item);
-    else sections.push({ kind: 'city', city: city || 'Cidade não informada', key, items: [item] });
+    const sameLegacyCity =
+      previous?.kind === 'city' &&
+      (isTrain || previous.items.some((entry) => normalizeText(entry.item_type) === 'trem')) &&
+      (!cityId || previous.key.startsWith('texto:')) &&
+      Boolean(city) &&
+      normalizeText(previous.city) === normalizeText(city);
+    if (previous?.kind === 'city' && (previous.key === key || sameLegacyCity)) {
+      if (cityId && previous.key.startsWith('texto:')) previous.key = key;
+      previous.items.push(item);
+    } else {
+      sections.push({ kind: 'city', city: city || 'Cidade não informada', key, items: [item] });
+    }
   }
   return sections;
 }
@@ -566,7 +582,7 @@ function renderGroupedItems(
 ) {
   return sections
     .map((section) => {
-      if (section.kind === 'flights' || section.kind === 'train') {
+      if (section.kind === 'flights') {
         const content = section.items
           .map((item) =>
             getFlightDataList(item).length
@@ -575,7 +591,7 @@ function renderGroupedItems(
           )
           .join('');
         return renderCityTable(
-          section.kind === 'train' ? 'Trem' : 'Passagens Aéreas Internacionais e Trechos Internos',
+          'Passagens Aéreas Internacionais e Trechos Internos',
           content,
           showItemValues,
           false
@@ -585,7 +601,13 @@ function renderGroupedItems(
         return renderCircuitItemHtml(section.items[0], showItemValues, defaultCurrency);
 
       const content = section.items
-        .map((item) => renderServiceItem(item, showItemValues, defaultCurrency))
+        .map((item) => {
+          if (normalizeText(item.item_type) !== 'trem')
+            return renderServiceItem(item, showItemValues, defaultCurrency);
+          return getFlightDataList(item).length
+            ? renderFlightItemHtml(item, showItemValues, defaultCurrency)
+            : renderServiceItem(item, showItemValues, defaultCurrency, true);
+        })
         .join('');
       const totals = new Map<string, number>();
       for (const item of section.items) {
@@ -745,6 +767,7 @@ function renderFlightItemHtml(
         textVal(flight.aeroporto_chegada) || routeParts.destino || flight.cidade_chegada
       ]
         .filter(Boolean)
+        .map((place) => (isTrain ? nomeCidadeNoPdf(place) : place))
         .join(' → ');
       const departureDate = formatRoteiroDate(flight.data_voo || flight.data_inicio);
       const offsetDays = diffDaysISODate(

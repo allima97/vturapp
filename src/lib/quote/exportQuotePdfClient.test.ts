@@ -133,6 +133,171 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(pdf).toContain('<td>Serviços e demais produtos</td><td>BRL</td>');
   });
 
+  it('mostra apenas os nomes das cidades nos trechos de trem, inclusive nos dados legados', () => {
+    const item = {
+      item_type: 'trem',
+      title: 'Trem de Alta Velocidade',
+      raw: {
+        aereo_import: {
+          segmentos: [
+            {
+              aeroporto_saida: 'Barcelona, Província de Barcelona, Catalunha, Espanha',
+              aeroporto_chegada: 'Madrid, Provincia de Madrid, Comunidade de Madrid, Espanha',
+              numero_voo: 'OL 2020',
+              data_voo: '2027-08-13',
+              data_fim: '2027-08-13',
+              hora_saida: '14:00',
+              hora_chegada: '15:20',
+              assentos: '10A,10B'
+            },
+            { trecho: 'Madrid, Espanha → Lisboa, Portugal' }
+          ]
+        }
+      }
+    };
+    const screen = renderQuoteItemsForScreen([item], 'BRL');
+    const pdf = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [item],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+    for (const html of [screen, pdf]) {
+      expect(html).toContain(
+        'Barcelona → Madrid - OL 2020 - 13-08-2027 - 14:00 / 15:20 - Assentos: 10A,10B'
+      );
+      expect(html).toContain('Madrid → Lisboa');
+      expect(html).not.toContain('Província de Barcelona');
+      expect(html).not.toContain('Comunidade de Madrid');
+    }
+    expect(item.raw.aereo_import.segmentos[0].aeroporto_saida).toBe(
+      'Barcelona, Província de Barcelona, Catalunha, Espanha'
+    );
+    const flight = {
+      item_type: 'passagem',
+      raw: { aereo_import: { segmentos: [{ aeroporto_saida: 'GRU, Terminal 3' }] } }
+    };
+    expect(renderQuoteItemsForScreen([flight], 'BRL')).toContain('GRU, Terminal 3');
+  });
+
+  it('inclui o trem na cidade de partida com os demais serviços e no subtotal', () => {
+    const items = [
+      {
+        item_type: 'hotel',
+        title: 'Hotel Barcelona',
+        city_name: 'Barcelona, Espanha',
+        destino_geografico_id: 'geonames:barcelona',
+        total_amount: 100
+      },
+      {
+        item_type: 'trem',
+        title: 'Trem Barcelona / Madrid',
+        city_name: 'Madrid, Espanha',
+        destino_geografico_id: 'geonames:madrid',
+        total_amount: 50,
+        raw: {
+          aereo_import: {
+            segmentos: [
+              {
+                aeroporto_saida: 'Barcelona, Espanha',
+                cidade_saida_id: 'geonames:barcelona',
+                aeroporto_chegada: 'Madrid, Espanha'
+              },
+              { aeroporto_saida: 'Madrid, Espanha', aeroporto_chegada: 'Lisboa, Portugal' }
+            ]
+          }
+        }
+      },
+      { item_type: 'hotel', title: 'Hotel Madrid', city_name: 'Madrid, Espanha', total_amount: 80 }
+    ];
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items,
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: true
+    });
+    const sections = html.match(/<section class="orc-city-section">[\s\S]*?<\/section>/g)!;
+    expect(sections).toHaveLength(2);
+    expect(sections[0]).toContain('>Barcelona</div>');
+    expect(sections[0]).toContain('Hotel Barcelona');
+    expect(sections[0]).toContain('Trem Barcelona / Madrid');
+    expect(sections[0]).toContain('Barcelona → Madrid');
+    expect(sections[0]).toContain('Madrid → Lisboa');
+    expect(sections[0]).toContain('Subtotal — Barcelona');
+    expect(sections[0]).toContain('R$ 150,00');
+    expect(sections[1]).toContain('Hotel Madrid');
+    expect(sections[1]).not.toContain('Trem Barcelona / Madrid');
+  });
+
+  it('usa a cidade do serviço quando não há origem e agrupa nomes legados iguais', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        {
+          item_type: 'hotel',
+          title: 'Hotel',
+          city_name: 'Paris, França',
+          destino_geografico_id: 'geonames:paris'
+        },
+        {
+          item_type: 'trem',
+          title: 'Trem antigo',
+          city_name: 'Paris, França',
+          raw: { aereo_import: { segmentos: [{ trecho: '' }] } }
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+    const sections = html.match(/<section class="orc-city-section">[\s\S]*?<\/section>/g)!;
+    expect(sections).toHaveLength(1);
+    expect(sections[0]).toContain('>Paris</div>');
+    expect(sections[0]).toContain('Hotel');
+    expect(sections[0]).toContain('Trem Antigo');
+  });
+
+  it('não agrupa cidades distintas com o mesmo nome quando possuem identificadores diferentes', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        {
+          item_type: 'hotel',
+          title: 'Hotel',
+          city_name: 'Paris',
+          destino_geografico_id: 'geonames:1'
+        },
+        {
+          item_type: 'trem',
+          title: 'Trem',
+          raw: {
+            aereo_import: {
+              segmentos: [{ aeroporto_saida: 'Paris', cidade_saida_id: 'geonames:2' }]
+            }
+          }
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+    expect(html.match(/<section class="orc-city-section">/g)).toHaveLength(2);
+  });
+
   it('usa VTur mesmo quando as configurações antigas incluem outro logo', () => {
     const settings = {
       logo_url: 'https://example.com/old-logo.png',
