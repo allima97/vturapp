@@ -220,6 +220,61 @@ it('preserva a ação de criar venda e oculta decisões após aprovação', asyn
   }
 });
 
+it.each([
+  { form: Page, prefix: 'orcamento-novo', modo: 'criação' },
+  { form: EditPage, prefix: 'orcamento-editar', modo: 'edição' }
+])(
+  'permite trocar seletores na $modo com eventos nativos de input e change',
+  async ({ form, prefix }) => {
+    api.fetch.mockResolvedValue({
+      client_name: 'Cliente',
+      valid_until: '2027-01-30',
+      currency: 'BRL',
+      itens: []
+    });
+    const target = document.createElement('div');
+    document.body.appendChild(target);
+    const app = mount(form, { target });
+    try {
+      await vi.waitFor(() => expect(target.querySelector(`#${prefix}-item-0-tipo`)).toBeTruthy());
+      target
+        .querySelector('details summary')!
+        .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      flushSync();
+      const type = target.querySelector(`#${prefix}-item-0-tipo`) as Element & {
+        value: string;
+        dispatchEvent: (event: Event) => boolean;
+      };
+      for (const [value, field] of [
+        ['hotel', 'checkin'],
+        ['aluguel_carro', 'cambio'],
+        ['passagem', 'data-saida'],
+        ['servico', 'categoria']
+      ]) {
+        type.value = value;
+        type.dispatchEvent(new Event('input', { bubbles: true }));
+        flushSync();
+        type.dispatchEvent(new Event('change', { bubbles: true }));
+        flushSync();
+        expect(type.value).toBe(value);
+        expect(target.querySelector(`#${prefix}-item-0-${field}`)).toBeTruthy();
+      }
+      const category = target.querySelector(`#${prefix}-item-0-categoria`) as Element & {
+        value: string;
+        dispatchEvent: (event: Event) => boolean;
+      };
+      category.value = 'Serviço Privativo';
+      category.dispatchEvent(new Event('input', { bubbles: true }));
+      flushSync();
+      category.dispatchEvent(new Event('change', { bubbles: true }));
+      flushSync();
+      expect(category.value).toBe('Serviço Privativo');
+    } finally {
+      await unmount(app);
+    }
+  }
+);
+
 it('calcula e salva o preço unitário digitado por centavos', async () => {
   api.post.mockResolvedValue({});
   const target = document.createElement('div');

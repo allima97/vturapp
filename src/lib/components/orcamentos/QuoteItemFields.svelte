@@ -28,6 +28,12 @@
     onChange();
   }
 
+  function atualizarInput(event: Event) {
+    // O valor dos selects é sincronizado no change, após o input nativo.
+    if (event.target instanceof HTMLSelectElement) return;
+    atualizarItem();
+  }
+
   function alterarTipo() {
     if (item.item_type === 'passagem' || item.item_type === 'trem') {
       item.city_name = '';
@@ -91,7 +97,7 @@
 
 <div
   class="grid grid-cols-1 gap-3 md:grid-cols-12"
-  on:input={atualizarItem}
+  on:input={atualizarInput}
   on:change={atualizarItem}
 >
   <div class="md:col-span-3">
