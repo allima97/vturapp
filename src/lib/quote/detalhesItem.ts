@@ -97,6 +97,15 @@ export function novoItemOrcamento(index: number, id = ''): ItemOrcamento {
   };
 }
 
+export function moverItemOrcamento(itens: ItemOrcamento[], index: number, direction: -1 | 1) {
+  const destino = index + direction;
+  if (index < 0 || index >= itens.length || destino < 0 || destino >= itens.length) return itens;
+  const ordenados = [...itens];
+  [ordenados[index], ordenados[destino]] = [ordenados[destino], ordenados[index]];
+  ordenados.forEach((item, position) => (item.order_index = position));
+  return ordenados;
+}
+
 function registro(value: unknown): Record<string, unknown> {
   return value && typeof value === 'object' && !Array.isArray(value)
     ? Object.fromEntries(Object.entries(value))

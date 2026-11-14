@@ -7,6 +7,7 @@
   import {
     formatarDescricaoItem,
     lerDetalhes,
+    moverItemOrcamento,
     novoItemOrcamento,
     recalcularTotaisItem,
     rawDetalhes,
@@ -19,7 +20,19 @@
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import { FieldInput, FieldSelect, FieldTextarea, LoadingState } from '$lib/components/ui';
-  import { ArrowLeft, Save, Send, Plus, X, FileText, Search, User, Whatsapp } from '$lib/icons';
+  import {
+    ArrowDown,
+    ArrowLeft,
+    ArrowUp,
+    Save,
+    Send,
+    Plus,
+    X,
+    FileText,
+    Search,
+    User,
+    Whatsapp
+  } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { addDaysISODate, todayISODateLocal } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
@@ -95,6 +108,13 @@
         .filter((_, i) => i !== index)
         .map((item, i) => ({ ...item, order_index: i }));
     }
+  }
+
+  function moverItem(index: number, direction: -1 | 1) {
+    formData.itens = moverItemOrcamento(formData.itens, index, direction);
+    delete errors[`item-${index}`];
+    delete errors[`item-${index + direction}`];
+    errors = errors;
   }
 
   interface OrcamentoEditClientePayload {
@@ -590,6 +610,26 @@
               {/if}
             </div>
 
+            <div class="mt-1 flex shrink-0 flex-col">
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                disabled={index === 0}
+                on:click={() => moverItem(index, -1)}
+                ariaLabel={`Mover item ${index + 1} para cima`}
+                title="Mover para cima"><ArrowUp size={16} /></Button
+              >
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                disabled={index === formData.itens.length - 1}
+                on:click={() => moverItem(index, 1)}
+                ariaLabel={`Mover item ${index + 1} para baixo`}
+                title="Mover para baixo"><ArrowDown size={16} /></Button
+              >
+            </div>
             {#if formData.itens.length > 1}
               <Button
                 type="button"

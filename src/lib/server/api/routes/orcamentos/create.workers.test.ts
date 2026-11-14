@@ -243,6 +243,58 @@ it('valida os detalhes antes de criar um orçamento', async () => {
   expect(await response.json()).toMatchObject({ error: expect.stringContaining('datas') });
 });
 
+it('salva e retorna a ordem manual dos itens no orçamento', async () => {
+  const create = await handleOrcamentosCreatePost({
+    request: new Request('https://vtur.app/api/v1/orcamentos/create', {
+      method: 'POST',
+      headers: { origin: 'https://vtur.app', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        client_name: 'Cliente',
+        valid_until: '2027-07-15',
+        itens: ['Primeiro', 'Segundo'].map((title, order_index) => ({
+          title,
+          item_type: 'passagem',
+          order_index,
+          quantity: 1,
+          unit_price: 150,
+          total_amount: 150,
+          start_date: '2027-08-11',
+          end_date: '2027-08-13',
+          raw: { detalhes_orcamento: { adultos: 1, adultos_valor: 150 } }
+        }))
+      })
+    }),
+    platform: { env: { DB: env.DB } }
+  } as Parameters<typeof handleOrcamentosCreatePost>[0]);
+  expect(create.status).toBe(201);
+  const { data } = await create.json<{ data: { id: string } }>();
+  const url = new URL(`https://vtur.app/api/v1/orcamentos/${data.id}`);
+  const get = () =>
+    handleOrcamentosIdGet({
+      url,
+      params: { id: data.id },
+      request: new Request(url)
+    } as Parameters<typeof handleOrcamentosIdGet>[0]);
+  const original = await (await get()).json<{ itens: Array<Record<string, unknown>> }>();
+  expect(original.itens.map((item) => item.title)).toEqual(['Primeiro', 'Segundo']);
+  const patch = await handleOrcamentosIdPatch({
+    url,
+    params: { id: data.id },
+    request: new Request(url, {
+      method: 'PATCH',
+      headers: { origin: 'https://vtur.app', 'content-type': 'application/json' },
+      body: JSON.stringify({ itens: [...original.itens].reverse(), valid_until: '2027-07-15' })
+    }),
+    platform: { env: { DB: env.DB } }
+  } as Parameters<typeof handleOrcamentosIdPatch>[0]);
+  expect(patch.status).toBe(200);
+  const reordered = await (await get()).json<{ itens: Array<Record<string, unknown>> }>();
+  expect(reordered.itens.map((item) => [item.title, item.order_index])).toEqual([
+    ['Segundo', 0],
+    ['Primeiro', 1]
+  ]);
+});
+
 it('atualiza detalhes sem perder o item, dados existentes ou segmentos', async () => {
   const quoteId = crypto.randomUUID();
   const itemId = crypto.randomUUID();

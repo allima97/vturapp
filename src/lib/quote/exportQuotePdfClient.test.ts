@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { buildQuotePreviewHtmlSync, openQuotePreview } from './exportQuotePdfClient';
+import {
+  buildQuotePreviewHtmlSync,
+  openQuotePreview,
+  renderQuoteItemsForScreen
+} from './exportQuotePdfClient';
 import { VTUR_LOGO_URL } from '$lib/brand';
 
 const mocks = vi.hoisted(() => ({ apiFetch: vi.fn(), open: vi.fn() }));
@@ -13,6 +17,68 @@ afterEach(() => {
 });
 
 describe('identidade dos orçamentos e circuitos', () => {
+  it('mantém a cor do cabeçalho das tabelas igual à do título do orçamento', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: false,
+      showItemValues: false
+    });
+    expect(html).toContain('.orc-title { font-size: 21px; font-weight: 700; color: #243aa3;');
+    expect(html).toContain('.orc-city-table thead th { background: #243aa3;');
+  });
+
+  it('apresenta itens na tela com os detalhes do PDF e valores unitários, escapando conteúdo', () => {
+    const html = renderQuoteItemsForScreen(
+      [
+        {
+          item_type: 'hotel',
+          title: '<script>alert(1)</script>',
+          city_name: 'Roma',
+          quantity: 2,
+          unit_price: 150,
+          total_amount: 300
+        },
+        {
+          item_type: 'passagem',
+          title: 'São Paulo / Roma',
+          quantity: 1,
+          unit_price: 1000,
+          total_amount: 1000,
+          raw: {
+            aereo_import: {
+              segmentos: [{ cia_aerea: 'LATAM', aeroporto_saida: 'GRU', aeroporto_chegada: 'FCO' }]
+            }
+          }
+        },
+        {
+          item_type: 'circuito',
+          title: 'Circuito',
+          quantity: 2,
+          unit_price: 50,
+          total_amount: 100,
+          segments: [{ segment_type: 'circuit_day', data: { titulo: 'Roma' } }]
+        }
+      ],
+      'BRL'
+    );
+    expect(html.indexOf('&lt;script&gt;')).toBeLessThan(html.indexOf('LATAM'));
+    expect(html).not.toContain('<script>');
+    expect(html).toContain('GRU → FCO');
+    expect(html).toContain('<th class="orc-value">Valor Unit.</th>');
+    expect(html).toContain('<th class="orc-value">Total</th>');
+    expect(html).toContain('02 apartamentos');
+    expect(html).toContain('R$ 150,00');
+    expect(html).toContain('Subtotal — Roma');
+    expect(html).toContain('Dia 1 - Roma');
+    expect(html).toContain('<td class="orc-quantity">2</td>');
+    expect(html).toContain('<td class="orc-value">R$ 50,00</td>');
+  });
+
   it('usa VTur mesmo quando as configurações antigas incluem outro logo', () => {
     const settings = {
       logo_url: 'https://example.com/old-logo.png',
@@ -195,7 +261,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('Valor da criança válido');
   });
 
-  it('agrupa serviços por cidade, usa o nome curto e mantém a ordem dos grupos e itens', () => {
+  it('agrupa serviços consecutivos por cidade sem alterar a ordem dos itens', () => {
     const html = buildQuotePreviewHtmlSync({
       quote: { id: 'quote-1' },
       items: [
@@ -234,7 +300,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
     const body = html.slice(html.indexOf('<body>'));
-    expect(body.match(/class="roteiro-card-city"/g)).toHaveLength(3);
+    expect(body.match(/class="roteiro-card-city"/g)).toHaveLength(4);
     expect(body).toContain(
       'focusable="false" style="vertical-align: -0.125em; margin-right: 0.3em"'
     );
@@ -242,9 +308,9 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(body).not.toContain('Califórnia');
     expect(body).not.toContain('Paris, França');
     expect(body).not.toContain('Não é acomodação');
-    expect(body.indexOf('Hotel Sunset')).toBeLessThan(body.indexOf('Aluguel'));
+    expect(body.indexOf('Hotel Sunset')).toBeLessThan(body.indexOf('Passeio no Louvre'));
+    expect(body.indexOf('Passeio no Louvre')).toBeLessThan(body.indexOf('Aluguel'));
     expect(body.indexOf('Aluguel')).toBeLessThan(body.indexOf('Ingresso &lt;seguro&gt;'));
-    expect(body.indexOf('Ingresso &lt;seguro&gt;')).toBeLessThan(body.indexOf('Passeio no Louvre'));
     expect(body).toContain('Cidade não informada');
   });
 
@@ -271,7 +337,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(hidden).not.toContain('Hotel americano');
   });
 
-  it('apresenta passagens primeiro e cidades pela primeira data dos seus serviços', () => {
+  it('respeita a ordem manual de passagens e cidades no resumo e detalhes', () => {
     const items = [
       { item_type: 'hotel', title: 'Hotel Paris', city_name: 'Paris', start_date: '2027-08-20' },
       {
@@ -307,27 +373,27 @@ describe('identidade dos orçamentos e circuitos', () => {
       });
       const body = html.slice(html.indexOf('<body>'));
       const titles = [
-        'Voo Principal',
-        'Voo sem Trechos',
         'Hotel Paris',
-        'Passeio Paris',
+        'Voo Principal',
         'Hotel Roma',
-        'Serviço com fim',
-        'Serviço sem data'
+        'Passeio Paris',
+        'Voo sem Trechos',
+        'Serviço sem data',
+        'Serviço com fim'
       ];
       const positions = titles.map((title) => body.indexOf(title));
       expect(positions.every((position) => position >= 0)).toBe(true);
       expect(positions).toEqual([...positions].sort((a, b) => a - b));
       if (showBudgetDetails) {
-        expect(body.match(/Passagens Aéreas Internacionais e Trechos Internos/g)).toHaveLength(1);
-        expect(body.match(/class="roteiro-card-city"/g)).toHaveLength(4);
+        expect(body.match(/Passagens Aéreas Internacionais e Trechos Internos/g)).toHaveLength(2);
+        expect(body.match(/class="roteiro-card-city"/g)).toHaveLength(5);
       }
     }
 
     expect(items[0].title).toBe('Hotel Paris');
   });
 
-  it('ordena cidades sem passagens e mantém a ordem original para datas iguais ou ausentes', () => {
+  it('mantém a ordem manual independentemente das datas', () => {
     const html = buildQuotePreviewHtmlSync({
       quote: { id: 'quote-1' },
       items: [
@@ -344,7 +410,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
     const body = html.slice(html.indexOf('<body>'));
-    const positions = ['Cidade B', 'Cidade C', 'Sem data A', 'Sem data D'].map((title) =>
+    const positions = ['Sem data A', 'Cidade B', 'Cidade C', 'Sem data D'].map((title) =>
       body.indexOf(title)
     );
     expect(positions.every((position) => position >= 0)).toBe(true);
@@ -352,7 +418,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(body).not.toContain('Passagens Aéreas Internacionais e Trechos Internos');
   });
 
-  it('mantém circuitos na sequência cronológica após as passagens', () => {
+  it('mantém circuitos e passagens na ordem manual', () => {
     const html = buildQuotePreviewHtmlSync({
       quote: { id: 'quote-1' },
       items: [
@@ -368,8 +434,8 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
     const body = html.slice(html.indexOf('<body>'));
-    expect(body.indexOf('Passagem Internacional')).toBeLessThan(body.indexOf('Circuito Itália'));
-    expect(body.indexOf('Circuito Itália')).toBeLessThan(body.indexOf('Hotel Madri'));
+    expect(body.indexOf('Hotel Madri')).toBeLessThan(body.indexOf('Circuito Itália'));
+    expect(body.indexOf('Circuito Itália')).toBeLessThan(body.indexOf('Passagem Internacional'));
     expect(body).toContain('<article class="roteiro-card');
   });
 

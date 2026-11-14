@@ -38,7 +38,7 @@
   } from '$lib/utils/formatters';
   import { toUserMessage } from '$lib/utils/errors';
   import { ensureServerSessionCookie } from '$lib/services/session';
-  import { resumoDetalhes } from '$lib/quote/detalhesItem';
+  import { renderQuoteItemsForScreen } from '$lib/quote/exportQuotePdfClient';
 
   import { confirmAction } from '$lib/stores/confirm';
   import { ApiError, apiDelete, apiFetch, apiPatch, isCanceledApiError } from '$lib/services/api';
@@ -64,7 +64,10 @@
     descricao?: string | null;
     city_name?: string | null;
     cidade?: string | null;
+    cidade_id?: string | null;
+    destino_geografico_id?: string | null;
     item_type?: string | null;
+    currency?: string | null;
     quantity?: number | null;
     quantidade?: number | null;
     unit_price?: number | null;
@@ -365,24 +368,6 @@
     return Math.ceil((Date.now() - data.getTime()) / (1000 * 60 * 60 * 24));
   }
 
-  function normalizeLookupText(value: string) {
-    return (value || '')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .trim();
-  }
-
-  function isCircuitItem(item: OrcamentoItemResumo) {
-    return normalizeLookupText(String(item.item_type || '')).replace(/[^a-z]/g, '') === 'circuito';
-  }
-
-  function getCircuitDays(item: OrcamentoItemResumo) {
-    return (item.segments || [])
-      .filter((seg) => String(seg.segment_type || '').toLowerCase() === 'circuit_day')
-      .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
-  }
-
   function getStatusColor(status: string): string {
     switch (String(status || '').toLowerCase()) {
       case 'aprovado':
@@ -448,6 +433,19 @@
   $: valorTotal =
     orcamento?.itens?.reduce((acc: number, item) => acc + Number(item.total_amount || 0), 0) || 0;
   $: quantidadeItens = orcamento?.itens?.length || 0;
+  $: itensHtml = renderQuoteItemsForScreen(
+    (orcamento?.itens || []).map((item) => ({
+      ...item,
+      id: item.id ?? undefined,
+      title: item.title || item.descricao,
+      city_name: item.city_name || item.cidade,
+      quantity: item.quantity ?? item.quantidade,
+      unit_price: item.unit_price ?? item.valor_unitario,
+      total_amount: item.total_amount ?? item.valor_total,
+      segments: item.segments ?? undefined
+    })),
+    orcamento?.currency || 'BRL'
+  );
   $: statusAtual = String(orcamento?.status || '').toLowerCase();
   $: podeCriarVenda = statusAtual === 'aprovado';
   $: orcamentoConvertido = statusAtual === 'fechado';
@@ -628,6 +626,84 @@
             EXPIRADO
           </span>
         {/if}
+
+        <style>
+          .quote-items :global(.orc-city-section) {
+            margin: 18px 0;
+          }
+          .quote-items :global(.orc-city-table) {
+            width: 100%;
+            min-width: 760px;
+            table-layout: fixed;
+            border-collapse: collapse;
+            font-size: 12px;
+            overflow-wrap: anywhere;
+          }
+          .quote-items :global(.orc-city-table th),
+          .quote-items :global(.orc-city-table td) {
+            border: 1px solid #dbe3ec;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+          }
+          .quote-items :global(.orc-city-table thead th) {
+            background: #243aa3;
+            color: white;
+            font-weight: 700;
+            text-transform: uppercase;
+          }
+          .quote-items :global(.orc-city-table thead .orc-city-heading) {
+            background: transparent;
+            border: 0;
+            padding: 0;
+            text-transform: none;
+          }
+          .quote-items :global(.roteiro-card-city),
+          .quote-items :global(.orc-table-section-title) {
+            margin: 0 0 8px;
+            border-left: 4px solid #c45b1b;
+            padding-left: 9px;
+            color: #112b4d;
+            font-size: 18px;
+            font-weight: 700;
+          }
+          .quote-items :global(.roteiro-card-city svg) {
+            display: none;
+          }
+          .quote-items :global(.orc-city-table tbody tr:nth-child(even):not(.orc-subtotal)) {
+            background: #f7f9fc;
+          }
+          .quote-items :global(.orc-city-table .orc-value) {
+            text-align: right;
+          }
+          .quote-items :global(.orc-service-type) {
+            font-weight: 700;
+          }
+          .quote-items :global(.orc-service-details) {
+            color: #475569;
+            line-height: 1.5;
+            margin-top: 4px;
+          }
+          .quote-items :global(.orc-subtotal) {
+            background: #edf2f7;
+            color: #112b4d;
+            font-weight: 700;
+          }
+          .quote-items :global(.roteiro-card) {
+            margin: 12px 0;
+            border: 1px solid #dbe3ec;
+            border-radius: 8px;
+            padding: 14px 16px;
+            overflow-wrap: anywhere;
+          }
+          .quote-items :global(.roteiro-card h3) {
+            font-weight: 700;
+          }
+          .quote-items :global(.roteiro-card-detail),
+          .quote-items :global(.orc-circuit-day) {
+            margin-top: 8px;
+          }
+        </style>
         {#if orcamentoConvertido}
           <span class="rounded-full bg-emerald-200 px-2 py-1 text-xs font-medium text-emerald-800">
             CONVERTIDO
@@ -774,8 +850,8 @@
     prioridade comercial.
   </div>
 
-  <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-    <div class="space-y-6 lg:col-span-2">
+  <div class="space-y-6">
+    <div class="space-y-6">
       <Card header="Dados do Cliente" color="clientes">
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div class="flex items-center gap-3">
@@ -830,93 +906,15 @@
           </Button>
         </svelte:fragment>
         {#if orcamento.itens && orcamento.itens.length > 0}
-          <div class="overflow-x-visible md:overflow-x-auto">
-            <table class="table-mobile-cards w-full">
-              <thead>
-                <tr class="border-b border-slate-200">
-                  <th class="px-3 py-3 text-left text-sm font-semibold text-slate-600">Descrição</th
-                  >
-                  <th class="px-3 py-3 text-center text-sm font-semibold text-slate-600">Tipo</th>
-                  <th class="px-3 py-3 text-center text-sm font-semibold text-slate-600">Qtd</th>
-                  <th class="px-3 py-3 text-right text-sm font-semibold text-slate-600"
-                    >Valor Unit.</th
-                  >
-                  <th class="px-3 py-3 text-right text-sm font-semibold text-slate-600">Total</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100">
-                {#each orcamento.itens as item}
-                  <tr class="hover:bg-slate-50">
-                    <td data-label="Descrição" class="px-3 py-3 text-slate-900">
-                      <p class="font-medium">
-                        {item.title || item.descricao || 'Item'}
-                      </p>
-                      {#if item.city_name || item.cidade}
-                        <p class="text-sm text-slate-500">
-                          {item.city_name || item.cidade}
-                        </p>
-                      {/if}
-                      {#if item.start_date || item.end_date}
-                        <p class="text-sm text-slate-500">
-                          {formatDate(item.start_date || item.end_date || null)}{item.start_date &&
-                          item.end_date &&
-                          item.end_date !== item.start_date
-                            ? ` a ${formatDate(item.end_date)}`
-                            : ''}
-                        </p>
-                      {/if}
-                      {#if resumoDetalhes(item).length}
-                        <p class="text-sm text-slate-500">{resumoDetalhes(item).join(' · ')}</p>
-                      {/if}
-                      {#if isCircuitItem(item) && getCircuitDays(item).length > 0}
-                        <div class="mt-3 space-y-2">
-                          {#each getCircuitDays(item) as seg, segIndex}
-                            {@const segData = seg.data || {}}
-                            <div class="rounded-lg border border-slate-200 bg-slate-50 p-2.5">
-                              <p class="text-xs font-semibold text-slate-700">
-                                Dia {Number(segData.dia || segIndex + 1)}
-                                {#if segData.titulo}
-                                  - {String(segData.titulo)}
-                                {/if}
-                              </p>
-                              {#if segData.descricao}
-                                <p class="mt-1 text-xs whitespace-pre-wrap text-slate-600">
-                                  {String(segData.descricao)}
-                                </p>
-                              {/if}
-                            </div>
-                          {/each}
-                        </div>
-                      {/if}
-                    </td>
-                    <td data-label="Tipo" class="px-3 py-3 text-center">
-                      <span class="rounded-full bg-slate-100 px-2 py-1 text-xs capitalize">
-                        {item.item_type || 'servico'}
-                      </span>
-                    </td>
-                    <td data-label="Qtd" class="px-3 py-3 text-center text-slate-700"
-                      >{item.quantity || item.quantidade || 1}</td
-                    >
-                    <td data-label="Valor Unit." class="px-3 py-3 text-right text-slate-700">
-                      {formatCurrency(item.unit_price || item.valor_unitario || 0)}
-                    </td>
-                    <td data-label="Total" class="px-3 py-3 text-right font-medium text-slate-900">
-                      {formatCurrency(item.total_amount || item.valor_total || 0)}
-                    </td>
-                  </tr>
-                {/each}
-              </tbody>
-              <tfoot>
-                <tr class="border-t-2 border-slate-200">
-                  <td colspan="4" class="px-3 py-4 text-right font-semibold text-slate-900"
-                    >Total do Orçamento:</td
-                  >
-                  <td class="text-clientes-600 px-3 py-4 text-right text-xl font-bold">
-                    {formatCurrency(orcamento.total || valorTotal)}
-                  </td>
-                </tr>
-              </tfoot>
-            </table>
+          <div class="quote-items overflow-x-auto">
+            <!-- eslint-disable-next-line svelte/no-at-html-tags -- o renderizador compartilhado escapa os dados dos itens -->
+            {@html itensHtml}
+          </div>
+          <div class="mt-4 flex flex-wrap justify-end gap-3 border-t-2 border-slate-200 pt-4">
+            <span class="font-semibold text-slate-900">Total do Orçamento:</span>
+            <span class="text-clientes-600 text-xl font-bold">
+              {formatCurrency(orcamento.total || valorTotal)}
+            </span>
           </div>
         {:else}
           <div class="py-8 text-center text-slate-500">
@@ -925,16 +923,6 @@
           </div>
         {/if}
       </Card>
-
-      {#if orcamento.notes || orcamento.observacoes}
-        <Card header="Observações e Condições" color="clientes">
-          <div class="prose prose-slate max-w-none">
-            <p class="whitespace-pre-wrap text-slate-700">
-              {orcamento.notes || orcamento.observacoes}
-            </p>
-          </div>
-        </Card>
-      {/if}
     </div>
 
     <div class="space-y-6">
@@ -1092,6 +1080,16 @@
                em vez de duplicados aqui embaixo. -->
         </div>
       </Card>
+
+      {#if orcamento.notes || orcamento.observacoes}
+        <Card header="Observações e Condições" color="clientes">
+          <div class="prose prose-slate max-w-none">
+            <p class="whitespace-pre-wrap text-slate-700">
+              {orcamento.notes || orcamento.observacoes}
+            </p>
+          </div>
+        </Card>
+      {/if}
 
       <Card header="Histórico de Interações" color="clientes">
         {#if loadingInteracoes}

@@ -479,7 +479,8 @@ function renderServiceItem(
   item: QuoteItemForPdf,
   showItemValues: boolean,
   defaultCurrency: string,
-  flight = false
+  flight = false,
+  showUnitValue = false
 ) {
   const type = normalizeText(item.item_type);
   const labels: Record<string, string> = {
@@ -508,23 +509,23 @@ function renderServiceItem(
     <td class="orc-service-type">${escHtml(label)}</td>
     <td><strong>${escHtml(title)}${periodo ? ` - ${escHtml(periodo)}` : ''}</strong>${fields.length ? `<div class="orc-service-details">${fields.map(escHtml).join(' | ')}</div>` : ''}</td>
     <td class="orc-quantity">${escHtml(quantity)}</td>
+    ${showUnitValue ? `<td class="orc-value">${escHtml(formatCurrency(Number(item.unit_price ?? 0), item.currency || defaultCurrency))}</td>` : ''}
     ${showItemValues ? `<td class="orc-value">${escHtml(formatCurrency(Number(item.total_amount ?? 0), item.currency || defaultCurrency))}</td>` : ''}
   </tr>`;
 }
 
 type QuotePdfSection =
-  | { kind: 'city'; city: string; items: QuoteItemForPdf[] }
+  | { kind: 'city'; city: string; key: string; items: QuoteItemForPdf[] }
   | { kind: 'flights'; items: QuoteItemForPdf[] }
   | { kind: 'circuit'; items: QuoteItemForPdf[] };
 
 function orderQuoteSections(items: QuoteItemForPdf[]): QuotePdfSection[] {
-  const flights: QuotePdfSection = { kind: 'flights', items: [] };
-  type CityGroup = Extract<QuotePdfSection, { kind: 'city' }>;
-  const groups = new Map<string, CityGroup>();
   const sections: QuotePdfSection[] = [];
   for (const item of items) {
+    const previous = sections[sections.length - 1];
     if (isFlightQuoteItem(item)) {
-      flights.items.push(item);
+      if (previous?.kind === 'flights') previous.items.push(item);
+      else sections.push({ kind: 'flights', items: [item] });
       continue;
     }
     if (isCircuitQuoteItem(item)) {
@@ -538,35 +539,17 @@ function orderQuoteSections(items: QuoteItemForPdf[]): QuotePdfSection[] {
         ? `cidade:${item.cidade_id}`
         : null;
     const key = chaveIdentidadeCidade(city, cityId);
-    let group = groups.get(key);
-    if (!group) {
-      group = { kind: 'city', city: city || 'Cidade não informada', items: [] };
-      groups.set(key, group);
-      sections.push(group);
-    }
-    group.items.push(item);
+    if (previous?.kind === 'city' && previous.key === key) previous.items.push(item);
+    else sections.push({ kind: 'city', city: city || 'Cidade não informada', key, items: [item] });
   }
-
-  const sectionStart = (section: QuotePdfSection) =>
-    section.items
-      .map(
-        (item) => parseISODateParts(item.start_date)?.iso || parseISODateParts(item.end_date)?.iso
-      )
-      .filter((date): date is string => Boolean(date))
-      .sort()[0];
-
-  sections.sort((a, b) => {
-    const startA = sectionStart(a);
-    const startB = sectionStart(b);
-    return startA && startB ? startA.localeCompare(startB) : startA ? -1 : startB ? 1 : 0;
-  });
-  return flights.items.length ? [flights, ...sections] : sections;
+  return sections;
 }
 
 function renderGroupedItems(
   sections: QuotePdfSection[],
   showItemValues: boolean,
-  defaultCurrency: string
+  defaultCurrency: string,
+  showUnitValue = false
 ) {
   return sections
     .map((section) => {
@@ -574,21 +557,30 @@ function renderGroupedItems(
         const content = section.items
           .map((item) =>
             getFlightDataList(item).length
-              ? renderFlightItemHtml(item, showItemValues, defaultCurrency)
-              : renderServiceItem(item, showItemValues, defaultCurrency, true)
+              ? renderFlightItemHtml(item, showItemValues, defaultCurrency, showUnitValue)
+              : renderServiceItem(item, showItemValues, defaultCurrency, true, showUnitValue)
           )
           .join('');
         return renderCityTable(
           'Passagens Aéreas Internacionais e Trechos Internos',
           content,
-          showItemValues
+          showItemValues,
+          false,
+          showUnitValue
         );
       }
       if (section.kind === 'circuit')
-        return renderCircuitItemHtml(section.items[0], showItemValues, defaultCurrency);
+        return renderCircuitItemHtml(
+          section.items[0],
+          showItemValues,
+          defaultCurrency,
+          showUnitValue
+        );
 
       const content = section.items
-        .map((item) => renderServiceItem(item, showItemValues, defaultCurrency))
+        .map((item) =>
+          renderServiceItem(item, showItemValues, defaultCurrency, false, showUnitValue)
+        )
         .join('');
       const totals = new Map<string, number>();
       for (const item of section.items) {
@@ -596,28 +588,44 @@ function renderGroupedItems(
         totals.set(currency, (totals.get(currency) || 0) + Number(item.total_amount ?? 0));
       }
       const subtotal = showItemValues
-        ? `<tr class="orc-subtotal"><td colspan="3">Subtotal — ${escHtml(nomeCidadeNoPdf(section.city))}</td><td class="orc-value">${Array.from(totals, ([currency, value]) => escHtml(formatCurrency(value, currency))).join('<br>')}</td></tr>`
+        ? `<tr class="orc-subtotal"><td colspan="${showUnitValue ? 4 : 3}">Subtotal — ${escHtml(nomeCidadeNoPdf(section.city))}</td><td class="orc-value">${Array.from(totals, ([currency, value]) => escHtml(formatCurrency(value, currency))).join('<br>')}</td></tr>`
         : '';
-      return renderCityTable(section.city, `${content}${subtotal}`, showItemValues, true);
+      return renderCityTable(
+        section.city,
+        `${content}${subtotal}`,
+        showItemValues,
+        true,
+        showUnitValue
+      );
     })
     .join('');
 }
 
-function renderCityTable(title: string, content: string, showItemValues: boolean, isCity = false) {
-  const columnCount = showItemValues ? 4 : 3;
+function renderCityTable(
+  title: string,
+  content: string,
+  showItemValues: boolean,
+  isCity = false,
+  showUnitValue = false
+) {
+  const columnCount = 3 + Number(showItemValues) + Number(showUnitValue);
   const sectionTitle = isCity
     ? printCityTitle(title)
     : `<div class="orc-table-section-title">${escHtml(title)}</div>`;
   return `<section class="orc-city-section">
     <table class="orc-city-table">
-      <colgroup><col style="width:18%"><col style="width:${showItemValues ? 50 : 70}%"><col style="width:14%">${showItemValues ? '<col style="width:18%">' : ''}</colgroup>
+      <colgroup><col style="width:18%"><col style="width:${showUnitValue ? 42 : showItemValues ? 50 : 70}%"><col style="width:14%">${showUnitValue ? '<col style="width:13%">' : ''}${showItemValues ? `<col style="width:${showUnitValue ? 13 : 18}%">` : ''}</colgroup>
       <thead>
         <tr><th class="orc-city-heading" colspan="${columnCount}">${sectionTitle}</th></tr>
-        <tr><th>Serviço</th><th>Descrição / Detalhes</th><th>Qtd.</th>${showItemValues ? '<th class="orc-value">Valor</th>' : ''}</tr>
+        <tr><th>Serviço</th><th>Descrição / Detalhes</th><th>Qtd.</th>${showUnitValue ? '<th class="orc-value">Valor Unit.</th>' : ''}${showItemValues ? `<th class="orc-value">${showUnitValue ? 'Total' : 'Valor'}</th>` : ''}</tr>
       </thead>
       <tbody>${content}</tbody>
     </table>
   </section>`;
+}
+
+export function renderQuoteItemsForScreen(items: QuoteItemForPdf[], currency: string) {
+  return renderGroupedItems(orderQuoteSections(items), true, currency, true);
 }
 
 function renderDetalhesItem(item: QuoteItemForPdf) {
@@ -639,7 +647,8 @@ function renderPeriodoItem(item: QuoteItemForPdf) {
 function renderFlightItemHtml(
   item: QuoteItemForPdf,
   showItemValues: boolean,
-  defaultCurrency: string
+  defaultCurrency: string,
+  showUnitValue = false
 ) {
   const flights = getFlightDataList(item).map((data) => {
     const trecho = splitTrechoCities(String(data.trecho || ''));
@@ -740,6 +749,7 @@ function renderFlightItemHtml(
     <td class="orc-service-type">${escHtml(service)}</td>
     <td>${content}</td>
     <td class="orc-quantity">${escHtml(quantityLabel)}</td>
+    ${showUnitValue ? `<td class="orc-value">${escHtml(formatCurrency(Number(item.unit_price ?? 0), currency))}</td>` : ''}
     ${showItemValues ? `<td class="orc-value">${escHtml(formatCurrency(amount, currency))}</td>` : ''}
   </tr>`;
 }
@@ -747,7 +757,8 @@ function renderFlightItemHtml(
 function renderCircuitItemHtml(
   item: QuoteItemForPdf,
   showItemValues: boolean,
-  defaultCurrency: string
+  defaultCurrency: string,
+  showUnitValue = false
 ) {
   const label = textVal(item.title || item.product_name || item.item_type || 'Circuito');
   const city = nomeCidadeNoPdf(textVal(item.city_name));
@@ -767,6 +778,17 @@ function renderCircuitItemHtml(
       <h3>${escHtml(dayTitle)}</h3>
       ${descricao ? `<p>${escHtml(descricao).replace(/\n/g, '<br/>')}</p>` : ''}
     </div>`;
+  }
+
+  if (showUnitValue) {
+    const content = `<tr class="orc-city-item">
+      <td class="orc-service-type">Circuito</td>
+      <td><strong>${escHtml(label)}</strong>${renderPeriodoItem(item)}${renderDetalhesItem(item)}${daysHtml}</td>
+      <td class="orc-quantity">${escHtml(String(item.quantity ?? '-'))}</td>
+      <td class="orc-value">${escHtml(formatCurrency(Number(item.unit_price ?? 0), currency))}</td>
+      <td class="orc-value">${escHtml(formatCurrency(amount, currency))}</td>
+    </tr>`;
+    return renderCityTable(city || 'Circuito', content, true, Boolean(city), true);
   }
 
   return `<article class="roteiro-card${requiresPrintContinuation(daysHtml) ? ' roteiro-card--long' : ''}">
@@ -1094,7 +1116,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-circuit-day { margin: 14px 0 0 0; }
     .orc-items-table-wrap { border: 1px solid #d9e2ec; border-radius: 8px; overflow: hidden; }
     .orc-items-table { width: 100%; border-collapse: collapse; font-size: 11px; }
-    .orc-items-table th { background: #f1f5f9; color: #334155; text-align: left; padding: 7px 8px; border-bottom: 1px solid #d9e2ec; }
+    .orc-items-table th { background: #243aa3; color: white; text-align: left; padding: 7px 8px; border-bottom: 1px solid #d9e2ec; }
     .orc-items-table td { padding: 7px 8px; border-bottom: 1px solid #eef2f7; color: #0f172a; }
     .orc-items-table tbody tr:last-child td { border-bottom: 0; }
     .orc-items-table .text-right { text-align: right; }
@@ -1103,7 +1125,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-city-section, .orc-financial-section { margin: 18px 0; }
     .orc-city-table { width: 100%; table-layout: fixed; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 12px; overflow-wrap: anywhere; }
     .orc-city-table th, .orc-city-table td { border: 1px solid #dbe3ec; padding: 8px; text-align: left; vertical-align: top; }
-    .orc-city-table thead th { background: #112b4d; color: white; font-weight: 700; }
+    .orc-city-table thead th { background: #243aa3; color: white; font-weight: 700; }
     .orc-city-table thead tr:not(:first-child) th { text-transform: uppercase; }
     .orc-city-table thead .orc-city-heading { background: transparent; border: 0; padding: 0; }
     .orc-city-table thead .orc-financial-heading { background: transparent; border: 0; padding: 0; }
@@ -1137,7 +1159,7 @@ export function buildQuotePreviewHtmlSync(params: {
       .roteiro-card, .orc-city-item { break-inside: avoid; page-break-inside: avoid; }
       .roteiro-card--long, .orc-city-item--long { break-inside: auto; page-break-inside: auto; }
       .orc-city-table thead { display: table-header-group; }
-      .orc-city-table th, .orc-city-table .orc-subtotal, .orc-city-item:nth-child(even) { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .orc-items-table th, .orc-city-table th, .orc-city-table .orc-subtotal, .orc-city-item:nth-child(even) { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
     }`;
 
   return `<!doctype html>

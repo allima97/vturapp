@@ -22,10 +22,89 @@ vi.mock('$lib/services/api', async (original) => ({
 
 import Page from '../../../routes/(app)/orcamentos/novo/+page.svelte';
 import EditPage from '../../../routes/(app)/orcamentos/[id]/editar/+page.svelte';
+import DetailPage from '../../../routes/(app)/orcamentos/[id]/+page.svelte';
 
 afterEach(() => {
   vi.resetAllMocks();
   document.body.replaceChildren();
+});
+
+it('mostra itens agrupados como no PDF, em largura integral e antes das ações', async () => {
+  api.fetch.mockImplementation((path: string) =>
+    Promise.resolve(
+      path.endsWith('/interacao')
+        ? { interacoes: [] }
+        : {
+            client_name: 'Cliente',
+            currency: 'BRL',
+            total: 1300,
+            itens: [
+              {
+                item_type: 'hotel',
+                title: 'Hotel Roma',
+                city_name: 'Roma, Itália',
+                quantity: 1,
+                unit_price: 300,
+                total_amount: 300,
+                start_date: '2027-08-11',
+                end_date: '2027-08-13',
+                raw: { detalhes_orcamento: { adultos: 2, quantidade_apartamentos: 1 } }
+              },
+              {
+                item_type: 'passagem',
+                title: 'São Paulo / Roma',
+                quantity: 2,
+                unit_price: 500,
+                total_amount: 1000,
+                raw: {
+                  detalhes_orcamento: { adultos: 2 },
+                  aereo_import: {
+                    segmentos: [
+                      {
+                        tipo_voo: 'Internacional',
+                        cia_aerea: 'LATAM',
+                        aeroporto_saida: 'GRU',
+                        aeroporto_chegada: 'FCO'
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+    )
+  );
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(DetailPage, { target });
+  try {
+    await vi.waitFor(() => expect(target.querySelector('.quote-items')).toBeTruthy());
+    const items = target.querySelector('.quote-items')!;
+    const text = items.textContent || '';
+    expect(text.indexOf('Hotel Roma')).toBeLessThan(text.indexOf('LATAM'));
+    for (const value of [
+      'GRU → FCO',
+      '02 passagens',
+      '01 apartamento',
+      'Valor Unit.',
+      'Total',
+      'R$ 500,00',
+      'R$ 1.000,00'
+    ]) {
+      expect(text).toContain(value);
+    }
+    expect(items.querySelectorAll('thead tr:last-child th')).toHaveLength(10);
+    const itemsCard = items.closest('.vtur-card')!;
+    const actionHeading = [...target.querySelectorAll('h3')].find(
+      (heading) => heading.textContent === 'Ações'
+    )!;
+    expect(
+      itemsCard.compareDocumentPosition(actionHeading) & Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(itemsCard.parentElement?.className).not.toContain('lg:col-span-2');
+  } finally {
+    await unmount(app);
+  }
 });
 
 it('calcula e salva o preço unitário digitado por centavos', async () => {
@@ -118,6 +197,103 @@ it('recolhe o item incluído ao adicionar outro item', async () => {
       false,
       false
     ]);
+  } finally {
+    await unmount(app);
+  }
+});
+
+it('permite reordenar novos itens preservando os dados e o estado aberto', async () => {
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Page, { target });
+  try {
+    flushSync();
+    const first = target.querySelector('details')!;
+    first.querySelector('summary')!.click();
+    flushSync();
+    const description = target.querySelector<HTMLInputElement>('#orcamento-novo-item-0-descricao')!;
+    description.value = 'Primeiro';
+    description.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+    [...target.querySelectorAll('button')]
+      .find((button) => button.textContent?.includes('Adicionar Item'))!
+      .click();
+    flushSync();
+    const second = target.querySelectorAll('details')[1];
+    second.querySelector('summary')!.click();
+    second.dispatchEvent(new Event('toggle'));
+    flushSync();
+    const secondDescription = target.querySelector<HTMLInputElement>(
+      '#orcamento-novo-item-1-descricao'
+    )!;
+    secondDescription.value = 'Segundo';
+    secondDescription.dispatchEvent(new Event('input', { bubbles: true }));
+    flushSync();
+    await vi.waitFor(() => expect(second.querySelector('summary')?.textContent).toContain('-'));
+    target.querySelector<HTMLButtonElement>('[aria-label="Mover item 2 para cima"]')!.click();
+    flushSync();
+    const cards = [...target.querySelectorAll('details')];
+    expect(cards.map((card) => card.querySelector('summary')?.textContent)).toEqual([
+      expect.stringContaining('Segundo'),
+      expect.stringContaining('Primeiro')
+    ]);
+    expect(cards.map((card) => card.open)).toEqual([true, false]);
+    expect(
+      target.querySelector<HTMLButtonElement>('[aria-label="Mover item 1 para cima"]')?.disabled
+    ).toBe(true);
+    expect(
+      target.querySelector<HTMLButtonElement>('[aria-label="Mover item 2 para baixo"]')?.disabled
+    ).toBe(true);
+  } finally {
+    await unmount(app);
+  }
+});
+
+it('salva a ordem alterada dos itens de um orçamento existente', async () => {
+  api.fetch.mockResolvedValue({
+    client_name: 'Cliente',
+    valid_until: '2027-08-01',
+    currency: 'BRL',
+    itens: ['Primeiro', 'Segundo'].map((title, index) => ({
+      id: `item-${index}`,
+      title,
+      item_type: 'passagem',
+      quantity: 1,
+      unit_price: 150,
+      total_amount: 150,
+      start_date: '2027-08-11',
+      end_date: '2027-08-13',
+      order_index: index,
+      raw: { detalhes_orcamento: { adultos: 1, adultos_valor: 150 } }
+    }))
+  });
+  api.patch.mockResolvedValue({});
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(EditPage, { target });
+  try {
+    await vi.waitFor(() =>
+      expect(target.querySelector('[aria-label="Mover item 1 para baixo"]')).toBeTruthy()
+    );
+    target.querySelector<HTMLButtonElement>('[aria-label="Mover item 1 para baixo"]')!.click();
+    flushSync();
+    expect(
+      [...target.querySelectorAll('details summary')].map((summary) => summary.textContent)
+    ).toEqual([expect.stringContaining('Segundo'), expect.stringContaining('Primeiro')]);
+    target
+      .querySelector('form')!
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await vi.waitFor(() =>
+      expect(api.patch).toHaveBeenCalledWith(
+        '/api/v1/orcamentos/orcamento-1',
+        expect.objectContaining({
+          itens: [
+            expect.objectContaining({ id: 'item-1', title: 'Segundo', order_index: 0 }),
+            expect.objectContaining({ id: 'item-0', title: 'Primeiro', order_index: 1 })
+          ]
+        })
+      )
+    );
   } finally {
     await unmount(app);
   }
