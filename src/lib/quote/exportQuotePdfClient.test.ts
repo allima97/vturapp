@@ -5,6 +5,10 @@ import {
   renderQuoteItemsForScreen
 } from './exportQuotePdfClient';
 import { VTUR_LOGO_URL } from '$lib/brand';
+import { compile, preprocess } from 'svelte/compiler';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const mocks = vi.hoisted(() => ({ apiFetch: vi.fn(), open: vi.fn() }));
 vi.mock('$lib/services/api', () => ({ apiFetch: mocks.apiFetch }));
@@ -17,6 +21,24 @@ afterEach(() => {
 });
 
 describe('identidade dos orçamentos e circuitos', () => {
+  it('aplica os estilos compilados às tabelas de itens renderizadas na tela', async () => {
+    const filename = fileURLToPath(
+      new URL('../../routes/(app)/orcamentos/[id]/+page.svelte', import.meta.url)
+    );
+    const source = await preprocess(readFileSync(filename, 'utf8'), vitePreprocess(), { filename });
+    const compiled = compile(source.code, { filename, generate: 'client' });
+    const css = compiled.css?.code || '';
+    const scope = css.match(/\.quote-items\.(svelte-[a-z0-9]+)/)?.[1];
+    expect(scope).toBeTruthy();
+    expect(compiled.js.code).toContain(`quote-items overflow-x-auto ${scope}`);
+    expect(css).toMatch(
+      /\.quote-items\.svelte-[a-z0-9]+ \.orc-city-table\s*\{[^}]*table-layout:\s*fixed/s
+    );
+    expect(css).toMatch(
+      /\.quote-items\.svelte-[a-z0-9]+ \.orc-city-table thead th\s*\{[^}]*background:\s*#243aa3/s
+    );
+  });
+
   it('mantém a cor do cabeçalho das tabelas igual à do título do orçamento', () => {
     const html = buildQuotePreviewHtmlSync({
       quote: { id: 'quote-1' },
@@ -70,6 +92,8 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).not.toContain('<script>');
     expect(html).toContain('GRU → FCO');
     expect(html).toContain('<th class="orc-value">Valor Unit.</th>');
+    expect(html).toContain('<th>Serviço</th><th>Cidade</th><th>Descrição / Detalhes</th>');
+    expect(html).toContain('<td>Roma</td>');
     expect(html).toContain('<th class="orc-value">Total</th>');
     expect(html).toContain('02 apartamentos');
     expect(html).toContain('R$ 150,00');
@@ -77,6 +101,50 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('Dia 1 - Roma');
     expect(html).toContain('<td class="orc-quantity">2</td>');
     expect(html).toContain('<td class="orc-value">R$ 50,00</td>');
+  });
+
+  it('apresenta trem como trem com trechos e quantidades de passageiros, sem classificá-lo como aéreo', () => {
+    const item = {
+      item_type: 'trem',
+      title: 'Roma / Milão',
+      quantity: 1,
+      unit_price: 50,
+      total_amount: 150,
+      city_name: 'Roma, Itália',
+      raw: {
+        detalhes_orcamento: { adultos: 2, criancas: 1 },
+        aereo_import: {
+          segmentos: [
+            {
+              tipo_voo: 'Internacional',
+              cia_aerea: 'Trenitalia',
+              numero_voo: 'FR 1000',
+              aeroporto_saida: 'ROM',
+              aeroporto_chegada: 'MIL'
+            }
+          ]
+        }
+      }
+    };
+    const screen = renderQuoteItemsForScreen([item], 'BRL');
+    const pdf = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [item],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: true
+    });
+    for (const html of [screen, pdf]) {
+      expect(html).toContain('<td class="orc-service-type">Trem</td>');
+      expect(html).toContain('ROM → MIL - FR 1000');
+      expect(html).toContain('03 passagens');
+      expect(html).not.toContain('Aéreo Internacional');
+    }
+    expect(screen).toContain('<td>Roma</td>');
+    expect(pdf).toContain('<td>Serviços e demais produtos</td><td>BRL</td>');
   });
 
   it('usa VTur mesmo quando as configurações antigas incluem outro logo', () => {

@@ -627,83 +627,6 @@
           </span>
         {/if}
 
-        <style>
-          .quote-items :global(.orc-city-section) {
-            margin: 18px 0;
-          }
-          .quote-items :global(.orc-city-table) {
-            width: 100%;
-            min-width: 760px;
-            table-layout: fixed;
-            border-collapse: collapse;
-            font-size: 12px;
-            overflow-wrap: anywhere;
-          }
-          .quote-items :global(.orc-city-table th),
-          .quote-items :global(.orc-city-table td) {
-            border: 1px solid #dbe3ec;
-            padding: 8px;
-            text-align: left;
-            vertical-align: top;
-          }
-          .quote-items :global(.orc-city-table thead th) {
-            background: #243aa3;
-            color: white;
-            font-weight: 700;
-            text-transform: uppercase;
-          }
-          .quote-items :global(.orc-city-table thead .orc-city-heading) {
-            background: transparent;
-            border: 0;
-            padding: 0;
-            text-transform: none;
-          }
-          .quote-items :global(.roteiro-card-city),
-          .quote-items :global(.orc-table-section-title) {
-            margin: 0 0 8px;
-            border-left: 4px solid #c45b1b;
-            padding-left: 9px;
-            color: #112b4d;
-            font-size: 18px;
-            font-weight: 700;
-          }
-          .quote-items :global(.roteiro-card-city svg) {
-            display: none;
-          }
-          .quote-items :global(.orc-city-table tbody tr:nth-child(even):not(.orc-subtotal)) {
-            background: #f7f9fc;
-          }
-          .quote-items :global(.orc-city-table .orc-value) {
-            text-align: right;
-          }
-          .quote-items :global(.orc-service-type) {
-            font-weight: 700;
-          }
-          .quote-items :global(.orc-service-details) {
-            color: #475569;
-            line-height: 1.5;
-            margin-top: 4px;
-          }
-          .quote-items :global(.orc-subtotal) {
-            background: #edf2f7;
-            color: #112b4d;
-            font-weight: 700;
-          }
-          .quote-items :global(.roteiro-card) {
-            margin: 12px 0;
-            border: 1px solid #dbe3ec;
-            border-radius: 8px;
-            padding: 14px 16px;
-            overflow-wrap: anywhere;
-          }
-          .quote-items :global(.roteiro-card h3) {
-            font-weight: 700;
-          }
-          .quote-items :global(.roteiro-card-detail),
-          .quote-items :global(.orc-circuit-day) {
-            margin-top: 8px;
-          }
-        </style>
         {#if orcamentoConvertido}
           <span class="rounded-full bg-emerald-200 px-2 py-1 text-xs font-medium text-emerald-800">
             CONVERTIDO
@@ -1162,3 +1085,81 @@
     />
   {/if}
 {/if}
+
+<style>
+  .quote-items :global(.orc-city-section) {
+    margin: 18px 0;
+  }
+  .quote-items :global(.orc-city-table) {
+    width: 100%;
+    min-width: 880px;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+  }
+  .quote-items :global(.orc-city-table th),
+  .quote-items :global(.orc-city-table td) {
+    border: 1px solid #dbe3ec;
+    padding: 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+  .quote-items :global(.orc-city-table thead th) {
+    background: #243aa3;
+    color: white;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .quote-items :global(.orc-city-table thead .orc-city-heading) {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    text-transform: none;
+  }
+  .quote-items :global(.roteiro-card-city),
+  .quote-items :global(.orc-table-section-title) {
+    margin: 0 0 8px;
+    border-left: 4px solid #c45b1b;
+    padding-left: 9px;
+    color: #112b4d;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .quote-items :global(.roteiro-card-city svg) {
+    display: none;
+  }
+  .quote-items :global(.orc-city-table tbody tr:nth-child(even):not(.orc-subtotal)) {
+    background: #f7f9fc;
+  }
+  .quote-items :global(.orc-city-table .orc-value) {
+    text-align: right;
+  }
+  .quote-items :global(.orc-service-type) {
+    font-weight: 700;
+  }
+  .quote-items :global(.orc-service-details) {
+    color: #475569;
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+  .quote-items :global(.orc-subtotal) {
+    background: #edf2f7;
+    color: #112b4d;
+    font-weight: 700;
+  }
+  .quote-items :global(.roteiro-card) {
+    margin: 12px 0;
+    border: 1px solid #dbe3ec;
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-wrap: anywhere;
+  }
+  .quote-items :global(.roteiro-card h3) {
+    font-weight: 700;
+  }
+  .quote-items :global(.roteiro-card-detail),
+  .quote-items :global(.orc-circuit-day) {
+    margin-top: 8px;
+  }
+</style>

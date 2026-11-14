@@ -295,6 +295,57 @@ it('salva e retorna a ordem manual dos itens no orçamento', async () => {
   ]);
 });
 
+it('cria e edita item de trem com passageiros e trechos', async () => {
+  const item = {
+    title: 'Roma / Milão',
+    item_type: 'trem',
+    quantity: 3,
+    unit_price: 50,
+    total_amount: 150,
+    start_date: '2027-08-11',
+    end_date: '2027-08-11',
+    raw: {
+      detalhes_orcamento: { adultos: 2, adultos_valor: 50, criancas: 1, criancas_valor: 50 },
+      aereo_import: { segmentos: [{ cia_aerea: 'Trenitalia', aeroporto_saida: 'ROM' }] }
+    }
+  };
+  const create = await handleOrcamentosCreatePost({
+    request: new Request('https://vtur.app/api/v1/orcamentos/create', {
+      method: 'POST',
+      headers: { origin: 'https://vtur.app', 'content-type': 'application/json' },
+      body: JSON.stringify({ client_name: 'Cliente', valid_until: '2027-07-15', itens: [item] })
+    }),
+    platform: { env: { DB: env.DB } }
+  } as Parameters<typeof handleOrcamentosCreatePost>[0]);
+  expect(create.status).toBe(201);
+  const { data } = await create.json<{ data: { id: string } }>();
+  const url = new URL(`https://vtur.app/api/v1/orcamentos/${data.id}`);
+  const get = () =>
+    handleOrcamentosIdGet({
+      url,
+      params: { id: data.id },
+      request: new Request(url)
+    } as Parameters<typeof handleOrcamentosIdGet>[0]);
+  const original = await (await get()).json<{ itens: Array<Record<string, unknown>> }>();
+  expect(original.itens[0]).toMatchObject(item);
+  const patch = await handleOrcamentosIdPatch({
+    url,
+    params: { id: data.id },
+    request: new Request(url, {
+      method: 'PATCH',
+      headers: { origin: 'https://vtur.app', 'content-type': 'application/json' },
+      body: JSON.stringify({
+        valid_until: '2027-07-15',
+        itens: [{ ...original.itens[0], title: 'Roma / Veneza' }]
+      })
+    }),
+    platform: { env: { DB: env.DB } }
+  } as Parameters<typeof handleOrcamentosIdPatch>[0]);
+  expect(patch.status).toBe(200);
+  const updated = await (await get()).json<{ itens: Array<Record<string, unknown>> }>();
+  expect(updated.itens[0]).toMatchObject({ ...item, title: 'Roma / Veneza' });
+});
+
 it('atualiza detalhes sem perder o item, dados existentes ou segmentos', async () => {
   const quoteId = crypto.randomUUID();
   const itemId = crypto.randomUUID();

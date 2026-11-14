@@ -41,6 +41,7 @@ export const tiposItem = [
   { value: 'pacote', label: 'Pacote' },
   { value: 'hotel', label: 'Hotel' },
   { value: 'passagem', label: 'Passagem Aérea' },
+  { value: 'trem', label: 'Trem' },
   { value: 'passeio', label: 'Passeio' },
   { value: 'show', label: 'Show' },
   { value: 'aluguel_carro', label: 'Aluguel de Carro' },
@@ -137,7 +138,7 @@ function isCar(type: string) {
 }
 
 function isFlight(type: string) {
-  return type === 'passagem';
+  return type === 'passagem' || type === 'trem';
 }
 
 function isActivity(type: string) {

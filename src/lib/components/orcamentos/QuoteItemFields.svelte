@@ -29,7 +29,7 @@
   }
 
   function alterarTipo() {
-    if (item.item_type === 'passagem') {
+    if (item.item_type === 'passagem' || item.item_type === 'trem') {
       item.city_name = '';
       item.destino_geografico_id = '';
       item.title = formatarDescricaoItem(item.item_type, item.title);
@@ -106,7 +106,7 @@
     />
   </div>
 
-  {#if item.item_type !== 'passagem'}
+  {#if item.item_type !== 'passagem' && item.item_type !== 'trem'}
     <div class="md:col-span-4">
       <DestinoOperacional
         fieldId={`${prefix}-destino`}
@@ -125,7 +125,11 @@
     </div>
   {/if}
 
-  <div class={item.item_type === 'passagem' ? 'md:col-span-9' : 'md:col-span-5'}>
+  <div
+    class={item.item_type === 'passagem' || item.item_type === 'trem'
+      ? 'md:col-span-9'
+      : 'md:col-span-5'}
+  >
     <FieldInput
       id={`${prefix}-descricao`}
       label="Descrição"
@@ -337,7 +341,7 @@
         {formatCurrency(calcularTotaisItem(item).total_amount)}
       </div>
     </div>
-  {:else if item.item_type === 'passagem'}
+  {:else if item.item_type === 'passagem' || item.item_type === 'trem'}
     <div class="md:col-span-3">
       <FieldInput
         id={`${prefix}-data-saida`}

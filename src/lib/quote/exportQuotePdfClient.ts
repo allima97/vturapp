@@ -201,6 +201,7 @@ function getFlightDataList(item: QuoteItemForPdf): Record<string, unknown>[] {
 }
 
 function isFlightQuoteItem(item: QuoteItemForPdf) {
+  if (normalizeText(item.item_type) === 'trem') return false;
   if (getFlightDataList(item).length > 0) return true;
   const normalized = normalizeText(
     `${item.item_type || ''} ${item.title || ''} ${item.product_name || ''}`
@@ -489,6 +490,7 @@ function renderServiceItem(
     servico: 'Serviço',
     pacote: 'Pacote',
     passagem: 'Passagem Aérea',
+    trem: 'Trem',
     passeio: 'Passeio',
     show: 'Show',
     aluguel_carro: 'Aluguel de Carro',
@@ -507,6 +509,7 @@ function renderServiceItem(
     : (formatLodgingOrCarQuantity(item) ?? (item.quantity == null ? '-' : String(item.quantity)));
   return `<tr class="orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}">
     <td class="orc-service-type">${escHtml(label)}</td>
+    ${showUnitValue ? `<td>${escHtml(nomeCidadeNoPdf(textVal(item.city_name)) || '—')}</td>` : ''}
     <td><strong>${escHtml(title)}${periodo ? ` - ${escHtml(periodo)}` : ''}</strong>${fields.length ? `<div class="orc-service-details">${fields.map(escHtml).join(' | ')}</div>` : ''}</td>
     <td class="orc-quantity">${escHtml(quantity)}</td>
     ${showUnitValue ? `<td class="orc-value">${escHtml(formatCurrency(Number(item.unit_price ?? 0), item.currency || defaultCurrency))}</td>` : ''}
@@ -517,12 +520,18 @@ function renderServiceItem(
 type QuotePdfSection =
   | { kind: 'city'; city: string; key: string; items: QuoteItemForPdf[] }
   | { kind: 'flights'; items: QuoteItemForPdf[] }
+  | { kind: 'train'; items: QuoteItemForPdf[] }
   | { kind: 'circuit'; items: QuoteItemForPdf[] };
 
 function orderQuoteSections(items: QuoteItemForPdf[]): QuotePdfSection[] {
   const sections: QuotePdfSection[] = [];
   for (const item of items) {
     const previous = sections[sections.length - 1];
+    if (normalizeText(item.item_type) === 'trem') {
+      if (previous?.kind === 'train') previous.items.push(item);
+      else sections.push({ kind: 'train', items: [item] });
+      continue;
+    }
     if (isFlightQuoteItem(item)) {
       if (previous?.kind === 'flights') previous.items.push(item);
       else sections.push({ kind: 'flights', items: [item] });
@@ -553,7 +562,7 @@ function renderGroupedItems(
 ) {
   return sections
     .map((section) => {
-      if (section.kind === 'flights') {
+      if (section.kind === 'flights' || section.kind === 'train') {
         const content = section.items
           .map((item) =>
             getFlightDataList(item).length
@@ -562,7 +571,7 @@ function renderGroupedItems(
           )
           .join('');
         return renderCityTable(
-          'Passagens Aéreas Internacionais e Trechos Internos',
+          section.kind === 'train' ? 'Trem' : 'Passagens Aéreas Internacionais e Trechos Internos',
           content,
           showItemValues,
           false,
@@ -588,7 +597,7 @@ function renderGroupedItems(
         totals.set(currency, (totals.get(currency) || 0) + Number(item.total_amount ?? 0));
       }
       const subtotal = showItemValues
-        ? `<tr class="orc-subtotal"><td colspan="${showUnitValue ? 4 : 3}">Subtotal — ${escHtml(nomeCidadeNoPdf(section.city))}</td><td class="orc-value">${Array.from(totals, ([currency, value]) => escHtml(formatCurrency(value, currency))).join('<br>')}</td></tr>`
+        ? `<tr class="orc-subtotal"><td colspan="${showUnitValue ? 5 : 3}">Subtotal — ${escHtml(nomeCidadeNoPdf(section.city))}</td><td class="orc-value">${Array.from(totals, ([currency, value]) => escHtml(formatCurrency(value, currency))).join('<br>')}</td></tr>`
         : '';
       return renderCityTable(
         section.city,
@@ -608,16 +617,16 @@ function renderCityTable(
   isCity = false,
   showUnitValue = false
 ) {
-  const columnCount = 3 + Number(showItemValues) + Number(showUnitValue);
+  const columnCount = 3 + Number(showItemValues) + 2 * Number(showUnitValue);
   const sectionTitle = isCity
     ? printCityTitle(title)
     : `<div class="orc-table-section-title">${escHtml(title)}</div>`;
   return `<section class="orc-city-section">
     <table class="orc-city-table">
-      <colgroup><col style="width:18%"><col style="width:${showUnitValue ? 42 : showItemValues ? 50 : 70}%"><col style="width:14%">${showUnitValue ? '<col style="width:13%">' : ''}${showItemValues ? `<col style="width:${showUnitValue ? 13 : 18}%">` : ''}</colgroup>
+      <colgroup><col style="width:${showUnitValue ? 13 : 18}%">${showUnitValue ? '<col style="width:13%">' : ''}<col style="width:${showUnitValue ? 34 : showItemValues ? 50 : 70}%"><col style="width:${showUnitValue ? 12 : 14}%">${showUnitValue ? '<col style="width:14%">' : ''}${showItemValues ? `<col style="width:${showUnitValue ? 14 : 18}%">` : ''}</colgroup>
       <thead>
         <tr><th class="orc-city-heading" colspan="${columnCount}">${sectionTitle}</th></tr>
-        <tr><th>Serviço</th><th>Descrição / Detalhes</th><th>Qtd.</th>${showUnitValue ? '<th class="orc-value">Valor Unit.</th>' : ''}${showItemValues ? `<th class="orc-value">${showUnitValue ? 'Total' : 'Valor'}</th>` : ''}</tr>
+        <tr><th>Serviço</th>${showUnitValue ? '<th>Cidade</th>' : ''}<th>Descrição / Detalhes</th><th>Qtd.</th>${showUnitValue ? '<th class="orc-value">Valor Unit.</th>' : ''}${showItemValues ? `<th class="orc-value">${showUnitValue ? 'Total' : 'Valor'}</th>` : ''}</tr>
       </thead>
       <tbody>${content}</tbody>
     </table>
@@ -683,11 +692,14 @@ function renderFlightItemHtml(
   );
   const flightType = normalizeText(flights[0].tipo_voo);
   const isDomestic = flightType === 'nacional' || flightType.includes('interno');
-  const service = isDomestic
-    ? 'Voo Interno'
-    : flightType === 'internacional'
-      ? 'Aéreo Internacional'
-      : 'Passagem Aérea';
+  const service =
+    normalizeText(item.item_type) === 'trem'
+      ? 'Trem'
+      : isDomestic
+        ? 'Voo Interno'
+        : flightType === 'internacional'
+          ? 'Aéreo Internacional'
+          : 'Passagem Aérea';
   const quantityLabel = formatFlightQuantity(item);
   const distinct = (values: string[]) =>
     Array.from(
@@ -747,6 +759,7 @@ function renderFlightItemHtml(
   </div>`;
   return `<tr class="orc-city-item">
     <td class="orc-service-type">${escHtml(service)}</td>
+    ${showUnitValue ? `<td>${escHtml(nomeCidadeNoPdf(textVal(item.city_name)) || '—')}</td>` : ''}
     <td>${content}</td>
     <td class="orc-quantity">${escHtml(quantityLabel)}</td>
     ${showUnitValue ? `<td class="orc-value">${escHtml(formatCurrency(Number(item.unit_price ?? 0), currency))}</td>` : ''}
@@ -783,6 +796,7 @@ function renderCircuitItemHtml(
   if (showUnitValue) {
     const content = `<tr class="orc-city-item">
       <td class="orc-service-type">Circuito</td>
+      <td>${escHtml(city || '—')}</td>
       <td><strong>${escHtml(label)}</strong>${renderPeriodoItem(item)}${renderDetalhesItem(item)}${daysHtml}</td>
       <td class="orc-quantity">${escHtml(String(item.quantity ?? '-'))}</td>
       <td class="orc-value">${escHtml(formatCurrency(Number(item.unit_price ?? 0), currency))}</td>
@@ -815,9 +829,10 @@ function renderAllItemsTableHtml(
       textVal(item.title || item.product_name || item.item_type || 'Item')
     );
     const type = textVal(item.item_type || 'servico');
-    const qty = isFlightQuoteItem(item)
-      ? getFlightPassengerQuantity(item)
-      : Number(item.quantity ?? 1);
+    const qty =
+      isFlightQuoteItem(item) || normalizeText(item.item_type) === 'trem'
+        ? getFlightPassengerQuantity(item)
+        : Number(item.quantity ?? 1);
     const quantity = formatLodgingOrCarQuantity(item) ?? String(Number.isFinite(qty) ? qty : 1);
     const unit = Number(item.unit_price ?? 0);
     const total = Number(item.total_amount ?? 0);

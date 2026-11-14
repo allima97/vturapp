@@ -105,6 +105,9 @@ export function supportsFlightSegments(itemType: string): boolean {
     .replace(/[\u0300-\u036f]/g, '')
     .toLowerCase();
   return (
-    normalized.includes('passag') || normalized.includes('aereo') || normalized.includes('voo')
+    normalized.includes('passag') ||
+    normalized.includes('aereo') ||
+    normalized.includes('voo') ||
+    normalized.trim() === 'trem'
   );
 }

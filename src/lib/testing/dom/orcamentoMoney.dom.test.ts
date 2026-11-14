@@ -93,7 +93,13 @@ it('mostra itens agrupados como no PDF, em largura integral e antes das ações'
     ]) {
       expect(text).toContain(value);
     }
-    expect(items.querySelectorAll('thead tr:last-child th')).toHaveLength(10);
+    expect(items.querySelectorAll('thead tr:last-child th')).toHaveLength(12);
+    expect(
+      [...items.querySelectorAll('thead tr:last-child')][0]
+        .querySelectorAll('th')[1]
+        ?.textContent?.trim()
+    ).toBe('Cidade');
+    expect(items.textContent).toContain('Roma');
     const itemsCard = items.closest('.vtur-card')!;
     const actionHeading = [...target.querySelectorAll('h3')].find(
       (heading) => heading.textContent === 'Ações'
@@ -380,6 +386,78 @@ it('mostra os tipos e a classe de reserva definidos para trechos aéreos', async
           | null
       )?.value
     ).toBe('Internacional');
+  } finally {
+    await unmount(app);
+  }
+});
+
+it('permite criar trem com campos, trechos e cálculo de passagem aérea', async () => {
+  api.post.mockResolvedValue({});
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Page, { target });
+  try {
+    flushSync();
+    const type = (selector: string, value: string) => {
+      const input = target.querySelector<HTMLInputElement>(selector)!;
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      flushSync();
+    };
+    type('input[placeholder="Digite o nome do cliente"]', 'Cliente');
+    const select = target.querySelector('#orcamento-novo-item-0-tipo') as Element & {
+      value: string;
+      dispatchEvent: (event: Event) => boolean;
+    };
+    select.value = 'trem';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    expect(target.querySelector('#orcamento-novo-item-0-destino')).toBeNull();
+    type('#orcamento-novo-item-0-descricao', 'ROMA / MILÃO');
+    type('#orcamento-novo-item-0-data-saida', '2027-08-11');
+    type('#orcamento-novo-item-0-data-chegada', '2027-08-11');
+    type('#orcamento-novo-item-0-adultos', '2');
+    type('#orcamento-novo-item-0-criancas', '1');
+    type('#orcamento-novo-item-0-valor-adultos', '10000');
+    type('#orcamento-novo-item-0-valor-criancas', '5000');
+    [...target.querySelectorAll('button')]
+      .find((button) => button.textContent?.includes('Adicionar trecho'))!
+      .click();
+    flushSync();
+    type('#orcamento-novo-item-0-voo-cia-aerea-0', 'Trenitalia');
+    type('#orcamento-novo-item-0-voo-numero-voo-0', 'FR 1000');
+    type('#orcamento-novo-item-0-voo-aeroporto-saida-0', 'ROM');
+    type('#orcamento-novo-item-0-voo-aeroporto-chegada-0', 'MIL');
+    target
+      .querySelector('form')!
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await vi.waitFor(() =>
+      expect(api.post).toHaveBeenCalledWith(
+        '/api/v1/orcamentos/create',
+        expect.objectContaining({
+          itens: [
+            expect.objectContaining({
+              item_type: 'trem',
+              title: 'Roma / Milão',
+              quantity: 3,
+              total_amount: 250,
+              raw: expect.objectContaining({
+                aereo_import: {
+                  segmentos: [
+                    expect.objectContaining({
+                      cia_aerea: 'Trenitalia',
+                      numero_voo: 'FR 1000',
+                      aeroporto_saida: 'ROM',
+                      aeroporto_chegada: 'MIL'
+                    })
+                  ]
+                }
+              })
+            })
+          ]
+        })
+      )
+    );
   } finally {
     await unmount(app);
   }
