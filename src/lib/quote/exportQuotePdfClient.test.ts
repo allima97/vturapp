@@ -42,12 +42,12 @@ describe('identidade dos orçamentos e circuitos', () => {
       items: [
         {
           item_type: 'hotel',
-          title: 'Hotel',
+          title: 'Hollywood Hotel Inn',
           start_date: '2027-08-11',
           end_date: '2027-08-13',
           raw: {
             detalhes_orcamento: {
-              categoria: '4 estrelas',
+              categoria: '3 Estrelas',
               adultos: 2,
               criancas: 0,
               tipo_apartamento: 'Duplo',
@@ -64,13 +64,48 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: false
     });
-    expect(html).toContain('11-08-2027 a 13-08-2027');
-    expect(html).toContain('Categoria: 4 estrelas');
-    expect(html).toContain('Adultos: 2');
+    expect(html).toContain('Hollywood Hotel Inn - 11-08-2027 a 13-08-2027 (02 noites)');
+    expect(html).toContain('02 Adultos | 3 Estrelas | Duplo | Café da manhã');
+    expect(html).not.toContain('Total de noites:');
+    expect(html).not.toContain('Categoria:');
+    expect(html).not.toContain('Apartamentos:');
     expect(html).not.toContain('Crianças: 0');
     expect(html).not.toContain('Valor da criança válido');
-    expect(html).toContain('Acomodação: Duplo');
-    expect(html).toContain('Regime: Café da manhã');
+  });
+
+  it('formata período e incluídos do aluguel de carro sem rótulos redundantes', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        {
+          item_type: 'aluguel_carro',
+          title: 'SUV - Automático',
+          city_name: 'Los Angeles',
+          start_date: '2027-01-17',
+          end_date: '2027-01-20',
+          quantity: 1,
+          total_amount: 700,
+          raw: {
+            detalhes_orcamento: {
+              cambio: 'Automático',
+              incluidos: ['CDW', 'LDW', 'Tanque Cheio', 'KM Livre']
+            }
+          }
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+
+    expect(html).toContain('SUV - 17-01-2027 a 20-01-2027 (04 dias)');
+    expect(html).toContain('Automático | KM Livre | CDW | LDW | Tanque Cheio');
+    expect(html).not.toContain('SUV - Automático - 17-01-2027');
+    expect(html).not.toContain('Câmbio:');
+    expect(html).not.toContain('Incluídos:');
   });
 
   it('omite categorias de passageiros sem quantidade no PDF', () => {
@@ -123,7 +158,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
 
-    expect(html).toContain('Crianças: 1');
+    expect(html).toContain('02 Adultos | 01 Criança');
     expect(html).toContain('Valor da criança válido');
   });
 
@@ -213,6 +248,13 @@ describe('identidade dos orçamentos e circuitos', () => {
           quantity: 1,
           total_amount: 1500,
           taxes_amount: 120,
+          raw: {
+            detalhes_orcamento: {
+              adultos: 2,
+              criancas: 0,
+              infant: 0
+            }
+          },
           segments: [
             {
               segment_type: 'flight',
@@ -272,6 +314,38 @@ describe('identidade dos orçamentos e circuitos', () => {
               ]
             }
           }
+        },
+        {
+          item_type: 'passagem',
+          title: 'Roma - Barcelona',
+          quantity: 1,
+          total_amount: 250,
+          raw: {
+            detalhes_orcamento: {
+              adultos: 2,
+              criancas: 0,
+              infant: 0
+            }
+          },
+          segments: [
+            {
+              segment_type: 'flight',
+              data: {
+                tipo_voo: 'Voo Interno',
+                trecho: 'ROMA -> BARCELONA',
+                cia_aerea: 'IBERIA',
+                numero_voo: 'IB 1554',
+                aeroporto_saida: 'ROMA',
+                aeroporto_chegada: 'BARCELONA',
+                data_voo: '2027-08-11',
+                data_fim: '2027-08-11',
+                hora_saida: '14:00',
+                hora_chegada: '15:20',
+                classe_reserva: 'Econômica',
+                tarifa_nome: 'Standard'
+              }
+            }
+          ]
         }
       ],
       settings: {},
@@ -298,7 +372,11 @@ describe('identidade dos orçamentos e circuitos', () => {
       'GRU -&gt; FCO - LA 8120 - 10-08-2027 - 10:50 / 10:15 (+1)',
       '10:50 / 10:15 (+1)',
       'FCO -&gt; GRU - LA 8121 - 25-08-2027 - 19:50 / 09:50 (+1)',
+      'ROMA -&gt; BARCELONA - IB 1554 - 11-08-2027 - 14:00 / 15:20',
       'Econômica',
+      '02 Adultos | Econômica | FULL',
+      '02 Adultos | Econômica | Standard',
+      'IBERIA',
       '1.500,00',
       '120,00'
     ]) {
@@ -310,7 +388,8 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('AD 4455');
     expect(html.match(/<strong>LATAM<\/strong>/g)).toHaveLength(1);
     expect(html.match(/SÃO PAULO \/ ROMA \/ SÃO PAULO/g)).toHaveLength(1);
-    expect(html.match(/Classe: Econômica \| Tarifa: FULL/g)).toHaveLength(1);
+    expect(html).not.toContain('Classe: Econômica');
+    expect(html).not.toContain('Tarifa: FULL');
     expect(html).not.toContain('Chegada no dia seguinte');
   });
 

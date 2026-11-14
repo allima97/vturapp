@@ -13,7 +13,7 @@ import { construirLinkWhatsApp } from '$lib/whatsapp';
 import { safeOpenNewTab } from '$lib/security/url';
 import { diffDaysISODate, formatISODateBR, parseISODateParts } from '$lib/date';
 import { apiFetch } from '$lib/services/api';
-import { lerDetalhes, resumoDetalhes } from '$lib/quote/detalhesItem';
+import { diasItem, lerDetalhes, resumoDetalhes } from '$lib/quote/detalhesItem';
 import { chaveIdentidadeCidade } from '$lib/catalogoOpcionais';
 import {
   nomeCidadeNoPdf,
@@ -360,6 +360,72 @@ function formatRoteiroDate(value?: string | null) {
   return formatDateBR(value).replace(/\//g, '-');
 }
 
+function formatPassengerCount(value: number | null, singular: string, plural: string) {
+  if (value === null || value <= 0) return '';
+  return `${String(value).padStart(2, '0')} ${value === 1 ? singular : plural}`;
+}
+
+function getPassengerDetails(item: QuoteItemForPdf) {
+  const details = lerDetalhes(item);
+  return [
+    formatPassengerCount(details.adultos, 'Adulto', 'Adultos'),
+    formatPassengerCount(details.criancas, 'Criança', 'Crianças'),
+    formatPassengerCount(details.infant, 'Infant', 'Infants')
+  ].filter(Boolean);
+}
+
+function getServiceDetails(item: QuoteItemForPdf) {
+  const type = normalizeText(item.item_type);
+  const details = lerDetalhes(item);
+  if (type === 'hotel' || type === 'hospedagem') {
+    return [
+      ...getPassengerDetails(item),
+      textVal(details.categoria),
+      textVal(details.tipo_apartamento),
+      textVal(details.regime)
+    ].filter(Boolean);
+  }
+  if (type === 'aluguel_carro') {
+    const includedOrder = ['KM Livre', 'CDW', 'LDW', 'Tanque Cheio'];
+    const included = new Set(details.incluidos.map(normalizeText));
+    const extras = [
+      ...includedOrder.filter((value) => included.has(normalizeText(value))),
+      ...details.incluidos.filter(
+        (value) => !includedOrder.some((known) => normalizeText(known) === normalizeText(value))
+      )
+    ];
+    return [textVal(details.cambio), ...extras].filter(Boolean);
+  }
+  return resumoDetalhes(item);
+}
+
+function getServiceTitle(item: QuoteItemForPdf) {
+  const title = textVal(item.title || item.product_name || item.item_type || 'Item');
+  if (normalizeText(item.item_type) !== 'aluguel_carro') return title;
+
+  const cambio = textVal(lerDetalhes(item).cambio);
+  const suffix = title.match(/^(.*?)\s+[-–—]\s+([^-–—]+)$/);
+  return suffix && cambio && normalizeText(suffix[2]) === normalizeText(cambio)
+    ? suffix[1].trim()
+    : title;
+}
+
+function formatServicePeriod(item: QuoteItemForPdf) {
+  const inicio = formatRoteiroDate(item.start_date);
+  const fim = formatRoteiroDate(item.end_date);
+  let periodo = inicio && fim && inicio !== fim ? `${inicio} a ${fim}` : inicio || fim;
+  const dias = diasItem(textVal(item.item_type), textVal(item.start_date), textVal(item.end_date));
+  const type = normalizeText(item.item_type);
+
+  if (periodo && (type === 'hotel' || type === 'hospedagem') && dias !== null && dias > 0) {
+    periodo += ` (${String(dias).padStart(2, '0')} ${dias === 1 ? 'noite' : 'noites'})`;
+  } else if (periodo && type === 'aluguel_carro' && dias !== null) {
+    periodo += ` (${String(dias).padStart(2, '0')} ${dias === 1 ? 'dia' : 'dias'})`;
+  }
+
+  return periodo;
+}
+
 function renderServiceItem(
   item: QuoteItemForPdf,
   showItemValues: boolean,
@@ -382,15 +448,13 @@ function renderServiceItem(
     outro: 'Serviço'
   };
   const label = labels[type] || textVal(item.item_type) || 'Serviço';
-  const inicio = formatRoteiroDate(item.start_date);
-  const fim = formatRoteiroDate(item.end_date);
-  const periodo = inicio && fim && inicio !== fim ? `${inicio} a ${fim}` : inicio || fim;
-  const fields = resumoDetalhes(item);
-  const title = textVal(item.title || item.product_name || item.item_type || 'Item');
+  const periodo = formatServicePeriod(item);
+  const fields = getServiceDetails(item);
+  const title = getServiceTitle(item);
   const quantity = item.quantity == null ? '-' : String(item.quantity);
   return `<tr class="orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}">
     <td class="orc-service-type">${escHtml(label)}</td>
-    <td><strong>${escHtml(title)}${periodo ? ` - ${escHtml(periodo)}` : ''}</strong>${fields.length ? `<div class="orc-service-details">${fields.map(escHtml).join(' · ')}</div>` : ''}</td>
+    <td><strong>${escHtml(title)}${periodo ? ` - ${escHtml(periodo)}` : ''}</strong>${fields.length ? `<div class="orc-service-details">${fields.map(escHtml).join(' | ')}</div>` : ''}</td>
     <td class="orc-quantity">${escHtml(quantity)}</td>
     ${showItemValues ? `<td class="orc-value">${escHtml(formatCurrency(Number(item.total_amount ?? 0), item.currency || defaultCurrency))}</td>` : ''}
   </tr>`;
@@ -555,12 +619,7 @@ function renderFlightItemHtml(
   const fareDetails = distinct(
     flights
       .map((flight) =>
-        [
-          textVal(flight.classe_reserva) ? `Classe: ${textVal(flight.classe_reserva)}` : '',
-          textVal(flight.tarifa_nome) ? `Tarifa: ${textVal(flight.tarifa_nome)}` : ''
-        ]
-          .filter(Boolean)
-          .join(' | ')
+        [textVal(flight.classe_reserva), textVal(flight.tarifa_nome)].filter(Boolean).join(' | ')
       )
       .filter(Boolean)
   );
@@ -599,15 +658,12 @@ function renderFlightItemHtml(
         .join(' - ');
     })
     .filter(Boolean);
-  const passengerDetails = resumoDetalhes(item).filter((detail) =>
-    /^(Adultos|Crianças|Infant):/.test(detail)
-  );
+  const serviceDetails = [...getPassengerDetails(item), ...fareDetails].join(' | ');
   const content = `<div class="orc-flight-row-details">
     ${carriers.length ? `<strong>${carriers.map(escHtml).join(' / ')}</strong>` : ''}
     ${title ? `<div>${escHtml(title)}</div>` : ''}
     ${segments.map((segment) => `<div class="orc-flight-segment">${escHtml(segment)}</div>`).join('')}
-    ${fareDetails.map((detail) => `<div class="orc-service-details">${escHtml(detail)}</div>`).join('')}
-    ${passengerDetails.length ? `<div class="orc-service-details">${passengerDetails.map(escHtml).join(' · ')}</div>` : ''}
+    ${serviceDetails ? `<div class="orc-service-details">${escHtml(serviceDetails)}</div>` : ''}
     ${showItemValues && taxes > 0 ? `<div class="orc-service-details">Taxas: ${escHtml(formatCurrency(taxes, currency))}</div>` : ''}
   </div>`;
   return `<tr class="orc-city-item">
