@@ -1290,11 +1290,46 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(group).toContain('class="q orc-quantity"');
     expect(group).not.toContain('Subtotal');
     expect(group).not.toContain('500,00');
+    expect(html).toContain('<div class="tt"><b>TOTAL</b><span>€ 500,00</span>');
     expect(html).toContain('>Produtos</span>');
+    expect(html).toContain('€ 500,00</span></div></section>');
     expect(html).not.toContain('Aéreo');
     expect(html).toContain('>01/07/2027</span>');
     expect(html).toContain('>15/07/2027</span>');
     expect(html).toContain('Tarifas válidas até 15/07/2027');
+  });
+
+  it('mostra o total geral na faixa mesmo sem valores por item', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1', currency: 'BRL', created_at: '2027-07-01' },
+      items: [
+        { item_type: 'passagem', title: 'Voo', total_amount: 1000, taxes_amount: 50 },
+        {
+          item_type: 'hotel',
+          title: 'Hotel',
+          city_name: 'Roma',
+          total_amount: 200,
+          currency: 'EUR'
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false,
+      discount: 50
+    });
+    const items = html.slice(
+      html.indexOf('<section class="orc-city-section">'),
+      html.indexOf('<section class="orc-financial-section">')
+    );
+    expect(items).not.toContain('1.000,00');
+    expect(items).not.toContain('200,00');
+    expect(html).toContain('<div class="tt"><b>TOTAL</b><span>R$ 1.000,00 · € 200,00</span>');
+    expect(html).toContain('R$ 1.000,00</span></div>');
+    expect(html).toContain('€ 200,00</span></div>');
+    expect(html).toContain('>Produtos</span>');
   });
 
   it('mostra somente as datas disponíveis no cabeçalho, sem separador solto', () => {
