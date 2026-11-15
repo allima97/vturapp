@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   diasItem,
+  lerDetalhes,
   novoItemOrcamento,
   rawDetalhes,
   recalcularTotaisItem,
@@ -68,7 +69,16 @@ describe('cálculos por tipo de item do orçamento', () => {
 
     expect(diasItem(item.item_type, item.start_date, item.end_date)).toBe(4);
     expect(item.total_amount).toBe(180);
-    expect(rawDetalhes(item)).toMatchObject({ adultos_valor: 100, senior_valor: 80 });
+    item.fornecedor = ' Assist Card ';
+    expect(rawDetalhes(item)).toMatchObject({
+      adultos_valor: 100,
+      senior_valor: 80,
+      fornecedor: 'Assist Card'
+    });
+    expect(
+      lerDetalhes({ item_type: 'seguro', raw: { detalhes_orcamento: rawDetalhes(item) } })
+        .fornecedor
+    ).toBe('Assist Card');
   });
 
   it('omite categorias de passageiros sem quantidade no resumo', () => {

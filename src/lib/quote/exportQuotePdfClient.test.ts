@@ -35,6 +35,12 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('.sh small { color: #6B7280;');
     expect(html).toContain('.card.tot { background: #EEF2F7;');
     expect(html).toContain('print-color-adjust: exact;');
+    expect(html).toContain(
+      '.two { display: grid; grid-template-columns: 1.9fr 1fr; gap: 10px; break-inside: avoid; align-items: start; }'
+    );
+    expect(html).toContain(
+      '.cta { background: #243AA3; color: #fff; border-radius: 12px; padding: 12px; display: flex; gap: 10px; align-items: center; align-self: start; height: auto; min-height: 0; }'
+    );
     expect(html).toContain('-webkit-print-color-adjust: exact;');
   });
 
@@ -531,6 +537,9 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     expect(html).toContain('HOTEL · 11/08 a 13/08/2027 · 2 NOITES');
     expect(html).toContain('Hollywood Hotel Inn');
+    expect(html.indexOf('>Hollywood Hotel Inn</b>')).toBeLessThan(
+      html.indexOf('HOTEL · 11/08 a 13/08/2027 · 2 NOITES')
+    );
     expect(html).toContain('3 estrelas · Duplo');
     expect(html).toContain('Café da manhã');
     expect(html).toContain('min-width: 0');
@@ -976,6 +985,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     expect(html).toContain('Passagens aéreas');
     expect(html).toContain('AÉREO · IDA · 10/08/2027');
+    expect(html.indexOf('São Paulo / Roma')).toBeLessThan(html.indexOf('AÉREO · IDA · 10/08/2027'));
     expect(html).toContain('AÉREO · VOLTA · 25/08/2027');
     expect(html).toContain('<div class="q orc-quantity">1 passagem</div>');
     expect(html.match(/<div class="q orc-quantity">2 passagens<\/div>/g)).toHaveLength(2);
@@ -1005,7 +1015,8 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html.match(/São Paulo \/ Roma \/ São Paulo/g)).toHaveLength(1);
     expect(html).not.toContain('Classe: Econômica');
     expect(html).not.toContain('Tarifa: FULL');
-    expect(html).not.toContain('Chegada no dia seguinte');
+    expect(html).not.toContain('Chegada no dia seguinte (+1)');
+    expect(html).toContain('<span class="p1">+1</span> = Chegada no dia seguinte');
   });
 
   it('conta passageiros em todos os voos, inclusive sem trechos, e preserva quantidades legadas', () => {
@@ -1291,7 +1302,8 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(group).not.toContain('Subtotal');
     expect(group).not.toContain('500,00');
     expect(html).toContain('<div class="tt"><b>TOTAL</b><span>€ 500,00</span>');
-    expect(html).toContain('>Produtos</span>');
+    expect(html).toContain('>Total da viagem</span>');
+    expect(html).not.toContain('Produtos');
     expect(html).toContain('€ 500,00</span></div></section>');
     expect(html).not.toContain('Aéreo');
     expect(html).toContain('>01/07/2027</span>');
@@ -1329,7 +1341,82 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('<div class="tt"><b>TOTAL</b><span>R$ 1.000,00 · € 200,00</span>');
     expect(html).toContain('R$ 1.000,00</span></div>');
     expect(html).toContain('€ 200,00</span></div>');
-    expect(html).toContain('>Produtos</span>');
+    expect(html).toContain('>Total da viagem</span>');
+    expect(html).not.toContain('Produtos');
+  });
+
+  it('padroniza a linha do serviço com dias, fornecedor ou categoria', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        {
+          item_type: 'seguro',
+          title: 'Seguro Europa',
+          city_name: 'Roma',
+          start_date: '2026-11-24',
+          end_date: '2026-12-01',
+          raw: { detalhes_orcamento: { fornecedor: 'Assist Card', adultos: 2 } }
+        },
+        {
+          item_type: 'seguro',
+          title: 'Seguro sem fornecedor',
+          city_name: 'Roma',
+          start_date: '2026-11-24',
+          end_date: '2026-11-24',
+          raw: { detalhes_orcamento: { adultos: 1 } }
+        },
+        {
+          item_type: 'ingresso',
+          title: 'Coliseu',
+          city_name: 'Roma',
+          start_date: '2026-11-25',
+          end_date: '2026-11-26',
+          raw: { detalhes_orcamento: { categoria: 'Básico', adultos: 2 } }
+        },
+        {
+          item_type: 'passeio',
+          title: 'City tour',
+          city_name: 'Roma',
+          start_date: '2026-11-25',
+          end_date: '2026-11-26',
+          raw: { detalhes_orcamento: { categoria: 'Serviço Compartilhado', adultos: 2 } }
+        },
+        {
+          item_type: 'show',
+          title: 'Ópera',
+          city_name: 'Roma',
+          start_date: '2026-11-26',
+          end_date: '2026-11-26',
+          raw: { detalhes_orcamento: { categoria: 'Plateia', adultos: 2 } }
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+
+    expect(html).toContain('SEGURO VIAGEM · 24/11 a 01/12/2026 - 08 dias');
+    expect(html).toContain('>Seguro Europa</b>');
+    expect(html.indexOf('>Seguro Europa</b>')).toBeLessThan(
+      html.indexOf('SEGURO VIAGEM · 24/11 a 01/12/2026 - 08 dias')
+    );
+    expect(html).toContain('>Assist Card</div>');
+    expect(html).toContain('SEGURO VIAGEM · 24/11/2026 - 01 dia');
+    expect(html).not.toContain('Total de dias');
+    expect(html).not.toContain('Adultos:');
+    expect(html).toContain('INGRESSO · 25/11 a 26/11/2026 - 02 dias');
+    expect(html).toContain('>Básico</div>');
+    expect(html).toContain('PASSEIO · 25/11 a 26/11/2026 - 02 dias');
+    expect(html).toContain('>Serviço Compartilhado</div>');
+    expect(html).toContain('SHOW · 26/11/2026 - 01 dia');
+    expect(html).toContain('>Plateia</div>');
+    expect(html).not.toContain('Categoria:');
+    expect(html).toContain('>2 adultos</span>');
+    expect(html.indexOf('>Assist Card</div>')).toBeGreaterThan(html.indexOf('>Seguro Europa</b>'));
+    expect(html).not.toContain('Produtos');
   });
 
   it('mostra somente as datas disponíveis no cabeçalho, sem separador solto', () => {
@@ -1382,6 +1469,107 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('€ 90,00');
     expect(html).not.toContain('R$ 90,00');
   });
+});
+
+it('explica o badge de chegada só no card de passagens aéreas', () => {
+  const html = buildQuotePreviewHtmlSync({
+    quote: { id: 'quote-1' },
+    items: [
+      {
+        item_type: 'passagem',
+        title: 'Com pernoite',
+        segments: [
+          {
+            segment_type: 'flight',
+            data: {
+              data_voo: '2027-08-10',
+              data_fim: '2027-08-11',
+              aeroporto_saida: 'GRU',
+              aeroporto_chegada: 'FCO'
+            }
+          }
+        ]
+      },
+      {
+        item_type: 'passagem',
+        title: 'Dois dias',
+        segments: [
+          {
+            segment_type: 'flight',
+            data: {
+              data_voo: '2027-08-12',
+              data_fim: '2027-08-14',
+              aeroporto_saida: 'FCO',
+              aeroporto_chegada: 'GRU'
+            }
+          }
+        ]
+      },
+      {
+        item_type: 'trem',
+        title: 'Trem noturno',
+        city_name: 'Roma',
+        raw: {
+          aereo_import: {
+            segmentos: [
+              {
+                aeroporto_saida: 'Roma',
+                aeroporto_chegada: 'Milão',
+                data_voo: '2027-08-15',
+                data_fim: '2027-08-16'
+              }
+            ]
+          }
+        }
+      }
+    ],
+    settings: {},
+    qrUrl: null,
+    complementUrl: null,
+    showBudgetItems: false,
+    showBudgetDetails: true,
+    showItemValues: false
+  });
+  const air = html.slice(html.indexOf('Passagens aéreas'), html.indexOf('<span class="l">Roma'));
+  const legend = '<p class="orc-arrival-legend">';
+  expect(air).toContain(
+    `${legend}<span><span class="p1">+1</span> = Chegada no dia seguinte</span>`
+  );
+  expect(air).toContain('<span><span class="p1">+2</span> = Chegada dois dias depois</span>');
+  expect(air.indexOf(legend)).toBeGreaterThan(air.lastIndexOf('class="row'));
+  expect(html.slice(html.indexOf('<span class="l">Roma'))).not.toContain('Chegada no dia seguinte');
+  expect(html.slice(html.indexOf('<span class="l">Roma'))).not.toContain(
+    'Chegada dois dias depois'
+  );
+
+  const semAtraso = buildQuotePreviewHtmlSync({
+    quote: { id: 'quote-1' },
+    items: [
+      {
+        item_type: 'passagem',
+        title: 'No mesmo dia',
+        segments: [
+          {
+            segment_type: 'flight',
+            data: {
+              data_voo: '2027-08-10',
+              data_fim: '2027-08-10',
+              aeroporto_saida: 'GRU',
+              aeroporto_chegada: 'GIG'
+            }
+          }
+        ]
+      }
+    ],
+    settings: {},
+    qrUrl: null,
+    complementUrl: null,
+    showBudgetItems: false,
+    showBudgetDetails: true,
+    showItemValues: false
+  });
+  expect(semAtraso).not.toContain('class="orc-arrival-legend"');
+  expect(semAtraso).not.toContain('Chegada no dia seguinte');
 });
 
 describe('prévia do orçamento', () => {

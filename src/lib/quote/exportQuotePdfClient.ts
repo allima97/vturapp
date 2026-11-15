@@ -523,6 +523,16 @@ function rotuloEstadia(item: QuoteItemForPdf, prefix: string, modo: 'noites' | '
   return [prefix, faixaDatas(item.start_date, item.end_date), contagem].filter(Boolean).join(' · ');
 }
 
+function rotuloServico(item: QuoteItemForPdf, prefix: string) {
+  const dias = diasItem(textVal(item.item_type), textVal(item.start_date), textVal(item.end_date));
+  const contagem =
+    dias != null && dias > 0
+      ? `- ${String(dias).padStart(2, '0')} ${dias === 1 ? 'dia' : 'dias'}`
+      : '';
+  const periodo = [faixaDatas(item.start_date, item.end_date), contagem].filter(Boolean).join(' ');
+  return [prefix, periodo].filter(Boolean).join(' · ');
+}
+
 function etiquetasCarro(labels: string[]) {
   const sigla = /^[A-Z0-9]{2,5}$/;
   const frase = (value: string) =>
@@ -690,21 +700,24 @@ function renderServiceItem(
   const details = lerDetalhes(item);
   const hospedagem = type === 'hotel' || type === 'hospedagem';
   const carro = type === 'aluguel_carro';
+  const seguro = type === 'seguro' || type === 'seguro_viagem';
   const cabecalho = hospedagem
     ? rotuloEstadia(item, 'HOTEL', 'noites')
     : carro
       ? rotuloEstadia(item, 'CARRO', 'diarias')
-      : [label.toUpperCase(), faixaDatas(item.start_date, item.end_date)]
-          .filter(Boolean)
-          .join(' · ');
+      : flight || type === 'trem'
+        ? [label.toUpperCase(), faixaDatas(item.start_date, item.end_date)]
+            .filter(Boolean)
+            .join(' · ')
+        : rotuloServico(item, label.toUpperCase());
   const estrelas = textVal(details.categoria).replace(/estrelas/gi, 'estrelas');
   const linhaCinza = hospedagem
     ? [estrelas, textVal(details.tipo_apartamento)].filter(Boolean).join(' · ')
     : carro
       ? 'Aluguel de carro'
-      : fields
-          .filter((field) => !passageirosSemZero(item).includes(quantidadeSemZero(field)))
-          .join(' · ');
+      : seguro
+        ? textVal(details.fornecedor)
+        : textVal(details.categoria);
   const cambio = textVal(details.cambio);
   const titulo =
     carro && cambio && !normalizeText(title).includes(normalizeText(cambio))
@@ -715,7 +728,7 @@ function renderServiceItem(
     : carro
       ? etiquetasCarro(details.incluidos)
       : [passageirosSemZero(item)];
-  const pdf = `${cabecalho ? `<div class="lb">${escHtml(cabecalho)}</div>` : ''}<b>${escHtml(titulo)}</b>${linhaCinza ? `<div class="mu sm">${escHtml(linhaCinza)}</div>` : ''}${etiquetas(tags)}`;
+  const pdf = `<b>${escHtml(titulo)}</b>${cabecalho ? `<div class="lb">${escHtml(cabecalho)}</div>` : ''}${linhaCinza ? `<div class="mu sm">${escHtml(linhaCinza)}</div>` : ''}${etiquetas(tags)}`;
   return `<div class="row orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}"><div>${serviceIconSvg(iconType)}</div><div>${pdf}</div><div class="q orc-quantity">${escHtml(quantidadeSemZero(quantity))}</div>${showItemValues ? `<div class="v">${escHtml(formatCurrency(Number(item.total_amount ?? 0), item.currency || defaultCurrency))}</div>` : '<div class="v"></div>'}</div>`;
 }
 
@@ -842,6 +855,37 @@ function periodoDoGrupo(items: QuoteItemForPdf[]) {
   return dates.length ? faixaResumo(dates[0], dates[dates.length - 1]) : '';
 }
 
+function atrasoChegada(data: { data_voo?: unknown; data_inicio?: unknown; data_fim?: unknown }) {
+  const offset = diffDaysISODate(
+    String(data.data_voo || data.data_inicio || ''),
+    String(data.data_fim || data.data_voo || data.data_inicio || '')
+  );
+  return offset != null && offset > 0 ? offset : 0;
+}
+
+function textoAtraso(dias: number) {
+  if (dias === 1) return 'Chegada no dia seguinte';
+  if (dias === 2) return 'Chegada dois dias depois';
+  return `Chegada ${dias} dias depois`;
+}
+
+function legendaAtraso(items: QuoteItemForPdf[]) {
+  const atrasos = new Set<number>();
+  for (const item of items) {
+    if (normalizeText(item.item_type) === 'trem') continue;
+    for (const data of getFlightDataList(item)) {
+      const atraso = atrasoChegada(data);
+      if (atraso > 0) atrasos.add(atraso);
+    }
+  }
+  if (!atrasos.size) return '';
+  const linhas = [...atrasos]
+    .sort((a, b) => a - b)
+    .map((dias) => `<span><span class="p1">+${dias}</span> = ${escHtml(textoAtraso(dias))}</span>`)
+    .join('');
+  return `<p class="orc-arrival-legend">${linhas}</p>`;
+}
+
 function renderGroupedItems(
   sections: QuotePdfSection[],
   showItemValues: boolean,
@@ -856,13 +900,13 @@ function renderGroupedItems(
     flights.length > 0
       ? renderCityTable(
           'Passagens aéreas',
-          flights
+          `${flights
             .map((item) =>
               getFlightDataList(item).length
                 ? renderFlightItemHtml(item, showItemValues, defaultCurrency)
                 : renderServiceItem(item, showItemValues, defaultCurrency, true)
             )
-            .join(''),
+            .join('')}${legendaAtraso(flights)}`,
           false,
           showItemValues ? moedasDoGrupo(flights, defaultCurrency) : '',
           resumoAereo(flights)
@@ -1167,20 +1211,19 @@ function renderFlightItemHtml(
       const kind = isTrain ? 'TREM' : 'AÉREO';
       const sentido = roundTrip ? (index === 0 ? 'IDA' : 'VOLTA') : '';
       const label = [kind, sentido, date && date !== '-' ? date : ''].filter(Boolean).join(' · ');
-      const offset = diffDaysISODate(
-        flight.data_voo || flight.data_inicio,
-        flight.data_fim || flight.data_voo || flight.data_inicio
-      );
-      const plus = offset != null && offset > 0 ? `<span class="p1">+${offset}</span>` : '';
+      const offset = atrasoChegada(flight);
+      const plus = offset > 0 ? `<span class="p1">+${offset}</span>` : '';
       const depart = textVal(flight.hora_saida).replace(/\s*\(\+\d+\)\s*$/, '');
       const arrive = textVal(flight.hora_chegada).replace(/\s*\(\+\d+\)\s*$/, '');
       const carrier = isTrain
-        ? [index === 0 ? tituloOriginal : '', textVal(flight.descricao)].filter(Boolean).join(' · ')
+        ? textVal(flight.descricao)
         : [textVal(flight.cia_aerea), textVal(flight.descricao)].filter(Boolean).join(' · ');
       const cities =
         !isTrain && (fromCity || toCity)
           ? `<div class="itn">${escHtml([fromCity || from, toCity || to].filter(Boolean).join(' / '))}</div>`
           : '';
+      const nomeTrecho =
+        isTrain && index === 0 && tituloOriginal ? `<b>${escHtml(tituloOriginal)}</b>` : '';
       const saida = depart ? `<span class="mu">${escHtml(depart)}</span>` : '';
       const chegada =
         arrive || plus ? `<span class="mu">${escHtml(arrive)}${plus ? ` ${plus}` : ''}</span>` : '';
@@ -1188,7 +1231,8 @@ function renderFlightItemHtml(
         from || to || depart || arrive
           ? `<div class="rt">${escHtml(from)} ${saida}<i></i>${escHtml(to)} ${chegada}</div>`
           : '';
-      return `${index ? '<div class="lb" style="margin-top:8px">' : '<div class="lb">'}${escHtml(label)}</div>${rota}${cities}${carrier ? `<div class="mu sm">${escHtml(carrier)}</div>` : ''}`;
+      const meta = `${index ? '<div class="lb" style="margin-top:8px">' : '<div class="lb">'}${escHtml(label)}</div>`;
+      return `${nomeTrecho}${cities}${meta}${rota}${carrier ? `<div class="mu sm">${escHtml(carrier)}</div>` : ''}`;
     })
     .join('');
   const tags = etiquetas([
@@ -1211,7 +1255,7 @@ function renderFlightItemHtml(
     !isTrain && title && !rotas.includes(normalizeText(title))
       ? `<div><b>${escHtml(title)}</b></div>`
       : '';
-  return `<div class="row orc-city-item"><div>${serviceIconSvg(iconType === 'passagem' ? 'passagem-section' : iconType)}</div><div>${legs}${nome}${tags}</div><div class="q orc-quantity">${escHtml(quantidadeSemZero(quantityLabel))}</div>${showItemValues ? `<div class="v">${escHtml(formatCurrency(amount, currency))}</div>` : '<div class="v"></div>'}</div>`;
+  return `<div class="row orc-city-item"><div>${serviceIconSvg(iconType === 'passagem' ? 'passagem-section' : iconType)}</div><div>${nome}${legs}${tags}</div><div class="q orc-quantity">${escHtml(quantidadeSemZero(quantityLabel))}</div>${showItemValues ? `<div class="v">${escHtml(formatCurrency(amount, currency))}</div>` : '<div class="v"></div>'}</div>`;
 }
 
 function renderCircuitItemHtml(
@@ -1321,8 +1365,8 @@ function renderFinancialSummary(
     .map(({ code, group, appliedDiscount, total }) => {
       const detail = showItemValues
         ? `· Aéreo ${formatCurrency(group.flights, code)} + Serviços ${formatCurrency(group.services + group.taxes, code)}${appliedDiscount ? ` · desconto ${formatCurrency(appliedDiscount, code)}` : ''}`
-        : 'Produtos';
-      return `<div class="card tot" style="padding:12px 14px;background:#EEF2F7"><span>Total da viagem <span class="mu" style="font-size:8.5pt;font-weight:normal">${escHtml(detail)}</span></span><span>${escHtml(formatCurrency(total, code))}</span></div>`;
+        : '';
+      return `<div class="card tot" style="padding:12px 14px;background:#EEF2F7"><span>Total da viagem${detail ? ` <span class="mu" style="font-size:8.5pt;font-weight:normal">${escHtml(detail)}</span>` : ''}</span><span>${escHtml(formatCurrency(total, code))}</span></div>`;
     })
     .join('');
   return `<section class="orc-financial-section">${cards}${discountNotice}</section>`;
@@ -1474,10 +1518,11 @@ export function buildQuotePreviewHtmlSync(params: {
     .rt { display: flex; align-items: center; gap: 6px; font-weight: bold; }
     .rt i { flex: 0 0 40px; height: 1px; background: #243AA3; }
     .p1 { background: #C62828; color: #fff; font-weight: bold; border-radius: 4px; padding: 0 4px; font-size: 7.5pt; margin-left: 2px; }
+    .orc-arrival-legend { margin: 6px 12px 8px; font-size: 7.5pt; color: #4B5563; display: flex; flex-wrap: wrap; gap: 10px; }
     .itn { font-size: 8.5pt; color: #1B2C80; font-weight: bold; margin-top: 1px; }
     .tot { display: flex; justify-content: space-between; align-items: center; font-size: 12pt; font-weight: bold; color: #1B2C80; }
-    .two { display: grid; grid-template-columns: 1.9fr 1fr; gap: 10px; break-inside: avoid; }
-    .cta { background: #243AA3; color: #fff; border-radius: 12px; padding: 12px; display: flex; gap: 10px; align-items: center; }
+    .two { display: grid; grid-template-columns: 1.9fr 1fr; gap: 10px; break-inside: avoid; align-items: start; }
+    .cta { background: #243AA3; color: #fff; border-radius: 12px; padding: 12px; display: flex; gap: 10px; align-items: center; align-self: start; height: auto; min-height: 0; }
     .cta img { height: 62px; background: #fff; border-radius: 6px; padding: 3px; }
     .shell { max-width: 900px; margin: 0 auto; padding: 24px; }
     .toolbar { position: sticky; top: 0; display: flex; justify-content: flex-end; padding: 12px 0 16px 0; background: #f8fafc; z-index: 10; }
