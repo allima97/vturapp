@@ -488,6 +488,13 @@ function quantidadeSemZero(label: string) {
   return label.replace(/^0+(?=\d)/, '');
 }
 
+function quantidadeExibida(label: string) {
+  const text = quantidadeSemZero(label).trim();
+  if (!text || text === '-') return text || '-';
+  const match = text.match(/^\d+/);
+  return match ? String(Number(match[0])) : text;
+}
+
 function faixaDatas(start?: string | null, end?: string | null) {
   const from = parseISODateParts(start)?.iso || '';
   const to = parseISODateParts(end)?.iso || '';
@@ -729,7 +736,7 @@ function renderServiceItem(
       ? etiquetasCarro(details.incluidos)
       : [passageirosSemZero(item)];
   const pdf = `<b>${escHtml(titulo)}</b>${cabecalho ? `<div class="lb">${escHtml(cabecalho)}</div>` : ''}${linhaCinza ? `<div class="mu sm">${escHtml(linhaCinza)}</div>` : ''}${etiquetas(tags)}`;
-  return `<div class="row orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}"><div>${serviceIconSvg(iconType)}</div><div>${pdf}</div><div class="q orc-quantity">${escHtml(quantidadeSemZero(quantity))}</div>${showItemValues ? `<div class="v">${escHtml(formatCurrency(Number(item.total_amount ?? 0), item.currency || defaultCurrency))}</div>` : '<div class="v"></div>'}</div>`;
+  return `<div class="row orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}"><div>${serviceIconSvg(iconType)}</div><div>${pdf}</div><div class="q orc-quantity">${escHtml(quantidadeExibida(quantity))}</div>${showItemValues ? `<div class="v">${escHtml(formatCurrency(Number(item.total_amount ?? 0), item.currency || defaultCurrency))}</div>` : '<div class="v"></div>'}</div>`;
 }
 
 type QuotePdfSection =
@@ -783,6 +790,71 @@ function orderQuoteSections(items: QuoteItemForPdf[]): QuotePdfSection[] {
     }
   }
   return sections;
+}
+
+function marcoDoItem(item: QuoteItemForPdf) {
+  const marcos: { start: string; end: string }[] = [];
+  const add = (start: unknown, end: unknown) => {
+    const inicio = parseISODateParts(typeof start === 'string' ? start : '')?.iso || '';
+    const fim = parseISODateParts(typeof end === 'string' ? end : '')?.iso || '';
+    if (inicio) marcos.push({ start: inicio, end: fim && fim >= inicio ? fim : inicio });
+  };
+  add(item.start_date, item.end_date);
+  for (const flight of getFlightDataList(item)) {
+    add(
+      flight.data_voo || flight.data_inicio,
+      flight.data_fim || flight.data_voo || flight.data_inicio
+    );
+  }
+  marcos.sort((a, b) => a.start.localeCompare(b.start) || a.end.localeCompare(b.end));
+  return marcos[0] || null;
+}
+
+function ordenarItensDoGrupo(items: QuoteItemForPdf[]) {
+  return items
+    .map((item, order) => ({ item, order, marco: marcoDoItem(item) }))
+    .sort((a, b) => {
+      if (a.marco && b.marco && a.marco.start !== b.marco.start) {
+        return a.marco.start < b.marco.start ? -1 : 1;
+      }
+      if (a.marco && !b.marco) return -1;
+      if (!a.marco && b.marco) return 1;
+      return a.order - b.order;
+    })
+    .map(({ item }) => item);
+}
+
+function ordenarGrupos(sections: QuotePdfSection[]) {
+  const indexes = sections.flatMap((section, index) => (section.kind === 'city' ? [index] : []));
+  const groups = indexes.map((index, order) => {
+    const section = sections[index];
+    const items = section.kind === 'city' ? ordenarItensDoGrupo(section.items) : [];
+    const marcos = items
+      .map(marcoDoItem)
+      .filter((marco): marco is { start: string; end: string } => Boolean(marco))
+      .sort((a, b) => a.start.localeCompare(b.start) || a.end.localeCompare(b.end));
+    return {
+      index,
+      order,
+      items,
+      start: marcos[0]?.start || '',
+      end: marcos[0]?.end || ''
+    };
+  });
+  groups.sort((a, b) => {
+    if (a.start && b.start && a.start !== b.start) return a.start < b.start ? -1 : 1;
+    if (a.start && b.start && a.end !== b.end) return a.end < b.end ? -1 : 1;
+    if (a.start && !b.start) return -1;
+    if (!a.start && b.start) return 1;
+    return a.order - b.order;
+  });
+  const ordered = sections.slice();
+  indexes.forEach((slot, position) => {
+    const source = sections[groups[position].index];
+    if (source.kind !== 'city') return;
+    ordered[slot] = { ...source, items: groups[position].items };
+  });
+  return ordered;
 }
 
 function resumoAereo(items: QuoteItemForPdf[]) {
@@ -895,7 +967,7 @@ function renderGroupedItems(
     .filter((section) => section.kind === 'flights')
     .flatMap((section) => section.items)
     .sort((a, b) => dataDoVoo(a).localeCompare(dataDoVoo(b)) || 0);
-  const rest = sections.filter((section) => section.kind !== 'flights');
+  const rest = ordenarGrupos(sections.filter((section) => section.kind !== 'flights'));
   const air =
     flights.length > 0
       ? renderCityTable(
@@ -916,6 +988,7 @@ function renderGroupedItems(
     .map((section) => {
       if (section.kind === 'circuit')
         return renderCircuitItemHtml(section.items[0], showItemValues, defaultCurrency);
+      if (section.kind !== 'city') return '';
       const content = section.items
         .map((item) => {
           if (normalizeText(item.item_type) !== 'trem')
@@ -939,7 +1012,7 @@ function renderGroupedItems(
 
 function renderCityTable(title: string, content: string, isCity = false, subtotal = '', note = '') {
   const heading = escHtml(isCity ? nomeCidadeNoPdf(title) : title);
-  return `<section class="orc-city-section"><div class="sh"><span class="l">${heading}${note ? ` <small>· ${escHtml(note)}</small>` : ''}</span>${subtotal ? `<span>${escHtml(subtotal)}</span>` : ''}</div>${content}</section>`;
+  return `<section class="orc-city-section"><div class="sh"><span></span><span class="l">${heading}${note ? ` <small>· ${escHtml(note)}</small>` : ''}</span><span class="sh-qtd">Qtd</span><span>${subtotal ? escHtml(subtotal) : ''}</span></div>${content}</section>`;
 }
 
 const financialIcon = `<svg class="orc-section-icon orc-section-icon--financial" width="13" height="13" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M5 9h1m12 6h1"/></svg>`;
@@ -1255,7 +1328,7 @@ function renderFlightItemHtml(
     !isTrain && title && !rotas.includes(normalizeText(title))
       ? `<div><b>${escHtml(title)}</b></div>`
       : '';
-  return `<div class="row orc-city-item"><div>${serviceIconSvg(iconType === 'passagem' ? 'passagem-section' : iconType)}</div><div>${nome}${legs}${tags}</div><div class="q orc-quantity">${escHtml(quantidadeSemZero(quantityLabel))}</div>${showItemValues ? `<div class="v">${escHtml(formatCurrency(amount, currency))}</div>` : '<div class="v"></div>'}</div>`;
+  return `<div class="row orc-city-item"><div>${serviceIconSvg(iconType === 'passagem' ? 'passagem-section' : iconType)}</div><div>${nome}${legs}${tags}</div><div class="q orc-quantity">${escHtml(quantidadeExibida(quantityLabel))}</div>${showItemValues ? `<div class="v">${escHtml(formatCurrency(amount, currency))}</div>` : '<div class="v"></div>'}</div>`;
 }
 
 function renderCircuitItemHtml(
@@ -1613,9 +1686,10 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-city-section { background: #fff; border: 1px solid #DDE3EC; border-radius: 12px; padding: 0; margin: 0 0 8px; overflow: hidden; }
     .orc-financial-section { background: transparent; border: 0; padding: 0; margin: 0; }
     .card.tot { background: #EEF2F7; border: 1px solid #DDE3EC; color: #1B2C80; }
-    .sh { background: #EEF2F7; display: flex; justify-content: space-between; align-items: center; width: 100%; margin: 0; padding: 8px 12px; font-weight: bold; color: #1B2C80; }
+    .sh { background: #EEF2F7; display: grid; grid-template-columns: 22px minmax(0, 1fr) 90px 90px; gap: 8px; align-items: center; width: 100%; margin: 0; padding: 8px 12px; font-weight: bold; color: #1B2C80; }
     .sh .l { display: flex; gap: 8px; align-items: center; min-width: 0; }
-    .sh > span:last-child { flex: none; color: #1B2C80; font-weight: bold; }
+    .sh-qtd { color: #6B7280; font-size: 7.5pt; font-weight: bold; letter-spacing: .04em; }
+    .sh > span:last-child { color: #1B2C80; font-weight: bold; text-align: right; }
     .sh small { color: #6B7280; font-weight: normal; }
     .row { display: grid; grid-template-columns: 22px 1fr 90px 90px; gap: 8px; padding: 6px 12px; border-top: 1px solid #EEF2F7; }
     .row > div { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
