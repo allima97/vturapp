@@ -95,8 +95,8 @@ it('mostra os itens em uma tabela padrão, na ordem manual e antes das ações',
       '01 apartamento',
       'Valor Unit.',
       'Total',
-      'R$ 500,00',
-      'R$ 1.000,00'
+      'R$ 500,00',
+      'R$ 1.000,00'
     ]) {
       expect(text).toContain(value);
     }
@@ -110,9 +110,9 @@ it('mostra os itens em uma tabela padrão, na ordem manual e antes das ações',
       'Roma',
       'Hotel',
       expect.stringContaining('Hotel Roma'),
-      'R$ 300,00',
+      'R$ 300,00',
       '01 apartamento',
-      'R$ 300,00'
+      'R$ 300,00'
     ]);
     expect(
       [...rows[1].querySelectorAll('td')].map((cell) => cell.getAttribute('data-label'))

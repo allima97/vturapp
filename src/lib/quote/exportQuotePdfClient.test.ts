@@ -301,7 +301,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(pdf).toContain('ROM');
     expect(pdf).toContain('MIL');
     expect(pdf).toContain('FR 1000');
-    expect(pdf).toContain('3 passagens');
+    expect(pdf).toContain('<div class="q orc-quantity">3</div>');
     expect(pdf).toContain('Assentos 12A, 12B');
     expect(pdf).toContain('Serviços');
     for (const html of [screen, pdf]) {
@@ -545,7 +545,8 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('min-width: 0');
     expect(html).toContain('overflow-wrap: anywhere');
     expect(html).toContain('2 adultos');
-    expect(html).toContain('<div class="q orc-quantity">1 apartamento</div>');
+    expect(html).toContain('<div class="q orc-quantity">1</div>');
+    expect(html).toContain('>Qtd</span>');
     expect(html).not.toContain('Total de noites:');
     expect(html).not.toContain('Categoria:');
     expect(html).not.toContain('Apartamentos:');
@@ -587,7 +588,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('KM livre');
     expect(html).toContain('CDW + LDW');
     expect(html).toContain('Tanque cheio');
-    expect(html).toContain('<div class="q orc-quantity">1 carro</div>');
+    expect(html).toContain('<div class="q orc-quantity">1</div>');
     expect(html).not.toContain('SUV - Automático - 17-01-2027');
     expect(html).not.toContain('Câmbio:');
     expect(html).not.toContain('Incluídos:');
@@ -616,9 +617,9 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: false
     });
-    for (const quantity of ['1 apartamento', '2 apartamentos', '1 carro', '2 carros']) {
-      expect(html).toContain(`<div class="q orc-quantity">${quantity}</div>`);
-    }
+    expect(html.match(/<div class="q orc-quantity">1<\/div>/g)).toHaveLength(2);
+    expect(html.match(/<div class="q orc-quantity">2<\/div>/g)).toHaveLength(3);
+    expect(html).toContain('>Qtd</span>');
     for (const quantity of ['01 apartamento', '02 apartamentos', '01 carro', '02 carros']) {
       expect(html).toContain(`<td class="text-right">${quantity}</td>`);
     }
@@ -794,9 +795,9 @@ describe('identidade dos orçamentos e circuitos', () => {
         ? [
             'Voo Principal',
             'Voo sem Trechos',
-            'Hotel Paris',
-            'Hotel Roma',
             'Passeio Paris',
+            'Hotel Roma',
+            'Hotel Paris',
             'Serviço sem data',
             'Serviço com fim'
           ]
@@ -821,7 +822,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(items[0].title).toBe('Hotel Paris');
   });
 
-  it('mantém a ordem manual independentemente das datas', () => {
+  it('ordena cidades por data e mantém a ordem manual quando a data empata ou falta', () => {
     const html = buildQuotePreviewHtmlSync({
       quote: { id: 'quote-1' },
       items: [
@@ -838,12 +839,63 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
     const body = html.slice(html.indexOf('<body>'));
-    const positions = ['Sem data A', 'Cidade B', 'Cidade C', 'Sem data D'].map((title) =>
+    const positions = ['Cidade B', 'Cidade C', 'Sem data A', 'Sem data D'].map((title) =>
       body.indexOf(title)
     );
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((a, b) => a - b));
     expect(body).not.toContain('Passagens Aéreas Internacionais e Trechos Internos');
+  });
+
+  it('coloca Los Angeles antes de Anaheim pela data inicial e ordena os itens do grupo', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        {
+          item_type: 'ingresso',
+          title: 'Ingresso Disney',
+          city_name: 'Anaheim',
+          start_date: '2026-11-25',
+          end_date: '2026-11-26'
+        },
+        {
+          item_type: 'servico',
+          title: 'Extra sem data',
+          city_name: 'Los Angeles'
+        },
+        {
+          item_type: 'passeio',
+          title: 'Passeio da tarde',
+          city_name: 'Los Angeles',
+          start_date: '2026-11-24',
+          end_date: '2026-11-25'
+        },
+        {
+          item_type: 'passeio',
+          title: 'Passeio Hollywood',
+          city_name: 'Los Angeles',
+          start_date: '2026-11-24',
+          end_date: '2026-11-24'
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+    const body = html.slice(html.indexOf('<body>'));
+    const titles = ['Passeio da tarde', 'Passeio Hollywood', 'Extra sem data', 'Ingresso Disney'];
+    const positions = titles.map((title) => body.indexOf(title));
+    expect(positions.every((position) => position >= 0)).toBe(true);
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+    expect(body.indexOf('<span class="l">Los Angeles')).toBeLessThan(
+      body.indexOf('<span class="l">Anaheim')
+    );
+    expect(body).toContain('Los Angeles <small>· 24 a 25/11/2026');
+    expect(body).toContain('Anaheim <small>· 25 a 26/11/2026');
+    expect(body).toContain('>Qtd</span>');
   });
 
   it('mantém circuitos e passagens na ordem manual', () => {
@@ -987,8 +1039,8 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('AÉREO · IDA · 10/08/2027');
     expect(html.indexOf('São Paulo / Roma')).toBeLessThan(html.indexOf('AÉREO · IDA · 10/08/2027'));
     expect(html).toContain('AÉREO · VOLTA · 25/08/2027');
-    expect(html).toContain('<div class="q orc-quantity">1 passagem</div>');
-    expect(html.match(/<div class="q orc-quantity">2 passagens<\/div>/g)).toHaveLength(2);
+    expect(html).toContain('<div class="q orc-quantity">1</div>');
+    expect(html.match(/<div class="q orc-quantity">2<\/div>/g)).toHaveLength(2);
     for (const value of [
       'LATAM · LA 8120',
       'GRU',
@@ -1062,7 +1114,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
 
-    for (const quantity of ['3 passagens', '1 passagem', '2 passagens', '4 passagens']) {
+    for (const quantity of ['3', '1', '2', '4']) {
       expect(html).toContain(`<div class="q orc-quantity">${quantity}</div>`);
     }
     expect(html).not.toContain('01 trecho');

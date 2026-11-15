@@ -455,7 +455,7 @@
   <Card header="Itens do Orçamento" color="orcamentos">
     <div class="space-y-3">
       {#each formData.itens as item, index}
-        <div class="flex items-start gap-3">
+        <div class="flex flex-wrap items-start gap-1 sm:flex-nowrap sm:gap-3">
           <div class="min-w-0 flex-1">
             <details bind:open={item.isOpen} class="rounded-lg border border-slate-200 bg-slate-50">
               <summary
@@ -482,39 +482,45 @@
             {/if}
           </div>
 
-          <div class="mt-1 flex shrink-0 flex-col">
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              disabled={index === 0}
-              on:click={() => moverItem(index, -1)}
-              ariaLabel={`Mover item ${index + 1} para cima`}
-              title="Mover para cima"><ArrowUp size={16} /></Button
-            >
-            <Button
-              type="button"
-              variant="ghost"
-              size="xs"
-              disabled={index === formData.itens.length - 1}
-              on:click={() => moverItem(index, 1)}
-              ariaLabel={`Mover item ${index + 1} para baixo`}
-              title="Mover para baixo"><ArrowDown size={16} /></Button
-            >
+          <div
+            class="ml-auto flex shrink-0 flex-row items-center gap-1 sm:mt-1 sm:ml-0 sm:items-start"
+          >
+            <div class="flex flex-row gap-1 sm:flex-col">
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                disabled={index === 0}
+                on:click={() => moverItem(index, -1)}
+                ariaLabel={`Mover item ${index + 1} para cima`}
+                title="Mover para cima"
+                class_name="max-sm:h-8! max-sm:w-8! max-sm:p-0!"><ArrowUp size={16} /></Button
+              >
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                disabled={index === formData.itens.length - 1}
+                on:click={() => moverItem(index, 1)}
+                ariaLabel={`Mover item ${index + 1} para baixo`}
+                title="Mover para baixo"
+                class_name="max-sm:h-8! max-sm:w-8! max-sm:p-0!"><ArrowDown size={16} /></Button
+              >
+            </div>
+            {#if formData.itens.length > 1}
+              <Button
+                type="button"
+                on:click={() => removeItem(index)}
+                variant="ghost"
+                size="sm"
+                class_name="max-sm:h-8! max-sm:w-8! max-sm:p-0! sm:mt-2 shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                ariaLabel="Remover item"
+                title="Remover item"
+              >
+                <X size={18} />
+              </Button>
+            {/if}
           </div>
-          {#if formData.itens.length > 1}
-            <Button
-              type="button"
-              on:click={() => removeItem(index)}
-              variant="ghost"
-              size="sm"
-              class_name="mt-2 shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-              ariaLabel="Remover item"
-              title="Remover item"
-            >
-              <X size={18} />
-            </Button>
-          {/if}
         </div>
       {/each}
 
