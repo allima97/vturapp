@@ -116,7 +116,11 @@
 
   {#if item.item_type !== 'passagem'}
     <div
-      class={item.item_type === 'trem' ? 'min-w-0 md:col-span-12 xl:col-span-3' : 'md:col-span-4'}
+      class={item.item_type === 'trem'
+        ? 'min-w-0 md:col-span-12 xl:col-span-3'
+        : item.item_type === 'seguro'
+          ? 'md:col-span-3'
+          : 'md:col-span-4'}
     >
       <DestinoOperacional
         fieldId={`${prefix}-destino`}
@@ -135,12 +139,26 @@
     </div>
   {/if}
 
+  {#if item.item_type === 'seguro'}
+    <div class="md:col-span-3">
+      <FieldInput
+        id={`${prefix}-fornecedor`}
+        label="Fornecedor"
+        bind:value={item.fornecedor}
+        placeholder="Ex.: Assist Card"
+        class_name="w-full"
+      />
+    </div>
+  {/if}
+
   <div
     class={item.item_type === 'passagem'
       ? 'md:col-span-9'
       : item.item_type === 'trem'
         ? 'min-w-0 md:col-span-12 xl:col-span-3'
-        : 'md:col-span-5'}
+        : item.item_type === 'seguro'
+          ? 'md:col-span-3'
+          : 'md:col-span-5'}
   >
     <FieldInput
       id={`${prefix}-descricao`}

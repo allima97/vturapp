@@ -19,6 +19,7 @@ export type DetalhesItem = {
   regime: string;
   cambio: string;
   incluidos: string[];
+  fornecedor: string;
 };
 
 export type ItemOrcamento = DetalhesItem & {
@@ -72,7 +73,8 @@ export function detalhesVazios(): DetalhesItem {
     quantidade_apartamentos: null,
     regime: '',
     cambio: '',
-    incluidos: []
+    incluidos: [],
+    fornecedor: ''
   };
 }
 
@@ -293,7 +295,8 @@ export function lerDetalhes(item: {
     cambio: texto(detalhes.cambio),
     incluidos: Array.isArray(detalhes.incluidos)
       ? detalhes.incluidos.filter((value): value is string => typeof value === 'string')
-      : []
+      : [],
+    fornecedor: texto(detalhes.fornecedor)
   };
 }
 
@@ -435,7 +438,13 @@ export function rawDetalhes(item: DetalhesItem & { item_type: string }) {
       criancas_valor: item.criancas_valor,
       infant: item.infant,
       infant_valor: item.infant_valor,
-      ...(isInsurance(type) ? { senior: item.senior, senior_valor: item.senior_valor } : {})
+      ...(isInsurance(type)
+        ? {
+            senior: item.senior,
+            senior_valor: item.senior_valor,
+            fornecedor: item.fornecedor.trim()
+          }
+        : {})
     };
   }
   return {
