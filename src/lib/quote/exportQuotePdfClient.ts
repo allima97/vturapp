@@ -855,6 +855,37 @@ function periodoDoGrupo(items: QuoteItemForPdf[]) {
   return dates.length ? faixaResumo(dates[0], dates[dates.length - 1]) : '';
 }
 
+function atrasoChegada(data: { data_voo?: unknown; data_inicio?: unknown; data_fim?: unknown }) {
+  const offset = diffDaysISODate(
+    String(data.data_voo || data.data_inicio || ''),
+    String(data.data_fim || data.data_voo || data.data_inicio || '')
+  );
+  return offset != null && offset > 0 ? offset : 0;
+}
+
+function textoAtraso(dias: number) {
+  if (dias === 1) return 'Chegada no dia seguinte';
+  if (dias === 2) return 'Chegada dois dias depois';
+  return `Chegada ${dias} dias depois`;
+}
+
+function legendaAtraso(items: QuoteItemForPdf[]) {
+  const atrasos = new Set<number>();
+  for (const item of items) {
+    if (normalizeText(item.item_type) === 'trem') continue;
+    for (const data of getFlightDataList(item)) {
+      const atraso = atrasoChegada(data);
+      if (atraso > 0) atrasos.add(atraso);
+    }
+  }
+  if (!atrasos.size) return '';
+  const linhas = [...atrasos]
+    .sort((a, b) => a - b)
+    .map((dias) => `<span><span class="p1">+${dias}</span> = ${escHtml(textoAtraso(dias))}</span>`)
+    .join('');
+  return `<p class="orc-arrival-legend">${linhas}</p>`;
+}
+
 function renderGroupedItems(
   sections: QuotePdfSection[],
   showItemValues: boolean,
@@ -869,13 +900,13 @@ function renderGroupedItems(
     flights.length > 0
       ? renderCityTable(
           'Passagens aéreas',
-          flights
+          `${flights
             .map((item) =>
               getFlightDataList(item).length
                 ? renderFlightItemHtml(item, showItemValues, defaultCurrency)
                 : renderServiceItem(item, showItemValues, defaultCurrency, true)
             )
-            .join(''),
+            .join('')}${legendaAtraso(flights)}`,
           false,
           showItemValues ? moedasDoGrupo(flights, defaultCurrency) : '',
           resumoAereo(flights)
@@ -1180,11 +1211,8 @@ function renderFlightItemHtml(
       const kind = isTrain ? 'TREM' : 'AÉREO';
       const sentido = roundTrip ? (index === 0 ? 'IDA' : 'VOLTA') : '';
       const label = [kind, sentido, date && date !== '-' ? date : ''].filter(Boolean).join(' · ');
-      const offset = diffDaysISODate(
-        flight.data_voo || flight.data_inicio,
-        flight.data_fim || flight.data_voo || flight.data_inicio
-      );
-      const plus = offset != null && offset > 0 ? `<span class="p1">+${offset}</span>` : '';
+      const offset = atrasoChegada(flight);
+      const plus = offset > 0 ? `<span class="p1">+${offset}</span>` : '';
       const depart = textVal(flight.hora_saida).replace(/\s*\(\+\d+\)\s*$/, '');
       const arrive = textVal(flight.hora_chegada).replace(/\s*\(\+\d+\)\s*$/, '');
       const carrier = isTrain
@@ -1490,6 +1518,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .rt { display: flex; align-items: center; gap: 6px; font-weight: bold; }
     .rt i { flex: 0 0 40px; height: 1px; background: #243AA3; }
     .p1 { background: #C62828; color: #fff; font-weight: bold; border-radius: 4px; padding: 0 4px; font-size: 7.5pt; margin-left: 2px; }
+    .orc-arrival-legend { margin: 6px 12px 8px; font-size: 7.5pt; color: #4B5563; display: flex; flex-wrap: wrap; gap: 10px; }
     .itn { font-size: 8.5pt; color: #1B2C80; font-weight: bold; margin-top: 1px; }
     .tot { display: flex; justify-content: space-between; align-items: center; font-size: 12pt; font-weight: bold; color: #1B2C80; }
     .two { display: grid; grid-template-columns: 1.9fr 1fr; gap: 10px; break-inside: avoid; align-items: start; }

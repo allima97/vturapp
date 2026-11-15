@@ -1015,7 +1015,8 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html.match(/São Paulo \/ Roma \/ São Paulo/g)).toHaveLength(1);
     expect(html).not.toContain('Classe: Econômica');
     expect(html).not.toContain('Tarifa: FULL');
-    expect(html).not.toContain('Chegada no dia seguinte');
+    expect(html).not.toContain('Chegada no dia seguinte (+1)');
+    expect(html).toContain('<span class="p1">+1</span> = Chegada no dia seguinte');
   });
 
   it('conta passageiros em todos os voos, inclusive sem trechos, e preserva quantidades legadas', () => {
@@ -1468,6 +1469,107 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('€ 90,00');
     expect(html).not.toContain('R$ 90,00');
   });
+});
+
+it('explica o badge de chegada só no card de passagens aéreas', () => {
+  const html = buildQuotePreviewHtmlSync({
+    quote: { id: 'quote-1' },
+    items: [
+      {
+        item_type: 'passagem',
+        title: 'Com pernoite',
+        segments: [
+          {
+            segment_type: 'flight',
+            data: {
+              data_voo: '2027-08-10',
+              data_fim: '2027-08-11',
+              aeroporto_saida: 'GRU',
+              aeroporto_chegada: 'FCO'
+            }
+          }
+        ]
+      },
+      {
+        item_type: 'passagem',
+        title: 'Dois dias',
+        segments: [
+          {
+            segment_type: 'flight',
+            data: {
+              data_voo: '2027-08-12',
+              data_fim: '2027-08-14',
+              aeroporto_saida: 'FCO',
+              aeroporto_chegada: 'GRU'
+            }
+          }
+        ]
+      },
+      {
+        item_type: 'trem',
+        title: 'Trem noturno',
+        city_name: 'Roma',
+        raw: {
+          aereo_import: {
+            segmentos: [
+              {
+                aeroporto_saida: 'Roma',
+                aeroporto_chegada: 'Milão',
+                data_voo: '2027-08-15',
+                data_fim: '2027-08-16'
+              }
+            ]
+          }
+        }
+      }
+    ],
+    settings: {},
+    qrUrl: null,
+    complementUrl: null,
+    showBudgetItems: false,
+    showBudgetDetails: true,
+    showItemValues: false
+  });
+  const air = html.slice(html.indexOf('Passagens aéreas'), html.indexOf('<span class="l">Roma'));
+  const legend = '<p class="orc-arrival-legend">';
+  expect(air).toContain(
+    `${legend}<span><span class="p1">+1</span> = Chegada no dia seguinte</span>`
+  );
+  expect(air).toContain('<span><span class="p1">+2</span> = Chegada dois dias depois</span>');
+  expect(air.indexOf(legend)).toBeGreaterThan(air.lastIndexOf('class="row'));
+  expect(html.slice(html.indexOf('<span class="l">Roma'))).not.toContain('Chegada no dia seguinte');
+  expect(html.slice(html.indexOf('<span class="l">Roma'))).not.toContain(
+    'Chegada dois dias depois'
+  );
+
+  const semAtraso = buildQuotePreviewHtmlSync({
+    quote: { id: 'quote-1' },
+    items: [
+      {
+        item_type: 'passagem',
+        title: 'No mesmo dia',
+        segments: [
+          {
+            segment_type: 'flight',
+            data: {
+              data_voo: '2027-08-10',
+              data_fim: '2027-08-10',
+              aeroporto_saida: 'GRU',
+              aeroporto_chegada: 'GIG'
+            }
+          }
+        ]
+      }
+    ],
+    settings: {},
+    qrUrl: null,
+    complementUrl: null,
+    showBudgetItems: false,
+    showBudgetDetails: true,
+    showItemValues: false
+  });
+  expect(semAtraso).not.toContain('class="orc-arrival-legend"');
+  expect(semAtraso).not.toContain('Chegada no dia seguinte');
 });
 
 describe('prévia do orçamento', () => {
