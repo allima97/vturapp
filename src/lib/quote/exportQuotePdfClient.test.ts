@@ -36,11 +36,10 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('.card.tot { background: #EEF2F7;');
     expect(html).toContain('print-color-adjust: exact;');
     expect(html).toContain(
-      '.two { display: grid; grid-template-columns: 1.9fr 1fr; gap: 10px; break-inside: avoid; align-items: start; }'
+      '.cta { background: #fff; color: #1F2937; border: 1px solid #DDE3EC; border-radius: 10px; padding: 6px 10px; display: flex; gap: 8px; align-items: center; flex: none; max-width: 250px; height: auto; min-height: 0; line-height: 1.35; }'
     );
-    expect(html).toContain(
-      '.cta { background: #243AA3; color: #fff; border-radius: 12px; padding: 12px; display: flex; gap: 10px; align-items: center; align-self: start; height: auto; min-height: 0; }'
-    );
+    expect(html.indexOf('Proposta de viagem')).toBeLessThan(html.indexOf('Reserve com o'));
+    expect(html).not.toContain('class="two"');
     expect(html).toContain('-webkit-print-color-adjust: exact;');
   });
 
@@ -75,7 +74,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(body).toContain('orc-section-icon--flight');
     expect(body).toContain('M17.8 19.2');
     expect(body).not.toContain('orc-section-icon--city');
-    expect(body).toContain('orc-section-icon--financial');
+    expect(html).toContain('orc-section-icon--financial');
     const icons = Array.from(body.matchAll(/<svg\b[^>]*>/g), (match) => match[0]);
     expect(icons.length).toBeGreaterThan(0);
     expect(icons.every((icon) => icon.includes('aria-hidden="true" focusable="false"'))).toBe(true);
@@ -323,6 +322,7 @@ describe('identidade dos orçamentos e circuitos', () => {
             {
               aeroporto_saida: 'Barcelona, Província de Barcelona, Catalunha, Espanha',
               aeroporto_chegada: 'Madrid, Provincia de Madrid, Comunidade de Madrid, Espanha',
+              cia_aerea: 'Renfe',
               numero_voo: 'OL 2020',
               data_voo: '2027-08-13',
               data_fim: '2027-08-13',
@@ -353,7 +353,10 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(pdf).toContain('TREM · 13/08/2027');
     expect(pdf).toContain('Barcelona');
     expect(pdf).toContain('Madrid');
-    expect(pdf).toContain('OL 2020');
+    expect(pdf).toContain('Renfe · OL 2020');
+    expect(pdf).toContain(
+      'Barcelona <span class="mu">14:00</span><span class="arr">→</span>Madrid'
+    );
     expect(pdf).toContain('Lisboa');
     for (const html of [screen, pdf]) {
       expect(html).not.toContain('Província de Barcelona');
@@ -507,6 +510,38 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).not.toContain('old/logo');
   });
 
+  it('destaca cliente e cidades em linhas próprias e permite ocultar o cabeçalho', () => {
+    const base = {
+      quote: { id: 'quote-1', client_name: 'Neusa de Fátima Xavier' },
+      items: [
+        { item_type: 'hotel', title: 'Hotel A', city_name: 'Los Angeles', total_amount: 100 },
+        { item_type: 'passeio', title: 'Passeio B', city_name: 'Anaheim', total_amount: 50 }
+      ],
+      settings: { consultor_nome: 'André Lima' },
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    };
+
+    const comCabecalho = buildQuotePreviewHtmlSync(base);
+    expect(comCabecalho).toContain('Para: <b style="color:#1F2937">Neusa de Fátima Xavier</b>');
+    expect(comCabecalho).toContain('Cidades: <b style="color:#1F2937">Los Angeles e Anaheim</b>');
+    expect(comCabecalho).toContain(VTUR_LOGO_URL);
+    expect(comCabecalho).toContain('André Lima');
+    expect(comCabecalho.indexOf(VTUR_LOGO_URL)).toBeLessThan(
+      comCabecalho.indexOf('Proposta de viagem')
+    );
+
+    const semCabecalho = buildQuotePreviewHtmlSync({ ...base, showHeader: false });
+    expect(semCabecalho).not.toContain(VTUR_LOGO_URL);
+    expect(semCabecalho).not.toContain('André Lima');
+    expect(semCabecalho).not.toContain('Consultor de viagens');
+    expect(semCabecalho).toContain('Proposta de viagem');
+    expect(semCabecalho).toContain('Para: <b style="color:#1F2937">Neusa de Fátima Xavier</b>');
+  });
+
   it('exibe período e detalhes dos produtos no PDF', () => {
     const html = buildQuotePreviewHtmlSync({
       quote: { id: 'quote-1' },
@@ -569,6 +604,7 @@ describe('identidade dos orçamentos e circuitos', () => {
           raw: {
             detalhes_orcamento: {
               cambio: 'Automático',
+              locadora: 'Localiza',
               incluidos: ['CDW', 'LDW', 'Tanque Cheio', 'KM Livre']
             }
           }
@@ -584,8 +620,11 @@ describe('identidade dos orçamentos e circuitos', () => {
 
     expect(html).toContain('CARRO · 17/01 a 20/01/2027 · 4 DIÁRIAS');
     expect(html).toContain('>SUV automático</b>');
-    expect(html).toContain('Aluguel de carro');
+    expect(html).toContain('<div class="mu sm">Localiza</div>');
+    expect(html).not.toContain('Aluguel de carro');
     expect(html).toContain('KM livre');
+    expect(html).toContain('sh--sem-valor');
+    expect(html).toContain('orc-row--sem-valor');
     expect(html).toContain('CDW + LDW');
     expect(html).toContain('Tanque cheio');
     expect(html).toContain('<div class="q orc-quantity">1</div>');
@@ -1036,20 +1075,22 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: true
     });
     expect(html).toContain('Passagens aéreas');
-    expect(html).toContain('AÉREO · IDA · 10/08/2027');
-    expect(html.indexOf('São Paulo / Roma')).toBeLessThan(html.indexOf('AÉREO · IDA · 10/08/2027'));
-    expect(html).toContain('AÉREO · VOLTA · 25/08/2027');
+    expect(html).toContain('LATAM · Voo <span class="arr">→</span> LA 8120 · 10/08/2027');
+    expect(html.indexOf('São Paulo / Roma / São Paulo')).toBeLessThan(html.indexOf('LA 8120'));
+    expect(html).toContain('LATAM · Voo <span class="arr">→</span> LA 8121 · 25/08/2027');
+    expect(html).toContain('IBERIA · Voo <span class="arr">→</span> IB 1554 · 11/08/2027');
+    expect(html.indexOf('Roma - Barcelona')).toBeLessThan(html.indexOf('IB 1554'));
+    expect(html).toContain('<span class="ct">São Paulo</span>');
+    expect(html).toContain('<span class="ct">Roma</span>');
     expect(html).toContain('<div class="q orc-quantity">1</div>');
     expect(html.match(/<div class="q orc-quantity">2<\/div>/g)).toHaveLength(2);
     for (const value of [
-      'LATAM · LA 8120',
+      'LATAM',
       'GRU',
       'FCO',
-      'São Paulo / Roma',
       'class="p1">+1',
-      'LATAM · LA 8121',
-      'IBERIA · IB 1554',
-      'Azul Linhas Aéreas · AD 4455',
+      'IBERIA',
+      'Azul Linhas Aéreas',
       'Econômica',
       'FULL',
       'Standard',
@@ -1063,7 +1104,6 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).not.toContain('Roma, Itália');
     expect(html).toContain('Azul Linhas Aéreas');
     expect(html).toContain('AD 4455');
-    expect(html).toContain('LATAM · LA 8120');
     expect(html.match(/São Paulo \/ Roma \/ São Paulo/g)).toHaveLength(1);
     expect(html).not.toContain('Classe: Econômica');
     expect(html).not.toContain('Tarifa: FULL');
@@ -1200,7 +1240,8 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     expect(html).toContain('GRU');
     expect(html).toContain('FCO');
-    expect(html).toContain('São Paulo / Roma');
+    expect(html).toContain('<span class="ct">São Paulo</span>');
+    expect(html).toContain('<span class="ct">Roma</span>');
     expect(html).toContain('LA 8120');
     expect(html).toContain('LA 8121');
   });
@@ -1249,10 +1290,12 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
 
-    expect(html).toContain('São Paulo / Roma');
-    expect(html).toContain('Roma / Barcelona');
-    expect(html).toContain('Los Angeles / Las Vegas');
-    expect(html).toContain('Guarulhos / Roma');
+    expect(html).toContain('<span class="ct">São Paulo</span>');
+    expect(html).toContain('<span class="ct">Roma</span>');
+    expect(html).toContain('<span class="ct">Barcelona</span>');
+    expect(html).toContain('<span class="ct">Los Angeles</span>');
+    expect(html).toContain('<span class="ct">Las Vegas</span>');
+    expect(html).toContain('<span class="ct">Guarulhos</span>');
     expect(html).toContain('ZZZ');
     expect(html).toContain('QQQ');
     expect(html).toContain('GRU');

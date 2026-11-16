@@ -68,13 +68,13 @@ it('seleciona cidades dos trechos, calcula a chegada e salva assentos e identifi
       .click();
     flushSync();
 
-    const prefix = '#orcamento-novo-item-0-voo-';
+    const prefix = '#orcamento-novo-item-0-trem-';
     for (const [field, city] of [
-      ['aeroporto-saida-0', 'Roma'],
-      ['aeroporto-chegada-0', 'Milão']
+      ['cidade-saida-0', 'Roma'],
+      ['cidade-chegada-0', 'Milão']
     ]) {
       setInput(`${prefix}${field}`, city);
-      if (field === 'aeroporto-saida-0') {
+      if (field === 'cidade-saida-0') {
         [...target.querySelectorAll('button')]
           .find((button) => button.textContent?.includes('Salvar Rascunho'))!
           .click();
@@ -89,7 +89,7 @@ it('seleciona cidades dos trechos, calcula a chegada e salva assentos e identifi
       flushSync();
     }
 
-    setInput(`${prefix}data-voo-0`, '2027-12-31');
+    setInput(`${prefix}data-saida-0`, '2027-12-31');
     setInput(`${prefix}hora-saida-0`, '23:30');
     setInput(`${prefix}duracao-0`, '02:15');
     expect(target.querySelector<HTMLInputElement>(`${prefix}data-chegada-0`)!.value).toBe(
@@ -196,14 +196,14 @@ it('preserva cidades antigas sem identificador e assentos ao editar trem', async
   const app = mount(EditPage, { target });
   try {
     await vi.waitFor(() =>
-      expect(target.querySelector('#orcamento-editar-item-0-voo-assentos-0')).toBeTruthy()
+      expect(target.querySelector('#orcamento-editar-item-0-trem-assentos-0')).toBeTruthy()
     );
     expect(
-      target.querySelector<HTMLInputElement>('#orcamento-editar-item-0-voo-aeroporto-saida-0')!
+      target.querySelector<HTMLInputElement>('#orcamento-editar-item-0-trem-cidade-saida-0')!
         .validity.valid
     ).toBe(true);
     expect(
-      target.querySelector<HTMLInputElement>('#orcamento-editar-item-0-voo-assentos-0')!.value
+      target.querySelector<HTMLInputElement>('#orcamento-editar-item-0-trem-assentos-0')!.value
     ).toBe('12A');
     target
       .querySelector('form')!

@@ -410,6 +410,20 @@
     { value: 'rejeitado', label: 'Rejeitado' },
     { value: 'expirado', label: 'Expirado' }
   ];
+
+  const moedaLabels: Record<string, string> = {
+    BRL: 'Real (R$)',
+    USD: 'Dólar (US$)',
+    EUR: 'Euro (€)'
+  };
+
+  $: resumoDadosOrcamento = [
+    statusOptions.find((option) => option.value === formData.status_negociacao)?.label || '',
+    formData.valid_until ? `Válido até ${formData.valid_until.split('-').reverse().join('/')}` : '',
+    moedaLabels[formData.currency] || formData.currency
+  ]
+    .filter(Boolean)
+    .join(' · ');
 </script>
 
 <svelte:head>
@@ -546,7 +560,12 @@
     </Card>
 
     <!-- ── Dados do Orçamento ───────────────────────────────────────────────── -->
-    <Card header="Dados do Orçamento" color="orcamentos">
+    <Card
+      header="Dados do Orçamento"
+      color="orcamentos"
+      collapsible
+      subtitle={resumoDadosOrcamento}
+    >
       <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
         <FieldSelect
           label="Status"
@@ -623,9 +642,9 @@
             </div>
 
             <div
-              class="ml-auto flex shrink-0 flex-row items-center gap-1 sm:mt-1 sm:ml-0 sm:items-start"
+              class="orc-item-acoes ml-auto flex shrink-0 flex-row items-center gap-1 sm:mt-1 sm:ml-0 sm:items-start"
             >
-              <div class="flex flex-row gap-1 sm:flex-col">
+              <div class="flex flex-row gap-1">
                 <Button
                   type="button"
                   variant="ghost"
@@ -653,7 +672,7 @@
                   variant="ghost"
                   size="sm"
                   on:click={() => removeItem(index)}
-                  class_name="max-sm:h-8! max-sm:w-8! max-sm:p-0! sm:mt-2 shrink-0 text-red-400 hover:text-red-600"
+                  class_name="max-sm:h-8! max-sm:w-8! max-sm:p-0! shrink-0 text-red-400 hover:text-red-600"
                   ariaLabel="Remover item"
                 >
                   <X size={18} />

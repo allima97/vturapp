@@ -3204,6 +3204,19 @@ thead.bg-slate-50 td {
     grid-row: auto !important;
   }
 
+  /* Ações dos itens do orçamento (mover/remover) permanecem lado a lado no mobile */
+  .orc-item-acoes,
+  .orc-item-acoes > div {
+    width: auto !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .orc-item-acoes button.vtur-button {
+    width: auto !important;
+    max-width: none !important;
+    flex-shrink: 1 !important;
+  }
+
   button.absolute.absolute:not(.vtur-topbar *, .vtur-mobile-nav *),
   a.vtur-button.absolute:not(.vtur-topbar *, .vtur-mobile-nav *) {
     position: static !important;

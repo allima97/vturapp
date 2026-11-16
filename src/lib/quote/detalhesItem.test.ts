@@ -37,6 +37,12 @@ describe('cálculos por tipo de item do orçamento', () => {
 
     expect(diasItem(item.item_type, item.start_date, item.end_date)).toBe(4);
     expect(item.total_amount).toBe(600);
+    item.locadora = ' Hertz ';
+    expect(rawDetalhes(item)).toMatchObject({ locadora: 'Hertz' });
+    expect(
+      lerDetalhes({ item_type: 'aluguel_carro', raw: { detalhes_orcamento: rawDetalhes(item) } })
+        .locadora
+    ).toBe('Hertz');
   });
 
   it('soma valores de adultos, crianças e infants por passagem', () => {
@@ -107,7 +113,7 @@ describe('cálculos por tipo de item do orçamento', () => {
 
     const passagemIdaEVolta = novoItemOrcamento(2);
     passagemIdaEVolta.item_type = 'passagem';
-    passagemIdaEVolta.city_name = 'Roma';
+    passagemIdaEVolta.city_name = 'Roma, Città metropolitana di Roma Capitale, Lácio, Itália';
     passagemIdaEVolta.title = 'SÃO PAULO / ROMA / SÃO PAULO';
     passagemIdaEVolta.start_date = '2027-08-10';
     passagemIdaEVolta.end_date = '2027-08-25';

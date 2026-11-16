@@ -92,6 +92,19 @@
 
   $: valorTotal = formData.itens.reduce((acc, item) => acc + (item.total_amount || 0), 0);
 
+  const moedaLabels: Record<string, string> = {
+    BRL: 'Real (R$)',
+    USD: 'Dólar (US$)',
+    EUR: 'Euro (€)'
+  };
+
+  $: resumoDadosOrcamento = [
+    formData.valid_until ? `Válido até ${formData.valid_until.split('-').reverse().join('/')}` : '',
+    moedaLabels[formData.currency] || formData.currency
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
   function addItem() {
     formData.itens = [
       ...formData.itens.map((item) => ({ ...item, isOpen: false })),
@@ -413,7 +426,7 @@
   </Card>
 
   <!-- ── Dados do Orçamento ───────────────────────────────────────────────── -->
-  <Card header="Dados do Orçamento" color="orcamentos">
+  <Card header="Dados do Orçamento" color="orcamentos" collapsible subtitle={resumoDadosOrcamento}>
     <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
       <div class="flex items-start gap-2">
         <FieldInput
@@ -483,9 +496,9 @@
           </div>
 
           <div
-            class="ml-auto flex shrink-0 flex-row items-center gap-1 sm:mt-1 sm:ml-0 sm:items-start"
+            class="orc-item-acoes ml-auto flex shrink-0 flex-row items-center gap-1 sm:mt-1 sm:ml-0 sm:items-start"
           >
-            <div class="flex flex-row gap-1 sm:flex-col">
+            <div class="flex flex-row gap-1">
               <Button
                 type="button"
                 variant="ghost"
@@ -513,7 +526,7 @@
                 on:click={() => removeItem(index)}
                 variant="ghost"
                 size="sm"
-                class_name="max-sm:h-8! max-sm:w-8! max-sm:p-0! sm:mt-2 shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50"
+                class_name="max-sm:h-8! max-sm:w-8! max-sm:p-0! shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50"
                 ariaLabel="Remover item"
                 title="Remover item"
               >

@@ -2,6 +2,7 @@
   import CidadeDestinoAutocomplete from '$lib/components/CidadeDestinoAutocomplete.svelte';
   import DestinoOperacional from '$lib/components/DestinoOperacional.svelte';
   import FlightSegments from '$lib/components/orcamentos/FlightSegments.svelte';
+  import TrainSegments from '$lib/components/orcamentos/TrainSegments.svelte';
   import { FieldInput, FieldSelect } from '$lib/components/ui';
   import {
     calcularTotaisItem,
@@ -22,6 +23,22 @@
     { value: 'Serviço Privativo', label: 'Serviço Privativo' }
   ];
   const itensCarro = ['KM Livre', 'CDW', 'LDW', 'Tanque Cheio'];
+  const locadoras = [
+    'Álamo',
+    'Avis',
+    'Budget',
+    'Dollar',
+    'Enterprise',
+    'Europcar',
+    'Foco',
+    'Hertz',
+    'Localiza',
+    'Movida',
+    'National',
+    'Sixt',
+    'Thrifty',
+    'Unidas'
+  ].map((nome) => ({ value: nome, label: nome }));
 
   function atualizarItem() {
     recalcularTotaisItem(item);
@@ -287,6 +304,16 @@
   {:else if item.item_type === 'aluguel_carro'}
     <div class="md:col-span-3">
       <FieldSelect
+        id={`${prefix}-locadora`}
+        label="Locadora"
+        bind:value={item.locadora}
+        options={locadoras}
+        placeholder="Selecione"
+        class_name="w-full"
+      />
+    </div>
+    <div class="md:col-span-3">
+      <FieldSelect
         id={`${prefix}-cambio`}
         label="Câmbio"
         value={item.cambio}
@@ -299,7 +326,7 @@
         on:change={atualizarCambio}
       />
     </div>
-    <div class="md:col-span-9">
+    <div class="md:col-span-6">
       <p class="mb-2 block text-xs font-medium text-slate-500">Incluídos</p>
       <div class="flex flex-wrap gap-x-5 gap-y-2 pt-1">
         {#each itensCarro as incluido}
@@ -397,7 +424,7 @@
       />
     </div>
     {#if item.item_type === 'trem'}
-      <FlightSegments idPrefix={`${prefix}-voo`} isTrain bind:segments={item.flightSegments} />
+      <TrainSegments idPrefix={`${prefix}-trem`} bind:segments={item.flightSegments} />
     {/if}
     <div class="md:col-span-12">
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

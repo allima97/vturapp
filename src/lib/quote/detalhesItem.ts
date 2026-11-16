@@ -20,6 +20,7 @@ export type DetalhesItem = {
   cambio: string;
   incluidos: string[];
   fornecedor: string;
+  locadora: string;
 };
 
 export type ItemOrcamento = DetalhesItem & {
@@ -74,7 +75,8 @@ export function detalhesVazios(): DetalhesItem {
     regime: '',
     cambio: '',
     incluidos: [],
-    fornecedor: ''
+    fornecedor: '',
+    locadora: ''
   };
 }
 
@@ -296,7 +298,8 @@ export function lerDetalhes(item: {
     incluidos: Array.isArray(detalhes.incluidos)
       ? detalhes.incluidos.filter((value): value is string => typeof value === 'string')
       : [],
-    fornecedor: texto(detalhes.fornecedor)
+    fornecedor: texto(detalhes.fornecedor),
+    locadora: texto(detalhes.locadora)
   };
 }
 
@@ -427,7 +430,7 @@ export function rawDetalhes(item: DetalhesItem & { item_type: string }) {
     };
   }
   if (isCar(type)) {
-    return { cambio: item.cambio, incluidos: item.incluidos };
+    return { cambio: item.cambio, incluidos: item.incluidos, locadora: item.locadora.trim() };
   }
   if (isPassengerPriced(type)) {
     return {
@@ -501,7 +504,7 @@ export function resumoItemOrcamento(
 ) {
   const type = tipoNormalizado(item.item_type);
   const tipo = tiposItem.find((option) => option.value === type)?.label || item.item_type || 'Item';
-  const cidade = item.city_name.trim();
+  const cidade = item.city_name.split(',')[0].trim();
   const descricao = formatarDescricaoItem(item.item_type, item.title).trim() || 'Novo item';
   const inicio = dataResumo(item.start_date);
   const fim = dataResumo(item.end_date);

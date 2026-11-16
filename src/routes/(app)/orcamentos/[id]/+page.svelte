@@ -114,9 +114,8 @@
 
   // ── Desconto para exportação PDF (somente aplicado no PDF, não salvo no BD)
   let exportDesconto = '';
-  let exportShowBudgetItems: 'sim' | 'nao' = 'nao';
-  let exportShowBudgetDetails: 'sim' | 'nao' = 'sim';
   let exportShowItemValues: 'sim' | 'nao' = 'nao';
+  let exportShowHeader: 'sim' | 'nao' = 'nao';
   let showPdfOptions = false;
   $: exportDescontoNum = (() => {
     const v = String(exportDesconto).replace(',', '.').trim();
@@ -309,9 +308,10 @@
       await openQuotePreview({
         quoteId: orcamentoId,
         dados: dadosBrowser,
-        showBudgetItems: exportShowBudgetItems === 'sim',
-        showBudgetDetails: exportShowBudgetDetails === 'sim',
+        showBudgetItems: false,
+        showBudgetDetails: true,
         showItemValues: exportShowItemValues === 'sim',
+        showHeader: exportShowHeader === 'sim',
         discount: exportDescontoNum
       });
     } catch (err) {
@@ -933,40 +933,6 @@
 
               <div>
                 <label
-                  for="export-show-budget-items"
-                  class="mb-1 block text-sm font-medium text-slate-700"
-                >
-                  Mostrar Itens do orçamento?
-                </label>
-                <select
-                  id="export-show-budget-items"
-                  class="focus:border-clientes-400 focus:ring-clientes-100 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:outline-hidden"
-                  bind:value={exportShowBudgetItems}
-                >
-                  <option value="sim">Sim</option>
-                  <option value="nao">Não</option>
-                </select>
-              </div>
-
-              <div>
-                <label
-                  for="export-show-budget-details"
-                  class="mb-1 block text-sm font-medium text-slate-700"
-                >
-                  Mostrar Detalhes do orçamento?
-                </label>
-                <select
-                  id="export-show-budget-details"
-                  class="focus:border-clientes-400 focus:ring-clientes-100 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:outline-hidden"
-                  bind:value={exportShowBudgetDetails}
-                >
-                  <option value="sim">Sim</option>
-                  <option value="nao">Não</option>
-                </select>
-              </div>
-
-              <div>
-                <label
                   for="export-show-item-values"
                   class="mb-1 block text-sm font-medium text-slate-700"
                 >
@@ -976,6 +942,23 @@
                   id="export-show-item-values"
                   class="focus:border-clientes-400 focus:ring-clientes-100 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:outline-hidden"
                   bind:value={exportShowItemValues}
+                >
+                  <option value="sim">Sim</option>
+                  <option value="nao">Não</option>
+                </select>
+              </div>
+
+              <div>
+                <label
+                  for="export-show-header"
+                  class="mb-1 block text-sm font-medium text-slate-700"
+                >
+                  Mostrar cabeçalho com logo e consultor?
+                </label>
+                <select
+                  id="export-show-header"
+                  class="focus:border-clientes-400 focus:ring-clientes-100 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:outline-hidden"
+                  bind:value={exportShowHeader}
                 >
                   <option value="sim">Sim</option>
                   <option value="nao">Não</option>

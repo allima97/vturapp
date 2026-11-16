@@ -721,7 +721,7 @@ function renderServiceItem(
   const linhaCinza = hospedagem
     ? [estrelas, textVal(details.tipo_apartamento)].filter(Boolean).join(' · ')
     : carro
-      ? 'Aluguel de carro'
+      ? textVal(details.locadora) || 'Aluguel de carro'
       : seguro
         ? textVal(details.fornecedor)
         : textVal(details.categoria);
@@ -735,8 +735,11 @@ function renderServiceItem(
     : carro
       ? etiquetasCarro(details.incluidos)
       : [passageirosSemZero(item)];
-  const pdf = `<b>${escHtml(titulo)}</b>${cabecalho ? `<div class="lb">${escHtml(cabecalho)}</div>` : ''}${linhaCinza ? `<div class="mu sm">${escHtml(linhaCinza)}</div>` : ''}${etiquetas(tags)}`;
-  return `<div class="row orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}"><div>${serviceIconSvg(iconType)}</div><div>${pdf}</div><div class="q orc-quantity">${escHtml(quantidadeExibida(quantity))}</div>${showItemValues ? `<div class="v">${escHtml(formatCurrency(Number(item.total_amount ?? 0), item.currency || defaultCurrency))}</div>` : '<div class="v"></div>'}</div>`;
+  const tituloHtml = titulo
+    ? `<div style="margin-bottom:10px"><b>${escHtml(titulo)}</b></div>`
+    : '';
+  const pdf = `${tituloHtml}${cabecalho ? `<div class="lb">${escHtml(cabecalho)}</div>` : ''}${linhaCinza ? `<div class="mu sm">${escHtml(linhaCinza)}</div>` : ''}${etiquetas(tags)}`;
+  return `<div class="row orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}${showItemValues ? '' : ' orc-row--sem-valor'}"><div>${serviceIconSvg(iconType)}</div><div>${pdf}</div><div class="q orc-quantity">${escHtml(quantidadeExibida(quantity))}</div>${showItemValues ? `<div class="v">${escHtml(formatCurrency(Number(item.total_amount ?? 0), item.currency || defaultCurrency))}</div>` : ''}</div>`;
 }
 
 type QuotePdfSection =
@@ -973,11 +976,11 @@ function renderGroupedItems(
       ? renderCityTable(
           'Passagens aéreas',
           `${flights
-            .map((item) =>
-              getFlightDataList(item).length
-                ? renderFlightItemHtml(item, showItemValues, defaultCurrency)
-                : renderServiceItem(item, showItemValues, defaultCurrency, true)
-            )
+            .map((item) => {
+              if (!getFlightDataList(item).length)
+                return renderServiceItem(item, showItemValues, defaultCurrency, true);
+              return renderFlightItemHtml(item, showItemValues, defaultCurrency);
+            })
             .join('')}${legendaAtraso(flights)}`,
           false,
           showItemValues ? moedasDoGrupo(flights, defaultCurrency) : '',
@@ -1012,7 +1015,7 @@ function renderGroupedItems(
 
 function renderCityTable(title: string, content: string, isCity = false, subtotal = '', note = '') {
   const heading = escHtml(isCity ? nomeCidadeNoPdf(title) : title);
-  return `<section class="orc-city-section"><div class="sh"><span></span><span class="l">${heading}${note ? ` <small>· ${escHtml(note)}</small>` : ''}</span><span class="sh-qtd">Qtd</span><span>${subtotal ? escHtml(subtotal) : ''}</span></div>${content}</section>`;
+  return `<section class="orc-city-section"><div class="sh${subtotal ? '' : ' sh--sem-valor'}"><span class="l">${heading}${note ? ` <small>· ${escHtml(note)}</small>` : ''}</span><span class="sh-qtd">Qtd</span>${subtotal ? `<span>${escHtml(subtotal)}</span>` : ''}</div>${content}</section>`;
 }
 
 const financialIcon = `<svg class="orc-section-icon orc-section-icon--financial" width="13" height="13" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M5 9h1m12 6h1"/></svg>`;
@@ -1289,23 +1292,35 @@ function renderFlightItemHtml(
       const depart = textVal(flight.hora_saida).replace(/\s*\(\+\d+\)\s*$/, '');
       const arrive = textVal(flight.hora_chegada).replace(/\s*\(\+\d+\)\s*$/, '');
       const carrier = isTrain
-        ? textVal(flight.descricao)
-        : [textVal(flight.cia_aerea), textVal(flight.descricao)].filter(Boolean).join(' · ');
-      const cities =
-        !isTrain && (fromCity || toCity)
-          ? `<div class="itn">${escHtml([fromCity || from, toCity || to].filter(Boolean).join(' / '))}</div>`
-          : '';
+        ? [textVal(flight.cia_aerea), textVal(flight.descricao)].filter(Boolean).join(' · ')
+        : textVal(flight.cia_aerea);
       const nomeTrecho =
-        isTrain && index === 0 && tituloOriginal ? `<b>${escHtml(tituloOriginal)}</b>` : '';
+        isTrain && index === 0 && tituloOriginal
+          ? `<div style="margin-bottom:10px"><b>${escHtml(tituloOriginal)}</b></div>`
+          : '';
       const saida = depart ? `<span class="mu">${escHtml(depart)}</span>` : '';
       const chegada =
         arrive || plus ? `<span class="mu">${escHtml(arrive)}${plus ? ` ${plus}` : ''}</span>` : '';
       const rota =
         from || to || depart || arrive
-          ? `<div class="rt">${escHtml(from)} ${saida}<i></i>${escHtml(to)} ${chegada}</div>`
+          ? isTrain
+            ? `<div class="rt">${escHtml(from)} ${saida}<span class="arr">→</span>${escHtml(to)} ${chegada}</div>`
+            : `<div class="rt"><span class="lg"><span>${escHtml(from)}${saida ? ` ${saida}` : ''}</span>${fromCity ? `<span class="ct">${escHtml(fromCity)}</span>` : ''}</span><span class="arr">→</span><span class="lg"><span>${escHtml(to)}${chegada ? ` ${chegada}` : ''}</span>${toCity ? `<span class="ct">${escHtml(toCity)}</span>` : ''}</span></div>`
           : '';
-      const meta = `${index ? '<div class="lb" style="margin-top:8px">' : '<div class="lb">'}${escHtml(label)}</div>`;
-      return `${nomeTrecho}${cities}${meta}${rota}${carrier ? `<div class="mu sm">${escHtml(carrier)}</div>` : ''}`;
+      const meta = (() => {
+        if (isTrain)
+          return `${index ? '<div class="lb" style="margin-top:8px">' : '<div class="lb">'}${escHtml(label)}</div>`;
+        const cia = [textVal(flight.cia_aerea), 'Voo'].filter(Boolean).map(escHtml).join(' · ');
+        const voo = [textVal(flight.descricao), date && date !== '-' ? date : '']
+          .filter(Boolean)
+          .map(escHtml)
+          .join(' · ');
+        const cabecalho = `${cia}${voo ? ` <span class="arr">→</span> ${voo}` : ''}`;
+        return `${index ? '<div class="lb" style="margin-top:16px">' : '<div class="lb">'}${cabecalho}</div>`;
+      })();
+      return isTrain
+        ? `${nomeTrecho}${meta}${rota}${carrier ? `<div class="mu sm">${escHtml(carrier)}</div>` : ''}`
+        : `${meta}${rota}`;
     })
     .join('');
   const tags = etiquetas([
@@ -1314,21 +1329,9 @@ function renderFlightItemHtml(
     ...(isTrain ? [] : [passageirosSemZero(item)]),
     ...distinct(flights.map((flight) => (flight.assentos ? `Assentos ${flight.assentos}` : '')))
   ]);
-  const rotas = flights.map((flight) =>
-    normalizeText(
-      [
-        cidadeDoTrecho(flight.cidade_saida, flight.aeroporto_saida),
-        cidadeDoTrecho(flight.cidade_chegada, flight.aeroporto_chegada)
-      ]
-        .filter(Boolean)
-        .join(' / ')
-    )
-  );
   const nome =
-    !isTrain && title && !rotas.includes(normalizeText(title))
-      ? `<div><b>${escHtml(title)}</b></div>`
-      : '';
-  return `<div class="row orc-city-item"><div>${serviceIconSvg(iconType === 'passagem' ? 'passagem-section' : iconType)}</div><div>${nome}${legs}${tags}</div><div class="q orc-quantity">${escHtml(quantidadeExibida(quantityLabel))}</div>${showItemValues ? `<div class="v">${escHtml(formatCurrency(amount, currency))}</div>` : '<div class="v"></div>'}</div>`;
+    !isTrain && title ? `<div style="margin-bottom:10px"><b>${escHtml(title)}</b></div>` : '';
+  return `<div class="row orc-city-item${showItemValues ? '' : ' orc-row--sem-valor'}"><div>${serviceIconSvg(iconType === 'passagem' ? 'passagem-section' : iconType)}</div><div>${nome}${legs}${tags}</div><div class="q orc-quantity">${escHtml(quantidadeExibida(quantityLabel))}</div>${showItemValues ? `<div class="v">${escHtml(formatCurrency(amount, currency))}</div>` : ''}</div>`;
 }
 
 function renderCircuitItemHtml(
@@ -1458,6 +1461,7 @@ export function buildQuotePreviewHtmlSync(params: {
   showBudgetItems: boolean;
   showBudgetDetails: boolean;
   showItemValues: boolean;
+  showHeader?: boolean;
   discount?: number;
 }): string {
   const {
@@ -1469,6 +1473,7 @@ export function buildQuotePreviewHtmlSync(params: {
     showBudgetItems,
     showBudgetDetails,
     showItemValues,
+    showHeader = true,
     discount = 0
   } = params;
 
@@ -1520,8 +1525,10 @@ export function buildQuotePreviewHtmlSync(params: {
   const headerHtml = `
     <div class="card"><div class="hd"><img src="${VTUR_LOGO_URL}" alt="VTur" /><div class="c">${consultor ? `<b style="color:#1B2C80;font-size:10pt">${escHtml(consultor)}</b> · ` : ''}Consultor de viagens${contatos ? `<br><span class="mu">${escHtml(contatos)}</span>` : ''}</div></div></div>`;
 
+  const ctaHtml = `<div class="cta">${qrUrl ? `<img src="${escHtml(qrUrl)}" alt="QR Code WhatsApp" />` : ''}<div><b>Reserve com o ${escHtml(primeiroNome || 'consultor')}</b><br><span>Aponte a câmera para o QR Code e fale no WhatsApp.${validity ? ` Tarifas válidas até ${escHtml(validity)}.` : ''}</span></div></div>`;
+
   const titleHtml = `
-    <div class="card"><h1 style="margin:0 0 2px">Proposta de viagem</h1><div class="mu">Para <b style="color:#1F2937">${escHtml(clientName)}</b>${cities.length ? ` · ${escHtml(cities.join(' e '))}` : ''}</div></div>`;
+    <div class="card orc-title-card"><div class="orc-title-main"><h1 style="margin:0 0 2px">Proposta de viagem</h1><div class="mu">Para: <b style="color:#1F2937">${escHtml(clientName)}</b></div>${cities.length ? `<div class="mu">Cidades: <b style="color:#1F2937">${escHtml(cities.join(' e '))}</b></div>` : ''}</div>${ctaHtml}</div>`;
 
   const viajantes = passageirosDoOrcamento(items);
   const totalFaixa = totalDaFaixa(items, currency, safeDiscount);
@@ -1557,13 +1564,10 @@ export function buildQuotePreviewHtmlSync(params: {
 
   // Rodapé
   const footerHtml = `
-    <div class="two">
-      <div class="card inf orc-footer-card" style="margin:0">
-        <b style="color:#1B2C80;font-size:9pt">Informações importantes</b>
-        <ul class="orc-footer-list">${footerLinesHtml}</ul>
-        ${complementUrl ? `<div class="orc-complement-img"><img src="${escHtml(complementUrl)}" alt="Imagem complementar" /></div>` : ''}
-      </div>
-      <div class="cta">${qrUrl ? `<img src="${escHtml(qrUrl)}" alt="QR Code WhatsApp" />` : ''}<div><b>Reserve com o ${escHtml(primeiroNome || 'consultor')}</b><br><span style="font-size:8.3pt;opacity:.9">Aponte a câmera para o QR Code e fale no WhatsApp.${validity ? ` Tarifas válidas até ${escHtml(validity)}.` : ''}</span></div></div>
+    <div class="card inf orc-footer-card">
+      <b style="color:#1B2C80;font-size:9pt">Informações importantes</b>
+      <ul class="orc-footer-list">${footerLinesHtml}</ul>
+      ${complementUrl ? `<div class="orc-complement-img"><img src="${escHtml(complementUrl)}" alt="Imagem complementar" /></div>` : ''}
     </div>`;
 
   const css = `
@@ -1589,14 +1593,18 @@ export function buildQuotePreviewHtmlSync(params: {
     .tag { display: inline-block; background: #EEF2F7; color: #1B2C80; border-radius: 20px; padding: 2px 8px; font-size: 7.5pt; margin: 4px 4px 0 0; }
     .lb { color: #6B7280; font-size: 7.5pt; font-weight: bold; }
     .rt { display: flex; align-items: center; gap: 6px; font-weight: bold; }
-    .rt i { flex: 0 0 40px; height: 1px; background: #243AA3; }
+    .lg { display: inline-flex; flex-direction: column; }
+    .lg .ct { color: #6B7280; font-size: 7.5pt; font-weight: normal; }
+    .arr { font-size: 1.25em; line-height: 1; }
     .p1 { background: #C62828; color: #fff; font-weight: bold; border-radius: 4px; padding: 0 4px; font-size: 7.5pt; margin-left: 2px; }
     .orc-arrival-legend { margin: 6px 12px 8px; font-size: 7.5pt; color: #4B5563; display: flex; flex-wrap: wrap; gap: 10px; }
-    .itn { font-size: 8.5pt; color: #1B2C80; font-weight: bold; margin-top: 1px; }
     .tot { display: flex; justify-content: space-between; align-items: center; font-size: 12pt; font-weight: bold; color: #1B2C80; }
-    .two { display: grid; grid-template-columns: 1.9fr 1fr; gap: 10px; break-inside: avoid; align-items: start; }
-    .cta { background: #243AA3; color: #fff; border-radius: 12px; padding: 12px; display: flex; gap: 10px; align-items: center; align-self: start; height: auto; min-height: 0; }
-    .cta img { height: 62px; background: #fff; border-radius: 6px; padding: 3px; }
+    .orc-title-card { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .orc-title-main { min-width: 0; }
+    .cta { background: #fff; color: #1F2937; border: 1px solid #DDE3EC; border-radius: 10px; padding: 6px 10px; display: flex; gap: 8px; align-items: center; flex: none; max-width: 250px; height: auto; min-height: 0; line-height: 1.35; }
+    .cta b { color: #1B2C80; font-size: 8.5pt; }
+    .cta span { color: #4B5563; font-size: 7.2pt; }
+    .cta img { height: 44px; background: #fff; border-radius: 6px; padding: 2px; }
     .shell { max-width: 900px; margin: 0 auto; padding: 24px; }
     .toolbar { position: sticky; top: 0; display: flex; justify-content: flex-end; padding: 12px 0 16px 0; background: #f8fafc; z-index: 10; }
     .toolbar button { border: 0; border-radius: 999px; padding: 10px 20px; background: #0f766e; color: white; font-size: 14px; cursor: pointer; font-weight: 600; }
@@ -1686,12 +1694,16 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-city-section { background: #fff; border: 1px solid #DDE3EC; border-radius: 12px; padding: 0; margin: 0 0 8px; overflow: hidden; }
     .orc-financial-section { background: transparent; border: 0; padding: 0; margin: 0; }
     .card.tot { background: #EEF2F7; border: 1px solid #DDE3EC; color: #1B2C80; }
-    .sh { background: #EEF2F7; display: grid; grid-template-columns: 22px minmax(0, 1fr) 90px 90px; gap: 8px; align-items: center; width: 100%; margin: 0; padding: 8px 12px; font-weight: bold; color: #1B2C80; }
+    .sh { background: #EEF2F7; display: grid; grid-template-columns: minmax(0, 1fr) 90px 90px; gap: 8px; align-items: center; width: 100%; margin: 0; padding: 8px 12px; font-weight: bold; color: #1B2C80; }
+    .sh.sh--sem-valor { grid-template-columns: minmax(0, 1fr) 90px; }
     .sh .l { display: flex; gap: 8px; align-items: center; min-width: 0; }
     .sh-qtd { color: #6B7280; font-size: 7.5pt; font-weight: bold; letter-spacing: .04em; }
-    .sh > span:last-child { color: #1B2C80; font-weight: bold; text-align: right; }
+    .sh.sh--sem-valor .sh-qtd { text-align: right; }
+    .sh > span:last-child:not(.sh-qtd) { color: #1B2C80; font-weight: bold; text-align: right; }
     .sh small { color: #6B7280; font-weight: normal; }
     .row { display: grid; grid-template-columns: 22px 1fr 90px 90px; gap: 8px; padding: 6px 12px; border-top: 1px solid #EEF2F7; }
+    .row.orc-row--sem-valor { grid-template-columns: 22px 1fr 90px; }
+    .row.orc-row--sem-valor .q { text-align: right; }
     .row > div { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
     .row strong, .orc-service-label, .orc-service-label span, .orc-flight-row-details, .orc-flight-segment { white-space: normal; overflow-wrap: anywhere; }
     .sh + .row { border-top: 0; }
@@ -1718,8 +1730,8 @@ export function buildQuotePreviewHtmlSync(params: {
       .shell { max-width: none; padding: 0; }
       .sh { background: #EEF2F7; color: #1B2C80; }
       .sh small { color: #6B7280; }
-      .band .tt, .cta, .p1 { color: #fff; }
-      .band .tt, .cta { background: #243AA3; }
+      .band .tt, .p1 { color: #fff; }
+      .band .tt { background: #243AA3; }
       .card.tot, .tag, .orc-subtotal { background: #EEF2F7; }
       .p1 { background: #C62828; }
       .orc-header-card, .orc-title-row, .orc-section-card, .orc-city-section, .orc-financial-section { box-shadow: none; }
@@ -1744,7 +1756,7 @@ export function buildQuotePreviewHtmlSync(params: {
 <body>
   <div class="toolbar"><button onclick="window.print()">Imprimir / Salvar em PDF</button></div>
   <div class="pg">
-    ${headerHtml}
+    ${showHeader ? headerHtml : ''}
     ${titleHtml}
     ${bandHtml}
     ${itensHtml}
@@ -1765,6 +1777,7 @@ export async function openQuotePreview(params: {
   showBudgetItems?: boolean;
   showBudgetDetails?: boolean;
   showItemValues?: boolean;
+  showHeader?: boolean;
   discount?: number;
 }): Promise<void> {
   const {
@@ -1773,6 +1786,7 @@ export async function openQuotePreview(params: {
     showBudgetItems = false,
     showBudgetDetails = true,
     showItemValues = true,
+    showHeader = true,
     discount = 0
   } = params;
 
@@ -1836,6 +1850,7 @@ export async function openQuotePreview(params: {
     showBudgetItems,
     showBudgetDetails,
     showItemValues,
+    showHeader,
     discount
   });
 

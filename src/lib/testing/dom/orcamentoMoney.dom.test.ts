@@ -169,7 +169,7 @@ it('organiza as ações e abre os formulários sem perder as opções do PDF', a
     expect(buttons[0].getAttribute('aria-expanded')).toBe('false');
     buttons[0].click();
     flushSync();
-    const select = target.querySelector('#quote-pdf-options')!.querySelectorAll('select')[2];
+    const select = target.querySelector('#quote-pdf-options')!.querySelectorAll('select')[0];
     select.value = 'sim';
     select.dispatchEvent(new Event('change', { bubbles: true }));
     flushSync();
@@ -185,7 +185,7 @@ it('organiza as ações e abre os formulários sem perder as opções do PDF', a
     );
     buttons[0].click();
     flushSync();
-    expect(target.querySelector('#quote-pdf-options')?.querySelectorAll('select')[2]?.value).toBe(
+    expect(target.querySelector('#quote-pdf-options')?.querySelectorAll('select')[0]?.value).toBe(
       'sim'
     );
     buttons[3].click();
@@ -684,18 +684,18 @@ it('permite criar trem com campos, trechos e cálculo de passagem aérea', async
       .click();
     flushSync();
     expect(target.textContent).toContain('Dados dos trechos de trem');
-    const segmentFields = [...target.querySelectorAll('[id^="orcamento-novo-item-0-voo-"]')];
+    const segmentFields = [...target.querySelectorAll('[id^="orcamento-novo-item-0-trem-"]')];
     expect(
-      segmentFields.map((field) => field.id.replace('orcamento-novo-item-0-voo-', ''))
+      segmentFields.map((field) => field.id.replace('orcamento-novo-item-0-trem-', ''))
     ).toEqual([
-      'cia-aerea-0',
-      'numero-voo-0',
+      'fornecedor-0',
+      'numero-trem-0',
       'classe-0',
-      'aeroporto-saida-0',
-      'data-voo-0',
+      'cidade-saida-0',
+      'data-saida-0',
       'hora-saida-0',
       'duracao-0',
-      'aeroporto-chegada-0',
+      'cidade-chegada-0',
       'data-chegada-0',
       'hora-chegada-0',
       'assentos-0'
@@ -717,25 +717,33 @@ it('permite criar trem com campos, trechos e cálculo de passagem aérea', async
       'Hora de chegada',
       'Assentos (opcional)'
     ]);
-    type('#orcamento-novo-item-0-voo-cia-aerea-0', 'Trenitalia');
-    type('#orcamento-novo-item-0-voo-numero-voo-0', 'FR 1000');
-    type('#orcamento-novo-item-0-voo-aeroporto-saida-0', 'Roma');
+    const fornecedor = target.querySelector(
+      '#orcamento-novo-item-0-trem-fornecedor-0'
+    ) as Element & {
+      value: string;
+      dispatchEvent: (event: Event) => boolean;
+    };
+    fornecedor.value = 'Trenitalia';
+    fornecedor.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
+    type('#orcamento-novo-item-0-trem-numero-trem-0', 'FR 1000');
+    type('#orcamento-novo-item-0-trem-cidade-saida-0', 'Roma');
     await vi.waitFor(() =>
       expect(
-        target.querySelector('#orcamento-novo-item-0-voo-aeroporto-saida-0 ~ div li button')
+        target.querySelector('#orcamento-novo-item-0-trem-cidade-saida-0 ~ div li button')
       ).toBeTruthy()
     );
-    [...target.querySelectorAll('#orcamento-novo-item-0-voo-aeroporto-saida-0 ~ div li button')]
+    [...target.querySelectorAll('#orcamento-novo-item-0-trem-cidade-saida-0 ~ div li button')]
       .find((button) => button.textContent?.includes('Roma, Itália'))!
       .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
     flushSync();
-    type('#orcamento-novo-item-0-voo-aeroporto-chegada-0', 'Milão');
+    type('#orcamento-novo-item-0-trem-cidade-chegada-0', 'Milão');
     await vi.waitFor(() =>
       expect(
-        target.querySelector('#orcamento-novo-item-0-voo-aeroporto-chegada-0 ~ div li button')
+        target.querySelector('#orcamento-novo-item-0-trem-cidade-chegada-0 ~ div li button')
       ).toBeTruthy()
     );
-    [...target.querySelectorAll('#orcamento-novo-item-0-voo-aeroporto-chegada-0 ~ div li button')]
+    [...target.querySelectorAll('#orcamento-novo-item-0-trem-cidade-chegada-0 ~ div li button')]
       .find((button) => button.textContent?.includes('Milão, Itália'))!
       .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
     flushSync();
@@ -816,19 +824,19 @@ it('edita trechos de trem já salvos sem perder dados ocultos antigos', async ()
   const app = mount(EditPage, { target });
   try {
     await vi.waitFor(() =>
-      expect(target.querySelector('#orcamento-editar-item-0-voo-cia-aerea-0')).toBeTruthy()
+      expect(target.querySelector('#orcamento-editar-item-0-trem-fornecedor-0')).toBeTruthy()
     );
     target
       .querySelector('details summary')!
       .dispatchEvent(new MouseEvent('click', { bubbles: true }));
     flushSync();
-    expect(target.querySelector('#orcamento-editar-item-0-voo-tipo-voo-0')).toBeNull();
-    expect(target.querySelector('#orcamento-editar-item-0-voo-tarifa-0')).toBeNull();
+    expect(target.querySelector('#orcamento-editar-item-0-trem-tipo-voo-0')).toBeNull();
+    expect(target.querySelector('#orcamento-editar-item-0-trem-tarifa-0')).toBeNull();
     expect(target.querySelector<HTMLInputElement>('#orcamento-editar-item-0-destino')?.value).toBe(
       'Milão, Itália'
     );
     const city = target.querySelector<HTMLInputElement>(
-      '#orcamento-editar-item-0-voo-aeroporto-chegada-0'
+      '#orcamento-editar-item-0-trem-cidade-chegada-0'
     )!;
     expect(city.value).toBe('Milão');
     city.value = 'Veneza';
@@ -836,12 +844,12 @@ it('edita trechos de trem já salvos sem perder dados ocultos antigos', async ()
     flushSync();
     await vi.waitFor(() =>
       expect(
-        target.querySelector('#orcamento-editar-item-0-voo-aeroporto-chegada-0 ~ div li button')
+        target.querySelector('#orcamento-editar-item-0-trem-cidade-chegada-0 ~ div li button')
       ).toBeTruthy()
     );
     target
       .querySelector<HTMLButtonElement>(
-        '#orcamento-editar-item-0-voo-aeroporto-chegada-0 ~ div li button'
+        '#orcamento-editar-item-0-trem-cidade-chegada-0 ~ div li button'
       )!
       .dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
     flushSync();
@@ -1163,6 +1171,16 @@ it('permite alterar câmbio e itens incluídos ao editar aluguel de carro', asyn
     await vi.waitFor(() =>
       expect(target.querySelector('#orcamento-editar-item-0-cambio')).toBeTruthy()
     );
+    const locadora = target.querySelector('#orcamento-editar-item-0-locadora') as Element & {
+      value: string;
+      dispatchEvent: (event: Event) => boolean;
+    };
+    expect(
+      [...locadora.querySelectorAll('option')].map((option) => option.getAttribute('value'))
+    ).toContain('Localiza');
+    locadora.value = 'Localiza';
+    locadora.dispatchEvent(new Event('change', { bubbles: true }));
+    flushSync();
     const change = target.querySelector('#orcamento-editar-item-0-cambio') as Element & {
       value: string;
       disabled: boolean;
@@ -1205,7 +1223,8 @@ it('permite alterar câmbio e itens incluídos ao editar aluguel de carro', asyn
               raw: {
                 detalhes_orcamento: {
                   cambio: 'Manual',
-                  incluidos: ['KM Livre', 'CDW', 'LDW']
+                  incluidos: ['KM Livre', 'CDW', 'LDW'],
+                  locadora: 'Localiza'
                 },
                 aereo_import: null
               }
