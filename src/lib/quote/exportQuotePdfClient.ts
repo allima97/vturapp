@@ -1598,7 +1598,8 @@ export function buildQuotePreviewHtmlSync(params: {
     .rt { display: flex; align-items: center; gap: 6px; font-weight: bold; }
     .lg { display: inline-flex; flex-direction: column; }
     .lg .ct { color: #6B7280; font-size: 7.5pt; font-weight: normal; }
-    .md { display: inline-flex; flex-direction: column; align-items: center; color: #6B7280; font-size: 7.5pt; font-weight: normal; padding: 0 14px; }
+    .md { display: inline-flex; flex-direction: column; align-items: center; color: #6B7280; font-size: 6.5pt; font-weight: normal; padding: 0 14px; }
+    .md .arr { display: inline-block; font-size: 1.6em; line-height: 1; transform: scaleX(3); }
     .arr { font-size: 1.25em; line-height: 1; }
     .p1 { background: #C62828; color: #fff; font-weight: bold; border-radius: 4px; padding: 0 4px; font-size: 7.5pt; margin-left: 2px; }
     .orc-arrival-legend { margin: 6px 12px 8px; font-size: 7.5pt; color: #4B5563; display: flex; flex-wrap: wrap; gap: 10px; }
