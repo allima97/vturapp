@@ -121,7 +121,7 @@ const trainIconShape =
 
 function tracoIcone(tipo: 'passagem' | 'trem', larguraLinha: number) {
   const shape = tipo === 'trem' ? trainIconShape : planeIconShape;
-  const rotacao = tipo === 'trem' ? '' : ' transform="rotate(45 12 12)"';
+  const rotacao = tipo === 'trem' ? '' : ' transform="rotate(90 12 12)"';
   const svg = `<svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><g${rotacao}>${shape}</g></svg>`;
   return `<span class="lni"><span class="ln" style="width:${larguraLinha}px"></span>${svg}<span class="ln" style="width:${larguraLinha}px"></span></span>`;
 }
