@@ -354,9 +354,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(pdf).toContain('Barcelona');
     expect(pdf).toContain('Madrid');
     expect(pdf).toContain('Renfe · OL 2020');
-    expect(pdf).toContain(
-      'Barcelona <span class="mu">14:00</span><span class="arr">→</span>Madrid'
-    );
+    expect(pdf).toContain('Barcelona <span class="mu">14:00</span><span class="lni"');
     expect(pdf).toContain('Lisboa');
     for (const html of [screen, pdf]) {
       expect(html).not.toContain('Província de Barcelona');
@@ -1076,15 +1074,11 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     expect(html).toContain('Passagens aéreas');
     expect(html.indexOf('São Paulo / Roma / São Paulo')).toBeLessThan(html.indexOf('LA 8120'));
-    expect(html).toContain(
-      '<span class="md"><span>LA 8120</span><span class="arr">→</span><span>LATAM</span></span>'
-    );
-    expect(html).toContain(
-      '<span class="md"><span>LA 8121</span><span class="arr">→</span><span>LATAM</span></span>'
-    );
-    expect(html).toContain(
-      '<span class="md"><span>IB 1554</span><span class="arr">→</span><span>IBERIA</span></span>'
-    );
+    expect(html).toContain('<span class="md"><span>LA 8120</span><span class="lni"');
+    expect(html).toContain('<span class="md"><span>LA 8121</span><span class="lni"');
+    expect(html).toContain('<span class="md"><span>IB 1554</span><span class="lni"');
+    expect(html).toContain('</span><span>LATAM</span></span>');
+    expect(html).toContain('</span><span>IBERIA</span></span>');
     expect(html.indexOf('Roma - Barcelona')).toBeLessThan(html.indexOf('IB 1554'));
     expect(html).toContain('<span class="ct">São Paulo – 10/08/2027</span>');
     expect(html).toContain('<span class="ct">Roma – 11/08/2027</span>');

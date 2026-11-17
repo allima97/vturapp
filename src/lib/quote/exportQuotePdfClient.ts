@@ -114,6 +114,18 @@ function escHtml(value?: string | number | null): string {
     .replace(/'/g, '&#039;');
 }
 
+const planeIconShape =
+  '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>';
+const trainIconShape =
+  '<rect x="4" y="3" width="16" height="16" rx="2"/><path d="M4 11h16M12 3v8M8 19l-2 3M18 22l-2-3M8 15h0M16 15h0"/>';
+
+function tracoIcone(tipo: 'passagem' | 'trem', larguraLinha: number) {
+  const shape = tipo === 'trem' ? trainIconShape : planeIconShape;
+  const rotacao = tipo === 'trem' ? '' : ' transform="rotate(45 12 12)"';
+  const svg = `<svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><g${rotacao}>${shape}</g></svg>`;
+  return `<span class="lni"><span class="ln" style="width:${larguraLinha}px"></span>${svg}<span class="ln" style="width:${larguraLinha}px"></span></span>`;
+}
+
 function textVal(value?: string | null): string {
   return String(value ?? '').trim();
 }
@@ -1047,13 +1059,7 @@ const serviceIcons = new Map<string, [string, string]>([
     'ingresso',
     ['ticket', '<path d="M3 8V5h18v3a3 3 0 0 0 0 6v3H3v-3a3 3 0 0 0 0-6zm9-2v2m0 2v2m0 2v2"/>']
   ],
-  [
-    'trem',
-    [
-      'train',
-      '<rect x="4" y="3" width="16" height="16" rx="2"/><path d="M4 11h16M12 3v8M8 19l-2 3M18 22l-2-3M8 15h0M16 15h0"/>'
-    ]
-  ],
+  ['trem', ['train', trainIconShape]],
   [
     'passeio',
     [
@@ -1083,10 +1089,7 @@ function serviceIconSvg(type: string) {
   const iconType = type === 'hospedagem' ? 'hotel' : type === 'seguro_viagem' ? 'seguro' : type;
   const flight = iconType === 'passagem' || iconType === 'passagem-section';
   const [name, shape] = flight
-    ? [
-        'flight',
-        '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>'
-      ]
+    ? ['flight', planeIconShape]
     : (serviceIcons.get(iconType) ?? [
         'service',
         '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V4h6v3M3 13h18m-10 0v2h2v-2"/>'
@@ -1309,8 +1312,8 @@ function renderFlightItemHtml(
       const rota =
         from || to || depart || arrive
           ? isTrain
-            ? `<div class="rt">${escHtml(from)} ${saida}<span class="arr">→</span>${escHtml(to)} ${chegada}</div>`
-            : `<div class="rt"${index ? ' style="margin-top:16px"' : ''}><span class="lg"><span><b>${escHtml(from)}</b>${depart ? ` <span class="mu">· ${escHtml(depart)}</span>` : ''}</span>${origemInfo ? `<span class="ct">${escHtml(origemInfo)}</span>` : ''}</span><span class="md">${textVal(flight.descricao) ? `<span>${escHtml(textVal(flight.descricao))}</span>` : ''}<span class="arr">→</span>${textVal(flight.cia_aerea) ? `<span>${escHtml(textVal(flight.cia_aerea))}</span>` : ''}</span><span class="lg"><span><b>${escHtml(to)}</b>${arrive ? ` <span class="mu">· ${escHtml(arrive)}</span>` : ''}${plus ? ` ${plus}` : ''}</span>${destinoInfo ? `<span class="ct">${escHtml(destinoInfo)}</span>` : ''}</span></div>`
+            ? `<div class="rt">${escHtml(from)} ${saida}${tracoIcone('trem', 24)}${escHtml(to)} ${chegada}</div>`
+            : `<div class="rtf"${index ? ' style="margin-top:16px"' : ''}><span class="lg"><span><b>${escHtml(from)}</b>${depart ? ` <span class="mu">· ${escHtml(depart)}</span>` : ''}</span>${origemInfo ? `<span class="ct">${escHtml(origemInfo)}</span>` : ''}</span><span class="md">${textVal(flight.descricao) ? `<span>${escHtml(textVal(flight.descricao))}</span>` : ''}${tracoIcone('passagem', 36)}${textVal(flight.cia_aerea) ? `<span>${escHtml(textVal(flight.cia_aerea))}</span>` : ''}</span><span class="lg"><span><b>${escHtml(to)}</b>${arrive ? ` <span class="mu">· ${escHtml(arrive)}</span>` : ''}${plus ? ` ${plus}` : ''}</span>${destinoInfo ? `<span class="ct">${escHtml(destinoInfo)}</span>` : ''}</span></div>`
           : '';
       const meta = (() => {
         if (isTrain)
@@ -1318,7 +1321,7 @@ function renderFlightItemHtml(
         if (rota) return '';
         const cia = [textVal(flight.cia_aerea), 'Voo'].filter(Boolean).map(escHtml).join(' · ');
         const voo = [textVal(flight.descricao), dataSaida].filter(Boolean).map(escHtml).join(' · ');
-        const cabecalho = `${cia}${voo ? ` <span class="arr">→</span> ${voo}` : ''}`;
+        const cabecalho = `${cia}${voo ? ` ${tracoIcone('passagem', 24)} ${voo}` : ''}`;
         return `${index ? '<div class="lb" style="margin-top:16px">' : '<div class="lb">'}${cabecalho}</div>`;
       })();
       return isTrain
@@ -1597,10 +1600,13 @@ export function buildQuotePreviewHtmlSync(params: {
     .lb { color: #6B7280; font-size: 7.5pt; font-weight: bold; }
     .rt { display: flex; align-items: center; gap: 6px; font-weight: bold; }
     .lg { display: inline-flex; flex-direction: column; }
-    .lg .ct { color: #6B7280; font-size: 7.5pt; font-weight: normal; }
-    .md { display: inline-flex; flex-direction: column; align-items: center; color: #6B7280; font-size: 6.5pt; font-weight: normal; padding: 0 14px; }
-    .md .arr { display: inline-block; font-size: 1.6em; line-height: 1; transform: scaleX(3); }
-    .arr { font-size: 1.25em; line-height: 1; }
+    .lg .ct { color: #6B7280; font-size: 7.5pt; font-weight: normal; white-space: nowrap; }
+    .md { display: inline-flex; flex-direction: column; align-items: center; color: #6B7280; font-size: 6.5pt; font-weight: normal; justify-self: center; }
+    .rtf { display: grid; grid-template-columns: 130px 100px auto; justify-content: start; align-items: center; column-gap: 6px; font-weight: bold; }
+    .rtf > .lg:last-child { margin-left: 22px; }
+    .lni { display: inline-flex; align-items: center; gap: 4px; }
+    .ln { display: inline-block; vertical-align: middle; border-top: 1.3px solid #9CA3AF; }
+    .md .lni { margin: 2px 0; }
     .p1 { background: #C62828; color: #fff; font-weight: bold; border-radius: 4px; padding: 0 4px; font-size: 7.5pt; margin-left: 2px; }
     .orc-arrival-legend { margin: 6px 12px 8px; font-size: 7.5pt; color: #4B5563; display: flex; flex-wrap: wrap; gap: 10px; }
     .tot { display: flex; justify-content: space-between; align-items: center; font-size: 12pt; font-weight: bold; color: #1B2C80; }
