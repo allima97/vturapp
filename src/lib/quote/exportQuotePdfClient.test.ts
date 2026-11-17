@@ -1075,13 +1075,21 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: true
     });
     expect(html).toContain('Passagens aéreas');
-    expect(html).toContain('LATAM · Voo <span class="arr">→</span> LA 8120 · 10/08/2027');
     expect(html.indexOf('São Paulo / Roma / São Paulo')).toBeLessThan(html.indexOf('LA 8120'));
-    expect(html).toContain('LATAM · Voo <span class="arr">→</span> LA 8121 · 25/08/2027');
-    expect(html).toContain('IBERIA · Voo <span class="arr">→</span> IB 1554 · 11/08/2027');
+    expect(html).toContain(
+      '<span class="md"><span>LA 8120</span><span class="arr">→</span><span>LATAM</span></span>'
+    );
+    expect(html).toContain(
+      '<span class="md"><span>LA 8121</span><span class="arr">→</span><span>LATAM</span></span>'
+    );
+    expect(html).toContain(
+      '<span class="md"><span>IB 1554</span><span class="arr">→</span><span>IBERIA</span></span>'
+    );
     expect(html.indexOf('Roma - Barcelona')).toBeLessThan(html.indexOf('IB 1554'));
-    expect(html).toContain('<span class="ct">São Paulo</span>');
-    expect(html).toContain('<span class="ct">Roma</span>');
+    expect(html).toContain('<span class="ct">São Paulo – 10/08/2027</span>');
+    expect(html).toContain('<span class="ct">Roma – 11/08/2027</span>');
+    expect(html).toContain('<span class="ct">Roma – 25/08/2027</span>');
+    expect(html).toContain('<span class="ct">São Paulo – 26/08/2027</span>');
     expect(html).toContain('<div class="q orc-quantity">1</div>');
     expect(html.match(/<div class="q orc-quantity">2<\/div>/g)).toHaveLength(2);
     for (const value of [

@@ -1301,20 +1301,23 @@ function renderFlightItemHtml(
       const saida = depart ? `<span class="mu">${escHtml(depart)}</span>` : '';
       const chegada =
         arrive || plus ? `<span class="mu">${escHtml(arrive)}${plus ? ` ${plus}` : ''}</span>` : '';
+      const dataSaida = date && date !== '-' ? date : '';
+      const dataChegadaBr = formatDateBR(flight.data_fim || flight.data_voo || flight.data_inicio);
+      const dataChegadaOk = dataChegadaBr && dataChegadaBr !== '-' ? dataChegadaBr : '';
+      const origemInfo = [fromCity, dataSaida].filter(Boolean).join(' – ');
+      const destinoInfo = [toCity, dataChegadaOk].filter(Boolean).join(' – ');
       const rota =
         from || to || depart || arrive
           ? isTrain
             ? `<div class="rt">${escHtml(from)} ${saida}<span class="arr">→</span>${escHtml(to)} ${chegada}</div>`
-            : `<div class="rt"><span class="lg"><span>${escHtml(from)}${saida ? ` ${saida}` : ''}</span>${fromCity ? `<span class="ct">${escHtml(fromCity)}</span>` : ''}</span><span class="arr">→</span><span class="lg"><span>${escHtml(to)}${chegada ? ` ${chegada}` : ''}</span>${toCity ? `<span class="ct">${escHtml(toCity)}</span>` : ''}</span></div>`
+            : `<div class="rt"${index ? ' style="margin-top:16px"' : ''}><span class="lg"><span><b>${escHtml(from)}</b>${depart ? ` <span class="mu">· ${escHtml(depart)}</span>` : ''}</span>${origemInfo ? `<span class="ct">${escHtml(origemInfo)}</span>` : ''}</span><span class="md">${textVal(flight.descricao) ? `<span>${escHtml(textVal(flight.descricao))}</span>` : ''}<span class="arr">→</span>${textVal(flight.cia_aerea) ? `<span>${escHtml(textVal(flight.cia_aerea))}</span>` : ''}</span><span class="lg"><span><b>${escHtml(to)}</b>${arrive ? ` <span class="mu">· ${escHtml(arrive)}</span>` : ''}${plus ? ` ${plus}` : ''}</span>${destinoInfo ? `<span class="ct">${escHtml(destinoInfo)}</span>` : ''}</span></div>`
           : '';
       const meta = (() => {
         if (isTrain)
           return `${index ? '<div class="lb" style="margin-top:8px">' : '<div class="lb">'}${escHtml(label)}</div>`;
+        if (rota) return '';
         const cia = [textVal(flight.cia_aerea), 'Voo'].filter(Boolean).map(escHtml).join(' · ');
-        const voo = [textVal(flight.descricao), date && date !== '-' ? date : '']
-          .filter(Boolean)
-          .map(escHtml)
-          .join(' · ');
+        const voo = [textVal(flight.descricao), dataSaida].filter(Boolean).map(escHtml).join(' · ');
         const cabecalho = `${cia}${voo ? ` <span class="arr">→</span> ${voo}` : ''}`;
         return `${index ? '<div class="lb" style="margin-top:16px">' : '<div class="lb">'}${cabecalho}</div>`;
       })();
@@ -1595,6 +1598,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .rt { display: flex; align-items: center; gap: 6px; font-weight: bold; }
     .lg { display: inline-flex; flex-direction: column; }
     .lg .ct { color: #6B7280; font-size: 7.5pt; font-weight: normal; }
+    .md { display: inline-flex; flex-direction: column; align-items: center; color: #6B7280; font-size: 7.5pt; font-weight: normal; padding: 0 14px; }
     .arr { font-size: 1.25em; line-height: 1; }
     .p1 { background: #C62828; color: #fff; font-weight: bold; border-radius: 4px; padding: 0 4px; font-size: 7.5pt; margin-left: 2px; }
     .orc-arrival-legend { margin: 6px 12px 8px; font-size: 7.5pt; color: #4B5563; display: flex; flex-wrap: wrap; gap: 10px; }
