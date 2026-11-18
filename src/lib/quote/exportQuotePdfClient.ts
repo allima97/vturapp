@@ -553,9 +553,9 @@ function estadiaHotelHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerD
   const checkin = trecho('Check-in', dataValidaBR(item.start_date), textVal(details.hora_checkin));
   const checkout = trecho('Check-out', dataValidaBR(item.end_date), textVal(details.hora_checkout));
   if (checkin && checkout)
-    return `<div class="rtf rota"><span class="lg"><span><b>${checkin}</b></span></span><span class="md">${traco(36)}</span><span class="lg"><span><b>${checkout}</b></span></span></div>`;
+    return `<div class="rtf rota"><span class="lg"><span class="rt rota">${checkin}</span></span><span class="md">${traco(36)}</span><span class="lg"><span class="rt rota">${checkout}</span></span></div>`;
   const partes = [checkin, checkout].filter(Boolean);
-  return partes.length ? `<div><b>${partes.join(' / ')}</b></div>` : '';
+  return partes.length ? `<div class="rt rota">${partes.join(' / ')}</div>` : '';
 }
 
 function rotaCarroHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDetalhes>) {
@@ -564,7 +564,7 @@ function rotaCarroHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDeta
   if (!retirada && !devolucao) return '';
   const grupo = (cidade: string, loja: string, rotuloData: string) => {
     const titulo = [cidade, loja].filter(Boolean).join(' · ');
-    return `<span class="lg"><span><b>${escHtml(titulo)}</b></span>${rotuloData ? `<span class="ct">${escHtml(rotuloData)}</span>` : ''}</span>`;
+    return `<span class="lg"><span class="rt rota">${escHtml(titulo)}</span>${rotuloData ? `<span class="ct">${escHtml(rotuloData)}</span>` : ''}</span>`;
   };
   const rotuloData = (rotulo: string, data: string, hora: string) =>
     data ? `${rotulo}: ${data}${hora ? ` às ${hora}` : ''}` : '';
@@ -1662,7 +1662,7 @@ export function buildQuotePreviewHtmlSync(params: {
     body { font-family: Arial, Helvetica, sans-serif; margin: 0; background: #fff; color: #1F2937; font-size: 9.4pt; }
     .pg { padding: 9mm 13mm 6mm; }
     .mu { color: #6B7280; }
-    .card { border: 1px solid #DDE3EC; border-radius: 12px; padding: 11px 14px; margin-bottom: 8px; break-inside: avoid; background: #fff; }
+    .card { border: 1.5px solid #C5CED9; border-radius: 12px; padding: 11px 14px; margin-bottom: 8px; break-inside: avoid; background: #fff; }
     .hd { display: flex; justify-content: space-between; align-items: center; }
     .hd img { height: 40px; }
     .hd .c { text-align: right; font-size: 8.3pt; line-height: 1.5; }
@@ -1695,7 +1695,8 @@ export function buildQuotePreviewHtmlSync(params: {
     .rtf.car.rota { align-items: start; }
     .rtf.rota > .lg:first-child { margin-right: 22px; }
     .rtf.rota > .lg:last-child { margin-left: 22px; }
-    .rt.rota { gap: 22px; }
+    .rt.rota { gap: 22px; font-size: 8.4pt; font-weight: bold; }
+    .rtf.car .lg .ct { font-size: 6.5pt; }
     .lb > .lni { margin-inline: 22px; }
     .lni { display: inline-flex; align-items: center; gap: 4px; min-height: 12px; }
     .ln { display: inline-block; vertical-align: middle; border-top: 1.3px solid #243AA3; }
@@ -1704,7 +1705,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .tot { display: flex; justify-content: space-between; align-items: center; font-size: 12pt; font-weight: bold; color: #1B2C80; }
     .orc-title-card { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
     .orc-title-main { min-width: 0; }
-    .cta { background: #fff; color: #1F2937; border: 1px solid #DDE3EC; border-radius: 10px; padding: 6px 10px; display: flex; gap: 8px; align-items: center; flex: none; max-width: 250px; height: auto; min-height: 0; line-height: 1.35; }
+    .cta { background: #fff; color: #1F2937; border: 1.5px solid #C5CED9; border-radius: 10px; padding: 6px 10px; display: flex; gap: 8px; align-items: center; flex: none; max-width: 250px; height: auto; min-height: 0; line-height: 1.35; }
     .cta b { color: #1B2C80; font-size: 8.5pt; }
     .cta span { color: #4B5563; font-size: 7.2pt; }
     .cta img { height: 44px; background: #fff; border-radius: 6px; padding: 2px; }
@@ -1714,7 +1715,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .toolbar button:hover { background: #0d6460; }
 
     /* Header */
-    .orc-header-card { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 12px 14px; margin: 0 0 12px 0; }
+    .orc-header-card { background: white; border: 1.5px solid #C5CED9; border-radius: 12px; padding: 12px 14px; margin: 0 0 12px 0; }
     .orc-header-table { width: 100%; border-collapse: separate; border-spacing: 0; }
     .orc-header-left { width: 52%; vertical-align: top; }
     .orc-header-right { width: 48%; vertical-align: top; }
@@ -1728,7 +1729,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-header-divider { height: 1px; background: #dbe3f0; margin: 10px 0 0 0; }
 
     /* Título */
-    .orc-title-row { background: white; border: 1px solid #DDE3EC; border-radius: 12px; padding: 16px; }
+    .orc-title-row { background: white; border: 1.5px solid #C5CED9; border-radius: 12px; padding: 16px; }
     .orc-title-row { margin: 0 0 16px 0; }
     .orc-title-kicker { color: #243aa3; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
     .orc-title { font-size: 21px; font-weight: 700; color: #243aa3; line-height: 1.2; margin-top: 4px; }
@@ -1736,7 +1737,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-title-dates { white-space: nowrap; }
 
     /* Seção genérica */
-    .orc-section-card { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 12px 14px; margin: 0 0 12px 0; }
+    .orc-section-card { background: white; border: 1.5px solid #C5CED9; border-radius: 12px; padding: 12px 14px; margin: 0 0 12px 0; }
     .orc-section-title { font-size: 13px; font-weight: 700; margin: 0 0 6px 0; }
     .orc-section-title--blue { color: #1d4ed8; }
     .orc-section-divider { height: 1px; background: #e2e8f0; margin: 0 0 10px 0; }
@@ -1748,7 +1749,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-item-value { font-size: 11px; color: #0f172a; margin: 2px 0 0 0; text-align: right; }
     .orc-item-divider { height: 1px; background: #f1f5f9; margin: 2px 0; }
     .orc-circuit-day { margin: 14px 0 0 0; }
-    .orc-items-table-wrap { border: 1px solid #d9e2ec; border-radius: 8px; overflow: hidden; }
+    .orc-items-table-wrap { border: 1.5px solid #C5CED9; border-radius: 8px; overflow: hidden; }
     .orc-items-table { width: 100%; border-collapse: collapse; font-size: 11px; }
     .orc-items-table th { background: #243aa3; color: white; text-align: left; padding: 7px 8px; border-bottom: 1px solid #d9e2ec; }
     .orc-items-table td { padding: 7px 8px; border-bottom: 1px solid #eef2f7; color: #0f172a; }
@@ -1756,6 +1757,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-items-table .text-right { text-align: right; }
     .orc-empty { font-size: 12px; color: #94a3b8; padding: 8px 0; }
     ${roteiroCardStyles}
+    .roteiro-card { border: 1.5px solid #C5CED9; }
     .orc-city-section, .orc-financial-section { margin: 18px 0; }
     .orc-city-table { width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; font-family: Arial, sans-serif; font-size: 12px; overflow-wrap: anywhere; }
     .orc-city-table th, .orc-city-table td { border: 0; text-align: left; vertical-align: top; }
@@ -1782,22 +1784,22 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-summary-note { color: #475569; font-size: 11px; }
 
     /* Rodapé */
-    .orc-footer-card.inf { padding: 11px 14px; margin: 0; border: 1px solid #DDE3EC; border-radius: 12px; background: #fff; }
+    .orc-footer-card.inf { padding: 11px 14px; margin: 0; border: 1.5px solid #C5CED9; border-radius: 12px; background: #fff; }
     .orc-footer-list { display: block; margin: 4px 0 0; padding: 0; list-style: none; font-size: 7.9pt; color: inherit; }
     .orc-footer-list li { display: flex; align-items: center; gap: 8px; padding: 2px 0; margin-top: 1px; background: transparent; border: 0; line-height: 1.35; overflow-wrap: anywhere; }
-    .band { margin: 0 0 8px; break-inside: avoid; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1.3fr; border-radius: 12px; overflow: hidden; border: 1px solid #DDE3EC; }
-    .band > div { padding: 10px 12px; border-right: 1px solid #DDE3EC; background: #fff; }
+    .band { margin: 0 0 8px; break-inside: avoid; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1.3fr; border-radius: 12px; overflow: hidden; border: 1.5px solid #C5CED9; }
+    .band > div { padding: 10px 12px; border-right: 1.5px solid #C5CED9; background: #fff; }
     .band b { display: block; font-size: 7pt; color: #6B7280; letter-spacing: 1px; margin-bottom: 3px; }
     .band span { font-weight: bold; color: #1B2C80; font-size: 9.5pt; }
     .band .tt { background: #243AA3; border: 0; }
     .band .tt b { color: #fff; opacity: .75; }
     .band .tt span { color: #fff; font-size: 14pt; }
     .band .val span { color: #C62828; }
-    .sec { border: 1px solid #DDE3EC; border-radius: 12px; margin: 0 0 8px; overflow: hidden; break-inside: avoid; background: #fff; }
-    .orc-city-section { background: #fff; border: 1px solid #DDE3EC; border-radius: 12px; padding: 0; margin: 0 0 8px; overflow: hidden; }
+    .sec { border: 1.5px solid #C5CED9; border-radius: 12px; margin: 0 0 8px; overflow: hidden; break-inside: avoid; background: #fff; }
+    .orc-city-section { background: #fff; border: 1.5px solid #C5CED9; border-radius: 12px; padding: 0; margin: 0 0 8px; overflow: hidden; }
     .orc-financial-section { background: transparent; border: 0; padding: 0; margin: 0; }
-    .card.tot { background: #EEF2F7; border: 1px solid #DDE3EC; color: #1B2C80; }
-    .sh { background: #EEF2F7; display: grid; grid-template-columns: minmax(0, 1fr) 90px 90px; gap: 8px; align-items: center; width: 100%; margin: 0; padding: 8px 12px; font-weight: bold; color: #1B2C80; }
+    .card.tot { background: #EEF2F7; border: 1.5px solid #C5CED9; color: #1B2C80; }
+    .sh { background: #D0DAEA; display: grid; grid-template-columns: minmax(0, 1fr) 90px 90px; gap: 8px; align-items: center; width: 100%; margin: 0; padding: 8px 12px; font-weight: bold; color: #1B2C80; }
     .sh.sh--sem-valor { grid-template-columns: minmax(0, 1fr) 90px; }
     .sh .l { display: flex; gap: 8px; align-items: center; min-width: 0; }
     .sh-qtd { color: #6B7280; font-size: 7.5pt; font-weight: bold; letter-spacing: .04em; }
@@ -1816,7 +1818,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-footer-list .orc-section-icon { width: 13px; height: 13px; }
     .orc-complement-img { margin: 12px 0 0 0; text-align: center; }
     .orc-complement-img img { max-height: 170px; max-width: 100%; }
-    .orc-validity-box { border: 1px solid #d1d5db; border-radius: 8px; margin: 10px 0 0 0; padding: 8px; text-align: center; }
+    .orc-validity-box { border: 1.5px solid #C5CED9; border-radius: 8px; margin: 10px 0 0 0; padding: 8px; text-align: center; }
     .orc-validity-client { font-size: 10px; color: #0f172a; }
     .orc-validity-date { font-size: 10px; color: #dc2626; margin: 3px 0 0 0; }
 
@@ -1831,7 +1833,7 @@ export function buildQuotePreviewHtmlSync(params: {
       body { background: white; }
       .toolbar { display: none; }
       .shell { max-width: none; padding: 0; }
-      .sh { background: #EEF2F7; color: #1B2C80; }
+      .sh { background: #D0DAEA; color: #1B2C80; }
       .sh small { color: #6B7280; }
       .band .tt { color: #fff; }
       .band .tt { background: #243AA3; }

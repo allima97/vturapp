@@ -30,13 +30,18 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     expect(html).toContain('.orc-title { font-size: 21px; font-weight: 700; color: #243aa3;');
     expect(html).toContain('.orc-city-table thead th { background: #243aa3;');
-    expect(html).toContain('.orc-title-row { background: white; border: 1px solid #DDE3EC;');
-    expect(html).toContain('.sh { background: #EEF2F7;');
+    expect(html).toContain('.orc-title-row { background: white; border: 1.5px solid #C5CED9;');
+    expect(html).toContain('.sh { background: #D0DAEA;');
     expect(html).toContain('.sh small { color: #6B7280;');
-    expect(html).toContain('.card.tot { background: #EEF2F7;');
+    expect(html).toContain('.card.tot { background: #EEF2F7; border: 1.5px solid #C5CED9;');
+    expect(html).toContain('.orc-city-section { background: #fff; border: 1.5px solid #C5CED9;');
+    expect(html).toContain(
+      '.band { margin: 0 0 8px; break-inside: avoid; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1.3fr; border-radius: 12px; overflow: hidden; border: 1.5px solid #C5CED9;'
+    );
+    expect(html).toContain('.card { border: 1.5px solid #C5CED9;');
     expect(html).toContain('print-color-adjust: exact;');
     expect(html).toContain(
-      '.cta { background: #fff; color: #1F2937; border: 1px solid #DDE3EC; border-radius: 10px; padding: 6px 10px; display: flex; gap: 8px; align-items: center; flex: none; max-width: 250px; height: auto; min-height: 0; line-height: 1.35; }'
+      '.cta { background: #fff; color: #1F2937; border: 1.5px solid #C5CED9; border-radius: 10px; padding: 6px 10px; display: flex; gap: 8px; align-items: center; flex: none; max-width: 250px; height: auto; min-height: 0; line-height: 1.35; }'
     );
     expect(html.indexOf('Proposta de viagem')).toBeLessThan(html.indexOf('Reserve com o'));
     expect(html).not.toContain('class="two"');
@@ -578,18 +583,18 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('HOTEL · 2 NOITES');
     expect(html).toContain('Hollywood Hotel Inn');
     expect(html.indexOf('>Hollywood Hotel Inn</b>')).toBeLessThan(html.indexOf('HOTEL · 2 NOITES'));
-    expect(html).toContain('<b>Check-in: 11/08/2027 às 15:00</b>');
-    expect(html).toContain('<b>Check-out: 13/08/2027 às 11:00</b>');
+    expect(html).toContain('class="rt rota">Check-in: 11/08/2027 às 15:00</span>');
+    expect(html).toContain('class="rt rota">Check-out: 13/08/2027 às 11:00</span>');
     expect(html).toContain('class="rtf rota"');
     expect(html).toContain(
       '.rtf.car .lg > span:first-child,\n    .rtf.rota .lg > span:first-child,\n    .rt.rota,\n    .rt.rota .mu { white-space: nowrap; overflow-wrap: normal; }'
     );
     expect(html).toContain('.rtf.rota > .lg:first-child { margin-right: 22px; }');
     expect(html).toContain('.rtf.rota > .lg:last-child { margin-left: 22px; }');
-    expect(html).toContain('.rt.rota { gap: 22px; }');
+    expect(html).toContain('.rt.rota { gap: 22px; font-size: 8.4pt; font-weight: bold; }');
     expect(html).not.toContain('.rtf.car > .lg:last-child { margin-left: 0; }');
-    expect(html.indexOf('<b>Check-in:')).toBeLessThan(html.indexOf('class="lni"'));
-    expect(html.indexOf('class="lni"')).toBeLessThan(html.indexOf('<b>Check-out:'));
+    expect(html.indexOf('Check-in:')).toBeLessThan(html.indexOf('class="lni"'));
+    expect(html.indexOf('class="lni"')).toBeLessThan(html.indexOf('Check-out:'));
     expect(html).toContain('3 estrelas · Duplo');
     expect(html).toContain('Café da manhã');
     expect(html).toContain('min-width: 0');
@@ -641,14 +646,15 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('CARRO · 4 DIÁRIAS');
     expect(html).toContain('>SUV automático</b>');
     expect(html).toContain('class="rtf car rota"');
-    expect(html).toContain('<b>Los Angeles · Loja Aeroporto LAX</b>');
-    expect(html).toContain('<b>Las Vegas · Loja Downtown (Figueroa St)</b>');
+    expect(html).toContain('class="rt rota">Los Angeles · Loja Aeroporto LAX</span>');
+    expect(html).toContain('class="rt rota">Las Vegas · Loja Downtown (Figueroa St)</span>');
     expect(html).toContain('<span class="ct">Retirada: 17/01/2027 às 14:00</span>');
     expect(html).toContain('<span class="ct">Devolução: 20/01/2027 às 20:00</span>');
     expect(html).toContain(
       '.lg .ct { color: #6B7280; font-size: 7.5pt; font-weight: normal; white-space: nowrap; overflow-wrap: normal; }'
     );
     expect(html).not.toContain('.rtf.car .lg .ct { color: inherit;');
+    expect(html).toContain('.rtf.car .lg .ct { font-size: 6.5pt; }');
     expect(html).toContain('<div class="mu sm">Localiza</div>');
     expect(html).toContain('>Aluguel de carro</span>');
     expect(html).not.toContain('<div class="mu sm">Aluguel de carro</div>');
