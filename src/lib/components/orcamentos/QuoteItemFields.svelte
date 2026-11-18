@@ -40,13 +40,47 @@
     'Unidas'
   ].map((nome) => ({ value: nome, label: nome }));
 
-  const regimes = ['Só Hospedagem', 'Café da manhã', 'Meia Pensão', 'Pensão Completa', 'ALL Inclusive'].map(
-    (nome) => ({ value: nome, label: nome })
-  );
+  const regimes = [
+    'Só Hospedagem',
+    'Café da manhã',
+    'Meia Pensão',
+    'Pensão Completa',
+    'ALL Inclusive'
+  ].map((nome) => ({ value: nome, label: nome }));
+  const categoriasHotel = [
+    '1 estrela',
+    '2 estrelas',
+    '3 estrelas',
+    '4 estrelas',
+    '5 estrelas',
+    'Resort',
+    'Pousada',
+    'Hostel'
+  ].map((nome) => ({ value: nome, label: nome }));
+  const tiposApartamento = [
+    'Individual',
+    'Duplo',
+    'Triplo',
+    'Quádruplo',
+    'Quíntuplo',
+    'Família',
+    '1 Quarto c/ 1 Banheiro',
+    '2 Quartos c/ 1 Banheiro',
+    '2 Quartos c/ 2 Banheiros'
+  ].map((nome) => ({ value: nome, label: nome }));
   $: opcoesRegime =
     item.regime && !regimes.some((opcao) => opcao.value === item.regime)
       ? [...regimes, { value: item.regime, label: item.regime }]
       : regimes;
+  $: opcoesCategoriaHotel = opcoesComValorSalvo(categoriasHotel, item.categoria);
+  $: opcoesApartamento = opcoesComValorSalvo(tiposApartamento, item.tipo_apartamento);
+
+  function opcoesComValorSalvo(opcoes: Array<{ value: string; label: string }>, valor: string) {
+    const salvo = valor.trim();
+    return salvo && !opcoes.some((opcao) => opcao.value === salvo)
+      ? [...opcoes, { value: salvo, label: salvo }]
+      : opcoes;
+  }
 
   function atualizarItem() {
     recalcularTotaisItem(item);
@@ -317,11 +351,12 @@
       </div>
     </div>
     <div class="md:col-span-4">
-      <FieldInput
+      <FieldSelect
         id={`${prefix}-categoria`}
         label="Categoria"
         bind:value={item.categoria}
-        placeholder="Ex.: 4 estrelas"
+        options={opcoesCategoriaHotel}
+        placeholder="Selecione"
         class_name="w-full"
       />
     </div>
@@ -350,10 +385,12 @@
       />
     </div>
     <div class="md:col-span-3">
-      <FieldInput
+      <FieldSelect
         id={`${prefix}-apartamento`}
         label="Tipo de apartamento"
         bind:value={item.tipo_apartamento}
+        options={opcoesApartamento}
+        placeholder="Selecione"
         class_name="w-full"
       />
     </div>
