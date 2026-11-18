@@ -31,7 +31,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('.orc-title { font-size: 21px; font-weight: 700; color: #243aa3;');
     expect(html).toContain('.orc-city-table thead th { background: #243aa3;');
     expect(html).toContain('.orc-title-row { background: white; border: 1.5px solid #C5CED9;');
-    expect(html).toContain('.sh { background: #EEF2F7;');
+    expect(html).toContain('.sh { background: #D0DAEA;');
     expect(html).toContain('.sh small { color: #6B7280;');
     expect(html).toContain('.card.tot { background: #EEF2F7; border: 1.5px solid #C5CED9;');
     expect(html).toContain('.orc-city-section { background: #fff; border: 1.5px solid #C5CED9;');

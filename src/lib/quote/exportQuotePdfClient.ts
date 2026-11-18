@@ -1798,7 +1798,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-city-section { background: #fff; border: 1.5px solid #C5CED9; border-radius: 12px; padding: 0; margin: 0 0 8px; overflow: hidden; }
     .orc-financial-section { background: transparent; border: 0; padding: 0; margin: 0; }
     .card.tot { background: #EEF2F7; border: 1.5px solid #C5CED9; color: #1B2C80; }
-    .sh { background: #EEF2F7; display: grid; grid-template-columns: minmax(0, 1fr) 90px 90px; gap: 8px; align-items: center; width: 100%; margin: 0; padding: 8px 12px; font-weight: bold; color: #1B2C80; }
+    .sh { background: #D0DAEA; display: grid; grid-template-columns: minmax(0, 1fr) 90px 90px; gap: 8px; align-items: center; width: 100%; margin: 0; padding: 8px 12px; font-weight: bold; color: #1B2C80; }
     .sh.sh--sem-valor { grid-template-columns: minmax(0, 1fr) 90px; }
     .sh .l { display: flex; gap: 8px; align-items: center; min-width: 0; }
     .sh-qtd { color: #6B7280; font-size: 7.5pt; font-weight: bold; letter-spacing: .04em; }
@@ -1832,7 +1832,7 @@ export function buildQuotePreviewHtmlSync(params: {
       body { background: white; }
       .toolbar { display: none; }
       .shell { max-width: none; padding: 0; }
-      .sh { background: #EEF2F7; color: #1B2C80; }
+      .sh { background: #D0DAEA; color: #1B2C80; }
       .sh small { color: #6B7280; }
       .band .tt { color: #fff; }
       .band .tt { background: #243AA3; }
