@@ -571,7 +571,7 @@ function rotaCarroHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDeta
   };
   const rotuloData = (rotulo: string, data: string, hora: string) =>
     data ? `${rotulo}: ${data}${hora ? ` às ${hora}` : ''}` : '';
-  return `<div class="rtf">${grupo(retirada, textVal(details.loja_retirada), rotuloData('Retirada', dataValidaBR(item.start_date), textVal(details.hora_retirada)))}<span class="md">${tracoIcone('carro', 36)}</span>${grupo(devolucao, textVal(details.loja_devolucao), rotuloData('Devolução', dataValidaBR(item.end_date), textVal(details.hora_devolucao)))}</div>`;
+  return `<div class="rtf car">${grupo(retirada, textVal(details.loja_retirada), rotuloData('Retirada', dataValidaBR(item.start_date), textVal(details.hora_retirada)))}<span class="md">${tracoIcone('carro', 36)}</span>${grupo(devolucao, textVal(details.loja_devolucao), rotuloData('Devolução', dataValidaBR(item.end_date), textVal(details.hora_devolucao)))}</div>`;
 }
 
 function rotuloServico(item: QuoteItemForPdf, prefix: string) {
@@ -1661,6 +1661,8 @@ export function buildQuotePreviewHtmlSync(params: {
     .lg .ct { color: #6B7280; font-size: 7.5pt; font-weight: normal; white-space: nowrap; }
     .md { display: inline-flex; flex-direction: column; align-items: center; color: #6B7280; font-size: 6pt; font-weight: normal; justify-self: center; }
     .rtf { display: grid; grid-template-columns: 130px 100px auto; justify-content: start; align-items: center; column-gap: 6px; font-weight: bold; }
+    .rtf.car { grid-template-columns: auto 100px auto; }
+    .rtf.car .lg > span:first-child { white-space: nowrap; }
     .rtf > .lg:last-child { margin-left: 22px; }
     .lni { display: inline-flex; align-items: center; gap: 4px; }
     .ln { display: inline-block; vertical-align: middle; border-top: 1.3px solid #243AA3; }
