@@ -1828,11 +1828,24 @@ export function buildQuotePreviewHtmlSync(params: {
     }
 
     @media print {
-      @page { size: A4; margin: 0; }
+      @page { size: A4; margin: 13mm; }
       html, body, body * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       body { background: white; }
       .toolbar { display: none; }
       .shell { max-width: none; padding: 0; }
+      .pg { padding: 0; }
+      .card,
+      .cta,
+      .orc-city-section,
+      .orc-section-card,
+      .orc-footer-card,
+      .band,
+      .sec,
+      .roteiro-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+        overflow: visible;
+      }
       .sh { background: #D0DAEA; color: #1B2C80; }
       .sh small { color: #6B7280; }
       .band .tt { color: #fff; }

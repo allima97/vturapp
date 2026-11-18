@@ -39,6 +39,11 @@ describe('identidade dos orçamentos e circuitos', () => {
       '.band { margin: 0 0 8px; break-inside: avoid; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1.3fr; border-radius: 12px; overflow: hidden; border: 1.5px solid #C5CED9;'
     );
     expect(html).toContain('.card { border: 1.5px solid #C5CED9;');
+    expect(html).toContain('@page { size: A4; margin: 13mm; }');
+    expect(html).toContain('.pg { padding: 0; }');
+    expect(html).toContain(
+      '.orc-city-section,\n      .orc-section-card,\n      .orc-footer-card,\n      .band,\n      .sec,\n      .roteiro-card {\n        break-inside: avoid;\n        page-break-inside: avoid;\n        overflow: visible;\n      }'
+    );
     expect(html).toContain('print-color-adjust: exact;');
     expect(html).toContain(
       '.cta { background: #fff; color: #1F2937; border: 1.5px solid #C5CED9; border-radius: 10px; padding: 6px 10px; display: flex; gap: 8px; align-items: center; flex: none; max-width: 250px; height: auto; min-height: 0; line-height: 1.35; }'
