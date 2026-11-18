@@ -18,7 +18,8 @@ import {
   diasItem,
   formatarDescricaoItem,
   lerDetalhes,
-  resumoDetalhes
+  resumoDetalhes,
+  resumoInformacoesVeiculo
 } from '$lib/quote/detalhesItem';
 import { chaveIdentidadeCidade } from '$lib/catalogoOpcionais';
 import { defaultQuoteFooter } from '$lib/quote/defaultFooter';
@@ -469,7 +470,7 @@ function getServiceDetails(item: QuoteItemForPdf) {
     ].filter(Boolean);
   }
   if (type === 'aluguel_carro') {
-    const includedOrder = ['KM Livre', 'CDW', 'LDW', 'Tanque Cheio'];
+    const includedOrder = ['KM Livre', 'CDW', 'LDW', 'Tanque Cheio', '2º motorista'];
     const included = new Set(details.incluidos.map(normalizeText));
     const extras = [
       ...includedOrder.filter((value) => included.has(normalizeText(value))),
@@ -477,7 +478,7 @@ function getServiceDetails(item: QuoteItemForPdf) {
         (value) => !includedOrder.some((known) => normalizeText(known) === normalizeText(value))
       )
     ];
-    return [textVal(details.cambio), ...extras].filter(Boolean);
+    return [textVal(details.cambio), resumoInformacoesVeiculo(details), ...extras].filter(Boolean);
   }
   return resumoDetalhes(item);
 }
@@ -762,10 +763,11 @@ function renderServiceItem(
             .join(' · ')
         : rotuloServico(item, label.toUpperCase());
   const estrelas = textVal(details.categoria).replace(/estrelas/gi, 'estrelas');
+  const veiculo = resumoInformacoesVeiculo(details);
   const linhaCinza = hospedagem
     ? [estrelas, textVal(details.tipo_apartamento)].filter(Boolean).join(' · ')
     : carro
-      ? textVal(details.locadora) || 'Aluguel de carro'
+      ? [textVal(details.locadora), veiculo].filter(Boolean).join(' · ') || 'Aluguel de carro'
       : seguro
         ? textVal(details.fornecedor)
         : textVal(details.categoria);

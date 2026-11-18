@@ -630,7 +630,11 @@ describe('identidade dos orçamentos e circuitos', () => {
             detalhes_orcamento: {
               cambio: 'Automático',
               locadora: 'Localiza',
-              incluidos: ['CDW', 'LDW', 'Tanque Cheio', 'KM Livre'],
+              incluidos: ['CDW', 'LDW', 'Tanque Cheio', 'KM Livre', '2º motorista'],
+              assentos: '5 assentos',
+              portas: '4 portas',
+              malas: '2 malas grandes',
+              combustivel: 'Flex',
               cidade_devolucao: 'Las Vegas',
               hora_retirada: '14:00',
               hora_devolucao: '20:00',
@@ -661,7 +665,31 @@ describe('identidade dos orçamentos e circuitos', () => {
     );
     expect(html).not.toContain('.rtf.car .lg .ct { color: inherit;');
     expect(html).not.toContain('.rtf.car .lg .ct { font-size: 6.5pt; }');
-    expect(html).toContain('<div class="mu sm">Localiza</div>');
+    expect(html).toContain(
+      '<div class="mu sm">Localiza · 5 assentos · 4 portas · 2 malas grandes · Flex</div>'
+    );
+    expect(html).toContain('2º motorista');
+    const tela = renderQuoteItemsForScreen(
+      [
+        {
+          item_type: 'aluguel_carro',
+          title: 'SUV',
+          raw: {
+            detalhes_orcamento: {
+              assentos: '5 assentos',
+              portas: '',
+              malas: '2 malas grandes',
+              combustivel: 'Flex',
+              incluidos: ['2º motorista', 'CDW']
+            }
+          }
+        }
+      ],
+      'BRL'
+    );
+    expect(tela).toContain('5 assentos · 2 malas grandes · Flex');
+    expect(tela).not.toContain('·  ·');
+    expect(tela).toContain('2º motorista');
     expect(html).toContain('>Aluguel de carro</span>');
     expect(html).not.toContain('<div class="mu sm">Aluguel de carro</div>');
     expect(html).toContain('KM livre');

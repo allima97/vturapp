@@ -19,6 +19,10 @@ export type DetalhesItem = {
   regime: string;
   cambio: string;
   incluidos: string[];
+  assentos: string;
+  portas: string;
+  malas: string;
+  combustivel: string;
   fornecedor: string;
   locadora: string;
   cidade_devolucao: string;
@@ -82,6 +86,10 @@ export function detalhesVazios(): DetalhesItem {
     regime: '',
     cambio: '',
     incluidos: [],
+    assentos: '',
+    portas: '',
+    malas: '',
+    combustivel: '',
     fornecedor: '',
     locadora: '',
     cidade_devolucao: '',
@@ -312,6 +320,10 @@ export function lerDetalhes(item: {
     incluidos: Array.isArray(detalhes.incluidos)
       ? detalhes.incluidos.filter((value): value is string => typeof value === 'string')
       : [],
+    assentos: texto(detalhes.assentos),
+    portas: texto(detalhes.portas),
+    malas: texto(detalhes.malas),
+    combustivel: texto(detalhes.combustivel),
     fornecedor: texto(detalhes.fornecedor),
     locadora: texto(detalhes.locadora),
     cidade_devolucao: texto(detalhes.cidade_devolucao),
@@ -461,7 +473,11 @@ export function rawDetalhes(item: DetalhesItem & { item_type: string }) {
       hora_retirada: item.hora_retirada.trim(),
       hora_devolucao: item.hora_devolucao.trim(),
       loja_retirada: item.loja_retirada.trim(),
-      loja_devolucao: item.loja_devolucao.trim()
+      loja_devolucao: item.loja_devolucao.trim(),
+      assentos: item.assentos.trim(),
+      portas: item.portas.trim(),
+      malas: item.malas.trim(),
+      combustivel: item.combustivel.trim()
     };
   }
   if (isPassengerPriced(type)) {
@@ -489,6 +505,15 @@ export function rawDetalhes(item: DetalhesItem & { item_type: string }) {
   };
 }
 
+export function resumoInformacoesVeiculo(
+  detalhes: Pick<DetalhesItem, 'assentos' | 'portas' | 'malas' | 'combustivel'>
+) {
+  return [detalhes.assentos, detalhes.portas, detalhes.malas, detalhes.combustivel]
+    .map((valor) => valor.trim())
+    .filter(Boolean)
+    .join(' · ');
+}
+
 export function resumoDetalhes(item: {
   start_date?: unknown;
   end_date?: unknown;
@@ -505,6 +530,8 @@ export function resumoDetalhes(item: {
     resumo.push(`Categoria: ${detalhes.categoria}`);
   if (isCar(type)) {
     if (detalhes.cambio) resumo.push(`Câmbio: ${detalhes.cambio}`);
+    const veiculo = resumoInformacoesVeiculo(detalhes);
+    if (veiculo) resumo.push(veiculo);
     if (detalhes.incluidos.length > 0) resumo.push(`Incluídos: ${detalhes.incluidos.join(', ')}`);
   }
   if (!isCar(type) && detalhes.adultos !== null && detalhes.adultos > 0)

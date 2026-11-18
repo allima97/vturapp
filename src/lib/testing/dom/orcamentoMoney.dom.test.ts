@@ -1141,6 +1141,12 @@ it('carrega e preserva os detalhes de hotel ao editar o orçamento', async () =>
     };
     expect(categoria.value).toBe('4 estrelas');
     expect([...categoria.options].some((option) => option.value === '4 estrelas')).toBe(true);
+    expect([...categoria.options].map((option) => option.value)).toEqual(
+      expect.arrayContaining(['Pousada', 'Apart Hotel', 'Hostel'])
+    );
+    expect(
+      [...categoria.options].findIndex((option) => option.value === 'Apart Hotel')
+    ).toBeLessThan([...categoria.options].findIndex((option) => option.value === 'Hostel'));
     expect([...categoria.options].some((option) => option.textContent === 'Selecione')).toBe(true);
     const apartamento = target.querySelector(
       'select#orcamento-editar-item-0-apartamento'
@@ -1205,7 +1211,7 @@ it('mantém categoria e apartamento antigos que não estão na lista do hotel', 
         end_date: '2027-08-13',
         raw: {
           detalhes_orcamento: {
-            categoria: 'Apart Hotel',
+            categoria: 'Villa',
             adultos: 2,
             tipo_apartamento: 'Bangalô',
             quantidade_apartamentos: 1,
@@ -1239,8 +1245,8 @@ it('mantém categoria e apartamento antigos que não estão na lista do hotel', 
       value: string;
       options: Array<{ value: string }>;
     };
-    expect(categoria.value).toBe('Apart Hotel');
-    expect([...categoria.options].some((option) => option.value === 'Apart Hotel')).toBe(true);
+    expect(categoria.value).toBe('Villa');
+    expect([...categoria.options].some((option) => option.value === 'Villa')).toBe(true);
     expect(apartamento.value).toBe('Bangalô');
     expect([...apartamento.options].some((option) => option.value === 'Bangalô')).toBe(true);
     target
@@ -1254,7 +1260,7 @@ it('mantém categoria e apartamento antigos que não estão na lista do hotel', 
             expect.objectContaining({
               raw: expect.objectContaining({
                 detalhes_orcamento: expect.objectContaining({
-                  categoria: 'Apart Hotel',
+                  categoria: 'Villa',
                   tipo_apartamento: 'Bangalô'
                 })
               })
@@ -1334,10 +1340,24 @@ it('permite alterar câmbio e itens incluídos ao editar aluguel de carro', asyn
       'KM Livre',
       'CDW',
       'LDW',
-      'Tanque Cheio'
+      'Tanque Cheio',
+      '2º motorista'
     ]);
     included.find((input) => input.value === 'KM Livre')!.click();
     included.find((input) => input.value === 'LDW')!.click();
+    included.find((input) => input.value === '2º motorista')!.click();
+    const escolher = (id: string, value: string) => {
+      const select = target.querySelector(id) as Element & {
+        value: string;
+        dispatchEvent: (event: Event) => boolean;
+      };
+      select.value = value;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    escolher('#orcamento-editar-item-0-assentos', '5 assentos');
+    escolher('#orcamento-editar-item-0-portas', '4 portas');
+    escolher('#orcamento-editar-item-0-malas', '2 malas grandes');
+    escolher('#orcamento-editar-item-0-combustivel', 'Flex');
     flushSync();
 
     target
@@ -1353,13 +1373,17 @@ it('permite alterar câmbio e itens incluídos ao editar aluguel de carro', asyn
               raw: {
                 detalhes_orcamento: {
                   cambio: 'Manual',
-                  incluidos: ['KM Livre', 'CDW', 'LDW'],
+                  incluidos: ['KM Livre', 'CDW', 'LDW', '2º motorista'],
                   locadora: 'Localiza',
                   cidade_devolucao: '',
                   hora_retirada: '',
                   hora_devolucao: '',
                   loja_retirada: '',
-                  loja_devolucao: ''
+                  loja_devolucao: '',
+                  assentos: '5 assentos',
+                  portas: '4 portas',
+                  malas: '2 malas grandes',
+                  combustivel: 'Flex'
                 },
                 aereo_import: null
               }

@@ -22,7 +22,7 @@
     { value: 'Serviço Compartilhado', label: 'Serviço Compartilhado' },
     { value: 'Serviço Privativo', label: 'Serviço Privativo' }
   ];
-  const itensCarro = ['KM Livre', 'CDW', 'LDW', 'Tanque Cheio'];
+  const itensCarro = ['KM Livre', 'CDW', 'LDW', 'Tanque Cheio', '2º motorista'];
   const locadoras = [
     'Álamo',
     'Avis',
@@ -55,8 +55,34 @@
     '5 estrelas',
     'Resort',
     'Pousada',
+    'Apart Hotel',
     'Hostel'
   ].map((nome) => ({ value: nome, label: nome }));
+  const assentosVeiculo = ['2', '4', '5', '7', '8', '9', '12', '15'].map((quantidade) => ({
+    value: `${quantidade} assentos`,
+    label: `${quantidade} assentos`
+  }));
+  const portasVeiculo = ['2', '3', '4', '5'].map((quantidade) => ({
+    value: `${quantidade} portas`,
+    label: `${quantidade} portas`
+  }));
+  const malasVeiculo = [
+    '1 mala pequena',
+    '1 mala grande',
+    '1 mala grande + 1 pequena',
+    '2 malas grandes',
+    '2 malas grandes + 1 pequena',
+    '3 malas grandes',
+    '4 ou mais malas'
+  ].map((nome) => ({ value: nome, label: nome }));
+  const combustiveisVeiculo = [
+    { value: 'Gasolina', label: 'Gasolina' },
+    { value: 'Flex', label: 'Flex (etanol/gasolina)' },
+    { value: 'Diesel', label: 'Diesel' },
+    { value: 'Elétrico', label: 'Elétrico' },
+    { value: 'Híbrido', label: 'Híbrido' },
+    { value: 'Híbrido plug-in', label: 'Híbrido plug-in' }
+  ];
   const tiposApartamento = [
     'Individual',
     'Duplo',
@@ -74,6 +100,10 @@
       : regimes;
   $: opcoesCategoriaHotel = opcoesComValorSalvo(categoriasHotel, item.categoria);
   $: opcoesApartamento = opcoesComValorSalvo(tiposApartamento, item.tipo_apartamento);
+  $: opcoesAssentos = opcoesComValorSalvo(assentosVeiculo, item.assentos);
+  $: opcoesPortas = opcoesComValorSalvo(portasVeiculo, item.portas);
+  $: opcoesMalas = opcoesComValorSalvo(malasVeiculo, item.malas);
+  $: opcoesCombustivel = opcoesComValorSalvo(combustiveisVeiculo, item.combustivel);
 
   function opcoesComValorSalvo(opcoes: Array<{ value: string; label: string }>, valor: string) {
     const salvo = valor.trim();
@@ -460,6 +490,49 @@
         placeholder="Selecione"
         class_name="w-full"
         on:change={atualizarCambio}
+      />
+    </div>
+    <div class="md:col-span-12">
+      <p class="mb-1 block text-xs font-semibold text-slate-600">Informações do veículo</p>
+    </div>
+    <div class="md:col-span-3">
+      <FieldSelect
+        id={`${prefix}-assentos`}
+        label="Assentos"
+        bind:value={item.assentos}
+        options={opcoesAssentos}
+        placeholder="Selecione"
+        class_name="w-full"
+      />
+    </div>
+    <div class="md:col-span-3">
+      <FieldSelect
+        id={`${prefix}-portas`}
+        label="Portas"
+        bind:value={item.portas}
+        options={opcoesPortas}
+        placeholder="Selecione"
+        class_name="w-full"
+      />
+    </div>
+    <div class="md:col-span-3">
+      <FieldSelect
+        id={`${prefix}-malas`}
+        label="Malas"
+        bind:value={item.malas}
+        options={opcoesMalas}
+        placeholder="Selecione"
+        class_name="w-full"
+      />
+    </div>
+    <div class="md:col-span-3">
+      <FieldSelect
+        id={`${prefix}-combustivel`}
+        label="Combustível"
+        bind:value={item.combustivel}
+        options={opcoesCombustivel}
+        placeholder="Selecione"
+        class_name="w-full"
       />
     </div>
     <div class="md:col-span-6">
