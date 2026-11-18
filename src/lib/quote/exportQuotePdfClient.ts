@@ -1658,11 +1658,11 @@ export function buildQuotePreviewHtmlSync(params: {
     .rt { display: flex; align-items: center; gap: 6px; font-weight: bold; }
     .lg { display: inline-flex; flex-direction: column; }
     .lg .ct { color: #6B7280; font-size: 7.5pt; font-weight: normal; white-space: nowrap; }
-    .md { display: inline-flex; flex-direction: column; align-items: center; color: #6B7280; font-size: 6.5pt; font-weight: normal; justify-self: center; }
+    .md { display: inline-flex; flex-direction: column; align-items: center; color: #6B7280; font-size: 6pt; font-weight: normal; justify-self: center; }
     .rtf { display: grid; grid-template-columns: 130px 100px auto; justify-content: start; align-items: center; column-gap: 6px; font-weight: bold; }
     .rtf > .lg:last-child { margin-left: 22px; }
     .lni { display: inline-flex; align-items: center; gap: 4px; }
-    .ln { display: inline-block; vertical-align: middle; border-top: 1.3px solid #9CA3AF; }
+    .ln { display: inline-block; vertical-align: middle; border-top: 1.3px solid #243AA3; }
     .md .lni { margin: 2px 0; }
     .p1 { color: #C62828; font-weight: 700; font-size: 6.5pt; vertical-align: super; margin-left: 1px; letter-spacing: 0.2px; }
     .tot { display: flex; justify-content: space-between; align-items: center; font-size: 12pt; font-weight: bold; color: #1B2C80; }
