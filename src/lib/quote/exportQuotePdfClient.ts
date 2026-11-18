@@ -553,9 +553,9 @@ function estadiaHotelHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerD
   const checkin = trecho('Check-in', dataValidaBR(item.start_date), textVal(details.hora_checkin));
   const checkout = trecho('Check-out', dataValidaBR(item.end_date), textVal(details.hora_checkout));
   if (checkin && checkout)
-    return `<div class="rtf rota"><span class="lg"><span><b>${checkin}</b></span></span><span class="md">${traco(36)}</span><span class="lg"><span><b>${checkout}</b></span></span></div>`;
+    return `<div class="rtf rota"><span class="lg"><span class="rt rota">${checkin}</span></span><span class="md">${traco(36)}</span><span class="lg"><span class="rt rota">${checkout}</span></span></div>`;
   const partes = [checkin, checkout].filter(Boolean);
-  return partes.length ? `<div><b>${partes.join(' / ')}</b></div>` : '';
+  return partes.length ? `<div class="rt rota">${partes.join(' / ')}</div>` : '';
 }
 
 function rotaCarroHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDetalhes>) {
@@ -564,7 +564,7 @@ function rotaCarroHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDeta
   if (!retirada && !devolucao) return '';
   const grupo = (cidade: string, loja: string, rotuloData: string) => {
     const titulo = [cidade, loja].filter(Boolean).join(' · ');
-    return `<span class="lg"><span><b>${escHtml(titulo)}</b></span>${rotuloData ? `<span class="ct">${escHtml(rotuloData)}</span>` : ''}</span>`;
+    return `<span class="lg"><span class="rt rota">${escHtml(titulo)}</span>${rotuloData ? `<span class="ct">${escHtml(rotuloData)}</span>` : ''}</span>`;
   };
   const rotuloData = (rotulo: string, data: string, hora: string) =>
     data ? `${rotulo}: ${data}${hora ? ` às ${hora}` : ''}` : '';
@@ -1695,8 +1695,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .rtf.car.rota { align-items: start; }
     .rtf.rota > .lg:first-child { margin-right: 22px; }
     .rtf.rota > .lg:last-child { margin-left: 22px; }
-    .rt.rota { gap: 22px; }
-    .rtf.car, .rtf.rota, .rt.rota { font-size: 8.4pt; }
+    .rt.rota { gap: 22px; font-size: 8.4pt; font-weight: bold; }
     .rtf.car .lg .ct { font-size: 6.5pt; }
     .lb > .lni { margin-inline: 22px; }
     .lni { display: inline-flex; align-items: center; gap: 4px; min-height: 12px; }

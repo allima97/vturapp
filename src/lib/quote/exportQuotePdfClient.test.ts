@@ -583,19 +583,18 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('HOTEL · 2 NOITES');
     expect(html).toContain('Hollywood Hotel Inn');
     expect(html.indexOf('>Hollywood Hotel Inn</b>')).toBeLessThan(html.indexOf('HOTEL · 2 NOITES'));
-    expect(html).toContain('<b>Check-in: 11/08/2027 às 15:00</b>');
-    expect(html).toContain('<b>Check-out: 13/08/2027 às 11:00</b>');
+    expect(html).toContain('class="rt rota">Check-in: 11/08/2027 às 15:00</span>');
+    expect(html).toContain('class="rt rota">Check-out: 13/08/2027 às 11:00</span>');
     expect(html).toContain('class="rtf rota"');
     expect(html).toContain(
       '.rtf.car .lg > span:first-child,\n    .rtf.rota .lg > span:first-child,\n    .rt.rota,\n    .rt.rota .mu { white-space: nowrap; overflow-wrap: normal; }'
     );
     expect(html).toContain('.rtf.rota > .lg:first-child { margin-right: 22px; }');
     expect(html).toContain('.rtf.rota > .lg:last-child { margin-left: 22px; }');
-    expect(html).toContain('.rt.rota { gap: 22px; }');
-    expect(html).toContain('.rtf.car, .rtf.rota, .rt.rota { font-size: 8.4pt; }');
+    expect(html).toContain('.rt.rota { gap: 22px; font-size: 8.4pt; font-weight: bold; }');
     expect(html).not.toContain('.rtf.car > .lg:last-child { margin-left: 0; }');
-    expect(html.indexOf('<b>Check-in:')).toBeLessThan(html.indexOf('class="lni"'));
-    expect(html.indexOf('class="lni"')).toBeLessThan(html.indexOf('<b>Check-out:'));
+    expect(html.indexOf('Check-in:')).toBeLessThan(html.indexOf('class="lni"'));
+    expect(html.indexOf('class="lni"')).toBeLessThan(html.indexOf('Check-out:'));
     expect(html).toContain('3 estrelas · Duplo');
     expect(html).toContain('Café da manhã');
     expect(html).toContain('min-width: 0');
@@ -647,8 +646,8 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('CARRO · 4 DIÁRIAS');
     expect(html).toContain('>SUV automático</b>');
     expect(html).toContain('class="rtf car rota"');
-    expect(html).toContain('<b>Los Angeles · Loja Aeroporto LAX</b>');
-    expect(html).toContain('<b>Las Vegas · Loja Downtown (Figueroa St)</b>');
+    expect(html).toContain('class="rt rota">Los Angeles · Loja Aeroporto LAX</span>');
+    expect(html).toContain('class="rt rota">Las Vegas · Loja Downtown (Figueroa St)</span>');
     expect(html).toContain('<span class="ct">Retirada: 17/01/2027 às 14:00</span>');
     expect(html).toContain('<span class="ct">Devolução: 20/01/2027 às 20:00</span>');
     expect(html).toContain(
