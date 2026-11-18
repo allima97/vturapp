@@ -89,17 +89,11 @@ it('mostra os itens em uma tabela padrão, na ordem manual e antes das ações',
     const items = target.querySelector('.quote-items')!;
     const text = items.textContent || '';
     expect(text.indexOf('Hotel Roma')).toBeLessThan(text.indexOf('LATAM'));
-    for (const value of [
-      'GRU → FCO',
-      '02 passagens',
-      '01 apartamento',
-      'Valor Unit.',
-      'Total',
-      'R$ 500,00',
-      'R$ 1.000,00'
-    ]) {
+    for (const value of ['GRU → FCO', 'Valor Unit.', 'Total', 'R$ 500,00', 'R$ 1.000,00']) {
       expect(text).toContain(value);
     }
+    expect(text).not.toContain('passagem');
+    expect(text).not.toContain('apartamento');
     expect(items.querySelectorAll('table')).toHaveLength(1);
     expect([...items.querySelectorAll('thead th')].map((cell) => cell.textContent?.trim())).toEqual(
       ['Cidade', 'Serviço', 'Descrição / Detalhes', 'Valor Unit.', 'Qtd', 'Total']
@@ -111,9 +105,12 @@ it('mostra os itens em uma tabela padrão, na ordem manual e antes das ações',
       'Hotel',
       expect.stringContaining('Hotel Roma'),
       'R$ 300,00',
-      '01 apartamento',
+      '1',
       'R$ 300,00'
     ]);
+    expect(rows[0].querySelector('.quote-service .orc-service-icon--hotel')).toBeTruthy();
+    expect(rows[1].querySelector('.quote-service .orc-service-icon--flight')).toBeTruthy();
+    expect(rows[1].querySelector('[data-label="Qtd"]')?.textContent?.trim()).toBe('2');
     expect(
       [...rows[1].querySelectorAll('td')].map((cell) => cell.getAttribute('data-label'))
     ).toEqual(['Cidade', 'Serviço', 'Descrição / Detalhes', 'Valor Unit.', 'Qtd', 'Total']);

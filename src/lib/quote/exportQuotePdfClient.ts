@@ -1222,12 +1222,14 @@ function renderScreenItemRow(
   defaultCurrency: string
 ) {
   const currency = item.currency || defaultCurrency;
+  const type = normalizeText(item.item_type);
+  const iconType = isFlightQuoteItem(item) && type !== 'trem' ? 'passagem' : type;
   return `<tr class="hover:bg-slate-50">
     <td data-label="Cidade" class="px-3 py-3 text-slate-900">${escHtml(nomeCidadeNoPdf(textVal(item.city_name)) || '—')}</td>
-    <td data-label="Serviço" class="px-3 py-3 text-slate-700">${escHtml(service)}</td>
+    <td data-label="Serviço" class="px-3 py-3 text-slate-700"><div class="quote-service">${serviceIconSvg(iconType)}<span>${escHtml(service)}</span></div></td>
     <td data-label="Descrição / Detalhes" class="px-3 py-3 text-slate-900"><div>${content}</div></td>
     <td data-label="Valor Unit." class="px-3 py-3 text-right text-slate-700">${escHtml(formatCurrency(Number(item.unit_price ?? 0), currency))}</td>
-    <td data-label="Qtd" class="px-3 py-3 text-center text-slate-700">${escHtml(quantity)}</td>
+    <td data-label="Qtd" class="px-3 py-3 text-center text-slate-700">${escHtml(quantidadeExibida(quantity))}</td>
     <td data-label="Total" class="px-3 py-3 text-right font-medium text-slate-900">${escHtml(formatCurrency(Number(item.total_amount ?? 0), currency))}</td>
   </tr>`;
 }
