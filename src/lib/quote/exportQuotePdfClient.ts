@@ -116,25 +116,14 @@ function escHtml(value?: string | number | null): string {
 
 const planeIconShape =
   '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>';
-const planeRightIconShape =
-  '<path d="M11.01 21.19 15.54 14.12l4.95 0C22.61 14.12 24.37 13.06 24.73 12c-0.35-1.06-2.12-2.12-4.24-2.12L15.54 9.88 11.01 2.81c-0.28-0.42-0.71-0.57-1.13-0.42l-0.57 0.14c-0.49 0.21-0.78 0.64-0.71 1.13l1.28 6.22-3.54 0.71L4.22 8.46l-1.41 0 0.71 3.54-0.71 3.54 1.41 0 2.12-2.12 3.54 0.71-1.27 6.22c-0.07 0.49 0.21 0.92 0.71 1.13l0.49 0.21c0.49 0.07 0.92-0.07 1.20-0.49z"/>';
 const trainIconShape =
   '<rect x="4" y="3" width="16" height="16" rx="2"/><path d="M4 11h16M12 3v8M8 19l-2 3M18 22l-2-3M8 15h0M16 15h0"/>';
 const carIconShape =
   '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10l-2.7-3.4A2 2 0 0 0 13.7 6H8.3a2 2 0 0 0-1.6.8L4 10l-2 .6C1.4 10.9 1 11.6 1 12.3V16c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>';
 const hotelIconShape = '<path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/>';
 
-function tracoIcone(tipo: 'passagem' | 'trem' | 'carro' | 'hotel', larguraLinha: number) {
-  const shape =
-    tipo === 'trem'
-      ? trainIconShape
-      : tipo === 'carro'
-        ? carIconShape
-        : tipo === 'hotel'
-          ? hotelIconShape
-          : planeRightIconShape;
-  const svg = `<svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${shape}</svg>`;
-  return `<span class="lni"><span class="ln" style="width:${larguraLinha}px"></span>${svg}<span class="ln" style="width:${larguraLinha}px"></span></span>`;
+function traco(larguraLinha: number) {
+  return `<span class="lni"><span class="ln" style="width:${larguraLinha * 2}px"></span></span>`;
 }
 
 function textVal(value?: string | null): string {
@@ -564,7 +553,7 @@ function estadiaHotelHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerD
   const checkin = trecho('Check-in', dataValidaBR(item.start_date), textVal(details.hora_checkin));
   const checkout = trecho('Check-out', dataValidaBR(item.end_date), textVal(details.hora_checkout));
   if (checkin && checkout)
-    return `<div class="estadia"><b>${checkin}</b> ${tracoIcone('hotel', 24)} <b>${checkout}</b></div>`;
+    return `<div class="estadia"><b>${checkin}</b> ${traco(24)} <b>${checkout}</b></div>`;
   const partes = [checkin, checkout].filter(Boolean);
   return partes.length ? `<div><b>${partes.join(' / ')}</b></div>` : '';
 }
@@ -579,7 +568,7 @@ function rotaCarroHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDeta
   };
   const rotuloData = (rotulo: string, data: string, hora: string) =>
     data ? `${rotulo}: ${data}${hora ? ` às ${hora}` : ''}` : '';
-  return `<div class="rtf car">${grupo(retirada, textVal(details.loja_retirada), rotuloData('Retirada', dataValidaBR(item.start_date), textVal(details.hora_retirada)))}<span class="md">${tracoIcone('carro', 36)}</span>${grupo(devolucao, textVal(details.loja_devolucao), rotuloData('Devolução', dataValidaBR(item.end_date), textVal(details.hora_devolucao)))}</div>`;
+  return `<div class="rtf car">${grupo(retirada, textVal(details.loja_retirada), rotuloData('Retirada', dataValidaBR(item.start_date), textVal(details.hora_retirada)))}<span class="md">${traco(36)}</span>${grupo(devolucao, textVal(details.loja_devolucao), rotuloData('Devolução', dataValidaBR(item.end_date), textVal(details.hora_devolucao)))}</div>`;
 }
 
 function rotuloServico(item: QuoteItemForPdf, prefix: string) {
@@ -1376,8 +1365,8 @@ function renderFlightItemHtml(
       const rota =
         from || to || depart || arrive
           ? isTrain
-            ? `<div class="rt">${escHtml(from)} ${saida}${tracoIcone('trem', 24)}${escHtml(to)} ${chegada}</div>`
-            : `<div class="rtf"${index ? ' style="margin-top:16px"' : ''}><span class="lg"><span><b>${escHtml(from)}</b>${depart ? ` <span class="mu">· ${escHtml(depart)}</span>` : ''}</span>${origemInfo ? `<span class="ct">${escHtml(origemInfo)}</span>` : ''}</span><span class="md">${textVal(flight.descricao) ? `<span>${escHtml(textVal(flight.descricao))}</span>` : ''}${tracoIcone('passagem', 36)}${textVal(flight.cia_aerea) ? `<span>${escHtml(textVal(flight.cia_aerea))}</span>` : ''}</span><span class="lg"><span><b>${escHtml(to)}</b>${arrive ? ` <span class="mu">· ${escHtml(arrive)}</span>` : ''}${plus ? ` ${plus}` : ''}</span>${destinoInfo ? `<span class="ct">${escHtml(destinoInfo)}</span>` : ''}</span></div>`
+            ? `<div class="rt">${escHtml(from)} ${saida}${traco(24)}${escHtml(to)} ${chegada}</div>`
+            : `<div class="rtf"${index ? ' style="margin-top:16px"' : ''}><span class="lg"><span><b>${escHtml(from)}</b>${depart ? ` <span class="mu">· ${escHtml(depart)}</span>` : ''}</span>${origemInfo ? `<span class="ct">${escHtml(origemInfo)}</span>` : ''}</span><span class="md">${textVal(flight.descricao) ? `<span>${escHtml(textVal(flight.descricao))}</span>` : ''}${traco(36)}${textVal(flight.cia_aerea) ? `<span>${escHtml(textVal(flight.cia_aerea))}</span>` : ''}</span><span class="lg"><span><b>${escHtml(to)}</b>${arrive ? ` <span class="mu">· ${escHtml(arrive)}</span>` : ''}${plus ? ` ${plus}` : ''}</span>${destinoInfo ? `<span class="ct">${escHtml(destinoInfo)}</span>` : ''}</span></div>`
           : '';
       const meta = (() => {
         if (isTrain)
@@ -1385,7 +1374,7 @@ function renderFlightItemHtml(
         if (rota) return '';
         const cia = [textVal(flight.cia_aerea), 'Voo'].filter(Boolean).map(escHtml).join(' · ');
         const voo = [textVal(flight.descricao), dataSaida].filter(Boolean).map(escHtml).join(' · ');
-        const cabecalho = `${cia}${voo ? ` ${tracoIcone('passagem', 24)} ${voo}` : ''}`;
+        const cabecalho = `${cia}${voo ? ` ${traco(24)} ${voo}` : ''}`;
         return `${index ? '<div class="lb" style="margin-top:16px">' : '<div class="lb">'}${cabecalho}</div>`;
       })();
       return isTrain
@@ -1675,7 +1664,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .rtf.car .lg .ct { color: inherit; font-size: inherit; font-weight: bold; }
     .estadia .lni { vertical-align: middle; }
     .rtf > .lg:last-child { margin-left: 22px; }
-    .lni { display: inline-flex; align-items: center; gap: 4px; }
+    .lni { display: inline-flex; align-items: center; gap: 4px; min-height: 12px; }
     .ln { display: inline-block; vertical-align: middle; border-top: 1.3px solid #243AA3; }
     .md .lni { margin: 2px 0; }
     .p1 { color: #C62828; font-weight: 700; font-size: 6.5pt; vertical-align: super; margin-left: 1px; letter-spacing: 0.2px; }
