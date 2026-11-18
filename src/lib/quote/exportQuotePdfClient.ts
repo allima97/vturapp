@@ -553,12 +553,12 @@ function dataValidaBR(value?: string | null) {
 
 function estadiaHotelHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDetalhes>) {
   const trecho = (rotulo: string, data: string, hora: string) =>
-    data ? `${rotulo}: ${data}${hora ? ` às ${hora}` : ''}` : '';
+    data ? `${rotulo}: ${escHtml(data)}${hora ? ` às ${escHtml(hora)}` : ''}` : '';
   const partes = [
     trecho('Check-in', dataValidaBR(item.start_date), textVal(details.hora_checkin)),
     trecho('Check-out', dataValidaBR(item.end_date), textVal(details.hora_checkout))
   ].filter(Boolean);
-  return partes.length ? `<div class="mu sm">${escHtml(partes.join(' / '))}</div>` : '';
+  return partes.length ? `<div class="mu sm"><b>${partes.join(' / ')}</b></div>` : '';
 }
 
 function rotaCarroHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDetalhes>) {

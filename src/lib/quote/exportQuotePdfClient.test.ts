@@ -573,7 +573,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html.indexOf('>Hollywood Hotel Inn</b>')).toBeLessThan(
       html.indexOf('HOTEL · 2 NOITES')
     );
-    expect(html).toContain('Check-in: 11/08/2027 às 15:00 / Check-out: 13/08/2027 às 11:00');
+    expect(html).toContain('<b>Check-in: 11/08/2027 às 15:00 / Check-out: 13/08/2027 às 11:00</b>');
     expect(html).toContain('3 estrelas · Duplo');
     expect(html).toContain('Café da manhã');
     expect(html).toContain('min-width: 0');
