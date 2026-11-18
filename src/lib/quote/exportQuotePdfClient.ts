@@ -564,9 +564,11 @@ function rotaCarroHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDeta
   if (!retirada && !devolucao) return '';
   const grupo = (cidade: string, hora: string, rotuloData: string) =>
     `<span class="lg"><span><b>${escHtml(cidade)}</b>${hora ? ` <span class="mu">· ${escHtml(hora)}</span>` : ''}</span>${rotuloData ? `<span class="ct">${escHtml(rotuloData)}</span>` : ''}</span>`;
-  const dataRetirada = dataValidaBR(item.start_date);
-  const dataDevolucao = dataValidaBR(item.end_date);
-  return `<div class="rtf">${grupo(retirada, textVal(details.hora_retirada), dataRetirada ? `Retirada: ${dataRetirada}` : '')}<span class="md">${tracoIcone('carro', 36)}</span>${grupo(devolucao, textVal(details.hora_devolucao), dataDevolucao ? `Devolução: ${dataDevolucao}` : '')}</div>`;
+  const rotuloDataHora = (rotulo: string, data: string, hora: string) =>
+    data ? `${rotulo}: ${data}${hora ? ` às ${hora}` : ''}` : '';
+  const horaRetirada = textVal(details.hora_retirada);
+  const horaDevolucao = textVal(details.hora_devolucao);
+  return `<div class="rtf">${grupo(retirada, horaRetirada, rotuloDataHora('Retirada', dataValidaBR(item.start_date), horaRetirada))}<span class="md">${tracoIcone('carro', 36)}</span>${grupo(devolucao, horaDevolucao, rotuloDataHora('Devolução', dataValidaBR(item.end_date), horaDevolucao))}</div>`;
 }
 
 function rotuloServico(item: QuoteItemForPdf, prefix: string) {
@@ -1011,16 +1013,24 @@ function renderGroupedItems(
     .flatMap((section) => section.items)
     .sort((a, b) => dataDoVoo(a).localeCompare(dataDoVoo(b)) || 0);
   const isCar = (item: QuoteItemForPdf) => normalizeText(item.item_type) === 'aluguel_carro';
+  const isInsurance = (item: QuoteItemForPdf) => {
+    const type = normalizeText(item.item_type);
+    return type === 'seguro' || type === 'seguro_viagem';
+  };
   const cars = sections
     .flatMap((section) => section.items)
     .filter(isCar)
+    .sort((a, b) => textVal(a.start_date).localeCompare(textVal(b.start_date)));
+  const insurances = sections
+    .flatMap((section) => section.items)
+    .filter(isInsurance)
     .sort((a, b) => textVal(a.start_date).localeCompare(textVal(b.start_date)));
   const rest = ordenarGrupos(
     sections
       .filter((section) => section.kind !== 'flights')
       .map((section) =>
         section.kind === 'city'
-          ? { ...section, items: section.items.filter((item) => !isCar(item)) }
+          ? { ...section, items: section.items.filter((item) => !isCar(item) && !isInsurance(item)) }
           : section
       )
       .filter((section) => section.kind !== 'city' || section.items.length > 0)
@@ -1075,7 +1085,18 @@ function renderGroupedItems(
       );
     })
     .join('');
-  return `${air}${carSection}${cities}`;
+  const insuranceSection =
+    insurances.length > 0
+      ? renderCityTable(
+          'Seguro Viagem',
+          insurances
+            .map((item) => renderServiceItem(item, showItemValues, defaultCurrency))
+            .join(''),
+          false,
+          showItemValues ? moedasDoGrupo(insurances, defaultCurrency) : ''
+        )
+      : '';
+  return `${air}${carSection}${cities}${insuranceSection}`;
 }
 
 function renderCityTable(title: string, content: string, isCity = false, subtotal = '', note = '') {

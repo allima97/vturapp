@@ -40,8 +40,6 @@
     'Unidas'
   ].map((nome) => ({ value: nome, label: nome }));
 
-  $: rotuloDestino = item.item_type === 'aluguel_carro' ? 'Cidade de Retirada' : 'Destino';
-
   function atualizarItem() {
     recalcularTotaisItem(item);
     onChange();
@@ -133,7 +131,7 @@
     />
   </div>
 
-  {#if item.item_type !== 'passagem'}
+  {#if item.item_type !== 'passagem' && item.item_type !== 'aluguel_carro'}
     <div
       class={item.item_type === 'trem'
         ? 'min-w-0 md:col-span-12 xl:col-span-3'
@@ -143,30 +141,18 @@
     >
       <DestinoOperacional
         fieldId={`${prefix}-destino`}
-        label={rotuloDestino}
+        label="Destino"
         bind:value={item.city_name}
         bind:destinoId={item.destino_geografico_id}
       >
         <CidadeDestinoAutocomplete
           id={`${prefix}-destino`}
-          label={rotuloDestino}
+          label="Destino"
           bind:value={item.city_name}
           placeholder="Cidade"
           class_name="w-full"
         />
       </DestinoOperacional>
-    </div>
-  {/if}
-
-  {#if item.item_type === 'aluguel_carro'}
-    <div class="md:col-span-5">
-      <CidadeDestinoAutocomplete
-        id={`${prefix}-cidade-devolucao`}
-        label="Cidade de Devolução"
-        bind:value={item.cidade_devolucao}
-        placeholder="Cidade"
-        class_name="w-full"
-      />
     </div>
   {/if}
 
@@ -189,7 +175,9 @@
         ? 'min-w-0 md:col-span-12 xl:col-span-3'
         : item.item_type === 'seguro'
           ? 'md:col-span-3'
-          : 'md:col-span-5'}
+          : item.item_type === 'aluguel_carro'
+            ? 'md:col-span-9'
+            : 'md:col-span-5'}
   >
     <FieldInput
       id={`${prefix}-descricao`}
@@ -206,6 +194,54 @@
       }}
     />
   </div>
+
+  {#if item.item_type === 'aluguel_carro'}
+    <div class="grid grid-cols-1 gap-3 md:col-span-12 md:grid-cols-12">
+      <div class="md:col-span-4">
+        <DestinoOperacional
+          fieldId={`${prefix}-destino`}
+          label="Cidade de Retirada"
+          bind:value={item.city_name}
+          bind:destinoId={item.destino_geografico_id}
+        >
+          <CidadeDestinoAutocomplete
+            id={`${prefix}-destino`}
+            label="Cidade de Retirada"
+            bind:value={item.city_name}
+            placeholder="Cidade"
+            class_name="w-full"
+          />
+        </DestinoOperacional>
+      </div>
+      <div class="md:col-span-2">
+        <FieldInput
+          id={`${prefix}-hora-retirada`}
+          label="Hora retirada"
+          type="time"
+          bind:value={item.hora_retirada}
+          class_name="w-full"
+        />
+      </div>
+      <div class="md:col-span-4">
+        <CidadeDestinoAutocomplete
+          id={`${prefix}-cidade-devolucao`}
+          label="Cidade de Devolução"
+          bind:value={item.cidade_devolucao}
+          placeholder="Cidade"
+          class_name="w-full"
+        />
+      </div>
+      <div class="md:col-span-2">
+        <FieldInput
+          id={`${prefix}-hora-devolucao`}
+          label="Hora devolução"
+          type="time"
+          bind:value={item.hora_devolucao}
+          class_name="w-full"
+        />
+      </div>
+    </div>
+  {/if}
 
   {#if item.item_type === 'hotel'}
     <div class="md:col-span-3">
@@ -380,24 +416,6 @@
       <div class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
         {diasItem(item.item_type, item.start_date, item.end_date) ?? '—'}
       </div>
-    </div>
-    <div class="md:col-span-2">
-      <FieldInput
-        id={`${prefix}-hora-retirada`}
-        label="Hora retirada"
-        type="time"
-        bind:value={item.hora_retirada}
-        class_name="w-full"
-      />
-    </div>
-    <div class="md:col-span-2">
-      <FieldInput
-        id={`${prefix}-hora-devolucao`}
-        label="Hora devolução"
-        type="time"
-        bind:value={item.hora_devolucao}
-        class_name="w-full"
-      />
     </div>
     <div class="md:col-span-2">
       <FieldInput
