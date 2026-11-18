@@ -623,8 +623,8 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('>SUV automático</b>');
     expect(html).toContain('<b>Los Angeles</b> <span class="mu">· 10:00</span>');
     expect(html).toContain('<b>Las Vegas</b> <span class="mu">· 10:00</span>');
-    expect(html).toContain('<span class="ct">Retirada: 17/01/2027 às 10:00</span>');
-    expect(html).toContain('<span class="ct">Devolução: 20/01/2027 às 10:00</span>');
+    expect(html).toContain('<span class="ct">Retirada: 17/01/2027</span>');
+    expect(html).toContain('<span class="ct">Devolução: 20/01/2027</span>');
     expect(html).toContain('<div class="mu sm">Localiza</div>');
     expect(html).toContain('>Aluguel de carro</span>');
     expect(html).not.toContain('<div class="mu sm">Aluguel de carro</div>');
