@@ -603,7 +603,10 @@ describe('identidade dos orçamentos e circuitos', () => {
             detalhes_orcamento: {
               cambio: 'Automático',
               locadora: 'Localiza',
-              incluidos: ['CDW', 'LDW', 'Tanque Cheio', 'KM Livre']
+              incluidos: ['CDW', 'LDW', 'Tanque Cheio', 'KM Livre'],
+              cidade_devolucao: 'Las Vegas',
+              hora_retirada: '10:00',
+              hora_devolucao: '10:00'
             }
           }
         }
@@ -616,10 +619,15 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
 
-    expect(html).toContain('CARRO · 17/01 a 20/01/2027 · 4 DIÁRIAS');
+    expect(html).toContain('CARRO · 4 DIÁRIAS');
     expect(html).toContain('>SUV automático</b>');
+    expect(html).toContain('<b>Los Angeles</b> <span class="mu">· 10:00</span>');
+    expect(html).toContain('<b>Las Vegas</b> <span class="mu">· 10:00</span>');
+    expect(html).toContain('<span class="ct">Retirada: 17/01/2027</span>');
+    expect(html).toContain('<span class="ct">Devolução: 20/01/2027</span>');
     expect(html).toContain('<div class="mu sm">Localiza</div>');
-    expect(html).not.toContain('Aluguel de carro');
+    expect(html).toContain('>Aluguel de carro</span>');
+    expect(html).not.toContain('<div class="mu sm">Aluguel de carro</div>');
     expect(html).toContain('KM livre');
     expect(html).toContain('sh--sem-valor');
     expect(html).toContain('orc-row--sem-valor');
@@ -758,15 +766,16 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
     const body = html.slice(html.indexOf('<body>'));
-    expect(body.match(/class="l"/g)).toHaveLength(4);
+    expect(body.match(/class="l"/g)).toHaveLength(5);
     expect(body).not.toContain('orc-section-icon--city');
+    expect(body).toContain('<span class="l">Aluguel de carro');
     expect(body).toContain('<span class="l">Los Angeles');
     expect(body).not.toContain('Califórnia');
     expect(body).not.toContain('Paris, França');
     expect(body).not.toContain('Não é acomodação');
+    expect(body.indexOf('Aluguel de carro')).toBeLessThan(body.indexOf('Hotel Sunset'));
     expect(body.indexOf('Hotel Sunset')).toBeLessThan(body.indexOf('Passeio no Louvre'));
-    expect(body.indexOf('Passeio no Louvre')).toBeLessThan(body.indexOf('Aluguel'));
-    expect(body.indexOf('Aluguel')).toBeLessThan(body.indexOf('Ingresso &lt;seguro&gt;'));
+    expect(body.indexOf('Passeio no Louvre')).toBeLessThan(body.indexOf('Ingresso &lt;seguro&gt;'));
     expect(body).toContain('Cidade não informada');
   });
 

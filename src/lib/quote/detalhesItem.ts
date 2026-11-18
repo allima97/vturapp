@@ -21,6 +21,9 @@ export type DetalhesItem = {
   incluidos: string[];
   fornecedor: string;
   locadora: string;
+  cidade_devolucao: string;
+  hora_retirada: string;
+  hora_devolucao: string;
 };
 
 export type ItemOrcamento = DetalhesItem & {
@@ -76,7 +79,10 @@ export function detalhesVazios(): DetalhesItem {
     cambio: '',
     incluidos: [],
     fornecedor: '',
-    locadora: ''
+    locadora: '',
+    cidade_devolucao: '',
+    hora_retirada: '',
+    hora_devolucao: ''
   };
 }
 
@@ -299,7 +305,10 @@ export function lerDetalhes(item: {
       ? detalhes.incluidos.filter((value): value is string => typeof value === 'string')
       : [],
     fornecedor: texto(detalhes.fornecedor),
-    locadora: texto(detalhes.locadora)
+    locadora: texto(detalhes.locadora),
+    cidade_devolucao: texto(detalhes.cidade_devolucao),
+    hora_retirada: texto(detalhes.hora_retirada),
+    hora_devolucao: texto(detalhes.hora_devolucao)
   };
 }
 
@@ -430,7 +439,14 @@ export function rawDetalhes(item: DetalhesItem & { item_type: string }) {
     };
   }
   if (isCar(type)) {
-    return { cambio: item.cambio, incluidos: item.incluidos, locadora: item.locadora.trim() };
+    return {
+      cambio: item.cambio,
+      incluidos: item.incluidos,
+      locadora: item.locadora.trim(),
+      cidade_devolucao: item.cidade_devolucao.trim(),
+      hora_retirada: item.hora_retirada.trim(),
+      hora_devolucao: item.hora_devolucao.trim()
+    };
   }
   if (isPassengerPriced(type)) {
     return {

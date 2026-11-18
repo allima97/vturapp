@@ -40,6 +40,8 @@
     'Unidas'
   ].map((nome) => ({ value: nome, label: nome }));
 
+  $: rotuloDestino = item.item_type === 'aluguel_carro' ? 'Cidade de Retirada' : 'Destino';
+
   function atualizarItem() {
     recalcularTotaisItem(item);
     onChange();
@@ -141,18 +143,30 @@
     >
       <DestinoOperacional
         fieldId={`${prefix}-destino`}
-        label="Destino"
+        label={rotuloDestino}
         bind:value={item.city_name}
         bind:destinoId={item.destino_geografico_id}
       >
         <CidadeDestinoAutocomplete
           id={`${prefix}-destino`}
-          label="Destino"
+          label={rotuloDestino}
           bind:value={item.city_name}
           placeholder="Cidade"
           class_name="w-full"
         />
       </DestinoOperacional>
+    </div>
+  {/if}
+
+  {#if item.item_type === 'aluguel_carro'}
+    <div class="md:col-span-5">
+      <CidadeDestinoAutocomplete
+        id={`${prefix}-cidade-devolucao`}
+        label="Cidade de Devolução"
+        bind:value={item.cidade_devolucao}
+        placeholder="Cidade"
+        class_name="w-full"
+      />
     </div>
   {/if}
 
@@ -346,7 +360,7 @@
     <div class="md:col-span-3">
       <FieldInput
         id={`${prefix}-data-inicial`}
-        label="Data inicial"
+        label="Data de retirada"
         type="date"
         bind:value={item.start_date}
         class_name="w-full"
@@ -355,7 +369,7 @@
     <div class="md:col-span-3">
       <FieldInput
         id={`${prefix}-data-final`}
-        label="Data final"
+        label="Data de devolução"
         type="date"
         bind:value={item.end_date}
         class_name="w-full"
@@ -366,6 +380,24 @@
       <div class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">
         {diasItem(item.item_type, item.start_date, item.end_date) ?? '—'}
       </div>
+    </div>
+    <div class="md:col-span-2">
+      <FieldInput
+        id={`${prefix}-hora-retirada`}
+        label="Hora retirada"
+        type="time"
+        bind:value={item.hora_retirada}
+        class_name="w-full"
+      />
+    </div>
+    <div class="md:col-span-2">
+      <FieldInput
+        id={`${prefix}-hora-devolucao`}
+        label="Hora devolução"
+        type="time"
+        bind:value={item.hora_devolucao}
+        class_name="w-full"
+      />
     </div>
     <div class="md:col-span-2">
       <FieldInput

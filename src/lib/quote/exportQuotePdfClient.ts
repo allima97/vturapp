@@ -116,13 +116,17 @@ function escHtml(value?: string | number | null): string {
 
 const planeIconShape =
   '<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>';
+const planeRightIconShape =
+  '<path d="M11.01 21.19 15.54 14.12l4.95 0C22.61 14.12 24.37 13.06 24.73 12c-0.35-1.06-2.12-2.12-4.24-2.12L15.54 9.88 11.01 2.81c-0.28-0.42-0.71-0.57-1.13-0.42l-0.57 0.14c-0.49 0.21-0.78 0.64-0.71 1.13l1.28 6.22-3.54 0.71L4.22 8.46l-1.41 0 0.71 3.54-0.71 3.54 1.41 0 2.12-2.12 3.54 0.71-1.27 6.22c-0.07 0.49 0.21 0.92 0.71 1.13l0.49 0.21c0.49 0.07 0.92-0.07 1.20-0.49z"/>';
 const trainIconShape =
   '<rect x="4" y="3" width="16" height="16" rx="2"/><path d="M4 11h16M12 3v8M8 19l-2 3M18 22l-2-3M8 15h0M16 15h0"/>';
+const carIconShape =
+  '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10l-2.7-3.4A2 2 0 0 0 13.7 6H8.3a2 2 0 0 0-1.6.8L4 10l-2 .6C1.4 10.9 1 11.6 1 12.3V16c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>';
 
-function tracoIcone(tipo: 'passagem' | 'trem', larguraLinha: number) {
-  const shape = tipo === 'trem' ? trainIconShape : planeIconShape;
-  const rotacao = tipo === 'trem' ? '' : ' transform="rotate(90 12 12)"';
-  const svg = `<svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><g${rotacao}>${shape}</g></svg>`;
+function tracoIcone(tipo: 'passagem' | 'trem' | 'carro', larguraLinha: number) {
+  const shape =
+    tipo === 'trem' ? trainIconShape : tipo === 'carro' ? carIconShape : planeRightIconShape;
+  const svg = `<svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${shape}</svg>`;
   return `<span class="lni"><span class="ln" style="width:${larguraLinha}px"></span>${svg}<span class="ln" style="width:${larguraLinha}px"></span></span>`;
 }
 
@@ -542,6 +546,29 @@ function rotuloEstadia(item: QuoteItemForPdf, prefix: string, modo: 'noites' | '
   return [prefix, faixaDatas(item.start_date, item.end_date), contagem].filter(Boolean).join(' · ');
 }
 
+function rotuloCarro(item: QuoteItemForPdf) {
+  const dias = diasItem(textVal(item.item_type), textVal(item.start_date), textVal(item.end_date));
+  const contagem =
+    dias != null && dias > 0 ? `${dias} ${dias === 1 ? 'DIÁRIA' : 'DIÁRIAS'}` : '';
+  return ['CARRO', contagem].filter(Boolean).join(' · ');
+}
+
+function dataValidaBR(value?: string | null) {
+  const data = formatDateBR(value);
+  return data && data !== '-' ? data : '';
+}
+
+function rotaCarroHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDetalhes>) {
+  const retirada = nomeCidadeNoPdf(textVal(item.city_name));
+  const devolucao = nomeCidadeNoPdf(textVal(details.cidade_devolucao));
+  if (!retirada && !devolucao) return '';
+  const grupo = (cidade: string, hora: string, rotuloData: string) =>
+    `<span class="lg"><span><b>${escHtml(cidade)}</b>${hora ? ` <span class="mu">· ${escHtml(hora)}</span>` : ''}</span>${rotuloData ? `<span class="ct">${escHtml(rotuloData)}</span>` : ''}</span>`;
+  const dataRetirada = dataValidaBR(item.start_date);
+  const dataDevolucao = dataValidaBR(item.end_date);
+  return `<div class="rtf">${grupo(retirada, textVal(details.hora_retirada), dataRetirada ? `Retirada: ${dataRetirada}` : '')}<span class="md">${tracoIcone('carro', 36)}</span>${grupo(devolucao, textVal(details.hora_devolucao), dataDevolucao ? `Devolução: ${dataDevolucao}` : '')}</div>`;
+}
+
 function rotuloServico(item: QuoteItemForPdf, prefix: string) {
   const dias = diasItem(textVal(item.item_type), textVal(item.start_date), textVal(item.end_date));
   const contagem =
@@ -723,7 +750,7 @@ function renderServiceItem(
   const cabecalho = hospedagem
     ? rotuloEstadia(item, 'HOTEL', 'noites')
     : carro
-      ? rotuloEstadia(item, 'CARRO', 'diarias')
+      ? rotuloCarro(item)
       : flight || type === 'trem'
         ? [label.toUpperCase(), faixaDatas(item.start_date, item.end_date)]
             .filter(Boolean)
@@ -750,7 +777,8 @@ function renderServiceItem(
   const tituloHtml = titulo
     ? `<div style="margin-bottom:10px"><b>${escHtml(titulo)}</b></div>`
     : '';
-  const pdf = `${tituloHtml}${cabecalho ? `<div class="lb">${escHtml(cabecalho)}</div>` : ''}${linhaCinza ? `<div class="mu sm">${escHtml(linhaCinza)}</div>` : ''}${etiquetas(tags)}`;
+  const rotaCarro = carro ? rotaCarroHtml(item, details) : '';
+  const pdf = `${tituloHtml}${cabecalho ? `<div class="lb">${escHtml(cabecalho)}</div>` : ''}${rotaCarro}${linhaCinza ? `<div class="mu sm">${escHtml(linhaCinza)}</div>` : ''}${etiquetas(tags)}`;
   return `<div class="row orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}${showItemValues ? '' : ' orc-row--sem-valor'}"><div>${serviceIconSvg(iconType)}</div><div>${pdf}</div><div class="q orc-quantity">${escHtml(quantidadeExibida(quantity))}</div>${showItemValues ? `<div class="v">${escHtml(formatCurrency(Number(item.total_amount ?? 0), item.currency || defaultCurrency))}</div>` : ''}</div>`;
 }
 
@@ -982,7 +1010,21 @@ function renderGroupedItems(
     .filter((section) => section.kind === 'flights')
     .flatMap((section) => section.items)
     .sort((a, b) => dataDoVoo(a).localeCompare(dataDoVoo(b)) || 0);
-  const rest = ordenarGrupos(sections.filter((section) => section.kind !== 'flights'));
+  const isCar = (item: QuoteItemForPdf) => normalizeText(item.item_type) === 'aluguel_carro';
+  const cars = sections
+    .flatMap((section) => section.items)
+    .filter(isCar)
+    .sort((a, b) => textVal(a.start_date).localeCompare(textVal(b.start_date)));
+  const rest = ordenarGrupos(
+    sections
+      .filter((section) => section.kind !== 'flights')
+      .map((section) =>
+        section.kind === 'city'
+          ? { ...section, items: section.items.filter((item) => !isCar(item)) }
+          : section
+      )
+      .filter((section) => section.kind !== 'city' || section.items.length > 0)
+  );
   const air =
     flights.length > 0
       ? renderCityTable(
@@ -997,6 +1039,17 @@ function renderGroupedItems(
           false,
           showItemValues ? moedasDoGrupo(flights, defaultCurrency) : '',
           resumoAereo(flights)
+        )
+      : '';
+  const carSection =
+    cars.length > 0
+      ? renderCityTable(
+          'Aluguel de carro',
+          cars
+            .map((item) => renderServiceItem(item, showItemValues, defaultCurrency))
+            .join(''),
+          false,
+          showItemValues ? moedasDoGrupo(cars, defaultCurrency) : ''
         )
       : '';
   const cities = rest
@@ -1022,7 +1075,7 @@ function renderGroupedItems(
       );
     })
     .join('');
-  return `${air}${cities}`;
+  return `${air}${carSection}${cities}`;
 }
 
 function renderCityTable(title: string, content: string, isCity = false, subtotal = '', note = '') {
@@ -1050,10 +1103,7 @@ const serviceIcons = new Map<string, [string, string]>([
   ['hotel', ['hotel', '<path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/>']],
   [
     'aluguel_carro',
-    [
-      'car',
-      '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10l-2.7-3.4A2 2 0 0 0 13.7 6H8.3a2 2 0 0 0-1.6.8L4 10l-2 .6C1.4 10.9 1 11.6 1 12.3V16c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>'
-    ]
+    ['car', carIconShape]
   ],
   [
     'ingresso',

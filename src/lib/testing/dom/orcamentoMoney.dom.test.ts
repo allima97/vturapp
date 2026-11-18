@@ -1224,7 +1224,10 @@ it('permite alterar câmbio e itens incluídos ao editar aluguel de carro', asyn
                 detalhes_orcamento: {
                   cambio: 'Manual',
                   incluidos: ['KM Livre', 'CDW', 'LDW'],
-                  locadora: 'Localiza'
+                  locadora: 'Localiza',
+                  cidade_devolucao: '',
+                  hora_retirada: '',
+                  hora_devolucao: ''
                 },
                 aereo_import: null
               }

@@ -38,11 +38,23 @@ describe('cálculos por tipo de item do orçamento', () => {
     expect(diasItem(item.item_type, item.start_date, item.end_date)).toBe(4);
     expect(item.total_amount).toBe(600);
     item.locadora = ' Hertz ';
-    expect(rawDetalhes(item)).toMatchObject({ locadora: 'Hertz' });
+    item.cidade_devolucao = ' Las Vegas ';
+    item.hora_retirada = '10:00';
+    item.hora_devolucao = '18:30';
+    expect(rawDetalhes(item)).toMatchObject({
+      locadora: 'Hertz',
+      cidade_devolucao: 'Las Vegas',
+      hora_retirada: '10:00',
+      hora_devolucao: '18:30'
+    });
     expect(
       lerDetalhes({ item_type: 'aluguel_carro', raw: { detalhes_orcamento: rawDetalhes(item) } })
-        .locadora
-    ).toBe('Hertz');
+    ).toMatchObject({
+      locadora: 'Hertz',
+      cidade_devolucao: 'Las Vegas',
+      hora_retirada: '10:00',
+      hora_devolucao: '18:30'
+    });
   });
 
   it('soma valores de adultos, crianças e infants por passagem', () => {
