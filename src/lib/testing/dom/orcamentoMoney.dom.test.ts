@@ -1043,10 +1043,10 @@ it('exige detalhes do hotel antes de salvar e envia os campos específicos', asy
     type('#orcamento-novo-item-0-destino', 'Roma');
     type('#orcamento-novo-item-0-checkin', '2027-08-11');
     type('#orcamento-novo-item-0-checkout', '2027-08-13');
-    type('#orcamento-novo-item-0-categoria', '4 estrelas');
+    change('#orcamento-novo-item-0-categoria', '4 estrelas');
     type('#orcamento-novo-item-0-adultos', '2');
     type('#orcamento-novo-item-0-criancas', '0');
-    type('#orcamento-novo-item-0-apartamento', 'Duplo');
+    change('#orcamento-novo-item-0-apartamento', 'Duplo');
     type('#orcamento-novo-item-0-quantidade-apartamentos', '1');
     change('#orcamento-novo-item-0-regime', 'Café da manhã');
     target
@@ -1133,14 +1133,24 @@ it('carrega e preserva os detalhes de hotel ao editar o orçamento', async () =>
     expect(target.querySelector<HTMLInputElement>('#orcamento-editar-item-0-criancas')!.value).toBe(
       '0'
     );
-    expect(
-      target.querySelector<HTMLInputElement>('#orcamento-editar-item-0-apartamento')!.value
-    ).toBe('Duplo');
-    const apartamento = target.querySelector<HTMLInputElement>(
-      '#orcamento-editar-item-0-apartamento'
-    )!;
+    const categoria = target.querySelector(
+      'select#orcamento-editar-item-0-categoria'
+    ) as Element & {
+      value: string;
+      options: Array<{ value: string; textContent: string | null }>;
+    };
+    expect(categoria.value).toBe('4 estrelas');
+    expect([...categoria.options].some((option) => option.value === '4 estrelas')).toBe(true);
+    expect([...categoria.options].some((option) => option.textContent === 'Selecione')).toBe(true);
+    const apartamento = target.querySelector(
+      'select#orcamento-editar-item-0-apartamento'
+    ) as Element & {
+      value: string;
+      dispatchEvent: (event: Event) => boolean;
+    };
+    expect(apartamento.value).toBe('Duplo');
     apartamento.value = 'Triplo';
-    apartamento.dispatchEvent(new Event('input', { bubbles: true }));
+    apartamento.dispatchEvent(new Event('change', { bubbles: true }));
     flushSync();
     target
       .querySelector('form')!
@@ -1167,6 +1177,87 @@ it('carrega e preserva os detalhes de hotel ao editar o orçamento', async () =>
                   hora_checkout: '11:00'
                 }
               }
+            })
+          ]
+        })
+      )
+    );
+  } finally {
+    await unmount(app);
+  }
+});
+
+it('mantém categoria e apartamento antigos que não estão na lista do hotel', async () => {
+  api.fetch.mockResolvedValue({
+    client_name: 'Cliente',
+    valid_until: '2027-08-01',
+    currency: 'BRL',
+    itens: [
+      {
+        id: 'item-1',
+        title: 'Hotel',
+        item_type: 'hotel',
+        city_name: 'Roma',
+        quantity: 1,
+        unit_price: 150,
+        total_amount: 150,
+        start_date: '2027-08-11',
+        end_date: '2027-08-13',
+        raw: {
+          detalhes_orcamento: {
+            categoria: 'Apart Hotel',
+            adultos: 2,
+            tipo_apartamento: 'Bangalô',
+            quantidade_apartamentos: 1,
+            regime: 'Café da manhã'
+          }
+        }
+      }
+    ]
+  });
+  api.patch.mockResolvedValue({});
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(EditPage, { target });
+  try {
+    await vi.waitFor(() =>
+      expect(target.querySelector('select#orcamento-editar-item-0-categoria')).toBeTruthy()
+    );
+    target
+      .querySelector('details summary')!
+      .dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    flushSync();
+    const categoria = target.querySelector(
+      'select#orcamento-editar-item-0-categoria'
+    ) as Element & {
+      value: string;
+      options: Array<{ value: string; textContent: string | null }>;
+    };
+    const apartamento = target.querySelector(
+      'select#orcamento-editar-item-0-apartamento'
+    ) as Element & {
+      value: string;
+      options: Array<{ value: string }>;
+    };
+    expect(categoria.value).toBe('Apart Hotel');
+    expect([...categoria.options].some((option) => option.value === 'Apart Hotel')).toBe(true);
+    expect(apartamento.value).toBe('Bangalô');
+    expect([...apartamento.options].some((option) => option.value === 'Bangalô')).toBe(true);
+    target
+      .querySelector('form')!
+      .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    await vi.waitFor(() =>
+      expect(api.patch).toHaveBeenCalledWith(
+        '/api/v1/orcamentos/orcamento-1',
+        expect.objectContaining({
+          itens: [
+            expect.objectContaining({
+              raw: expect.objectContaining({
+                detalhes_orcamento: expect.objectContaining({
+                  categoria: 'Apart Hotel',
+                  tipo_apartamento: 'Bangalô'
+                })
+              })
             })
           ]
         })
