@@ -57,6 +57,18 @@ describe('cálculos por tipo de item do orçamento', () => {
     });
   });
 
+  it('aplica horários padrão de check-in e check-out no hotel quando não informados', () => {
+    const padrao = lerDetalhes({ item_type: 'hotel', raw: { detalhes_orcamento: {} } });
+    expect(padrao.hora_checkin).toBe('15:00');
+    expect(padrao.hora_checkout).toBe('11:00');
+    const custom = lerDetalhes({
+      item_type: 'hotel',
+      raw: { detalhes_orcamento: { hora_checkin: '14:00', hora_checkout: '12:00' } }
+    });
+    expect(custom.hora_checkin).toBe('14:00');
+    expect(custom.hora_checkout).toBe('12:00');
+  });
+
   it('soma valores de adultos, crianças e infants por passagem', () => {
     const item = novoItemOrcamento(0);
     item.item_type = 'passagem';

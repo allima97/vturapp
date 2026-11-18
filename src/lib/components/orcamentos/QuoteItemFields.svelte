@@ -56,6 +56,10 @@
       item.city_name = '';
       item.destino_geografico_id = '';
     }
+    if (item.item_type === 'hotel') {
+      if (!item.hora_checkin) item.hora_checkin = '15:00';
+      if (!item.hora_checkout) item.hora_checkout = '11:00';
+    }
     if (item.item_type === 'passagem' || item.item_type === 'trem') {
       item.title = formatarDescricaoItem(item.item_type, item.title);
     }
@@ -253,12 +257,30 @@
         class_name="w-full"
       />
     </div>
+    <div class="md:col-span-2">
+      <FieldInput
+        id={`${prefix}-hora-checkin`}
+        label="Hora check-in"
+        type="time"
+        bind:value={item.hora_checkin}
+        class_name="w-full"
+      />
+    </div>
     <div class="md:col-span-3">
       <FieldInput
         id={`${prefix}-checkout`}
         label="Check-out"
         type="date"
         bind:value={item.end_date}
+        class_name="w-full"
+      />
+    </div>
+    <div class="md:col-span-2">
+      <FieldInput
+        id={`${prefix}-hora-checkout`}
+        label="Hora check-out"
+        type="time"
+        bind:value={item.hora_checkout}
         class_name="w-full"
       />
     </div>

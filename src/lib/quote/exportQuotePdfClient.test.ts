@@ -568,11 +568,12 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: false
     });
-    expect(html).toContain('HOTEL · 11/08 a 13/08/2027 · 2 NOITES');
+    expect(html).toContain('HOTEL · 2 NOITES');
     expect(html).toContain('Hollywood Hotel Inn');
     expect(html.indexOf('>Hollywood Hotel Inn</b>')).toBeLessThan(
-      html.indexOf('HOTEL · 11/08 a 13/08/2027 · 2 NOITES')
+      html.indexOf('HOTEL · 2 NOITES')
     );
+    expect(html).toContain('Check-in: 11/08/2027 às 15:00 / Check-out: 13/08/2027 às 11:00');
     expect(html).toContain('3 estrelas · Duplo');
     expect(html).toContain('Café da manhã');
     expect(html).toContain('min-width: 0');

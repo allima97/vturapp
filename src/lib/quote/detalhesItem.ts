@@ -24,6 +24,8 @@ export type DetalhesItem = {
   cidade_devolucao: string;
   hora_retirada: string;
   hora_devolucao: string;
+  hora_checkin: string;
+  hora_checkout: string;
 };
 
 export type ItemOrcamento = DetalhesItem & {
@@ -82,7 +84,9 @@ export function detalhesVazios(): DetalhesItem {
     locadora: '',
     cidade_devolucao: '',
     hora_retirada: '',
-    hora_devolucao: ''
+    hora_devolucao: '',
+    hora_checkin: '',
+    hora_checkout: ''
   };
 }
 
@@ -308,7 +312,9 @@ export function lerDetalhes(item: {
     locadora: texto(detalhes.locadora),
     cidade_devolucao: texto(detalhes.cidade_devolucao),
     hora_retirada: texto(detalhes.hora_retirada),
-    hora_devolucao: texto(detalhes.hora_devolucao)
+    hora_devolucao: texto(detalhes.hora_devolucao),
+    hora_checkin: texto(detalhes.hora_checkin) || (isHotel(type) ? '15:00' : ''),
+    hora_checkout: texto(detalhes.hora_checkout) || (isHotel(type) ? '11:00' : '')
   };
 }
 
@@ -435,7 +441,9 @@ export function rawDetalhes(item: DetalhesItem & { item_type: string }) {
       criancas: item.criancas,
       tipo_apartamento: item.tipo_apartamento.trim(),
       quantidade_apartamentos: item.quantidade_apartamentos,
-      regime: item.regime.trim()
+      regime: item.regime.trim(),
+      hora_checkin: item.hora_checkin.trim(),
+      hora_checkout: item.hora_checkout.trim()
     };
   }
   if (isCar(type)) {

@@ -1036,7 +1036,9 @@ it('exige detalhes do hotel antes de salvar e envia os campos específicos', asy
                   criancas: 0,
                   tipo_apartamento: 'Duplo',
                   quantidade_apartamentos: 1,
-                  regime: 'Café da manhã'
+                  regime: 'Café da manhã',
+                  hora_checkin: '15:00',
+                  hora_checkout: '11:00'
                 }
               }
             })
@@ -1125,7 +1127,9 @@ it('carrega e preserva os detalhes de hotel ao editar o orçamento', async () =>
                   criancas: 0,
                   tipo_apartamento: 'Triplo',
                   quantidade_apartamentos: 1,
-                  regime: 'Café da manhã'
+                  regime: 'Café da manhã',
+                  hora_checkin: '15:00',
+                  hora_checkout: '11:00'
                 }
               }
             })

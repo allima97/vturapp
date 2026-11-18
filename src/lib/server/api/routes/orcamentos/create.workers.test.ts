@@ -129,7 +129,9 @@ it.each([
       criancas: 0,
       tipo_apartamento: 'Duplo',
       quantidade_apartamentos: 2,
-      regime: 'Café da manhã'
+      regime: 'Café da manhã',
+      hora_checkin: '15:00',
+      hora_checkout: '11:00'
     }
   });
 });

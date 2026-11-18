@@ -535,7 +535,7 @@ function faixaResumo(start?: string | null, end?: string | null) {
   return faixaDatas(inicio.iso, fim.iso);
 }
 
-function rotuloEstadia(item: QuoteItemForPdf, prefix: string, modo: 'noites' | 'diarias') {
+function rotuloEstadiaCurto(item: QuoteItemForPdf, prefix: string, modo: 'noites' | 'diarias') {
   const dias = diasItem(textVal(item.item_type), textVal(item.start_date), textVal(item.end_date));
   const contagem =
     dias != null && dias > 0
@@ -543,19 +543,22 @@ function rotuloEstadia(item: QuoteItemForPdf, prefix: string, modo: 'noites' | '
         ? `${dias} ${dias === 1 ? 'NOITE' : 'NOITES'}`
         : `${dias} ${dias === 1 ? 'DIÁRIA' : 'DIÁRIAS'}`
       : '';
-  return [prefix, faixaDatas(item.start_date, item.end_date), contagem].filter(Boolean).join(' · ');
-}
-
-function rotuloCarro(item: QuoteItemForPdf) {
-  const dias = diasItem(textVal(item.item_type), textVal(item.start_date), textVal(item.end_date));
-  const contagem =
-    dias != null && dias > 0 ? `${dias} ${dias === 1 ? 'DIÁRIA' : 'DIÁRIAS'}` : '';
-  return ['CARRO', contagem].filter(Boolean).join(' · ');
+  return [prefix, contagem].filter(Boolean).join(' · ');
 }
 
 function dataValidaBR(value?: string | null) {
   const data = formatDateBR(value);
   return data && data !== '-' ? data : '';
+}
+
+function estadiaHotelHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDetalhes>) {
+  const trecho = (rotulo: string, data: string, hora: string) =>
+    data ? `${rotulo}: ${data}${hora ? ` às ${hora}` : ''}` : '';
+  const partes = [
+    trecho('Check-in', dataValidaBR(item.start_date), textVal(details.hora_checkin)),
+    trecho('Check-out', dataValidaBR(item.end_date), textVal(details.hora_checkout))
+  ].filter(Boolean);
+  return partes.length ? `<div class="mu sm">${escHtml(partes.join(' / '))}</div>` : '';
 }
 
 function rotaCarroHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDetalhes>) {
@@ -752,9 +755,9 @@ function renderServiceItem(
   const carro = type === 'aluguel_carro';
   const seguro = type === 'seguro' || type === 'seguro_viagem';
   const cabecalho = hospedagem
-    ? rotuloEstadia(item, 'HOTEL', 'noites')
+    ? rotuloEstadiaCurto(item, 'HOTEL', 'noites')
     : carro
-      ? rotuloCarro(item)
+      ? rotuloEstadiaCurto(item, 'CARRO', 'diarias')
       : flight || type === 'trem'
         ? [label.toUpperCase(), faixaDatas(item.start_date, item.end_date)]
             .filter(Boolean)
@@ -782,7 +785,8 @@ function renderServiceItem(
     ? `<div style="margin-bottom:10px"><b>${escHtml(titulo)}</b></div>`
     : '';
   const rotaCarro = carro ? rotaCarroHtml(item, details) : '';
-  const pdf = `${tituloHtml}${cabecalho ? `<div class="lb">${escHtml(cabecalho)}</div>` : ''}${rotaCarro}${linhaCinza ? `<div class="mu sm">${escHtml(linhaCinza)}</div>` : ''}${etiquetas(tags)}`;
+  const estadiaHotel = hospedagem ? estadiaHotelHtml(item, details) : '';
+  const pdf = `${tituloHtml}${cabecalho ? `<div class="lb">${escHtml(cabecalho)}</div>` : ''}${rotaCarro}${estadiaHotel}${linhaCinza ? `<div class="mu sm">${escHtml(linhaCinza)}</div>` : ''}${etiquetas(tags)}`;
   return `<div class="row orc-city-item${requiresPrintContinuation([title, ...fields].join('\n')) ? ' orc-city-item--long' : ''}${showItemValues ? '' : ' orc-row--sem-valor'}"><div>${serviceIconSvg(iconType)}</div><div>${pdf}</div><div class="q orc-quantity">${escHtml(quantidadeExibida(quantity))}</div>${showItemValues ? `<div class="v">${escHtml(formatCurrency(Number(item.total_amount ?? 0), item.currency || defaultCurrency))}</div>` : ''}</div>`;
 }
 
