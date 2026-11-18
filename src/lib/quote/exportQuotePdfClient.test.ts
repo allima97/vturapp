@@ -592,6 +592,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('.rtf.rota > .lg:first-child { margin-right: 22px; }');
     expect(html).toContain('.rtf.rota > .lg:last-child { margin-left: 22px; }');
     expect(html).toContain('.rt.rota { gap: 22px; }');
+    expect(html).toContain('.rtf.car, .rtf.rota, .rt.rota { font-size: 8.4pt; }');
     expect(html).not.toContain('.rtf.car > .lg:last-child { margin-left: 0; }');
     expect(html.indexOf('<b>Check-in:')).toBeLessThan(html.indexOf('class="lni"'));
     expect(html.indexOf('class="lni"')).toBeLessThan(html.indexOf('<b>Check-out:'));
@@ -654,6 +655,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       '.lg .ct { color: #6B7280; font-size: 7.5pt; font-weight: normal; white-space: nowrap; overflow-wrap: normal; }'
     );
     expect(html).not.toContain('.rtf.car .lg .ct { color: inherit;');
+    expect(html).toContain('.rtf.car .lg .ct { font-size: 6.5pt; }');
     expect(html).toContain('<div class="mu sm">Localiza</div>');
     expect(html).toContain('>Aluguel de carro</span>');
     expect(html).not.toContain('<div class="mu sm">Aluguel de carro</div>');

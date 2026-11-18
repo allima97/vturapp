@@ -1696,6 +1696,8 @@ export function buildQuotePreviewHtmlSync(params: {
     .rtf.rota > .lg:first-child { margin-right: 22px; }
     .rtf.rota > .lg:last-child { margin-left: 22px; }
     .rt.rota { gap: 22px; }
+    .rtf.car, .rtf.rota, .rt.rota { font-size: 8.4pt; }
+    .rtf.car .lg .ct { font-size: 6.5pt; }
     .lb > .lni { margin-inline: 22px; }
     .lni { display: inline-flex; align-items: center; gap: 4px; min-height: 12px; }
     .ln { display: inline-block; vertical-align: middle; border-top: 1.3px solid #243AA3; }
