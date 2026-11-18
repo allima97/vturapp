@@ -581,6 +581,9 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('<b>Check-in: 11/08/2027 às 15:00</b>');
     expect(html).toContain('<b>Check-out: 13/08/2027 às 11:00</b>');
     expect(html).toContain('class="rtf rota"');
+    expect(html).toContain(
+      '.rtf.car .lg > span:first-child,\n    .rtf.rota .lg > span:first-child,\n    .rt.rota,\n    .rt.rota .mu { white-space: nowrap; overflow-wrap: normal; }'
+    );
     expect(html).toContain('.rtf.rota > .lg:first-child { margin-right: 22px; }');
     expect(html).toContain('.rtf.rota > .lg:last-child { margin-left: 22px; }');
     expect(html).toContain('.rt.rota { gap: 22px; }');
@@ -642,6 +645,10 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('<b>Las Vegas · Loja Downtown (Figueroa St)</b>');
     expect(html).toContain('<span class="ct">Retirada: 17/01/2027 às 14:00</span>');
     expect(html).toContain('<span class="ct">Devolução: 20/01/2027 às 20:00</span>');
+    expect(html).toContain(
+      '.lg .ct { color: #6B7280; font-size: 7.5pt; font-weight: normal; white-space: nowrap; overflow-wrap: normal; }'
+    );
+    expect(html).not.toContain('.rtf.car .lg .ct { color: inherit;');
     expect(html).toContain('<div class="mu sm">Localiza</div>');
     expect(html).toContain('>Aluguel de carro</span>');
     expect(html).not.toContain('<div class="mu sm">Aluguel de carro</div>');
