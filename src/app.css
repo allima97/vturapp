@@ -3070,6 +3070,17 @@ thead.bg-slate-50 td {
   }
 }
 
+.quote-service {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.quote-service svg {
+  flex: 0 0 auto;
+}
+
 /* No desktop os controles ficam na coluna ao lado do card. */
 summary.quote-item-head > .quote-item-actions {
   display: none;
@@ -3502,6 +3513,20 @@ summary.quote-item-head > .quote-item-actions {
   .table-mobile-cards tbody > tr > td > span {
     display: block !important;
     line-height: 1.5 !important;
+  }
+
+  .table-mobile-cards tbody > tr > td > div.quote-service {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+    width: auto !important;
+  }
+
+  .table-mobile-cards tbody > tr > td > div.quote-service > span {
+    margin: 0 !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
   }
 
   /* Estilos específicos para o sub-conteúdo das células */

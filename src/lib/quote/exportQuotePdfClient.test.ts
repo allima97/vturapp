@@ -248,7 +248,11 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('GRU → FCO');
     expect(html).toContain('data-label="Cidade"');
     expect(html).toContain('>Roma</td>');
-    expect(html).toContain('02 apartamentos');
+    expect(html).toContain('orc-service-icon--hotel');
+    expect(html).toContain('orc-service-icon--flight');
+    expect(html).toContain('class="quote-service"');
+    expect(html).not.toContain('apartamento');
+    expect(html).not.toContain('passagem');
     expect(html).toContain('R$ 150,00');
     expect(html).not.toContain('Subtotal — Roma');
     expect(html).toContain('Dia 1 - Roma');
@@ -294,7 +298,9 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: true
     });
     expect(screen).toContain('ROM → MIL - FR 1000');
-    expect(screen).toContain('03 passagens');
+    expect(screen).toContain('orc-service-icon--train');
+    expect(screen).toContain('>3</td>');
+    expect(screen).not.toContain('passagens');
     expect(screen).toContain('Assentos: 12A, 12B');
     expect(pdf).toContain('>TREM<');
     expect(pdf).toContain('ROM');
@@ -308,7 +314,8 @@ describe('identidade dos orçamentos e circuitos', () => {
       expect(html).not.toContain('Tarifa antiga');
       expect(html).not.toContain('Aéreo Internacional');
     }
-    expect(screen).toContain('data-label="Serviço" class="px-3 py-3 text-slate-700">Trem</td>');
+    expect(screen).toContain('orc-service-icon--train');
+    expect(screen).toContain('>Trem</span>');
     expect(screen).toContain('>Roma</td>');
   });
 
@@ -1287,7 +1294,8 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: false
     });
-    expect(screen).toContain('>Passagem Aérea</td>');
+    expect(screen).toContain('orc-service-icon--flight');
+    expect(screen).toContain('>Passagem Aérea</span>');
     expect(pdf).toContain('Passagens aéreas');
     expect(pdf).toContain('Voo Antigo');
   });
