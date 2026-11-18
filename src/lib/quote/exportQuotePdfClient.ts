@@ -1669,7 +1669,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-footer-list { display: block; gap: 0; margin: 4px 0 0; padding: 0; list-style: none; font-size: 7.9pt; line-height: 1.35; color: inherit; }
     .orc-footer-list li, .ii { display: flex; gap: 8px; align-items: center; padding: 2px 0; margin-top: 1px; background: transparent; border: 0; font-size: 7.9pt; line-height: 1.35; }
     .orc-footer-list svg, .ii svg { flex: 0 0 auto; }
-    .chks { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+    .chks { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 14px; margin-top: 6px; }
     .chk { display: flex; align-items: center; gap: 6px; color: #1B2C80; font-size: 7.5pt; }
     .chk svg { flex: 0 0 auto; }
     .lb { color: #6B7280; font-size: 7.5pt; font-weight: bold; }
