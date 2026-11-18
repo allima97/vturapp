@@ -30,13 +30,18 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     expect(html).toContain('.orc-title { font-size: 21px; font-weight: 700; color: #243aa3;');
     expect(html).toContain('.orc-city-table thead th { background: #243aa3;');
-    expect(html).toContain('.orc-title-row { background: white; border: 1px solid #DDE3EC;');
+    expect(html).toContain('.orc-title-row { background: white; border: 1.5px solid #C5CED9;');
     expect(html).toContain('.sh { background: #EEF2F7;');
     expect(html).toContain('.sh small { color: #6B7280;');
-    expect(html).toContain('.card.tot { background: #EEF2F7;');
+    expect(html).toContain('.card.tot { background: #EEF2F7; border: 1.5px solid #C5CED9;');
+    expect(html).toContain('.orc-city-section { background: #fff; border: 1.5px solid #C5CED9;');
+    expect(html).toContain(
+      '.band { margin: 0 0 8px; break-inside: avoid; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1.3fr; border-radius: 12px; overflow: hidden; border: 1.5px solid #C5CED9;'
+    );
+    expect(html).toContain('.card { border: 1.5px solid #C5CED9;');
     expect(html).toContain('print-color-adjust: exact;');
     expect(html).toContain(
-      '.cta { background: #fff; color: #1F2937; border: 1px solid #DDE3EC; border-radius: 10px; padding: 6px 10px; display: flex; gap: 8px; align-items: center; flex: none; max-width: 250px; height: auto; min-height: 0; line-height: 1.35; }'
+      '.cta { background: #fff; color: #1F2937; border: 1.5px solid #C5CED9; border-radius: 10px; padding: 6px 10px; display: flex; gap: 8px; align-items: center; flex: none; max-width: 250px; height: auto; min-height: 0; line-height: 1.35; }'
     );
     expect(html.indexOf('Proposta de viagem')).toBeLessThan(html.indexOf('Reserve com o'));
     expect(html).not.toContain('class="two"');
