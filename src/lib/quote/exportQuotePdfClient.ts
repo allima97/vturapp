@@ -1670,6 +1670,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .md { display: inline-flex; flex-direction: column; align-items: center; color: #6B7280; font-size: 6pt; font-weight: normal; justify-self: center; }
     .rtf { display: grid; grid-template-columns: 130px 100px auto; justify-content: start; align-items: center; column-gap: 6px; font-weight: bold; }
     .rtf.car { grid-template-columns: auto 100px auto; align-items: start; }
+    .rtf.car > .lg:last-child { margin-left: 0; }
     .rtf.car .lg > span:first-child { white-space: nowrap; }
     .rtf.car .lg .ct { color: inherit; font-size: inherit; font-weight: bold; }
     .estadia .lni { vertical-align: middle; }
