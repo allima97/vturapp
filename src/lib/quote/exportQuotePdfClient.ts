@@ -612,6 +612,9 @@ function etiquetasCarro(labels: string[]) {
   return tags;
 }
 
+const checkIcon =
+  '<svg width="11" height="11" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#243AA3" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg>';
+
 function etiquetas(labels: string[]) {
   const seen = new Set<string>();
   let html = '';
@@ -620,9 +623,9 @@ function etiquetas(labels: string[]) {
     const key = normalizeText(text);
     if (!text || seen.has(key)) continue;
     seen.add(key);
-    html += `<span class="tag">${escHtml(text)}</span>`;
+    html += `<div class="chk">${checkIcon}<span>${escHtml(text)}</span></div>`;
   }
-  return html ? `<div>${html}</div>` : '';
+  return html ? `<div class="chks">${html}</div>` : '';
 }
 
 function passageirosDoOrcamento(items: QuoteItemForPdf[]) {
@@ -1666,7 +1669,9 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-footer-list { display: block; gap: 0; margin: 4px 0 0; padding: 0; list-style: none; font-size: 7.9pt; line-height: 1.35; color: inherit; }
     .orc-footer-list li, .ii { display: flex; gap: 8px; align-items: center; padding: 2px 0; margin-top: 1px; background: transparent; border: 0; font-size: 7.9pt; line-height: 1.35; }
     .orc-footer-list svg, .ii svg { flex: 0 0 auto; }
-    .tag { display: inline-block; background: #EEF2F7; color: #1B2C80; border-radius: 20px; padding: 2px 8px; font-size: 7.5pt; margin: 4px 4px 0 0; }
+    .chks { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+    .chk { display: flex; align-items: center; gap: 6px; color: #1B2C80; font-size: 7.5pt; }
+    .chk svg { flex: 0 0 auto; }
     .lb { color: #6B7280; font-size: 7.5pt; font-weight: bold; }
     .rt { display: flex; align-items: center; gap: 6px; font-weight: bold; }
     .lg { display: inline-flex; flex-direction: column; }
@@ -1813,7 +1818,7 @@ export function buildQuotePreviewHtmlSync(params: {
       .sh small { color: #6B7280; }
       .band .tt, .p1 { color: #fff; }
       .band .tt { background: #243AA3; }
-      .card.tot, .tag, .orc-subtotal { background: #EEF2F7; }
+      .card.tot, .orc-subtotal { background: #EEF2F7; }
       .p1 { background: #C62828; }
       .orc-header-card, .orc-title-row, .orc-section-card, .orc-city-section, .orc-financial-section { box-shadow: none; }
       .row, .row > div { overflow: visible; }
