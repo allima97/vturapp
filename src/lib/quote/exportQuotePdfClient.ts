@@ -122,10 +122,17 @@ const trainIconShape =
   '<rect x="4" y="3" width="16" height="16" rx="2"/><path d="M4 11h16M12 3v8M8 19l-2 3M18 22l-2-3M8 15h0M16 15h0"/>';
 const carIconShape =
   '<path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9L18 10l-2.7-3.4A2 2 0 0 0 13.7 6H8.3a2 2 0 0 0-1.6.8L4 10l-2 .6C1.4 10.9 1 11.6 1 12.3V16c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>';
+const hotelIconShape = '<path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/>';
 
-function tracoIcone(tipo: 'passagem' | 'trem' | 'carro', larguraLinha: number) {
+function tracoIcone(tipo: 'passagem' | 'trem' | 'carro' | 'hotel', larguraLinha: number) {
   const shape =
-    tipo === 'trem' ? trainIconShape : tipo === 'carro' ? carIconShape : planeRightIconShape;
+    tipo === 'trem'
+      ? trainIconShape
+      : tipo === 'carro'
+        ? carIconShape
+        : tipo === 'hotel'
+          ? hotelIconShape
+          : planeRightIconShape;
   const svg = `<svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#243AA3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${shape}</svg>`;
   return `<span class="lni"><span class="ln" style="width:${larguraLinha}px"></span>${svg}<span class="ln" style="width:${larguraLinha}px"></span></span>`;
 }
@@ -554,10 +561,11 @@ function dataValidaBR(value?: string | null) {
 function estadiaHotelHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDetalhes>) {
   const trecho = (rotulo: string, data: string, hora: string) =>
     data ? `${rotulo}: ${escHtml(data)}${hora ? ` às ${escHtml(hora)}` : ''}` : '';
-  const partes = [
-    trecho('Check-in', dataValidaBR(item.start_date), textVal(details.hora_checkin)),
-    trecho('Check-out', dataValidaBR(item.end_date), textVal(details.hora_checkout))
-  ].filter(Boolean);
+  const checkin = trecho('Check-in', dataValidaBR(item.start_date), textVal(details.hora_checkin));
+  const checkout = trecho('Check-out', dataValidaBR(item.end_date), textVal(details.hora_checkout));
+  if (checkin && checkout)
+    return `<div><b>${checkin}</b> ${tracoIcone('hotel', 24)} <b>${checkout}</b></div>`;
+  const partes = [checkin, checkout].filter(Boolean);
   return partes.length ? `<div><b>${partes.join(' / ')}</b></div>` : '';
 }
 
@@ -1106,7 +1114,7 @@ const defaultFooterIcons = new Map(
 );
 
 const serviceIcons = new Map<string, [string, string]>([
-  ['hotel', ['hotel', '<path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/>']],
+  ['hotel', ['hotel', hotelIconShape]],
   [
     'aluguel_carro',
     ['car', carIconShape]
