@@ -564,7 +564,7 @@ function estadiaHotelHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerD
   const checkin = trecho('Check-in', dataValidaBR(item.start_date), textVal(details.hora_checkin));
   const checkout = trecho('Check-out', dataValidaBR(item.end_date), textVal(details.hora_checkout));
   if (checkin && checkout)
-    return `<div><b>${checkin}</b> ${tracoIcone('hotel', 24)} <b>${checkout}</b></div>`;
+    return `<div class="estadia"><b>${checkin}</b> ${tracoIcone('hotel', 24)} <b>${checkout}</b></div>`;
   const partes = [checkin, checkout].filter(Boolean);
   return partes.length ? `<div><b>${partes.join(' / ')}</b></div>` : '';
 }
@@ -1669,9 +1669,10 @@ export function buildQuotePreviewHtmlSync(params: {
     .lg .ct { color: #6B7280; font-size: 7.5pt; font-weight: normal; white-space: nowrap; }
     .md { display: inline-flex; flex-direction: column; align-items: center; color: #6B7280; font-size: 6pt; font-weight: normal; justify-self: center; }
     .rtf { display: grid; grid-template-columns: 130px 100px auto; justify-content: start; align-items: center; column-gap: 6px; font-weight: bold; }
-    .rtf.car { grid-template-columns: auto 100px auto; }
+    .rtf.car { grid-template-columns: auto 100px auto; align-items: start; }
     .rtf.car .lg > span:first-child { white-space: nowrap; }
     .rtf.car .lg .ct { color: inherit; font-size: inherit; font-weight: bold; }
+    .estadia .lni { vertical-align: middle; }
     .rtf > .lg:last-child { margin-left: 22px; }
     .lni { display: inline-flex; align-items: center; gap: 4px; }
     .ln { display: inline-block; vertical-align: middle; border-top: 1.3px solid #243AA3; }
