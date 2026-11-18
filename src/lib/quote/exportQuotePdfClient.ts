@@ -565,12 +565,13 @@ function rotaCarroHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDeta
   const retirada = nomeCidadeNoPdf(textVal(item.city_name));
   const devolucao = nomeCidadeNoPdf(textVal(details.cidade_devolucao));
   if (!retirada && !devolucao) return '';
-  const grupo = (cidade: string, hora: string, rotuloData: string) =>
-    `<span class="lg"><span><b>${escHtml(cidade)}</b>${hora ? ` <span class="mu">· ${escHtml(hora)}</span>` : ''}</span>${rotuloData ? `<span class="ct">${escHtml(rotuloData)}</span>` : ''}</span>`;
-  const rotuloData = (rotulo: string, data: string) => (data ? `${rotulo}: ${data}` : '');
-  const horaRetirada = textVal(details.hora_retirada);
-  const horaDevolucao = textVal(details.hora_devolucao);
-  return `<div class="rtf">${grupo(retirada, horaRetirada, rotuloData('Retirada', dataValidaBR(item.start_date)))}<span class="md">${tracoIcone('carro', 36)}</span>${grupo(devolucao, horaDevolucao, rotuloData('Devolução', dataValidaBR(item.end_date)))}</div>`;
+  const grupo = (cidade: string, loja: string, rotuloData: string) => {
+    const titulo = [cidade, loja].filter(Boolean).join(' · ');
+    return `<span class="lg"><span><b>${escHtml(titulo)}</b></span>${rotuloData ? `<span class="ct">${escHtml(rotuloData)}</span>` : ''}</span>`;
+  };
+  const rotuloData = (rotulo: string, data: string, hora: string) =>
+    data ? `${rotulo}: ${data}${hora ? ` às ${hora}` : ''}` : '';
+  return `<div class="rtf">${grupo(retirada, textVal(details.loja_retirada), rotuloData('Retirada', dataValidaBR(item.start_date), textVal(details.hora_retirada)))}<span class="md">${tracoIcone('carro', 36)}</span>${grupo(devolucao, textVal(details.loja_devolucao), rotuloData('Devolução', dataValidaBR(item.end_date), textVal(details.hora_devolucao)))}</div>`;
 }
 
 function rotuloServico(item: QuoteItemForPdf, prefix: string) {

@@ -234,6 +234,15 @@
           class_name="w-full"
         />
       </div>
+      <div class="md:col-span-6">
+        <FieldInput
+          id={`${prefix}-loja-retirada`}
+          label="Loja"
+          bind:value={item.loja_retirada}
+          placeholder="Ex.: Loja Aeroporto LAX"
+          class_name="w-full"
+        />
+      </div>
       <div class="md:col-span-4">
         <CidadeDestinoAutocomplete
           id={`${prefix}-cidade-devolucao`}
@@ -249,6 +258,15 @@
           label="Hora devolução"
           type="time"
           bind:value={item.hora_devolucao}
+          class_name="w-full"
+        />
+      </div>
+      <div class="md:col-span-6">
+        <FieldInput
+          id={`${prefix}-loja-devolucao`}
+          label="Loja"
+          bind:value={item.loja_devolucao}
+          placeholder="Ex.: Loja Downtown (Figueroa St)"
           class_name="w-full"
         />
       </div>

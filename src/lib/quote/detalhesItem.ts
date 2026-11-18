@@ -24,6 +24,8 @@ export type DetalhesItem = {
   cidade_devolucao: string;
   hora_retirada: string;
   hora_devolucao: string;
+  loja_retirada: string;
+  loja_devolucao: string;
   hora_checkin: string;
   hora_checkout: string;
 };
@@ -85,6 +87,8 @@ export function detalhesVazios(): DetalhesItem {
     cidade_devolucao: '',
     hora_retirada: '',
     hora_devolucao: '',
+    loja_retirada: '',
+    loja_devolucao: '',
     hora_checkin: '',
     hora_checkout: ''
   };
@@ -313,6 +317,8 @@ export function lerDetalhes(item: {
     cidade_devolucao: texto(detalhes.cidade_devolucao),
     hora_retirada: texto(detalhes.hora_retirada),
     hora_devolucao: texto(detalhes.hora_devolucao),
+    loja_retirada: texto(detalhes.loja_retirada),
+    loja_devolucao: texto(detalhes.loja_devolucao),
     hora_checkin: texto(detalhes.hora_checkin) || (isHotel(type) ? '15:00' : ''),
     hora_checkout: texto(detalhes.hora_checkout) || (isHotel(type) ? '11:00' : '')
   };
@@ -453,7 +459,9 @@ export function rawDetalhes(item: DetalhesItem & { item_type: string }) {
       locadora: item.locadora.trim(),
       cidade_devolucao: item.cidade_devolucao.trim(),
       hora_retirada: item.hora_retirada.trim(),
-      hora_devolucao: item.hora_devolucao.trim()
+      hora_devolucao: item.hora_devolucao.trim(),
+      loja_retirada: item.loja_retirada.trim(),
+      loja_devolucao: item.loja_devolucao.trim()
     };
   }
   if (isPassengerPriced(type)) {

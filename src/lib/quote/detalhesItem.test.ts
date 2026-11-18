@@ -41,11 +41,15 @@ describe('cálculos por tipo de item do orçamento', () => {
     item.cidade_devolucao = ' Las Vegas ';
     item.hora_retirada = '10:00';
     item.hora_devolucao = '18:30';
+    item.loja_retirada = ' Loja Aeroporto LAX ';
+    item.loja_devolucao = ' Loja Downtown ';
     expect(rawDetalhes(item)).toMatchObject({
       locadora: 'Hertz',
       cidade_devolucao: 'Las Vegas',
       hora_retirada: '10:00',
-      hora_devolucao: '18:30'
+      hora_devolucao: '18:30',
+      loja_retirada: 'Loja Aeroporto LAX',
+      loja_devolucao: 'Loja Downtown'
     });
     expect(
       lerDetalhes({ item_type: 'aluguel_carro', raw: { detalhes_orcamento: rawDetalhes(item) } })
@@ -53,7 +57,9 @@ describe('cálculos por tipo de item do orçamento', () => {
       locadora: 'Hertz',
       cidade_devolucao: 'Las Vegas',
       hora_retirada: '10:00',
-      hora_devolucao: '18:30'
+      hora_devolucao: '18:30',
+      loja_retirada: 'Loja Aeroporto LAX',
+      loja_devolucao: 'Loja Downtown'
     });
   });
 

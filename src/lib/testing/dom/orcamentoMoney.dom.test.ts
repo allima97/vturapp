@@ -1231,7 +1231,9 @@ it('permite alterar câmbio e itens incluídos ao editar aluguel de carro', asyn
                   locadora: 'Localiza',
                   cidade_devolucao: '',
                   hora_retirada: '',
-                  hora_devolucao: ''
+                  hora_devolucao: '',
+                  loja_retirada: '',
+                  loja_devolucao: ''
                 },
                 aereo_import: null
               }

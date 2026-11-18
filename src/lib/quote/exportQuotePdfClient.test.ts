@@ -606,8 +606,10 @@ describe('identidade dos orçamentos e circuitos', () => {
               locadora: 'Localiza',
               incluidos: ['CDW', 'LDW', 'Tanque Cheio', 'KM Livre'],
               cidade_devolucao: 'Las Vegas',
-              hora_retirada: '10:00',
-              hora_devolucao: '10:00'
+              hora_retirada: '14:00',
+              hora_devolucao: '20:00',
+              loja_retirada: 'Loja Aeroporto LAX',
+              loja_devolucao: 'Loja Downtown (Figueroa St)'
             }
           }
         }
@@ -622,10 +624,10 @@ describe('identidade dos orçamentos e circuitos', () => {
 
     expect(html).toContain('CARRO · 4 DIÁRIAS');
     expect(html).toContain('>SUV automático</b>');
-    expect(html).toContain('<b>Los Angeles</b> <span class="mu">· 10:00</span>');
-    expect(html).toContain('<b>Las Vegas</b> <span class="mu">· 10:00</span>');
-    expect(html).toContain('<span class="ct">Retirada: 17/01/2027</span>');
-    expect(html).toContain('<span class="ct">Devolução: 20/01/2027</span>');
+    expect(html).toContain('<b>Los Angeles · Loja Aeroporto LAX</b>');
+    expect(html).toContain('<b>Las Vegas · Loja Downtown (Figueroa St)</b>');
+    expect(html).toContain('<span class="ct">Retirada: 17/01/2027 às 14:00</span>');
+    expect(html).toContain('<span class="ct">Devolução: 20/01/2027 às 20:00</span>');
     expect(html).toContain('<div class="mu sm">Localiza</div>');
     expect(html).toContain('>Aluguel de carro</span>');
     expect(html).not.toContain('<div class="mu sm">Aluguel de carro</div>');
