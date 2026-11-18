@@ -553,7 +553,7 @@ function estadiaHotelHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerD
   const checkin = trecho('Check-in', dataValidaBR(item.start_date), textVal(details.hora_checkin));
   const checkout = trecho('Check-out', dataValidaBR(item.end_date), textVal(details.hora_checkout));
   if (checkin && checkout)
-    return `<div class="estadia"><b>${checkin}</b> ${traco(24)} <b>${checkout}</b></div>`;
+    return `<div class="rtf rota"><span class="lg"><span><b>${checkin}</b></span></span><span class="md">${traco(36)}</span><span class="lg"><span><b>${checkout}</b></span></span></div>`;
   const partes = [checkin, checkout].filter(Boolean);
   return partes.length ? `<div><b>${partes.join(' / ')}</b></div>` : '';
 }
@@ -568,7 +568,7 @@ function rotaCarroHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDeta
   };
   const rotuloData = (rotulo: string, data: string, hora: string) =>
     data ? `${rotulo}: ${data}${hora ? ` às ${hora}` : ''}` : '';
-  return `<div class="rtf car">${grupo(retirada, textVal(details.loja_retirada), rotuloData('Retirada', dataValidaBR(item.start_date), textVal(details.hora_retirada)))}<span class="md">${traco(36)}</span>${grupo(devolucao, textVal(details.loja_devolucao), rotuloData('Devolução', dataValidaBR(item.end_date), textVal(details.hora_devolucao)))}</div>`;
+  return `<div class="rtf car rota">${grupo(retirada, textVal(details.loja_retirada), rotuloData('Retirada', dataValidaBR(item.start_date), textVal(details.hora_retirada)))}<span class="md">${traco(36)}</span>${grupo(devolucao, textVal(details.loja_devolucao), rotuloData('Devolução', dataValidaBR(item.end_date), textVal(details.hora_devolucao)))}</div>`;
 }
 
 function rotuloServico(item: QuoteItemForPdf, prefix: string) {
@@ -789,9 +789,37 @@ function renderServiceItem(
 }
 
 type QuotePdfSection =
-  | { kind: 'city'; city: string; key: string; items: QuoteItemForPdf[] }
+  | { kind: 'city'; city: string; key: string; cityId: string | null; items: QuoteItemForPdf[] }
   | { kind: 'flights'; items: QuoteItemForPdf[] }
   | { kind: 'circuit'; items: QuoteItemForPdf[] };
+
+function nomesCompativeis(a: string, b: string) {
+  const fullA = normalizeText(a);
+  const fullB = normalizeText(b);
+  if (!fullA || !fullB) return false;
+  if (fullA === fullB) return true;
+  const shortA = normalizeText(nomeCidadeNoPdf(a));
+  const shortB = normalizeText(nomeCidadeNoPdf(b));
+  if (!shortA || shortA !== shortB) return false;
+  if (fullA === shortA || fullB === shortB) return true;
+  if (fullA.startsWith(`${fullB},`) || fullB.startsWith(`${fullA},`)) return true;
+  const tokens = (full: string, short: string) =>
+    full
+      .slice(short.length)
+      .split(/[^a-z0-9]+/)
+      .filter((token) => token.length >= 4);
+  const restoA = new Set(tokens(fullA, shortA));
+  return tokens(fullB, shortB).some((token) => restoA.has(token));
+}
+
+function mesmaCidade(section: QuotePdfSection, city: string, cityId: string | null) {
+  if (section.kind !== 'city') return false;
+  if (section.cityId && cityId && section.cityId !== cityId) return false;
+  if (section.cityId && cityId) return true;
+  const atual = section.city === 'Cidade não informada' ? '' : section.city;
+  if (!atual && !city) return !section.cityId && !cityId;
+  return nomesCompativeis(atual, city);
+}
 
 function orderQuoteSections(items: QuoteItemForPdf[]): QuotePdfSection[] {
   const sections: QuotePdfSection[] = [];
@@ -825,17 +853,21 @@ function orderQuoteSections(items: QuoteItemForPdf[]): QuotePdfSection[] {
           ? `cidade:${item.cidade_id}`
           : null;
     const key = chaveIdentidadeCidade(city, cityId);
-    const sameLegacyCity =
-      previous?.kind === 'city' &&
-      (isTrain || previous.items.some((entry) => normalizeText(entry.item_type) === 'trem')) &&
-      (!cityId || previous.key.startsWith('texto:')) &&
-      Boolean(city) &&
-      normalizeText(previous.city) === normalizeText(city);
-    if (previous?.kind === 'city' && (previous.key === key || sameLegacyCity)) {
-      if (cityId && previous.key.startsWith('texto:')) previous.key = key;
-      previous.items.push(item);
+    const match = sections.find((section) => mesmaCidade(section, city, cityId));
+    if (match?.kind === 'city') {
+      if (cityId && !match.cityId) {
+        match.cityId = cityId;
+        match.key = key;
+      }
+      match.items.push(item);
     } else {
-      sections.push({ kind: 'city', city: city || 'Cidade não informada', key, items: [item] });
+      sections.push({
+        kind: 'city',
+        city: city || 'Cidade não informada',
+        key,
+        cityId,
+        items: [item]
+      });
     }
   }
   return sections;
@@ -887,7 +919,7 @@ function ordenarGrupos(sections: QuotePdfSection[]) {
       order,
       items,
       start: marcos[0]?.start || '',
-      end: marcos[0]?.end || ''
+      end: marcos.reduce((max, marco) => (marco.end > max ? marco.end : max), '')
     };
   });
   groups.sort((a, b) => {
@@ -984,7 +1016,6 @@ function atrasoChegada(data: { data_voo?: unknown; data_inicio?: unknown; data_f
   return offset != null && offset > 0 ? offset : 0;
 }
 
-
 function renderGroupedItems(
   sections: QuotePdfSection[],
   showItemValues: boolean,
@@ -1012,7 +1043,10 @@ function renderGroupedItems(
       .filter((section) => section.kind !== 'flights')
       .map((section) =>
         section.kind === 'city'
-          ? { ...section, items: section.items.filter((item) => !isCar(item) && !isInsurance(item)) }
+          ? {
+              ...section,
+              items: section.items.filter((item) => !isCar(item) && !isInsurance(item))
+            }
           : section
       )
       .filter((section) => section.kind !== 'city' || section.items.length > 0)
@@ -1037,9 +1071,7 @@ function renderGroupedItems(
     cars.length > 0
       ? renderCityTable(
           'Aluguel de carro',
-          cars
-            .map((item) => renderServiceItem(item, showItemValues, defaultCurrency))
-            .join(''),
+          cars.map((item) => renderServiceItem(item, showItemValues, defaultCurrency)).join(''),
           false,
           showItemValues ? moedasDoGrupo(cars, defaultCurrency) : ''
         )
@@ -1104,10 +1136,7 @@ const defaultFooterIcons = new Map(
 
 const serviceIcons = new Map<string, [string, string]>([
   ['hotel', ['hotel', hotelIconShape]],
-  [
-    'aluguel_carro',
-    ['car', carIconShape]
-  ],
+  ['aluguel_carro', ['car', carIconShape]],
   [
     'ingresso',
     ['ticket', '<path d="M3 8V5h18v3a3 3 0 0 0 0 6v3H3v-3a3 3 0 0 0 0-6zm9-2v2m0 2v2m0 2v2"/>']
@@ -1365,7 +1394,7 @@ function renderFlightItemHtml(
       const rota =
         from || to || depart || arrive
           ? isTrain
-            ? `<div class="rt">${escHtml(from)} ${saida}${traco(24)}${escHtml(to)} ${chegada}</div>`
+            ? `<div class="rt rota">${escHtml(from)} ${saida}${traco(24)}${escHtml(to)} ${chegada}</div>`
             : `<div class="rtf"${index ? ' style="margin-top:16px"' : ''}><span class="lg"><span><b>${escHtml(from)}</b>${depart ? ` <span class="mu">· ${escHtml(depart)}</span>` : ''}</span>${origemInfo ? `<span class="ct">${escHtml(origemInfo)}</span>` : ''}</span><span class="md">${textVal(flight.descricao) ? `<span>${escHtml(textVal(flight.descricao))}</span>` : ''}${traco(36)}${textVal(flight.cia_aerea) ? `<span>${escHtml(textVal(flight.cia_aerea))}</span>` : ''}</span><span class="lg"><span><b>${escHtml(to)}</b>${arrive ? ` <span class="mu">· ${escHtml(arrive)}</span>` : ''}${plus ? ` ${plus}` : ''}</span>${destinoInfo ? `<span class="ct">${escHtml(destinoInfo)}</span>` : ''}</span></div>`
           : '';
       const meta = (() => {
@@ -1607,11 +1636,7 @@ export function buildQuotePreviewHtmlSync(params: {
   } else {
     const sections = orderQuoteSections(items);
     if (showBudgetItems) {
-      itensHtml += renderAllItemsTableHtml(
-        sections.flatMap((section) => section.items),
-        showItemValues,
-        currency
-      );
+      itensHtml += renderAllItemsTableHtml(items, showItemValues, currency);
     }
     if (showBudgetDetails) {
       itensHtml += renderGroupedItems(sections, showItemValues, currency);
@@ -1659,11 +1684,15 @@ export function buildQuotePreviewHtmlSync(params: {
     .md { display: inline-flex; flex-direction: column; align-items: center; color: #6B7280; font-size: 6pt; font-weight: normal; justify-self: center; }
     .rtf { display: grid; grid-template-columns: 130px 100px auto; justify-content: start; align-items: center; column-gap: 6px; font-weight: bold; }
     .rtf.car { grid-template-columns: auto 100px auto; align-items: start; }
-    .rtf.car > .lg:last-child { margin-left: 0; }
     .rtf.car .lg > span:first-child { white-space: nowrap; }
     .rtf.car .lg .ct { color: inherit; font-size: inherit; font-weight: bold; }
-    .estadia .lni { vertical-align: middle; }
     .rtf > .lg:last-child { margin-left: 22px; }
+    .rtf.rota { grid-template-columns: auto 100px auto; align-items: center; }
+    .rtf.car.rota { align-items: start; }
+    .rtf.rota > .lg:first-child { margin-right: 22px; }
+    .rtf.rota > .lg:last-child { margin-left: 22px; }
+    .rt.rota { gap: 22px; }
+    .lb > .lni { margin-inline: 22px; }
     .lni { display: inline-flex; align-items: center; gap: 4px; min-height: 12px; }
     .ln { display: inline-block; vertical-align: middle; border-top: 1.3px solid #243AA3; }
     .md .lni { margin: 2px 0; }

@@ -570,11 +570,14 @@ describe('identidade dos orçamentos e circuitos', () => {
     });
     expect(html).toContain('HOTEL · 2 NOITES');
     expect(html).toContain('Hollywood Hotel Inn');
-    expect(html.indexOf('>Hollywood Hotel Inn</b>')).toBeLessThan(
-      html.indexOf('HOTEL · 2 NOITES')
-    );
+    expect(html.indexOf('>Hollywood Hotel Inn</b>')).toBeLessThan(html.indexOf('HOTEL · 2 NOITES'));
     expect(html).toContain('<b>Check-in: 11/08/2027 às 15:00</b>');
     expect(html).toContain('<b>Check-out: 13/08/2027 às 11:00</b>');
+    expect(html).toContain('class="rtf rota"');
+    expect(html).toContain('.rtf.rota > .lg:first-child { margin-right: 22px; }');
+    expect(html).toContain('.rtf.rota > .lg:last-child { margin-left: 22px; }');
+    expect(html).toContain('.rt.rota { gap: 22px; }');
+    expect(html).not.toContain('.rtf.car > .lg:last-child { margin-left: 0; }');
     expect(html.indexOf('<b>Check-in:')).toBeLessThan(html.indexOf('class="lni"'));
     expect(html.indexOf('class="lni"')).toBeLessThan(html.indexOf('<b>Check-out:'));
     expect(html).toContain('3 estrelas · Duplo');
@@ -627,6 +630,7 @@ describe('identidade dos orçamentos e circuitos', () => {
 
     expect(html).toContain('CARRO · 4 DIÁRIAS');
     expect(html).toContain('>SUV automático</b>');
+    expect(html).toContain('class="rtf car rota"');
     expect(html).toContain('<b>Los Angeles · Loja Aeroporto LAX</b>');
     expect(html).toContain('<b>Las Vegas · Loja Downtown (Figueroa St)</b>');
     expect(html).toContain('<span class="ct">Retirada: 17/01/2027 às 14:00</span>');
@@ -772,16 +776,16 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
     const body = html.slice(html.indexOf('<body>'));
-    expect(body.match(/class="l"/g)).toHaveLength(5);
+    expect(body.match(/class="l"/g)).toHaveLength(4);
     expect(body).not.toContain('orc-section-icon--city');
     expect(body).toContain('<span class="l">Aluguel de carro');
-    expect(body).toContain('<span class="l">Los Angeles');
+    expect(body.match(/<span class="l">Los Angeles/g)).toHaveLength(1);
     expect(body).not.toContain('Califórnia');
     expect(body).not.toContain('Paris, França');
     expect(body).not.toContain('Não é acomodação');
     expect(body.indexOf('Aluguel de carro')).toBeLessThan(body.indexOf('Hotel Sunset'));
-    expect(body.indexOf('Hotel Sunset')).toBeLessThan(body.indexOf('Passeio no Louvre'));
-    expect(body.indexOf('Passeio no Louvre')).toBeLessThan(body.indexOf('Ingresso &lt;seguro&gt;'));
+    expect(body.indexOf('Hotel Sunset')).toBeLessThan(body.indexOf('Ingresso &lt;seguro&gt;'));
+    expect(body.indexOf('Ingresso &lt;seguro&gt;')).toBeLessThan(body.indexOf('Passeio no Louvre'));
     expect(body).toContain('Cidade não informada');
   });
 
@@ -848,8 +852,8 @@ describe('identidade dos orçamentos e circuitos', () => {
             'Voo Principal',
             'Voo sem Trechos',
             'Passeio Paris',
-            'Hotel Roma',
             'Hotel Paris',
+            'Hotel Roma',
             'Serviço sem data',
             'Serviço com fim'
           ]
@@ -867,7 +871,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       expect(positions).toEqual([...positions].sort((a, b) => a - b));
       if (showBudgetDetails) {
         expect(body.match(/Passagens aéreas/g)).toHaveLength(1);
-        expect(body.match(/class="l"/g)).toHaveLength(6);
+        expect(body.match(/class="l"/g)).toHaveLength(5);
       }
     }
 
@@ -948,6 +952,88 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(body).toContain('Los Angeles <small>· 24 a 25/11/2026');
     expect(body).toContain('Anaheim <small>· 25 a 26/11/2026');
     expect(body).toContain('>Qtd</span>');
+  });
+
+  it('reúne Los Angeles num único card mesmo com nome curto, nome longo e identificador', () => {
+    const html = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        {
+          item_type: 'servico',
+          title: 'Seguro 150k',
+          city_name: 'Los Angeles, Condado de Los Angeles, Califórnia',
+          destino_geografico_id: 'geonames:la',
+          start_date: '2026-11-24',
+          end_date: '2026-12-01'
+        },
+        {
+          item_type: 'ingresso',
+          title: 'Ingresso Disney',
+          city_name: 'Anaheim, Califórnia, EUA',
+          start_date: '2026-11-25',
+          end_date: '2026-11-26'
+        },
+        {
+          item_type: 'passeio',
+          title: 'Passeio Hollywood Boulevard',
+          city_name: 'Los Angeles',
+          start_date: '2026-11-24',
+          end_date: '2026-11-25'
+        },
+        {
+          item_type: 'hotel',
+          title: 'Hollywood Hotel Inn',
+          city_name: 'Los Angeles, Condado de Los Angeles, Califórnia',
+          destino_geografico_id: 'geonames:la',
+          start_date: '2026-11-25',
+          end_date: '2026-11-30'
+        },
+        {
+          item_type: 'aluguel_carro',
+          title: 'Minivan',
+          city_name: 'Los Angeles',
+          destino_geografico_id: 'geonames:la',
+          start_date: '2026-11-25',
+          end_date: '2026-11-30'
+        },
+        {
+          item_type: 'show',
+          title: 'Show Las Vegas',
+          city_name: 'Las Vegas, Nevada, EUA',
+          start_date: '2026-11-27',
+          end_date: '2026-11-27'
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+    const body = html.slice(html.indexOf('<body>'));
+    expect(body.match(/<span class="l">Los Angeles/g)).toHaveLength(1);
+    expect(body).toContain('Los Angeles <small>· 24/11 a 01/12/2026');
+    const losAngeles = body.slice(
+      body.indexOf('<span class="l">Los Angeles'),
+      body.indexOf('<span class="l">Anaheim')
+    );
+    expect(losAngeles.indexOf('Seguro 150k')).toBeLessThan(
+      losAngeles.indexOf('Passeio Hollywood Boulevard')
+    );
+    expect(losAngeles.indexOf('Passeio Hollywood Boulevard')).toBeLessThan(
+      losAngeles.indexOf('Hollywood Hotel Inn')
+    );
+    expect(losAngeles).not.toContain('Minivan');
+    expect(losAngeles).not.toContain('Ingresso Disney');
+    expect(body.indexOf('<span class="l">Los Angeles')).toBeLessThan(
+      body.indexOf('<span class="l">Anaheim')
+    );
+    expect(body.indexOf('<span class="l">Anaheim')).toBeLessThan(
+      body.indexOf('<span class="l">Las Vegas')
+    );
+    expect(body).toContain('Anaheim <small>· 25 a 26/11/2026');
+    expect(body).toContain('Las Vegas <small>· 27/11/2026');
   });
 
   it('mantém circuitos e passagens na ordem manual', () => {

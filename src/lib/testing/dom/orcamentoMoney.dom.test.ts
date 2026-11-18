@@ -371,6 +371,44 @@ it('recolhe o item incluído ao adicionar outro item', async () => {
   }
 });
 
+it('mantém os controles do item numa linha do cabeçalho sem abrir o item', async () => {
+  const target = document.createElement('div');
+  document.body.appendChild(target);
+  const app = mount(Page, { target });
+  try {
+    flushSync();
+    [...target.querySelectorAll('button')]
+      .find((button) => button.textContent?.includes('Adicionar Item'))!
+      .click();
+    flushSync();
+    const summary = target.querySelector('details summary')!;
+    const inline = summary.querySelector('.quote-item-actions')!;
+    const buttons = [...inline.querySelectorAll('button')];
+    expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual([
+      'Mover item 1 para cima',
+      'Mover item 1 para baixo',
+      'Remover item'
+    ]);
+    expect(summary.querySelector('span')?.className).toContain('truncate');
+    expect(
+      inline.compareDocumentPosition(summary.querySelector('span.rounded-full')!) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+    ).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(summary.querySelector('.orc-item-acoes')).toBeNull();
+    expect(target.querySelector('.orc-item-acoes')).toBeTruthy();
+    const details = summary.parentElement as HTMLDetailsElement;
+    expect(details.open).toBe(false);
+    buttons[1].dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
+    flushSync();
+    expect(details.open).toBe(false);
+    expect(target.querySelectorAll('details')[0].querySelector('summary')?.textContent).toContain(
+      'Novo item'
+    );
+  } finally {
+    await unmount(app);
+  }
+});
+
 it('permite reordenar novos itens preservando os dados e o estado aberto', async () => {
   const target = document.createElement('div');
   document.body.appendChild(target);
