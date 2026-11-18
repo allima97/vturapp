@@ -558,7 +558,7 @@ function estadiaHotelHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerD
     trecho('Check-in', dataValidaBR(item.start_date), textVal(details.hora_checkin)),
     trecho('Check-out', dataValidaBR(item.end_date), textVal(details.hora_checkout))
   ].filter(Boolean);
-  return partes.length ? `<div class="mu sm"><b>${partes.join(' / ')}</b></div>` : '';
+  return partes.length ? `<div><b>${partes.join(' / ')}</b></div>` : '';
 }
 
 function rotaCarroHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDetalhes>) {
