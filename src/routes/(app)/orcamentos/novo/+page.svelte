@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation';
   import { onMount, onDestroy } from 'svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
+  import QuoteItemActions from '$lib/components/orcamentos/QuoteItemActions.svelte';
   import QuoteItemFields from '$lib/components/orcamentos/QuoteItemFields.svelte';
   import {
     formatarDescricaoItem,
@@ -18,19 +19,7 @@
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import { FieldInput, FieldSelect, FieldTextarea } from '$lib/components/ui';
-  import {
-    ArrowDown,
-    ArrowLeft,
-    ArrowUp,
-    Save,
-    Send,
-    Plus,
-    X,
-    FileText,
-    Search,
-    User,
-    Whatsapp
-  } from '$lib/icons';
+  import { ArrowLeft, Save, Send, Plus, X, FileText, Search, User, Whatsapp } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { addDaysISODate, todayISODateLocal } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
@@ -472,9 +461,16 @@
           <div class="min-w-0 flex-1">
             <details bind:open={item.isOpen} class="rounded-lg border border-slate-200 bg-slate-50">
               <summary
-                class="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 text-sm font-medium text-slate-800"
+                class="quote-item-head flex cursor-pointer list-none items-center gap-2 px-4 py-3 text-sm font-medium text-slate-800"
               >
-                <span class="min-w-0 truncate">{resumoItemOrcamento(item)}</span>
+                <span class="min-w-0 flex-1 truncate">{resumoItemOrcamento(item)}</span>
+                <QuoteItemActions
+                  inline
+                  {index}
+                  total={formData.itens.length}
+                  onMove={moverItem}
+                  onRemove={removeItem}
+                />
                 <span
                   class="shrink-0 rounded-full border border-slate-300 bg-white px-2 py-0.5 text-base leading-none"
                 >
@@ -495,45 +491,12 @@
             {/if}
           </div>
 
-          <div
-            class="orc-item-acoes ml-auto flex shrink-0 flex-row items-center gap-1 sm:mt-1 sm:ml-0 sm:items-start"
-          >
-            <div class="flex flex-row gap-1">
-              <Button
-                type="button"
-                variant="ghost"
-                size="xs"
-                disabled={index === 0}
-                on:click={() => moverItem(index, -1)}
-                ariaLabel={`Mover item ${index + 1} para cima`}
-                title="Mover para cima"
-                class_name="max-sm:h-8! max-sm:w-8! max-sm:p-0!"><ArrowUp size={16} /></Button
-              >
-              <Button
-                type="button"
-                variant="ghost"
-                size="xs"
-                disabled={index === formData.itens.length - 1}
-                on:click={() => moverItem(index, 1)}
-                ariaLabel={`Mover item ${index + 1} para baixo`}
-                title="Mover para baixo"
-                class_name="max-sm:h-8! max-sm:w-8! max-sm:p-0!"><ArrowDown size={16} /></Button
-              >
-            </div>
-            {#if formData.itens.length > 1}
-              <Button
-                type="button"
-                on:click={() => removeItem(index)}
-                variant="ghost"
-                size="sm"
-                class_name="max-sm:h-8! max-sm:w-8! max-sm:p-0! shrink-0 text-red-500 hover:text-red-600 hover:bg-red-50"
-                ariaLabel="Remover item"
-                title="Remover item"
-              >
-                <X size={18} />
-              </Button>
-            {/if}
-          </div>
+          <QuoteItemActions
+            {index}
+            total={formData.itens.length}
+            onMove={moverItem}
+            onRemove={removeItem}
+          />
         </div>
       {/each}
 
