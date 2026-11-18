@@ -1663,6 +1663,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .rtf { display: grid; grid-template-columns: 130px 100px auto; justify-content: start; align-items: center; column-gap: 6px; font-weight: bold; }
     .rtf.car { grid-template-columns: auto 100px auto; }
     .rtf.car .lg > span:first-child { white-space: nowrap; }
+    .rtf.car .lg .ct { color: inherit; font-size: inherit; font-weight: bold; }
     .rtf > .lg:last-child { margin-left: 22px; }
     .lni { display: inline-flex; align-items: center; gap: 4px; }
     .ln { display: inline-block; vertical-align: middle; border-top: 1.3px solid #243AA3; }
