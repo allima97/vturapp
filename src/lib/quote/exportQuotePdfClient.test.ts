@@ -1120,7 +1120,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).not.toContain('Classe: Econômica');
     expect(html).not.toContain('Tarifa: FULL');
     expect(html).not.toContain('Chegada no dia seguinte (+1)');
-    expect(html).toContain('<span class="p1">+1</span> = Chegada no dia seguinte');
+    expect(html).not.toContain('orc-arrival-legend');
   });
 
   it('conta passageiros em todos os voos, inclusive sem trechos, e preserva quantidades legadas', () => {
@@ -1582,7 +1582,7 @@ describe('identidade dos orçamentos e circuitos', () => {
   });
 });
 
-it('explica o badge de chegada só no card de passagens aéreas', () => {
+it('mostra o indicador de chegada no próprio voo, sem legenda no rodapé', () => {
   const html = buildQuotePreviewHtmlSync({
     quote: { id: 'quote-1' },
     items: [
@@ -1642,16 +1642,11 @@ it('explica o badge de chegada só no card de passagens aéreas', () => {
     showItemValues: false
   });
   const air = html.slice(html.indexOf('Passagens aéreas'), html.indexOf('<span class="l">Roma'));
-  const legend = '<p class="orc-arrival-legend">';
-  expect(air).toContain(
-    `${legend}<span><span class="p1">+1</span> = Chegada no dia seguinte</span>`
-  );
-  expect(air).toContain('<span><span class="p1">+2</span> = Chegada dois dias depois</span>');
-  expect(air.indexOf(legend)).toBeGreaterThan(air.lastIndexOf('class="row'));
-  expect(html.slice(html.indexOf('<span class="l">Roma'))).not.toContain('Chegada no dia seguinte');
-  expect(html.slice(html.indexOf('<span class="l">Roma'))).not.toContain(
-    'Chegada dois dias depois'
-  );
+  expect(air).toContain('class="p1">+1');
+  expect(air).toContain('class="p1">+2');
+  expect(html).not.toContain('orc-arrival-legend');
+  expect(html).not.toContain('Chegada no dia seguinte');
+  expect(html).not.toContain('Chegada dois dias depois');
 
   const semAtraso = buildQuotePreviewHtmlSync({
     quote: { id: 'quote-1' },

@@ -986,28 +986,6 @@ function atrasoChegada(data: { data_voo?: unknown; data_inicio?: unknown; data_f
   return offset != null && offset > 0 ? offset : 0;
 }
 
-function textoAtraso(dias: number) {
-  if (dias === 1) return 'Chegada no dia seguinte';
-  if (dias === 2) return 'Chegada dois dias depois';
-  return `Chegada ${dias} dias depois`;
-}
-
-function legendaAtraso(items: QuoteItemForPdf[]) {
-  const atrasos = new Set<number>();
-  for (const item of items) {
-    if (normalizeText(item.item_type) === 'trem') continue;
-    for (const data of getFlightDataList(item)) {
-      const atraso = atrasoChegada(data);
-      if (atraso > 0) atrasos.add(atraso);
-    }
-  }
-  if (!atrasos.size) return '';
-  const linhas = [...atrasos]
-    .sort((a, b) => a - b)
-    .map((dias) => `<span><span class="p1">+${dias}</span> = ${escHtml(textoAtraso(dias))}</span>`)
-    .join('');
-  return `<p class="orc-arrival-legend">${linhas}</p>`;
-}
 
 function renderGroupedItems(
   sections: QuotePdfSection[],
@@ -1051,7 +1029,7 @@ function renderGroupedItems(
                 return renderServiceItem(item, showItemValues, defaultCurrency, true);
               return renderFlightItemHtml(item, showItemValues, defaultCurrency);
             })
-            .join('')}${legendaAtraso(flights)}`,
+            .join('')}`,
           false,
           showItemValues ? moedasDoGrupo(flights, defaultCurrency) : '',
           resumoAereo(flights)
@@ -1686,8 +1664,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .lni { display: inline-flex; align-items: center; gap: 4px; }
     .ln { display: inline-block; vertical-align: middle; border-top: 1.3px solid #9CA3AF; }
     .md .lni { margin: 2px 0; }
-    .p1 { background: #C62828; color: #fff; font-weight: bold; border-radius: 4px; padding: 0 4px; font-size: 7.5pt; margin-left: 2px; }
-    .orc-arrival-legend { margin: 6px 12px 8px; font-size: 7.5pt; color: #4B5563; display: flex; flex-wrap: wrap; gap: 10px; }
+    .p1 { color: #C62828; font-weight: 700; font-size: 6.5pt; vertical-align: super; margin-left: 1px; letter-spacing: 0.2px; }
     .tot { display: flex; justify-content: space-between; align-items: center; font-size: 12pt; font-weight: bold; color: #1B2C80; }
     .orc-title-card { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
     .orc-title-main { min-width: 0; }
@@ -1820,10 +1797,9 @@ export function buildQuotePreviewHtmlSync(params: {
       .shell { max-width: none; padding: 0; }
       .sh { background: #EEF2F7; color: #1B2C80; }
       .sh small { color: #6B7280; }
-      .band .tt, .p1 { color: #fff; }
+      .band .tt { color: #fff; }
       .band .tt { background: #243AA3; }
       .card.tot, .orc-subtotal { background: #EEF2F7; }
-      .p1 { background: #C62828; }
       .orc-header-card, .orc-title-row, .orc-section-card, .orc-city-section, .orc-financial-section { box-shadow: none; }
       .row, .row > div { overflow: visible; }
       .roteiro-card { break-inside: avoid; page-break-inside: avoid; }
