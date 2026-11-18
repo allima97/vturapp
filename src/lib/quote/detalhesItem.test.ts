@@ -43,13 +43,19 @@ describe('cálculos por tipo de item do orçamento', () => {
     item.hora_devolucao = '18:30';
     item.loja_retirada = ' Loja Aeroporto LAX ';
     item.loja_devolucao = ' Loja Downtown ';
+    item.assentos = ' 5 assentos ';
+    item.malas = '2 malas grandes';
     expect(rawDetalhes(item)).toMatchObject({
       locadora: 'Hertz',
       cidade_devolucao: 'Las Vegas',
       hora_retirada: '10:00',
       hora_devolucao: '18:30',
       loja_retirada: 'Loja Aeroporto LAX',
-      loja_devolucao: 'Loja Downtown'
+      loja_devolucao: 'Loja Downtown',
+      assentos: '5 assentos',
+      portas: '',
+      malas: '2 malas grandes',
+      combustivel: ''
     });
     expect(
       lerDetalhes({ item_type: 'aluguel_carro', raw: { detalhes_orcamento: rawDetalhes(item) } })
