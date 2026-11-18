@@ -655,11 +655,12 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('class="rt rota">Las Vegas · Loja Downtown (Figueroa St)</span>');
     expect(html).toContain('<span class="ct">Retirada: 17/01/2027 às 14:00</span>');
     expect(html).toContain('<span class="ct">Devolução: 20/01/2027 às 20:00</span>');
+    expect(html).toContain('.mu.sm, .lg .ct { font-size: 8pt; font-weight: normal; }');
     expect(html).toContain(
-      '.lg .ct { color: #6B7280; font-size: 7.5pt; font-weight: normal; white-space: nowrap; overflow-wrap: normal; }'
+      '.lg .ct { color: #6B7280; white-space: nowrap; overflow-wrap: normal; }'
     );
     expect(html).not.toContain('.rtf.car .lg .ct { color: inherit;');
-    expect(html).toContain('.rtf.car .lg .ct { font-size: 6.5pt; }');
+    expect(html).not.toContain('.rtf.car .lg .ct { font-size: 6.5pt; }');
     expect(html).toContain('<div class="mu sm">Localiza</div>');
     expect(html).toContain('>Aluguel de carro</span>');
     expect(html).not.toContain('<div class="mu sm">Aluguel de carro</div>');
