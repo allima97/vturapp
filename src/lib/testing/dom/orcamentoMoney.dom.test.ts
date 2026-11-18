@@ -1013,7 +1013,7 @@ it('exige detalhes do hotel antes de salvar e envia os campos específicos', asy
     type('#orcamento-novo-item-0-criancas', '0');
     type('#orcamento-novo-item-0-apartamento', 'Duplo');
     type('#orcamento-novo-item-0-quantidade-apartamentos', '1');
-    type('#orcamento-novo-item-0-regime', 'Café da manhã');
+    change('#orcamento-novo-item-0-regime', 'Café da manhã');
     target
       .querySelector('form')!
       .dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));

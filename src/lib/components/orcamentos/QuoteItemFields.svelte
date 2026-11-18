@@ -40,6 +40,14 @@
     'Unidas'
   ].map((nome) => ({ value: nome, label: nome }));
 
+  const regimes = ['Só Hospedagem', 'Café da manhã', 'Meia Pensão', 'Pensão Completa', 'ALL Inclusive'].map(
+    (nome) => ({ value: nome, label: nome })
+  );
+  $: opcoesRegime =
+    item.regime && !regimes.some((opcao) => opcao.value === item.regime)
+      ? [...regimes, { value: item.regime, label: item.regime }]
+      : regimes;
+
   function atualizarItem() {
     recalcularTotaisItem(item);
     onChange();
@@ -344,11 +352,12 @@
       />
     </div>
     <div class="md:col-span-3">
-      <FieldInput
+      <FieldSelect
         id={`${prefix}-regime`}
         label="Regime"
         bind:value={item.regime}
-        placeholder="Ex.: Café da manhã"
+        options={opcoesRegime}
+        placeholder="Selecione"
         class_name="w-full"
       />
     </div>
