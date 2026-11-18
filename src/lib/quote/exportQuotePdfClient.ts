@@ -1682,12 +1682,14 @@ export function buildQuotePreviewHtmlSync(params: {
     .lb { color: #6B7280; font-size: 7.5pt; font-weight: bold; }
     .rt { display: flex; align-items: center; gap: 6px; font-weight: bold; }
     .lg { display: inline-flex; flex-direction: column; }
-    .lg .ct { color: #6B7280; font-size: 7.5pt; font-weight: normal; white-space: nowrap; }
+    .lg .ct { color: #6B7280; font-size: 7.5pt; font-weight: normal; white-space: nowrap; overflow-wrap: normal; }
     .md { display: inline-flex; flex-direction: column; align-items: center; color: #6B7280; font-size: 6pt; font-weight: normal; justify-self: center; }
     .rtf { display: grid; grid-template-columns: 130px 100px auto; justify-content: start; align-items: center; column-gap: 6px; font-weight: bold; }
     .rtf.car { grid-template-columns: auto 100px auto; align-items: start; }
-    .rtf.car .lg > span:first-child { white-space: nowrap; }
-    .rtf.car .lg .ct { color: inherit; font-size: inherit; font-weight: bold; }
+    .rtf.car .lg > span:first-child,
+    .rtf.rota .lg > span:first-child,
+    .rt.rota,
+    .rt.rota .mu { white-space: nowrap; overflow-wrap: normal; }
     .rtf > .lg:last-child { margin-left: 22px; }
     .rtf.rota { grid-template-columns: auto 100px auto; align-items: center; }
     .rtf.car.rota { align-items: start; }
