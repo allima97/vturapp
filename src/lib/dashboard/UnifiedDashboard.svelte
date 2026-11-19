@@ -1762,32 +1762,30 @@
                     : orc.status === 'enviado'
                       ? 'bg-blue-100 text-blue-700'
                       : 'bg-amber-100 text-amber-700'}
-                <Button
+                <button
                   type="button"
-                  variant="unstyled"
-                  class_name="w-full rounded-xl border border-slate-100 p-3 text-left hover:bg-slate-50 transition-colors"
+                  class="flex w-full items-start justify-between gap-3 rounded-xl border border-slate-100 px-4 py-3 text-left transition-colors hover:bg-slate-50"
                   on:click={() => handleOrcamentoClick(orc)}
                 >
-                  <div class="flex items-start justify-between gap-2">
-                    <div class="min-w-0">
-                      <div class="flex items-center gap-2">
-                        <p class="text-sm font-semibold text-slate-900">
-                          {orc.cliente?.nome || 'Cliente'}
-                        </p>
-                        <span class="rounded-full px-2 py-0.5 text-xs font-semibold {statusClass}"
-                          >{statusLabel}</span
-                        >
-                      </div>
-                      <p class="mt-0.5 text-xs text-slate-500">
-                        {orc.quote_item?.[0]?.city_name || orc.quote_item?.[0]?.title || '-'}
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2">
+                      <p class="truncate text-sm font-semibold text-slate-900">
+                        {orc.cliente?.nome || 'Cliente'}
                       </p>
-                      <p class="text-xs text-slate-400">{formatDate(orc.created_at)}</p>
+                      <span
+                        class="shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold {statusClass}"
+                        >{statusLabel}</span
+                      >
                     </div>
-                    <span class="shrink-0 text-sm font-bold text-slate-900"
-                      >{formatCurrency(orc.total || 0)}</span
-                    >
+                    <p class="mt-0.5 truncate text-xs text-slate-500">
+                      {orc.quote_item?.[0]?.city_name || orc.quote_item?.[0]?.title || '-'}
+                    </p>
+                    <p class="text-xs text-slate-400">{formatDate(orc.created_at)}</p>
                   </div>
-                </Button>
+                  <span class="ml-auto shrink-0 text-sm font-bold text-slate-900"
+                    >{formatCurrency(orc.total || 0)}</span
+                  >
+                </button>
               {/each}
             </div>
           {/if}
