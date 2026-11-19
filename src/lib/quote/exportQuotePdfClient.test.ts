@@ -44,6 +44,12 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain(
       '.band { margin: 0 0 8px; break-inside: avoid; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1.3fr; border-radius: 12px; overflow: hidden; border: 1.5px solid #C5CED9;'
     );
+    expect(html).toContain(
+      '.band::after { content: ""; position: absolute; inset: -1.5px; border: 1.5px solid #C5CED9; border-radius: 12px; pointer-events: none; }'
+    );
+    expect(html).toContain(
+      '.band > div:first-child { border-top-left-radius: 10.5px; border-bottom-left-radius: 10.5px; }'
+    );
     expect(html).toContain('.card { border: 1.5px solid #C5CED9;');
     expect(html).toContain('@page { size: A4; margin: 13mm; }');
     expect(html).toContain('.pg { padding: 0; }');

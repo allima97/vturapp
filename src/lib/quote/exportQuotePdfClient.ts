@@ -1788,8 +1788,10 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-footer-card.inf { padding: 11px 14px; margin: 0; border: 1.5px solid #C5CED9; border-radius: 12px; background: #fff; }
     .orc-footer-list { display: block; margin: 4px 0 0; padding: 0; list-style: none; font-size: 7.9pt; color: inherit; }
     .orc-footer-list li { display: flex; align-items: center; gap: 8px; padding: 2px 0; margin-top: 1px; background: transparent; border: 0; line-height: 1.35; overflow-wrap: anywhere; }
-    .band { margin: 0 0 8px; break-inside: avoid; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1.3fr; border-radius: 12px; overflow: hidden; border: 1.5px solid #C5CED9; }
-    .band > div { padding: 10px 12px; border-right: 1.5px solid #C5CED9; background: #fff; }
+    .band { margin: 0 0 8px; break-inside: avoid; display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr 1.3fr; border-radius: 12px; overflow: hidden; border: 1.5px solid #C5CED9; position: relative; }
+    .band::after { content: ""; position: absolute; inset: -1.5px; border: 1.5px solid #C5CED9; border-radius: 12px; pointer-events: none; }
+    .band > div { padding: 10px 12px; border-right: 1.5px solid #C5CED9; background: #fff; background-clip: padding-box; }
+    .band > div:first-child { border-top-left-radius: 10.5px; border-bottom-left-radius: 10.5px; }
     .band b { display: block; font-size: 7pt; color: #6B7280; letter-spacing: 1px; margin-bottom: 3px; }
     .band span { font-weight: bold; color: #1B2C80; font-size: 9.5pt; }
     .band .tt { background: #243AA3; border: 0; border-top-right-radius: 10.5px; border-bottom-right-radius: 10.5px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
