@@ -1,5 +1,6 @@
 <script lang="ts">
   import { VTUR_LOGO_URL } from '$lib/brand';
+  import { formatISODateBR, parseISODateParts } from '$lib/date';
   import { explicitarIdentidadeCidade, VERSAO_ROTEIRO_IDENTIDADE } from '$lib/roteiroProtocolo';
   import { revisaoRoteiroAtiva, roteiroGeograficoAtivo } from '$lib/config/destinosGeograficos';
   import { salvarRoteiroComConfirmacao } from '$lib/features/roteiros/salvarComConfirmacao';
@@ -986,22 +987,19 @@
   }
 
   function formatPreviewDate(value: string | null | undefined) {
-    const normalized = String(value || '').trim();
-    if (!normalized) return '';
+    const formatted = formatISODateBR(value);
+    return formatted === '-' ? '' : formatted;
+  }
 
-    const isoMatch = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (isoMatch) {
-      const [, year, month, day] = isoMatch;
-      return `${day}-${month}-${year}`;
-    }
-
-    const isoDateTimeMatch = normalized.match(/^(\d{4})-(\d{2})-(\d{2})T.*$/);
-    if (isoDateTimeMatch) {
-      const [, year, month, day] = isoDateTimeMatch;
-      return `${day}-${month}-${year}`;
-    }
-
-    return normalized;
+  function faixaPeriodo(start: string, end: string) {
+    const inicio = parseISODateParts(start);
+    const fim = parseISODateParts(end);
+    if (!inicio) return formatPreviewDate(end);
+    if (!fim || inicio.iso === fim.iso) return formatISODateBR(inicio.iso);
+    const dia = String(inicio.day).padStart(2, '0');
+    const mes = String(inicio.month).padStart(2, '0');
+    if (inicio.year === fim.year) return `${dia}/${mes} a ${formatISODateBR(fim.iso)}`;
+    return `${formatISODateBR(inicio.iso)} a ${formatISODateBR(fim.iso)}`;
   }
 
   function buildPreviewSection(title: string, content: string) {
@@ -1203,10 +1201,8 @@
           .reverse()
           .find((item) => item.data_fim || item.data_voo || item.data_inicio)?.data_fim ||
         '';
-      const start = formatPreviewDate(firstDia);
-      const end = formatPreviewDate(lastDia);
-      if (start && end && start !== end) return `${start} a ${end}`;
-      return start || end || '';
+      if (firstDia && lastDia) return faixaPeriodo(firstDia, lastDia);
+      return formatPreviewDate(firstDia || lastDia);
     })();
 
     const headerCardHtml = `
@@ -1294,17 +1290,14 @@
             .card.compact h3 { margin-bottom: 6px; }
             .card h3 { margin: 0 0 8px; font-size: 15px; }
             .card p { margin: 0; line-height: 1.55; white-space: normal; }
-            .roteiro-print-section { margin-top: 24px; }
-            .roteiro-print-table { width: 100%; table-layout: fixed; border-spacing: 0; }
-            .roteiro-print-table td { padding: 0; }
-            .roteiro-print-section h2 { margin: 0 0 12px; padding: 14px 18px; border: 1px solid #9aaac2; border-radius: 18px; background: white; color: #243aa3; font: bold 22px Georgia, "Times New Roman", serif; text-align: center; }
+            .roteiro-print-section { margin: 0 0 8px; }
+            .roteiro-print-section h2 { margin: 0; padding: 8px 12px; border: 1.5px solid #C5CED9; border-bottom: 0; border-radius: 10.5px 10.5px 0 0; background: #D0DAEA; color: #1B2C80; font: bold 11px Arial, Helvetica, sans-serif; text-align: left; }
             .roteiro-print-title-icon { width: 1em; height: 1em; margin-right: 0.35em; vertical-align: -0.15em; }
             .roteiro-print-subtitle { display: block; margin-top: 6px; font-size: 13px; font-weight: normal; }
             ${roteiroCardStyles}
-            .roteiro-optional-table { width: 100%; table-layout: fixed; border-spacing: 0; }
-            .roteiro-optional-item + .roteiro-optional-item { margin-top: 14px; }
+            .roteiro-optional-item + .roteiro-optional-item { margin-top: 8px; }
             ${roteiroFlightStyles}
-            .preview-table-wrap { overflow: hidden; border: 1px solid #e2e8f0; border-radius: 14px; }
+            .preview-table-wrap { overflow: visible; border: 0; border-radius: 0; }
             .preview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
             .preview-table thead th { text-align: left; padding: 8px; border-bottom: 1px solid #cbd5e1; background: #eef2ff; color: #1e3a8a; }
             .preview-table tbody td { padding: 8px; border-bottom: 1px solid #e2e8f0; color: #475569; vertical-align: top; }
@@ -1317,33 +1310,26 @@
             ul { margin: 0; padding-left: 18px; }
             li { margin: 0 0 6px; }
             @media print {
-              @page { margin: 12mm; }
+              @page { size: A4; margin: 13mm; }
               body { background: white; }
               .toolbar { display: none; }
               .shell { max-width: none; padding: 0; }
-              .preview-header-card, .preview-title-card, .preview-footer-card, .section { box-shadow: none; border-radius: 0; }
-              .preview-title-card, .section { padding: 12px 14px 18px; }
-              .preview-table-wrap { border-radius: 0; }
-              .section { break-inside: auto; page-break-inside: auto; }
-              .section h2 { break-after: avoid; page-break-after: avoid; }
+              .preview-header-card, .preview-title-card, .preview-footer-card { box-shadow: none; }
+              .section, .roteiro-print-section { break-inside: auto; page-break-inside: auto; break-before: auto; page-break-before: auto; padding: 0; }
+              .section h2, .roteiro-print-section h2 { break-after: avoid; page-break-after: avoid; }
               .preview-header-card,
               .preview-title-card,
               .preview-footer-card,
-              .card,
-              .preview-table-wrap,
-              .preview-complement-img,
-              .preview-header-table,
-              .preview-header-right-inner {
+              .preview-complement-img {
                 break-inside: avoid;
                 page-break-inside: avoid;
               }
-              .roteiro-print-table thead { display: table-header-group; }
-              .roteiro-optional-table thead { display: table-header-group; }
-              .roteiro-card--long { break-inside: auto; page-break-inside: auto; }
-              .roteiro-flight.roteiro-card--long { overflow: visible; }
-              .roteiro-optional-item { break-inside: avoid; page-break-inside: avoid; }
-              .roteiro-optional-item--long { break-inside: auto; page-break-inside: auto; }
-              .roteiro-flight-header { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+              .roteiro-card:not(.roteiro-card--long),
+              .roteiro-optional-item:not(.roteiro-optional-item--long) {
+                break-inside: avoid;
+                page-break-inside: avoid;
+              }
+              .roteiro-card--long, .roteiro-optional-item--long { break-inside: auto; page-break-inside: auto; overflow: visible; }
             }
             ${roteiroPdfThemeCss}
           </style>

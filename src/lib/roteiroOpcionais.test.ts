@@ -138,9 +138,9 @@ describe('opcionais do roteiro', () => {
   it('gera PDF agrupado por cidade sem campos de data e escapa conteúdo', () => {
     const escape = (s: string) => s.replace(/</g, '&lt;').replace(/>/g, '&gt;');
     const html = buildOpcionaisHtml(exemplo, escape);
-    expect(html.match(/<article class="card roteiro-card">/g)).toHaveLength(2);
+    expect(html.match(/<article class="roteiro-card">/g)).toHaveLength(2);
     const [barcelona, paris] = html.split('</article>');
-    expect(barcelona).toMatch(/<thead>[\s\S]*Barcelona[\s\S]*<\/thead>/);
+    expect(barcelona.indexOf('Barcelona')).toBeLessThan(barcelona.indexOf('Bairro Gótico'));
     expect(barcelona).toContain('Bairro Gótico');
     expect(barcelona).toContain('Flamenco');
     expect(paris).toContain('Rio Sena');
