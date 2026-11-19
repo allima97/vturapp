@@ -393,6 +393,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(pdf).toContain('Madrid');
     expect(pdf).toContain('Renfe · OL 2020');
     expect(pdf).toContain('Barcelona <span class="mu">14:00</span><span class="lni"');
+    expect(pdf).toContain('<span class="ln" style="width:34px"></span>');
     expect(pdf).toContain('Lisboa');
     for (const html of [screen, pdf]) {
       expect(html).not.toContain('Província de Barcelona');
@@ -612,6 +613,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('class="rt rota">Check-in: 11/08/2027 às 15:00</span>');
     expect(html).toContain('class="rt rota">Check-out: 13/08/2027 às 11:00</span>');
     expect(html).toContain('class="rtf rota"');
+    expect(html).toContain('<span class="ln" style="width:50px"></span>');
     expect(html).toContain(
       '.rtf.car .lg > span:first-child,\n    .rtf.rota .lg > span:first-child,\n    .rt.rota,\n    .rt.rota .mu { white-space: nowrap; overflow-wrap: normal; }'
     );
@@ -1287,6 +1289,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('Passagens aéreas');
     expect(html.indexOf('São Paulo / Roma / São Paulo')).toBeLessThan(html.indexOf('LA 8120'));
     expect(html).toContain('<span class="md"><span>LA 8120</span><span class="lni"');
+    expect(html).toContain('<span class="ln" style="width:50px"></span>');
     expect(html).toContain('<span class="md"><span>LA 8121</span><span class="lni"');
     expect(html).toContain('<span class="md"><span>IB 1554</span><span class="lni"');
     expect(html).toContain('</span><span>LATAM</span></span>');
