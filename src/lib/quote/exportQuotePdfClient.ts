@@ -127,6 +127,10 @@ function traco(larguraLinha: number) {
   return `<span class="lni"><span class="ln" style="width:${larguraLinha * 2}px"></span></span>`;
 }
 
+function tracoConector(larguraLinha: number) {
+  return traco(Math.round(larguraLinha * 0.7));
+}
+
 function textVal(value?: string | null): string {
   return String(value ?? '').trim();
 }
@@ -554,7 +558,7 @@ function estadiaHotelHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerD
   const checkin = trecho('Check-in', dataValidaBR(item.start_date), textVal(details.hora_checkin));
   const checkout = trecho('Check-out', dataValidaBR(item.end_date), textVal(details.hora_checkout));
   if (checkin && checkout)
-    return `<div class="rtf rota"><span class="lg"><span class="rt rota">${checkin}</span></span><span class="md">${traco(36)}</span><span class="lg"><span class="rt rota">${checkout}</span></span></div>`;
+    return `<div class="rtf rota"><span class="lg"><span class="rt rota">${checkin}</span></span><span class="md">${tracoConector(36)}</span><span class="lg"><span class="rt rota">${checkout}</span></span></div>`;
   const partes = [checkin, checkout].filter(Boolean);
   return partes.length ? `<div class="rt rota">${partes.join(' / ')}</div>` : '';
 }
@@ -569,7 +573,7 @@ function rotaCarroHtml(item: QuoteItemForPdf, details: ReturnType<typeof lerDeta
   };
   const rotuloData = (rotulo: string, data: string, hora: string) =>
     data ? `${rotulo}: ${data}${hora ? ` às ${hora}` : ''}` : '';
-  return `<div class="rtf car rota">${grupo(retirada, textVal(details.loja_retirada), rotuloData('Retirada', dataValidaBR(item.start_date), textVal(details.hora_retirada)))}<span class="md">${traco(36)}</span>${grupo(devolucao, textVal(details.loja_devolucao), rotuloData('Devolução', dataValidaBR(item.end_date), textVal(details.hora_devolucao)))}</div>`;
+  return `<div class="rtf car rota">${grupo(retirada, textVal(details.loja_retirada), rotuloData('Retirada', dataValidaBR(item.start_date), textVal(details.hora_retirada)))}<span class="md">${tracoConector(36)}</span>${grupo(devolucao, textVal(details.loja_devolucao), rotuloData('Devolução', dataValidaBR(item.end_date), textVal(details.hora_devolucao)))}</div>`;
 }
 
 function rotuloServico(item: QuoteItemForPdf, prefix: string) {
@@ -1400,8 +1404,8 @@ function renderFlightItemHtml(
       const rota =
         from || to || depart || arrive
           ? isTrain
-            ? `<div class="rt rota">${escHtml(from)} ${saida}${traco(24)}${escHtml(to)} ${chegada}</div>`
-            : `<div class="rtf"${index ? ' style="margin-top:16px"' : ''}><span class="lg"><span><b>${escHtml(from)}</b>${depart ? ` <span class="mu">· ${escHtml(depart)}</span>` : ''}</span>${origemInfo ? `<span class="ct">${escHtml(origemInfo)}</span>` : ''}</span><span class="md">${textVal(flight.descricao) ? `<span>${escHtml(textVal(flight.descricao))}</span>` : ''}${traco(36)}${textVal(flight.cia_aerea) ? `<span>${escHtml(textVal(flight.cia_aerea))}</span>` : ''}</span><span class="lg"><span><b>${escHtml(to)}</b>${arrive ? ` <span class="mu">· ${escHtml(arrive)}</span>` : ''}${plus ? ` ${plus}` : ''}</span>${destinoInfo ? `<span class="ct">${escHtml(destinoInfo)}</span>` : ''}</span></div>`
+            ? `<div class="rt rota">${escHtml(from)} ${saida}${tracoConector(24)}${escHtml(to)} ${chegada}</div>`
+            : `<div class="rtf"${index ? ' style="margin-top:16px"' : ''}><span class="lg"><span><b>${escHtml(from)}</b>${depart ? ` <span class="mu">· ${escHtml(depart)}</span>` : ''}</span>${origemInfo ? `<span class="ct">${escHtml(origemInfo)}</span>` : ''}</span><span class="md">${textVal(flight.descricao) ? `<span>${escHtml(textVal(flight.descricao))}</span>` : ''}${tracoConector(36)}${textVal(flight.cia_aerea) ? `<span>${escHtml(textVal(flight.cia_aerea))}</span>` : ''}</span><span class="lg"><span><b>${escHtml(to)}</b>${arrive ? ` <span class="mu">· ${escHtml(arrive)}</span>` : ''}${plus ? ` ${plus}` : ''}</span>${destinoInfo ? `<span class="ct">${escHtml(destinoInfo)}</span>` : ''}</span></div>`
           : '';
       const meta = (() => {
         if (isTrain)
@@ -1702,7 +1706,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .rtf.rota > .lg:last-child { margin-left: 22px; }
     .rt.rota { gap: 22px; font-size: 8.4pt; font-weight: bold; }
     .rt.rota { max-width: 100%; min-width: 0; overflow: hidden; }
-    .rt.rota .lni, .rtf .md { min-width: 0; flex: 0 1 48px; }
+    .rt.rota .lni, .rtf .md { min-width: 0; flex: 0 1 34px; justify-content: center; }
     .md .ln { max-width: 100%; }
     .lb > .lni { margin-inline: 22px; }
     .lni { display: inline-flex; align-items: center; gap: 4px; min-height: 12px; }
