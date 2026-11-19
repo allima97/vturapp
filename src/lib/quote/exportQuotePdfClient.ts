@@ -1685,21 +1685,25 @@ export function buildQuotePreviewHtmlSync(params: {
     .chk svg { flex: 0 0 auto; }
     .lb { color: #6B7280; font-size: 7.5pt; font-weight: bold; }
     .rt { display: flex; align-items: center; gap: 6px; font-weight: bold; }
-    .lg { display: inline-flex; flex-direction: column; }
+    .lg { display: inline-flex; flex-direction: column; min-width: 0; max-width: 100%; overflow: hidden; }
     .lg .ct { color: #6B7280; white-space: nowrap; overflow-wrap: normal; }
     .md { display: inline-flex; flex-direction: column; align-items: center; color: #6B7280; font-size: 6pt; font-weight: normal; justify-self: center; }
-    .rtf { display: grid; grid-template-columns: 130px 100px auto; justify-content: start; align-items: center; column-gap: 6px; font-weight: bold; }
-    .rtf.car { grid-template-columns: auto 100px auto; align-items: start; }
+    .rtf { display: grid; grid-template-columns: minmax(0, 130px) minmax(12px, 64px) minmax(0, 1fr); justify-content: start; align-items: center; column-gap: 6px; font-weight: bold; width: 100%; max-width: 100%; min-width: 0; }
+    .rtf.car { grid-template-columns: minmax(0, max-content) minmax(8px, 1fr) minmax(0, max-content); align-items: start; }
+    .rtf.car .lg, .rtf.rota .lg { max-width: none; }
     .rtf.car .lg > span:first-child,
     .rtf.rota .lg > span:first-child,
     .rt.rota,
     .rt.rota .mu { white-space: nowrap; overflow-wrap: normal; }
     .rtf > .lg:last-child { margin-left: 22px; }
-    .rtf.rota { grid-template-columns: auto 100px auto; align-items: center; }
+    .rtf.rota { grid-template-columns: minmax(0, max-content) minmax(8px, 1fr) minmax(0, max-content); align-items: center; width: 100%; max-width: 100%; min-width: 0; }
     .rtf.car.rota { align-items: start; }
     .rtf.rota > .lg:first-child { margin-right: 22px; }
     .rtf.rota > .lg:last-child { margin-left: 22px; }
     .rt.rota { gap: 22px; font-size: 8.4pt; font-weight: bold; }
+    .rt.rota { max-width: 100%; min-width: 0; overflow: hidden; }
+    .rt.rota .lni, .rtf .md { min-width: 0; flex: 0 1 48px; }
+    .md .ln { max-width: 100%; }
     .lb > .lni { margin-inline: 22px; }
     .lni { display: inline-flex; align-items: center; gap: 4px; min-height: 12px; }
     .ln { display: inline-block; vertical-align: middle; border-top: 1.3px solid #243AA3; }
@@ -1811,13 +1815,14 @@ export function buildQuotePreviewHtmlSync(params: {
     .sh.sh--sem-valor .sh-qtd { text-align: right; }
     .sh > span:last-child:not(.sh-qtd) { color: #1B2C80; font-weight: bold; text-align: right; }
     .sh small { color: #6B7280; font-weight: normal; }
-    .row { display: grid; grid-template-columns: 22px 1fr 90px 90px; gap: 8px; padding: 6px 12px; border-top: 1px solid #EEF2F7; }
-    .row.orc-row--sem-valor { grid-template-columns: 22px 1fr 90px; }
+    .row { display: grid; grid-template-columns: 22px minmax(0, 1fr) 90px 90px; gap: 8px; padding: 6px 12px; border-top: 1px solid #EEF2F7; }
+    .row.orc-row--sem-valor { grid-template-columns: 22px minmax(0, 1fr) 90px; }
     .row.orc-row--sem-valor .q { text-align: right; }
     .row > div { min-width: 0; white-space: normal; overflow-wrap: anywhere; }
+    .row > div:nth-child(2) { min-width: 0; max-width: 100%; margin-right: 12mm; overflow: hidden; }
     .row strong, .orc-service-label, .orc-service-label span, .orc-flight-row-details, .orc-flight-segment { white-space: normal; overflow-wrap: anywhere; }
     .sh + .row { border-top: 0; }
-    .q { color: #6B7280; font-size: 8.3pt; }
+    .q { color: #6B7280; font-size: 8.3pt; align-self: stretch; }
     .v, .orc-value { text-align: right; font-weight: bold; }
     .orc-subtotal { display: flex; justify-content: space-between; gap: 12px; padding: 8px 12px; background: #EEF2F7; font-weight: bold; color: #1B2C80; }
     .orc-footer-list .orc-section-icon { width: 13px; height: 13px; }
@@ -1858,6 +1863,7 @@ export function buildQuotePreviewHtmlSync(params: {
       .card.tot, .orc-subtotal { background: #EEF2F7; }
       .orc-header-card, .orc-title-row, .orc-section-card, .orc-city-section, .orc-financial-section { box-shadow: none; }
       .row, .row > div { overflow: visible; }
+      .row > div:nth-child(2) { overflow: hidden; margin-right: 12mm; }
       .roteiro-card { break-inside: avoid; page-break-inside: avoid; }
       .orc-city-item { break-inside: auto; page-break-inside: auto; }
       .roteiro-card--long, .orc-city-item--long { break-inside: auto; page-break-inside: auto; }
