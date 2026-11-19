@@ -473,25 +473,27 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
   expect(flight.querySelector('.ln')?.getAttribute('style')).toContain('width:50px');
   expect(flight.textContent).toContain('LA 123');
   for (const section of preview.querySelectorAll('.roteiro-print-section')) {
-    expect(section.querySelector('h2')).toBeTruthy();
-    expect(section.querySelector('table')).toBeNull();
+    expect(section.querySelector('thead h2')).toBeTruthy();
+    expect(section.querySelectorAll('tbody tr').length).toBeGreaterThan(0);
   }
   for (const section of [
     '.preview-itinerary-section',
     '.preview-hotels-section',
-    '.preview-optionals-section'
+    '.preview-optionals-section',
+    '.preview-airfare-section'
   ]) {
-    expect(preview.querySelector(`${section} h2 svg`)?.getAttribute('aria-hidden')).toBe('true');
+    expect(preview.querySelector(`${section} h2 svg`)).toBeNull();
   }
-  const flightTitleIcon = preview.querySelector(
-    '.preview-airfare-section h2 svg.roteiro-print-title-icon[aria-hidden="true"] path'
-  );
-  expect(flightTitleIcon?.getAttribute('d')).toContain('M17.8 19.2');
-  expect(flightTitleIcon?.getAttribute('transform')).toBeNull();
   expect(html).toContain('background: #D0DAEA');
   expect(html).toContain('@page { size: A4; margin: 13mm; }');
   expect(html).toContain('border: 1.5px solid #C5CED9');
-  expect(preview.querySelector('.preview-hotels-section h2 .orc-service-icon--hotel')).toBeTruthy();
+  expect(html).toContain('display: table-header-group');
+  expect(
+    preview.querySelector('.preview-hotels-section tbody .orc-service-icon--hotel')
+  ).toBeTruthy();
+  expect(
+    preview.querySelector('.preview-airfare-section tbody .orc-service-icon--flight')
+  ).toBeTruthy();
   expect(preview.querySelector('.rot-band b')?.textContent).toBe('PERÍODO');
   expect(preview.querySelector('.preview-hotels-section .lb')?.textContent).toBe(
     'HOTEL · 2 NOITES'

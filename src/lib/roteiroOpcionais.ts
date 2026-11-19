@@ -142,7 +142,7 @@ export function buildOpcionaisHtml(
     const conteudo = grupo.passeios.map((p) => `${p.nome}\n${p.descricao}`).join('\n');
     const longo = grupo.passeios.length > 6 || requiresPrintContinuation(conteudo);
     return `
-      <article class="roteiro-card${longo ? ' roteiro-card--long' : ''}">
+      <tr class="${longo ? 'roteiro-card--long' : ''}"><td><article class="roteiro-card${longo ? ' roteiro-card--long' : ''}">
         <div class="roteiro-card-city">${serviceIconSvg('passeio')}${escape(formatarCidade(grupo.cidade))}</div>
         ${grupo.passeios
           .map(
@@ -154,6 +154,6 @@ export function buildOpcionaisHtml(
           </div>`
           )
           .join('')}
-      </article>`;
+      </article></td></tr>`;
   }).join('');
 }
