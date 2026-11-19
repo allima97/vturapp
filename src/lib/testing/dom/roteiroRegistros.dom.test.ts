@@ -501,7 +501,16 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
   const flightTitleIcon = preview.querySelector(
     '.preview-airfare-section h2 svg.roteiro-print-title-icon[aria-hidden="true"] path'
   );
-  expect(flightTitleIcon?.outerHTML).toBe(flightPlane.outerHTML);
+  expect(flightTitleIcon?.getAttribute('d')).toContain('M17.8 19.2');
+  expect(flightTitleIcon?.getAttribute('transform')).toBeNull();
+  expect(html).toContain('background: #D0DAEA');
+  expect(html).toContain('@page { size: A4; margin: 13mm; }');
+  expect(html).toContain('border: 1.5px solid #C5CED9');
+  expect(preview.querySelector('.preview-hotels-section h2 .orc-service-icon--hotel')).toBeTruthy();
+  expect(preview.querySelector('.rot-band b')?.textContent).toBe('PERÍODO');
+  expect(preview.querySelector('.preview-hotels-section .rot-kicker')?.textContent).toBe(
+    'Hotel · 2 noites'
+  );
   expect(html).toContain('<h3>Dia 1 - Roma - Barcelona</h3>');
   expect(html).not.toContain(barcelona);
   button('Salvar roteiro').click();

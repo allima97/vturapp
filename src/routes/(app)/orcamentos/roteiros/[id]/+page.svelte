@@ -80,6 +80,7 @@
   } from './_components/preview-cards';
   import { nomeCidadeNoPdf } from './_components/preview-cidade';
   import { roteiroCardStyles } from '$lib/utils/printLayout';
+  import { roteiroCheckChips, roteiroPdfThemeCss } from '$lib/quote/roteiroPdfTheme';
   import { roteiroFlightStyles } from '$lib/quote/printFlights';
   import AbaItinerario from './_components/AbaItinerario.svelte';
   import CidadeRoteiro from './_components/CidadeRoteiro.svelte';
@@ -1014,10 +1015,13 @@
     return `<section class="${className}"><h2>${escapePreviewHtml(title)}</h2>${content}</section>`;
   }
 
-  function buildPreviewListSection(title: string, items: string[]) {
+  function buildPreviewListSection(title: string, items: string[], chips = false) {
     const filtered = items.map((item) => String(item || '').trim()).filter(Boolean);
     if (filtered.length === 0) return '';
-    return `<section class="section"><h2>${escapePreviewHtml(title)}</h2>${buildPreviewList(filtered)}</section>`;
+    const body = chips
+      ? roteiroCheckChips(filtered, escapePreviewHtml)
+      : buildPreviewList(filtered);
+    return `<section class="section"><h2>${escapePreviewHtml(title)}</h2>${body}</section>`;
   }
 
   function buildPreviewTable(headers: string[], rows: string[][], className = '') {
@@ -1241,10 +1245,12 @@
     const titleCardHtml = `
       <section class="preview-title-card">
         <div class="preview-title-kicker">Roteiro Personalizado</div>
-        <div class="preview-title-name">${escapePreviewHtml(nome || 'Roteiro')}</div>
-        ${citiesLine ? `<div class="preview-title-meta"><b>Cidades:</b> ${escapePreviewHtml(citiesLine)}</div>` : ''}
-        ${periodText ? `<div class="preview-title-meta"><b>Período:</b> ${escapePreviewHtml(periodText)}</div>` : ''}
+        <h1 class="preview-title-name">${escapePreviewHtml(nome || 'Roteiro')}</h1>
+        ${citiesLine ? `<div class="mu preview-title-meta">Cidades: <b style="color:#1F2937">${escapePreviewHtml(citiesLine)}</b></div>` : ''}
       </section>`;
+    const summaryBandHtml = periodText
+      ? `<div class="rot-band"><div><b>PERÍODO</b><span>${escapePreviewHtml(periodText)}</span></div>${duracao ? `<div><b>DURAÇÃO</b><span>${escapePreviewHtml(duracao)} dias</span></div>` : ''}</div>`
+      : '';
 
     const footerHtml =
       footerLines.length > 0
@@ -1339,6 +1345,7 @@
               .roteiro-optional-item--long { break-inside: auto; page-break-inside: auto; }
               .roteiro-flight-header { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
             }
+            ${roteiroPdfThemeCss}
           </style>
         </head>
         <body>
@@ -1346,9 +1353,10 @@
             <div class="toolbar"><a class="print-action" href="#" onclick="event.preventDefault(); window.print();">Imprimir / Salvar em PDF</a></div>
             ${incluirCabecalhoRodapePdf ? headerCardHtml : ''}
             ${titleCardHtml}
+            ${summaryBandHtml}
             ${buildRoteiroCardSection('Itinerário Detalhado', diasHtml, 'preview-itinerary-section', '', 'itinerary')}
             ${buildRoteiroCardSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section', '', 'hotels')}
-            ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
+            ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section', '', 'passeios')}
             ${buildRoteiroCardSection(
               'Passeios Opcionais',
               buildOpcionaisHtml(
@@ -1363,7 +1371,7 @@
             ${buildRoteiroCardSection('Passagem Aérea', transportesHtml, 'preview-airfare-section', '', 'flights')}
             ${buildPreviewRawSection('Investimento', investimentoHtml, 'preview-investimento-section')}
             ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
-            ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'))}
+            ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
             ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'))}
             ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
             ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}
