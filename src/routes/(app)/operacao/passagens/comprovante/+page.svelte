@@ -302,7 +302,7 @@
     box-sizing: border-box;
     width: 100%;
     padding: 24px;
-    color: #17233c;
+    color: #1F2937;
     background: white;
     font-family: Arial, sans-serif;
     font-size: 13px;
@@ -322,16 +322,16 @@
     justify-content: space-between;
     align-items: baseline;
     gap: 16px;
-    border-bottom: 2px solid #0075ca;
+    border-bottom: 2px solid #243AA3;
     padding-bottom: 14px;
   }
   .cabecalho strong {
-    color: #0075ca;
+    color: #243AA3;
     font-size: 22px;
     text-transform: uppercase;
   }
   .cabecalho span {
-    color: #475569;
+    color: #6B7280;
     font-size: 14px;
     font-weight: bold;
     text-align: right;
@@ -341,16 +341,16 @@
     justify-content: space-between;
     align-items: center;
     gap: 16px;
-    background: #f6f8fb;
-    border: 1px solid #cbd5e1;
-    border-left: 4px solid #0075ca;
+    background: #EEF2F7;
+    border: 1px solid #C5CED9;
+    border-left: 4px solid #243AA3;
     border-radius: 4px;
     padding: 14px 18px;
     margin-top: 18px;
   }
   .rotulo {
     display: block;
-    color: #64748b;
+    color: #6B7280;
     font-size: 10px;
     font-weight: bold;
   }
@@ -367,12 +367,12 @@
   }
   h2 {
     font-size: 15px;
-    border-bottom: 1px solid #dbe3ec;
+    border-bottom: 1px solid #C5CED9;
     padding-bottom: 7px;
     margin: 20px 0 10px;
   }
   .trecho {
-    border: 1px solid #cbd5e1;
+    border: 1px solid #C5CED9;
     border-radius: 5px;
     margin-bottom: 12px;
     break-inside: avoid;
@@ -383,8 +383,8 @@
     justify-content: space-between;
     gap: 12px;
     padding: 9px 14px;
-    background: #101b33;
-    color: white;
+    background: #D0DAEA;
+    color: #1B2C80;
   }
   .trecho-corpo {
     padding: 12px 14px;
@@ -399,12 +399,12 @@
     display: block;
   }
   .codigo {
-    color: #0075ca;
+    color: #243AA3;
     font-size: 22px;
   }
   .local p {
     margin-top: 5px;
-    color: #475569;
+    color: #6B7280;
   }
   .destino {
     text-align: right;
@@ -413,7 +413,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    color: #64748b;
+    color: #6B7280;
     font-size: 10px;
     text-align: center;
   }
@@ -422,7 +422,7 @@
     align-items: center;
     width: 110px;
     max-width: 100%;
-    color: #0075ca;
+    color: #243AA3;
     font-size: 18px;
   }
   .duracao span::before,
@@ -430,7 +430,7 @@
     content: '';
     flex: 1;
     height: 2px;
-    background: #cbd5e1;
+    background: #243AA3;
   }
   .aviso-chegada {
     color: #92400e;
@@ -445,7 +445,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 10px;
-    border-top: 1px dashed #dbe3ec;
+    border-top: 1px dashed #C5CED9;
     margin-top: 12px;
     padding-top: 10px;
   }
@@ -461,12 +461,12 @@
   td {
     padding: 9px 10px;
     text-align: left;
-    border-bottom: 1px solid #dbe3ec;
+    border-bottom: 1px solid #C5CED9;
     overflow-wrap: anywhere;
   }
   th {
-    background: #f1f5f9;
-    color: #334155;
+    background: #D0DAEA;
+    color: #1B2C80;
     font-size: 10px;
     text-transform: uppercase;
   }
@@ -477,8 +477,8 @@
     border-bottom: 0;
   }
   .aviso-embarque {
-    background: #f6f8fb;
-    border: 1px solid #cbd5e1;
+    background: #EEF2F7;
+    border: 1px solid #C5CED9;
     border-radius: 4px;
     margin-top: 16px;
     padding: 14px 18px;
@@ -486,7 +486,7 @@
   }
   footer {
     margin-top: 24px;
-    color: #64748b;
+    color: #6B7280;
     font-size: 11px;
   }
   @media (max-width: 600px) {
