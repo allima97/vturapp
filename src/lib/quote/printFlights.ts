@@ -93,7 +93,7 @@ export function renderPreviewFlights(
           '\n'
         )
       );
-      return `<div class="row rot-row roteiro-card${longo ? ' roteiro-card--long' : ''}"><div>${serviceIconSvg('passagem')}</div><div>${titulo ? `<div class="rot-item-title"><b>${escapeHtml(titulo)}</b></div>` : ''}${rota}${chipsHtml}${index === items.length - 1 ? extraHtml : ''}</div></div>`;
+      return `<tr class="${longo ? 'roteiro-card--long' : ''}"><td><div class="row rot-row roteiro-card${longo ? ' roteiro-card--long' : ''}"><div>${serviceIconSvg('passagem')}</div><div>${titulo ? `<div class="rot-item-title"><b>${escapeHtml(titulo)}</b></div>` : ''}${rota}${chipsHtml}${index === items.length - 1 ? extraHtml : ''}</div></div></td></tr>`;
     })
     .join('');
 }

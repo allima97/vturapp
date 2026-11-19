@@ -53,7 +53,7 @@ export const roteiroPdfThemeCss = `
     break-before: auto;
     page-break-before: auto;
   }
-  .roteiro-print-section > .rot-sh, .section > h2 {
+  .section > h2 {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -71,11 +71,56 @@ export const roteiroPdfThemeCss = `
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+  .roteiro-print-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 0 0 8px; height: auto; background: transparent; break-inside: auto; page-break-inside: auto; }
+  .roteiro-print-table thead { display: table-header-group; break-after: avoid; page-break-after: avoid; }
+  .roteiro-print-table thead tr, .roteiro-print-table tbody tr { break-inside: avoid; page-break-inside: avoid; height: auto; }
+  .roteiro-print-table thead th {
+    padding: 0;
+    border: 1.5px solid #C5CED9;
+    border-bottom: 0;
+    border-radius: 10.5px 10.5px 0 0;
+    background: #D0DAEA;
+    text-align: left;
+    font-weight: bold;
+    color: #1B2C80;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .roteiro-print-table thead h2, .roteiro-print-section h2, .rot-sh {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 10.5px 10.5px 0 0;
+    background: transparent;
+    color: #1B2C80;
+    font: bold 11px Arial, Helvetica, sans-serif;
+    text-align: left;
+  }
+  .roteiro-print-table tbody td {
+    padding: 6px 12px;
+    border-left: 1.5px solid #C5CED9;
+    border-right: 1.5px solid #C5CED9;
+    border-bottom: 1.5px solid #C5CED9;
+    background: #fff;
+    vertical-align: top;
+    height: auto;
+  }
+  .roteiro-print-table tbody tr:last-child td { border-bottom-left-radius: 10.5px; border-bottom-right-radius: 10.5px; }
+  .roteiro-print-table .roteiro-card, .roteiro-print-table .row.rot-row, .roteiro-print-table .card {
+    border: 0;
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
+    height: auto;
+  }
   .roteiro-print-title-icon, .rot-sh .orc-service-icon { width: 16px; height: 16px; margin-right: 8px; vertical-align: -3px; color: #243AA3; flex: none; }
   .roteiro-print-subtitle { display: inline; margin: 0; color: #6B7280; font-size: 8pt; font-weight: normal; }
   .roteiro-print-subtitle::before { content: " · "; }
-  .rot-body > .roteiro-card,
-  .rot-body > .row,
   .section > .grid,
   .section > ul,
   .section > .chks,
@@ -86,14 +131,12 @@ export const roteiroPdfThemeCss = `
     background: #fff;
     margin: 0;
   }
-  .rot-body > :last-child,
   .section > :last-child {
     border-bottom: 1.5px solid #C5CED9;
     border-bottom-left-radius: 10.5px;
     border-bottom-right-radius: 10.5px;
   }
   .roteiro-card, .row.rot-row {
-    border-top: 1px solid #EEF2F7;
     border-radius: 0;
     padding: 6px 12px;
     color: #1F2937;
@@ -104,7 +147,6 @@ export const roteiroPdfThemeCss = `
     break-inside: avoid;
     page-break-inside: avoid;
   }
-  .rot-body > :first-child { border-top: 0; }
   .roteiro-card--long, .roteiro-optional-item--long { break-inside: auto; page-break-inside: auto; }
   .row.rot-row, .rot-hotel { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: start; }
   .roteiro-card h3, .rot-item-title, .rot-item-title b, .roteiro-optional-item h3 {
@@ -173,7 +215,10 @@ export const roteiroPdfThemeCss = `
       height: auto;
       min-height: 0;
     }
-    .roteiro-print-section > .rot-sh, .section > h2 {
+    .roteiro-print-table { break-inside: auto; page-break-inside: auto; height: auto; }
+    .roteiro-print-table thead { display: table-header-group; }
+    .roteiro-print-table thead th { background: #D0DAEA; border-radius: 10.5px 10.5px 0 0; }
+    .section > h2 {
       background: #D0DAEA;
       color: #1B2C80;
       border-radius: 10.5px 10.5px 0 0;

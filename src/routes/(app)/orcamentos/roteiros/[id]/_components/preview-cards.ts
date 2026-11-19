@@ -6,15 +6,6 @@ import type { RotHotel, RotPasseio } from './tipos';
 export { renderPreviewFlights } from '$lib/quote/printFlights';
 
 type FormatDate = (value: string | null | undefined) => string;
-type SectionIcon = 'itinerary' | 'hotels' | 'optionals' | 'flights' | 'passeios';
-
-const sectionIconType: Record<SectionIcon, string> = {
-  itinerary: 'passeio',
-  hotels: 'hotel',
-  passeios: 'passeio',
-  optionals: 'ingresso',
-  flights: 'passagem-section'
-};
 
 function cityTitle(city: string) {
   return `<div class="roteiro-card-city">${escapeHtml(nomeCidadeNoPdf(city))}</div>`;
@@ -38,15 +29,13 @@ export function buildRoteiroCardSection(
   title: string,
   content: string,
   sectionClass = '',
-  subtitle = '',
-  icon?: SectionIcon
+  subtitle = ''
 ) {
   if (!content.trim()) return '';
-  const iconHtml = icon ? serviceIconSvg(sectionIconType[icon], 'roteiro-print-title-icon') : '';
   const subtitulo = subtitle
     ? `<span class="roteiro-print-subtitle">${escapeHtml(subtitle)}</span>`
     : '';
-  return `<section class="roteiro-print-section ${escapeHtml(sectionClass)}"><h2 class="rot-sh">${iconHtml}${escapeHtml(title)}${subtitulo}</h2><div class="rot-body">${content}</div></section>`;
+  return `<section class="roteiro-print-section ${escapeHtml(sectionClass)}"><table class="roteiro-print-table"><thead><tr><th><h2 class="rot-sh">${escapeHtml(title)}${subtitulo}</h2></th></tr></thead><tbody>${content}</tbody></table></section>`;
 }
 
 function text(value: string | null | undefined) {
@@ -65,7 +54,8 @@ function groupByCity<T extends { cidade: string }>(items: T[], fallback: string)
 }
 
 function card(content: string, source: string) {
-  return `<article class="roteiro-card${requiresPrintContinuation(source) ? ' roteiro-card--long' : ''}">${content}</article>`;
+  const longo = requiresPrintContinuation(source) ? ' roteiro-card--long' : '';
+  return `<tr class="${longo.trim()}"><td><article class="roteiro-card${longo}">${content}</article></td></tr>`;
 }
 
 function conector() {

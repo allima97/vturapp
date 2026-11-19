@@ -25,6 +25,7 @@ describe('tema do PDF de roteiro', () => {
     expect(roteiroPdfThemeCss).toContain('color: #6B7280');
     expect(roteiroPdfThemeCss).toContain('font-size: 8pt');
     expect(roteiroPdfThemeCss).toContain('@page { size: A4; margin: 13mm; }');
+    expect(roteiroPdfThemeCss).toContain('display: table-header-group');
     expect(roteiroPdfThemeCss).toContain('print-color-adjust: exact');
     expect(roteiroPdfThemeCss).not.toContain('.roteiro-print-section { overflow: hidden');
     expect(roteiroPdfThemeCss).toContain('font-family: Arial, Helvetica, sans-serif');

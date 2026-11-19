@@ -1291,7 +1291,9 @@
             .card h3 { margin: 0 0 8px; font-size: 15px; }
             .card p { margin: 0; line-height: 1.55; white-space: normal; }
             .roteiro-print-section { margin: 0 0 8px; }
-            .roteiro-print-section h2 { margin: 0; padding: 8px 12px; border: 1.5px solid #C5CED9; border-bottom: 0; border-radius: 10.5px 10.5px 0 0; background: #D0DAEA; color: #1B2C80; font: bold 11px Arial, Helvetica, sans-serif; text-align: left; }
+            .roteiro-print-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+            .roteiro-print-table thead { display: table-header-group; }
+            .roteiro-print-section h2 { margin: 0; padding: 8px 12px; border: 0; background: transparent; color: #1B2C80; font: bold 11px Arial, Helvetica, sans-serif; text-align: left; }
             .roteiro-print-title-icon { width: 1em; height: 1em; margin-right: 0.35em; vertical-align: -0.15em; }
             .roteiro-print-subtitle { display: block; margin-top: 6px; font-size: 13px; font-weight: normal; }
             ${roteiroCardStyles}
@@ -1340,9 +1342,9 @@
             ${incluirCabecalhoRodapePdf ? headerCardHtml : ''}
             ${titleCardHtml}
             ${summaryBandHtml}
-            ${buildRoteiroCardSection('Itinerário Detalhado', diasHtml, 'preview-itinerary-section', '', 'itinerary')}
-            ${buildRoteiroCardSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section', '', 'hotels')}
-            ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section', '', 'passeios')}
+            ${buildRoteiroCardSection('Itinerário Detalhado', diasHtml, 'preview-itinerary-section')}
+            ${buildRoteiroCardSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
+            ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
             ${buildRoteiroCardSection(
               'Passeios Opcionais',
               buildOpcionaisHtml(
@@ -1351,10 +1353,9 @@
                 nomeCidadeNoPdf
               ),
               'preview-optionals-section',
-              'Sugestões sem data marcada, não incluídas no valor do roteiro',
-              'optionals'
+              'Sugestões sem data marcada, não incluídas no valor do roteiro'
             )}
-            ${buildRoteiroCardSection('Passagem Aérea', transportesHtml, 'preview-airfare-section', '', 'flights')}
+            ${buildRoteiroCardSection('Passagem Aérea', transportesHtml, 'preview-airfare-section')}
             ${buildPreviewRawSection('Investimento', investimentoHtml, 'preview-investimento-section')}
             ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
             ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
