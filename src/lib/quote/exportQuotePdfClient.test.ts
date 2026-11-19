@@ -626,6 +626,42 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).not.toContain('Valor da criança válido');
   });
 
+  it('mostra o período geral no título de aluguel e de seguro, e omite quando não há data', () => {
+    const comDatas = buildQuotePreviewHtmlSync({
+      quote: { id: 'quote-1' },
+      items: [
+        {
+          item_type: 'aluguel_carro',
+          title: 'Carro curto',
+          city_name: 'Los Angeles',
+          start_date: '2027-01-19',
+          end_date: '2027-01-22'
+        },
+        {
+          item_type: 'aluguel_carro',
+          title: 'Carro cedo',
+          city_name: 'Los Angeles',
+          start_date: '2027-01-17',
+          end_date: '2027-01-18'
+        },
+        {
+          item_type: 'seguro',
+          title: 'Seguro sem data',
+          city_name: 'Roma'
+        }
+      ],
+      settings: {},
+      qrUrl: null,
+      complementUrl: null,
+      showBudgetItems: false,
+      showBudgetDetails: true,
+      showItemValues: false
+    });
+    expect(comDatas).toContain('Aluguel de carro <small>· 17 a 22/01/2027</small>');
+    expect(comDatas).toContain('<span class="l">Seguro Viagem</span>');
+    expect(comDatas).not.toContain('Seguro Viagem <small>');
+  });
+
   it('formata período e incluídos do aluguel de carro sem rótulos redundantes', () => {
     const html = buildQuotePreviewHtmlSync({
       quote: { id: 'quote-1' },
@@ -702,7 +738,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(tela).toContain('5 assentos · 2 malas grandes · Flex');
     expect(tela).not.toContain('·  ·');
     expect(tela).toContain('2º motorista');
-    expect(html).toContain('>Aluguel de carro</span>');
+    expect(html).toContain('Aluguel de carro <small>· 17 a 20/01/2027</small>');
     expect(html).not.toContain('<div class="mu sm">Aluguel de carro</div>');
     expect(html).toContain('KM livre');
     expect(html).toContain('sh--sem-valor');
@@ -1682,6 +1718,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(html).toContain('>2 adultos</span>');
     expect(html.indexOf('>Assist Card</div>')).toBeGreaterThan(html.indexOf('>Seguro Europa</b>'));
     expect(html).not.toContain('Produtos');
+    expect(html).toContain('Seguro Viagem <small>· 24/11 a 01/12/2026</small>');
     expect(html).toContain('<span class="l">Seguro Viagem');
     expect(html.indexOf('<span class="l">Seguro Viagem')).toBeGreaterThan(
       html.indexOf('>Coliseu</b>')
