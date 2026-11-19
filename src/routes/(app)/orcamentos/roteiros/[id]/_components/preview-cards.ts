@@ -1,6 +1,6 @@
 import { escapeHtml } from '$lib/utils/html';
-import { serviceIconSvg } from '$lib/quote/pdfIcons';
-import { printCardField, nomeCidadeNoPdf, requiresPrintContinuation } from '$lib/utils/printLayout';
+import { quoteCheckIcon, serviceIconSvg } from '$lib/quote/pdfIcons';
+import { nomeCidadeNoPdf, requiresPrintContinuation } from '$lib/utils/printLayout';
 import type { RotHotel, RotPasseio } from './tipos';
 
 export { renderPreviewFlights } from '$lib/quote/printFlights';
@@ -16,8 +16,8 @@ const sectionIconType: Record<SectionIcon, string> = {
   flights: 'passagem-section'
 };
 
-function cityTitle(city: string, iconType: string) {
-  return `<div class="roteiro-card-city">${serviceIconSvg(iconType)}${escapeHtml(nomeCidadeNoPdf(city))}</div>`;
+function cityTitle(city: string) {
+  return `<div class="roteiro-card-city">${escapeHtml(nomeCidadeNoPdf(city))}</div>`;
 }
 
 function iconeDoPasseio(tipo: string) {
@@ -43,10 +43,10 @@ export function buildRoteiroCardSection(
 ) {
   if (!content.trim()) return '';
   const iconHtml = icon ? serviceIconSvg(sectionIconType[icon], 'roteiro-print-title-icon') : '';
-  return `<section class="roteiro-print-section ${escapeHtml(sectionClass)}"><table class="roteiro-print-table" role="presentation">
-    <thead><tr><td><h2>${iconHtml}${escapeHtml(title)}${subtitle ? `<span class="roteiro-print-subtitle">${escapeHtml(subtitle)}</span>` : ''}</h2></td></tr></thead>
-    <tbody><tr><td>${content}</td></tr></tbody>
-  </table></section>`;
+  const subtitulo = subtitle
+    ? `<span class="roteiro-print-subtitle">${escapeHtml(subtitle)}</span>`
+    : '';
+  return `<section class="roteiro-print-section ${escapeHtml(sectionClass)}"><h2 class="rot-sh">${iconHtml}${escapeHtml(title)}${subtitulo}</h2><div class="rot-body">${content}</div></section>`;
 }
 
 function text(value: string | null | undefined) {
@@ -64,8 +64,18 @@ function groupByCity<T extends { cidade: string }>(items: T[], fallback: string)
   return groups;
 }
 
-function card(content: string, text: string) {
-  return `<article class="card roteiro-card${requiresPrintContinuation(text) ? ' roteiro-card--long' : ''}">${content}</article>`;
+function card(content: string, source: string) {
+  return `<article class="roteiro-card${requiresPrintContinuation(source) ? ' roteiro-card--long' : ''}">${content}</article>`;
+}
+
+function conector() {
+  return `<span class="md">${`<span class="lni"><span class="ln" style="width:50px"></span></span>`}</span>`;
+}
+
+function chip(label: string) {
+  const value = text(label);
+  if (!value || value === '-') return '';
+  return `<div class="chks"><div class="chk">${quoteCheckIcon}<span>${escapeHtml(value)}</span></div></div>`;
 }
 
 export function renderPreviewHotels(items: RotHotel[], formatDate: FormatDate) {
@@ -74,22 +84,28 @@ export function renderPreviewHotels(items: RotHotel[], formatDate: FormatDate) {
       .map((hotel) => {
         const start = formatDate(hotel.data_inicio);
         const end = formatDate(hotel.data_fim);
-        const period = start || end ? `${start || '-'} a ${end || '-'}` : '-';
         const noites = hotel.noites && hotel.noites > 0 ? hotel.noites : 0;
-        const kicker = noites ? `Hotel · ${noites} ${noites === 1 ? 'noite' : 'noites'}` : 'Hotel';
+        const kicker = noites ? `HOTEL · ${noites} ${noites === 1 ? 'NOITE' : 'NOITES'}` : 'HOTEL';
+        const checkin = start ? `Check-in: ${start}` : '';
+        const checkout = end ? `Check-out: ${end}` : '';
+        const estadia =
+          checkin && checkout
+            ? `<div class="rtf rota"><span class="lg"><span class="rt rota">${escapeHtml(checkin)}</span></span>${conector()}<span class="lg"><span class="rt rota">${escapeHtml(checkout)}</span></span></div>`
+            : checkin || checkout
+              ? `<div class="rt rota">${escapeHtml(checkin || checkout)}</div>`
+              : '';
+        const detalhe = [text(hotel.apto), text(hotel.endereco)].filter(Boolean).join(' · ');
         const content = [
-          cityTitle(city, 'hotel'),
-          `<p class="rot-kicker">${escapeHtml(kicker)}</p>`,
-          printCardField('Hotel', text(hotel.hotel), true),
-          printCardField('Check In/Out', period, true),
-          printCardField(
-            'Noites',
-            hotel.noites && hotel.noites > 0 ? String(hotel.noites) : '-',
-            true
-          ),
-          printCardField('Acomodação', text(hotel.apto), true),
-          printCardField('Regime', text(hotel.regime), true),
-          text(hotel.endereco) ? printCardField('Endereço', text(hotel.endereco), true) : ''
+          `<div class="rot-hotel"><div>${serviceIconSvg('hotel')}</div><div>`,
+          cityTitle(city),
+          text(hotel.hotel)
+            ? `<div class="rot-item-title"><b>${escapeHtml(text(hotel.hotel))}</b></div>`
+            : '',
+          `<div class="lb">${escapeHtml(kicker)}</div>`,
+          estadia,
+          detalhe ? `<div class="mu sm">${escapeHtml(detalhe)}</div>` : '',
+          chip(text(hotel.regime)),
+          `</div></div>`
         ].join('');
         return card(
           content,
@@ -110,11 +126,15 @@ export function renderPreviewPasseios(items: RotPasseio[], formatDate: FormatDat
         const kicker = text(item.tipo) || 'Passeio';
         return card(
           [
-            cityTitle(city, iconeDoPasseio(kicker)),
-            `<p class="rot-kicker">${escapeHtml(kicker)}</p>`,
-            printCardField('Passeio', text(item.passeio)),
-            printCardField('Data', date),
-            printCardField('Ingressos', text(item.ingressos))
+            `<div class="rot-hotel"><div>${serviceIconSvg(iconeDoPasseio(kicker))}</div><div>`,
+            cityTitle(city),
+            `<div class="lb">${escapeHtml(kicker.toUpperCase())}</div>`,
+            text(item.passeio)
+              ? `<div class="rot-item-title"><b>${escapeHtml(text(item.passeio))}</b></div>`
+              : '',
+            date && date !== '-' ? `<p class="meta">${escapeHtml(date)}</p>` : '',
+            text(item.ingressos) ? `<p>${escapeHtml(text(item.ingressos))}</p>` : '',
+            `</div></div>`
           ].join(''),
           [city, item.passeio, item.ingressos].join('\n')
         );

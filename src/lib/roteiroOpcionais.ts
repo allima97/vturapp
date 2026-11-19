@@ -142,20 +142,18 @@ export function buildOpcionaisHtml(
     const conteudo = grupo.passeios.map((p) => `${p.nome}\n${p.descricao}`).join('\n');
     const longo = grupo.passeios.length > 6 || requiresPrintContinuation(conteudo);
     return `
-      <article class="card roteiro-card${longo ? ' roteiro-card--long' : ''}">
-        <table class="roteiro-optional-table" role="presentation">
-          <thead><tr><td><div class="roteiro-card-city">${serviceIconSvg('passeio')}${escape(formatarCidade(grupo.cidade))}</div></td></tr></thead>
-          <tbody><tr><td>${grupo.passeios
-            .map(
-              (
-                p
-              ) => `<div class="roteiro-optional-item${requiresPrintContinuation(p.descricao) ? ' roteiro-optional-item--long' : ''}">
-              <h3>${escape(p.nome)}</h3>
-              ${p.descricao ? `<p>${escape(p.descricao).replace(/\n/g, '<br>')}</p>` : ''}
-            </div>`
-            )
-            .join('')}</td></tr></tbody>
-        </table>
+      <article class="roteiro-card${longo ? ' roteiro-card--long' : ''}">
+        <div class="roteiro-card-city">${serviceIconSvg('passeio')}${escape(formatarCidade(grupo.cidade))}</div>
+        ${grupo.passeios
+          .map(
+            (
+              p
+            ) => `<div class="roteiro-optional-item${requiresPrintContinuation(p.descricao) ? ' roteiro-optional-item--long' : ''}">
+            <h3>${escape(p.nome)}</h3>
+            ${p.descricao ? `<p>${escape(p.descricao).replace(/\n/g, '<br>')}</p>` : ''}
+          </div>`
+          )
+          .join('')}
       </article>`;
   }).join('');
 }

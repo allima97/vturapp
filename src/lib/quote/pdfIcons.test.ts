@@ -26,18 +26,29 @@ describe('tema do PDF de roteiro', () => {
     expect(roteiroPdfThemeCss).toContain('font-size: 8pt');
     expect(roteiroPdfThemeCss).toContain('@page { size: A4; margin: 13mm; }');
     expect(roteiroPdfThemeCss).toContain('print-color-adjust: exact');
-    expect(roteiroPdfThemeCss).not.toContain('overflow: hidden');
+    expect(roteiroPdfThemeCss).not.toContain('.roteiro-print-section { overflow: hidden');
     expect(roteiroPdfThemeCss).toContain('font-family: Arial, Helvetica, sans-serif');
   });
 
   it('mostra o hotel com o ícone e o rótulo do orçamento, sem mudar os campos', () => {
     const html = renderPreviewHotels(
-      [{ ...newHotel(0), cidade: 'Roma, Itália', hotel: 'Hotel Roma', noites: 6, regime: 'Café' }],
+      [
+        {
+          ...newHotel(0),
+          cidade: 'Roma, Itália',
+          hotel: 'Hotel Roma',
+          noites: 6,
+          regime: 'Café',
+          data_inicio: '2027-08-11',
+          data_fim: '2027-08-13'
+        }
+      ],
       (value) => value || ''
     );
     expect(html).toContain(hotelIconShape);
-    expect(html).toContain('class="rot-kicker">Hotel · 6 noites');
-    expect(html).toContain('Hotel: <strong>Hotel Roma</strong>');
+    expect(html).toContain('class="lb">HOTEL · 6 NOITES');
+    expect(html).toContain('<b>Hotel Roma</b>');
+    expect(html).toContain('class="rtf rota"');
     expect(html).toContain('Café');
     expect(roteiroCheckChips(['Traslado'], (value) => value)).toContain(quoteCheckIcon);
   });

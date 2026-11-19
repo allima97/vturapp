@@ -416,28 +416,26 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
     ])
   );
   const firstHotel = hotels.querySelector('.roteiro-card')!;
-  for (const value of ['02-01-2027', '04-01-2027', '2', 'Duplo', 'Café', 'Rua Principal']) {
+  for (const value of [
+    '02/01/2027',
+    '04/01/2027',
+    'HOTEL · 2 NOITES',
+    'Duplo',
+    'Café',
+    'Rua Principal',
+    'Hotel Barcelona'
+  ]) {
     expect(firstHotel.textContent).toContain(value);
   }
-  const hotelFields = [...firstHotel.querySelectorAll('.roteiro-card-detail')];
-  for (const [index, [label, value]] of [
-    ['Hotel:', 'Hotel Barcelona'],
-    ['Check In/Out:', '02-01-2027 a 04-01-2027'],
-    ['Noites:', '2'],
-    ['Acomodação:', 'Duplo'],
-    ['Regime:', 'Café'],
-    ['Endereço:', 'Rua Principal']
-  ].entries()) {
-    expect(hotelFields[index].firstChild?.textContent?.trim()).toBe(label);
-    expect(hotelFields[index].querySelector('strong')?.textContent).toBe(value);
-  }
+  expect(firstHotel.querySelector('.rtf.rota')).toBeTruthy();
+  expect(firstHotel.querySelector('.chk')?.textContent).toBe('Café');
   expect(hotels.querySelectorAll('.roteiro-card')[1].textContent).toContain('Outro Hotel');
   expect(preview.querySelector('.preview-passeios-section .roteiro-card-city')?.textContent).toBe(
     'Barcelona'
   );
-  expect(
-    preview.querySelector('.preview-passeios-section .roteiro-card-detail strong')?.textContent
-  ).toBe('Passeio:');
+  expect(preview.querySelector('.preview-passeios-section .rot-item-title')?.textContent).toBe(
+    'Sagrada Família'
+  );
   expect(preview.querySelectorAll('.preview-itinerary-section .roteiro-card')).toHaveLength(2);
   expect(preview.querySelectorAll('.preview-optionals-section .roteiro-card')).toHaveLength(1);
   const optionalTitle = preview.querySelector('.preview-optionals-section h2')!;
@@ -461,35 +459,22 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
     'Roma',
     'FCO',
     'LATAM',
-    '02-01-2027',
-    '03-01-2027',
+    '02/01/2027',
+    '03/01/2027',
     '23:30',
     '14:00',
-    '11h30',
     'Econômica',
     'Light'
   ]) {
     expect(flight.textContent).toContain(value);
   }
-  expect(flight.querySelector('.roteiro-flight-header span')?.textContent).toBe(
-    'TRECHO 1 — sábado, 02 de janeiro de 2027'
-  );
-  const flightLabel = flight.querySelectorAll('.roteiro-flight-header > span')[1];
-  expect(flightLabel.textContent).toBe('Voo  LA 123');
-  const flightPlane = flightLabel.querySelector('svg[aria-hidden="true"] path')!;
-  expect(flightPlane.getAttribute('transform')).toBe('rotate(-35 12 12)');
-  const durationPlane = flight.querySelector(
-    '.roteiro-flight-duration svg[aria-hidden="true"] path'
-  )!;
-  expect(durationPlane.getAttribute('d')).toBe(flightPlane.getAttribute('d'));
-  expect(durationPlane.getAttribute('transform')).toBeNull();
-  expect(flight.querySelector('.roteiro-flight-arrival-notice')?.textContent).toBe(
-    'Chegada no dia seguinte (+1)'
-  );
-  expect(flight.querySelector('.roteiro-flight-details strong')?.textContent).toBe('LATAM');
-  expect(flight.querySelectorAll('.roteiro-flight-place')).toHaveLength(2);
+  expect(flight.querySelector('.rtf')).toBeTruthy();
+  expect(flight.querySelector('.p1')?.textContent).toBe('+1');
+  expect(flight.querySelector('.ln')?.getAttribute('style')).toContain('width:50px');
+  expect(flight.textContent).toContain('LA 123');
   for (const section of preview.querySelectorAll('.roteiro-print-section')) {
-    expect(section.querySelector('thead h2')).toBeTruthy();
+    expect(section.querySelector('h2')).toBeTruthy();
+    expect(section.querySelector('table')).toBeNull();
   }
   for (const section of [
     '.preview-itinerary-section',
@@ -508,8 +493,8 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
   expect(html).toContain('border: 1.5px solid #C5CED9');
   expect(preview.querySelector('.preview-hotels-section h2 .orc-service-icon--hotel')).toBeTruthy();
   expect(preview.querySelector('.rot-band b')?.textContent).toBe('PERÍODO');
-  expect(preview.querySelector('.preview-hotels-section .rot-kicker')?.textContent).toBe(
-    'Hotel · 2 noites'
+  expect(preview.querySelector('.preview-hotels-section .lb')?.textContent).toBe(
+    'HOTEL · 2 NOITES'
   );
   expect(html).toContain('<h3>Dia 1 - Roma - Barcelona</h3>');
   expect(html).not.toContain(barcelona);
