@@ -1792,7 +1792,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .band > div { padding: 10px 12px; border-right: 1.5px solid #C5CED9; background: #fff; }
     .band b { display: block; font-size: 7pt; color: #6B7280; letter-spacing: 1px; margin-bottom: 3px; }
     .band span { font-weight: bold; color: #1B2C80; font-size: 9.5pt; }
-    .band .tt { background: #243AA3; border: 0; }
+    .band .tt { background: #243AA3; border: 0; border-top-right-radius: 10.5px; border-bottom-right-radius: 10.5px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .band .tt b { color: #fff; opacity: .75; }
     .band .tt span { color: #fff; font-size: 14pt; }
     .band .val span { color: #C62828; }
@@ -1800,7 +1800,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-city-section { background: #fff; border: 1.5px solid #C5CED9; border-radius: 12px; padding: 0; margin: 0 0 8px; overflow: hidden; }
     .orc-financial-section { background: transparent; border: 0; padding: 0; margin: 0; }
     .card.tot { background: #EEF2F7; border: 1.5px solid #C5CED9; color: #1B2C80; }
-    .sh { background: #D0DAEA; display: grid; grid-template-columns: minmax(0, 1fr) 90px 90px; gap: 8px; align-items: center; width: 100%; margin: 0; padding: 8px 12px; font-weight: bold; color: #1B2C80; }
+    .sh { background: #D0DAEA; display: grid; grid-template-columns: minmax(0, 1fr) 90px 90px; gap: 8px; align-items: center; width: 100%; margin: 0; padding: 8px 12px; font-weight: bold; color: #1B2C80; border-top-left-radius: 10.5px; border-top-right-radius: 10.5px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .sh.sh--sem-valor { grid-template-columns: minmax(0, 1fr) 90px; }
     .sh .l { display: flex; gap: 8px; align-items: center; min-width: 0; }
     .sh-qtd { color: #6B7280; font-size: 7.5pt; font-weight: bold; letter-spacing: .04em; }
