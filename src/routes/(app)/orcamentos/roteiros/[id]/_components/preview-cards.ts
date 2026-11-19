@@ -1,20 +1,38 @@
 import { escapeHtml } from '$lib/utils/html';
-import { flightPlane } from '$lib/quote/printFlights';
-import { printCityTitle, printCardField, requiresPrintContinuation } from '$lib/utils/printLayout';
+import { serviceIconSvg } from '$lib/quote/pdfIcons';
+import { printCardField, nomeCidadeNoPdf, requiresPrintContinuation } from '$lib/utils/printLayout';
 import type { RotHotel, RotPasseio } from './tipos';
 
 export { renderPreviewFlights } from '$lib/quote/printFlights';
 
 type FormatDate = (value: string | null | undefined) => string;
-type SectionIcon = 'itinerary' | 'hotels' | 'optionals' | 'flights';
+type SectionIcon = 'itinerary' | 'hotels' | 'optionals' | 'flights' | 'passeios';
 
-const sectionIcons: Record<Exclude<SectionIcon, 'flights'>, string> = {
-  itinerary:
-    '<circle cx="5" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="M5 7v2c0 3 3 3 6 3s6 0 6 3v2"/>',
-  hotels: '<path d="M4 21V5l8-3 8 3v16M2 21h20M10 21v-4h4v4M8 8h1m6 0h1M8 12h1m6 0h1"/>',
-  optionals:
-    '<circle cx="7" cy="16" r="4"/><circle cx="17" cy="16" r="4"/><path d="M3 16 5 7h3l3 9m2 0 3-9h3l2 9M9 10h6"/>'
+const sectionIconType: Record<SectionIcon, string> = {
+  itinerary: 'passeio',
+  hotels: 'hotel',
+  passeios: 'passeio',
+  optionals: 'ingresso',
+  flights: 'passagem-section'
 };
+
+function cityTitle(city: string, iconType: string) {
+  return `<div class="roteiro-card-city">${serviceIconSvg(iconType)}${escapeHtml(nomeCidadeNoPdf(city))}</div>`;
+}
+
+function iconeDoPasseio(tipo: string) {
+  const nome = tipo
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+  if (nome.includes('seguro')) return 'seguro';
+  if (nome.includes('ingresso')) return 'ingresso';
+  if (nome.includes('transfer')) return 'transfer';
+  if (nome.includes('show')) return 'show';
+  if (nome.includes('trem') || nome.includes('ferro')) return 'trem';
+  if (nome.includes('carro')) return 'aluguel_carro';
+  return 'passeio';
+}
 
 export function buildRoteiroCardSection(
   title: string,
@@ -24,12 +42,7 @@ export function buildRoteiroCardSection(
   icon?: SectionIcon
 ) {
   if (!content.trim()) return '';
-  const iconHtml =
-    icon === 'flights'
-      ? flightPlane('roteiro-print-title-icon')
-      : icon
-        ? `<svg class="roteiro-print-title-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${sectionIcons[icon]}</svg>`
-        : '';
+  const iconHtml = icon ? serviceIconSvg(sectionIconType[icon], 'roteiro-print-title-icon') : '';
   return `<section class="roteiro-print-section ${escapeHtml(sectionClass)}"><table class="roteiro-print-table" role="presentation">
     <thead><tr><td><h2>${iconHtml}${escapeHtml(title)}${subtitle ? `<span class="roteiro-print-subtitle">${escapeHtml(subtitle)}</span>` : ''}</h2></td></tr></thead>
     <tbody><tr><td>${content}</td></tr></tbody>
@@ -62,8 +75,11 @@ export function renderPreviewHotels(items: RotHotel[], formatDate: FormatDate) {
         const start = formatDate(hotel.data_inicio);
         const end = formatDate(hotel.data_fim);
         const period = start || end ? `${start || '-'} a ${end || '-'}` : '-';
+        const noites = hotel.noites && hotel.noites > 0 ? hotel.noites : 0;
+        const kicker = noites ? `Hotel · ${noites} ${noites === 1 ? 'noite' : 'noites'}` : 'Hotel';
         const content = [
-          printCityTitle(city),
+          cityTitle(city, 'hotel'),
+          `<p class="rot-kicker">${escapeHtml(kicker)}</p>`,
           printCardField('Hotel', text(hotel.hotel), true),
           printCardField('Check In/Out', period, true),
           printCardField(
@@ -91,9 +107,11 @@ export function renderPreviewPasseios(items: RotPasseio[], formatDate: FormatDat
         const start = formatDate(item.data_inicio);
         const end = formatDate(item.data_fim);
         const date = start && end && start !== end ? `${start} a ${end}` : start || end || '-';
+        const kicker = text(item.tipo) || 'Passeio';
         return card(
           [
-            printCityTitle(city),
+            cityTitle(city, iconeDoPasseio(kicker)),
+            `<p class="rot-kicker">${escapeHtml(kicker)}</p>`,
             printCardField('Passeio', text(item.passeio)),
             printCardField('Data', date),
             printCardField('Ingressos', text(item.ingressos))

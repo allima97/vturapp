@@ -1,7 +1,8 @@
 import { chaveIdentidadeCidade } from './catalogoOpcionais';
 import { destinoIdValido } from './destinoIdentidade';
 import { chaveNomeOpcional } from './importarOpcionais';
-import { printLocationIcon, requiresPrintContinuation } from './utils/printLayout';
+import { serviceIconSvg } from './quote/pdfIcons';
+import { requiresPrintContinuation } from './utils/printLayout';
 
 export type RoteiroOpcionalCidade = {
   cidade: string;
@@ -143,7 +144,7 @@ export function buildOpcionaisHtml(
     return `
       <article class="card roteiro-card${longo ? ' roteiro-card--long' : ''}">
         <table class="roteiro-optional-table" role="presentation">
-          <thead><tr><td><div class="roteiro-card-city">${printLocationIcon}${escape(formatarCidade(grupo.cidade))}</div></td></tr></thead>
+          <thead><tr><td><div class="roteiro-card-city">${serviceIconSvg('passeio')}${escape(formatarCidade(grupo.cidade))}</div></td></tr></thead>
           <tbody><tr><td>${grupo.passeios
             .map(
               (

@@ -106,16 +106,16 @@ export function renderPreviewFlights(
 
 export const roteiroFlightStyles = `
   .roteiro-flight-plane { width: 1em; height: 1em; vertical-align: -0.15em; }
-  .roteiro-flight { padding: 0; overflow: hidden; border-radius: 5px; font-family: Arial, sans-serif; color: #17233c; }
-  .roteiro-flight-header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 12px; padding: 9px 14px; background: #243aa3; color: white; font-weight: bold; }
+  .roteiro-flight { padding: 0; overflow: visible; border: 1.5px solid #C5CED9; border-radius: 12px; font-family: Arial, Helvetica, sans-serif; color: #1F2937; }
+  .roteiro-flight-header { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 12px; padding: 9px 14px; background: #D0DAEA; color: #1B2C80; font-weight: bold; border-top-left-radius: 10.5px; border-top-right-radius: 10.5px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .roteiro-flight-body { padding: 12px 14px; }
   .roteiro-flight-route { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; align-items: center; }
   .roteiro-flight-place strong { display: block; }
-  .roteiro-flight-code { color: #0075ca; font-size: 22px; }
+  .roteiro-flight-code { color: #243AA3; font-size: 14pt; }
   .roteiro-flight-place p { margin-top: 5px; color: #475569; }
   .roteiro-flight-destination { text-align: right; }
   .roteiro-flight-duration { color: #64748b; font-size: 10px; text-align: center; }
-  .roteiro-flight-duration span { display: flex; align-items: center; width: 110px; margin: 0 auto; color: #0075ca; font-size: 18px; }
+  .roteiro-flight-duration span { display: flex; align-items: center; width: 110px; margin: 0 auto; color: #243AA3; font-size: 18px; }
   .roteiro-flight-duration span::before, .roteiro-flight-duration span::after { content: ''; flex: 1; height: 2px; background: currentColor; }
   .roteiro-flight-duration .roteiro-flight-plane { flex: none; }
   .roteiro-flight-arrival-notice { display: block; color: #92400e; font-size: 10px; font-weight: 700; border: 1px solid #b45309; border-radius: 4px; padding: 3px 6px; margin-top: 4px; }
