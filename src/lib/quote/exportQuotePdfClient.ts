@@ -1075,7 +1075,8 @@ function renderGroupedItems(
           'Aluguel de carro',
           cars.map((item) => renderServiceItem(item, showItemValues, defaultCurrency)).join(''),
           false,
-          showItemValues ? moedasDoGrupo(cars, defaultCurrency) : ''
+          showItemValues ? moedasDoGrupo(cars, defaultCurrency) : '',
+          periodoDoGrupo(cars)
         )
       : '';
   const cities = rest
@@ -1109,7 +1110,8 @@ function renderGroupedItems(
             .map((item) => renderServiceItem(item, showItemValues, defaultCurrency))
             .join(''),
           false,
-          showItemValues ? moedasDoGrupo(insurances, defaultCurrency) : ''
+          showItemValues ? moedasDoGrupo(insurances, defaultCurrency) : '',
+          periodoDoGrupo(insurances)
         )
       : '';
   return `${air}${carSection}${cities}${insuranceSection}`;
