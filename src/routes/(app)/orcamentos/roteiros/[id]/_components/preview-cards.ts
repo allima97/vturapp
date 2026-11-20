@@ -242,7 +242,6 @@ export function renderPreviewCarros(items: RotPasseio[], formatDate: FormatDate)
         const chips = chipsHtml(etiquetasCarro(detalhes.incluidos ?? []));
         const content = [
           `<div class="rot-hotel"><div>${serviceIconSvg('aluguel_carro')}</div><div>`,
-          cityTitle(city),
           `<div class="rot-item-title"><b>${escapeHtml(titulo)}</b></div>`,
           `<div class="lb">${escapeHtml(kicker)}</div>`,
           rota,
@@ -291,7 +290,6 @@ export function renderPreviewTrens(items: RotPasseio[], formatDate: FormatDate) 
         );
         const content = [
           `<div class="rot-hotel"><div>${serviceIconSvg('trem')}</div><div>`,
-          cityTitle(city),
           `<div class="rot-item-title"><b>${escapeHtml(titulo)}</b></div>`,
           pernas || (periodo ? `<p class="meta">${escapeHtml(periodo)}</p>` : ''),
           chips,
@@ -324,7 +322,6 @@ export function renderPreviewSeguros(items: RotPasseio[], formatDate: FormatDate
         const linhaCinza = text(item.fornecedor);
         const content = [
           `<div class="rot-hotel"><div>${serviceIconSvg('seguro')}</div><div>`,
-          cityTitle(city),
           `<div class="rot-item-title"><b>${escapeHtml(titulo)}</b></div>`,
           `<div class="lb">${escapeHtml(rotulo)}</div>`,
           linhaCinza ? `<div class="mu sm">${escapeHtml(linhaCinza)}</div>` : '',

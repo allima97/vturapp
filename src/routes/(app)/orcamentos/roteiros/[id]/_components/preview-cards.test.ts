@@ -183,7 +183,9 @@ describe('cards de passeio no PDF do roteiro (paridade com orçamento)', () => {
                 aeroporto_saida: 'Paris Gare de Lyon',
                 aeroporto_chegada: 'Lyon Part-Dieu',
                 classe_reserva: 'Executiva',
-                assentos: '12A'
+                assentos: '12A',
+                cidade_saida_id: '',
+                cidade_chegada_id: ''
               }
             ]
           }
