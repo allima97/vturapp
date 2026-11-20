@@ -161,13 +161,13 @@
   // ─── Constants ─────────────────────────────────────────────────────────────
   const ABAS = [
     { id: 'itinerario', label: 'Itinerário' },
-    { id: 'hoteis', label: 'Hotéis' },
-    { id: 'transporte', label: 'Aéreo' },
+    { id: 'transporte', label: 'Passagem Aérea' },
     { id: 'aluguel-carro', label: 'Aluguel de Carro' },
+    { id: 'hoteis', label: 'Hotéis' },
     { id: 'trem', label: 'Trem' },
-    { id: 'seguro-viagem', label: 'Seguro Viagem' },
     { id: 'passeios', label: 'Passeios' },
     { id: 'opcionais', label: 'Opcionais' },
+    { id: 'seguro-viagem', label: 'Seguro Viagem' },
     { id: 'investimento', label: 'Investimento' },
     { id: 'pagamento', label: 'Pagamento' },
     { id: 'inclusoes', label: 'Inclusões' },
@@ -1385,11 +1385,11 @@
             ${titleCardHtml}
             ${summaryBandHtml}
             ${buildRoteiroCardSection('Itinerário Detalhado', diasHtml, 'preview-itinerary-section')}
-            ${buildRoteiroCardSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
-            ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
+            ${buildRoteiroCardSection('Passagem Aérea', transportesHtml, 'preview-airfare-section')}
             ${buildRoteiroCardSection('Aluguel de Carro', carrosHtml, 'preview-carros-section')}
+            ${buildRoteiroCardSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
             ${buildRoteiroCardSection('Trem', trensHtml, 'preview-trens-section')}
-            ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
+            ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
             ${buildRoteiroCardSection(
               'Passeios Opcionais',
               buildOpcionaisHtml(
@@ -1400,7 +1400,7 @@
               'preview-optionals-section',
               'Sugestões sem data marcada, não incluídas no valor do roteiro'
             )}
-            ${buildRoteiroCardSection('Passagem Aérea', transportesHtml, 'preview-airfare-section')}
+            ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
             ${buildPreviewRawSection('Investimento', investimentoHtml, 'preview-investimento-section')}
             ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
             ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
