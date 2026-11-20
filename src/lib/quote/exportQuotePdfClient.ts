@@ -534,8 +534,8 @@ function rotuloEstadiaCurto(item: QuoteItemForPdf, prefix: string, modo: 'noites
   const contagem =
     dias != null && dias > 0
       ? modo === 'noites'
-        ? `${dias} ${dias === 1 ? 'NOITE' : 'NOITES'}`
-        : `${dias} ${dias === 1 ? 'DIÁRIA' : 'DIÁRIAS'}`
+        ? `${dias} ${dias === 1 ? 'Noite' : 'Noites'}`
+        : `${dias} ${dias === 1 ? 'Diária' : 'Diárias'}`
       : '';
   return [prefix, contagem].filter(Boolean).join(' · ');
 }
@@ -748,14 +748,12 @@ function renderServiceItem(
   const carro = type === 'aluguel_carro';
   const seguro = type === 'seguro' || type === 'seguro_viagem';
   const cabecalho = hospedagem
-    ? rotuloEstadiaCurto(item, 'HOTEL', 'noites')
+    ? rotuloEstadiaCurto(item, 'Hotel', 'noites')
     : carro
-      ? rotuloEstadiaCurto(item, 'CARRO', 'diarias')
+      ? rotuloEstadiaCurto(item, 'Carro', 'diarias')
       : flight || type === 'trem'
-        ? [label.toUpperCase(), faixaDatas(item.start_date, item.end_date)]
-            .filter(Boolean)
-            .join(' · ')
-        : rotuloServico(item, label.toUpperCase());
+        ? [label, faixaDatas(item.start_date, item.end_date)].filter(Boolean).join(' · ')
+        : rotuloServico(item, label);
   const estrelas = textVal(details.categoria).replace(/estrelas/gi, 'estrelas');
   const veiculo = resumoInformacoesVeiculo(details);
   const linhaCinza = hospedagem
@@ -1322,8 +1320,8 @@ function renderFlightItemHtml(
       const from = siglaDoTrecho(fromCode, flight.cidade_saida, isTrain);
       const to = siglaDoTrecho(toCode, flight.cidade_chegada, isTrain);
       const date = formatDateBR(flight.data_voo || flight.data_inicio);
-      const kind = isTrain ? 'TREM' : 'AÉREO';
-      const sentido = roundTrip ? (index === 0 ? 'IDA' : 'VOLTA') : '';
+      const kind = isTrain ? 'Trem' : 'Aéreo';
+      const sentido = roundTrip ? (index === 0 ? 'Ida' : 'Volta') : '';
       const label = [kind, sentido, date && date !== '-' ? date : ''].filter(Boolean).join(' · ');
       const offset = atrasoChegada(flight);
       const plus = offset > 0 ? `<span class="p1">+${offset}</span>` : '';
@@ -1575,11 +1573,11 @@ export function buildQuotePreviewHtmlSync(params: {
   const totalFaixa = totalDaFaixa(items, currency, safeDiscount);
   const bandHtml = `
     <div class="band">
-      <div><b>PERÍODO</b><span>${escHtml(period || '—')}</span></div>
-      <div><b>VIAJANTES</b><span>${escHtml(viajantes || '—')}</span></div>
-      <div><b>EMISSÃO</b><span>${escHtml(dateLabel || '—')}</span></div>
-      <div class="val"><b>VALIDADE</b><span>${escHtml(validity || '—')}</span></div>
-      <div class="tt"><b>TOTAL</b><span>${escHtml(totalFaixa)}</span></div>
+      <div><b>Período</b><span>${escHtml(period || '—')}</span></div>
+      <div><b>Viajantes</b><span>${escHtml(viajantes || '—')}</span></div>
+      <div><b>Emissão</b><span>${escHtml(dateLabel || '—')}</span></div>
+      <div class="val"><b>Validade</b><span>${escHtml(validity || '—')}</span></div>
+      <div class="tt"><b>Total</b><span>${escHtml(totalFaixa)}</span></div>
     </div>`;
 
   // Itens

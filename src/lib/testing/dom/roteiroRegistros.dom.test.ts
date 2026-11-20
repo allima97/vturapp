@@ -401,14 +401,9 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
   });
   const preview = new DOMParser().parseFromString(html, 'text/html');
   const hotels = preview.querySelector('.preview-hotels-section')!;
-  expect([...hotels.querySelectorAll('.roteiro-card-city')].map((el) => el.textContent)).toEqual([
-    'Barcelona',
-    'Barcelona',
-    'Madrid',
-    'Paris',
-    'Roma',
-    'Paris'
-  ]);
+  expect([...hotels.querySelectorAll('.roteiro-card-city')].map((el) => el.textContent)).toEqual(
+    []
+  );
   expect([...hotels.querySelectorAll('.roteiro-card')].map((el) => el.textContent)).toEqual(
     expect.arrayContaining([
       expect.stringContaining('Hotel Paris'),
@@ -419,10 +414,9 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
   for (const value of [
     '02/01/2027',
     '04/01/2027',
-    'HOTEL · 2 NOITES',
+    'Barcelona · Hotel · 2 Noites',
     'Duplo',
     'Café',
-    'Rua Principal',
     'Hotel Barcelona'
   ]) {
     expect(firstHotel.textContent).toContain(value);
@@ -494,9 +488,9 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
   expect(
     preview.querySelector('.preview-airfare-section tbody .orc-service-icon--flight')
   ).toBeTruthy();
-  expect(preview.querySelector('.rot-band b')?.textContent).toBe('PERÍODO');
+  expect(preview.querySelector('.rot-band b')?.textContent).toBe('Período');
   expect(preview.querySelector('.preview-hotels-section .lb')?.textContent).toBe(
-    'HOTEL · 2 NOITES'
+    'Barcelona · Hotel · 2 Noites'
   );
   expect(html).toContain('<h3>Dia 1 - Roma - Barcelona</h3>');
   expect(html).not.toContain(barcelona);

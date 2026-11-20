@@ -128,8 +128,8 @@ export function renderPreviewHotels(items: RotHotel[], formatDate: FormatDate) {
         const cidadeCurta = nomeCidadeNoPdf(city);
         const kicker = [
           cidadeCurta,
-          'HOTEL',
-          noites ? `${noites} ${noites === 1 ? 'NOITE' : 'NOITES'}` : ''
+          'Hotel',
+          noites ? `${noites} ${noites === 1 ? 'Noite' : 'Noites'}` : ''
         ]
           .filter(Boolean)
           .join(' · ');
@@ -215,8 +215,8 @@ export function renderPreviewCarros(items: RotPasseio[], formatDate: FormatDate)
             ? `${tituloBase} ${cambio.toLowerCase()}`
             : tituloBase;
         const kicker = [
-          'CARRO',
-          dias != null && dias > 0 ? `${dias} ${dias === 1 ? 'DIÁRIA' : 'DIÁRIAS'}` : ''
+          'Carro',
+          dias != null && dias > 0 ? `${dias} ${dias === 1 ? 'Diária' : 'Diárias'}` : ''
         ]
           .filter(Boolean)
           .join(' · ');
@@ -268,7 +268,7 @@ function pernaTrem(segmento: QuoteFlightSegment, formatDate: FormatDate, index: 
   const dataSaida = formatDate(segmento.data_voo || segmento.data_fim);
   const saida = text(segmento.hora_saida).replace(/\s*\(\+\d+\)\s*$/, '');
   const chegada = text(segmento.hora_chegada).replace(/\s*\(\+\d+\)\s*$/, '');
-  const rotulo = ['TREM', dataSaida && dataSaida !== '-' ? dataSaida : '']
+  const rotulo = ['Trem', dataSaida && dataSaida !== '-' ? dataSaida : '']
     .filter(Boolean)
     .join(' · ');
   const carrier = [text(segmento.cia_aerea), text(segmento.numero_voo)].filter(Boolean).join(' · ');
@@ -317,7 +317,7 @@ export function renderPreviewSeguros(items: RotPasseio[], formatDate: FormatDate
         const dias = diasItem('seguro', item.data_inicio, item.data_fim);
         const contagem =
           dias != null ? `- ${String(dias).padStart(2, '0')} ${dias === 1 ? 'dia' : 'dias'}` : '';
-        const rotulo = ['SEGURO VIAGEM', [periodo, contagem].filter(Boolean).join(' ')]
+        const rotulo = ['Seguro Viagem', [periodo, contagem].filter(Boolean).join(' ')]
           .filter(Boolean)
           .join(' · ');
         const passageiros = passageirosChipText(
@@ -355,7 +355,7 @@ export function renderPreviewPasseios(items: RotPasseio[], formatDate: FormatDat
           [
             `<div class="rot-hotel"><div>${serviceIconSvg(iconeDoPasseio(kicker))}</div><div>`,
             cityTitle(city),
-            `<div class="lb">${escapeHtml(kicker.toUpperCase())}</div>`,
+            `<div class="lb">${escapeHtml(kicker)}</div>`,
             text(item.passeio)
               ? `<div class="rot-item-title"><b>${escapeHtml(text(item.passeio))}</b></div>`
               : '',

@@ -1287,7 +1287,7 @@
         ${citiesLine ? `<div class="mu preview-title-meta">Cidades: <b style="color:#1F2937">${escapePreviewHtml(citiesLine)}</b></div>` : ''}
       </section>`;
     const summaryBandHtml = periodText
-      ? `<div class="rot-band"><div><b>PERÍODO</b><span>${escapePreviewHtml(periodText)}</span></div>${duracao ? `<div><b>DURAÇÃO</b><span>${escapePreviewHtml(duracao)} dias</span></div>` : ''}</div>`
+      ? `<div class="rot-band"><div><b>Período</b><span>${escapePreviewHtml(periodText)}</span></div>${duracao ? `<div><b>Duração</b><span>${escapePreviewHtml(duracao)} dias</span></div>` : ''}</div>`
       : '';
 
     const footerHtml =

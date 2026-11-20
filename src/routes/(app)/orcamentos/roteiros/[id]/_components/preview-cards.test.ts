@@ -151,7 +151,7 @@ describe('cards de passeio no PDF do roteiro (paridade com orçamento)', () => {
       ],
       formatDate
     );
-    expect(html).toContain('CARRO · 6 DIÁRIAS');
+    expect(html).toContain('Carro · 6 Diárias');
     expect(html).toContain('Retirada:');
     expect(html).toContain('Devolução:');
     expect(html).toContain('Europcar');
@@ -193,7 +193,7 @@ describe('cards de passeio no PDF do roteiro (paridade com orçamento)', () => {
       ],
       formatDate
     );
-    expect(html).toContain('TREM ·');
+    expect(html).toContain('Trem ·');
     expect(html).toContain('Paris Gare de Lyon');
     expect(html).toContain('Lyon Part-Dieu');
     expect(html).toContain('TGV · 6123');
@@ -220,7 +220,7 @@ describe('cards de passeio no PDF do roteiro (paridade com orçamento)', () => {
       ],
       formatDate
     );
-    expect(html).toContain('SEGURO VIAGEM ·');
+    expect(html).toContain('Seguro Viagem ·');
     expect(html).toContain('- 06 dias');
     expect(html).toContain('Assist Card');
     expect(html).toContain('2 adultos e 1 criança e 1 infant');

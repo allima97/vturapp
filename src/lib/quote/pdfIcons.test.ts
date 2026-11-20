@@ -47,7 +47,7 @@ describe('tema do PDF de roteiro', () => {
       (value) => value || ''
     );
     expect(html).toContain(hotelIconShape);
-    expect(html).toContain('class="lb">HOTEL · 6 NOITES');
+    expect(html).toContain('class="lb">Roma · Hotel · 6 Noites');
     expect(html).toContain('<b>Hotel Roma</b>');
     expect(html).toContain('class="rtf rota"');
     expect(html).toContain('Café');
