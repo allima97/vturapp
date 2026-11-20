@@ -351,8 +351,8 @@
     </Button>
   </div>
 
-  {#snippet campoDescricao(item: RotPasseio)}
-    <div class="col-span-2">
+  {#snippet campoDescricao(item: RotPasseio, classe = 'col-span-2')}
+    <div class={classe}>
       <FieldDatalistInput
         label={ehTipoDetalhado(item.tipo) ? 'Descrição' : 'Passeio / Serviço'}
         bind:value={item.passeio}
@@ -456,91 +456,97 @@
               {/if}
               {#if passeio.tipo === 'Aluguel de Carro'}
                 {@const dCarro = detalhesDe(passeio)}
-                {@render campoDescricao(passeio)}
-                <div class="col-span-2">
-                  <FieldSelect
-                    label="Locadora"
-                    value={dCarro.locadora ?? ''}
-                    options={opcoesComValorSalvo(LOCADORAS, dCarro.locadora)}
-                    placeholder="Selecione"
-                    class_name="w-full"
-                    on:change={(e) => alterarDetalheTexto(passeio, 'locadora', e)}
-                  />
+                <div class="col-span-full grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  {@render campoDescricao(passeio, '')}
+                  <div>
+                    <FieldSelect
+                      label="Locadora"
+                      value={dCarro.locadora ?? ''}
+                      options={opcoesComValorSalvo(LOCADORAS, dCarro.locadora)}
+                      placeholder="Selecione"
+                      class_name="w-full"
+                      on:change={(e) => alterarDetalheTexto(passeio, 'locadora', e)}
+                    />
+                  </div>
+                  <div>
+                    <p class="mb-1 block text-xs font-medium text-slate-500">Total de dias</p>
+                    <div
+                      class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                    >
+                      {diasItem('aluguel_carro', passeio.data_inicio, passeio.data_fim) ?? '—'}
+                    </div>
+                  </div>
                 </div>
-                <div class="col-span-2">
-                  <CidadeRoteiro
-                    bind:destino={passeios[index]}
-                    fieldId={`passeio-cidade-${index}`}
-                    label="Cidade de Retirada"
-                  />
+                <div class="col-span-full grid grid-cols-2 gap-3 lg:grid-cols-4">
+                  <div>
+                    <CidadeRoteiro
+                      bind:destino={passeios[index]}
+                      fieldId={`passeio-cidade-${index}`}
+                      label="Cidade de Retirada"
+                    />
+                  </div>
+                  <div>
+                    <FieldInput
+                      label="Loja Retirada"
+                      value={dCarro.loja_retirada ?? ''}
+                      placeholder="Ex.: Loja Aeroporto"
+                      class_name="w-full"
+                      on:input={(e) => alterarDetalheTexto(passeio, 'loja_retirada', e)}
+                    />
+                  </div>
+                  <div>
+                    <FieldInput
+                      label="Data retirada"
+                      type="date"
+                      bind:value={passeio.data_inicio}
+                      class_name="w-full"
+                    />
+                  </div>
+                  <div>
+                    <FieldInput
+                      label="Hora retirada"
+                      type="time"
+                      value={dCarro.hora_retirada ?? ''}
+                      class_name="w-full"
+                      on:input={(e) => alterarDetalheTexto(passeio, 'hora_retirada', e)}
+                    />
+                  </div>
                 </div>
-                <div class="col-span-2">
-                  <FieldInput
-                    label="Loja Retirada"
-                    value={dCarro.loja_retirada ?? ''}
-                    placeholder="Ex.: Loja Aeroporto"
-                    class_name="w-full"
-                    on:input={(e) => alterarDetalheTexto(passeio, 'loja_retirada', e)}
-                  />
-                </div>
-                <div class="col-span-2">
-                  <FieldInput
-                    label="Data retirada"
-                    type="date"
-                    bind:value={passeio.data_inicio}
-                    class_name="w-full"
-                  />
-                </div>
-                <div class="col-span-2">
-                  <FieldInput
-                    label="Hora retirada"
-                    type="time"
-                    value={dCarro.hora_retirada ?? ''}
-                    class_name="w-full"
-                    on:input={(e) => alterarDetalheTexto(passeio, 'hora_retirada', e)}
-                  />
-                </div>
-                <div class="col-span-2">
-                  <CidadeDestinoAutocomplete
-                    id={`passeio-devolucao-${index}`}
-                    label="Cidade de Devolução"
-                    bind:value={dCarro.cidade_devolucao}
-                    placeholder="Cidade"
-                    class_name="w-full"
-                  />
-                </div>
-                <div class="col-span-2">
-                  <FieldInput
-                    label="Loja Devolução"
-                    value={dCarro.loja_devolucao ?? ''}
-                    placeholder="Ex.: Loja Downtown"
-                    class_name="w-full"
-                    on:input={(e) => alterarDetalheTexto(passeio, 'loja_devolucao', e)}
-                  />
-                </div>
-                <div class="col-span-2">
-                  <FieldInput
-                    label="Data devolução"
-                    type="date"
-                    bind:value={passeio.data_fim}
-                    class_name="w-full"
-                  />
-                </div>
-                <div class="col-span-2">
-                  <FieldInput
-                    label="Hora devolução"
-                    type="time"
-                    value={dCarro.hora_devolucao ?? ''}
-                    class_name="w-full"
-                    on:input={(e) => alterarDetalheTexto(passeio, 'hora_devolucao', e)}
-                  />
-                </div>
-                <div class="col-span-2">
-                  <p class="mb-1 block text-xs font-medium text-slate-500">Total de dias</p>
-                  <div
-                    class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
-                  >
-                    {diasItem('aluguel_carro', passeio.data_inicio, passeio.data_fim) ?? '—'}
+                <div class="col-span-full grid grid-cols-2 gap-3 lg:grid-cols-4">
+                  <div>
+                    <CidadeDestinoAutocomplete
+                      id={`passeio-devolucao-${index}`}
+                      label="Cidade de Devolução"
+                      bind:value={dCarro.cidade_devolucao}
+                      placeholder="Cidade"
+                      class_name="w-full"
+                    />
+                  </div>
+                  <div>
+                    <FieldInput
+                      label="Loja Devolução"
+                      value={dCarro.loja_devolucao ?? ''}
+                      placeholder="Ex.: Loja Downtown"
+                      class_name="w-full"
+                      on:input={(e) => alterarDetalheTexto(passeio, 'loja_devolucao', e)}
+                    />
+                  </div>
+                  <div>
+                    <FieldInput
+                      label="Data devolução"
+                      type="date"
+                      bind:value={passeio.data_fim}
+                      class_name="w-full"
+                    />
+                  </div>
+                  <div>
+                    <FieldInput
+                      label="Hora devolução"
+                      type="time"
+                      value={dCarro.hora_devolucao ?? ''}
+                      class_name="w-full"
+                      on:input={(e) => alterarDetalheTexto(passeio, 'hora_devolucao', e)}
+                    />
                   </div>
                 </div>
                 <div class="col-span-full">
