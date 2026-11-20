@@ -76,9 +76,13 @@
   import { renderPreviewDia } from './_components/preview-dia';
   import {
     buildRoteiroCardSection,
+    categoriaPasseioPdf,
+    renderPreviewCarros,
     renderPreviewFlights,
     renderPreviewHotels,
-    renderPreviewPasseios
+    renderPreviewPasseios,
+    renderPreviewSeguros,
+    renderPreviewTrens
   } from './_components/preview-cards';
   import { nomeCidadeNoPdf } from './_components/preview-cidade';
   import { roteiroCardStyles } from '$lib/utils/printLayout';
@@ -161,6 +165,7 @@
     { id: 'transporte', label: 'Aéreo' },
     { id: 'aluguel-carro', label: 'Aluguel de Carro' },
     { id: 'trem', label: 'Trem' },
+    { id: 'seguro-viagem', label: 'Seguro Viagem' },
     { id: 'passeios', label: 'Passeios' },
     { id: 'opcionais', label: 'Opcionais' },
     { id: 'investimento', label: 'Investimento' },
@@ -188,15 +193,7 @@
     'Pousada',
     'Resort'
   ];
-  const PASSEIO_TIPO_OPTIONS = [
-    'Passeio',
-    'Show',
-    'Ingresso',
-    'Transfer',
-    'Seguro Viagem',
-    'Serviço',
-    'Outro'
-  ];
+  const PASSEIO_TIPO_OPTIONS = ['Passeio', 'Show', 'Ingresso', 'Transfer', 'Serviço', 'Outro'];
   const TRANSPORTE_TIPO_OPTIONS = ['Aéreo', 'Terrestre', 'Marítimo', 'Ferroviário'];
   const TRANSPORTE_TIPO_VOO_OPTIONS = ['Nacional', 'Internacional'];
   const INVESTIMENTO_TIPO_OPTIONS = ['Por pessoa', 'Por casal', 'Por família', 'Por apto'];
@@ -334,6 +331,7 @@
       (p) =>
         p.tipo !== 'Trem' &&
         p.tipo !== 'Aluguel de Carro' &&
+        p.tipo !== 'Seguro Viagem' &&
         (p.cidade || p.passeio || p.data_inicio || p.tipo)
     ).length,
     'aluguel-carro': passeios.filter(
@@ -341,6 +339,9 @@
     ).length,
     trem: passeios.filter(
       (p) => p.tipo === 'Trem' && (p.cidade || p.passeio || p.data_inicio || p.tipo)
+    ).length,
+    'seguro-viagem': passeios.filter(
+      (p) => p.tipo === 'Seguro Viagem' && (p.cidade || p.passeio || p.data_inicio || p.tipo)
     ).length,
     transporte: transportes.filter((t) => t.trecho || t.cia_aerea || t.data_voo || t.tipo).length,
     investimento: investimentos.filter(
@@ -1158,7 +1159,18 @@
     const hoteisHtml = renderPreviewHotels(hoteisItems, formatPreviewDate);
 
     const passeiosItems = passeios.filter((item) => item.passeio || item.cidade);
-    const passeiosHtml = renderPreviewPasseios(passeiosItems, formatPreviewDate);
+    const passeiosGerais = passeiosItems.filter(
+      (item) => categoriaPasseioPdf(item.tipo) === 'geral'
+    );
+    const carrosItems = passeiosItems.filter((item) => categoriaPasseioPdf(item.tipo) === 'carro');
+    const trensItems = passeiosItems.filter((item) => categoriaPasseioPdf(item.tipo) === 'trem');
+    const segurosItems = passeiosItems.filter(
+      (item) => categoriaPasseioPdf(item.tipo) === 'seguro'
+    );
+    const passeiosHtml = renderPreviewPasseios(passeiosGerais, formatPreviewDate);
+    const carrosHtml = renderPreviewCarros(carrosItems, formatPreviewDate);
+    const trensHtml = renderPreviewTrens(trensItems, formatPreviewDate);
+    const segurosHtml = renderPreviewSeguros(segurosItems, formatPreviewDate);
 
     const investimentoRows = investimentos
       .filter(
@@ -1375,6 +1387,9 @@
             ${buildRoteiroCardSection('Itinerário Detalhado', diasHtml, 'preview-itinerary-section')}
             ${buildRoteiroCardSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
             ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
+            ${buildRoteiroCardSection('Aluguel de Carro', carrosHtml, 'preview-carros-section')}
+            ${buildRoteiroCardSection('Trem', trensHtml, 'preview-trens-section')}
+            ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
             ${buildRoteiroCardSection(
               'Passeios Opcionais',
               buildOpcionaisHtml(
@@ -1608,10 +1623,23 @@
         bind:passeios
         {sugestoes}
       />
+    {:else if abaAtiva === 'seguro-viagem'}
+      <AbaPasseios
+        tituloCard="Seguro Viagem"
+        rotuloAdicionar="Adicionar seguro viagem"
+        PASSEIO_TIPO_OPTIONS={['Seguro Viagem']}
+        apenasTipos={['Seguro Viagem']}
+        {handleImportPasseioText}
+        {passeioImportError}
+        {passeioImportMsg}
+        bind:passeioImportText
+        bind:passeios
+        {sugestoes}
+      />
     {:else if abaAtiva === 'passeios'}
       <AbaPasseios
         {PASSEIO_TIPO_OPTIONS}
-        excetoTipos={['Trem', 'Aluguel de Carro']}
+        excetoTipos={['Trem', 'Aluguel de Carro', 'Seguro Viagem']}
         {handleImportPasseioText}
         {passeioImportError}
         {passeioImportMsg}
