@@ -1352,7 +1352,11 @@ export const legadoRoteiroPersonalizado = sqliteTable('legado_roteiro_personaliz
   mostrarPagamentoPdf: integer('mostrar_pagamento_pdf', { mode: 'boolean' }),
   mostrarInformacoesPdf: integer('mostrar_informacoes_pdf', { mode: 'boolean' }),
   mostrarRodapePdf: integer('mostrar_rodape_pdf', { mode: 'boolean' }),
-  opcionais: text('opcionais')
+  opcionais: text('opcionais'),
+  clienteId: text('cliente_id'),
+  clienteNome: text('cliente_nome'),
+  clienteTelefone: text('cliente_telefone'),
+  clienteEmail: text('cliente_email')
 });
 
 export const legadoRoteiroSugestoes = sqliteTable('legado_roteiro_sugestoes', {

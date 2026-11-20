@@ -42,7 +42,7 @@ export async function handleRoteirosIdGet(event: RequestEvent) {
 
     for (let tentativa = 0; tentativa < (revisaoRoteiroAtiva ? 3 : 1); tentativa++) {
       const { data: roteiro, error: roteiroError } = await consultarRoteiro(
-        `id, nome, opcionais, duracao, inicio_cidade, fim_cidade, inclui_texto, nao_inclui_texto, informacoes_importantes, mostrar_pagamento_pdf, mostrar_informacoes_pdf, mostrar_rodape_pdf, created_by, company_id, created_at, updated_at${revisaoRoteiroAtiva ? ', revisao' : ''}`
+        `id, nome, opcionais, duracao, inicio_cidade, fim_cidade, inclui_texto, nao_inclui_texto, informacoes_importantes, mostrar_pagamento_pdf, mostrar_informacoes_pdf, mostrar_rodape_pdf, cliente_id, cliente_nome, cliente_telefone, cliente_email, created_by, company_id, created_at, updated_at${revisaoRoteiroAtiva ? ', revisao' : ''}`
       );
       if (roteiroError) throw roteiroError;
       if (!roteiro)

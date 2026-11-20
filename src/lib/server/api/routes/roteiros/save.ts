@@ -410,6 +410,18 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
     const mostrarInformacoesPdf = body.mostrar_informacoes_pdf === false ? false : true;
     const mostrarRodapePdf = body.mostrar_rodape_pdf === false ? false : true;
 
+    const clienteCampos = {
+      cliente_id:
+        typeof body.cliente_id === 'string' && body.cliente_id.trim()
+          ? body.cliente_id.trim()
+          : null,
+      cliente_nome: typeof body.cliente_nome === 'string' ? body.cliente_nome.trim() || null : null,
+      cliente_telefone:
+        typeof body.cliente_telefone === 'string' ? body.cliente_telefone.trim() || null : null,
+      cliente_email:
+        typeof body.cliente_email === 'string' ? body.cliente_email.trim() || null : null
+    };
+
     // Upsert roteiro principal
     let roteiroId: string = isNew ? crypto.randomUUID() : String(body.id).trim();
     const db = event.platform?.env?.DB;
@@ -443,7 +455,8 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
         informacoes_importantes: informacoesImportantes,
         mostrar_pagamento_pdf: mostrarPagamentoPdf,
         mostrar_informacoes_pdf: mostrarInformacoesPdf,
-        mostrar_rodape_pdf: mostrarRodapePdf
+        mostrar_rodape_pdf: mostrarRodapePdf,
+        ...clienteCampos
       };
 
       if (atomico) {
@@ -482,6 +495,7 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
         mostrar_pagamento_pdf: mostrarPagamentoPdf,
         mostrar_informacoes_pdf: mostrarInformacoesPdf,
         mostrar_rodape_pdf: mostrarRodapePdf,
+        ...clienteCampos,
         updated_at: new Date().toISOString()
       };
 

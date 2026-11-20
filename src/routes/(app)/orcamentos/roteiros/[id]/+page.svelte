@@ -38,7 +38,11 @@
     DollarSign,
     RefreshCw,
     Copy,
-    Pencil
+    Pencil,
+    Search,
+    User,
+    X,
+    Whatsapp
   } from '$lib/icons';
   import { ApiError, apiFetch, apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { ensureServerSessionCookie } from '$lib/services/session';
@@ -139,6 +143,10 @@
     mostrar_pagamento_pdf?: boolean | null;
     mostrar_informacoes_pdf?: boolean | null;
     mostrar_rodape_pdf?: boolean | null;
+    cliente_id?: string | null;
+    cliente_nome?: string | null;
+    cliente_telefone?: string | null;
+    cliente_email?: string | null;
     dias?: RotDia[] | null;
     hoteis?: RotHotel[] | null;
     passeios?: RotPasseio[] | null;
@@ -235,6 +243,10 @@
   let mostrarPagamentoPdf = $state(true);
   let mostrarInformacoesPdf = $state(true);
   let mostrarRodapePdf = $state(true);
+  let clienteId = $state('');
+  let clienteNome = $state('');
+  let clienteTelefone = $state('');
+  let clienteEmail = $state('');
 
   function parsePasseioDetalhes(value: unknown): RotPasseioDetalhes | null {
     if (!value) return null;
@@ -462,6 +474,10 @@
       mostrarPagamentoPdf = r.mostrar_pagamento_pdf !== false;
       mostrarInformacoesPdf = r.mostrar_informacoes_pdf !== false;
       mostrarRodapePdf = r.mostrar_rodape_pdf !== false;
+      clienteId = r.cliente_id || '';
+      clienteNome = r.cliente_nome || '';
+      clienteTelefone = r.cliente_telefone || '';
+      clienteEmail = r.cliente_email || '';
 
       dias = (r.dias || []).map((d) => ({
         ...newDia(d.ordem ?? 0),
@@ -576,6 +592,10 @@
         mostrar_pagamento_pdf: mostrarPagamentoPdf,
         mostrar_informacoes_pdf: mostrarInformacoesPdf,
         mostrar_rodape_pdf: mostrarRodapePdf,
+        cliente_id: clienteId || null,
+        cliente_nome: clienteNome.trim() || null,
+        cliente_telefone: clienteTelefone.trim() || null,
+        cliente_email: clienteEmail.trim() || null,
         dias: dias.map((d, i) => ({
           ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(d) : d),
           ordem: i
@@ -650,6 +670,10 @@
         mostrar_pagamento_pdf: mostrarPagamentoPdf,
         mostrar_informacoes_pdf: mostrarInformacoesPdf,
         mostrar_rodape_pdf: mostrarRodapePdf,
+        cliente_id: clienteId || null,
+        cliente_nome: clienteNome.trim() || null,
+        cliente_telefone: clienteTelefone.trim() || null,
+        cliente_email: clienteEmail.trim() || null,
         dias: diasCopia.map((d, i) => ({
           ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(d) : d),
           ordem: i
@@ -794,6 +818,78 @@
         whatsapp: item.whatsapp ? String(item.whatsapp) : undefined
       }))
       .filter((item) => item.id.length > 0 && item.nome.length > 0);
+  }
+
+  // ─── Vínculo de cliente cadastrado (Dados do roteiro) ─────────────────────
+  let vinculoQ = $state('');
+  let vinculoResults = $state<{ id: string; nome: string; email?: string; whatsapp?: string }[]>(
+    []
+  );
+  let vinculoLoading = $state(false);
+  let showVinculo = $state(false);
+  let vinculoController: AbortController | null = null;
+  let vinculoSeq = 0;
+  let vinculoTimeout: ReturnType<typeof setTimeout> | null = null;
+
+  $effect(() => {
+    const q = vinculoQ;
+    if (!editandoDadosRoteiro || clienteId || !showVinculo || q.length < 2) {
+      vinculoController?.abort();
+      vinculoResults = [];
+      return;
+    }
+    if (vinculoTimeout) clearTimeout(vinculoTimeout);
+    vinculoTimeout = setTimeout(async () => {
+      vinculoController?.abort();
+      const controller = new AbortController();
+      vinculoController = controller;
+      const seq = ++vinculoSeq;
+      vinculoLoading = true;
+      try {
+        const data = await apiFetch<ClienteBuscaResponse | ClienteBuscaResult[]>(
+          '/api/v1/clientes',
+          {
+            query: { search: q },
+            signal: controller.signal,
+            // Busca opcional de cliente: sem acesso a Clientes, só não lista.
+            redirectOnForbidden: false
+          }
+        );
+        if (seq !== vinculoSeq || destroyed) return;
+        vinculoResults = normalizeClienteBuscaResults(data);
+      } catch (err) {
+        if (isCanceledApiError(err)) return;
+        vinculoResults = [];
+      } finally {
+        if (seq === vinculoSeq && !destroyed) vinculoLoading = false;
+      }
+    }, 300);
+
+    return () => {
+      if (vinculoTimeout) clearTimeout(vinculoTimeout);
+    };
+  });
+
+  function selecionarClienteVinculo(cliente: {
+    id: string;
+    nome: string;
+    email?: string;
+    whatsapp?: string;
+  }) {
+    clienteId = cliente.id;
+    clienteNome = cliente.nome;
+    clienteTelefone = cliente.whatsapp || '';
+    clienteEmail = cliente.email || '';
+    vinculoQ = '';
+    showVinculo = false;
+    vinculoResults = [];
+  }
+
+  function limparClienteVinculo() {
+    clienteId = '';
+    vinculoQ = '';
+    showVinculo = false;
+    vinculoResults = [];
   }
 
   $effect(() => {
@@ -1284,6 +1380,7 @@
       <section class="preview-title-card">
         <div class="preview-title-kicker">Roteiro Personalizado</div>
         <h1 class="preview-title-name">${escapePreviewHtml(nome || 'Roteiro')}</h1>
+        ${clienteNome ? `<div class="mu preview-title-meta">Para: <b style="color:#1F2937">${escapePreviewHtml(clienteNome)}</b></div>` : ''}
         ${citiesLine ? `<div class="mu preview-title-meta">Cidades: <b style="color:#1F2937">${escapePreviewHtml(citiesLine)}</b></div>` : ''}
       </section>`;
     const summaryBandHtml = periodText
@@ -1443,10 +1540,13 @@
     loadSeq += 1;
     diasBuscaSeq += 1;
     clienteBuscaSeq += 1;
+    vinculoSeq += 1;
     loadController?.abort();
     diasBuscaController?.abort();
     clienteBuscaController?.abort();
+    vinculoController?.abort();
     if (clienteSearchTimeout) clearTimeout(clienteSearchTimeout);
+    if (vinculoTimeout) clearTimeout(vinculoTimeout);
   });
 </script>
 
@@ -1541,6 +1641,151 @@
           </p>
         {/if}
       </div>
+    </div>
+
+    <div class="mt-4 border-t border-slate-100 pt-4">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div class="lg:col-span-2">
+          {#if editandoDadosRoteiro}
+            <FieldInput
+              label="Nome do cliente"
+              bind:value={clienteNome}
+              placeholder="Digite o nome do cliente"
+              id="rot-cliente-nome"
+            />
+          {:else}
+            <p class="vtur-label">Nome do cliente</p>
+            <p
+              id="rot-cliente-nome"
+              class="min-h-10 px-2.5 py-2.5 text-sm break-words text-slate-900"
+            >
+              {clienteNome || '—'}
+            </p>
+          {/if}
+        </div>
+        <div>
+          {#if editandoDadosRoteiro}
+            <FieldInput
+              label="Telefone/WhatsApp"
+              bind:value={clienteTelefone}
+              icon={Whatsapp}
+              placeholder="(00) 00000-0000"
+              mask="phone"
+              id="rot-cliente-telefone"
+            />
+          {:else}
+            <p class="vtur-label">Telefone/WhatsApp</p>
+            <p
+              id="rot-cliente-telefone"
+              class="min-h-10 px-2.5 py-2.5 text-sm break-words text-slate-900"
+            >
+              {clienteTelefone || '—'}
+            </p>
+          {/if}
+        </div>
+        <div class="md:col-span-3 lg:col-span-2 lg:col-start-4">
+          {#if editandoDadosRoteiro}
+            <FieldInput
+              label="E-mail"
+              type="email"
+              bind:value={clienteEmail}
+              placeholder="cliente@email.com"
+              id="rot-cliente-email"
+            />
+          {:else}
+            <p class="vtur-label">E-mail</p>
+            <p
+              id="rot-cliente-email"
+              class="min-h-10 px-2.5 py-2.5 text-sm break-words text-slate-900"
+            >
+              {clienteEmail || '—'}
+            </p>
+          {/if}
+        </div>
+      </div>
+
+      {#if editandoDadosRoteiro}
+        <div class="mt-4">
+          <label for="rot-vinculo-cliente" class="mb-1 block text-sm font-medium text-slate-700">
+            Vincular cliente cadastrado <span class="font-normal text-slate-500">(opcional)</span>
+          </label>
+
+          {#if clienteId}
+            <div class="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <div
+                class="bg-clientes-100 flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
+              >
+                <User size={20} class="text-clientes-600" />
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="truncate font-medium text-slate-900">{clienteNome}</p>
+                <p class="text-sm text-slate-500">Cliente cadastrado selecionado</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                type="button"
+                on:click={limparClienteVinculo}
+              >
+                <X size={16} />
+              </Button>
+            </div>
+          {:else}
+            <div class="relative">
+              <FieldInput
+                id="rot-vinculo-cliente"
+                bind:value={vinculoQ}
+                label={null}
+                icon={Search}
+                on:input={() => {
+                  showVinculo = true;
+                }}
+                on:focus={() => {
+                  showVinculo = true;
+                }}
+                on:blur={() => {
+                  setTimeout(() => {
+                    showVinculo = false;
+                  }, 200);
+                }}
+                placeholder="Buscar para vincular por nome, email ou CPF..."
+                class_name="w-full"
+                autocomplete="off"
+              />
+              {#if showVinculo && vinculoQ.length >= 2}
+                <div
+                  class="absolute top-full right-0 left-0 z-50 mt-1 max-h-60 overflow-auto rounded-lg border border-slate-200 bg-white shadow-lg"
+                >
+                  {#if vinculoLoading}
+                    <div class="px-4 py-3 text-sm text-slate-500">Buscando...</div>
+                  {:else if vinculoResults.length > 0}
+                    {#each vinculoResults as cliente}
+                      <Button
+                        type="button"
+                        variant="unstyled"
+                        size="sm"
+                        on:click={() => selecionarClienteVinculo(cliente)}
+                        class_name="block w-full rounded-none border-b border-slate-100 px-4 py-3 text-left transition-colors hover:bg-slate-50"
+                      >
+                        <p class="font-medium text-slate-900">{cliente.nome}</p>
+                        <p class="text-sm text-slate-500">
+                          {cliente.email || 'Sem email'}{cliente.whatsapp
+                            ? ` • ${cliente.whatsapp}`
+                            : ''}
+                        </p>
+                      </Button>
+                    {/each}
+                  {:else}
+                    <div class="px-4 py-3 text-sm text-slate-500">
+                      Nenhum cliente encontrado. Você pode preencher os dados manualmente acima.
+                    </div>
+                  {/if}
+                </div>
+              {/if}
+            </div>
+          {/if}
+        </div>
+      {/if}
     </div>
   </Card>
 
@@ -1757,6 +2002,21 @@
       type="button"
       variant="secondary"
       on:click={() => {
+        gerarClienteResults = [];
+        if (clienteId && clienteNome) {
+          gerarClienteSel = {
+            id: clienteId,
+            nome: clienteNome,
+            email: clienteEmail || undefined,
+            whatsapp: clienteTelefone || undefined
+          };
+          gerarClienteQ = clienteNome;
+          gerarClienteNome = '';
+        } else {
+          gerarClienteSel = null;
+          gerarClienteQ = '';
+          gerarClienteNome = clienteNome;
+        }
         showGerarModal = true;
       }}
     >
