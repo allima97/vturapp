@@ -63,6 +63,7 @@
     type RotInvestimento,
     type RotPagamento,
     type RotPasseio,
+    type RotPasseioDetalhes,
     type RotTransporte
   } from './_components/tipos';
   import {
@@ -187,10 +188,13 @@
   ];
   const PASSEIO_TIPO_OPTIONS = [
     'Passeio',
+    'Trem',
+    'Show',
+    'Ingresso',
+    'Aluguel de Carro',
     'Transfer',
     'Seguro Viagem',
     'Serviço',
-    'Ingresso',
     'Outro'
   ];
   const TRANSPORTE_TIPO_OPTIONS = ['Aéreo', 'Terrestre', 'Marítimo', 'Ferroviário'];
@@ -234,6 +238,20 @@
   let mostrarPagamentoPdf = $state(true);
   let mostrarInformacoesPdf = $state(true);
   let mostrarRodapePdf = $state(true);
+
+  function parsePasseioDetalhes(value: unknown): RotPasseioDetalhes | null {
+    if (!value) return null;
+    if (typeof value === 'object' && !Array.isArray(value)) return value as RotPasseioDetalhes;
+    if (typeof value !== 'string' || !value.trim()) return null;
+    try {
+      const parsed: unknown = JSON.parse(value);
+      return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+        ? (parsed as RotPasseioDetalhes)
+        : null;
+    } catch {
+      return null;
+    }
+  }
 
   function mergeCidadesVisitadas(inicio?: string | null, fim?: string | null): string {
     const origem = String(inicio || '').trim();
@@ -445,7 +463,8 @@
       passeios = (r.passeios || []).map((p) => ({
         ...newPasseio(p.ordem ?? 0),
         ...p,
-        ingressos: p.ingressos || 'Não incluído'
+        ingressos: p.ingressos || 'Não incluído',
+        detalhes: parsePasseioDetalhes((p as { detalhes?: unknown }).detalhes)
       }));
       transportes = (r.transportes || []).map((t) => ({ ...newTransporte(t.ordem ?? 0), ...t }));
       investimentos = (r.investimentos || []).map((i) => ({

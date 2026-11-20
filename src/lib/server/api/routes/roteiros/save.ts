@@ -111,6 +111,7 @@ type RoteiroPasseioPayload = {
   qtd_criancas?: unknown;
   valor_original?: unknown;
   valor_final?: unknown;
+  detalhes?: unknown;
   ordem?: unknown;
 };
 
@@ -129,6 +130,7 @@ type RoteiroPasseioDraft = {
   qtd_criancas: unknown;
   valor_original: unknown;
   valor_final: unknown;
+  detalhes: string | null;
   ordem: number;
 };
 
@@ -595,6 +597,12 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
               qtd_criancas: p.qtd_criancas || null,
               valor_original: p.valor_original || null,
               valor_final: p.valor_final || null,
+              detalhes:
+                p.detalhes && typeof p.detalhes === 'object'
+                  ? JSON.stringify(p.detalhes)
+                  : typeof p.detalhes === 'string' && p.detalhes.trim()
+                    ? p.detalhes
+                    : null,
               ordem: typeof p.ordem === 'number' ? p.ordem : idx
             })
           )
@@ -610,7 +618,8 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
               Number.isFinite(Number(p.qtd_adultos)) ||
               Number.isFinite(Number(p.qtd_criancas)) ||
               Number.isFinite(Number(p.valor_original)) ||
-              Number.isFinite(Number(p.valor_final))
+              Number.isFinite(Number(p.valor_final)) ||
+              Boolean(p.detalhes && p.detalhes !== '{}')
             )
           );
 

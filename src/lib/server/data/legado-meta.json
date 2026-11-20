@@ -1521,7 +1521,8 @@
         "qtd_adultos": { "kind": "integer", "nullable": true },
         "qtd_criancas": { "kind": "integer", "nullable": true },
         "valor_original": { "kind": "real", "nullable": true },
-        "valor_final": { "kind": "real", "nullable": true }
+        "valor_final": { "kind": "real", "nullable": true },
+        "detalhes": { "kind": "text", "nullable": true }
       },
       "primaryKey": ["id"]
     },

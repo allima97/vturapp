@@ -1332,7 +1332,8 @@ export const legadoRoteiroPasseio = sqliteTable('legado_roteiro_passeio', {
   qtdAdultos: integer('qtd_adultos', { mode: 'number' }),
   qtdCriancas: integer('qtd_criancas', { mode: 'number' }),
   valorOriginal: real('valor_original'),
-  valorFinal: real('valor_final')
+  valorFinal: real('valor_final'),
+  detalhes: text('detalhes')
 });
 
 export const legadoRoteiroPersonalizado = sqliteTable('legado_roteiro_personalizado', {

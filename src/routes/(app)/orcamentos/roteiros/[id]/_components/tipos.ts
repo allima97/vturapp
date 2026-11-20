@@ -1,4 +1,28 @@
 // ─── Types ─────────────────────────────────────────────────────────────────
+import type { QuoteFlightSegment } from '$lib/quote/flights';
+
+export type RotPasseioDetalhes = {
+  categoria?: string;
+  adultos_valor?: number;
+  criancas_valor?: number;
+  infant?: number | null;
+  infant_valor?: number;
+  quantidade?: number | null;
+  cambio?: string;
+  locadora?: string;
+  cidade_devolucao?: string;
+  hora_retirada?: string;
+  hora_devolucao?: string;
+  loja_retirada?: string;
+  loja_devolucao?: string;
+  assentos?: string;
+  portas?: string;
+  malas?: string;
+  combustivel?: string;
+  incluidos: string[];
+  segmentos: QuoteFlightSegment[];
+};
+
 export type RotDia = {
   id?: string;
   ordem: number;
@@ -51,6 +75,7 @@ export type RotPasseio = {
   qtd_criancas: number | null;
   valor_original: number | null;
   valor_final: number | null;
+  detalhes?: RotPasseioDetalhes | null;
 };
 
 export type RotTransporte = {

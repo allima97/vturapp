@@ -72,7 +72,7 @@ export async function handleRoteirosIdGet(event: RequestEvent) {
         client
           .from('roteiro_passeio')
           .select(
-            'id, roteiro_id, cidade, cidade_id, passeio, data_inicio, data_fim, tipo, ingressos, ordem, fornecedor, qtd_adultos, qtd_criancas, valor_original, valor_final'
+            'id, roteiro_id, cidade, cidade_id, passeio, data_inicio, data_fim, tipo, ingressos, ordem, fornecedor, qtd_adultos, qtd_criancas, valor_original, valor_final, detalhes'
           )
           .eq('roteiro_id', id)
           .order('ordem')
