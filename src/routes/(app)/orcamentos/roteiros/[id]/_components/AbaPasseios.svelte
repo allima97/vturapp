@@ -646,39 +646,67 @@
                   </div>
                 </div>
               {:else}
-                <div class="col-span-2">
-                  <CidadeRoteiro
-                    bind:destino={passeios[index]}
-                    fieldId={`passeio-cidade-${index}`}
-                  />
-                </div>
-                {@render campoDescricao(passeio)}
-                {#if !ehTipoDetalhado(passeio.tipo)}
+                {#if passeio.tipo === 'Trem'}
+                  <div class="col-span-full grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div>
+                      <CidadeRoteiro
+                        bind:destino={passeios[index]}
+                        fieldId={`passeio-cidade-${index}`}
+                      />
+                    </div>
+                    {@render campoDescricao(passeio, '')}
+                    <div>
+                      <FieldInput
+                        label="Data de saída"
+                        type="date"
+                        bind:value={passeio.data_inicio}
+                        class_name="w-full"
+                      />
+                    </div>
+                    <div>
+                      <FieldInput
+                        label="Data de chegada"
+                        type="date"
+                        bind:value={passeio.data_fim}
+                        class_name="w-full"
+                      />
+                    </div>
+                  </div>
+                {:else}
+                  <div class="col-span-2">
+                    <CidadeRoteiro
+                      bind:destino={passeios[index]}
+                      fieldId={`passeio-cidade-${index}`}
+                    />
+                  </div>
+                  {@render campoDescricao(passeio)}
+                  {#if !ehTipoDetalhado(passeio.tipo)}
+                    <div class="col-span-2">
+                      <FieldInput
+                        label="Fornecedor"
+                        bind:value={passeio.fornecedor}
+                        placeholder="Fornecedor"
+                        class_name="w-full"
+                      />
+                    </div>
+                  {/if}
                   <div class="col-span-2">
                     <FieldInput
-                      label="Fornecedor"
-                      bind:value={passeio.fornecedor}
-                      placeholder="Fornecedor"
+                      label={rotuloDataInicio(passeio.tipo)}
+                      type="date"
+                      bind:value={passeio.data_inicio}
+                      class_name="w-full"
+                    />
+                  </div>
+                  <div class="col-span-2">
+                    <FieldInput
+                      label={rotuloDataFim(passeio.tipo)}
+                      type="date"
+                      bind:value={passeio.data_fim}
                       class_name="w-full"
                     />
                   </div>
                 {/if}
-                <div class="col-span-2">
-                  <FieldInput
-                    label={rotuloDataInicio(passeio.tipo)}
-                    type="date"
-                    bind:value={passeio.data_inicio}
-                    class_name="w-full"
-                  />
-                </div>
-                <div class="col-span-2">
-                  <FieldInput
-                    label={rotuloDataFim(passeio.tipo)}
-                    type="date"
-                    bind:value={passeio.data_fim}
-                    class_name="w-full"
-                  />
-                </div>
                 {#if ehTipoDetalhado(passeio.tipo)}
                   {@const d = detalhesDe(passeio)}
                   {#if passeio.tipo === 'Trem'}
@@ -714,77 +742,79 @@
                     </div>
                     {@render campoIngressos(passeio)}
                   {/if}
-                  <div class="col-span-2 grid grid-cols-2 gap-2">
-                    <FieldInput
-                      label="Adultos"
-                      type="number"
-                      value={passeio.qtd_adultos ?? ''}
-                      min="0"
-                      step="1"
-                      class_name="w-full"
-                      on:input={(e) => alterarQuantidadePasseio(passeio, 'qtd_adultos', e)}
-                    />
-                    <FieldInput
-                      label="Valor Adulto"
-                      type="number"
-                      money
-                      value={d.adultos_valor ?? 0}
-                      min="0"
-                      step="0.01"
-                      class_name="w-full"
-                      on:moneyInput={(e) => alterarDetalheValor(passeio, 'adultos_valor', e)}
-                    />
-                  </div>
-                  <div class="col-span-2 grid grid-cols-2 gap-2">
-                    <FieldInput
-                      label="Crianças"
-                      type="number"
-                      value={passeio.qtd_criancas ?? ''}
-                      min="0"
-                      step="1"
-                      class_name="w-full"
-                      on:input={(e) => alterarQuantidadePasseio(passeio, 'qtd_criancas', e)}
-                    />
-                    <FieldInput
-                      label="Valor Criança"
-                      type="number"
-                      money
-                      value={d.criancas_valor ?? 0}
-                      min="0"
-                      step="0.01"
-                      class_name="w-full"
-                      on:moneyInput={(e) => alterarDetalheValor(passeio, 'criancas_valor', e)}
-                    />
-                  </div>
-                  <div class="col-span-2 grid grid-cols-2 gap-2">
-                    <FieldInput
-                      label="Infant"
-                      type="number"
-                      value={d.infant ?? ''}
-                      min="0"
-                      step="1"
-                      class_name="w-full"
-                      on:input={(e) => alterarDetalheNumero(passeio, 'infant', e)}
-                    />
-                    <FieldInput
-                      label="Valor Infant"
-                      type="number"
-                      money
-                      value={d.infant_valor ?? 0}
-                      min="0"
-                      step="0.01"
-                      class_name="w-full"
-                      on:moneyInput={(e) => alterarDetalheValor(passeio, 'infant_valor', e)}
-                    />
-                  </div>
-                  <div class="col-span-2">
-                    <p class="mb-1 block text-xs font-medium text-slate-500">Total</p>
-                    <div
-                      class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-right text-sm font-semibold text-slate-800"
-                    >
-                      {formatTotal(totaisPasseio(passeio).total_amount)}
+                  {#if passeio.tipo !== 'Trem' || d.segmentos.length > 0}
+                    <div class="col-span-2 grid grid-cols-2 gap-2">
+                      <FieldInput
+                        label="Adultos"
+                        type="number"
+                        value={passeio.qtd_adultos ?? ''}
+                        min="0"
+                        step="1"
+                        class_name="w-full"
+                        on:input={(e) => alterarQuantidadePasseio(passeio, 'qtd_adultos', e)}
+                      />
+                      <FieldInput
+                        label="Valor Adulto"
+                        type="number"
+                        money
+                        value={d.adultos_valor ?? 0}
+                        min="0"
+                        step="0.01"
+                        class_name="w-full"
+                        on:moneyInput={(e) => alterarDetalheValor(passeio, 'adultos_valor', e)}
+                      />
                     </div>
-                  </div>
+                    <div class="col-span-2 grid grid-cols-2 gap-2">
+                      <FieldInput
+                        label="Crianças"
+                        type="number"
+                        value={passeio.qtd_criancas ?? ''}
+                        min="0"
+                        step="1"
+                        class_name="w-full"
+                        on:input={(e) => alterarQuantidadePasseio(passeio, 'qtd_criancas', e)}
+                      />
+                      <FieldInput
+                        label="Valor Criança"
+                        type="number"
+                        money
+                        value={d.criancas_valor ?? 0}
+                        min="0"
+                        step="0.01"
+                        class_name="w-full"
+                        on:moneyInput={(e) => alterarDetalheValor(passeio, 'criancas_valor', e)}
+                      />
+                    </div>
+                    <div class="col-span-2 grid grid-cols-2 gap-2">
+                      <FieldInput
+                        label="Infant"
+                        type="number"
+                        value={d.infant ?? ''}
+                        min="0"
+                        step="1"
+                        class_name="w-full"
+                        on:input={(e) => alterarDetalheNumero(passeio, 'infant', e)}
+                      />
+                      <FieldInput
+                        label="Valor Infant"
+                        type="number"
+                        money
+                        value={d.infant_valor ?? 0}
+                        min="0"
+                        step="0.01"
+                        class_name="w-full"
+                        on:moneyInput={(e) => alterarDetalheValor(passeio, 'infant_valor', e)}
+                      />
+                    </div>
+                    <div class="col-span-2">
+                      <p class="mb-1 block text-xs font-medium text-slate-500">Total</p>
+                      <div
+                        class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-right text-sm font-semibold text-slate-800"
+                      >
+                        {formatTotal(totaisPasseio(passeio).total_amount)}
+                      </div>
+                    </div>
+                  {/if}
                 {:else}
                   <div class="col-span-2 grid grid-cols-2 gap-2">
                     <FieldInput
