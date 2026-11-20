@@ -125,7 +125,14 @@ export function renderPreviewHotels(items: RotHotel[], formatDate: FormatDate) {
         const start = formatDate(hotel.data_inicio);
         const end = formatDate(hotel.data_fim);
         const noites = hotel.noites && hotel.noites > 0 ? hotel.noites : 0;
-        const kicker = noites ? `HOTEL · ${noites} ${noites === 1 ? 'NOITE' : 'NOITES'}` : 'HOTEL';
+        const cidadeCurta = nomeCidadeNoPdf(city);
+        const kicker = [
+          cidadeCurta,
+          'HOTEL',
+          noites ? `${noites} ${noites === 1 ? 'NOITE' : 'NOITES'}` : ''
+        ]
+          .filter(Boolean)
+          .join(' · ');
         const checkin = start ? `Check-in: ${start}` : '';
         const checkout = end ? `Check-out: ${end}` : '';
         const estadia =
@@ -142,11 +149,10 @@ export function renderPreviewHotels(items: RotHotel[], formatDate: FormatDate) {
         );
         const content = [
           `<div class="rot-hotel"><div>${serviceIconSvg('hotel')}</div><div>`,
-          cityTitle(city),
           text(hotel.hotel)
             ? `<div class="rot-item-title"><b>${escapeHtml(text(hotel.hotel))}</b></div>`
             : '',
-          `<div class="lb">${escapeHtml(kicker)}</div>`,
+          kicker ? `<div class="lb">${escapeHtml(kicker)}</div>` : '',
           estadia,
           detalhe ? `<div class="mu sm">${escapeHtml(detalhe)}</div>` : '',
           chipsHtml([text(hotel.regime), passageiros]),
