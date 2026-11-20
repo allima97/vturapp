@@ -7,6 +7,8 @@ export type RotPasseioDetalhes = {
   criancas_valor?: number;
   infant?: number | null;
   infant_valor?: number;
+  senior?: number | null;
+  senior_valor?: number;
   quantidade?: number | null;
   cambio?: string;
   locadora?: string;

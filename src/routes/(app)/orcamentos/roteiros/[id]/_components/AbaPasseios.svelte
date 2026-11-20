@@ -98,12 +98,13 @@
   }
 
   // ─── Tipos com campos detalhados (mesmos do Orçamento) ─────────────────────
-  const TIPOS_DETALHADOS = ['Trem', 'Show', 'Ingresso', 'Aluguel de Carro'];
+  const TIPOS_DETALHADOS = ['Trem', 'Show', 'Ingresso', 'Aluguel de Carro', 'Seguro Viagem'];
   const MAPA_TIPO_ITEM: Record<string, string> = {
     Trem: 'trem',
     Show: 'show',
     Ingresso: 'ingresso',
-    'Aluguel de Carro': 'aluguel_carro'
+    'Aluguel de Carro': 'aluguel_carro',
+    'Seguro Viagem': 'seguro'
   };
   const CATEGORIAS_SERVICO = [
     { value: 'Serviço Compartilhado', label: 'Serviço Compartilhado' },
@@ -217,7 +218,7 @@
   function totaisPasseio(passeio: RotPasseio) {
     const detalhes = passeio.detalhes;
     const ehCarro = passeio.tipo === 'Aluguel de Carro';
-    return calcularTotaisItem({
+    const totais = calcularTotaisItem({
       item_type: MAPA_TIPO_ITEM[passeio.tipo] ?? '',
       quantity: ehCarro ? Number(detalhes?.quantidade) || 1 : 1,
       unit_price: Number(passeio.valor_original) || 0,
@@ -227,10 +228,20 @@
       criancas_valor: Number(detalhes?.criancas_valor) || 0,
       infant: detalhes?.infant ?? null,
       infant_valor: Number(detalhes?.infant_valor) || 0,
-      senior: null,
-      senior_valor: 0,
+      senior: detalhes?.senior ?? null,
+      senior_valor: Number(detalhes?.senior_valor) || 0,
       quantidade_apartamentos: null
     });
+    // Seguro legado (formulário antigo, sem valores por passageiro): preserva o valor_final salvo.
+    const semValoresPassageiros =
+      detalhes?.adultos_valor === undefined &&
+      detalhes?.criancas_valor === undefined &&
+      detalhes?.infant_valor === undefined &&
+      detalhes?.senior_valor === undefined;
+    if (passeio.tipo === 'Seguro Viagem' && semValoresPassageiros && totais.total_amount === 0) {
+      return { ...totais, total_amount: Number(passeio.valor_final) || 0 };
+    }
+    return totais;
   }
 
   function formatTotal(value: number) {
@@ -267,7 +278,11 @@
     detalhesDe(passeio)[campo] = target.value;
   }
 
-  function alterarDetalheNumero(passeio: RotPasseio, campo: 'infant' | 'quantidade', event: Event) {
+  function alterarDetalheNumero(
+    passeio: RotPasseio,
+    campo: 'infant' | 'senior' | 'quantidade',
+    event: Event
+  ) {
     const raw = (event.currentTarget as HTMLInputElement).value;
     const valor = raw === '' ? null : Number(raw);
     detalhesDe(passeio)[campo] = valor;
@@ -275,7 +290,7 @@
 
   function alterarDetalheValor(
     passeio: RotPasseio,
-    campo: 'adultos_valor' | 'criancas_valor' | 'infant_valor',
+    campo: 'adultos_valor' | 'criancas_valor' | 'infant_valor' | 'senior_valor',
     event: CustomEvent<string | number>
   ) {
     detalhesDe(passeio)[campo] = Number(event.detail) || 0;
@@ -680,12 +695,14 @@
                     />
                   </div>
                   {@render campoDescricao(passeio)}
-                  {#if !ehTipoDetalhado(passeio.tipo)}
+                  {#if !ehTipoDetalhado(passeio.tipo) || passeio.tipo === 'Seguro Viagem'}
                     <div class="col-span-2">
                       <FieldInput
                         label="Fornecedor"
                         bind:value={passeio.fornecedor}
-                        placeholder="Fornecedor"
+                        placeholder={passeio.tipo === 'Seguro Viagem'
+                          ? 'Ex.: Assist Card'
+                          : 'Fornecedor'}
                         class_name="w-full"
                       />
                     </div>
@@ -742,6 +759,16 @@
                     </div>
                     {@render campoIngressos(passeio)}
                   {/if}
+                  {#if passeio.tipo === 'Seguro Viagem'}
+                    <div class="col-span-2">
+                      <p class="mb-1 block text-xs font-medium text-slate-500">Total de dias</p>
+                      <div
+                        class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                      >
+                        {diasItem('seguro', passeio.data_inicio, passeio.data_fim) ?? '—'}
+                      </div>
+                    </div>
+                  {/if}
                   {#if passeio.tipo !== 'Trem' || d.segmentos.length > 0}
                     <div class="col-span-2 grid grid-cols-2 gap-2">
                       <FieldInput
@@ -764,6 +791,29 @@
                         on:moneyInput={(e) => alterarDetalheValor(passeio, 'adultos_valor', e)}
                       />
                     </div>
+                    {#if passeio.tipo === 'Seguro Viagem'}
+                      <div class="col-span-2 grid grid-cols-2 gap-2">
+                        <FieldInput
+                          label="Senior"
+                          type="number"
+                          value={d.senior ?? ''}
+                          min="0"
+                          step="1"
+                          class_name="w-full"
+                          on:input={(e) => alterarDetalheNumero(passeio, 'senior', e)}
+                        />
+                        <FieldInput
+                          label="Valor Senior"
+                          type="number"
+                          money
+                          value={d.senior_valor ?? 0}
+                          min="0"
+                          step="0.01"
+                          class_name="w-full"
+                          on:moneyInput={(e) => alterarDetalheValor(passeio, 'senior_valor', e)}
+                        />
+                      </div>
+                    {/if}
                     <div class="col-span-2 grid grid-cols-2 gap-2">
                       <FieldInput
                         label="Crianças"

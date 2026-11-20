@@ -137,11 +137,16 @@ function detalhesPasseio(item: RotPasseio): RotPasseioDetalhes {
 }
 
 function passageirosTexto(item: RotPasseio) {
+  const detalhes = detalhesPasseio(item);
   const partes: string[] = [];
   const adultos = Number(item.qtd_adultos) || 0;
   const criancas = Number(item.qtd_criancas) || 0;
+  const infant = Number(detalhes.infant) || 0;
+  const senior = Number(detalhes.senior) || 0;
   if (adultos > 0) partes.push(`${adultos} ${adultos === 1 ? 'adulto' : 'adultos'}`);
   if (criancas > 0) partes.push(`${criancas} ${criancas === 1 ? 'criança' : 'crianças'}`);
+  if (infant > 0) partes.push(`${infant} ${infant === 1 ? 'infant' : 'infants'}`);
+  if (senior > 0) partes.push(`${senior} ${senior === 1 ? 'senior' : 'seniors'}`);
   return partes.join(' · ');
 }
 
@@ -297,6 +302,8 @@ export function renderPreviewSeguros(items: RotPasseio[], formatDate: FormatDate
       .map((item) => {
         const titulo = text(item.passeio) || 'Seguro Viagem';
         const periodo = periodoTexto(item, formatDate);
+        const dias = diasItem('seguro', item.data_inicio, item.data_fim);
+        const totalDias = dias != null ? `Total de dias: ${dias}` : '';
         const passageiros = passageirosTexto(item);
         const linhaCinza = [text(item.fornecedor), passageiros].filter(Boolean).join(' · ');
         const content = [
@@ -305,10 +312,14 @@ export function renderPreviewSeguros(items: RotPasseio[], formatDate: FormatDate
           `<div class="rot-item-title"><b>${escapeHtml(titulo)}</b></div>`,
           `<div class="lb">SEGURO VIAGEM</div>`,
           periodo ? `<p class="meta">${escapeHtml(periodo)}</p>` : '',
+          totalDias ? `<p class="meta">${escapeHtml(totalDias)}</p>` : '',
           linhaCinza ? `<div class="mu sm">${escapeHtml(linhaCinza)}</div>` : '',
           `</div></div>`
         ].join('');
-        return card(content, [city, item.passeio, item.fornecedor].join('\n'));
+        return card(
+          content,
+          [city, item.passeio, item.fornecedor, periodo, totalDias, passageiros].join('\n')
+        );
       })
       .join('')
   ).join('');
