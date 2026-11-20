@@ -13,6 +13,21 @@
   } from './tipos';
   import { ChevronDown, ChevronUp, Plus, Trash2 } from '$lib/icons';
   import { formatHorario } from '$lib/utils/inputFormatting';
+  import { FORNECEDORES_TREM } from '$lib/quote/flights';
+
+  const CLASSES_RESERVA = ['Econômica', 'Econômica Premium', 'Executiva', 'Primeira Classe'].map(
+    (nome) => ({ value: nome, label: nome })
+  );
+
+  function opcoesComValorSalvo(
+    opcoes: Array<{ value: string; label: string }>,
+    valor: string | null | undefined
+  ) {
+    const salvo = String(valor ?? '').trim();
+    return salvo && !opcoes.some((opcao) => opcao.value === salvo)
+      ? [...opcoes, { value: salvo, label: salvo }]
+      : opcoes;
+  }
 
   let {
     TRANSPORTE_TIPO_OPTIONS,
@@ -188,6 +203,29 @@
                   class_name="w-full"
                 />
               </div>
+              {#if transporte.tipo !== 'Aéreo'}
+                <div>
+                  {#if transporte.tipo === 'Ferroviário'}
+                    <FieldSelect
+                      label="Fornecedor"
+                      value={transporte.fornecedor}
+                      options={opcoesComValorSalvo(FORNECEDORES_TREM, transporte.fornecedor)}
+                      placeholder="Selecione"
+                      class_name="w-full"
+                      on:change={(e) => {
+                        transporte.fornecedor = (e.target as HTMLSelectElement).value;
+                      }}
+                    />
+                  {:else}
+                    <FieldInput
+                      label="Fornecedor"
+                      bind:value={transporte.fornecedor}
+                      placeholder="Fornecedor"
+                      class_name="w-full"
+                    />
+                  {/if}
+                </div>
+              {/if}
               <div>
                 <FieldInput
                   label="Data do voo"
@@ -206,11 +244,15 @@
                 />
               </div>
               <div>
-                <FieldInput
+                <FieldSelect
                   label="Classe reserva"
-                  bind:value={transporte.classe_reserva}
-                  placeholder="Ex: Econômica"
+                  value={transporte.classe_reserva}
+                  options={opcoesComValorSalvo(CLASSES_RESERVA, transporte.classe_reserva)}
+                  placeholder="Selecione"
                   class_name="w-full"
+                  on:change={(e) => {
+                    transporte.classe_reserva = (e.target as HTMLSelectElement).value;
+                  }}
                 />
               </div>
               <div>

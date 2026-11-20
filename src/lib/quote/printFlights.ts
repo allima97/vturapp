@@ -8,6 +8,7 @@ export type PrintFlight = {
   cidade_saida?: string;
   cidade_chegada?: string;
   cia_aerea: string;
+  fornecedor?: string;
   descricao: string;
   data_inicio: string;
   data_fim: string;
@@ -63,7 +64,9 @@ export function renderPreviewFlights(
       const offset = diffDaysISODate(item.data_voo || item.data_inicio, item.data_fim);
       const plus = offset != null && offset > 0 ? `<span class="p1">+${offset}</span>` : '';
       const voo = text(item.descricao);
-      const cia = text(item.cia_aerea);
+      const cia = [text(item.cia_aerea), text(item.fornecedor)]
+        .filter((valor, indice, todas) => valor && todas.indexOf(valor) === indice)
+        .join(' · ');
       const tituloPartes = [fromCity, toCity].filter(
         (cidade, indice, todas) =>
           cidade &&
@@ -89,9 +92,14 @@ export function renderPreviewFlights(
         ? `<div class="chks">${chips.map((chip) => `<div class="chk">${quoteCheckIcon}<span>${escapeHtml(chip)}</span></div>`).join('')}</div>`
         : '';
       const longo = requiresPrintContinuation(
-        [item.trecho, item.cia_aerea, item.descricao, item.classe_reserva, item.tarifa_nome].join(
-          '\n'
-        )
+        [
+          item.trecho,
+          item.cia_aerea,
+          item.fornecedor,
+          item.descricao,
+          item.classe_reserva,
+          item.tarifa_nome
+        ].join('\n')
       );
       return `<tr class="${longo ? 'roteiro-card--long' : ''}"><td><div class="row rot-row roteiro-card${longo ? ' roteiro-card--long' : ''}"><div>${serviceIconSvg('passagem')}</div><div>${titulo ? `<div class="rot-item-title"><b>${escapeHtml(titulo)}</b></div>` : ''}${rota}${chipsHtml}${index === items.length - 1 ? extraHtml : ''}</div></div></td></tr>`;
     })

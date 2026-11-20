@@ -3,7 +3,12 @@
   import TrainCity from '$lib/components/orcamentos/TrainCity.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import { Plus, Trash2 } from '$lib/icons';
-  import { newQuoteFlightSegment, trainArrival, type QuoteFlightSegment } from '$lib/quote/flights';
+  import {
+    FORNECEDORES_TREM,
+    newQuoteFlightSegment,
+    trainArrival,
+    type QuoteFlightSegment
+  } from '$lib/quote/flights';
 
   let {
     idPrefix,
@@ -13,30 +18,10 @@
     segments: QuoteFlightSegment[];
   } = $props();
 
-  const fornecedoresTrem = [
-    'Amtrak',
-    'Brightline',
-    'China Railway',
-    'Comboios de Portugal',
-    'Deutsche Bahn',
-    'Eurostar',
-    'Italo',
-    'Japan Railways (JR)',
-    'Korail',
-    'NS International',
-    'Ouigo',
-    'ÖBB',
-    'Renfe',
-    'SBB',
-    'SNCF',
-    'Trenitalia',
-    'VIA Rail'
-  ].map((nome) => ({ value: nome, label: nome }));
-
   function opcoesFornecedorTrem(atual: string) {
-    return atual && !fornecedoresTrem.some((opcao) => opcao.value === atual)
-      ? [...fornecedoresTrem, { value: atual, label: atual }]
-      : fornecedoresTrem;
+    return atual && !FORNECEDORES_TREM.some((opcao) => opcao.value === atual)
+      ? [...FORNECEDORES_TREM, { value: atual, label: atual }]
+      : FORNECEDORES_TREM;
   }
 
   function addSegment() {

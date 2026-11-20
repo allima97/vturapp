@@ -90,6 +90,26 @@ function toFlightSegment(value: unknown): QuoteFlightSegment {
   };
 }
 
+export const FORNECEDORES_TREM = [
+  'Amtrak',
+  'Brightline',
+  'China Railway',
+  'Comboios de Portugal',
+  'Deutsche Bahn',
+  'Eurostar',
+  'Italo',
+  'Japan Railways (JR)',
+  'Korail',
+  'NS International',
+  'Ouigo',
+  'ÖBB',
+  'Renfe',
+  'SBB',
+  'SNCF',
+  'Trenitalia',
+  'VIA Rail'
+].map((nome) => ({ value: nome, label: nome }));
+
 export function newQuoteFlightSegment(): QuoteFlightSegment {
   return {
     tipo_voo: 'Nacional',

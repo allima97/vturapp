@@ -1151,7 +1151,7 @@
         : '';
 
     const transportesItems = transportes.filter(
-      (item) => item.trecho || item.cia_aerea || item.data_voo
+      (item) => item.trecho || item.cia_aerea || item.fornecedor || item.data_voo
     );
     const transportesHtml = renderPreviewFlights(transportesItems, formatPreviewDate);
 
