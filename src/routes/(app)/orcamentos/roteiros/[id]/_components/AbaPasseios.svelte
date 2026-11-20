@@ -11,8 +11,7 @@
     addItem,
     newPasseio,
     removeItem,
-    reorder,
-    updateItem
+    reorder
   } from './tipos';
   import { ChevronDown, ChevronUp, Plus, Trash2 } from '$lib/icons';
   import CidadeRoteiro from './CidadeRoteiro.svelte';
@@ -310,7 +309,7 @@
       detalhesDe(passeio);
       const total = totaisPasseio(passeio).total_amount;
       if (Number(passeio.valor_final) !== total) {
-        passeios = updateItem(passeios, index, { valor_final: total });
+        passeio.valor_final = total;
       }
     });
   });
@@ -623,9 +622,7 @@
                     step="0.01"
                     class_name="w-full"
                     on:moneyInput={(e) => {
-                      passeios = updateItem(passeios, index, {
-                        valor_original: Number(e.detail) || null
-                      });
+                      passeio.valor_original = Number(e.detail) || null;
                     }}
                   />
                 </div>
@@ -795,22 +792,14 @@
                       type="number"
                       value={passeio.qtd_adultos ?? ''}
                       class_name="w-full"
-                      on:input={(e) => {
-                        passeios = updateItem(passeios, index, {
-                          qtd_adultos: Number((e.target as HTMLInputElement).value) || null
-                        });
-                      }}
+                      on:input={(e) => alterarQuantidadePasseio(passeio, 'qtd_adultos', e)}
                     />
                     <FieldInput
                       label="Crianças"
                       type="number"
                       value={passeio.qtd_criancas ?? ''}
                       class_name="w-full"
-                      on:input={(e) => {
-                        passeios = updateItem(passeios, index, {
-                          qtd_criancas: Number((e.target as HTMLInputElement).value) || null
-                        });
-                      }}
+                      on:input={(e) => alterarQuantidadePasseio(passeio, 'qtd_criancas', e)}
                     />
                   </div>
                   {#if passeio.tipo === 'Passeio'}
@@ -823,9 +812,7 @@
                         value={passeio.valor_original ?? ''}
                         class_name="w-full"
                         on:moneyInput={(e) => {
-                          passeios = updateItem(passeios, index, {
-                            valor_original: Number(e.detail) || null
-                          });
+                          passeio.valor_original = Number(e.detail) || null;
                         }}
                       />
                       <FieldInput
@@ -835,9 +822,7 @@
                         value={passeio.valor_final ?? ''}
                         class_name="w-full"
                         on:moneyInput={(e) => {
-                          passeios = updateItem(passeios, index, {
-                            valor_final: Number(e.detail) || null
-                          });
+                          passeio.valor_final = Number(e.detail) || null;
                         }}
                       />
                     </div>
@@ -850,9 +835,7 @@
                         value={passeio.valor_original ?? ''}
                         class_name="w-full"
                         on:moneyInput={(e) => {
-                          passeios = updateItem(passeios, index, {
-                            valor_original: Number(e.detail) || null
-                          });
+                          passeio.valor_original = Number(e.detail) || null;
                         }}
                       />
                     </div>
@@ -864,9 +847,7 @@
                         value={passeio.valor_final ?? ''}
                         class_name="w-full"
                         on:moneyInput={(e) => {
-                          passeios = updateItem(passeios, index, {
-                            valor_final: Number(e.detail) || null
-                          });
+                          passeio.valor_final = Number(e.detail) || null;
                         }}
                       />
                     </div>
