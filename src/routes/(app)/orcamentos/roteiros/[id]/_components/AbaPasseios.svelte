@@ -561,22 +561,12 @@
                       on:change={(e) => alterarDetalheTexto(passeio, 'locadora', e)}
                     />
                   </div>
-                  <div class="col-span-2">
-                    <FieldSelect
-                      label="Câmbio"
-                      value={d.cambio ?? ''}
-                      options={CAMBIOS}
-                      placeholder="Selecione"
-                      class_name="w-full"
-                      on:change={(e) => alterarDetalheTexto(passeio, 'cambio', e)}
-                    />
-                  </div>
                   <div class="col-span-full">
                     <p class="mb-1 block text-xs font-semibold text-slate-600">
                       Informações do veículo
                     </p>
                   </div>
-                  <div class="col-span-full grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  <div class="col-span-full grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
                     <FieldSelect
                       label="Assentos"
                       value={d.assentos ?? ''}
@@ -608,6 +598,14 @@
                       placeholder="Selecione"
                       class_name="w-full"
                       on:change={(e) => alterarDetalheTexto(passeio, 'combustivel', e)}
+                    />
+                    <FieldSelect
+                      label="Câmbio"
+                      value={d.cambio ?? ''}
+                      options={CAMBIOS}
+                      placeholder="Selecione"
+                      class_name="w-full"
+                      on:change={(e) => alterarDetalheTexto(passeio, 'cambio', e)}
                     />
                   </div>
                   <div class="col-span-full">
