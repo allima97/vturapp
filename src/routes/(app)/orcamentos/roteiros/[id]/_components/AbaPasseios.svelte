@@ -9,10 +9,9 @@
     type RotPasseio,
     type RotPasseioDetalhes,
     addItem,
-    moveDown,
-    moveUp,
     newPasseio,
     removeItem,
+    reorder,
     updateItem
   } from './tipos';
   import { ChevronDown, ChevronUp, Plus, Trash2 } from '$lib/icons';
@@ -27,6 +26,10 @@
 
   let {
     PASSEIO_TIPO_OPTIONS,
+    apenasTipos,
+    excetoTipos,
+    tituloCard = 'Passeios e Serviços',
+    rotuloAdicionar = 'Adicionar passeio',
     handleImportPasseioText,
     passeioImportError,
     passeioImportMsg,
@@ -35,6 +38,10 @@
     sugestoes
   }: {
     PASSEIO_TIPO_OPTIONS: string[];
+    apenasTipos?: string[];
+    excetoTipos?: string[];
+    tituloCard?: string;
+    rotuloAdicionar?: string;
     handleImportPasseioText: () => void;
     passeioImportError: string | null;
     passeioImportMsg: string | null;
@@ -152,6 +159,35 @@
 
   function ehTipoDetalhado(tipo: string) {
     return TIPOS_DETALHADOS.includes(tipo);
+  }
+
+  // ─── Filtro por tipo (abas dedicadas a Trem / Aluguel de Carro) ────────────
+  const tipoNovoPasseio = $derived(apenasTipos?.[0] ?? 'Passeio');
+
+  function tipoVisivel(tipo: string) {
+    if (apenasTipos && !apenasTipos.includes(tipo)) return false;
+    if (excetoTipos?.includes(tipo)) return false;
+    return true;
+  }
+
+  const passeiosVisiveis = $derived.by(() => {
+    const lista: { passeio: RotPasseio; index: number; posicao: number }[] = [];
+    passeios.forEach((passeio, index) => {
+      if (tipoVisivel(passeio.tipo)) lista.push({ passeio, index, posicao: lista.length });
+    });
+    return lista;
+  });
+
+  function moverPasseioVisivel(index: number, direcao: -1 | 1) {
+    let alvo = index + direcao;
+    while (alvo >= 0 && alvo < passeios.length) {
+      if (tipoVisivel(passeios[alvo].tipo)) break;
+      alvo += direcao;
+    }
+    if (alvo < 0 || alvo >= passeios.length) return;
+    const next = [...passeios];
+    [next[index], next[alvo]] = [next[alvo], next[index]];
+    passeios = reorder(next);
   }
 
   type DetalheTexto =
@@ -300,20 +336,38 @@
   });
 </script>
 
-<Card title="Passeios e Serviços" color="clientes">
+<Card title={tituloCard} color="clientes">
   <div class="mb-3 flex flex-wrap gap-2">
     <Button
       type="button"
       variant="secondary"
       size="sm"
       on:click={() => {
-        passeios = addItem(passeios, newPasseio);
+        passeios = addItem(passeios, (ordem) => newPasseio(ordem, tipoNovoPasseio));
       }}
     >
       <Plus size={13} class="mr-1" />
-      Adicionar passeio
+      {rotuloAdicionar}
     </Button>
   </div>
+
+  {#snippet campoDescricao(item: RotPasseio)}
+    <div class="col-span-2">
+      <FieldDatalistInput
+        label={ehTipoDetalhado(item.tipo) ? 'Descrição' : 'Passeio / Serviço'}
+        bind:value={item.passeio}
+        placeholder={ehTipoDetalhado(item.tipo) ? 'Ex.: Roma / Milão' : 'Nome do passeio'}
+        class_name="w-full"
+        options={catalogosPasseios[chaveCidadeCatalogo(item)]?.nomes ?? []}
+        helper={(() => {
+          const catalogo = catalogosPasseios[chaveCidadeCatalogo(item)];
+          if (catalogo?.estado === 'carregando') return 'Carregando sugestões da cidade...';
+          if (catalogo?.estado === 'erro') return catalogo.erro ?? 'Erro ao carregar sugestões.';
+          return null;
+        })()}
+      />
+    </div>
+  {/snippet}
 
   {#snippet campoIngressos(item: RotPasseio)}
     <div class="col-span-2">
@@ -327,11 +381,11 @@
     </div>
   {/snippet}
 
-  {#if passeios.length === 0}
+  {#if passeiosVisiveis.length === 0}
     <p class="py-6 text-center text-sm text-slate-400">Nenhum passeio adicionado.</p>
   {:else}
     <div class="space-y-3">
-      {#each passeios as passeio, index (passeio)}
+      {#each passeiosVisiveis as { passeio, index, posicao } (passeio)}
         <div class="relative rounded-xl border border-slate-200 bg-slate-50 p-3">
           <div class="mb-2 flex gap-1 sm:absolute sm:top-3 sm:right-3 sm:mb-0">
             <Button
@@ -339,11 +393,11 @@
               variant="ghost"
               size="xs"
               class_name="text-slate-400 hover:text-slate-600"
-              disabled={index === 0}
+              disabled={posicao === 0}
               ariaLabel="Mover passeio para cima"
               title="Mover passeio para cima"
               on:click={() => {
-                passeios = moveUp(passeios, index);
+                moverPasseioVisivel(index, -1);
               }}
             >
               <ChevronUp size={13} />
@@ -353,11 +407,11 @@
               variant="ghost"
               size="xs"
               class_name="text-slate-400 hover:text-slate-600"
-              disabled={index === passeios.length - 1}
+              disabled={posicao === passeiosVisiveis.length - 1}
               ariaLabel="Mover passeio para baixo"
               title="Mover passeio para baixo"
               on:click={() => {
-                passeios = moveDown(passeios, index);
+                moverPasseioVisivel(index, 1);
               }}
             >
               <ChevronDown size={13} />
@@ -382,103 +436,281 @@
               class="flex cursor-pointer list-none items-center justify-between gap-3 pr-28 text-sm font-semibold"
             >
               <span class="truncate"
-                >{String(passeio.passeio ?? '').trim() || `Passeio ${index + 1}`}</span
+                >{String(passeio.passeio ?? '').trim() || `Passeio ${posicao + 1}`}</span
               >
               <span aria-hidden="true" class="text-lg">
                 <span class="indicador-mais">+</span><span class="indicador-menos">−</span>
               </span>
             </summary>
             <div class="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-6">
-              <div class="col-span-2">
-                <FieldSelect
-                  label="Tipo"
-                  bind:value={passeio.tipo}
-                  options={PASSEIO_TIPO_OPTIONS.map((opt) => ({ value: opt, label: opt }))}
-                  placeholder={null}
-                  class_name="w-full"
-                />
-              </div>
-              <div class="col-span-2">
-                <CidadeRoteiro bind:destino={passeios[index]} fieldId={`passeio-cidade-${index}`} />
-              </div>
-              <div class="col-span-2">
-                <FieldDatalistInput
-                  label={ehTipoDetalhado(passeio.tipo) ? 'Descrição' : 'Passeio / Serviço'}
-                  bind:value={passeio.passeio}
-                  placeholder={ehTipoDetalhado(passeio.tipo)
-                    ? 'Ex.: Roma / Milão'
-                    : 'Nome do passeio'}
-                  class_name="w-full"
-                  options={catalogosPasseios[chaveCidadeCatalogo(passeio)]?.nomes ?? []}
-                  helper={(() => {
-                    const catalogo = catalogosPasseios[chaveCidadeCatalogo(passeio)];
-                    if (catalogo?.estado === 'carregando')
-                      return 'Carregando sugestões da cidade...';
-                    if (catalogo?.estado === 'erro')
-                      return catalogo.erro ?? 'Erro ao carregar sugestões.';
-                    return null;
-                  })()}
-                />
-              </div>
-              {#if !ehTipoDetalhado(passeio.tipo)}
+              {#if PASSEIO_TIPO_OPTIONS.length > 1}
                 <div class="col-span-2">
-                  <FieldInput
-                    label="Fornecedor"
-                    bind:value={passeio.fornecedor}
-                    placeholder="Fornecedor"
+                  <FieldSelect
+                    label="Tipo"
+                    bind:value={passeio.tipo}
+                    options={PASSEIO_TIPO_OPTIONS.map((opt) => ({ value: opt, label: opt }))}
+                    placeholder={null}
                     class_name="w-full"
                   />
                 </div>
               {/if}
-              <div class="col-span-2">
-                <FieldInput
-                  label={rotuloDataInicio(passeio.tipo)}
-                  type="date"
-                  bind:value={passeio.data_inicio}
-                  class_name="w-full"
-                />
-              </div>
-              <div class="col-span-2">
-                <FieldInput
-                  label={rotuloDataFim(passeio.tipo)}
-                  type="date"
-                  bind:value={passeio.data_fim}
-                  class_name="w-full"
-                />
-              </div>
-              {#if ehTipoDetalhado(passeio.tipo)}
-                {@const d = detalhesDe(passeio)}
-                {#if passeio.tipo === 'Trem'}
-                  <div class="col-span-full">
-                    <TrainSegments idPrefix={`passeio-trem-${index}`} bind:segments={d.segmentos} />
+              {#if passeio.tipo === 'Aluguel de Carro'}
+                {@const dCarro = detalhesDe(passeio)}
+                {@render campoDescricao(passeio)}
+                <div class="col-span-2">
+                  <FieldSelect
+                    label="Locadora"
+                    value={dCarro.locadora ?? ''}
+                    options={opcoesComValorSalvo(LOCADORAS, dCarro.locadora)}
+                    placeholder="Selecione"
+                    class_name="w-full"
+                    on:change={(e) => alterarDetalheTexto(passeio, 'locadora', e)}
+                  />
+                </div>
+                <div class="col-span-2">
+                  <CidadeRoteiro
+                    bind:destino={passeios[index]}
+                    fieldId={`passeio-cidade-${index}`}
+                    label="Cidade de Retirada"
+                  />
+                </div>
+                <div class="col-span-2">
+                  <FieldInput
+                    label="Loja Retirada"
+                    value={dCarro.loja_retirada ?? ''}
+                    placeholder="Ex.: Loja Aeroporto"
+                    class_name="w-full"
+                    on:input={(e) => alterarDetalheTexto(passeio, 'loja_retirada', e)}
+                  />
+                </div>
+                <div class="col-span-2">
+                  <FieldInput
+                    label="Data retirada"
+                    type="date"
+                    bind:value={passeio.data_inicio}
+                    class_name="w-full"
+                  />
+                </div>
+                <div class="col-span-2">
+                  <FieldInput
+                    label="Hora retirada"
+                    type="time"
+                    value={dCarro.hora_retirada ?? ''}
+                    class_name="w-full"
+                    on:input={(e) => alterarDetalheTexto(passeio, 'hora_retirada', e)}
+                  />
+                </div>
+                <div class="col-span-2">
+                  <CidadeDestinoAutocomplete
+                    id={`passeio-devolucao-${index}`}
+                    label="Cidade de Devolução"
+                    bind:value={dCarro.cidade_devolucao}
+                    placeholder="Cidade"
+                    class_name="w-full"
+                  />
+                </div>
+                <div class="col-span-2">
+                  <FieldInput
+                    label="Loja Devolução"
+                    value={dCarro.loja_devolucao ?? ''}
+                    placeholder="Ex.: Loja Downtown"
+                    class_name="w-full"
+                    on:input={(e) => alterarDetalheTexto(passeio, 'loja_devolucao', e)}
+                  />
+                </div>
+                <div class="col-span-2">
+                  <FieldInput
+                    label="Data devolução"
+                    type="date"
+                    bind:value={passeio.data_fim}
+                    class_name="w-full"
+                  />
+                </div>
+                <div class="col-span-2">
+                  <FieldInput
+                    label="Hora devolução"
+                    type="time"
+                    value={dCarro.hora_devolucao ?? ''}
+                    class_name="w-full"
+                    on:input={(e) => alterarDetalheTexto(passeio, 'hora_devolucao', e)}
+                  />
+                </div>
+                <div class="col-span-2">
+                  <p class="mb-1 block text-xs font-medium text-slate-500">Total de dias</p>
+                  <div
+                    class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
+                  >
+                    {diasItem('aluguel_carro', passeio.data_inicio, passeio.data_fim) ?? '—'}
                   </div>
-                {/if}
-                {#if passeio.tipo === 'Show'}
-                  <div class="col-span-2">
-                    <FieldSelect
-                      label="Categoria"
-                      value={d.categoria ?? ''}
-                      options={CATEGORIAS_SERVICO}
-                      placeholder="Selecione"
-                      class_name="w-full"
-                      on:change={(e) => alterarDetalheTexto(passeio, 'categoria', e)}
-                    />
+                </div>
+                <div class="col-span-full">
+                  <p class="mb-1 block text-xs font-semibold text-slate-600">
+                    Informações do veículo
+                  </p>
+                </div>
+                <div class="col-span-full grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                  <FieldSelect
+                    label="Assentos"
+                    value={dCarro.assentos ?? ''}
+                    options={opcoesComValorSalvo(ASSENTOS_VEICULO, dCarro.assentos)}
+                    placeholder="Selecione"
+                    class_name="w-full"
+                    on:change={(e) => alterarDetalheTexto(passeio, 'assentos', e)}
+                  />
+                  <FieldSelect
+                    label="Portas"
+                    value={dCarro.portas ?? ''}
+                    options={opcoesComValorSalvo(PORTAS_VEICULO, dCarro.portas)}
+                    placeholder="Selecione"
+                    class_name="w-full"
+                    on:change={(e) => alterarDetalheTexto(passeio, 'portas', e)}
+                  />
+                  <FieldSelect
+                    label="Malas"
+                    value={dCarro.malas ?? ''}
+                    options={opcoesComValorSalvo(MALAS_VEICULO, dCarro.malas)}
+                    placeholder="Selecione"
+                    class_name="w-full"
+                    on:change={(e) => alterarDetalheTexto(passeio, 'malas', e)}
+                  />
+                  <FieldSelect
+                    label="Combustível"
+                    value={dCarro.combustivel ?? ''}
+                    options={opcoesComValorSalvo(COMBUSTIVEIS_VEICULO, dCarro.combustivel)}
+                    placeholder="Selecione"
+                    class_name="w-full"
+                    on:change={(e) => alterarDetalheTexto(passeio, 'combustivel', e)}
+                  />
+                  <FieldSelect
+                    label="Câmbio"
+                    value={dCarro.cambio ?? ''}
+                    options={CAMBIOS}
+                    placeholder="Selecione"
+                    class_name="w-full"
+                    on:change={(e) => alterarDetalheTexto(passeio, 'cambio', e)}
+                  />
+                </div>
+                <div class="col-span-full">
+                  <p class="mb-2 block text-xs font-medium text-slate-500">Incluídos</p>
+                  <div class="flex flex-wrap gap-x-5 gap-y-2 pt-1">
+                    {#each ITENS_CARRO as incluido}
+                      <label class="inline-flex items-center gap-2 text-sm text-slate-700">
+                        <input
+                          type="checkbox"
+                          value={incluido}
+                          checked={dCarro.incluidos.includes(incluido)}
+                          class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                          onchange={(e) => alterarIncluidoCarro(passeio, e)}
+                        />
+                        {incluido}
+                      </label>
+                    {/each}
                   </div>
-                  {@render campoIngressos(passeio)}
-                {/if}
-                {#if passeio.tipo === 'Ingresso'}
+                </div>
+                <div class="col-span-2">
+                  <FieldInput
+                    money
+                    label="Valor Unit."
+                    type="number"
+                    value={passeio.valor_original ?? ''}
+                    min="0"
+                    step="0.01"
+                    class_name="w-full"
+                    on:moneyInput={(e) => {
+                      passeios = updateItem(passeios, index, {
+                        valor_original: Number(e.detail) || null
+                      });
+                    }}
+                  />
+                </div>
+                <div class="col-span-2">
+                  <FieldInput
+                    label="Qtd. Carros"
+                    type="number"
+                    value={dCarro.quantidade ?? ''}
+                    min="1"
+                    step="1"
+                    class_name="w-full"
+                    on:input={(e) => alterarDetalheNumero(passeio, 'quantidade', e)}
+                  />
+                </div>
+                <div class="col-span-2">
+                  <p class="mb-1 block text-xs font-medium text-slate-500">Total</p>
+                  <div
+                    class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-right text-sm font-semibold text-slate-800"
+                  >
+                    {formatTotal(totaisPasseio(passeio).total_amount)}
+                  </div>
+                </div>
+              {:else}
+                <div class="col-span-2">
+                  <CidadeRoteiro
+                    bind:destino={passeios[index]}
+                    fieldId={`passeio-cidade-${index}`}
+                  />
+                </div>
+                {@render campoDescricao(passeio)}
+                {#if !ehTipoDetalhado(passeio.tipo)}
                   <div class="col-span-2">
                     <FieldInput
-                      label="Categoria"
-                      value={d.categoria ?? ''}
-                      placeholder="Ex.: Inteira, Meia"
+                      label="Fornecedor"
+                      bind:value={passeio.fornecedor}
+                      placeholder="Fornecedor"
                       class_name="w-full"
-                      on:input={(e) => alterarDetalheTexto(passeio, 'categoria', e)}
                     />
                   </div>
-                  {@render campoIngressos(passeio)}
                 {/if}
-                {#if passeio.tipo !== 'Aluguel de Carro'}
+                <div class="col-span-2">
+                  <FieldInput
+                    label={rotuloDataInicio(passeio.tipo)}
+                    type="date"
+                    bind:value={passeio.data_inicio}
+                    class_name="w-full"
+                  />
+                </div>
+                <div class="col-span-2">
+                  <FieldInput
+                    label={rotuloDataFim(passeio.tipo)}
+                    type="date"
+                    bind:value={passeio.data_fim}
+                    class_name="w-full"
+                  />
+                </div>
+                {#if ehTipoDetalhado(passeio.tipo)}
+                  {@const d = detalhesDe(passeio)}
+                  {#if passeio.tipo === 'Trem'}
+                    <div class="col-span-full">
+                      <TrainSegments
+                        idPrefix={`passeio-trem-${index}`}
+                        bind:segments={d.segmentos}
+                      />
+                    </div>
+                  {/if}
+                  {#if passeio.tipo === 'Show'}
+                    <div class="col-span-2">
+                      <FieldSelect
+                        label="Categoria"
+                        value={d.categoria ?? ''}
+                        options={CATEGORIAS_SERVICO}
+                        placeholder="Selecione"
+                        class_name="w-full"
+                        on:change={(e) => alterarDetalheTexto(passeio, 'categoria', e)}
+                      />
+                    </div>
+                    {@render campoIngressos(passeio)}
+                  {/if}
+                  {#if passeio.tipo === 'Ingresso'}
+                    <div class="col-span-2">
+                      <FieldInput
+                        label="Categoria"
+                        value={d.categoria ?? ''}
+                        placeholder="Ex.: Inteira, Meia"
+                        class_name="w-full"
+                        on:input={(e) => alterarDetalheTexto(passeio, 'categoria', e)}
+                      />
+                    </div>
+                    {@render campoIngressos(passeio)}
+                  {/if}
                   <div class="col-span-2 grid grid-cols-2 gap-2">
                     <FieldInput
                       label="Adultos"
@@ -551,245 +783,88 @@
                     </div>
                   </div>
                 {:else}
-                  <div class="col-span-2">
-                    <FieldSelect
-                      label="Locadora"
-                      value={d.locadora ?? ''}
-                      options={opcoesComValorSalvo(LOCADORAS, d.locadora)}
-                      placeholder="Selecione"
+                  <div class="col-span-2 grid grid-cols-2 gap-2">
+                    <FieldInput
+                      label="Adultos"
+                      type="number"
+                      value={passeio.qtd_adultos ?? ''}
                       class_name="w-full"
-                      on:change={(e) => alterarDetalheTexto(passeio, 'locadora', e)}
+                      on:input={(e) => {
+                        passeios = updateItem(passeios, index, {
+                          qtd_adultos: Number((e.target as HTMLInputElement).value) || null
+                        });
+                      }}
+                    />
+                    <FieldInput
+                      label="Crianças"
+                      type="number"
+                      value={passeio.qtd_criancas ?? ''}
+                      class_name="w-full"
+                      on:input={(e) => {
+                        passeios = updateItem(passeios, index, {
+                          qtd_criancas: Number((e.target as HTMLInputElement).value) || null
+                        });
+                      }}
                     />
                   </div>
-                  <div class="col-span-full">
-                    <p class="mb-1 block text-xs font-semibold text-slate-600">
-                      Informações do veículo
-                    </p>
-                  </div>
-                  <div class="col-span-full grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                    <FieldSelect
-                      label="Assentos"
-                      value={d.assentos ?? ''}
-                      options={opcoesComValorSalvo(ASSENTOS_VEICULO, d.assentos)}
-                      placeholder="Selecione"
-                      class_name="w-full"
-                      on:change={(e) => alterarDetalheTexto(passeio, 'assentos', e)}
-                    />
-                    <FieldSelect
-                      label="Portas"
-                      value={d.portas ?? ''}
-                      options={opcoesComValorSalvo(PORTAS_VEICULO, d.portas)}
-                      placeholder="Selecione"
-                      class_name="w-full"
-                      on:change={(e) => alterarDetalheTexto(passeio, 'portas', e)}
-                    />
-                    <FieldSelect
-                      label="Malas"
-                      value={d.malas ?? ''}
-                      options={opcoesComValorSalvo(MALAS_VEICULO, d.malas)}
-                      placeholder="Selecione"
-                      class_name="w-full"
-                      on:change={(e) => alterarDetalheTexto(passeio, 'malas', e)}
-                    />
-                    <FieldSelect
-                      label="Combustível"
-                      value={d.combustivel ?? ''}
-                      options={opcoesComValorSalvo(COMBUSTIVEIS_VEICULO, d.combustivel)}
-                      placeholder="Selecione"
-                      class_name="w-full"
-                      on:change={(e) => alterarDetalheTexto(passeio, 'combustivel', e)}
-                    />
-                    <FieldSelect
-                      label="Câmbio"
-                      value={d.cambio ?? ''}
-                      options={CAMBIOS}
-                      placeholder="Selecione"
-                      class_name="w-full"
-                      on:change={(e) => alterarDetalheTexto(passeio, 'cambio', e)}
-                    />
-                  </div>
-                  <div class="col-span-full">
-                    <p class="mb-2 block text-xs font-medium text-slate-500">Incluídos</p>
-                    <div class="flex flex-wrap gap-x-5 gap-y-2 pt-1">
-                      {#each ITENS_CARRO as incluido}
-                        <label class="inline-flex items-center gap-2 text-sm text-slate-700">
-                          <input
-                            type="checkbox"
-                            value={incluido}
-                            checked={d.incluidos.includes(incluido)}
-                            class="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                            onchange={(e) => alterarIncluidoCarro(passeio, e)}
-                          />
-                          {incluido}
-                        </label>
-                      {/each}
+                  {#if passeio.tipo === 'Passeio'}
+                    {@render campoIngressos(passeio)}
+                    <div class="col-span-2 grid grid-cols-2 gap-2">
+                      <FieldInput
+                        money
+                        label="Valor original (R$)"
+                        type="number"
+                        value={passeio.valor_original ?? ''}
+                        class_name="w-full"
+                        on:moneyInput={(e) => {
+                          passeios = updateItem(passeios, index, {
+                            valor_original: Number(e.detail) || null
+                          });
+                        }}
+                      />
+                      <FieldInput
+                        money
+                        label="Valor final (R$)"
+                        type="number"
+                        value={passeio.valor_final ?? ''}
+                        class_name="w-full"
+                        on:moneyInput={(e) => {
+                          passeios = updateItem(passeios, index, {
+                            valor_final: Number(e.detail) || null
+                          });
+                        }}
+                      />
                     </div>
-                  </div>
-                  <div class="col-span-2">
-                    <CidadeDestinoAutocomplete
-                      id={`passeio-devolucao-${index}`}
-                      label="Cidade de Devolução"
-                      bind:value={d.cidade_devolucao}
-                      placeholder="Cidade"
-                      class_name="w-full"
-                    />
-                  </div>
-                  <div class="col-span-2 grid grid-cols-2 gap-2">
-                    <FieldInput
-                      label="Hora retirada"
-                      type="time"
-                      value={d.hora_retirada ?? ''}
-                      class_name="w-full"
-                      on:input={(e) => alterarDetalheTexto(passeio, 'hora_retirada', e)}
-                    />
-                    <FieldInput
-                      label="Loja"
-                      value={d.loja_retirada ?? ''}
-                      placeholder="Ex.: Loja Aeroporto"
-                      class_name="w-full"
-                      on:input={(e) => alterarDetalheTexto(passeio, 'loja_retirada', e)}
-                    />
-                  </div>
-                  <div class="col-span-2 grid grid-cols-2 gap-2">
-                    <FieldInput
-                      label="Hora devolução"
-                      type="time"
-                      value={d.hora_devolucao ?? ''}
-                      class_name="w-full"
-                      on:input={(e) => alterarDetalheTexto(passeio, 'hora_devolucao', e)}
-                    />
-                    <FieldInput
-                      label="Loja"
-                      value={d.loja_devolucao ?? ''}
-                      placeholder="Ex.: Loja Downtown"
-                      class_name="w-full"
-                      on:input={(e) => alterarDetalheTexto(passeio, 'loja_devolucao', e)}
-                    />
-                  </div>
-                  <div class="col-span-2">
-                    <p class="mb-1 block text-xs font-medium text-slate-500">Total de dias</p>
-                    <div
-                      class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
-                    >
-                      {diasItem('aluguel_carro', passeio.data_inicio, passeio.data_fim) ?? '—'}
+                  {:else}
+                    <div class="col-span-2">
+                      <FieldInput
+                        money
+                        label="Valor original (R$)"
+                        type="number"
+                        value={passeio.valor_original ?? ''}
+                        class_name="w-full"
+                        on:moneyInput={(e) => {
+                          passeios = updateItem(passeios, index, {
+                            valor_original: Number(e.detail) || null
+                          });
+                        }}
+                      />
                     </div>
-                  </div>
-                  <div class="col-span-2 grid grid-cols-2 gap-2">
-                    <FieldInput
-                      money
-                      label="Valor Unit."
-                      type="number"
-                      value={passeio.valor_original ?? ''}
-                      min="0"
-                      step="0.01"
-                      class_name="w-full"
-                      on:moneyInput={(e) => {
-                        passeios = updateItem(passeios, index, {
-                          valor_original: Number(e.detail) || null
-                        });
-                      }}
-                    />
-                    <FieldInput
-                      label="Qtd. Carros"
-                      type="number"
-                      value={d.quantidade ?? ''}
-                      min="1"
-                      step="1"
-                      class_name="w-full"
-                      on:input={(e) => alterarDetalheNumero(passeio, 'quantidade', e)}
-                    />
-                  </div>
-                  <div class="col-span-2">
-                    <p class="mb-1 block text-xs font-medium text-slate-500">Total</p>
-                    <div
-                      class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-right text-sm font-semibold text-slate-800"
-                    >
-                      {formatTotal(totaisPasseio(passeio).total_amount)}
+                    <div class="col-span-2">
+                      <FieldInput
+                        money
+                        label="Valor final (R$)"
+                        type="number"
+                        value={passeio.valor_final ?? ''}
+                        class_name="w-full"
+                        on:moneyInput={(e) => {
+                          passeios = updateItem(passeios, index, {
+                            valor_final: Number(e.detail) || null
+                          });
+                        }}
+                      />
                     </div>
-                  </div>
-                {/if}
-              {:else}
-                <div class="col-span-2 grid grid-cols-2 gap-2">
-                  <FieldInput
-                    label="Adultos"
-                    type="number"
-                    value={passeio.qtd_adultos ?? ''}
-                    class_name="w-full"
-                    on:input={(e) => {
-                      passeios = updateItem(passeios, index, {
-                        qtd_adultos: Number((e.target as HTMLInputElement).value) || null
-                      });
-                    }}
-                  />
-                  <FieldInput
-                    label="Crianças"
-                    type="number"
-                    value={passeio.qtd_criancas ?? ''}
-                    class_name="w-full"
-                    on:input={(e) => {
-                      passeios = updateItem(passeios, index, {
-                        qtd_criancas: Number((e.target as HTMLInputElement).value) || null
-                      });
-                    }}
-                  />
-                </div>
-                {#if passeio.tipo === 'Passeio'}
-                  {@render campoIngressos(passeio)}
-                  <div class="col-span-2 grid grid-cols-2 gap-2">
-                    <FieldInput
-                      money
-                      label="Valor original (R$)"
-                      type="number"
-                      value={passeio.valor_original ?? ''}
-                      class_name="w-full"
-                      on:moneyInput={(e) => {
-                        passeios = updateItem(passeios, index, {
-                          valor_original: Number(e.detail) || null
-                        });
-                      }}
-                    />
-                    <FieldInput
-                      money
-                      label="Valor final (R$)"
-                      type="number"
-                      value={passeio.valor_final ?? ''}
-                      class_name="w-full"
-                      on:moneyInput={(e) => {
-                        passeios = updateItem(passeios, index, {
-                          valor_final: Number(e.detail) || null
-                        });
-                      }}
-                    />
-                  </div>
-                {:else}
-                  <div class="col-span-2">
-                    <FieldInput
-                      money
-                      label="Valor original (R$)"
-                      type="number"
-                      value={passeio.valor_original ?? ''}
-                      class_name="w-full"
-                      on:moneyInput={(e) => {
-                        passeios = updateItem(passeios, index, {
-                          valor_original: Number(e.detail) || null
-                        });
-                      }}
-                    />
-                  </div>
-                  <div class="col-span-2">
-                    <FieldInput
-                      money
-                      label="Valor final (R$)"
-                      type="number"
-                      value={passeio.valor_final ?? ''}
-                      class_name="w-full"
-                      on:moneyInput={(e) => {
-                        passeios = updateItem(passeios, index, {
-                          valor_final: Number(e.detail) || null
-                        });
-                      }}
-                    />
-                  </div>
+                  {/if}
                 {/if}
               {/if}
             </div>
@@ -803,32 +878,34 @@
         variant="secondary"
         size="sm"
         on:click={() => {
-          passeios = addItem(passeios, newPasseio);
+          passeios = addItem(passeios, (ordem) => newPasseio(ordem, tipoNovoPasseio));
         }}
       >
         <Plus size={13} class="mr-1" />
-        Adicionar passeio
+        {rotuloAdicionar}
       </Button>
     </div>
   {/if}
 
-  <div class="mt-6 rounded-xl border border-dashed border-slate-300 p-4">
-    <p class="mb-2 text-sm font-medium text-slate-600">Importar passeios por texto</p>
-    <FieldTextarea
-      bind:value={passeioImportText}
-      rows={4}
-      class_name="w-full"
-      monospace={true}
-      placeholder="Cole o texto com dados dos passeios (um por linha ou texto livre)…"
-    />
-    <div class="mt-2 flex items-center gap-3">
-      <Button type="button" variant="secondary" size="sm" on:click={handleImportPasseioText}
-        >Importar</Button
-      >
-      {#if passeioImportMsg}<span class="text-xs text-green-600">{passeioImportMsg}</span>{/if}
-      {#if passeioImportError}<span class="text-xs text-red-600">{passeioImportError}</span>{/if}
+  {#if !apenasTipos}
+    <div class="mt-6 rounded-xl border border-dashed border-slate-300 p-4">
+      <p class="mb-2 text-sm font-medium text-slate-600">Importar passeios por texto</p>
+      <FieldTextarea
+        bind:value={passeioImportText}
+        rows={4}
+        class_name="w-full"
+        monospace={true}
+        placeholder="Cole o texto com dados dos passeios (um por linha ou texto livre)…"
+      />
+      <div class="mt-2 flex items-center gap-3">
+        <Button type="button" variant="secondary" size="sm" on:click={handleImportPasseioText}
+          >Importar</Button
+        >
+        {#if passeioImportMsg}<span class="text-xs text-green-600">{passeioImportMsg}</span>{/if}
+        {#if passeioImportError}<span class="text-xs text-red-600">{passeioImportError}</span>{/if}
+      </div>
     </div>
-  </div>
+  {/if}
 </Card>
 
 <style>

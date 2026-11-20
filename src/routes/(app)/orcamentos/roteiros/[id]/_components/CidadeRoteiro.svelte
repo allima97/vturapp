@@ -10,6 +10,7 @@
     cidade_modo_geografico?: boolean;
   };
   export let fieldId: string;
+  export let label = 'Cidade';
   export let required = false;
 
   let valido = false;
@@ -24,7 +25,7 @@
 {#if geografico}
   <SeletorDestinoGeografico
     {fieldId}
-    label="Cidade"
+    {label}
     bind:value={destino.cidade}
     bind:destinoId={destino.cidade_id}
     bind:valid={valido}
@@ -35,7 +36,7 @@
 {:else}
   <CidadeDestinoAutocomplete
     id={fieldId}
-    label="Cidade"
+    {label}
     bind:value={destino.cidade}
     placeholder="Cidade"
     class_name="w-full"

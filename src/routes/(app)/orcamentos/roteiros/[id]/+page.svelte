@@ -158,9 +158,11 @@
   const ABAS = [
     { id: 'itinerario', label: 'Itinerário' },
     { id: 'hoteis', label: 'Hotéis' },
+    { id: 'transporte', label: 'Aéreo' },
+    { id: 'aluguel-carro', label: 'Aluguel de Carro' },
+    { id: 'trem', label: 'Trem' },
     { id: 'passeios', label: 'Passeios' },
     { id: 'opcionais', label: 'Opcionais' },
-    { id: 'transporte', label: 'Aéreo' },
     { id: 'investimento', label: 'Investimento' },
     { id: 'pagamento', label: 'Pagamento' },
     { id: 'inclusoes', label: 'Inclusões' },
@@ -188,10 +190,8 @@
   ];
   const PASSEIO_TIPO_OPTIONS = [
     'Passeio',
-    'Trem',
     'Show',
     'Ingresso',
-    'Aluguel de Carro',
     'Transfer',
     'Seguro Viagem',
     'Serviço',
@@ -330,7 +330,18 @@
     itinerario: dias.filter((d) => d.cidade || d.percurso || d.data || d.descricao).length,
     hoteis: hoteis.filter((h) => h.cidade || h.hotel || h.data_inicio || h.apto || h.categoria)
       .length,
-    passeios: passeios.filter((p) => p.cidade || p.passeio || p.data_inicio || p.tipo).length,
+    passeios: passeios.filter(
+      (p) =>
+        p.tipo !== 'Trem' &&
+        p.tipo !== 'Aluguel de Carro' &&
+        (p.cidade || p.passeio || p.data_inicio || p.tipo)
+    ).length,
+    'aluguel-carro': passeios.filter(
+      (p) => p.tipo === 'Aluguel de Carro' && (p.cidade || p.passeio || p.data_inicio || p.tipo)
+    ).length,
+    trem: passeios.filter(
+      (p) => p.tipo === 'Trem' && (p.cidade || p.passeio || p.data_inicio || p.tipo)
+    ).length,
     transporte: transportes.filter((t) => t.trecho || t.cia_aerea || t.data_voo || t.tipo).length,
     investimento: investimentos.filter(
       (i) => i.tipo || Number(i.valor_por_pessoa) > 0 || Number(i.valor_por_apto) > 0
@@ -1571,9 +1582,36 @@
         cidadesItinerario={dias.map((dia) => ({ cidade: dia.cidade, cidade_id: dia.cidade_id }))}
         passeiosIncorporados={passeios}
       />
+    {:else if abaAtiva === 'aluguel-carro'}
+      <AbaPasseios
+        tituloCard="Aluguel de Carro"
+        rotuloAdicionar="Adicionar aluguel de carro"
+        PASSEIO_TIPO_OPTIONS={['Aluguel de Carro']}
+        apenasTipos={['Aluguel de Carro']}
+        {handleImportPasseioText}
+        {passeioImportError}
+        {passeioImportMsg}
+        bind:passeioImportText
+        bind:passeios
+        {sugestoes}
+      />
+    {:else if abaAtiva === 'trem'}
+      <AbaPasseios
+        tituloCard="Trem"
+        rotuloAdicionar="Adicionar trem"
+        PASSEIO_TIPO_OPTIONS={['Trem']}
+        apenasTipos={['Trem']}
+        {handleImportPasseioText}
+        {passeioImportError}
+        {passeioImportMsg}
+        bind:passeioImportText
+        bind:passeios
+        {sugestoes}
+      />
     {:else if abaAtiva === 'passeios'}
       <AbaPasseios
         {PASSEIO_TIPO_OPTIONS}
+        excetoTipos={['Trem', 'Aluguel de Carro']}
         {handleImportPasseioText}
         {passeioImportError}
         {passeioImportMsg}

@@ -156,7 +156,7 @@ export function newHotel(ordem: number): RotHotel {
     valor_final: null
   };
 }
-export function newPasseio(ordem: number): RotPasseio {
+export function newPasseio(ordem: number, tipo = 'Passeio'): RotPasseio {
   return {
     ordem,
     cidade: '',
@@ -164,7 +164,7 @@ export function newPasseio(ordem: number): RotPasseio {
     fornecedor: '',
     data_inicio: '',
     data_fim: '',
-    tipo: 'Passeio',
+    tipo,
     ingressos: 'Não incluído',
     qtd_adultos: null,
     qtd_criancas: null,
