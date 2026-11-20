@@ -1645,7 +1645,7 @@
 
     <div class="mt-4 border-t border-slate-100 pt-4">
       <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <div class="lg:col-span-2">
+        <div>
           {#if editandoDadosRoteiro}
             <FieldInput
               label="Nome do cliente"
@@ -1683,7 +1683,7 @@
             </p>
           {/if}
         </div>
-        <div class="md:col-span-3 lg:col-span-2 lg:col-start-4">
+        <div>
           {#if editandoDadosRoteiro}
             <FieldInput
               label="E-mail"
@@ -1721,12 +1721,7 @@
                 <p class="truncate font-medium text-slate-900">{clienteNome}</p>
                 <p class="text-sm text-slate-500">Cliente cadastrado selecionado</p>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                type="button"
-                on:click={limparClienteVinculo}
-              >
+              <Button variant="ghost" size="sm" type="button" on:click={limparClienteVinculo}>
                 <X size={16} />
               </Button>
             </div>
