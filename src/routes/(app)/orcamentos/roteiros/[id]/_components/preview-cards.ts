@@ -229,11 +229,7 @@ function codigoLocal(value: string) {
   return /^[A-Za-z]{3}$/.test(token) ? token.toUpperCase() : '';
 }
 
-function ladoTrem(sigla: string, hora: string, info: string) {
-  return `<span class="lg"><span><b>${escapeHtml(sigla)}</b>${hora ? ` <span class="mu">· ${escapeHtml(hora)}</span>` : ''}</span>${info ? `<span class="ct">${escapeHtml(info)}</span>` : ''}</span>`;
-}
-
-function pernaTrem(segmento: QuoteFlightSegment, formatDate: FormatDate) {
+function pernaTrem(segmento: QuoteFlightSegment, formatDate: FormatDate, index: number) {
   const [routeFrom = '', routeTo = ''] = text(segmento.trecho).split(/\s*(?:→|->)\s*|\s+-\s+/);
   const fromCode = codigoLocal(segmento.aeroporto_saida);
   const toCode = codigoLocal(segmento.aeroporto_chegada);
@@ -241,20 +237,28 @@ function pernaTrem(segmento: QuoteFlightSegment, formatDate: FormatDate) {
   const toCity = nomeCidadeNoPdf(text(segmento.aeroporto_chegada) || routeTo);
   const from = fromCode || fromCity || '—';
   const to = toCode || toCity || '—';
-  const saida = formatDate(segmento.data_voo);
-  const chegada = formatDate(segmento.data_fim || segmento.data_voo);
-  const horaSaida = text(segmento.hora_saida);
-  const horaChegada = text(segmento.hora_chegada);
-  const infoSaida = [fromCity && fromCity.toUpperCase() !== from ? fromCity : '', saida]
-    .filter(Boolean)
-    .join(' – ');
-  const infoChegada = [toCity && toCity.toUpperCase() !== to ? toCity : '', chegada]
-    .filter(Boolean)
-    .join(' – ');
-  const meio = [text(segmento.numero_voo), text(segmento.cia_aerea), text(segmento.tarifa_nome)]
+  const dataSaida = formatDate(segmento.data_voo || segmento.data_fim);
+  const dataChegada = formatDate(segmento.data_fim || segmento.data_voo);
+  const saida = text(segmento.hora_saida).replace(/\s*\(\+\d+\)\s*$/, '');
+  const chegada = text(segmento.hora_chegada).replace(/\s*\(\+\d+\)\s*$/, '');
+  const rotulo = ['TREM', dataSaida && dataSaida !== '-' ? dataSaida : '']
     .filter(Boolean)
     .join(' · ');
-  return `<div class="rtf">${ladoTrem(from, horaSaida, infoSaida)}<span class="md">${meio ? `<span>${escapeHtml(meio)}</span>` : ''}${conector()}</span>${ladoTrem(to, horaChegada, infoChegada)}</div>`;
+  const carrier = [text(segmento.cia_aerea), text(segmento.numero_voo)].filter(Boolean).join(' · ');
+  const infoSaida = [fromCity && fromCity.toUpperCase() !== from ? fromCity : '', dataSaida]
+    .filter(Boolean)
+    .join(' – ');
+  const infoChegada = [toCity && toCity.toUpperCase() !== to ? toCity : '', dataChegada]
+    .filter(Boolean)
+    .join(' – ');
+  return [
+    `<div class="lb"${index ? ' style="margin-top:8px"' : ''}>${escapeHtml(rotulo)}</div>`,
+    `<div class="rt rota">${escapeHtml(from)}${saida ? ` <span class="mu">${escapeHtml(saida)}</span>` : ''}${conector()}${escapeHtml(to)}${chegada ? ` <span class="mu">${escapeHtml(chegada)}</span>` : ''}</div>`,
+    infoSaida || infoChegada
+      ? `<div class="ct">${escapeHtml([infoSaida, infoChegada].filter(Boolean).join('  →  '))}</div>`
+      : '',
+    carrier ? `<div class="mu sm">${escapeHtml(carrier)}</div>` : ''
+  ].join('');
 }
 
 export function renderPreviewTrens(items: RotPasseio[], formatDate: FormatDate) {
@@ -265,20 +269,17 @@ export function renderPreviewTrens(items: RotPasseio[], formatDate: FormatDate) 
         const segmentos = Array.isArray(detalhes.segmentos) ? detalhes.segmentos : [];
         const titulo = text(item.passeio) || 'Trem';
         const periodo = periodoTexto(item, formatDate);
-        const pernas = segmentos.map((seg) => pernaTrem(seg, formatDate)).join('');
-        const chips = chipsHtml([
-          passageirosTexto(item),
-          ...segmentos.map((seg) =>
-            [text(seg.classe_reserva), text(seg.assentos) ? `Assentos ${text(seg.assentos)}` : '']
-              .filter(Boolean)
-              .join(' · ')
-          )
-        ]);
+        const pernas = segmentos.map((seg, index) => pernaTrem(seg, formatDate, index)).join('');
+        const chips = chipsHtml(
+          segmentos.flatMap((seg) => [
+            text(seg.classe_reserva),
+            text(seg.assentos) ? `Assentos ${text(seg.assentos)}` : ''
+          ])
+        );
         const content = [
           `<div class="rot-hotel"><div>${serviceIconSvg('trem')}</div><div>`,
           cityTitle(city),
           `<div class="rot-item-title"><b>${escapeHtml(titulo)}</b></div>`,
-          `<div class="lb">TREMO</div>`,
           pernas || (periodo ? `<p class="meta">${escapeHtml(periodo)}</p>` : ''),
           periodo && pernas ? `<p class="meta">${escapeHtml(periodo)}</p>` : '',
           chips,
@@ -305,7 +306,6 @@ export function renderPreviewSeguros(items: RotPasseio[], formatDate: FormatDate
           `<div class="lb">SEGURO VIAGEM</div>`,
           periodo ? `<p class="meta">${escapeHtml(periodo)}</p>` : '',
           linhaCinza ? `<div class="mu sm">${escapeHtml(linhaCinza)}</div>` : '',
-          text(item.ingressos) ? `<p>${escapeHtml(text(item.ingressos))}</p>` : '',
           `</div></div>`
         ].join('');
         return card(content, [city, item.passeio, item.fornecedor].join('\n'));
