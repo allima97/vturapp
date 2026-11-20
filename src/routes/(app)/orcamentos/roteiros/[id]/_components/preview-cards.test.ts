@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { renderPreviewFlights } from './preview-cards';
-import { newTransporte } from './tipos';
+import {
+  renderPreviewCarros,
+  renderPreviewFlights,
+  renderPreviewSeguros,
+  renderPreviewTrens
+} from './preview-cards';
+import { newPasseio, newTransporte } from './tipos';
+
+const formatDate = (date: string | null | undefined) => date || '';
 
 describe('trechos aéreos no PDF do roteiro', () => {
   it('mostra cada trecho como a linha do orçamento, com aeroportos, horários e chips', () => {
@@ -119,5 +126,105 @@ describe('trechos aéreos no PDF do roteiro', () => {
       );
       expect(html).not.toContain('class="p1"');
     }
+  });
+});
+
+describe('cards de passeio no PDF do roteiro (paridade com orçamento)', () => {
+  it('carro mostra selo, rota e incluídos sem quantidade', () => {
+    const html = renderPreviewCarros(
+      [
+        {
+          ...newPasseio(0, 'Aluguel de Carro'),
+          cidade: 'Paris',
+          passeio: 'Carro intermediário',
+          data_inicio: '2027-01-10',
+          data_fim: '2027-01-15',
+          detalhes: {
+            incluidos: ['KM Livre', 'CDW', 'LDW'],
+            segmentos: [],
+            cambio: 'Automático',
+            locadora: 'Europcar',
+            cidade_devolucao: 'Lyon',
+            quantidade: 2
+          }
+        }
+      ],
+      formatDate
+    );
+    expect(html).toContain('CARRO · 6 DIÁRIAS');
+    expect(html).toContain('Retirada:');
+    expect(html).toContain('Devolução:');
+    expect(html).toContain('Europcar');
+    expect(html).toContain('KM livre');
+    expect(html).toContain('CDW + LDW');
+    expect(html).not.toContain('carros');
+  });
+
+  it('trem mostra trecho como no orçamento, sem linha extra de cidade/data nem período', () => {
+    const html = renderPreviewTrens(
+      [
+        {
+          ...newPasseio(0, 'Trem'),
+          cidade: 'Paris',
+          passeio: 'TGV Paris - Lyon',
+          data_inicio: '2027-01-10',
+          data_fim: '2027-01-10',
+          detalhes: {
+            incluidos: [],
+            segmentos: [
+              {
+                ...newTransporte(0),
+                trecho: 'Paris - Lyon',
+                cia_aerea: 'TGV',
+                numero_voo: '6123',
+                data_voo: '2027-01-10',
+                hora_saida: '08:19',
+                hora_chegada: '10:37',
+                aeroporto_saida: 'Paris Gare de Lyon',
+                aeroporto_chegada: 'Lyon Part-Dieu',
+                classe_reserva: 'Executiva',
+                assentos: '12A'
+              }
+            ]
+          }
+        }
+      ],
+      formatDate
+    );
+    expect(html).toContain('TREM ·');
+    expect(html).toContain('Paris Gare de Lyon');
+    expect(html).toContain('Lyon Part-Dieu');
+    expect(html).toContain('TGV · 6123');
+    expect(html).toContain('Executiva');
+    expect(html).toContain('Assentos 12A');
+    expect(html).not.toContain('class="ct"');
+    expect(html).not.toContain('class="meta"');
+  });
+
+  it('seguro mostra selo com período e dias, fornecedor e passageiros', () => {
+    const html = renderPreviewSeguros(
+      [
+        {
+          ...newPasseio(0, 'Seguro Viagem'),
+          cidade: 'Paris',
+          passeio: 'Seguro Europa',
+          fornecedor: 'Assist Card',
+          data_inicio: '2027-01-10',
+          data_fim: '2027-01-15',
+          qtd_adultos: 2,
+          qtd_criancas: 1,
+          detalhes: { incluidos: [], segmentos: [], infant: 1, senior: 1 }
+        }
+      ],
+      formatDate
+    );
+    expect(html).toContain('SEGURO VIAGEM ·');
+    expect(html).toContain('- 06 dias');
+    expect(html).toContain('Assist Card');
+    expect(html).toContain('2 adultos e 1 criança e 1 infant');
+    expect(html).not.toContain('Total de dias');
+    expect(html).not.toContain('sênior');
+    expect(html).not.toContain('senior');
+    expect(html).not.toContain('Não incluído');
   });
 });

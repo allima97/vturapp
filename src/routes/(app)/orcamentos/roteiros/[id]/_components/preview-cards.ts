@@ -64,10 +64,58 @@ function conector() {
   return `<span class="md">${`<span class="lni"><span class="ln" style="width:50px"></span></span>`}</span>`;
 }
 
-function chip(label: string) {
-  const value = text(label);
-  if (!value || value === '-') return '';
-  return `<div class="chks"><div class="chk">${quoteCheckIcon}<span>${escapeHtml(value)}</span></div></div>`;
+function chipsHtml(itens: string[]) {
+  const vistos = new Set<string>();
+  const limpos = itens.map(text).filter((item) => {
+    const key = item.toLowerCase();
+    if (!item || vistos.has(key)) return false;
+    vistos.add(key);
+    return true;
+  });
+  if (!limpos.length) return '';
+  return `<div class="chks">${limpos
+    .map((item) => `<div class="chk">${quoteCheckIcon}<span>${escapeHtml(item)}</span></div>`)
+    .join('')}</div>`;
+}
+
+function passageirosChipText(adultos: number, criancas: number, infant: number) {
+  const partes: string[] = [];
+  if (adultos > 0) partes.push(`${adultos} ${adultos === 1 ? 'adulto' : 'adultos'}`);
+  if (criancas > 0) partes.push(`${criancas} ${criancas === 1 ? 'criança' : 'crianças'}`);
+  if (infant > 0) partes.push(`${infant} ${infant === 1 ? 'infant' : 'infants'}`);
+  return partes.join(' e ');
+}
+
+function etiquetasCarro(labels: string[]) {
+  const sigla = /^[A-Z0-9]{2,5}$/;
+  const frase = (value: string) =>
+    value
+      .split(/\s+/)
+      .map((word, index) =>
+        sigla.test(word)
+          ? word
+          : index === 0
+            ? word.charAt(0).toUpperCase() + word.slice(1).toLocaleLowerCase('pt-BR')
+            : word.toLocaleLowerCase('pt-BR')
+      )
+      .join(' ');
+  const tags: string[] = [];
+  const siglas: string[] = [];
+  const flush = () => {
+    if (siglas.length) tags.push(siglas.splice(0).join(' + '));
+  };
+  for (const label of labels) {
+    const value = text(label);
+    if (!value) continue;
+    if (sigla.test(value)) {
+      siglas.push(value);
+      continue;
+    }
+    flush();
+    tags.push(frase(value));
+  }
+  flush();
+  return tags;
 }
 
 export function renderPreviewHotels(items: RotHotel[], formatDate: FormatDate) {
@@ -86,7 +134,12 @@ export function renderPreviewHotels(items: RotHotel[], formatDate: FormatDate) {
             : checkin || checkout
               ? `<div class="rt rota">${escapeHtml(checkin || checkout)}</div>`
               : '';
-        const detalhe = [text(hotel.apto), text(hotel.endereco)].filter(Boolean).join(' · ');
+        const detalhe = [text(hotel.categoria), text(hotel.apto)].filter(Boolean).join(' · ');
+        const passageiros = passageirosChipText(
+          Number(hotel.qtd_adultos) || 0,
+          Number(hotel.qtd_criancas) || 0,
+          0
+        );
         const content = [
           `<div class="rot-hotel"><div>${serviceIconSvg('hotel')}</div><div>`,
           cityTitle(city),
@@ -96,12 +149,12 @@ export function renderPreviewHotels(items: RotHotel[], formatDate: FormatDate) {
           `<div class="lb">${escapeHtml(kicker)}</div>`,
           estadia,
           detalhe ? `<div class="mu sm">${escapeHtml(detalhe)}</div>` : '',
-          chip(text(hotel.regime)),
+          chipsHtml([text(hotel.regime), passageiros]),
           `</div></div>`
         ].join('');
         return card(
           content,
-          [city, hotel.hotel, hotel.endereco, hotel.apto, hotel.regime].join('\n')
+          [city, hotel.hotel, hotel.categoria, hotel.apto, hotel.regime, passageiros].join('\n')
         );
       })
       .join('')
@@ -134,28 +187,6 @@ function detalhesPasseio(item: RotPasseio): RotPasseioDetalhes {
     }
   }
   return { incluidos: [], segmentos: [] };
-}
-
-function passageirosTexto(item: RotPasseio) {
-  const detalhes = detalhesPasseio(item);
-  const partes: string[] = [];
-  const adultos = Number(item.qtd_adultos) || 0;
-  const criancas = Number(item.qtd_criancas) || 0;
-  const infant = Number(detalhes.infant) || 0;
-  const senior = Number(detalhes.senior) || 0;
-  if (adultos > 0) partes.push(`${adultos} ${adultos === 1 ? 'adulto' : 'adultos'}`);
-  if (criancas > 0) partes.push(`${criancas} ${criancas === 1 ? 'criança' : 'crianças'}`);
-  if (infant > 0) partes.push(`${infant} ${infant === 1 ? 'infant' : 'infants'}`);
-  if (senior > 0) partes.push(`${senior} ${senior === 1 ? 'senior' : 'seniors'}`);
-  return partes.join(' · ');
-}
-
-function chipsHtml(itens: string[]) {
-  const limpos = itens.map(text).filter(Boolean);
-  if (!limpos.length) return '';
-  return `<div class="chks">${limpos
-    .map((item) => `<div class="chk">${quoteCheckIcon}<span>${escapeHtml(item)}</span></div>`)
-    .join('')}</div>`;
 }
 
 function periodoTexto(item: RotPasseio, formatDate: FormatDate) {
@@ -208,11 +239,7 @@ export function renderPreviewCarros(items: RotPasseio[], formatDate: FormatDate)
         });
         const linhaCinza =
           [text(detalhes.locadora), veiculo].filter(Boolean).join(' · ') || 'Aluguel de carro';
-        const quantidade = Number(detalhes.quantidade) || 0;
-        const chips = chipsHtml([
-          ...(detalhes.incluidos ?? []),
-          quantidade > 0 ? `${quantidade} ${quantidade === 1 ? 'carro' : 'carros'}` : ''
-        ]);
+        const chips = chipsHtml(etiquetasCarro(detalhes.incluidos ?? []));
         const content = [
           `<div class="rot-hotel"><div>${serviceIconSvg('aluguel_carro')}</div><div>`,
           cityTitle(city),
@@ -229,39 +256,20 @@ export function renderPreviewCarros(items: RotPasseio[], formatDate: FormatDate)
   ).join('');
 }
 
-function codigoLocal(value: string) {
-  const token = text(value).split(',')[0].trim();
-  return /^[A-Za-z]{3}$/.test(token) ? token.toUpperCase() : '';
-}
-
 function pernaTrem(segmento: QuoteFlightSegment, formatDate: FormatDate, index: number) {
   const [routeFrom = '', routeTo = ''] = text(segmento.trecho).split(/\s*(?:→|->)\s*|\s+-\s+/);
-  const fromCode = codigoLocal(segmento.aeroporto_saida);
-  const toCode = codigoLocal(segmento.aeroporto_chegada);
-  const fromCity = nomeCidadeNoPdf(text(segmento.aeroporto_saida) || routeFrom);
-  const toCity = nomeCidadeNoPdf(text(segmento.aeroporto_chegada) || routeTo);
-  const from = fromCode || fromCity || '—';
-  const to = toCode || toCity || '—';
+  const from = nomeCidadeNoPdf(text(segmento.aeroporto_saida) || routeFrom) || '—';
+  const to = nomeCidadeNoPdf(text(segmento.aeroporto_chegada) || routeTo) || '—';
   const dataSaida = formatDate(segmento.data_voo || segmento.data_fim);
-  const dataChegada = formatDate(segmento.data_fim || segmento.data_voo);
   const saida = text(segmento.hora_saida).replace(/\s*\(\+\d+\)\s*$/, '');
   const chegada = text(segmento.hora_chegada).replace(/\s*\(\+\d+\)\s*$/, '');
   const rotulo = ['TREM', dataSaida && dataSaida !== '-' ? dataSaida : '']
     .filter(Boolean)
     .join(' · ');
   const carrier = [text(segmento.cia_aerea), text(segmento.numero_voo)].filter(Boolean).join(' · ');
-  const infoSaida = [fromCity && fromCity.toUpperCase() !== from ? fromCity : '', dataSaida]
-    .filter(Boolean)
-    .join(' – ');
-  const infoChegada = [toCity && toCity.toUpperCase() !== to ? toCity : '', dataChegada]
-    .filter(Boolean)
-    .join(' – ');
   return [
     `<div class="lb"${index ? ' style="margin-top:8px"' : ''}>${escapeHtml(rotulo)}</div>`,
     `<div class="rt rota">${escapeHtml(from)}${saida ? ` <span class="mu">${escapeHtml(saida)}</span>` : ''}${conector()}${escapeHtml(to)}${chegada ? ` <span class="mu">${escapeHtml(chegada)}</span>` : ''}</div>`,
-    infoSaida || infoChegada
-      ? `<div class="ct">${escapeHtml([infoSaida, infoChegada].filter(Boolean).join('  →  '))}</div>`
-      : '',
     carrier ? `<div class="mu sm">${escapeHtml(carrier)}</div>` : ''
   ].join('');
 }
@@ -286,7 +294,6 @@ export function renderPreviewTrens(items: RotPasseio[], formatDate: FormatDate) 
           cityTitle(city),
           `<div class="rot-item-title"><b>${escapeHtml(titulo)}</b></div>`,
           pernas || (periodo ? `<p class="meta">${escapeHtml(periodo)}</p>` : ''),
-          periodo && pernas ? `<p class="meta">${escapeHtml(periodo)}</p>` : '',
           chips,
           `</div></div>`
         ].join('');
@@ -300,25 +307,33 @@ export function renderPreviewSeguros(items: RotPasseio[], formatDate: FormatDate
   return Array.from(groupByCity(items, 'Seguro Viagem'), ([city, seguros]) =>
     seguros
       .map((item) => {
+        const detalhes = detalhesPasseio(item);
         const titulo = text(item.passeio) || 'Seguro Viagem';
         const periodo = periodoTexto(item, formatDate);
         const dias = diasItem('seguro', item.data_inicio, item.data_fim);
-        const totalDias = dias != null ? `Total de dias: ${dias}` : '';
-        const passageiros = passageirosTexto(item);
-        const linhaCinza = [text(item.fornecedor), passageiros].filter(Boolean).join(' · ');
+        const contagem =
+          dias != null ? `- ${String(dias).padStart(2, '0')} ${dias === 1 ? 'dia' : 'dias'}` : '';
+        const rotulo = ['SEGURO VIAGEM', [periodo, contagem].filter(Boolean).join(' ')]
+          .filter(Boolean)
+          .join(' · ');
+        const passageiros = passageirosChipText(
+          Number(item.qtd_adultos) || 0,
+          Number(item.qtd_criancas) || 0,
+          Number(detalhes.infant) || 0
+        );
+        const linhaCinza = text(item.fornecedor);
         const content = [
           `<div class="rot-hotel"><div>${serviceIconSvg('seguro')}</div><div>`,
           cityTitle(city),
           `<div class="rot-item-title"><b>${escapeHtml(titulo)}</b></div>`,
-          `<div class="lb">SEGURO VIAGEM</div>`,
-          periodo ? `<p class="meta">${escapeHtml(periodo)}</p>` : '',
-          totalDias ? `<p class="meta">${escapeHtml(totalDias)}</p>` : '',
+          `<div class="lb">${escapeHtml(rotulo)}</div>`,
           linhaCinza ? `<div class="mu sm">${escapeHtml(linhaCinza)}</div>` : '',
+          chipsHtml([passageiros]),
           `</div></div>`
         ].join('');
         return card(
           content,
-          [city, item.passeio, item.fornecedor, periodo, totalDias, passageiros].join('\n')
+          [city, item.passeio, item.fornecedor, periodo, passageiros].join('\n')
         );
       })
       .join('')
