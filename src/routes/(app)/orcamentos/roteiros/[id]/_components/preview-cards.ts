@@ -274,7 +274,7 @@ function pernaTrem(segmento: QuoteFlightSegment, formatDate: FormatDate, index: 
   const carrier = [text(segmento.cia_aerea), text(segmento.numero_voo)].filter(Boolean).join(' · ');
   return [
     `<div class="lb"${index ? ' style="margin-top:8px"' : ''}>${escapeHtml(rotulo)}</div>`,
-    `<div class="rt rota">${escapeHtml(from)}${saida ? ` <span class="mu">${escapeHtml(saida)}</span>` : ''}${conector()}${escapeHtml(to)}${chegada ? ` <span class="mu">${escapeHtml(chegada)}</span>` : ''}</div>`,
+    `<div class="rt rota">${escapeHtml(from)}${saida ? ` <span class="mu">${escapeHtml(saida)}</span>` : ''} <span aria-hidden="true">→</span> ${escapeHtml(to)}${chegada ? ` <span class="mu">${escapeHtml(chegada)}</span>` : ''}</div>`,
     carrier ? `<div class="mu sm">${escapeHtml(carrier)}</div>` : ''
   ].join('');
 }

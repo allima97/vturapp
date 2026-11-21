@@ -194,6 +194,7 @@ describe('cards de passeio no PDF do roteiro (paridade com orçamento)', () => {
       formatDate
     );
     expect(html).toContain('Trem ·');
+    expect(html).toContain('→');
     expect(html).toContain('Paris Gare de Lyon');
     expect(html).toContain('Lyon Part-Dieu');
     expect(html).toContain('TGV · 6123');
