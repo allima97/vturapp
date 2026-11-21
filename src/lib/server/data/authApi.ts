@@ -226,15 +226,38 @@ export function createAuthApi(context: DataContext) {
     return session.user;
   }
 
+  // O nome canônico do usuário fica em legado_users.nome_completo; o campo
+  // name do better-auth pode estar vazio (aí mapUser cai no e-mail).
+  async function mapSessionUser(user: { id: string; email?: string | null; name?: string | null }) {
+    const mapped = mapUser(user);
+    try {
+      const row = await context.db
+        .prepare('SELECT nome_completo FROM legado_users WHERE id = ?1')
+        .bind(user.id)
+        .first<{ nome_completo: string | null }>();
+      const nome = String(row?.nome_completo || '').trim();
+      if (nome) {
+        mapped.user_metadata = {
+          ...(mapped.user_metadata || {}),
+          nome_completo: nome,
+          nome
+        };
+      }
+    } catch {
+      // sem legado_users: mantém mapUser
+    }
+    return mapped;
+  }
+
   return {
     async getSession() {
       const user = await currentUser();
       if (!user) return { data: { session: null }, error: null };
-      return { data: { session: sessionFor(mapUser(user)) }, error: null };
+      return { data: { session: sessionFor(await mapSessionUser(user)) }, error: null };
     },
     async getUser() {
       const user = await currentUser();
-      return { data: { user: user ? mapUser(user) : null }, error: null };
+      return { data: { user: user ? await mapSessionUser(user) : null }, error: null };
     },
     async signOut() {
       context.cookies?.delete('better-auth.session_token', { path: '/' });

@@ -115,6 +115,10 @@
         if (!response.ok) {
           throw new Error(data.error || 'Código inválido ou expirado.');
         }
+        // A sessão foi criada via cookie: recarga completa para o SSR popular
+        // o auth store (nome/e-mail do usuário no topo do app).
+        window.location.assign(nextPath);
+        return;
       } else {
         if (!factorId) {
           error = 'Fator 2FA não encontrado.';
