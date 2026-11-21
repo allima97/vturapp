@@ -3,7 +3,8 @@ import { quoteCheckIcon, serviceIconSvg } from '$lib/quote/pdfIcons';
 import { nomeCidadeNoPdf, requiresPrintContinuation } from '$lib/utils/printLayout';
 import { diasItem, resumoInformacoesVeiculo } from '$lib/quote/detalhesItem';
 import type { QuoteFlightSegment } from '$lib/quote/flights';
-import type { RotHotel, RotPasseio, RotPasseioDetalhes } from './tipos';
+import type { RotHotel, RotInvestimento, RotPasseio, RotPasseioDetalhes } from './tipos';
+import { formatBRL } from './formatadores';
 
 export { renderPreviewFlights } from '$lib/quote/printFlights';
 
@@ -405,4 +406,31 @@ export function renderPreviewPasseios(items: RotPasseio[], formatDate: FormatDat
       })
       .join('')
   ).join('');
+}
+
+export function renderPreviewInvestimentos(items: RotInvestimento[]) {
+  return items
+    .map((item) => {
+      const tipo = text(item.tipo);
+      const vpp = Number(item.valor_por_pessoa || 0);
+      const qa = Number(item.qtd_apto || 0);
+      const vpa = Number(item.valor_por_apto || 0);
+      const titulo = tipo || 'Investimento';
+      const rotulo = tipo ? 'Investimento' : '';
+      const meta = vpp > 0 ? `R$ ${formatBRL(vpp)} por pessoa` : '';
+      const chips = chipsHtml([
+        qa > 0 ? `${qa} ${qa === 1 ? 'pax' : 'paxs'}` : '',
+        vpa > 0 ? `R$ ${formatBRL(vpa)} por apto` : ''
+      ]);
+      const content = [
+        `<div class="rot-hotel"><div>${serviceIconSvg('investimento')}</div><div>`,
+        `<div class="rot-item-title"><b>${escapeHtml(titulo)}</b></div>`,
+        rotulo ? `<div class="lb">${escapeHtml(rotulo)}</div>` : '',
+        meta ? `<p class="meta">${escapeHtml(meta)}</p>` : '',
+        chips,
+        `</div></div>`
+      ].join('');
+      return card(content, [item.tipo, meta, chips].join('\n'));
+    })
+    .join('');
 }

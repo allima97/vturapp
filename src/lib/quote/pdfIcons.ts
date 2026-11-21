@@ -17,6 +17,8 @@ const insuranceIconShape = '<path d="M12 3 20 6v5c0 5-3 8-8 10-5-2-8-5-8-10V6zM9
 const packageIconShape = '<path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"/>';
 const serviceIconShape =
   '<rect x="3" y="7" width="18" height="13" rx="2"/><path d="M9 7V4h6v3M3 13h18m-10 0v2h2v-2"/>';
+const moneyIconShape =
+  '<rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="3"/><path d="M6 12h.01M18 12h.01"/>';
 
 const serviceIcons = new Map<string, [string, string]>([
   ['hotel', ['hotel', hotelIconShape]],
@@ -27,7 +29,8 @@ const serviceIcons = new Map<string, [string, string]>([
   ['transfer', ['transfer', transferIconShape]],
   ['show', ['show', showIconShape]],
   ['seguro', ['insurance', insuranceIconShape]],
-  ['pacote', ['package', packageIconShape]]
+  ['pacote', ['package', packageIconShape]],
+  ['investimento', ['money', moneyIconShape]]
 ]);
 
 export const quoteCheckIcon =

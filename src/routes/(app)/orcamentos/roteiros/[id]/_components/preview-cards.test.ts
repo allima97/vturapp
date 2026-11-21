@@ -264,3 +264,26 @@ describe('cards de passeio no PDF do roteiro (paridade com orçamento)', () => {
     expect(html).not.toContain('Não incluído');
   });
 });
+
+describe('investimento no PDF do roteiro', () => {
+  it('renderiza cada linha como card com tipo, valor por pessoa e chips', async () => {
+    const { renderPreviewInvestimentos } = await import('./preview-cards');
+    const { newInvestimento } = await import('./tipos');
+    const html = renderPreviewInvestimentos([
+      {
+        ...newInvestimento(0),
+        tipo: 'Por pessoa',
+        valor_por_pessoa: 1500,
+        qtd_apto: 2,
+        valor_por_apto: 3000
+      }
+    ]);
+    expect(html).toContain('Por pessoa');
+    expect(html).toContain('Investimento');
+    expect(html).toContain('R$ 1.500,00 por pessoa');
+    expect(html).toContain('2 paxs');
+    expect(html).toContain('R$ 3.000,00 por apto');
+    expect(html).toContain('roteiro-card');
+    expect(html).not.toContain('<table');
+  });
+});

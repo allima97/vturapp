@@ -84,6 +84,7 @@
     renderPreviewCarros,
     renderPreviewFlights,
     renderPreviewHotels,
+    renderPreviewInvestimentos,
     renderPreviewPasseios,
     renderPreviewSeguros,
     renderPreviewTrens
@@ -1134,12 +1135,6 @@
     return `<section class="section"><h2>${escapePreviewHtml(title)}</h2><div class="grid">${content}</div></section>`;
   }
 
-  function buildPreviewRawSection(title: string, content: string, sectionClass = '') {
-    if (!content.trim()) return '';
-    const className = ['section', sectionClass].filter(Boolean).join(' ');
-    return `<section class="${className}"><h2>${escapePreviewHtml(title)}</h2>${content}</section>`;
-  }
-
   function buildPreviewListSection(title: string, items: string[], chips = false) {
     const filtered = items.map((item) => String(item || '').trim()).filter(Boolean);
     if (filtered.length === 0) return '';
@@ -1147,23 +1142,6 @@
       ? roteiroCheckChips(filtered, escapePreviewHtml)
       : buildPreviewList(filtered);
     return `<section class="section"><h2>${escapePreviewHtml(title)}</h2>${body}</section>`;
-  }
-
-  function buildPreviewTable(headers: string[], rows: string[][], className = '') {
-    if (rows.length === 0) return '';
-    return `<div class="preview-table-wrap ${escapePreviewHtml(className)}"><table class="preview-table ${escapePreviewHtml(className)}">
-      <thead>
-        <tr>${headers.map((header) => `<th>${escapePreviewHtml(header)}</th>`).join('')}</tr>
-      </thead>
-      <tbody>
-        ${rows
-          .map(
-            (row) =>
-              `<tr>${row.map((cell) => `<td>${escapePreviewHtml(cell || '-')}</td>`).join('')}</tr>`
-          )
-          .join('')}
-      </tbody>
-    </table></div>`;
   }
 
   function extractStoragePath(url?: string | null): string | null {
@@ -1268,31 +1246,15 @@
     const trensHtml = renderPreviewTrens(trensItems, formatPreviewDate);
     const segurosHtml = renderPreviewSeguros(segurosItems, formatPreviewDate);
 
-    const investimentoRows = investimentos
-      .filter(
-        (item) =>
-          item.tipo ||
-          Number(item.valor_por_pessoa || 0) > 0 ||
-          Number(item.valor_por_apto || 0) > 0
-      )
-      .map((item) => [
-        String(item.tipo || '').trim() || '-',
-        Number(item.valor_por_pessoa || 0) > 0
-          ? `R$ ${formatBRL(Number(item.valor_por_pessoa || 0))}`
-          : '-',
-        Number(item.qtd_apto || 0) > 0 ? String(Number(item.qtd_apto || 0)) : '-',
+    const investimentosItems = investimentos.filter(
+      (item) =>
+        item.tipo ||
+        Number(item.valor_por_pessoa || 0) > 0 ||
         Number(item.valor_por_apto || 0) > 0
-          ? `R$ ${formatBRL(Number(item.valor_por_apto || 0))}`
-          : '-'
-      ]);
-    const investimentoHtml =
-      investimentoRows.length > 0
-        ? buildPreviewTable(
-            ['Tipo', 'Valor por Pessoa', 'Qte Paxs', 'Valor total por Apto'],
-            investimentoRows,
-            'investimento-preview-table'
-          )
-        : '';
+    );
+    const investimentosHtml = renderPreviewInvestimentos(investimentosItems);
+    const investimentoTotalTexto =
+      totalInvestimento > 0 ? `Total por pessoa: R$ ${formatBRL(totalInvestimento)}` : '';
 
     const pagamentosItems = pagamentos.filter((item) => item.servico || item.valor_total_com_taxas);
     const pagamentosHtml =
@@ -1498,7 +1460,7 @@
               'Sugestões sem data marcada, não incluídas no valor do roteiro'
             )}
             ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
-            ${buildPreviewRawSection('Investimento', investimentoHtml, 'preview-investimento-section')}
+            ${buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
             ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
             ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
             ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'))}
