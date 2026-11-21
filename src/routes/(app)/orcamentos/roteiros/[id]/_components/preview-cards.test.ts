@@ -204,6 +204,39 @@ describe('cards de passeio no PDF do roteiro (paridade com orçamento)', () => {
     expect(html).not.toContain('class="meta"');
   });
 
+  it('trem não repete a descrição quando ela é só a rota com outro separador', () => {
+    const html = renderPreviewTrens(
+      [
+        {
+          ...newPasseio(0, 'Trem'),
+          cidade: 'Los Angeles',
+          passeio: 'Las Vegas - Los Angeles',
+          detalhes: {
+            incluidos: [],
+            segmentos: [
+              {
+                ...newTransporte(0),
+                trecho: 'Los Angeles - Las Vegas',
+                cia_aerea: 'Amtrak',
+                numero_voo: '8585',
+                data_voo: '2027-01-22',
+                hora_saida: '15:00',
+                hora_chegada: '16:20',
+                aeroporto_saida: 'Los Angeles',
+                aeroporto_chegada: 'Las Vegas',
+                cidade_saida_id: '',
+                cidade_chegada_id: ''
+              }
+            ]
+          }
+        }
+      ],
+      formatDate
+    );
+    expect(html).toContain('Los Angeles → Las Vegas');
+    expect(html).not.toContain('Las Vegas - Los Angeles');
+  });
+
   it('seguro mostra selo com período e dias, fornecedor e passageiros', () => {
     const html = renderPreviewSeguros(
       [

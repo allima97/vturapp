@@ -307,8 +307,21 @@ export function renderPreviewTrens(items: RotPasseio[], formatDate: FormatDate) 
             .replace(/[\u0300-\u036f]/g, '')
             .toLowerCase()
             .replace(/[^a-z0-9]/g, '');
+        // Descrição que é só a rota repetida (ex.: "Las Vegas - Los Angeles"
+        // para o título "Los Angeles → Las Vegas") não deve sair de novo.
+        const passeioNorm = passeioTxt ? normTxt(passeioTxt) : '';
+        const restoRota = cidadesRota.reduce(
+          (acc, cidade) => acc.replace(normTxt(cidade), ''),
+          passeioNorm
+        );
+        const passeioEhRota =
+          passeioNorm !== '' &&
+          restoRota === '' &&
+          cidadesRota.every((cidade) => passeioNorm.includes(normTxt(cidade)));
         const passeioExtra =
-          passeioTxt && normTxt(passeioTxt) !== normTxt(tituloRota || titulo) ? passeioTxt : '';
+          passeioTxt && !passeioEhRota && normTxt(passeioTxt) !== normTxt(tituloRota || titulo)
+            ? passeioTxt
+            : '';
         const periodo = periodoTexto(item, formatDate);
         const pernas = segmentos.map((seg, index) => pernaTrem(seg, formatDate, index)).join('');
         const chips = chipsHtml(
