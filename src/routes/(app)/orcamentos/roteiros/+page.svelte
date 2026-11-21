@@ -203,18 +203,17 @@
   <svelte:fragment slot="row-actions" let:row>
     <Button
       type="button"
-      variant="ghost"
-      size="xs"
-      ariaLabel="Excluir roteiro"
+      variant="danger"
+      size="sm"
       title="Excluir"
       disabled={deletingId === row.id}
-      class_name="h-8 w-8 p-0! text-slate-400 hover:bg-red-50! hover:text-red-600!"
       on:click={(event) => {
         event.stopPropagation();
         deleteRoteiro(row);
       }}
     >
-      <Trash2 size={15} />
+      <Trash2 size={14} class="mr-1.5" />
+      Excluir
     </Button>
   </svelte:fragment>
 </DataTable>

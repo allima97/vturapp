@@ -261,10 +261,16 @@ export function renderPreviewCarros(items: RotPasseio[], formatDate: FormatDate)
   ).join('');
 }
 
-function pernaTrem(segmento: QuoteFlightSegment, formatDate: FormatDate, index: number) {
+function pontosTrechoTrem(segmento: QuoteFlightSegment): [string, string] {
   const [routeFrom = '', routeTo = ''] = text(segmento.trecho).split(/\s*(?:→|->)\s*|\s+-\s+/);
-  const from = nomeCidadeNoPdf(text(segmento.aeroporto_saida) || routeFrom) || '—';
-  const to = nomeCidadeNoPdf(text(segmento.aeroporto_chegada) || routeTo) || '—';
+  return [
+    nomeCidadeNoPdf(text(segmento.aeroporto_saida) || routeFrom) || '—',
+    nomeCidadeNoPdf(text(segmento.aeroporto_chegada) || routeTo) || '—'
+  ];
+}
+
+function pernaTrem(segmento: QuoteFlightSegment, formatDate: FormatDate, index: number) {
+  const [from, to] = pontosTrechoTrem(segmento);
   const dataSaida = formatDate(segmento.data_voo || segmento.data_fim);
   const saida = text(segmento.hora_saida).replace(/\s*\(\+\d+\)\s*$/, '');
   const chegada = text(segmento.hora_chegada).replace(/\s*\(\+\d+\)\s*$/, '');
@@ -285,7 +291,24 @@ export function renderPreviewTrens(items: RotPasseio[], formatDate: FormatDate) 
       .map((item) => {
         const detalhes = detalhesPasseio(item);
         const segmentos = Array.isArray(detalhes.segmentos) ? detalhes.segmentos : [];
-        const titulo = text(item.passeio) || 'Trem';
+        const cidadesRota = Array.from(
+          new Set(
+            segmentos
+              .flatMap((seg) => pontosTrechoTrem(seg))
+              .filter((ponto) => ponto && ponto !== '—')
+          )
+        );
+        const tituloRota = cidadesRota.length >= 2 ? cidadesRota.join(' → ') : '';
+        const passeioTxt = text(item.passeio);
+        const titulo = tituloRota || passeioTxt || 'Trem';
+        const normTxt = (valor: string) =>
+          valor
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, '');
+        const passeioExtra =
+          passeioTxt && normTxt(passeioTxt) !== normTxt(tituloRota || titulo) ? passeioTxt : '';
         const periodo = periodoTexto(item, formatDate);
         const pernas = segmentos.map((seg, index) => pernaTrem(seg, formatDate, index)).join('');
         const chips = chipsHtml(
@@ -298,6 +321,7 @@ export function renderPreviewTrens(items: RotPasseio[], formatDate: FormatDate) 
           `<div class="rot-hotel"><div>${serviceIconSvg('trem')}</div><div>`,
           `<div class="rot-item-title"><b>${escapeHtml(titulo)}</b></div>`,
           pernas || (periodo ? `<p class="meta">${escapeHtml(periodo)}</p>` : ''),
+          passeioExtra ? `<div class="mu sm">${escapeHtml(passeioExtra)}</div>` : '',
           chips,
           `</div></div>`
         ].join('');
