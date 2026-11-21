@@ -111,7 +111,7 @@ async function totpCode(secret: string, at = Date.now()) {
   return String(binary % 1_000_000).padStart(6, '0');
 }
 
-async function codeMatches(secret: string, code: string) {
+export async function codeMatches(secret: string, code: string) {
   const now = Date.now();
   const checks = await Promise.all([-1, 0, 1].map((step) => totpCode(secret, now + step * 30000)));
   return checks.includes(code);
@@ -133,7 +133,7 @@ async function signAal(secret: string, userId: string, exp: number) {
   return [...new Uint8Array(signature)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
 }
 
-async function writeAal(context: DataContext, userId: string) {
+export async function writeAal(context: DataContext, userId: string) {
   const exp = Math.floor(Date.now() / 1000) + 60 * 60 * 12;
   const signature = await signAal(context.secret, userId, exp);
   context.cookies?.set(AAL_COOKIE, `${userId}.${exp}.${signature}`, {
@@ -185,14 +185,22 @@ export async function openUserSession(context: DataContext, userId: string) {
     )
     .bind(crypto.randomUUID(), userId, token, now + 30 * 24 * 60 * 60 * 1000, now)
     .run();
+  // Em produção (HTTPS) o better-auth usa o prefixo __Secure- no nome do
+  // cookie de sessão; sem ele o getSession não encontra a sessão e o app
+  // interpreta como logout. Em HTTP (dev) o nome é sem prefixo.
+  const useSecureCookies = String(context.origin || '').startsWith('https:');
+  const cookieName = useSecureCookies
+    ? '__Secure-better-auth.session_token'
+    : 'better-auth.session_token';
   const cookie = await serializeSignedCookie(
-    'better-auth.session_token',
+    cookieName,
     token,
     context.secret || 'dev-only-auth-secret-32-chars-min',
     {
       path: '/',
       httpOnly: true,
       sameSite: 'lax',
+      secure: useSecureCookies,
       maxAge: 30 * 24 * 60 * 60
     }
   );
@@ -203,6 +211,7 @@ export async function openUserSession(context: DataContext, userId: string) {
     path: '/',
     httpOnly: true,
     sameSite: 'lax',
+    secure: useSecureCookies,
     maxAge: 30 * 24 * 60 * 60
   });
   return token;

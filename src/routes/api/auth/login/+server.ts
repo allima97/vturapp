@@ -134,7 +134,13 @@ export const POST: RequestHandler = async ({
     const payload = (await response.json()) as {
       token?: string;
       user?: { id: string; email: string; name?: string };
+      twoFactorRedirect?: boolean;
     };
+    // Com 2FA ativo o better-auth não cria sessão: retorna twoFactorRedirect e
+    // grava o cookie temporário two_factor. O cliente deve ir para /auth/mfa.
+    if (payload.twoFactorRedirect === true) {
+      return json({ two_factor_required: true }, { headers: NO_STORE_HEADERS });
+    }
     const user = payload.user
       ? {
           id: payload.user.id,

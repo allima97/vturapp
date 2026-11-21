@@ -16,6 +16,9 @@
   let error: string | null = null;
   let factorId = '';
   let nextPath = '/';
+  // Fluxo de login com 2FA: ainda não há sessão, só o cookie temporário
+  // two_factor criado pelo signInEmail. A verificação usa /two-factor/verify-totp.
+  let fluxoLogin = false;
 
   type VerifiedTotpFactor = {
     id?: string | null;
@@ -42,7 +45,7 @@
 
       const { data: sessionData } = await dados.auth.getSession();
       if (!sessionData?.session?.user) {
-        goto('/auth/login');
+        fluxoLogin = true;
         return;
       }
 
@@ -92,7 +95,7 @@
       error = 'Informe o código de 6 dígitos.';
       return;
     }
-    if (!factorId) {
+    if (!fluxoLogin && !factorId) {
       error = 'Fator 2FA não encontrado.';
       return;
     }
@@ -101,17 +104,35 @@
     error = null;
 
     try {
-      const { data: challengeData, error: challengeError } = await dados.auth.mfa.challenge({
-        factorId
-      });
-      if (challengeError) throw challengeError;
+      if (fluxoLogin) {
+        const response = await fetch('/api/auth/mfa/login', {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ code })
+        });
+        const data = (await response.json().catch(() => ({}))) as { error?: string };
+        if (!response.ok) {
+          throw new Error(data.error || 'Código inválido ou expirado.');
+        }
+      } else {
+        if (!factorId) {
+          error = 'Fator 2FA não encontrado.';
+          return;
+        }
 
-      const { error: verifyError } = await dados.auth.mfa.verify({
-        factorId,
-        challengeId: challengeData.id,
-        code
-      });
-      if (verifyError) throw verifyError;
+        const { data: challengeData, error: challengeError } = await dados.auth.mfa.challenge({
+          factorId
+        });
+        if (challengeError) throw challengeError;
+
+        const { error: verifyError } = await dados.auth.mfa.verify({
+          factorId,
+          challengeId: challengeData.id,
+          code
+        });
+        if (verifyError) throw verifyError;
+      }
 
       // Atualiza permissões e redireciona
       const dadosClient = dados;

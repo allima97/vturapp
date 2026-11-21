@@ -44,6 +44,7 @@
     session?: Session | null;
     user?: User | null;
     error?: string;
+    two_factor_required?: boolean;
   };
 
   function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
@@ -215,6 +216,11 @@
           );
         }
         throw new Error(payload.error || 'Erro ao fazer login. Tente novamente.');
+      }
+
+      if (payload.two_factor_required === true) {
+        await goto(`/auth/mfa?next=${encodeURIComponent(redirectTarget)}`);
+        return;
       }
 
       const session = payload.session;
