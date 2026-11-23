@@ -77,7 +77,7 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - [x] admin
 - [x] master
 - [x] cadastros
-- [ ] clientes
+- [x] clientes
 - [ ] financeiro (+ comissoes)
 - [ ] operacao
 - [ ] orcamentos (+ roteiros)
@@ -116,3 +116,5 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - 8 páginas (`master/*` + `dashboard/master`): DataTable/PageHeader já adotados; zero ocorrências de button/table/select crus, Intl ad-hoc, confirm() nativo ou "R$" manual.
 
 - `cadastros/circuitos`: `Intl.NumberFormat` local → `formatCurrencyInt()` (novo helper canônico para moeda sem centavos, adicionado a `formatters.ts`). Demais 17 páginas já conformes.
+
+- `clientes`: `+page` migrou `Intl.NumberFormat` local → `formatCurrency()`; `[id]` removeu formatter local, converteu tabelas HTML de histórico (vendas/orçamentos) para `DataTable` com `onRowClick`, `searchable/filterable/exportable={false}` e `escapeHtml` nos formatters.

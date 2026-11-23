@@ -8,7 +8,7 @@
   import KPIGrid from '$lib/components/kpis/KPIGrid.svelte';
   import { toast } from '$lib/stores/ui';
   import { toUserMessage } from '$lib/utils/errors';
-  import { formatDate } from '$lib/utils/formatters';
+  import { formatCurrency, formatDate } from '$lib/utils/formatters';
   import { escapeHtml } from '$lib/utils/html';
   import { apiGet, isCanceledApiError } from '$lib/services/api';
 
@@ -62,11 +62,6 @@
     comViagem: 0,
     emNegociacao: 0
   };
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
-
   const columns = [
     {
       key: 'nome',
@@ -142,7 +137,7 @@
       label: 'Total Gasto',
       sortable: true,
       align: 'right' as const,
-      formatter: (value: number) => BRL_CURRENCY_FORMATTER.format(value || 0)
+      formatter: (value: number) => formatCurrency(value)
     },
     {
       key: 'ultima_compra',
@@ -442,7 +437,7 @@
   />
   <KPICard
     title="Total gasto"
-    value={BRL_CURRENCY_FORMATTER.format(totalCarteira)}
+    value={formatCurrency(totalCarteira)}
     color="slate"
     icon={Wallet}
     loading={loadingSummary}

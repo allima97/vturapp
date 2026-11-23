@@ -4,6 +4,7 @@
   import { onDestroy, onMount } from 'svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
+  import DataTable from '$lib/components/ui/DataTable.svelte';
   import Tabs from '$lib/components/ui/Tabs.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import LoadingState from '$lib/components/ui/LoadingState.svelte';
@@ -40,7 +41,8 @@
   } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { parseISODateParts, todayISODateLocal } from '$lib/date';
-  import { formatDate as formatDateValue } from '$lib/utils/formatters';
+  import { formatCurrency, formatDate as formatDateValue } from '$lib/utils/formatters';
+  import { escapeHtml } from '$lib/utils/html';
   import { toUserMessage } from '$lib/utils/errors';
   import { apiGet, isCanceledApiError } from '$lib/services/api';
 
@@ -104,11 +106,6 @@
   };
 
   const clienteId = $page.params.id;
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
-
   let cliente: ClienteDetalhe | null = null;
   let historicoVendas: HistoricoVenda[] = [];
   let historicoOrcamentos: HistoricoOrcamento[] = [];
@@ -152,10 +149,6 @@
   // Fase 5.4: atalhos de contato (só abrem o app de telefone, e-mail ou WhatsApp).
   $: linkWhatsApp = construirLinkWhatsApp(cliente?.whatsapp || cliente?.telefone || null);
   $: telefoneDigitos = String(cliente?.telefone || cliente?.whatsapp || '').replace(/[^\d+]/g, '');
-
-  function formatCurrency(value: number | null | undefined) {
-    return BRL_CURRENCY_FORMATTER.format(Number(value || 0));
-  }
 
   function formatDate(value: string | null | undefined) {
     return formatDateValue(value);
@@ -201,6 +194,68 @@
     };
     return labels[key] || String(status || '-');
   }
+
+  const colunasHistoricoVendas = [
+    {
+      key: 'data_lancamento',
+      label: 'Lançamento',
+      formatter: (v: string | null) => formatDate(v)
+    },
+    {
+      key: 'destino_nome',
+      label: 'Destino',
+      formatter: (_v: unknown, row: HistoricoVenda) =>
+        `<div class="font-medium text-slate-900">${escapeHtml(row.destino_nome || '-')}</div><div class="text-xs text-slate-500">${escapeHtml(row.destino_cidade_nome || 'Sem cidade')}</div>`
+    },
+    {
+      key: 'data_embarque',
+      label: 'Embarque',
+      formatter: (v: string | null) => formatDate(v)
+    },
+    {
+      key: 'valor_total',
+      label: 'Valor',
+      align: 'right' as const,
+      formatter: (v: number) => formatCurrency(v)
+    },
+    {
+      key: 'valor_taxas',
+      label: 'Taxas',
+      align: 'right' as const,
+      formatter: (v: number) => formatCurrency(v)
+    },
+    {
+      key: 'origem_vinculo',
+      label: 'Vínculo',
+      formatter: (v: string | undefined) =>
+        `<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${v === 'passageiro' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}">${v === 'passageiro' ? 'Passageiro' : 'Titular'}</span>`
+    }
+  ];
+
+  const colunasHistoricoOrcamentos = [
+    {
+      key: 'data_orcamento',
+      label: 'Data',
+      formatter: (v: string | null) => formatDate(v)
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      formatter: (v: string | null) =>
+        `<span class="inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusBadge(v)}">${escapeHtml(getStatusLabel(v))}</span>`
+    },
+    {
+      key: 'produto_nome',
+      label: 'Produto',
+      formatter: (v: string | null) => escapeHtml(v || '-')
+    },
+    {
+      key: 'valor',
+      label: 'Valor',
+      align: 'right' as const,
+      formatter: (v: number | null) => formatCurrency(v)
+    }
+  ];
 
   async function carregarCliente() {
     loadController?.abort();
@@ -635,71 +690,17 @@
     aria-labelledby="cliente-tab-vendas"
     hidden={abaAtiva !== 'vendas'}
   >
-    <Card title="Histórico de vendas" color="clientes">
-      {#if historicoVendas.length > 0}
-        <div class="overflow-x-visible md:overflow-x-auto">
-          <table class="table-mobile-cards w-full text-sm">
-            <thead class="bg-slate-50">
-              <tr>
-                <th class="px-4 py-3 text-left font-semibold text-slate-600">Lancamento</th>
-                <th class="px-4 py-3 text-left font-semibold text-slate-600">Destino</th>
-                <th class="px-4 py-3 text-left font-semibold text-slate-600">Embarque</th>
-                <th class="px-4 py-3 text-right font-semibold text-slate-600">Valor</th>
-                <th class="px-4 py-3 text-right font-semibold text-slate-600">Taxas</th>
-                <th class="px-4 py-3 text-left font-semibold text-slate-600">Vinculo</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-200">
-              {#each historicoVendas as venda}
-                <tr
-                  class="cursor-pointer transition-colors hover:bg-slate-50"
-                  tabindex="0"
-                  on:click={() => goto(`/vendas/${venda.id}`)}
-                  on:keydown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      void goto(`/vendas/${venda.id}`);
-                    }
-                  }}
-                >
-                  <td data-label="Lançamento" class="px-4 py-3 text-slate-700"
-                    >{formatDate(venda.data_lancamento)}</td
-                  >
-                  <td data-label="Destino" class="px-4 py-3">
-                    <div class="font-medium text-slate-900">{venda.destino_nome || '-'}</div>
-                    <div class="text-xs text-slate-500">
-                      {venda.destino_cidade_nome || 'Sem cidade'}
-                    </div>
-                  </td>
-                  <td data-label="Embarque" class="px-4 py-3 text-slate-700"
-                    >{formatDate(venda.data_embarque)}</td
-                  >
-                  <td data-label="Valor" class="px-4 py-3 text-right font-medium text-slate-900"
-                    >{formatCurrency(venda.valor_total)}</td
-                  >
-                  <td data-label="Taxas" class="px-4 py-3 text-right text-slate-700"
-                    >{formatCurrency(venda.valor_taxas)}</td
-                  >
-                  <td data-label="Vínculo" class="px-4 py-3">
-                    <span
-                      class={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${venda.origem_vinculo === 'passageiro' ? 'bg-amber-100 text-amber-700' : 'bg-blue-100 text-blue-700'}`}
-                    >
-                      {venda.origem_vinculo === 'passageiro' ? 'Passageiro' : 'Titular'}
-                    </span>
-                  </td>
-                </tr>
-              {/each}
-            </tbody>
-          </table>
-        </div>
-      {:else}
-        <div
-          class="rounded-vtur-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500"
-        >
-          Nenhuma venda vinculada a este cliente.
-        </div>
-      {/if}
-    </Card>
+    <DataTable
+      title="Histórico de vendas"
+      color="clientes"
+      columns={colunasHistoricoVendas}
+      data={historicoVendas}
+      searchable={false}
+      filterable={false}
+      exportable={false}
+      onRowClick={(venda) => goto(`/vendas/${venda.id}`)}
+      emptyMessage="Nenhuma venda vinculada a este cliente."
+    />
   </div>
 
   <div
@@ -708,60 +709,17 @@
     aria-labelledby="cliente-tab-orcamentos"
     hidden={abaAtiva !== 'orcamentos'}
   >
-    <Card title="Histórico de orçamentos" color="clientes">
-      {#if historicoOrcamentos.length > 0}
-        <div class="overflow-x-visible md:overflow-x-auto">
-          <table class="table-mobile-cards w-full text-sm">
-            <thead class="bg-slate-50">
-              <tr>
-                <th class="px-4 py-3 text-left font-semibold text-slate-600">Data</th>
-                <th class="px-4 py-3 text-left font-semibold text-slate-600">Status</th>
-                <th class="px-4 py-3 text-left font-semibold text-slate-600">Produto</th>
-                <th class="px-4 py-3 text-right font-semibold text-slate-600">Valor</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-200">
-              {#each historicoOrcamentos as orcamento}
-                <tr
-                  class="cursor-pointer transition-colors hover:bg-slate-50"
-                  tabindex="0"
-                  on:click={() => goto(`/orcamentos/${orcamento.id}`)}
-                  on:keydown={(event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault();
-                      void goto(`/orcamentos/${orcamento.id}`);
-                    }
-                  }}
-                >
-                  <td data-label="Data" class="px-4 py-3 text-slate-700"
-                    >{formatDate(orcamento.data_orcamento)}</td
-                  >
-                  <td data-label="Status" class="px-4 py-3">
-                    <span
-                      class={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${getStatusBadge(orcamento.status)}`}
-                    >
-                      {getStatusLabel(orcamento.status)}
-                    </span>
-                  </td>
-                  <td data-label="Produto" class="px-4 py-3 text-slate-900"
-                    >{orcamento.produto_nome || '-'}</td
-                  >
-                  <td data-label="Valor" class="px-4 py-3 text-right text-slate-900"
-                    >{formatCurrency(orcamento.valor)}</td
-                  >
-                </tr>
-              {/each}
-            </tbody>
-          </table>
-        </div>
-      {:else}
-        <div
-          class="rounded-vtur-lg border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500"
-        >
-          Nenhum orcamento vinculado a este cliente.
-        </div>
-      {/if}
-    </Card>
+    <DataTable
+      title="Histórico de orçamentos"
+      color="clientes"
+      columns={colunasHistoricoOrcamentos}
+      data={historicoOrcamentos}
+      searchable={false}
+      filterable={false}
+      exportable={false}
+      onRowClick={(orcamento) => goto(`/orcamentos/${orcamento.id}`)}
+      emptyMessage="Nenhum orçamento vinculado a este cliente."
+    />
   </div>
 
   <div
