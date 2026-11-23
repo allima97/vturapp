@@ -1,9 +1,21 @@
-import { quoteCheckIcon } from '$lib/quote/pdfIcons';
+import { quoteCheckIcon, quoteXIcon } from '$lib/quote/pdfIcons';
+
+export function roteiroIconChips(
+  items: string[],
+  escape: (value: string) => string,
+  icon: string = quoteCheckIcon
+) {
+  return `<div class="chks">${items
+    .map((item) => `<div class="chk">${icon}<span>${escape(item)}</span></div>`)
+    .join('')}</div>`;
+}
 
 export function roteiroCheckChips(items: string[], escape: (value: string) => string) {
-  return `<div class="chks">${items
-    .map((item) => `<div class="chk">${quoteCheckIcon}<span>${escape(item)}</span></div>`)
-    .join('')}</div>`;
+  return roteiroIconChips(items, escape, quoteCheckIcon);
+}
+
+export function roteiroXChips(items: string[], escape: (value: string) => string) {
+  return roteiroIconChips(items, escape, quoteXIcon);
 }
 
 /** Visual do PDF de orçamento, aplicado ao roteiro sem alterar o HTML do orçamento. */

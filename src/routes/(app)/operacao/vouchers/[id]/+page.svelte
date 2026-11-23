@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { ComponentType } from 'svelte';
-  import { browser } from '$app/environment';
+  import { confirmAction } from '$lib/stores/confirm';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
@@ -218,7 +218,7 @@
   async function duplicarVoucher() {
     if (!voucher || duplicating) return;
 
-    if (browser && !window.confirm(`Deseja duplicar o voucher "${voucher.nome}"?`)) {
+    if (!(await confirmAction(`Deseja duplicar o voucher "${voucher.nome}"?`))) {
       return;
     }
 

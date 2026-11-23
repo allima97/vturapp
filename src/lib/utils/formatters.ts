@@ -191,3 +191,20 @@ export function initials(name: string | null | undefined, max = 2): string {
 
   return result;
 }
+
+// ─── Arquivos ─────────────────────────────────────────────────────────────────
+
+/** Tamanho de arquivo legível (ex.: "2,4 MB") */
+export function formatFileSize(bytes: number | null | undefined): string {
+  if (bytes === null || bytes === undefined || !Number.isFinite(bytes) || bytes < 0) return '-';
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ['KB', 'MB', 'GB'];
+  let size = bytes;
+  let unit = 'B';
+  for (const next of units) {
+    if (size < 1024) break;
+    size /= 1024;
+    unit = next;
+  }
+  return `${size.toLocaleString('pt-BR', { maximumFractionDigits: 1 })} ${unit}`;
+}

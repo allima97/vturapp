@@ -26,6 +26,7 @@
     LoadingState
   } from '$lib/components/ui';
   import { toast } from '$lib/stores/ui';
+  import { confirmAction } from '$lib/stores/confirm';
   import { fetchImageAsDataUrl } from '$lib/utils/browser-images';
   import {
     ArrowLeft,
@@ -91,7 +92,7 @@
   } from './_components/preview-cards';
   import { nomeCidadeNoPdf } from './_components/preview-cidade';
   import { roteiroCardStyles } from '$lib/utils/printLayout';
-  import { roteiroCheckChips, roteiroPdfThemeCss } from '$lib/quote/roteiroPdfTheme';
+  import { roteiroCheckChips, roteiroPdfThemeCss, roteiroXChips } from '$lib/quote/roteiroPdfTheme';
   import { roteiroFlightStyles } from '$lib/quote/printFlights';
   import AbaItinerario from './_components/AbaItinerario.svelte';
   import CidadeRoteiro from './_components/CidadeRoteiro.svelte';
@@ -648,7 +649,9 @@
 
     if (
       browser &&
-      !window.confirm('Deseja duplicar este roteiro? Será criada uma nova cópia para edição.')
+      !(await confirmAction(
+        'Deseja duplicar este roteiro? Será criada uma nova cópia para edição.'
+      ))
     ) {
       return;
     }
@@ -1135,12 +1138,19 @@
     return `<section class="section"><h2>${escapePreviewHtml(title)}</h2><div class="grid">${content}</div></section>`;
   }
 
-  function buildPreviewListSection(title: string, items: string[], chips = false) {
+  function buildPreviewListSection(
+    title: string,
+    items: string[],
+    chips: boolean | 'x' = false
+  ) {
     const filtered = items.map((item) => String(item || '').trim()).filter(Boolean);
     if (filtered.length === 0) return '';
-    const body = chips
-      ? roteiroCheckChips(filtered, escapePreviewHtml)
-      : buildPreviewList(filtered);
+    const body =
+      chips === 'x'
+        ? roteiroXChips(filtered, escapePreviewHtml)
+        : chips
+          ? roteiroCheckChips(filtered, escapePreviewHtml)
+          : buildPreviewList(filtered);
     return `<section class="section"><h2>${escapePreviewHtml(title)}</h2>${body}</section>`;
   }
 
@@ -1463,7 +1473,7 @@
             ${buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
             ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
             ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
-            ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'))}
+            ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'), 'x')}
             ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
             ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}
           </div>

@@ -87,6 +87,7 @@ export { default as MoveDown } from './MoveDown.svelte';
 export { default as MoveUp } from './MoveUp.svelte';
 export { default as Network } from './Network.svelte';
 export { default as Pencil } from './Pencil.svelte';
+export { default as Paperclip } from './Paperclip.svelte';
 export { default as Percent } from './Percent.svelte';
 export { default as Phone } from './Phone.svelte';
 export { default as Whatsapp } from './Whatsapp.svelte';

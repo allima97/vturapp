@@ -3,7 +3,6 @@
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
-  import FileInput from '$lib/components/ui/FileInput.svelte';
   import FileDropzone from '$lib/components/ui/FileDropzone.svelte';
   import Dialog from '$lib/components/ui/Dialog.svelte';
   import DataTable from '$lib/components/ui/DataTable.svelte';

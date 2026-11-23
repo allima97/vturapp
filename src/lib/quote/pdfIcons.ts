@@ -35,6 +35,8 @@ const serviceIcons = new Map<string, [string, string]>([
 
 export const quoteCheckIcon =
   '<svg width="11" height="11" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#243AA3" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20 6 9 17l-5-5"/></svg>';
+export const quoteXIcon =
+  '<svg width="11" height="11" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#DC2626" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M18 6 6 18M6 6l12 12"/></svg>';
 
 export function serviceIconSvg(type: string, extraClass = '') {
   const iconType = type === 'hospedagem' ? 'hotel' : type === 'seguro_viagem' ? 'seguro' : type;
