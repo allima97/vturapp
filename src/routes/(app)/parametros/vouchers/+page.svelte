@@ -8,7 +8,7 @@
     FieldCheckbox,
     FieldInput,
     FieldSelect,
-    FileInput,
+    FileDropzone,
     LoadingState,
     PageHeader
   } from '$lib/components/ui';
@@ -408,7 +408,7 @@
           class_name="rounded-xl border border-slate-200 bg-white px-4 py-4"
         />
 
-        <FileInput
+        <FileDropzone
           label={form.id ? 'Substituir arquivo' : 'Arquivo'}
           bind:files={fileList}
           accept="image/png,image/jpeg,image/webp"

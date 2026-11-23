@@ -3,7 +3,7 @@
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
-  import { FieldInput, LoadingState, SimpleTable } from '$lib/components/ui';
+  import { FieldInput, LoadingState } from '$lib/components/ui';
   import { toast } from '$lib/stores/ui';
   import { permissoes } from '$lib/stores/permissoes';
   import { apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
@@ -185,7 +185,8 @@
     </div>
   {:else}
     <div class="overflow-x-auto">
-      <SimpleTable tableClass="w-full text-sm" color="financeiro">
+      <div class="vtur-table-shell overflow-hidden">
+        <table class="table-mobile-cards w-full text-sm">
         <thead class="bg-slate-50">
           <tr>
             <th class="px-4 py-3 text-left font-semibold text-slate-600">Nome</th>
@@ -236,7 +237,8 @@
             </tr>
           {/each}
         </tbody>
-      </SimpleTable>
+      </table>
+      </div>
     </div>
   {/if}
 </Card>
@@ -244,7 +246,8 @@
 {#if convites.length > 0}
   <Card title="Convites pendentes" color="financeiro">
     <div class="overflow-x-auto">
-      <SimpleTable tableClass="w-full text-sm" color="financeiro">
+      <div class="vtur-table-shell overflow-hidden">
+        <table class="table-mobile-cards w-full text-sm">
         <thead class="bg-slate-50">
           <tr>
             <th class="px-4 py-3 text-left font-semibold text-slate-600">E-mail convidado</th>
@@ -279,7 +282,8 @@
             </tr>
           {/each}
         </tbody>
-      </SimpleTable>
+      </table>
+      </div>
     </div>
   </Card>
 {/if}

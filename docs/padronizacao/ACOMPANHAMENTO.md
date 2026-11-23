@@ -82,7 +82,7 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - [x] operacao
 - [x] orcamentos (+ roteiros)
 - [x] vendas
-- [ ] parametros
+- [x] parametros
 - [ ] relatorios + dashboards
 - [ ] consultoria-online
 - [ ] perfil + auth
@@ -126,3 +126,5 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - `orcamentos`: `Intl.NumberFormat` ad-hoc removido de +page, novo, [id] e [id]/editar — multi-moeda agora usa `formatCurrency(value, currency)` canônico (mesmo cache por moeda); `formatBRL` de roteiros delega a `formatNumber(x,2)`; `AbaPasseios` usa `formatCurrency`. **Exceções documentadas**: tabelas `preview-header-*` e `roteiro-print-table` são markup de impressão/PDF.
 
 - `vendas`: `Intl.NumberFormat` local removido de +page e [id] → `formatCurrency` canônico ([id] mantém wrapper local para coerção `Number()` de campos `string|number` do D1). **Exceções documentadas**: tabelas "Recibos" e "Pagamentos" em [id] têm `tfoot` com totais — DataTable não suporta rodapé de agregação. `lib/server/vendas/pdf.ts` segue com paleta antiga (débito conhecido, convergir depois).
+
+- `parametros`: 4 `SimpleTable` de +page e 2 de equipe → `<table class="table-mobile-cards">` em `vtur-table-shell` (todas com inputs editáveis); `percentFormatter` → `formatNumber(x,2)`; `vouchers` migrou `FileInput` → `FileDropzone` (componente canônico de upload — pendência da Etapa 3 resolvida). **Exceções documentadas**: `escalas` (grade de calendário mensal com sticky column), `metas` (grade editável de metas por vendedor), `cambios` (`Intl` 4-6 casas decimais para taxas de câmbio — sem helper canônico equivalente) e `DATE_TIME_FORMATTER` de +page (`dateStyle:'medium'` — estilo distinto do canônico).

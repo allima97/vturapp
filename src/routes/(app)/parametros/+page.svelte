@@ -12,12 +12,12 @@
     FieldInput,
     FieldSelect,
     FieldTextarea,
-    SimpleTable,
     LoadingState
   } from '$lib/components/ui';
   import FieldToggle from '$lib/components/ui/form/FieldToggle.svelte';
   import Dialog from '$lib/components/ui/Dialog.svelte';
   import { toast } from '$lib/stores/ui';
+  import { formatNumber } from '$lib/utils/formatters';
   import { permissoes } from '$lib/stores/permissoes';
   import { descobrirModulo } from '$lib/config/modulos';
   import { toUserMessage } from '$lib/utils/errors';
@@ -379,10 +379,6 @@
     tiers: Tier[];
   }
 
-  const percentFormatter = new Intl.NumberFormat('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
   const faixas: FaixaType[] = ['PRE', 'POS'];
   const ruleTypeOptions = [
     { value: 'GERAL', label: 'Geral (percentuais fixos)' },
@@ -527,7 +523,7 @@
   $: ({ activeRules, inactiveRules, escalonaveis, totalTiers } = rulesResumo);
 
   function formatPercent(value: number | null | undefined) {
-    return percentFormatter.format(normalizeNumber(value));
+    return formatNumber(normalizeNumber(value), 2);
   }
   function resetRuleForm() {
     ruleForm = emptyRuleForm();
@@ -1299,10 +1295,8 @@
                 </div>
               {:else}
                 <div class="overflow-x-auto">
-                  <SimpleTable
-                    tableClass="min-w-full divide-y divide-slate-200 text-sm"
-                    color="financeiro"
-                  >
+                  <div class="vtur-table-shell overflow-hidden">
+            <table class="table-mobile-cards w-full text-sm min-w-full divide-y divide-slate-200">
                     <thead class="bg-white/80"
                       ><tr class="text-left text-slate-600"
                         ><th class="px-3 py-2 font-medium">Faixa</th><th
@@ -1419,7 +1413,8 @@
                         </tr>
                       {/each}
                     </tbody>
-                  </SimpleTable>
+                  </table>
+            </div>
                 </div>
               {/if}
             </div>
@@ -1647,10 +1642,8 @@
                           </div>
                         {:else}
                           <div class="overflow-x-auto">
-                            <SimpleTable
-                              tableClass="min-w-full divide-y divide-slate-200 text-sm"
-                              color="financeiro"
-                            >
+                            <div class="vtur-table-shell overflow-hidden">
+            <table class="table-mobile-cards w-full text-sm min-w-full divide-y divide-slate-200">
                               <thead class="bg-white/80"
                                 ><tr class="text-left text-slate-600"
                                   ><th class="px-3 py-2 font-medium">Faixa</th><th
@@ -1777,7 +1770,8 @@
                                   </tr>
                                 {/each}
                               </tbody>
-                            </SimpleTable>
+                            </table>
+            </div>
                           </div>
                         {/if}
                       </div>
@@ -1997,7 +1991,8 @@
                 Nenhuma faixa adicionada ainda.
               </div>
             {:else}
-              <SimpleTable tableClass="min-w-full divide-y divide-slate-200" color="financeiro">
+              <div class="vtur-table-shell overflow-hidden">
+              <table class="table-mobile-cards w-full text-sm min-w-full divide-y divide-slate-200">
                 <thead class="bg-white/70"
                   ><tr class="text-left text-slate-600"
                     ><th class="px-3 py-2 font-medium">Faixa</th><th class="px-3 py-2 font-medium"
@@ -2077,7 +2072,8 @@
                     </tr>
                   {/each}
                 </tbody>
-              </SimpleTable>
+              </table>
+            </div>
             {/if}
           </div>
         {/if}
