@@ -17,6 +17,7 @@
   import DestinoOperacional from '$lib/components/DestinoOperacional.svelte';
   import { campoGeografico } from '$lib/config/destinosGeograficos';
   import { toUserMessage } from '$lib/utils/errors';
+  import { formatCurrency as formatCurrencyValue, formatDateTime } from '$lib/utils/formatters';
   import { apiGet, apiPatch, apiPost, isCanceledApiError } from '$lib/services/api';
   import { safeOpenNewTab } from '$lib/security/url';
   import { createLoadGuard } from '$lib/utils/loadGuard';
@@ -64,19 +65,7 @@
     { value: 'fechada', label: 'Fechadas' }
   ];
 
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
   const loadGuard = createLoadGuard();
-
-  const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
 
   let consultorias: Consultoria[] = [];
   let loading = false;
@@ -104,23 +93,12 @@
   let form: ConsultoriaForm = defaultForm();
 
   function formatDataHora(iso: string): string {
-    if (!iso) return '-';
-    const date = new Date(iso);
-    if (Number.isNaN(date.getTime())) {
-      return date.toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    }
-    return DATE_TIME_FORMATTER.format(date);
+    return formatDateTime(iso);
   }
 
   function formatCurrency(val: number): string {
     if (!val) return '-';
-    return BRL_CURRENCY_FORMATTER.format(val);
+    return formatCurrencyValue(val);
   }
 
   async function loadConsultorias() {

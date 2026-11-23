@@ -8,6 +8,7 @@
   import { FieldInput, LoadingState } from '$lib/components/ui';
   import { toast } from '$lib/stores/ui';
   import { toUserMessage } from '$lib/utils/errors';
+  import { formatDateTime as formatDateTimeValue } from '$lib/utils/formatters';
   import { apiFetch, apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
   import { browserSupportsWebAuthn, startRegistration } from '@simplewebauthn/browser';
@@ -252,17 +253,9 @@
     error = null;
   }
 
-  const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-
   function formatDateTime(value?: string | null) {
     if (!value) return 'Nunca usada';
-    return DATE_TIME_FORMATTER.format(new Date(value));
+    return formatDateTimeValue(value);
   }
 
   onMount(async () => {

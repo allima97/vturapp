@@ -15,7 +15,7 @@
     Minus,
     SlidersHorizontal
   } from '$lib/icons';
-  import { formatYearMonthLabel } from '$lib/utils/formatters';
+  import { formatYearMonthLabel, formatCurrency } from '$lib/utils/formatters';
   import { toUserMessage } from '$lib/utils/errors';
   import { toast } from '$lib/stores/ui';
   import { permissoes } from '$lib/stores/permissoes';
@@ -82,14 +82,6 @@
     return formatYearMonthLabel(getMonthRange(monthValue).month);
   }
 
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
-
-  function formatCurrency(value: number): string {
-    return BRL_CURRENCY_FORMATTER.format(value);
-  }
 
   const defaultRange = getMonthRange('');
 

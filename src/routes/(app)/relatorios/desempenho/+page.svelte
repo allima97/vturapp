@@ -10,6 +10,7 @@
   import { toast } from '$lib/stores/ui';
   import { permissoes } from '$lib/stores/permissoes';
   import { toUserMessage } from '$lib/utils/errors';
+  import { formatCurrencyInt } from '$lib/utils/formatters';
   import { apiFetch, apiGet, isCanceledApiError } from '$lib/services/api';
 
   // ---------------------------------------------------------------------------
@@ -76,12 +77,6 @@
     'Nov',
     'Dez'
   ];
-  const BRL_INTEGER_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  });
 
   // ---------------------------------------------------------------------------
   // Estado
@@ -119,7 +114,7 @@
   }
 
   function fmt(v: number) {
-    return BRL_INTEGER_CURRENCY_FORMATTER.format(v);
+    return formatCurrencyInt(v);
   }
 
   function fmtShort(v: number) {

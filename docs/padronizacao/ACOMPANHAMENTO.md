@@ -83,10 +83,10 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - [x] orcamentos (+ roteiros)
 - [x] vendas
 - [x] parametros
-- [ ] relatorios + dashboards
-- [ ] consultoria-online
+- [x] relatorios + dashboards
+- [x] consultoria-online
 - [ ] perfil + auth
-- [ ] reescrita (avaliar: legado — migrar ou excluir)
+- [x] reescrita (avaliar: legado — migrar ou excluir)
 
 ## Regras de segurança para o agent executor
 
@@ -128,3 +128,8 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - `vendas`: `Intl.NumberFormat` local removido de +page e [id] → `formatCurrency` canônico ([id] mantém wrapper local para coerção `Number()` de campos `string|number` do D1). **Exceções documentadas**: tabelas "Recibos" e "Pagamentos" em [id] têm `tfoot` com totais — DataTable não suporta rodapé de agregação. `lib/server/vendas/pdf.ts` segue com paleta antiga (débito conhecido, convergir depois).
 
 - `parametros`: 4 `SimpleTable` de +page e 2 de equipe → `<table class="table-mobile-cards">` em `vtur-table-shell` (todas com inputs editáveis); `percentFormatter` → `formatNumber(x,2)`; `vouchers` migrou `FileInput` → `FileDropzone` (componente canônico de upload — pendência da Etapa 3 resolvida). **Exceções documentadas**: `escalas` (grade de calendário mensal com sticky column), `metas` (grade editável de metas por vendedor), `cambios` (`Intl` 4-6 casas decimais para taxas de câmbio — sem helper canônico equivalente) e `DATE_TIME_FORMATTER` de +page (`dateStyle:'medium'` — estilo distinto do canônico).
+
+- `relatorios`: `Intl` ad-hoc → `formatCurrency`/`formatCurrencyInt` (ranking, placar, desempenho). **Exceções**: `placar` `HORA` (hora:minuto sem helper canônico), `vendas` `MONTH_LABEL_FORMATTER` (`month:'short'+year:'2-digit'` ≠ `formatYearMonthLabel`), `performance` 4 tabelas com headers agrupados via colspan (sem suporte no DataTable).
+- `consultoria-online`: `BRL`/`DATE_TIME_FORMATTER`/`toLocaleString` → `formatCurrency`/`formatDateTime` (corrige bug: `toLocaleString` era chamado justamente quando a data era inválida).
+- `perfil/auth`: `perfil/mfa` `DATE_TIME_FORMATTER` → `formatDateTime` canônico (wrapper local preservado para "Nunca usada"); `perfil/escala` 2 grades de calendário com sticky column → exceções.
+- `reescrita`: seção legada — `CursorPagination`+`AccessibleDialog` em `reescrita/clientes` morrem com a seção (decisão canônica §7); sem migração.

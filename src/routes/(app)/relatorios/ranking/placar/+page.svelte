@@ -20,7 +20,7 @@
     TrendingUp,
     Trophy
   } from '$lib/icons';
-  import { formatYearMonthLabel } from '$lib/utils/formatters';
+  import { formatYearMonthLabel, formatCurrencyInt } from '$lib/utils/formatters';
   import { toUserMessage } from '$lib/utils/errors';
   import { permissoes } from '$lib/stores/permissoes';
   import { apiFetch, isCanceledApiError } from '$lib/services/api';
@@ -48,11 +48,6 @@
   }
 
   const ATUALIZAR_A_CADA_MS = 60_000;
-  const BRL = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0
-  });
   const HORA = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' });
 
   let mes = todayISODateLocal().slice(0, 7);
@@ -271,7 +266,7 @@
         <div class="vtur-card p-5">
           <p class="text-sm font-medium text-slate-500">{bloco.titulo}</p>
           <p class="mt-1 text-3xl font-black tracking-tight text-slate-900 tabular-nums">
-            {BRL.format(bloco.valor || 0)}
+            {formatCurrencyInt(bloco.valor || 0)}
           </p>
           {#if bloco.meta > 0}
             <div
@@ -288,7 +283,7 @@
               ></div>
             </div>
             <p class="mt-1 text-sm text-slate-600">
-              <strong class="text-slate-900">{bloco.pct.toFixed(1)}%</strong> da meta de {BRL.format(
+              <strong class="text-slate-900">{bloco.pct.toFixed(1)}%</strong> da meta de {formatCurrencyInt(
                 bloco.meta
               )}
             </p>
@@ -330,7 +325,7 @@
             </div>
             <p class="mt-2 truncate text-lg font-semibold text-slate-900">{v.vendedor_nome}</p>
             <p class="text-financeiro-700 mt-1 text-2xl font-black tabular-nums">
-              {BRL.format(v.total_receita || 0)}
+              {formatCurrencyInt(v.total_receita || 0)}
             </p>
             <p class="mt-1 text-sm text-slate-600">{v.total_vendas} venda(s)</p>
             {#if v.meta > 0}
@@ -378,7 +373,7 @@
               </div>
               <span class="text-right">
                 <span class="block font-bold text-slate-900 tabular-nums"
-                  >{BRL.format(v.total_receita || 0)}</span
+                  >{formatCurrencyInt(v.total_receita || 0)}</span
                 >
                 <span class="block text-xs text-slate-500 tabular-nums">
                   {v.meta > 0 ? `${pct.toFixed(1)}% da meta` : `${v.total_vendas} venda(s)`}
