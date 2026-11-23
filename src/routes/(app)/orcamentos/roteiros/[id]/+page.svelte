@@ -1931,7 +1931,7 @@
             <div class="toolbar">
               <label class="rot2-modelo">Modelo
                 <select onchange="rvSwitchModelo(this.value)">
-                  <option value="completo"${mostrarItinerario ? '' : ' selected'}>Completo</option>
+                  <option value="completo"${mostrarItinerario ? '' : ' selected'}>Padrão</option>
                   <option value="moderno"${mostrarModerno ? ' selected' : ''}>Moderno</option>
                 </select>
               </label>
