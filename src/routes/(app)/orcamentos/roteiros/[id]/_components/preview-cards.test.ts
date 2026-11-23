@@ -224,6 +224,7 @@ describe('cards de passeio no PDF do roteiro (paridade com orçamento)', () => {
                 hora_chegada: '16:20',
                 aeroporto_saida: 'Los Angeles',
                 aeroporto_chegada: 'Las Vegas',
+                assentos: '',
                 cidade_saida_id: '',
                 cidade_chegada_id: ''
               }
