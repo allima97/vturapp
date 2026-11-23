@@ -1502,10 +1502,13 @@
     };
 
     // ── Moderno: bordered info/list box
-    const buildRot3InfoBox = (items: string[]) => {
+    const buildRot3InfoBox = (items: string[], tipo?: 'inclui' | 'naoinclui') => {
       const filtered = items.map((s) => String(s || '').trim()).filter(Boolean);
       if (!filtered.length) return '';
-      return `<div class="rot3-info-box"><ul class="rot3-info-list">${filtered.map((s) => `<li>${escapePreviewHtml(s)}</li>`).join('')}</ul></div>`;
+      const icoVerde = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:5px;flex-shrink:0"><circle cx="6" cy="6" r="5.5" fill="#16A34A" opacity="0.15"/><path d="M3.2 6l1.8 1.8L9 4" stroke="#16A34A" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      const icoVerm  = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:5px;flex-shrink:0"><circle cx="6" cy="6" r="5.5" fill="#DC2626" opacity="0.15"/><path d="M4 4l4 4M8 4l-4 4" stroke="#DC2626" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      const ico = tipo === 'inclui' ? icoVerde : tipo === 'naoinclui' ? icoVerm : '';
+      return `<div class="rot3-info-box"><ul class="rot3-info-list rot3-info-list--icon">${filtered.map((s) => `<li>${ico}${escapePreviewHtml(s)}</li>`).join('')}</ul></div>`;
     };
 
     // ── Moderno: Passagem Aérea (grouped flights)
@@ -1659,8 +1662,8 @@
       ${segurosHtml.trim() ? buildRot3Secao('SEGURO VIAGEM', segurosHtml) : ''}
       ${buildRot3Secao('INVESTIMENTO', rot3InvestHtml)}
       ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
-      ${incluiTexto.trim() ? buildRot3Secao('O QUE ESTÁ INCLUÍDO', buildRot3InfoBox(incluiTexto.split('\n'))) : ''}
-      ${naoIncluiTexto.trim() ? buildRot3Secao('O QUE NÃO ESTÁ INCLUÍDO', buildRot3InfoBox(naoIncluiTexto.split('\n'))) : ''}
+      ${incluiTexto.trim() ? buildRot3Secao('O QUE ESTÁ INCLUÍDO', buildRot3InfoBox(incluiTexto.split('\n'), 'inclui')) : ''}
+      ${naoIncluiTexto.trim() ? buildRot3Secao('O QUE NÃO ESTÁ INCLUÍDO', buildRot3InfoBox(naoIncluiTexto.split('\n'), 'naoinclui')) : ''}
       ${mostrarInformacoesPdf && informacoesImportantes.trim() ? buildRot3Secao('INFORMAÇÕES IMPORTANTES', buildRot3InfoBox(informacoesImportantes.split('\n'))) : ''}
       ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}
       <div class="rot3-doc-footer">Roteiro Personalizado${nome ? ` · ${escapePreviewHtml(nome)}` : ''}</div>`;
@@ -1835,6 +1838,8 @@
             .rot3-info-box { border: 1.5px solid #C5CED9; border-radius: 8px; padding: 12px 16px; background: #fff; }
             .rot3-info-list { margin: 0; padding-left: 16px; }
             .rot3-info-list li { font-size: 9pt; color: #374151; margin-bottom: 4px; line-height: 1.5; }
+            .rot3-info-list--icon { padding-left: 0; list-style: none; }
+            .rot3-info-list--icon li { display: flex; align-items: flex-start; }
             @media print {
               .rot3-doc { max-width: none; }
               .rot3-dia { break-inside: avoid; page-break-inside: avoid; }
