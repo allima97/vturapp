@@ -1644,6 +1644,35 @@
       <div class="rot3-inv-footer">${_icoClock}Emissão em ${emis}&nbsp;•&nbsp;Tarifas válidas até ${valid}${consultorNome ? `&nbsp;•&nbsp;Reserve com ${escapePreviewHtml(consultorNome)} via WhatsApp` : ''}</div>`;
     }
 
+    // ── Moderno: Formas de Pagamento
+    let rot3PagamentosHtml = '';
+    if (pagamentosItems.length > 0) {
+      const colHdrPag = `<div class="rot3-hotel-header-row">
+        <div class="rot3-hotel-h1">MODALIDADE</div>
+        <div class="rot3-hotel-h2">SERVIÇO / CONDIÇÃO</div>
+        <div class="rot3-hotel-h3" style="text-align:right">VALOR TOTAL</div>
+      </div>`;
+      const rowsPag = pagamentosItems.map((p) => {
+        const modalidade = escapePreviewHtml(String(p.forma_pagamento || '—').trim());
+        const servico    = escapePreviewHtml(String(p.servico || '').trim());
+        const valor      = p.valor_total_com_taxas
+          ? `R$&nbsp;${formatBRL(Number(p.valor_total_com_taxas))}`
+          : '—';
+        return `<div class="rot3-hotel-row">
+          <div class="rot3-hotel-c1">
+            <div class="rot3-hotel-nome">${modalidade}</div>
+          </div>
+          <div class="rot3-hotel-c2">
+            ${servico ? `<div class="rot3-hotel-info">${servico}</div>` : ''}
+          </div>
+          <div class="rot3-hotel-c3" style="text-align:right;font-weight:600;color:#1B2C80">
+            ${valor}
+          </div>
+        </div>`;
+      }).join('');
+      rot3PagamentosHtml = `<div class="rot3-tabela">${colHdrPag}${rowsPag}</div>`;
+    }
+
     const rot3ModernoBodyHtml = `
       <div class="rot3-doc">
         <div class="rot3-kicker-bar"></div>
@@ -1661,7 +1690,7 @@
       ${passeiosHtml.trim() ? buildRot3Secao('PASSEIOS E SERVIÇOS', passeiosHtml) : ''}
       ${segurosHtml.trim() ? buildRot3Secao('SEGURO VIAGEM', segurosHtml) : ''}
       ${buildRot3Secao('INVESTIMENTO', rot3InvestHtml)}
-      ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
+      ${mostrarPagamentoPdf && rot3PagamentosHtml ? buildRot3Secao('FORMAS DE PAGAMENTO', rot3PagamentosHtml) : ''}
       ${incluiTexto.trim() ? buildRot3Secao('O QUE ESTÁ INCLUÍDO', buildRot3InfoBox(incluiTexto.split('\n'), 'inclui')) : ''}
       ${naoIncluiTexto.trim() ? buildRot3Secao('O QUE NÃO ESTÁ INCLUÍDO', buildRot3InfoBox(naoIncluiTexto.split('\n'), 'naoinclui')) : ''}
       ${mostrarInformacoesPdf && informacoesImportantes.trim() ? buildRot3Secao('INFORMAÇÕES IMPORTANTES', buildRot3InfoBox(informacoesImportantes.split('\n'))) : ''}
@@ -1825,7 +1854,7 @@
             .rot3-hotel-header-row div:nth-child(2) { flex: 2; }
             .rot3-hotel-header-row div:nth-child(3) { flex: 1.5; }
             .rot3-hotel-nome { font-size: 10pt; font-weight: bold; color: #1B2C80; }
-            .rot3-hotel-cidade { font-size: 8.5pt; color: #E05C1A; font-weight: bold; margin-top: 2px; }
+            .rot3-hotel-cidade { font-size: 8.5pt; color: #1B2C80; font-weight: bold; margin-top: 2px; }
             .rot3-hotel-cat { font-size: 8pt; color: #6B7280; margin-top: 2px; }
             .rot3-hotel-info { font-size: 8.5pt; color: #374151; margin-top: 2px; }
             .rot3-inv-box { display: flex; border: 1.5px solid #C5CED9; border-radius: 8px 8px 0 0; overflow: hidden; }
