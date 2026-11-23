@@ -1963,8 +1963,8 @@ function buildModernoPropostaBodyHtml(params: {
     showHeader, showDetalhes
   } = params;
 
-  const destino = cities.join(' → ').toUpperCase() || 'PROPOSTA DE VIAGEM';
-  const rotaCidades = cities.join(' → ');
+  const destino = cities.join(' • ').toUpperCase() || 'PROPOSTA DE VIAGEM';
+  const rotaCidades = cities.join(' • ');
   const metaItens = [
     period ? `📅 Período: ${period}` : '',
     viajantes ? `👥 Viajantes: ${viajantes}` : '',
@@ -1973,7 +1973,7 @@ function buildModernoPropostaBodyHtml(params: {
   ].filter(Boolean);
 
   const cidadesHtml = cities.length
-    ? `<div class="pvm-bloco"><div class="pvm-bloco-label">CIDADES CONTEMPLADAS</div><div class="pvm-rota">${escHtml(rotaCidades)}</div></div>`
+    ? `<div class="pvm-bloco"><div class="pvm-bloco-label">CIDADES CONTEMPLADAS NA PROPOSTA</div><div class="pvm-rota">${escHtml(rotaCidades)}</div></div>`
     : '';
 
   const ctaHtml = `<div class="pvm-cta">${qrUrl ? `<img src="${escHtml(qrUrl)}" alt="QR" class="pvm-qr" />` : ''}<div class="pvm-cta-texto"><b>Reserve com ${escHtml(primeiroNome || 'o consultor')}</b><span>Atendimento direto via WhatsApp.${validity ? ` Tarifas válidas até ${escHtml(validity)}.` : ''}</span></div></div>`;
@@ -2397,6 +2397,30 @@ export function buildQuotePreviewHtmlSync(params: {
     .pv-inv-val { color: #1B2C80; font-size: 12pt; white-space: nowrap; }
     .pv-inv-total { background: #EEF2F7; margin: 6px -14px -11px; padding: 9px 14px; border-radius: 0 0 10.5px 10.5px; border-top: 1.5px solid #C5CED9; }
 
+    /* ─── Modelo Moderno da Proposta (pvm-*) ─────────────────────────────── */
+    .pvm-doc { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1F2937; }
+    .pvm-head { border-top: 4px solid #1B2C80; padding: 20px 0 16px; margin-bottom: 14px; border-bottom: 1px solid #C5CED9; text-align: center; }
+    .pvm-head-main { max-width: 480px; margin: 0 auto; }
+    .pvm-kicker { color: #1B2C80; font-size: 8pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
+    .pvm-title { color: #1B2C80; font-size: 24pt; font-weight: 800; margin: 2px 0 8px; line-height: 1.1; }
+    .pvm-para { font-size: 10pt; color: #1F2937; margin: 4px 0 2px; }
+    .pvm-para b { color: #1B2C80; }
+    .pvm-meta { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 3px 8px; color: #4B5563; font-size: 8.5pt; margin-top: 6px; }
+    .pvm-dot { color: #C5CED9; }
+    .pvm-cons { font-size: 8pt; color: #6B7280; margin-top: 10px; line-height: 1.55; }
+    .pvm-cons b { color: #1B2C80; display: block; font-size: 9pt; }
+    .pvm-bloco { border: 1.5px solid #C5CED9; border-radius: 10px; padding: 10px 14px; margin: 0 0 14px; background: #EEF2F7; }
+    .pvm-bloco-label { font-size: 7.5pt; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; color: #1B2C80; margin-bottom: 6px; }
+    .pvm-rota { font-size: 14pt; font-weight: bold; color: #1B2C80; line-height: 1.4; }
+    .pvm-cta { display: flex; align-items: center; gap: 12px; border: 1.5px solid #C5CED9; border-radius: 10px; padding: 10px 14px; margin: 0 0 14px; background: #fff; }
+    .pvm-cta-texto { font-size: 9pt; color: #1F2937; }
+    .pvm-cta-texto b { display: block; color: #1B2C80; font-size: 10pt; margin-bottom: 2px; }
+    .pvm-cta-texto span { color: #4B5563; font-size: 8.5pt; }
+    .pvm-qr { height: 60px; width: 60px; border-radius: 6px; }
+    .pvm-sec { margin: 0 0 10px; }
+    .pvm-sec-title { font-size: 11pt; color: #1B2C80; font-weight: bold; border-bottom: 1.5px solid #C5CED9; padding-bottom: 6px; margin: 14px 0 8px; text-transform: uppercase; letter-spacing: 1px; }
+
+
     @media screen and (max-width: 640px) {
       .orc-financial-section { overflow-x: auto; }
       .orc-city-table { min-width: 580px; }
@@ -2425,7 +2449,8 @@ export function buildQuotePreviewHtmlSync(params: {
       .pv-invest, .pv-invest-card,
       .pv-cron,
       .pv-grupo,
-      .pv-voo {
+      .pv-voo,
+      .pvm-cta {
         break-inside: avoid;
         page-break-inside: avoid;
       }

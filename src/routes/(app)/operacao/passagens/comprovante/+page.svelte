@@ -19,7 +19,7 @@
   } from '$lib/passagens/importacao';
 
   let item: PassagemImportada | null = null;
-  let modeloPdf: 'padrao' | 'bilhete' = 'padrao';
+  let modeloPdf: 'padrao' | 'bilhete' | 'moderno' = 'padrao';
   let cidades: AirportCodeCityLookup = {};
   let cidadesIndisponiveis = false;
   let error = '';
@@ -175,6 +175,7 @@
           <select bind:value={modeloPdf}>
             <option value="padrao">Padrão</option>
             <option value="bilhete">Bilhete</option>
+            <option value="moderno">Moderno</option>
           </select>
         </label>
       {/if}
@@ -432,11 +433,9 @@
         <section class="mod-info-card mod-rota-card">
           <div class="mod-card-label">ROTA DA VIAGEM</div>
           <div class="mod-rota-valor">
-            {primeiro3 ? (cidade(primeiro3.origem, primeiro3.cidadeOrigem) || primeiro3.origem) + ' (' + primeiro3.origem + ')' : ''}
-            {#each conexoes3 as c}
-              {' → ' + (cidade(c) || c) + ' (' + c + ')'}
-            {/each}
-            {ultimo3 ? ' → ' + (cidade(ultimo3.destino, ultimo3.cidadeDestino) || ultimo3.destino) + ' (' + ultimo3.destino + ')' : ''}
+            {primeiro3 ? primeiro3.origem : ''}
+            {#each conexoes3 as c}{' → ' + c}{/each}
+            {ultimo3 ? ' → ' + ultimo3.destino : ''}
           </div>
           {#if primeiro3}<div class="mod-rota-data">{data(primeiro3.saida, true)}</div>{/if}
         </section>
@@ -473,12 +472,11 @@
             </div>
           </div>
           <div class="mod-grade">
-            <div class="mod-campo"><span class="mod-rotulo">VOO</span><strong>{trecho.voo}</strong></div>
-            <div class="mod-campo"><span class="mod-rotulo">PARTIDA</span><strong>{data(trecho.saida)} {horario(trecho.saida)}</strong></div>
-            <div class="mod-campo"><span class="mod-rotulo">CHEGADA</span><strong>{data(trecho.chegada)} {horario(trecho.chegada)}</strong></div>
-            <div class="mod-campo"><span class="mod-rotulo">DURAÇÃO</span><strong>{trecho.duracao || 'Não informada'}</strong></div>
-            <div class="mod-campo"><span class="mod-rotulo">CLASSE</span><strong>{trecho.classe || 'Não informada'}</strong></div>
-            <div class="mod-campo"><span class="mod-rotulo">ASSENTOS</span><strong>{assentos(i)}</strong></div>
+            <div class="mod-campo"><span class="mod-rotulo">COMPANHIA</span><strong>{trecho.companhia} {trecho.voo}</strong></div>
+            <div class="mod-campo"><span class="mod-rotulo">CLASSE</span><strong>{trecho.classe || '—'}</strong></div>
+            <div class="mod-campo"><span class="mod-rotulo">TARIFA</span><strong>{trecho.tarifa || '—'}</strong></div>
+            <div class="mod-campo"><span class="mod-rotulo">ASSENTOS</span><strong>{assentos(i) || '—'}</strong></div>
+            <div class="mod-campo"><span class="mod-rotulo">STATUS DO VOO</span><strong>{trecho.status || '—'}</strong></div>
           </div>
         </section>
       {/each}
@@ -505,7 +503,7 @@
         <p>Apresente-se no aeroporto indicado com pelo menos 3 horas de antecedência para voos internacionais e 2 horas de antecedência para voos nacionais.</p>
         <p><strong>Para um maior controle, baixe o aplicativo da companhia aérea ({cias}) e acompanhe a situação de seu voo utilizando o código de reserva {item.localizador}.</strong></p>
       </aside>
-      <footer class="mod-rodape">{cias} • Reserva: {item.localizador}</footer>
+      <footer class="mod-rodape"><span>{cias} • Reserva: {item.localizador}</span><span class="mod-rodape-pag"></span></footer>
     </div>
     {/if}
   {/if}
@@ -908,15 +906,17 @@
     color: #1F2937;
   }
   .mod-cabecalho {
-    border-bottom: 3px solid #1B2C80;
-    padding-bottom: 14px;
+    border-top: 4px solid #1B2C80;
+    border-bottom: 1px solid #C5CED9;
+    padding: 18px 0 14px;
     margin-bottom: 18px;
+    text-align: center;
   }
   .mod-cia-linha {
     font-size: 10px;
     font-weight: bold;
     letter-spacing: 2px;
-    color: #6B7280;
+    color: #1B2C80;
     text-transform: uppercase;
     margin-bottom: 4px;
   }
@@ -1064,7 +1064,7 @@
   }
   .mod-grade {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 0;
     border-top: 1px solid #EEF2F7;
     padding: 10px 14px;
@@ -1130,7 +1130,9 @@
     color: #374151;
   }
   .mod-rodape {
-    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     color: #9CA3AF;
     font-size: 10px;
     border-top: 1px solid #C5CED9;
@@ -1141,6 +1143,7 @@
     .mod-trecho { break-inside: avoid; page-break-inside: avoid; }
     .mod-atencao { break-inside: avoid; page-break-inside: avoid; }
     .mod-cards-row { grid-template-columns: 1fr 1fr; }
-    .mod-cabecalho { padding-bottom: 10px; margin-bottom: 14px; }
+    .mod-cabecalho { padding-top: 16px; padding-bottom: 10px; margin-bottom: 14px; }
+    .mod-rodape-pag::after { content: "Pág. " counter(page); }
   }
 </style>

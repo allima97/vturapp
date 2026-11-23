@@ -1594,6 +1594,34 @@
               .rot2-dia { break-inside: avoid; page-break-inside: avoid; }
               .rot2-doc { max-width: none; }
             }
+
+            /* ─── Modelo Moderno do Roteiro (rot3-*) ─────────────────────────────── */
+            .rot3-doc { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1F2937; max-width: 720px; margin: 0 auto; border-top: 4px solid #1B2C80; padding-top: 20px; }
+            .rot3-kicker { font-size: 8.5pt; font-weight: bold; letter-spacing: 2.5px; text-transform: uppercase; color: #1B2C80; text-align: center; margin-bottom: 4px; }
+            .rot3-title { font-size: 26pt; font-weight: bold; color: #1B2C80; margin: 2px 0 6px; line-height: 1.1; text-align: center; }
+            .rot3-para { font-size: 10pt; color: #1F2937; margin: 0 0 2px; text-align: center; }
+            .rot3-para strong { color: #1B2C80; }
+            .rot3-meta { font-size: 9pt; color: #4B5563; margin: 0 0 20px; text-align: center; }
+            .rot3-bloco { border: 1.5px solid #C5CED9; border-radius: 10px; padding: 10px 14px; margin: 14px 0 20px; background: #EEF2F7; }
+            .rot3-bloco-label { font-size: 7.5pt; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; color: #1B2C80; margin-bottom: 6px; }
+            .rot3-rota { font-size: 13pt; font-weight: bold; color: #1B2C80; line-height: 1.5; }
+            .rot3-itin { margin: 0 0 20px; }
+            .rot3-itin-titulo { font-size: 10pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #1B2C80; border-bottom: 1.5px solid #C5CED9; padding-bottom: 6px; margin: 0 0 14px; }
+            .rot3-dias-lista { }
+            .rot3-dia { display: flex; gap: 0; margin-bottom: 10px; break-inside: avoid; page-break-inside: avoid; }
+            .rot3-dia-left { display: flex; flex-direction: column; align-items: center; width: 86px; flex-shrink: 0; padding-right: 10px; padding-top: 2px; }
+            .rot3-dia-pill { background: #1B2C80; color: #fff; font-size: 7.5pt; font-weight: bold; padding: 4px 8px; border-radius: 999px; text-align: center; white-space: nowrap; letter-spacing: 0.3px; }
+            .rot3-dia-dot { width: 10px; height: 10px; border-radius: 50%; background: #1B2C80; margin: 6px 0 0; flex-shrink: 0; }
+            .rot3-dia-line { width: 2px; background: #C5CED9; flex: 1; min-height: 20px; margin-top: 2px; }
+            .rot3-dia-body { flex: 1; border: 1.5px solid #C5CED9; border-radius: 10px; padding: 10px 14px; background: #fff; min-width: 0; }
+            .rot3-dia-rota { font-size: 10.5pt; font-weight: bold; color: #1B2C80; margin-bottom: 4px; }
+            .rot3-dia-desc { margin: 0; font-size: 9pt; color: #374151; line-height: 1.6; }
+            .rot3-doc-footer { margin-top: 24px; padding-top: 8px; border-top: 1px solid #C5CED9; font-size: 8pt; color: #9CA3AF; display: flex; justify-content: space-between; }
+            @media print {
+              .rot3-doc { max-width: none; }
+              .rot3-dia { break-inside: avoid; page-break-inside: avoid; }
+              .rot3-bloco { background: #EEF2F7; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
             ${roteiroPdfThemeCss}
           </style>
         </head>
