@@ -12,6 +12,7 @@
   import { escapeHtml } from '$lib/utils/html';
   import { diffDaysISODate, formatISODateBR, todayISODateLocal } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
+  import { formatCurrency } from '$lib/utils/formatters';
   import { createLoadGuard } from '$lib/utils/loadGuard';
 
   type BillingRow = {
@@ -72,10 +73,6 @@
   const loadGuard = createLoadGuard();
 
   let form = { status: 'active', valor_mensal: '', ultimo_pagamento: '', proximo_vencimento: '' };
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
 
   const columns = [
     { key: 'company_nome', label: 'Empresa', sortable: true },
@@ -98,7 +95,7 @@
       label: 'Mensalidade',
       sortable: true,
       align: 'right' as const,
-      formatter: (v: number | null) => (v != null ? BRL_CURRENCY_FORMATTER.format(v) : '-')
+      formatter: (v: number | null) => formatCurrency(v)
     },
     {
       key: 'proximo_vencimento',
@@ -235,7 +232,7 @@
     </div>
     <div>
       <p class="text-sm font-medium text-slate-500">MRR (ativas)</p>
-      <p class="text-2xl font-bold text-slate-900">{BRL_CURRENCY_FORMATTER.format(totalMrr)}</p>
+      <p class="text-2xl font-bold text-slate-900">{formatCurrency(totalMrr)}</p>
     </div>
   </div>
 </div>

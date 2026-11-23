@@ -11,10 +11,15 @@ import { extractISODate, formatISODateBR, formatISODateShortBR } from '$lib/date
 
 // ─── Moeda ────────────────────────────────────────────────────────────────────
 
-const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-  style: 'currency',
-  currency: 'BRL'
-});
+const CURRENCY_FORMATTERS = new Map<string, Intl.NumberFormat>([
+  [
+    'BRL',
+    new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    })
+  ]
+]);
 
 const NUMBER_FORMATTERS = new Map<number, Intl.NumberFormat>();
 const DATE_FORMATTER = new Intl.DateTimeFormat('pt-BR');
@@ -44,9 +49,18 @@ const PHONE_EIGHT_DIGIT_PATTERN = /(\d{4})(\d{1,4})$/;
 const PHONE_NINE_DIGIT_PATTERN = /(\d{5})(\d{1,4})$/;
 const CEP_BLOCK_PATTERN = /(\d{5})(\d{1,3})$/;
 
-export function formatCurrency(value: number | null | undefined): string {
+export function formatCurrency(
+  value: number | null | undefined,
+  currency = 'BRL'
+): string {
   if (value == null || isNaN(value)) return '-';
-  return BRL_CURRENCY_FORMATTER.format(value);
+  const code = String(currency || 'BRL').toUpperCase();
+  let formatter = CURRENCY_FORMATTERS.get(code);
+  if (!formatter) {
+    formatter = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: code });
+    CURRENCY_FORMATTERS.set(code, formatter);
+  }
+  return formatter.format(value);
 }
 
 export function formatCurrencyShort(value: number | null | undefined): string {

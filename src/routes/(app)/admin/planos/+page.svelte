@@ -9,6 +9,7 @@
   import { toast } from '$lib/stores/ui';
   import { Plus, Trash2, RefreshCw, DollarSign } from '$lib/icons';
   import { toUserMessage } from '$lib/utils/errors';
+  import { formatCurrency } from '$lib/utils/formatters';
 
   import { confirmAction } from '$lib/stores/confirm';
   import { apiDelete, apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
@@ -31,23 +32,6 @@
   const loadGuard = createLoadGuard();
 
   let form = { nome: '', descricao: '', valor_mensal: '', moeda: 'BRL', ativo: true };
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
-  const CURRENCY_FORMATTERS = new Map<string, Intl.NumberFormat>([['BRL', BRL_CURRENCY_FORMATTER]]);
-
-  function getCurrencyFormatter(currency: string) {
-    const normalizedCurrency = currency || 'BRL';
-    const cached = CURRENCY_FORMATTERS.get(normalizedCurrency);
-    if (cached) return cached;
-    const formatter = new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: normalizedCurrency
-    });
-    CURRENCY_FORMATTERS.set(normalizedCurrency, formatter);
-    return formatter;
-  }
 
   const columns = [
     { key: 'nome', label: 'Nome', sortable: true },
@@ -62,7 +46,7 @@
       label: 'Mensalidade',
       sortable: true,
       align: 'right' as const,
-      formatter: (v: number, row: Plano) => getCurrencyFormatter(row.moeda).format(v || 0)
+      formatter: (v: number, row: Plano) => formatCurrency(v || 0, row.moeda)
     },
     {
       key: 'ativo',
@@ -206,7 +190,7 @@
     </div>
     <div>
       <p class="text-sm font-medium text-slate-500">MRR potencial</p>
-      <p class="text-2xl font-bold text-slate-900">{BRL_CURRENCY_FORMATTER.format(totalMrr)}</p>
+      <p class="text-2xl font-bold text-slate-900">{formatCurrency(totalMrr)}</p>
     </div>
   </div>
 </div>
