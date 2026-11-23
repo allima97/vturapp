@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { formatCurrency } from '$lib/utils/formatters';
   import { goto } from '$app/navigation';
   import { onMount, onDestroy } from 'svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
@@ -34,10 +35,6 @@
     cpf?: string | null;
   }
 
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
 
   // ─── Estado do formulário ────────────────────────────────────────────────────
   let formData = {
@@ -286,9 +283,6 @@
   }
 
   // ─── Formatação ───────────────────────────────────────────────────────────────
-  function formatCurrency(value: number): string {
-    return BRL_CURRENCY_FORMATTER.format(value || 0);
-  }
 </script>
 
 <svelte:head>

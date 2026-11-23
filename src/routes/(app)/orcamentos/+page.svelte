@@ -8,7 +8,7 @@
   import { toast } from '$lib/stores/ui';
   import { diffDaysISODate, todayISODateLocal } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
-  import { formatDate } from '$lib/utils/formatters';
+  import { formatDate, formatCurrency } from '$lib/utils/formatters';
   import { escapeHtml } from '$lib/utils/html';
   import { apiGet } from '$lib/services/api';
 
@@ -43,10 +43,6 @@
 
   let abortController: AbortController | null = null;
   const STATUS_SEM_FOLLOW_UP = new Set(['fechado', 'rejeitado', 'expirado']);
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
 
   function getDiasSemInteracao(value: string | null | undefined) {
     if (!value) return Number.POSITIVE_INFINITY;
@@ -300,7 +296,7 @@
       sortable: true,
       align: 'right' as const,
       width: '130px',
-      formatter: (value: number) => BRL_CURRENCY_FORMATTER.format(value)
+      formatter: (value: number) => formatCurrency(value)
     },
     {
       key: 'status',

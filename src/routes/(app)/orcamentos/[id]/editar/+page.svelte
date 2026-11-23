@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { formatCurrency as formatCurrencyValue } from '$lib/utils/formatters';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';
   import { onMount, onDestroy } from 'svelte';
@@ -374,21 +375,8 @@
   }
 
   // ─── Formatação ───────────────────────────────────────────────────────────────
-  const CURRENCY_FORMATTERS = new Map<string, Intl.NumberFormat>();
-
-  function getCurrencyFormatter(currency: string) {
-    const cached = CURRENCY_FORMATTERS.get(currency);
-    if (cached) return cached;
-    const formatter = new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency
-    });
-    CURRENCY_FORMATTERS.set(currency, formatter);
-    return formatter;
-  }
-
   function formatCurrency(value: number): string {
-    return getCurrencyFormatter(formData.currency || 'BRL').format(value || 0);
+    return formatCurrencyValue(value || 0, formData.currency || 'BRL');
   }
 
   const statusOptions = [

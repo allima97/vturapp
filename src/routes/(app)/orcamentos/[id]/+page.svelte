@@ -35,6 +35,7 @@
   import { compareISODate, todayISODateLocal } from '$lib/date';
   import {
     formatDate as formatDateValue,
+    formatCurrency as formatCurrencyValue,
     formatDateTime as formatDateTimeValue
   } from '$lib/utils/formatters';
   import { toUserMessage } from '$lib/utils/errors';
@@ -339,21 +340,8 @@
     }
   }
 
-  const CURRENCY_FORMATTERS = new Map<string, Intl.NumberFormat>();
-
-  function getCurrencyFormatter(currency: string) {
-    const cached = CURRENCY_FORMATTERS.get(currency);
-    if (cached) return cached;
-    const formatter = new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency
-    });
-    CURRENCY_FORMATTERS.set(currency, formatter);
-    return formatter;
-  }
-
   function formatCurrency(value: number): string {
-    return getCurrencyFormatter(orcamento?.currency || 'BRL').format(value || 0);
+    return formatCurrencyValue(value || 0, orcamento?.currency || 'BRL');
   }
 
   function formatDate(dateString: string | null): string {

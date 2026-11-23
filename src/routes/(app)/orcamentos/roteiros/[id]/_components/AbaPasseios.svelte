@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { formatCurrency as formatCurrencyBR } from '$lib/utils/formatters';
   import { FieldDatalistInput, FieldInput, FieldSelect, FieldTextarea } from '$lib/components/ui';
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
@@ -244,11 +245,6 @@
     return totais;
   }
 
-  function formatTotal(value: number) {
-    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-      value || 0
-    );
-  }
 
   function rotuloDataInicio(tipo: string) {
     if (tipo === 'Trem') return 'Data de saída';
@@ -657,7 +653,7 @@
                   <div
                     class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-right text-sm font-semibold text-slate-800"
                   >
-                    {formatTotal(totaisPasseio(passeio).total_amount)}
+                    {formatCurrencyBR(totaisPasseio(passeio).total_amount)}
                   </div>
                 </div>
               {:else}
@@ -861,7 +857,7 @@
                       <div
                         class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-right text-sm font-semibold text-slate-800"
                       >
-                        {formatTotal(totaisPasseio(passeio).total_amount)}
+                        {formatCurrencyBR(totaisPasseio(passeio).total_amount)}
                       </div>
                     </div>
                   {/if}

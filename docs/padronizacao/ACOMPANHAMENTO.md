@@ -80,7 +80,7 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - [x] clientes
 - [x] financeiro (+ comissoes)
 - [x] operacao
-- [ ] orcamentos (+ roteiros)
+- [x] orcamentos (+ roteiros)
 - [ ] vendas
 - [ ] parametros
 - [ ] relatorios + dashboards
@@ -122,3 +122,5 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - `financeiro`: `Intl.NumberFormat` ad-hoc removido de ajustes-vendas, caixa, comissoes, comissoes/calculo, formas-pagamento e regras — tudo migrado para `formatCurrency`/`formatCurrencyInt`/`formatPercent`/`formatNumber` canônicos. `caixa`: tabela "Movimentações Recentes" virou `DataTable`. `regras`: `SimpleTable` substituído por `<table class="table-mobile-cards">` em `vtur-table-shell` (linhas contêm inputs de formulário — DataTable não hospeda campos editáveis). **Exceção documentada**: `conciliacao` mantém 7 grades `<table>` densas somente-leitura (min-w até 2100px, relatórios de conciliação bancária) — markup de apresentação especializado, migrar exigiria colunas dinâmicas no DataTable; revisar em etapa dedicada.
 
 - `operacao`: `Intl.NumberFormat` removido de viagens, viagens/[id], ultimas-compras → `formatCurrency`/`formatCurrencyInt`. `tarefas`: `DATE_TIME_FORMATTER` local → `formatDateTime` canônico. `agenda`: branch com hora → `formatDateTime` canônico (manteve `DATE_FORMATTER` local para eventos allDay — formatação date-only de `Date` não coberta pelos helpers). **Exceções documentadas**: `passagens` tabela "Passagens salvas" (Card com slot de ações + linhas clicáveis — DataTable não suporta slot de ação no header) e `passagens/comprovante` (markup de impressão do bilhete).
+
+- `orcamentos`: `Intl.NumberFormat` ad-hoc removido de +page, novo, [id] e [id]/editar — multi-moeda agora usa `formatCurrency(value, currency)` canônico (mesmo cache por moeda); `formatBRL` de roteiros delega a `formatNumber(x,2)`; `AbaPasseios` usa `formatCurrency`. **Exceções documentadas**: tabelas `preview-header-*` e `roteiro-print-table` são markup de impressão/PDF.
