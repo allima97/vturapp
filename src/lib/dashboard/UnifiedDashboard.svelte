@@ -1104,7 +1104,7 @@
   <p class="mb-2 text-right text-xs text-slate-500 dark:text-slate-400">
     <time
       datetime={readModelRebuiltAt}
-      title={new Date(readModelRebuiltAt).toLocaleString('pt-BR')}
+      title={formatDateTime(readModelRebuiltAt)}
     >
       Dados atualizados {quando}
     </time>

@@ -5,7 +5,6 @@
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
-  import SimpleTable from '$lib/components/ui/SimpleTable.svelte';
   import FieldInput from '$lib/components/ui/form/FieldInput.svelte';
   import FieldSelect from '$lib/components/ui/form/FieldSelect.svelte';
   import { apiFetch, isCanceledApiError } from '$lib/services/api';
@@ -348,11 +347,10 @@
     <AlertMessage variant="success" {message} />
   {/if}
 
-  <SimpleTable
-    title="Registros encontrados"
-    empty={rows.length === 0 && !loading}
-    emptyMessage="Nenhuma linha encontrada. Verifique os documentos informados."
-  >
+  <div class="space-y-3">
+    <h3 class="text-base font-semibold tracking-tight text-slate-900">Registros encontrados</h3>
+    <div class="vtur-table-shell overflow-hidden">
+    <table class="table-mobile-cards w-full text-sm">
     <thead>
       <tr>
         <th>Documento</th>
@@ -398,7 +396,14 @@
         </tr>
       {/each}
     </tbody>
-  </SimpleTable>
+    </table>
+    </div>
+    {#if rows.length === 0 && !loading}
+      <div class="border-t border-slate-100 px-5 py-8 text-center text-sm text-slate-500">
+        Nenhuma linha encontrada. Verifique os documentos informados.
+      </div>
+    {/if}
+  </div>
 
   <Card
     title="Aplicar correcao"

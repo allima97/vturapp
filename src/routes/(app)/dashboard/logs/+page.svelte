@@ -6,12 +6,12 @@
   import Button from '$lib/components/ui/Button.svelte';
   import Badge from '$lib/components/ui/Badge.svelte';
   import LoadingState from '$lib/components/ui/LoadingState.svelte';
-  import SimpleTable from '$lib/components/ui/SimpleTable.svelte';
-  import PaginationControls from '$lib/components/ui/PaginationControls.svelte';
+  import DataTable from '$lib/components/ui/DataTable.svelte';
   import { BottomSheet, FieldInput } from '$lib/components/ui';
   import { toast } from '$lib/stores/ui';
   import { apiGet } from '$lib/services/api';
   import { formatDateTime } from '$lib/utils/formatters';
+  import { escapeHtml } from '$lib/utils/html';
   import { createDebouncedReloader } from '$lib/utils/autoReload';
   import { toUserMessage } from '$lib/utils/errors';
 
@@ -64,6 +64,45 @@
     return log.usuario?.nome_completo || log.usuario?.email || log.user_id || '-';
   }
 
+  const colunasLogs = [
+    {
+      key: 'created_at',
+      label: 'Data',
+      formatter: (v: string | null) => formatDateTime(v)
+    },
+    {
+      key: 'modulo',
+      label: 'Módulo',
+      formatter: (v: string | null) =>
+        v
+          ? `<span class="inline-flex items-center rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">${escapeHtml(v)}</span>`
+          : '-'
+    },
+    {
+      key: 'acao',
+      label: 'Ação',
+      formatter: (v: string | null) =>
+        `<span class="font-medium text-slate-900">${escapeHtml(v || '-')}</span>`
+    },
+    {
+      key: 'usuario',
+      label: 'Usuário',
+      formatter: (_v: unknown, row: LogItem) => escapeHtml(userLabel(row))
+    },
+    {
+      key: 'ip',
+      label: 'IP',
+      formatter: (v: string | null) =>
+        `<span class="font-mono text-xs text-slate-500">${escapeHtml(v || '-')}</span>`
+    },
+    {
+      key: 'detalhes',
+      label: 'Detalhes',
+      formatter: (_v: unknown, row: LogItem) =>
+        `<span class="text-xs text-slate-500">${escapeHtml(formatDetails(row.detalhes))}</span>`
+    }
+  ];
+
   async function loadLogs(nextPage = page) {
     loading = true;
     try {
@@ -82,16 +121,6 @@
     } finally {
       loading = false;
     }
-  }
-
-  function nextPage() {
-    if (page * pageSize >= total) return;
-    void loadLogs(page + 1);
-  }
-
-  function prevPage() {
-    if (page <= 1) return;
-    void loadLogs(page - 1);
   }
 
   onMount(() => {
@@ -185,47 +214,25 @@
   {#if loading}
     <LoadingState />
   {:else}
-    <SimpleTable
+    <DataTable
       title="Eventos"
-      empty={logs.length === 0}
+      color="default"
+      columns={colunasLogs}
+      data={logs}
+      {loading}
+      serverSide
+      totalItems={total}
+      page={page}
+      {pageSize}
+      searchable={false}
+      filterable={false}
+      exportable={false}
       emptyMessage="Nenhum log encontrado para os filtros atuais."
-    >
-      <thead>
-        <tr>
-          <th class="px-5 py-3 text-left">Data</th>
-          <th class="px-5 py-3 text-left">Módulo</th>
-          <th class="px-5 py-3 text-left">Ação</th>
-          <th class="px-5 py-3 text-left">Usuário</th>
-          <th class="px-5 py-3 text-left">IP</th>
-          <th class="px-5 py-3 text-left">Detalhes</th>
-        </tr>
-      </thead>
-      <tbody>
-        {#each logs as log}
-          <tr>
-            <td data-label="Data" class="px-5 py-3 whitespace-nowrap"
-              >{formatDateTime(log.created_at)}</td
-            >
-            <td data-label="Módulo" class="px-5 py-3">
-              <Badge color="yellow" size="sm">{log.modulo || '-'}</Badge>
-            </td>
-            <td data-label="Ação" class="px-5 py-3 font-medium text-slate-900">{log.acao || '-'}</td
-            >
-            <td data-label="Usuário" class="max-w-[240px] truncate px-5 py-3">{userLabel(log)}</td>
-            <td data-label="IP" class="px-5 py-3 font-mono text-xs text-slate-500"
-              >{log.ip || '-'}</td
-            >
-            <td
-              data-label="Detalhes"
-              class="max-w-[420px] truncate px-5 py-3 text-xs text-slate-500"
-            >
-              {formatDetails(log.detalhes)}
-            </td>
-          </tr>
-        {/each}
-      </tbody>
-    </SimpleTable>
-
-    <PaginationControls {page} {total} {pageSize} onPrev={prevPage} onNext={nextPage} />
+      onPageChange={(p) => void loadLogs(p)}
+      onPageSizeChange={(size) => {
+        pageSize = size;
+        void loadLogs(1);
+      }}
+    />
   {/if}
 </div>

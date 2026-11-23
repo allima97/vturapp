@@ -133,3 +133,5 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - `consultoria-online`: `BRL`/`DATE_TIME_FORMATTER`/`toLocaleString` → `formatCurrency`/`formatDateTime` (corrige bug: `toLocaleString` era chamado justamente quando a data era inválida).
 - `perfil/auth`: `perfil/mfa` `DATE_TIME_FORMATTER` → `formatDateTime` canônico (wrapper local preservado para "Nunca usada"); `perfil/escala` 2 grades de calendário com sticky column → exceções.
 - `reescrita`: seção legada — `CursorPagination`+`AccessibleDialog` em `reescrita/clientes` morrem com a seção (decisão canônica §7); sem migração.
+
+- **Etapa 3 residual concluída**: `dashboard/logs` migrado de `SimpleTable`+`PaginationControls` para `DataTable` `serverSide` (paginação via `onPageChange`/`onPageSizeChange`, `totalItems`); `FixRecibosTool` `SimpleTable` → table canônica (ferramenta interna com ações por linha); `UnifiedDashboard` `toLocaleString` → `formatDateTime`. Restam `SimpleTable`/`PaginationControls`/`CursorPagination` apenas em `components/ui` (definições) e `reescrita/clientes` (legado).
