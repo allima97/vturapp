@@ -1488,9 +1488,11 @@
         rot3CidadesResumo.push(c);
     }
 
+    const _calIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px;position:relative;top:-1px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
+    const _clkIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px;position:relative;top:-1px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
     const rot3MetaItens = [
-      periodText ? `📅 Período: ${periodText}` : '',
-      duracao ? `⏱ Duração: ${duracao} dias` : ''
+      periodText ? `${_calIcon}Período: ${escapePreviewHtml(periodText)}` : '',
+      duracao ? `${_clkIcon}Duração: ${escapePreviewHtml(duracao)} dias` : ''
     ].filter(Boolean);
 
     const rot3ModernoBodyHtml = `
@@ -1499,7 +1501,7 @@
         <div class="rot3-kicker">ROTEIRO PERSONALIZADO</div>
         <h1 class="rot3-title">${escapePreviewHtml((nome || 'Roteiro').toUpperCase())}</h1>
         ${clienteNome ? `<div class="rot3-para">Para: <strong>${escapePreviewHtml(clienteNome)}</strong></div>` : ''}
-        ${rot3MetaItens.length ? `<div class="rot3-meta">${rot3MetaItens.map((m) => escapePreviewHtml(m)).join(' &nbsp;•&nbsp; ')}</div>` : ''}
+        ${rot3MetaItens.length ? `<div class="rot3-meta">${rot3MetaItens.join(' &nbsp;•&nbsp; ')}</div>` : ''}
         ${rot3CidadesResumo.length ? `<div class="rot3-bloco"><div class="rot3-bloco-label">RESUMO DO ROTEIRO</div><div class="rot3-rota">${escapePreviewHtml(rot3CidadesResumo.join(' → '))}</div></div>` : ''}
         ${rot3DiasHtml ? `<section class="rot3-itin"><h2 class="rot3-itin-titulo">ITINERÁRIO DETALHADO</h2><div class="rot3-dias-lista">${rot3DiasHtml}</div></section>` : ''}
       </div>
