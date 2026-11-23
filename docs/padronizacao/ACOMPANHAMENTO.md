@@ -75,8 +75,8 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 ## Checklist da Etapa 4 (marcar `[x]` ao migrar cada seção)
 
 - [x] admin
-- [ ] master
-- [ ] cadastros
+- [x] master
+- [x] cadastros
 - [ ] clientes
 - [ ] financeiro (+ comissoes)
 - [ ] operacao
@@ -111,3 +111,8 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - `admin/lgpd` reescrita com componentes canônicos (PageHeader, Tabs, DataTable, Dialog, Field*, AlertMessage, confirmAction na anonimização).
 - `admin/planos` e `admin/financeiro`: `Intl.NumberFormat` ad-hoc → `formatCurrency()`; `formatCurrency` agora aceita `currency` opcional com cache.
 - Demais páginas de admin já estavam conformes. Deploy `fa6d645f`.
+
+### 2026-11-23 — Etapa 4: seção master verificada (já conforme)
+- 8 páginas (`master/*` + `dashboard/master`): DataTable/PageHeader já adotados; zero ocorrências de button/table/select crus, Intl ad-hoc, confirm() nativo ou "R$" manual.
+
+- `cadastros/circuitos`: `Intl.NumberFormat` local → `formatCurrencyInt()` (novo helper canônico para moeda sem centavos, adicionado a `formatters.ts`). Demais 17 páginas já conformes.

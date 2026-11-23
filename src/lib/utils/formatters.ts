@@ -63,6 +63,17 @@ export function formatCurrency(
   return formatter.format(value);
 }
 
+const BRL_INTEGER_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
+  style: 'currency',
+  currency: 'BRL',
+  maximumFractionDigits: 0
+});
+
+export function formatCurrencyInt(value: number | null | undefined): string {
+  if (value == null || isNaN(value)) return '-';
+  return BRL_INTEGER_CURRENCY_FORMATTER.format(value);
+}
+
 export function formatCurrencyShort(value: number | null | undefined): string {
   if (value == null || isNaN(value)) return '-';
   if (Math.abs(value) >= 1_000_000)

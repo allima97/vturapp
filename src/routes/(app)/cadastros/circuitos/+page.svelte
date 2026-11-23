@@ -10,6 +10,7 @@
   import { BottomSheet, FieldInput, FieldSelect, LoadingState } from '$lib/components/ui';
   import { apiDelete, apiGet, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
+  import { formatCurrencyInt } from '$lib/utils/formatters';
   import {
     Plus,
     Route,
@@ -58,11 +59,6 @@
   let searchQuery = '';
   let showFilterSheet = false;
   const loadGuard = createLoadGuard();
-  const BRL_INTEGER_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0
-  });
 
   const columns = [
     { key: 'codigo', label: 'Código', sortable: true, width: '90px' },
@@ -88,7 +84,7 @@
       sortable: true,
       align: 'right' as const,
       width: '110px',
-      formatter: (v: number) => formatCurrency(v)
+      formatter: (v: number) => formatCurrencyInt(v)
     },
     {
       key: 'ativo',
@@ -146,9 +142,6 @@
     return `<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-200 text-slate-600">Inativo</span>`;
   }
 
-  function formatCurrency(value: number): string {
-    return BRL_INTEGER_CURRENCY_FORMATTER.format(value || 0);
-  }
 
   async function confirmDelete() {
     if (!circuitoToDelete) return;
@@ -269,7 +262,7 @@
       </div>
       <div>
         <p class="text-sm font-medium text-slate-500">Preço Médio</p>
-        <p class="text-2xl font-bold text-slate-900">{formatCurrency(stats.precoMedio)}</p>
+        <p class="text-2xl font-bold text-slate-900">{formatCurrencyInt(stats.precoMedio)}</p>
       </div>
     </div>
   </div>
