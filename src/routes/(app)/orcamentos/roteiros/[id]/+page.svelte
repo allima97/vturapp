@@ -1429,6 +1429,18 @@
         ${rot2MetaLinha ? `<div class="rot2-meta">${escapePreviewHtml(rot2MetaLinha)}</div>` : ''}
         ${resumoRoteiroHtml}
         ${rot2DiasHtml ? `<section class="rot2-itin"><h2>Itinerário Detalhado</h2>${rot2DiasHtml}</section>` : ''}
+        ${buildRoteiroCardSection('Passagem Aérea', transportesHtml, 'preview-airfare-section')}
+        ${buildRoteiroCardSection('Aluguel de Carro', carrosHtml, 'preview-carros-section')}
+        ${buildRoteiroCardSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
+        ${buildRoteiroCardSection('Trem', trensHtml, 'preview-trens-section')}
+        ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
+        ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
+        ${buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
+        ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
+        ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
+        ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'), 'x')}
+        ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
+        ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}
         <div class="rot2-doc-footer">Roteiro Personalizado${nome ? ` • ${escapePreviewHtml(nome)}` : ''}</div>
       </div>`;
 
@@ -1452,8 +1464,10 @@
             const pillLabel = [`Dia ${index + 1}`, diaDDMM].filter(Boolean).join(' · ');
             const rotaSetas = rota.replace(/\s+-\s+/g, ' → ');
             return `<div class="rot3-dia">
-              <div class="rot3-dia-left">
+              <div class="rot3-dia-pill-col">
                 <div class="rot3-dia-pill">${escapePreviewHtml(pillLabel)}</div>
+              </div>
+              <div class="rot3-dia-mid">
                 <div class="rot3-dia-dot"></div>
                 ${index < diasItems.length - 1 ? '<div class="rot3-dia-line"></div>' : ''}
               </div>
@@ -1481,12 +1495,25 @@
 
     const rot3ModernoBodyHtml = `
       <div class="rot3-doc">
+        <div class="rot3-kicker-bar"></div>
         <div class="rot3-kicker">ROTEIRO PERSONALIZADO</div>
         <h1 class="rot3-title">${escapePreviewHtml((nome || 'Roteiro').toUpperCase())}</h1>
         ${clienteNome ? `<div class="rot3-para">Para: <strong>${escapePreviewHtml(clienteNome)}</strong></div>` : ''}
         ${rot3MetaItens.length ? `<div class="rot3-meta">${rot3MetaItens.map((m) => escapePreviewHtml(m)).join(' &nbsp;•&nbsp; ')}</div>` : ''}
         ${rot3CidadesResumo.length ? `<div class="rot3-bloco"><div class="rot3-bloco-label">RESUMO DO ROTEIRO</div><div class="rot3-rota">${escapePreviewHtml(rot3CidadesResumo.join(' → '))}</div></div>` : ''}
         ${rot3DiasHtml ? `<section class="rot3-itin"><h2 class="rot3-itin-titulo">ITINERÁRIO DETALHADO</h2><div class="rot3-dias-lista">${rot3DiasHtml}</div></section>` : ''}
+        ${buildRoteiroCardSection('Passagem Aérea', transportesHtml, 'preview-airfare-section')}
+        ${buildRoteiroCardSection('Aluguel de Carro', carrosHtml, 'preview-carros-section')}
+        ${buildRoteiroCardSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
+        ${buildRoteiroCardSection('Trem', trensHtml, 'preview-trens-section')}
+        ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
+        ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
+        ${buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
+        ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
+        ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
+        ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'), 'x')}
+        ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
+        ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}
         <div class="rot3-doc-footer">Roteiro Personalizado${nome ? ` · ${escapePreviewHtml(nome)}` : ''}</div>
       </div>`;
 
@@ -1608,11 +1635,13 @@
             .rot3-itin { margin: 0 0 20px; }
             .rot3-itin-titulo { font-size: 10pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #1B2C80; border-bottom: 1.5px solid #C5CED9; padding-bottom: 6px; margin: 0 0 14px; }
             .rot3-dias-lista { }
+            .rot3-kicker-bar { width: 40px; height: 3px; background: #1B2C80; margin: 0 auto 10px; border-radius: 2px; }
             .rot3-dia { display: flex; gap: 0; margin-bottom: 10px; break-inside: avoid; page-break-inside: avoid; }
-            .rot3-dia-left { display: flex; flex-direction: column; align-items: center; width: 86px; flex-shrink: 0; padding-right: 10px; padding-top: 2px; }
+            .rot3-dia-pill-col { width: 90px; flex-shrink: 0; padding-top: 2px; }
+            .rot3-dia-mid { display: flex; flex-direction: column; align-items: center; width: 20px; flex-shrink: 0; padding-top: 6px; }
             .rot3-dia-pill { background: #1B2C80; color: #fff; font-size: 7.5pt; font-weight: bold; padding: 4px 8px; border-radius: 999px; text-align: center; white-space: nowrap; letter-spacing: 0.3px; }
-            .rot3-dia-dot { width: 10px; height: 10px; border-radius: 50%; background: #1B2C80; margin: 6px 0 0; flex-shrink: 0; }
-            .rot3-dia-line { width: 2px; background: #C5CED9; flex: 1; min-height: 20px; margin-top: 2px; }
+            .rot3-dia-dot { width: 10px; height: 10px; border-radius: 50%; background: #1B2C80; flex-shrink: 0; }
+            .rot3-dia-line { width: 2px; background: #C5CED9; flex: 1; min-height: 20px; margin-top: 4px; }
             .rot3-dia-body { flex: 1; border: 1.5px solid #C5CED9; border-radius: 10px; padding: 10px 14px; background: #fff; min-width: 0; }
             .rot3-dia-rota { font-size: 10.5pt; font-weight: bold; color: #1B2C80; margin-bottom: 4px; }
             .rot3-dia-desc { margin: 0; font-size: 9pt; color: #374151; line-height: 1.6; }
