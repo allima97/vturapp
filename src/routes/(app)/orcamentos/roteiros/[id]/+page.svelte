@@ -1673,6 +1673,42 @@
       rot3PagamentosHtml = `<div class="rot3-tabela">${colHdrPag}${rowsPag}</div>`;
     }
 
+    // ── Moderno: Passeios Opcionais
+    let rot3OpcionaisHtml = '';
+    {
+      const opcionaisVisiveis = removerPasseiosIncorporados(opcionais, passeios);
+      const linhas = opcionaisVisiveis.flatMap((grupo) =>
+        grupo.passeios.map((p) => ({ cidade: grupo.cidade, nome: p.nome, descricao: p.descricao }))
+      ).filter((l) => l.nome);
+      if (linhas.length > 0) {
+        const colHdrOpc = `<div class="rot3-hotel-header-row">
+          <div class="rot3-hotel-h1">DESTINO</div>
+          <div class="rot3-hotel-h2">ATIVIDADE / EXPERIÊNCIA SUGERIDA</div>
+          <div class="rot3-hotel-h3">VALOR ESTIMADO</div>
+        </div>`;
+        const rowsOpc = linhas.map((l) => {
+          const cidade = nomeCidadeNoPdf(l.cidade);
+          const descHtml = l.descricao
+            ? `<div class="rot3-opc-desc">${escapePreviewHtml(l.descricao).replace(/\n/g, '<br>')}</div>`
+            : '';
+          return `<div class="rot3-hotel-row">
+            <div class="rot3-hotel-c1">
+              <div class="rot3-hotel-nome">${escapePreviewHtml(cidade || l.cidade)}</div>
+            </div>
+            <div class="rot3-hotel-c2">
+              <div class="rot3-hotel-info" style="font-weight:600;color:#1a1a1a">${escapePreviewHtml(l.nome)}</div>
+              ${descHtml}
+            </div>
+            <div class="rot3-hotel-c3" style="text-align:right">
+              <div style="font-weight:600;color:#1B2C80">[Valor / pax]</div>
+              <div style="font-size:7.5pt;color:#6B7280">Por pessoa</div>
+            </div>
+          </div>`;
+        }).join('');
+        rot3OpcionaisHtml = `<div class="rot3-tabela">${colHdrOpc}${rowsOpc}</div>`;
+      }
+    }
+
     const rot3ModernoBodyHtml = `
       <div class="rot3-doc">
         <div class="rot3-kicker-bar"></div>
@@ -1688,6 +1724,7 @@
       ${buildRot3Secao('HOTÉIS SUGERIDOS', rot3HoteisHtml)}
       ${trensHtml.trim() ? buildRot3Secao('TREM', trensHtml) : ''}
       ${passeiosHtml.trim() ? buildRot3Secao('PASSEIOS E SERVIÇOS', passeiosHtml) : ''}
+      ${rot3OpcionaisHtml ? buildRot3Secao('PASSEIOS OPCIONAIS', rot3OpcionaisHtml) : ''}
       ${segurosHtml.trim() ? buildRot3Secao('SEGURO VIAGEM', segurosHtml) : ''}
       ${buildRot3Secao('INVESTIMENTO', rot3InvestHtml)}
       ${mostrarPagamentoPdf && rot3PagamentosHtml ? buildRot3Secao('FORMAS DE PAGAMENTO', rot3PagamentosHtml) : ''}
@@ -1857,6 +1894,7 @@
             .rot3-hotel-cidade { font-size: 8.5pt; color: #1B2C80; font-weight: bold; margin-top: 2px; }
             .rot3-hotel-cat { font-size: 8pt; color: #6B7280; margin-top: 2px; }
             .rot3-hotel-info { font-size: 8.5pt; color: #374151; margin-top: 2px; }
+            .rot3-opc-desc { font-size: 7.5pt; color: #6B7280; margin-top: 2px; line-height: 1.4; }
             .rot3-inv-box { display: flex; border: 1.5px solid #C5CED9; border-radius: 8px 8px 0 0; overflow: hidden; }
             .rot3-inv-col { flex: 1; padding: 14px 16px; text-align: center; }
             .rot3-inv-divider { width: 1.5px; background: #C5CED9; flex-shrink: 0; }
