@@ -94,3 +94,10 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 2. Rodar `npm run check` (ou equivalente do repo) após cada lote de remoção/refactor.
 3. Não criar componente novo sem verificar equivalente existente (regra 2 do plano original).
 4. Toda mudança de padrão documentada em `docs/padronizacao/` deve ser refletida neste arquivo.
+
+### 2026-11-23 — Repo movido para fora do iCloud + git restaurado
+- **Move efetivado:** repo agora em `~/dev/vturapp` (symlink mantido em `~/Documents/GitHub/vturapp`). Todos os arquivos `dataless` materializaram; builds voltaram a ~22s. `node_modules` reinstalado via `npm ci` (0 dataless).
+- **Git restaurado:** `.git` recuperado; commit `25b6a557` consolidou X-vermelho no "não incluído" do PDF, último `confirmAction()` (roteiros duplicar), remoção dos `* 2*` e pushed para `origin/main`.
+- **Correção de registro:** `FileInput.svelte` **NÃO foi removido** — é usado por `parametros/vouchers/+page.svelte` (import em ui/index.ts é obrigatório; sem ele o build quebra). Canônico de upload segue sendo `FileDropzone`; migração de vouchers → FileDropzone fica para a Etapa 4.
+- **confirm() nativo: 0 ocorrências restantes** em `src/` — migração encerrada.
+- **Pendente imediato:** rodar `npm run check` agora que o ambiente está estável.
