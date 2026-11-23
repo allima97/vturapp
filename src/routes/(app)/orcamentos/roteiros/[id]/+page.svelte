@@ -1513,31 +1513,62 @@
     if (transportesItems.length > 0) {
       const groupsMap = new Map<string, typeof transportesItems>();
       for (const t of transportesItems) {
-        const gk = [t.tipo_voo || '', t.cia_aerea || ''].filter(Boolean).join(' \u2022 ') || 'Voos';
+        const gk = [t.tipo_voo || '', t.cia_aerea || ''].filter(Boolean).join(' • ') || 'Voos';
         if (!groupsMap.has(gk)) groupsMap.set(gk, []);
         groupsMap.get(gk)!.push(t);
       }
+      const _chkIco = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:3px;flex-shrink:0"><circle cx="6" cy="6" r="5.5" fill="#1B2C80" opacity="0.13"/><path d="M3.2 6l1.8 1.8L9 4" stroke="#1B2C80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
       let inner = '';
       for (const [gk, grpItems] of groupsMap) {
         inner += `<div class="rot3-grupo-header">${escapePreviewHtml(gk)}</div>`;
         for (const t of grpItems) {
-          const partes = (t.trecho || '').split(/\s*(?:\u2192|->|\u2014)\s*/);
-          const cidDest = nomeCidadeNoPdf((partes[1] || '').trim());
-          const dVoo = formatPreviewDate(t.data_voo || t.data_inicio || '');
+          // Col 1: "CidadeOrigem → CidadeDestino"
+          const trechoPartes = (t.trecho || '').split(/\s*(?:→|->|—|--)\s*/);
+          const cidOrig = nomeCidadeNoPdf((trechoPartes[0] || '').trim());
+          const cidDest = nomeCidadeNoPdf((trechoPartes[1] || '').trim());
+          const trechoDisplay = cidOrig && cidDest
+            ? `${escapePreviewHtml(cidOrig)} → ${escapePreviewHtml(cidDest)}`
+            : escapePreviewHtml(t.trecho || '');
+          // Col 1 subtitle: "Voo LA8120 • 10/08/2027"
+          const descVoo = String(t.descricao || '').trim();
+          const dSaida = formatPreviewDate(t.data_voo || t.data_inicio || '');
+          const c1SubParts: string[] = [];
+          if (descVoo) c1SubParts.push(`Voo ${descVoo}`);
+          else if (t.cia_aerea) c1SubParts.push(escapePreviewHtml(t.cia_aerea));
+          if (dSaida) c1SubParts.push(dSaida);
+          const c1Sub = c1SubParts.join(' • ');
+          // Col 2 line 1: "GRU 17:50 → FCO 10:15 +1"
+          const aeOrig = ((t.aeroporto_saida || '').split(',')[0]).trim().toUpperCase();
+          const aeDest = ((t.aeroporto_chegada || '').split(',')[0]).trim().toUpperCase();
+          const horaSaida = (t.hora_saida || '').replace(/\s*\(\+\d+\)\s*$/, '').trim();
+          const horaCheg = (t.hora_chegada || '').replace(/\s*\(\+\d+\)\s*$/, '').trim();
+          const msOff = new Date(t.data_fim || '').getTime() - new Date(t.data_voo || t.data_inicio || '').getTime();
+          const dOff = (!isNaN(msOff) && msOff > 43200000) ? Math.round(msOff / 86400000) : 0;
+          const plusHtml = dOff > 0 ? `<sup class="rot3-voo-plus">+${dOff}</sup>` : '';
+          const fromPart = [aeOrig, horaSaida].filter(Boolean).join('\u00a0');
+          const toPart = [aeDest, horaCheg].filter(Boolean).join('\u00a0');
+          const rotaLine = (fromPart || toPart) ? `${escapePreviewHtml(fromPart)} → ${escapePreviewHtml(toPart)}${plusHtml}` : '';
+          // Col 2 line 2: "Chegada em Roma em 11/08/2027"
           const dCheg = formatPreviewDate(t.data_fim || t.data_voo || '');
-          const classeLabel = t.tarifa_nome || t.classe_reserva || '';
+          const chegParts: string[] = ['Chegada'];
+          if (cidDest) chegParts.push(`em ${escapePreviewHtml(cidDest)}`);
+          if (dCheg && dCheg !== dSaida) chegParts.push(`em ${dCheg}`);
+          else if (dCheg && !cidDest) chegParts.push(`em ${dCheg}`);
+          const chegLine = chegParts.length > 1 ? chegParts.join(' ') : '';
+          // Col 3: checkmark items for classe_reserva + tarifa_nome
+          const checks = ([t.classe_reserva, t.tarifa_nome] as (string | undefined)[]).filter(s => String(s || '').trim());
+          const checksHtml = checks.map(s => `<div class="rot3-chk-item">${_chkIco}${escapePreviewHtml(String(s).trim())}</div>`).join('');
           inner += `<div class="rot3-voo-row">
             <div class="rot3-voo-c1">
-              <div class="rot3-voo-trecho">${escapePreviewHtml(t.trecho || '')}</div>
-              ${t.cia_aerea ? `<div class="rot3-voo-cia">${escapePreviewHtml(t.cia_aerea)}</div>` : ''}
+              <div class="rot3-voo-trecho">${trechoDisplay}</div>
+              ${c1Sub ? `<div class="rot3-voo-cia">${c1Sub}</div>` : ''}
             </div>
             <div class="rot3-voo-c2">
-              ${t.hora_saida ? `<div class="rot3-voo-info"><span class="rot3-voo-label">Saída:</span> ${escapePreviewHtml(t.hora_saida)}${dVoo ? ' \u00b7 ' + dVoo : ''}</div>` : (dVoo ? `<div class="rot3-voo-info">${dVoo}</div>` : '')}
-              ${(t.hora_chegada || cidDest || dCheg) ? `<div class="rot3-voo-info">Chegada${cidDest ? ' em ' + escapePreviewHtml(cidDest) : ''}${dCheg && dCheg !== dVoo ? ' em ' + dCheg : ''}${t.hora_chegada ? ' \u00e0s ' + escapePreviewHtml(t.hora_chegada) : ''}</div>` : ''}
+              ${rotaLine ? `<div class="rot3-voo-rota">${rotaLine}</div>` : ''}
+              ${chegLine ? `<div class="rot3-voo-info">${chegLine}</div>` : ''}
             </div>
             <div class="rot3-voo-c3">
-              ${classeLabel ? `<span class="rot3-chip">${escapePreviewHtml(classeLabel)}</span>` : ''}
-              ${t.duracao_voo ? `<span class="rot3-chip">${escapePreviewHtml(t.duracao_voo)}</span>` : ''}
+              ${checksHtml}
             </div>
           </div>`;
         }
@@ -1764,10 +1795,13 @@
             .rot3-voo-row:last-child { border-bottom: none; }
             .rot3-voo-c1 { flex: 2; min-width: 0; }
             .rot3-voo-c2 { flex: 3; min-width: 0; }
-            .rot3-voo-c3 { flex: 1.5; display: flex; flex-wrap: wrap; gap: 4px; align-items: flex-start; min-width: 0; }
+            .rot3-voo-c3 { flex: 1.5; display: flex; flex-direction: column; gap: 2px; justify-content: flex-start; min-width: 0; }
             .rot3-voo-trecho { font-size: 10pt; font-weight: bold; color: #1B2C80; }
             .rot3-voo-cia { font-size: 8.5pt; color: #6B7280; margin-top: 2px; }
             .rot3-voo-info { font-size: 8.5pt; color: #374151; margin-top: 2px; }
+            .rot3-voo-rota { font-size: 9pt; font-weight: bold; color: #1B2C80; margin-top: 2px; }
+            .rot3-voo-plus { font-size: 7pt; vertical-align: super; color: #E05C1A; font-weight: bold; margin-left: 2px; }
+            .rot3-chk-item { font-size: 8.5pt; color: #1B2C80; display: flex; align-items: center; margin-bottom: 2px; }
             .rot3-voo-label { font-weight: bold; color: #1B2C80; }
             .rot3-chip { display: inline-block; background: #EEF2F7; color: #1B2C80; border-radius: 999px; font-size: 7.5pt; font-weight: bold; padding: 2px 7px; margin: 1px 0; border: 1px solid #C5CED9; }
             .rot3-hotel-header-row { display: flex; gap: 10px; background: #1B2C80; color: #fff; font-size: 8pt; font-weight: bold; letter-spacing: 0.5px; padding: 5px 12px; }
