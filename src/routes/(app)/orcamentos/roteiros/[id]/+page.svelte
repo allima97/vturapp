@@ -237,7 +237,7 @@
   let nome = $state('');
   let revisao = $state<string | undefined>();
   let duracao = $state('');
-  let modeloPdfRoteiro: 'completo' | 'itinerario' | 'moderno' = $state('completo');
+  let modeloPdfRoteiro: 'completo' | 'moderno' = $state('completo');
   let inicioCidade = $state('');
   let fimCidade = $state('');
   let incluiTexto = $state('');
@@ -1226,7 +1226,7 @@
 
   function buildRoteiroPreviewHtml(
     assets: PreviewPdfAssets = { qrUrl: null, complementUrl: null },
-    modeloInicial: 'completo' | 'itinerario' | 'moderno' = 'completo'
+    modeloInicial: 'completo' | 'moderno' = 'completo'
   ) {
     const diasItems = dias.filter((dia) => dia.cidade || dia.percurso || dia.data || dia.descricao);
     const diasHtml =
@@ -1709,6 +1709,13 @@
       }
     }
 
+    const rot3InfoTexto = informacoesImportantes.trim() || [
+      'Preços em real (R$) convertido ao câmbio do dia sujeito a alteração e disponibilidade da tarifa.',
+      'Valor da criança válido somente quando acompanhada de dois adultos pagantes no mesmo apartamento.',
+      'Este orçamento é apenas uma tomada de preço.',
+      'Os serviços citados não estão reservados; a compra somente poderá ser confirmada após a confirmação dos fornecedores.',
+      'Este orçamento foi feito com base na menor tarifa para os serviços solicitados, podendo sofrer alteração devido à disponibilidade de lugares no ato da compra.'
+    ].join('\n');
     const rot3ModernoBodyHtml = `
       <div class="rot3-doc">
         <div class="rot3-kicker-bar"></div>
@@ -1730,7 +1737,7 @@
       ${mostrarPagamentoPdf && rot3PagamentosHtml ? buildRot3Secao('FORMAS DE PAGAMENTO', rot3PagamentosHtml) : ''}
       ${incluiTexto.trim() ? buildRot3Secao('O QUE ESTÁ INCLUÍDO', buildRot3InfoBox(incluiTexto.split('\n'), 'inclui')) : ''}
       ${naoIncluiTexto.trim() ? buildRot3Secao('O QUE NÃO ESTÁ INCLUÍDO', buildRot3InfoBox(naoIncluiTexto.split('\n'), 'naoinclui')) : ''}
-      ${mostrarInformacoesPdf && informacoesImportantes.trim() ? buildRot3Secao('INFORMAÇÕES IMPORTANTES', buildRot3InfoBox(informacoesImportantes.split('\n'))) : ''}
+      ${mostrarInformacoesPdf ? buildRot3Secao('INFORMAÇÕES IMPORTANTES', buildRot3InfoBox(rot3InfoTexto.split('\n'))) : ''}
       ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}
       <div class="rot3-doc-footer">Roteiro Personalizado${nome ? ` · ${escapePreviewHtml(nome)}` : ''}</div>`;
 
@@ -2455,8 +2462,7 @@
         bind:value={modeloPdfRoteiro}
         class="rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm text-slate-700"
       >
-        <option value="completo">Completo</option>
-        <option value="itinerario">Itinerário</option>
+        <option value="completo">Padrão</option>
         <option value="moderno">Moderno</option>
       </select>
     </label>
