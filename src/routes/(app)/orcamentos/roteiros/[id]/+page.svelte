@@ -1575,28 +1575,31 @@
     // ── Moderno: Investimento
     let rot3InvestHtml = '';
     if (investimentosItems.length > 0) {
-      const qtdA = Number(investimentosItems[0]?.qtd_apto || 1) || 1;
-      const totalG = totalInvestimento * qtdA;
+      const qtdAdultos = Number(investimentosItems[0]?.qtd_adultos || investimentosItems[0]?.qtd_apto || 1) || 1;
+      const totalAdultos = totalInvestimento * qtdAdultos;
       const dtHoje = new Date();
       const dtAm = new Date(dtHoje); dtAm.setDate(dtAm.getDate() + 1);
       const fDt = (d: Date) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
       const emis = fDt(dtHoje);
       const valid = fDt(dtAm);
       const consultorNome = pdfSettings?.consultor_nome || '';
+      const _icoP = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:inline;vertical-align:middle;margin-right:4px;margin-bottom:1px"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;
+      const _icoG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:inline;vertical-align:middle;margin-right:4px;margin-bottom:1px"><circle cx="8" cy="8" r="3.5"/><circle cx="16" cy="9" r="2.5"/><path d="M1 20c0-3.5 3.1-6 8-6s7.5 2.3 8 5.5"/><path d="M18 15c2.5.5 5 2 5 5" stroke-dasharray="3 2"/></svg>`;
+      const _icoClock = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:5px;margin-bottom:1px;opacity:0.85"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`;
       rot3InvestHtml = `<div class="rot3-inv-box">
         <div class="rot3-inv-col">
-          <div class="rot3-inv-label">POR PESSOA</div>
+          <div class="rot3-inv-label">${_icoP}POR PESSOA</div>
           <div class="rot3-inv-valor">R$&nbsp;${formatBRL(totalInvestimento)}</div>
-          <div class="rot3-inv-sub">${qtdA} apto${qtdA !== 1 ? 's' : ''}</div>
+          <div class="rot3-inv-sub">Valor médio individual por adulto</div>
         </div>
         <div class="rot3-inv-divider"></div>
         <div class="rot3-inv-col">
-          <div class="rot3-inv-label">TOTAL DA VIAGEM</div>
-          <div class="rot3-inv-valor">R$&nbsp;${formatBRL(totalG)}</div>
-          <div class="rot3-inv-sub">${qtdA} apto${qtdA !== 1 ? 's' : ''}</div>
+          <div class="rot3-inv-label">${_icoG}TOTAL DA VIAGEM (${qtdAdultos} ${qtdAdultos !== 1 ? 'ADULTOS' : 'ADULTO'})</div>
+          <div class="rot3-inv-valor">R$&nbsp;${formatBRL(totalAdultos)}</div>
+          <div class="rot3-inv-sub">Valor total da proposta para ${qtdAdultos} adulto${qtdAdultos !== 1 ? 's' : ''}</div>
         </div>
       </div>
-      <div class="rot3-inv-footer">Emiss\u00e3o em ${emis}&nbsp;\u2022&nbsp;Tarifas v\u00e1lidas at\u00e9 ${valid}${consultorNome ? `&nbsp;\u2022&nbsp;Reserve com ${escapePreviewHtml(consultorNome)} via WhatsApp` : ''}</div>`;
+      <div class="rot3-inv-footer">${_icoClock}Emissão em ${emis}&nbsp;•&nbsp;Tarifas válidas até ${valid}${consultorNome ? `&nbsp;•&nbsp;Reserve com ${escapePreviewHtml(consultorNome)} via WhatsApp` : ''}</div>`;
     }
 
     const rot3ModernoBodyHtml = `
@@ -1739,7 +1742,7 @@
             .rot3-bloco-label { font-size: 7.5pt; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; color: #1B2C80; margin-bottom: 6px; }
             .rot3-rota { font-size: 13pt; font-weight: bold; color: #1B2C80; line-height: 1.5; }
             .rot3-itin { margin: 0 0 20px; }
-            .rot3-itin-titulo { font-size: 10pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #1B2C80; border-bottom: 1.5px solid #C5CED9; padding-bottom: 6px; margin: 0 0 14px; }
+            .rot3-itin-titulo { font-size: 10pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #1B2C80; border-bottom: 1.5px solid #C5CED9; padding-bottom: 6px; margin: 0 0 14px; text-align: center; }
             .rot3-dias-lista { }
             .rot3-kicker-bar { width: 40px; height: 3px; background: #1B2C80; margin: 0 auto 10px; border-radius: 2px; }
             .rot3-dia { display: flex; gap: 0; margin-bottom: 10px; break-inside: avoid; page-break-inside: avoid; }
