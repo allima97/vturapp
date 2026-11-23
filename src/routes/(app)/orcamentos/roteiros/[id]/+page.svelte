@@ -1495,6 +1495,110 @@
       duracao ? `${_clkIcon}Duração: ${escapePreviewHtml(duracao)} dias` : ''
     ].filter(Boolean);
 
+    // ── Moderno: section wrapper helper
+    const buildRot3Secao = (titulo: string, conteudo: string) => {
+      if (!conteudo.trim()) return '';
+      return `<section class="rot3-secao"><h2 class="rot3-secao-titulo">${escapePreviewHtml(titulo)}</h2>${conteudo}</section>`;
+    };
+
+    // ── Moderno: bordered info/list box
+    const buildRot3InfoBox = (items: string[]) => {
+      const filtered = items.map((s) => String(s || '').trim()).filter(Boolean);
+      if (!filtered.length) return '';
+      return `<div class="rot3-info-box"><ul class="rot3-info-list">${filtered.map((s) => `<li>${escapePreviewHtml(s)}</li>`).join('')}</ul></div>`;
+    };
+
+    // ── Moderno: Passagem Aérea (grouped flights)
+    let rot3FlightsHtml = '';
+    if (transportesItems.length > 0) {
+      const groupsMap = new Map<string, typeof transportesItems>();
+      for (const t of transportesItems) {
+        const gk = [t.tipo_voo || '', t.cia_aerea || ''].filter(Boolean).join(' \u2022 ') || 'Voos';
+        if (!groupsMap.has(gk)) groupsMap.set(gk, []);
+        groupsMap.get(gk)!.push(t);
+      }
+      let inner = '';
+      for (const [gk, grpItems] of groupsMap) {
+        inner += `<div class="rot3-grupo-header">${escapePreviewHtml(gk)}</div>`;
+        for (const t of grpItems) {
+          const partes = (t.trecho || '').split(/\s*(?:\u2192|->|\u2014)\s*/);
+          const cidDest = nomeCidadeNoPdf((partes[1] || '').trim());
+          const dVoo = formatPreviewDate(t.data_voo || t.data_inicio || '');
+          const dCheg = formatPreviewDate(t.data_fim || t.data_voo || '');
+          const classeLabel = t.tarifa_nome || t.classe_reserva || '';
+          inner += `<div class="rot3-voo-row">
+            <div class="rot3-voo-c1">
+              <div class="rot3-voo-trecho">${escapePreviewHtml(t.trecho || '')}</div>
+              ${t.cia_aerea ? `<div class="rot3-voo-cia">${escapePreviewHtml(t.cia_aerea)}</div>` : ''}
+            </div>
+            <div class="rot3-voo-c2">
+              ${t.hora_saida ? `<div class="rot3-voo-info"><span class="rot3-voo-label">Saída:</span> ${escapePreviewHtml(t.hora_saida)}${dVoo ? ' \u00b7 ' + dVoo : ''}</div>` : (dVoo ? `<div class="rot3-voo-info">${dVoo}</div>` : '')}
+              ${(t.hora_chegada || cidDest || dCheg) ? `<div class="rot3-voo-info">Chegada${cidDest ? ' em ' + escapePreviewHtml(cidDest) : ''}${dCheg && dCheg !== dVoo ? ' em ' + dCheg : ''}${t.hora_chegada ? ' \u00e0s ' + escapePreviewHtml(t.hora_chegada) : ''}</div>` : ''}
+            </div>
+            <div class="rot3-voo-c3">
+              ${classeLabel ? `<span class="rot3-chip">${escapePreviewHtml(classeLabel)}</span>` : ''}
+              ${t.duracao_voo ? `<span class="rot3-chip">${escapePreviewHtml(t.duracao_voo)}</span>` : ''}
+            </div>
+          </div>`;
+        }
+      }
+      rot3FlightsHtml = `<div class="rot3-tabela">${inner}</div>`;
+    }
+
+    // ── Moderno: Hotéis Sugeridos
+    let rot3HoteisHtml = '';
+    if (hoteisItems.length > 0) {
+      const colHdr = `<div class="rot3-hotel-header-row"><div class="rot3-hotel-c1">Hotel &amp; Destino</div><div class="rot3-hotel-c2">Per\u00edodo de Hospedagem</div><div class="rot3-hotel-c3">Acomoda\u00e7\u00e3o &amp; Regime</div></div>`;
+      const rows = hoteisItems.map((h) => {
+        const ci = formatPreviewDate(h.data_inicio || '');
+        const co = formatPreviewDate(h.data_fim || '');
+        const nts = h.noites ? `${h.noites} noite${Number(h.noites) !== 1 ? 's' : ''}` : '';
+        return `<div class="rot3-hotel-row">
+          <div class="rot3-hotel-c1">
+            <div class="rot3-hotel-nome">${escapePreviewHtml(h.hotel || '\u2014')}</div>
+            ${h.cidade ? `<div class="rot3-hotel-cidade">${escapePreviewHtml(nomeCidadeNoPdf(h.cidade))}</div>` : ''}
+          </div>
+          <div class="rot3-hotel-c2">
+            ${ci ? `<div class="rot3-hotel-info"><span class="rot3-voo-label">Check-in:</span> ${ci}</div>` : ''}
+            ${co ? `<div class="rot3-hotel-info"><span class="rot3-voo-label">Check-out:</span> ${co}</div>` : ''}
+            ${nts ? `<div class="rot3-hotel-info">${escapePreviewHtml(nts)}</div>` : ''}
+          </div>
+          <div class="rot3-hotel-c3">
+            ${h.apto ? `<div class="rot3-hotel-apto">${escapePreviewHtml(h.apto)}</div>` : ''}
+            ${h.regime ? `<span class="rot3-chip">${escapePreviewHtml(h.regime)}</span>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+      rot3HoteisHtml = `<div class="rot3-tabela">${colHdr}${rows}</div>`;
+    }
+
+    // ── Moderno: Investimento
+    let rot3InvestHtml = '';
+    if (investimentosItems.length > 0) {
+      const qtdA = Number(investimentosItems[0]?.qtd_apto || 1) || 1;
+      const totalG = totalInvestimento * qtdA;
+      const dtHoje = new Date();
+      const dtAm = new Date(dtHoje); dtAm.setDate(dtAm.getDate() + 1);
+      const fDt = (d: Date) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+      const emis = fDt(dtHoje);
+      const valid = fDt(dtAm);
+      const consultorNome = pdfSettings?.consultor_nome || '';
+      rot3InvestHtml = `<div class="rot3-inv-box">
+        <div class="rot3-inv-col">
+          <div class="rot3-inv-label">POR PESSOA</div>
+          <div class="rot3-inv-valor">R$&nbsp;${formatBRL(totalInvestimento)}</div>
+          <div class="rot3-inv-sub">${qtdA} apto${qtdA !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="rot3-inv-divider"></div>
+        <div class="rot3-inv-col">
+          <div class="rot3-inv-label">TOTAL DA VIAGEM</div>
+          <div class="rot3-inv-valor">R$&nbsp;${formatBRL(totalG)}</div>
+          <div class="rot3-inv-sub">${qtdA} apto${qtdA !== 1 ? 's' : ''}</div>
+        </div>
+      </div>
+      <div class="rot3-inv-footer">Emiss\u00e3o em ${emis}&nbsp;\u2022&nbsp;Tarifas v\u00e1lidas at\u00e9 ${valid}${consultorNome ? `&nbsp;\u2022&nbsp;Reserve com ${escapePreviewHtml(consultorNome)} via WhatsApp` : ''}</div>`;
+    }
+
     const rot3ModernoBodyHtml = `
       <div class="rot3-doc">
         <div class="rot3-kicker-bar"></div>
@@ -1505,17 +1609,17 @@
         ${rot3CidadesResumo.length ? `<div class="rot3-bloco"><div class="rot3-bloco-label">RESUMO DO ROTEIRO</div><div class="rot3-rota">${escapePreviewHtml(rot3CidadesResumo.join(' → '))}</div></div>` : ''}
         ${rot3DiasHtml ? `<section class="rot3-itin"><h2 class="rot3-itin-titulo">ITINERÁRIO DETALHADO</h2><div class="rot3-dias-lista">${rot3DiasHtml}</div></section>` : ''}
       </div>
-      ${buildRoteiroCardSection('Passagem Aérea', transportesHtml, 'preview-airfare-section')}
-      ${buildRoteiroCardSection('Aluguel de Carro', carrosHtml, 'preview-carros-section')}
-      ${buildRoteiroCardSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
-      ${buildRoteiroCardSection('Trem', trensHtml, 'preview-trens-section')}
-      ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
-      ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
-      ${buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
+      ${buildRot3Secao('PASSAGEM AÉREA', rot3FlightsHtml)}
+      ${carrosHtml.trim() ? buildRot3Secao('ALUGUEL DE CARRO', carrosHtml) : ''}
+      ${buildRot3Secao('HOTÉIS SUGERIDOS', rot3HoteisHtml)}
+      ${trensHtml.trim() ? buildRot3Secao('TREM', trensHtml) : ''}
+      ${passeiosHtml.trim() ? buildRot3Secao('PASSEIOS E SERVIÇOS', passeiosHtml) : ''}
+      ${segurosHtml.trim() ? buildRot3Secao('SEGURO VIAGEM', segurosHtml) : ''}
+      ${buildRot3Secao('INVESTIMENTO', rot3InvestHtml)}
       ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
-      ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
-      ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'), 'x')}
-      ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
+      ${incluiTexto.trim() ? buildRot3Secao('O QUE ESTÁ INCLUÍDO', buildRot3InfoBox(incluiTexto.split('\n'))) : ''}
+      ${naoIncluiTexto.trim() ? buildRot3Secao('O QUE NÃO ESTÁ INCLUÍDO', buildRot3InfoBox(naoIncluiTexto.split('\n'))) : ''}
+      ${mostrarInformacoesPdf && informacoesImportantes.trim() ? buildRot3Secao('INFORMAÇÕES IMPORTANTES', buildRot3InfoBox(informacoesImportantes.split('\n'))) : ''}
       ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}
       <div class="rot3-doc-footer">Roteiro Personalizado${nome ? ` · ${escapePreviewHtml(nome)}` : ''}</div>`;
 
@@ -1648,10 +1752,51 @@
             .rot3-dia-rota { font-size: 10.5pt; font-weight: bold; color: #1B2C80; margin-bottom: 4px; }
             .rot3-dia-desc { margin: 0; font-size: 9pt; color: #374151; line-height: 1.6; }
             .rot3-doc-footer { margin-top: 24px; padding-top: 8px; border-top: 1px solid #C5CED9; font-size: 8pt; color: #9CA3AF; display: flex; justify-content: space-between; }
+            /* ─── rot3 Section / Flights / Hotels / Invest ─── */
+            .rot3-secao { margin: 24px 0 0; }
+            .rot3-secao-titulo { font-size: 10pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #1B2C80; border-bottom: 1.5px solid #C5CED9; padding-bottom: 6px; margin: 0 0 14px; text-align: center; }
+            .rot3-tabela { border: 1.5px solid #C5CED9; border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+            .rot3-grupo-header { background: #EEF2F7; color: #1B2C80; font-size: 8.5pt; font-weight: bold; letter-spacing: 1px; padding: 5px 12px; border-bottom: 1px solid #C5CED9; }
+            .rot3-voo-row { display: flex; gap: 10px; padding: 8px 12px; border-bottom: 1px solid #EEF2F7; break-inside: avoid; page-break-inside: avoid; }
+            .rot3-voo-row:last-child { border-bottom: none; }
+            .rot3-voo-c1 { flex: 2; min-width: 0; }
+            .rot3-voo-c2 { flex: 3; min-width: 0; }
+            .rot3-voo-c3 { flex: 1.5; display: flex; flex-wrap: wrap; gap: 4px; align-items: flex-start; min-width: 0; }
+            .rot3-voo-trecho { font-size: 10pt; font-weight: bold; color: #1B2C80; }
+            .rot3-voo-cia { font-size: 8.5pt; color: #6B7280; margin-top: 2px; }
+            .rot3-voo-info { font-size: 8.5pt; color: #374151; margin-top: 2px; }
+            .rot3-voo-label { font-weight: bold; color: #1B2C80; }
+            .rot3-chip { display: inline-block; background: #EEF2F7; color: #1B2C80; border-radius: 999px; font-size: 7.5pt; font-weight: bold; padding: 2px 7px; margin: 1px 0; border: 1px solid #C5CED9; }
+            .rot3-hotel-header-row { display: flex; gap: 10px; background: #1B2C80; color: #fff; font-size: 8pt; font-weight: bold; letter-spacing: 0.5px; padding: 5px 12px; }
+            .rot3-hotel-row { display: flex; gap: 10px; padding: 8px 12px; border-bottom: 1px solid #EEF2F7; break-inside: avoid; page-break-inside: avoid; }
+            .rot3-hotel-row:last-child { border-bottom: none; }
+            .rot3-hotel-c1 { flex: 2.5; min-width: 0; }
+            .rot3-hotel-c2 { flex: 2; min-width: 0; }
+            .rot3-hotel-c3 { flex: 1.5; min-width: 0; }
+            .rot3-hotel-header-row div:nth-child(1) { flex: 2.5; }
+            .rot3-hotel-header-row div:nth-child(2) { flex: 2; }
+            .rot3-hotel-header-row div:nth-child(3) { flex: 1.5; }
+            .rot3-hotel-nome { font-size: 10pt; font-weight: bold; color: #1B2C80; }
+            .rot3-hotel-cidade { font-size: 8.5pt; color: #6B7280; margin-top: 2px; }
+            .rot3-hotel-info { font-size: 8.5pt; color: #374151; margin-top: 2px; }
+            .rot3-hotel-apto { font-size: 9pt; color: #1F2937; }
+            .rot3-inv-box { display: flex; border: 1.5px solid #C5CED9; border-radius: 8px 8px 0 0; overflow: hidden; }
+            .rot3-inv-col { flex: 1; padding: 14px 16px; text-align: center; }
+            .rot3-inv-divider { width: 1.5px; background: #C5CED9; flex-shrink: 0; }
+            .rot3-inv-label { font-size: 8pt; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; color: #6B7280; margin-bottom: 6px; }
+            .rot3-inv-valor { font-size: 16pt; font-weight: bold; color: #1B2C80; line-height: 1.2; }
+            .rot3-inv-sub { font-size: 8pt; color: #9CA3AF; margin-top: 4px; }
+            .rot3-inv-footer { background: #1B2C80; color: #fff; font-size: 8pt; padding: 7px 14px; text-align: center; border-radius: 0 0 8px 8px; }
+            .rot3-info-box { border: 1.5px solid #C5CED9; border-radius: 8px; padding: 12px 16px; background: #fff; }
+            .rot3-info-list { margin: 0; padding-left: 16px; }
+            .rot3-info-list li { font-size: 9pt; color: #374151; margin-bottom: 4px; line-height: 1.5; }
             @media print {
               .rot3-doc { max-width: none; }
               .rot3-dia { break-inside: avoid; page-break-inside: avoid; }
               .rot3-bloco { background: #EEF2F7; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .rot3-grupo-header { background: #EEF2F7; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .rot3-hotel-header-row { background: #1B2C80; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .rot3-inv-footer { background: #1B2C80; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             }
             ${roteiroPdfThemeCss}
           </style>
