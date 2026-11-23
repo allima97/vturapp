@@ -1742,7 +1742,7 @@
       <div class="rot3-doc-footer">Roteiro Personalizado${nome ? ` · ${escapePreviewHtml(nome)}` : ''}</div>`;
 
     const mostrarModerno = modeloInicial === 'moderno';
-    const mostrarItinerario = modeloInicial === 'itinerario';
+    const mostrarItinerario = false; // opção removida do seletor
 
     return `<!doctype html>
       <html lang="pt-BR">
@@ -1932,7 +1932,6 @@
               <label class="rot2-modelo">Modelo
                 <select onchange="rvSwitchModelo(this.value)">
                   <option value="completo"${mostrarItinerario ? '' : ' selected'}>Completo</option>
-                  <option value="itinerario"${mostrarItinerario && !mostrarModerno ? ' selected' : ''}>Itinerário</option>
                   <option value="moderno"${mostrarModerno ? ' selected' : ''}>Moderno</option>
                 </select>
               </label>
