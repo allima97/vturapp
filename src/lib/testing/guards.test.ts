@@ -56,7 +56,7 @@ describe('guardas', () => {
     // Fase 4.2: no flowbite-svelte 1.x os campos, selos, alertas, menus e a janela modal mudaram
     // de aparência e de comportamento. O pacote 1.x só entra por import direto de arquivo
     // (hoje só a tabela); o import pelo índice ('flowbite-svelte') traria o pacote inteiro.
-    const permitidos = new Set(['src/lib/components/ui/SimpleTable.svelte']);
+    const permitidos = new Set<string>();
     const achados = files
       .filter(({ text }) => /from\s+['"]flowbite-svelte(\/[^'"]*)?['"]/.test(text))
       .map(({ path }) => path)

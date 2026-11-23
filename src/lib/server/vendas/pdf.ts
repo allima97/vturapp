@@ -14,6 +14,7 @@
  */
 
 import type { VendaDetalhe } from './service';
+import { formatCurrency } from '$lib/utils/formatters';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Utilitários de formatação
@@ -21,8 +22,7 @@ import type { VendaDetalhe } from './service';
 
 /** Centavos inteiros → "R$ 1.234,56" */
 export function formatarBRL(centavos: number): string {
-  const valor = centavos / 100;
-  return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  return formatCurrency(centavos / 100);
 }
 
 /** TEXT YYYY-MM-DD → "DD/MM/YYYY" (sem dependência de Date para evitar TZ) */
@@ -82,7 +82,7 @@ export function gerarComprovanteHtml(
   // ── Seção: itens ──────────────────────────────────────────────────────────
   const itensHtml =
     venda.itens.length === 0
-      ? '<tr><td colspan="5" style="text-align:center;color:#666">Nenhum item</td></tr>'
+      ? '<tr><td colspan="5" style="text-align:center;color:#6B7280">Nenhum item</td></tr>'
       : venda.itens
           .map(
             (it) => /* html */ `
@@ -100,7 +100,7 @@ export function gerarComprovanteHtml(
   // ── Seção: pagamentos / parcelas ──────────────────────────────────────────
   const pagamentosHtml =
     venda.pagamentos.length === 0
-      ? '<tr><td colspan="5" style="text-align:center;color:#666">Nenhum pagamento</td></tr>'
+      ? '<tr><td colspan="5" style="text-align:center;color:#6B7280">Nenhum pagamento</td></tr>'
       : venda.pagamentos
           .flatMap((pag) =>
             pag.parcelas.map(
@@ -134,15 +134,15 @@ export function gerarComprovanteHtml(
   <style>
     /* ── reset ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #1a1a1a; background: #fff; }
+    body { font-family: Arial, Helvetica, sans-serif; font-size: 11pt; color: #1F2937; background: #fff; }
 
     /* ── layout ── */
     .page { max-width: 210mm; margin: 0 auto; padding: 12mm 14mm; }
     .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 8mm; }
     .logo { height: 40px; max-width: 140px; object-fit: contain; }
-    .empresa-info { text-align: right; font-size: 9pt; color: #444; }
-    h1 { font-size: 14pt; color: #003366; margin-bottom: 2mm; }
-    h2 { font-size: 11pt; color: #003366; margin: 5mm 0 2mm; border-bottom: 1px solid #ccd6e0; padding-bottom: 1mm; }
+    .empresa-info { text-align: right; font-size: 9pt; color: #6B7280; }
+    h1 { font-size: 14pt; color: #1B2C80; margin-bottom: 2mm; }
+    h2 { font-size: 11pt; color: #1B2C80; margin: 5mm 0 2mm; border-bottom: 1px solid #C5CED9; padding-bottom: 1mm; }
 
     /* ── cancelada ── */
     .cancelada-banner {
@@ -154,13 +154,13 @@ export function gerarComprovanteHtml(
     /* ── dados ── */
     .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2mm 8mm; margin-bottom: 4mm; }
     .campo { font-size: 9.5pt; }
-    .campo .label { color: #555; font-size: 8.5pt; display: block; margin-bottom: .5mm; }
+    .campo .label { color: #6B7280; font-size: 8.5pt; display: block; margin-bottom: .5mm; }
     .campo .valor { font-weight: 600; }
 
     /* ── tabelas ── */
     table { width: 100%; border-collapse: collapse; margin-bottom: 4mm; font-size: 9.5pt; }
-    th { background: #003366; color: #fff; text-align: left; padding: 2mm 3mm; font-size: 9pt; }
-    td { padding: 1.5mm 3mm; border-bottom: 1px solid #e5e7eb; }
+    th { background: #1B2C80; color: #fff; text-align: left; padding: 2mm 3mm; font-size: 9pt; }
+    td { padding: 1.5mm 3mm; border-bottom: 1px solid #C5CED9; }
     tr:last-child td { border-bottom: none; }
     td.num { text-align: right; }
     th.num { text-align: right; }
@@ -169,10 +169,10 @@ export function gerarComprovanteHtml(
     .totais { margin-top: 3mm; float: right; min-width: 180px; }
     .totais table { width: 100%; }
     .totais td { padding: 1mm 3mm; font-size: 10pt; }
-    .totais .total-principal td { font-weight: bold; font-size: 11pt; color: #003366; border-top: 2px solid #003366; }
+    .totais .total-principal td { font-weight: bold; font-size: 11pt; color: #1B2C80; border-top: 2px solid #1B2C80; }
 
     /* ── rodapé ── */
-    .rodape { margin-top: 8mm; font-size: 8pt; color: #666; border-top: 1px solid #e5e7eb; padding-top: 3mm; }
+    .rodape { margin-top: 8mm; font-size: 8pt; color: #6B7280; border-top: 1px solid #C5CED9; padding-top: 3mm; }
 
     /* ── impressão ── */
     @media print {
@@ -294,7 +294,7 @@ export function gerarComprovanteHtml(
   <!-- botão impressão (oculto ao imprimir) -->
   <div class="no-print" style="text-align:right; margin-top:6mm">
     <button onclick="window.print()"
-      style="padding:8px 20px;background:#003366;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11pt">
+      style="padding:8px 20px;background:#1B2C80;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11pt">
       🖨 Imprimir / Salvar PDF
     </button>
   </div>
