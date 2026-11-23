@@ -3,6 +3,7 @@
   import { goto } from '$app/navigation';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
+  import DataTable from '$lib/components/ui/DataTable.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import Dialog from '$lib/components/ui/Dialog.svelte';
   import {
@@ -35,7 +36,8 @@
   import { toast } from '$lib/stores/ui';
   import { todayISODateLocal } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
-  import { formatDate as formatDateValue } from '$lib/utils/formatters';
+  import { formatCurrency, formatDate as formatDateValue } from '$lib/utils/formatters';
+  import { escapeHtml } from '$lib/utils/html';
   import { apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
 
   interface Movimentacao {
@@ -70,11 +72,6 @@
     id: string;
     nome: string;
   }
-
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
 
   let loading = true;
   let periodo = 'mes_atual';
@@ -255,10 +252,6 @@
     formasAbortController?.abort();
   });
 
-  function formatCurrency(value: number): string {
-    return BRL_CURRENCY_FORMATTER.format(value || 0);
-  }
-
   function formatDate(dateStr: string): string {
     return formatDateValue(dateStr);
   }
@@ -387,6 +380,42 @@
     };
     return styles[status] || 'bg-slate-100 text-slate-700';
   }
+
+  const colunasMovimentacoes = [
+    {
+      key: 'data',
+      label: 'Data',
+      formatter: (v: string) => formatDate(v)
+    },
+    {
+      key: 'descricao',
+      label: 'Descrição',
+      formatter: (_v: unknown, row: Movimentacao) =>
+        `<p class="font-medium text-slate-900">${escapeHtml(row.descricao)}</p>${row.cliente && row.cliente !== '-' ? `<p class="text-xs text-slate-500">${escapeHtml(row.cliente)}</p>` : ''}`
+    },
+    { key: 'forma_pagamento', label: 'Forma' },
+    {
+      key: 'valor',
+      label: 'Valor',
+      align: 'right' as const,
+      formatter: (_v: unknown, row: Movimentacao) =>
+        `<span class="${row.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'}">${row.tipo === 'entrada' ? '+' : '-'}${formatCurrency(row.valor)}</span>`
+    },
+    {
+      key: 'status',
+      label: 'Status',
+      align: 'center' as const,
+      formatter: (v: string) => {
+        const label =
+          v === 'conciliado' || v === 'confirmado'
+            ? 'Confirmado'
+            : v === 'pendente'
+              ? 'Pendente'
+              : v;
+        return `<span class="inline-flex rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(v)}">${label}</span>`;
+      }
+    }
+  ];
 </script>
 
 <svelte:head>
@@ -699,77 +728,23 @@
       {/if}
     </Card>
 
-    <Card header="Movimentações Recentes" icon={FileText} color="financeiro" class="lg:col-span-2">
-      {#if movimentacoes.length === 0}
-        <div class="py-12 text-center text-slate-500">
-          <TrendingUp size={48} class="mx-auto mb-2 opacity-30" />
-          <p>Nenhuma movimentação no período</p>
-        </div>
-      {:else}
-        <div class="overflow-x-visible md:overflow-x-auto">
-          <table class="table-mobile-cards w-full text-sm">
-            <thead class="bg-slate-50">
-              <tr>
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase"
-                  >Data</th
-                >
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase"
-                  >Descrição</th
-                >
-                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase"
-                  >Forma</th
-                >
-                <th class="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase"
-                  >Valor</th
-                >
-                <th class="px-4 py-3 text-center text-xs font-semibold text-slate-600 uppercase"
-                  >Status</th
-                >
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-200">
-              {#each movimentacoes.slice(0, 10) as mov}
-                <tr class="hover:bg-slate-50">
-                  <td data-label="Data" class="px-4 py-3 text-slate-700">{formatDate(mov.data)}</td>
-                  <td data-label="Descrição" class="px-4 py-3">
-                    <p class="font-medium text-slate-900">{mov.descricao}</p>
-                    {#if mov.cliente && mov.cliente !== '-'}
-                      <p class="text-xs text-slate-500">{mov.cliente}</p>
-                    {/if}
-                  </td>
-                  <td data-label="Forma" class="px-4 py-3 text-slate-700">{mov.forma_pagamento}</td>
-                  <td data-label="Valor" class="px-4 py-3 text-right">
-                    <span class={mov.tipo === 'entrada' ? 'text-green-600' : 'text-red-600'}>
-                      {mov.tipo === 'entrada' ? '+' : '-'}{formatCurrency(mov.valor)}
-                    </span>
-                  </td>
-                  <td data-label="Status" class="px-4 py-3 text-center">
-                    <span
-                      class="inline-flex rounded-full px-2 py-1 text-xs font-medium {getStatusBadge(
-                        mov.status
-                      )}"
-                    >
-                      {mov.status === 'conciliado' || mov.status === 'confirmado'
-                        ? 'Confirmado'
-                        : mov.status === 'pendente'
-                          ? 'Pendente'
-                          : mov.status}
-                    </span>
-                  </td>
-                </tr>
-              {/each}
-            </tbody>
-          </table>
-        </div>
-        {#if movimentacoes.length > 10}
-          <div class="mt-4 text-center">
-            <p class="text-sm text-slate-500">
-              Mostrando 10 de {movimentacoes.length} movimentações
-            </p>
-          </div>
-        {/if}
+    <div class="lg:col-span-2">
+      <DataTable
+        title="Movimentações Recentes"
+        color="financeiro"
+        columns={colunasMovimentacoes}
+        data={movimentacoes.slice(0, 10)}
+        searchable={false}
+        filterable={false}
+        exportable={false}
+        emptyMessage="Nenhuma movimentação no período."
+      />
+      {#if movimentacoes.length > 10}
+        <p class="mt-4 text-center text-sm text-slate-500">
+          Mostrando 10 de {movimentacoes.length} movimentações
+        </p>
       {/if}
-    </Card>
+    </div>
   </div>
 {/if}
 

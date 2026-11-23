@@ -10,7 +10,7 @@
   import { permissoes } from '$lib/stores/permissoes';
   import { RefreshCw, RotateCcw, Search, SlidersHorizontal } from '$lib/icons';
   import { todayISODateLocal } from '$lib/date';
-  import { formatDate } from '$lib/utils/formatters';
+  import { formatCurrency, formatDate } from '$lib/utils/formatters';
   import { escapeHtml } from '$lib/utils/html';
   import { apiGet, apiPost } from '$lib/services/api';
   import { toUserMessage } from '$lib/utils/errors';
@@ -68,11 +68,6 @@
   const autoReload = createDebouncedReloader(() => load({ silent: true }), 300);
 
   let form = { vendedor_destino_id: '', percentual_destino: '50', observacao: '' };
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
-
   $: canEdit =
     !$permissoes.ready ||
     $permissoes.isSystemAdmin ||
@@ -86,10 +81,6 @@
   }));
 
   $: canSelectEmpresa = empresaOptions.length > 1;
-
-  function formatCurrency(value: number) {
-    return BRL_CURRENCY_FORMATTER.format(value || 0);
-  }
 
   const columns = [
     {

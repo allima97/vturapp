@@ -78,7 +78,7 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - [x] master
 - [x] cadastros
 - [x] clientes
-- [ ] financeiro (+ comissoes)
+- [x] financeiro (+ comissoes)
 - [ ] operacao
 - [ ] orcamentos (+ roteiros)
 - [ ] vendas
@@ -118,3 +118,5 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - `cadastros/circuitos`: `Intl.NumberFormat` local → `formatCurrencyInt()` (novo helper canônico para moeda sem centavos, adicionado a `formatters.ts`). Demais 17 páginas já conformes.
 
 - `clientes`: `+page` migrou `Intl.NumberFormat` local → `formatCurrency()`; `[id]` removeu formatter local, converteu tabelas HTML de histórico (vendas/orçamentos) para `DataTable` com `onRowClick`, `searchable/filterable/exportable={false}` e `escapeHtml` nos formatters.
+
+- `financeiro`: `Intl.NumberFormat` ad-hoc removido de ajustes-vendas, caixa, comissoes, comissoes/calculo, formas-pagamento e regras — tudo migrado para `formatCurrency`/`formatCurrencyInt`/`formatPercent`/`formatNumber` canônicos. `caixa`: tabela "Movimentações Recentes" virou `DataTable`. `regras`: `SimpleTable` substituído por `<table class="table-mobile-cards">` em `vtur-table-shell` (linhas contêm inputs de formulário — DataTable não hospeda campos editáveis). **Exceção documentada**: `conciliacao` mantém 7 grades `<table>` densas somente-leitura (min-w até 2100px, relatórios de conciliação bancária) — markup de apresentação especializado, migrar exigiria colunas dinâmicas no DataTable; revisar em etapa dedicada.

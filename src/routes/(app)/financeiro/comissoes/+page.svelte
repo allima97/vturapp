@@ -33,7 +33,7 @@
   import { permissoes } from '$lib/stores/permissoes';
   import { monthRangeFromKey, todayISODateLocal } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
-  import { formatDate } from '$lib/utils/formatters';
+  import { formatCurrency, formatDate, formatPercent } from '$lib/utils/formatters';
   import { apiFetch, apiGet, apiPost, apiPut, isCanceledApiError } from '$lib/services/api';
 
   interface Comissao {
@@ -120,11 +120,6 @@
   let comissoesAbortController: AbortController | null = null;
   let vendedoresRequestSeq = 0;
   let vendedoresAbortController: AbortController | null = null;
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
-
   $: statusOptions = [
     { value: 'todas', label: 'Todas' },
     { value: 'pendente', label: 'Pendentes' },
@@ -309,16 +304,6 @@
     }
   }
 
-  function formatCurrency(value: number) {
-    return BRL_CURRENCY_FORMATTER.format(value || 0);
-  }
-
-  function formatPercent(value: number) {
-    return `${Number(value || 0)
-      .toFixed(2)
-      .replace('.', ',')}%`;
-  }
-
   function buildKpiLabel(label: string, values: number[]) {
     const unique = Array.from(
       new Set(
@@ -330,7 +315,7 @@
     ).sort((a, b) => a - b);
 
     if (unique.length === 0) return label;
-    if (unique.length <= 2) return `${label} (${unique.map(formatPercent).join(' / ')})`;
+    if (unique.length <= 2) return `${label} (${unique.map((v) => formatPercent(v, 2)).join(' / ')})`;
     return `${label} (${unique.length} faixas)`;
   }
 

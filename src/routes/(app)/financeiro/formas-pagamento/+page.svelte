@@ -17,6 +17,7 @@
   } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { toUserMessage } from '$lib/utils/errors';
+  import { formatNumber } from '$lib/utils/formatters';
   import { apiDelete, apiGet, apiPatch, apiPost, isCanceledApiError } from '$lib/services/api';
   import { escapeHtml } from '$lib/utils/html';
   import { createLoadGuard } from '$lib/utils/loadGuard';
@@ -40,7 +41,6 @@
     nome: string;
   }
 
-  const PT_BR_NUMBER_FORMATTER = new Intl.NumberFormat('pt-BR');
   const contextGuard = createLoadGuard();
   const formasGuard = createLoadGuard();
 
@@ -100,7 +100,7 @@
       align: 'center' as const,
       formatter: (value: boolean, row: FormaPagamento) =>
         value
-          ? `<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">${PT_BR_NUMBER_FORMATTER.format(Number(row.desconto_padrao_pct || 0))}%</span>`
+          ? `<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">${formatNumber(Number(row.desconto_padrao_pct || 0), 2)}%</span>`
           : '<span class="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-600">Não</span>'
     },
     {

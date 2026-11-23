@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { formatNumber } from '$lib/utils/formatters';
   import { onMount } from 'svelte';
   import PageHeader from '$lib/components/ui/PageHeader.svelte';
   import Card from '$lib/components/ui/Card.svelte';
@@ -9,7 +10,6 @@
     FieldSelect,
     FieldTextarea,
     LoadingState,
-    SimpleTable
   } from '$lib/components/ui';
   import { mobileCardActions } from '$lib/actions/mobileCardActions';
   import MobileCardField from '$lib/components/ui/MobileCardField.svelte';
@@ -65,10 +65,6 @@
     tiers: Tier[];
   }
 
-  const percentFormatter = new Intl.NumberFormat('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  });
   const faixas: FaixaType[] = ['PRE', 'POS'];
 
   const emptyForm = (): RuleForm => ({
@@ -236,7 +232,7 @@
   $: ({ activeRules, inactiveRules, escalonaveis, totalTiers } = rulesResumo);
 
   function formatPercent(value: number | null | undefined) {
-    return percentFormatter.format(normalizeNumber(value));
+    return formatNumber(normalizeNumber(value), 2);
   }
 
   function resetForm() {
@@ -668,7 +664,8 @@
               Nenhuma faixa adicionada ainda.
             </div>
           {:else}
-            <SimpleTable tableClass="min-w-full divide-y divide-slate-200" color="financeiro">
+            <div class="vtur-table-shell overflow-hidden">
+            <table class="table-mobile-cards w-full text-sm min-w-full divide-y divide-slate-200">
               <thead class="bg-white/70">
                 <tr class="text-left text-slate-600">
                   <th class="px-3 py-2 font-medium">Faixa</th>
@@ -749,7 +746,8 @@
                   </tr>
                 {/each}
               </tbody>
-            </SimpleTable>
+            </table>
+            </div>
           {/if}
         </div>
       {/if}

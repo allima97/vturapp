@@ -22,7 +22,7 @@
   } from '$lib/icons';
   import { toast } from '$lib/stores/ui';
   import { currentMonthRangeISODate, parseISODateParts, todayISODateLocal } from '$lib/date';
-  import { formatDate } from '$lib/utils/formatters';
+  import { formatCurrency, formatCurrencyInt, formatDate, formatPercent } from '$lib/utils/formatters';
   import { apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { toUserMessage } from '$lib/utils/errors';
   import { createDebouncedReloader } from '$lib/utils/autoReload';
@@ -103,15 +103,6 @@
   let vendedoresRequestSeq = 0;
   let vendedoresAbortController: AbortController | null = null;
   const autoReload = createDebouncedReloader(() => loadComissoes(), 250);
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
-  const BRL_INTEGER_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0
-  });
   const MONTH_NAME_FORMATTER = new Intl.DateTimeFormat('pt-BR', {
     month: 'long',
     timeZone: 'UTC'
@@ -329,17 +320,7 @@
     }
   }
 
-  function formatCurrency(value: number) {
-    return BRL_INTEGER_CURRENCY_FORMATTER.format(Number(value || 0));
-  }
-
-  function formatPercent(value: number) {
-    return `${Number(value || 0)
-      .toFixed(2)
-      .replace('.', ',')}%`;
-  }
-
-  function buildKpiLabel(label: string, values: number[]) {
+    function buildKpiLabel(label: string, values: number[]) {
     const unique = Array.from(
       new Set(
         values
@@ -349,7 +330,7 @@
       )
     ).sort((a, b) => a - b);
     if (unique.length === 0) return label;
-    if (unique.length <= 2) return `${label} (${unique.map(formatPercent).join(' / ')})`;
+    if (unique.length <= 2) return `${label} (${unique.map((v) => formatPercent(v, 2)).join(' / ')})`;
     return `${label} (${unique.length} faixas)`;
   }
 
@@ -363,7 +344,7 @@
       label: 'Valor Recibo',
       sortable: true,
       align: 'right' as const,
-      formatter: (value: number) => BRL_CURRENCY_FORMATTER.format(value)
+      formatter: (value: number) => formatCurrency(value)
     },
     {
       key: 'percentual',
@@ -378,7 +359,7 @@
       label: 'Comissão + seguro',
       sortable: true,
       align: 'right' as const,
-      formatter: (value: number) => BRL_CURRENCY_FORMATTER.format(value)
+      formatter: (value: number) => formatCurrency(value)
     },
     { key: 'regra', label: 'Regra', sortable: true, width: '150px' },
     {
@@ -408,7 +389,7 @@
       label: 'Valor Recibo',
       sortable: true,
       align: 'right' as const,
-      formatter: (value: number) => BRL_CURRENCY_FORMATTER.format(value)
+      formatter: (value: number) => formatCurrency(value)
     },
     {
       key: 'percentual_aplicado',
@@ -423,14 +404,14 @@
       label: 'Comissão + seguro',
       sortable: true,
       align: 'right' as const,
-      formatter: (value: number) => BRL_CURRENCY_FORMATTER.format(value)
+      formatter: (value: number) => formatCurrency(value)
     },
     {
       key: 'valor_pago',
       label: 'Pago',
       sortable: true,
       align: 'right' as const,
-      formatter: (value: number) => BRL_CURRENCY_FORMATTER.format(value || 0)
+      formatter: (value: number) => formatCurrency(value || 0)
     },
     {
       key: 'data_pagamento',
@@ -662,7 +643,7 @@
     </div>
     <div>
       <p class="text-sm font-medium text-slate-500">{labelComissao}</p>
-      <p class="text-2xl font-bold text-slate-900">{formatCurrency(totalComissaoGeralPeriodo)}</p>
+      <p class="text-2xl font-bold text-slate-900">{formatCurrencyInt(totalComissaoGeralPeriodo)}</p>
     </div>
   </div>
 
@@ -673,7 +654,7 @@
     <div>
       <p class="text-sm font-medium text-slate-500">Comissão total</p>
       <p class="text-2xl font-bold text-slate-900">
-        {formatCurrency(totalComissaoGeralPeriodo)}
+        {formatCurrencyInt(totalComissaoGeralPeriodo)}
       </p>
     </div>
   </div>
@@ -685,7 +666,7 @@
     <div>
       <p class="text-sm font-medium text-slate-500">{labelSeguro}</p>
       <p class="text-2xl font-bold text-slate-900">
-        {formatCurrency(totalSeguroPeriodo)}
+        {formatCurrencyInt(totalSeguroPeriodo)}
       </p>
     </div>
   </div>
@@ -697,7 +678,7 @@
     <div>
       <p class="text-sm font-medium text-slate-500">Comissão + seguro</p>
       <p class="text-2xl font-bold text-slate-900">
-        {formatCurrency(totalComissaoComSeguroPeriodo)}
+        {formatCurrencyInt(totalComissaoComSeguroPeriodo)}
       </p>
     </div>
   </div>
