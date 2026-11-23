@@ -1912,7 +1912,7 @@
               .rot3-doc { max-width: none; }
               .rot3-dia { break-inside: avoid; page-break-inside: avoid; }
               .rot3-bloco { background: #EEF2F7; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-              .rot3-grupo-header { background: #EEF2F7; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .rot3-grupo-header { background: #1B2C80; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
               .rot3-hotel-header-row { background: #1B2C80; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
               .rot3-inv-footer { background: #1B2C80; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             }
