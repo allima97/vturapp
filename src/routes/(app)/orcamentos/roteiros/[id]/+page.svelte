@@ -1892,7 +1892,7 @@
             .rot3-hotel-header-row div:nth-child(2) { flex: 2; }
             .rot3-hotel-header-row div:nth-child(3) { flex: 1.5; }
             .rot3-hotel-nome { font-size: 10pt; font-weight: bold; color: #1B2C80; }
-            .rot3-hotel-cidade { display: inline-block; background: #EEF2F7; color: #1B2C80; border: 1px solid #C5CED9; border-radius: 10px; padding: 1px 8px; font-size: 8pt; font-weight: 600; margin-top: 4px; }
+            .rot3-hotel-cidade { font-size: 8.5pt; color: #4472C4; font-weight: 600; margin-top: 2px; }
             .rot3-hotel-cat { font-size: 8pt; color: #6B7280; margin-top: 2px; }
             .rot3-hotel-info { font-size: 8.5pt; color: #374151; margin-top: 2px; }
             .rot3-opc-desc { font-size: 7.5pt; color: #6B7280; margin-top: 2px; line-height: 1.4; }
