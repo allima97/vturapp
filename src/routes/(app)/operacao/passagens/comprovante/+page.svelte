@@ -716,11 +716,11 @@
     background: #fff;
     color: #1F2937;
   }
-  .bilhete-top {
+  :global(.bilhete-top) {
     padding-bottom: 14px;
     border-bottom: 2px solid #1B2C80;
   }
-  .bilhete-cia-linha {
+  :global(.bilhete-cia-linha) {
     display: block;
     color: #1B2C80;
     font-size: 13px;
@@ -728,13 +728,13 @@
     letter-spacing: 0.5px;
     text-transform: uppercase;
   }
-  .bilhete-titulo {
+  :global(.bilhete-titulo) {
     margin: 4px 0 0;
     color: #1B2C80;
     font-size: 24px;
     font-weight: bold;
   }
-  .bilhete-meta {
+  :global(.bilhete-meta) {
     display: flex;
     flex-wrap: wrap;
     gap: 4px 10px;
@@ -742,7 +742,7 @@
     font-size: 12px;
     color: #4B5563;
   }
-  .bilhete-rota-card {
+  :global(.bilhete-rota-card) {
     border: 1px solid #C5CED9;
     border-left: 4px solid #1B2C80;
     border-radius: 6px;
@@ -751,7 +751,7 @@
     margin-top: 16px;
     break-inside: avoid;
   }
-  .bilhete-rota-label {
+  :global(.bilhete-rota-label) {
     font-size: 10px;
     font-weight: bold;
     letter-spacing: 1px;
@@ -759,17 +759,17 @@
     color: #6B7280;
     margin-bottom: 6px;
   }
-  .bilhete-rota-grande {
+  :global(.bilhete-rota-grande) {
     font-size: 22px;
     font-weight: bold;
     color: #1B2C80;
   }
-  .bilhete-rota-sub {
+  :global(.bilhete-rota-sub) {
     margin-top: 6px;
     font-size: 12px;
     color: #4B5563;
   }
-  .bilhete-pnr-card {
+  :global(.bilhete-pnr-card) {
     border: 1px solid #C5CED9;
     border-radius: 6px;
     padding: 12px 18px;
@@ -779,26 +779,26 @@
     gap: 14px;
     break-inside: avoid;
   }
-  .bilhete-pnr-label {
+  :global(.bilhete-pnr-label) {
     font-size: 10px;
     font-weight: bold;
     letter-spacing: 1px;
     text-transform: uppercase;
     color: #6B7280;
   }
-  .bilhete-pnr-codigo {
+  :global(.bilhete-pnr-codigo) {
     color: #1B2C80;
     font-size: 26px;
     letter-spacing: 2px;
   }
-  .bilhete-trecho {
+  :global(.bilhete-trecho) {
     border: 1px solid #C5CED9;
     border-radius: 8px;
     margin-bottom: 12px;
     overflow: hidden;
     break-inside: avoid;
   }
-  .bilhete-trecho-top {
+  :global(.bilhete-trecho-top) {
     display: flex;
     justify-content: space-between;
     gap: 12px;
@@ -808,34 +808,34 @@
     font-size: 11px;
     font-weight: bold;
   }
-  .bilhete-trajeto {
+  :global(.bilhete-trajeto) {
     display: grid;
     grid-template-columns: 1fr auto 1fr;
     gap: 12px;
     align-items: center;
     padding: 14px;
   }
-  .bilhete-local > strong,
-  .bilhete-local > span {
+  :global(.bilhete-local > strong),
+  :global(.bilhete-local > span) {
     display: block;
   }
-  .bilhete-codigo {
+  :global(.bilhete-codigo) {
     color: #1B2C80;
     font-size: 24px;
     letter-spacing: 1px;
   }
-  .bilhete-local > span {
+  :global(.bilhete-local > span) {
     color: #1F2937;
     font-size: 12px;
   }
-  .bilhete-quando {
+  :global(.bilhete-quando) {
     color: #6B7280 !important;
     font-size: 11px !important;
   }
-  .bilhete-destino {
+  :global(.bilhete-destino) {
     text-align: right;
   }
-  .bilhete-meio {
+  :global(.bilhete-meio) {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -844,21 +844,21 @@
     font-size: 10px;
     text-align: center;
   }
-  .bilhete-voo-linha {
+  :global(.bilhete-voo-linha) {
     font-weight: bold;
     color: #1B2C80;
   }
-  .bilhete-duracao {
+  :global(.bilhete-duracao) {
     font-weight: bold;
   }
-  .bilhete-grade {
+  :global(.bilhete-grade) {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
     gap: 10px;
     border-top: 1px dashed #C5CED9;
     padding: 10px 14px;
   }
-  .bilhete-campo strong {
+  :global(.bilhete-campo strong) {
     display: block;
     font-size: 12px;
     color: #1F2937;
