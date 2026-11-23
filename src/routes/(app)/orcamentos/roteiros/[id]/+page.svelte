@@ -1647,30 +1647,48 @@
     // ── Moderno: Formas de Pagamento
     let rot3PagamentosHtml = '';
     if (pagamentosItems.length > 0) {
-      const colHdrPag = `<div class="rot3-hotel-header-row">
-        <div class="rot3-hotel-h1">MODALIDADE</div>
-        <div class="rot3-hotel-h2">SERVIÇO / CONDIÇÃO</div>
-        <div class="rot3-hotel-h3" style="text-align:right">VALOR TOTAL</div>
+      const qtdPaxPag = Number(investimentosItems[0]?.qtd_adultos || investimentosItems[0]?.qtd_apto || 0) || 0;
+      const paxLabel  = qtdPaxPag > 1 ? ` (${qtdPaxPag} Pax${qtdPaxPag > 1 ? 's' : ''})` : '';
+      const colHdrPag = `<div class="rot3-pag-header-row">
+        <div class="rot3-pag-h1">Modalidade</div>
+        <div class="rot3-pag-h2">Condição Comercial</div>
+        <div class="rot3-pag-h3">Valor Total${paxLabel}</div>
       </div>`;
       const rowsPag = pagamentosItems.map((p) => {
-        const modalidade = escapePreviewHtml(String(p.forma_pagamento || '—').trim());
-        const servico    = escapePreviewHtml(String(p.servico || '').trim());
-        const valor      = p.valor_total_com_taxas
+        const modalidade  = escapePreviewHtml(String(p.forma_pagamento || '—').trim());
+        const servicoRaw  = String(p.servico || '').trim();
+        // Split at first newline or ". " to separate bold title from description
+        const nlIdx = servicoRaw.indexOf('\n');
+        const ptIdx = servicoRaw.indexOf('. ');
+        const splitIdx = nlIdx >= 0 ? nlIdx : (ptIdx >= 0 && ptIdx < 80 ? ptIdx + 1 : -1);
+        const condTitulo = splitIdx > 0
+          ? escapePreviewHtml(servicoRaw.slice(0, splitIdx).trim())
+          : escapePreviewHtml(servicoRaw);
+        const condDesc   = splitIdx > 0
+          ? escapePreviewHtml(servicoRaw.slice(splitIdx).trim())
+          : '';
+        const valorTotal = p.valor_total_com_taxas
           ? `R$&nbsp;${formatBRL(Number(p.valor_total_com_taxas))}`
           : '—';
-        return `<div class="rot3-hotel-row">
-          <div class="rot3-hotel-c1">
-            <div class="rot3-hotel-nome">${modalidade}</div>
+        const valorPax = (p.valor_total_com_taxas && qtdPaxPag > 1)
+          ? `R$&nbsp;${formatBRL(Number(p.valor_total_com_taxas) / qtdPaxPag)}&nbsp;/ pax`
+          : '';
+        return `<div class="rot3-pag-row">
+          <div class="rot3-pag-c1">
+            <div class="rot3-pag-modal">${modalidade}</div>
           </div>
-          <div class="rot3-hotel-c2">
-            ${servico ? `<div class="rot3-hotel-info">${servico}</div>` : ''}
+          <div class="rot3-pag-c2">
+            ${condTitulo ? `<div class="rot3-pag-cond-titulo">${condTitulo}</div>` : ''}
+            ${condDesc   ? `<div class="rot3-pag-cond-desc">${condDesc}</div>`   : ''}
           </div>
-          <div class="rot3-hotel-c3" style="text-align:right;font-weight:600;color:#1B2C80">
-            ${valor}
+          <div class="rot3-pag-c3">
+            <div class="rot3-pag-valor">${valorTotal}</div>
+            ${valorPax ? `<div class="rot3-pag-pax">${valorPax}</div>` : ''}
           </div>
         </div>`;
       }).join('');
-      rot3PagamentosHtml = `<div class="rot3-tabela">${colHdrPag}${rowsPag}</div>`;
+      const obsGerais = `<div class="rot3-pag-obs"><span class="rot3-pag-obs-label">Observações Gerais:</span> Valores sujeitos à disponibilidade e alteração sem aviso prévio até a efetivação da reserva. Os passeios opcionais não estão incluídos no valor total do pacote e podem ser adicionados a qualquer momento conforme preferência dos viajantes.</div>`;
+      rot3PagamentosHtml = `<div class="rot3-pag-tabela">${colHdrPag}${rowsPag}${obsGerais}</div>`;
     }
 
     // ── Moderno: Passeios Opcionais
@@ -1802,6 +1820,23 @@
             .empty { color: #64748b; font-style: italic; }
             ul { margin: 0; padding-left: 18px; }
             li { margin: 0 0 6px; }
+            .rot3-pag-tabela { border: 1.5px solid #C5CED9; border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
+            .rot3-pag-header-row { display: flex; gap: 10px; background: #f8f9fb; border-bottom: 1.5px solid #C5CED9; font-size: 8.5pt; font-weight: 700; color: #1B2C80; padding: 7px 14px; }
+            .rot3-pag-h1 { flex: 2; min-width: 0; }
+            .rot3-pag-h2 { flex: 3; min-width: 0; }
+            .rot3-pag-h3 { flex: 1.5; min-width: 0; text-align: right; }
+            .rot3-pag-row { display: flex; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #EEF2F7; break-inside: avoid; page-break-inside: avoid; }
+            .rot3-pag-row:last-of-type { border-bottom: none; }
+            .rot3-pag-c1 { flex: 2; min-width: 0; }
+            .rot3-pag-c2 { flex: 3; min-width: 0; }
+            .rot3-pag-c3 { flex: 1.5; min-width: 0; text-align: right; display: flex; flex-direction: column; gap: 3px; }
+            .rot3-pag-modal { font-size: 9.5pt; font-weight: 700; color: #1B2C80; }
+            .rot3-pag-cond-titulo { font-size: 8.5pt; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+            .rot3-pag-cond-desc { font-size: 8pt; color: #374151; line-height: 1.45; }
+            .rot3-pag-valor { font-size: 9.5pt; font-weight: 700; color: #1B2C80; }
+            .rot3-pag-pax { font-size: 8pt; color: #6B7280; }
+            .rot3-pag-obs { background: #F8F9FB; border-top: 1.5px solid #C5CED9; padding: 10px 14px; font-size: 8pt; color: #374151; line-height: 1.5; border-radius: 0 0 6px 6px; }
+            .rot3-pag-obs-label { font-weight: 700; color: #1B2C80; }
             @media print {
               @page { size: A4; margin: 13mm; }
               body { background: white; }
@@ -1921,6 +1956,8 @@
               .rot3-bloco { background: #EEF2F7; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
               .rot3-grupo-header { background: #1B2C80; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
               .rot3-hotel-header-row { background: #1B2C80; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .rot3-pag-header-row { background: #f8f9fb; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .rot3-pag-obs { background: #F8F9FB; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
               .rot3-inv-footer { background: #1B2C80; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             }
             ${roteiroPdfThemeCss}
