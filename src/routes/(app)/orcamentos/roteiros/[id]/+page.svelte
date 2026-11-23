@@ -1579,24 +1579,32 @@
     // ── Moderno: Hotéis Sugeridos
     let rot3HoteisHtml = '';
     if (hoteisItems.length > 0) {
-      const colHdr = `<div class="rot3-hotel-header-row"><div class="rot3-hotel-c1">Hotel &amp; Destino</div><div class="rot3-hotel-c2">Per\u00edodo de Hospedagem</div><div class="rot3-hotel-c3">Acomoda\u00e7\u00e3o &amp; Regime</div></div>`;
+      const _chkIco = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:3px;flex-shrink:0"><circle cx="6" cy="6" r="5.5" fill="#1B2C80" opacity="0.13"/><path d="M3.2 6l1.8 1.8L9 4" stroke="#1B2C80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      const colHdr = `<div class="rot3-hotel-header-row"><div class="rot3-hotel-c1">Hotel &amp; Destino</div><div class="rot3-hotel-c2">Período de Hospedagem</div><div class="rot3-hotel-c3">Acomodação &amp; Regime</div></div>`;
       const rows = hoteisItems.map((h) => {
         const ci = formatPreviewDate(h.data_inicio || '');
         const co = formatPreviewDate(h.data_fim || '');
         const nts = h.noites ? `${h.noites} noite${Number(h.noites) !== 1 ? 's' : ''}` : '';
+        const cidade = nomeCidadeNoPdf(h.cidade || '');
+        // C1 subtitle: "Cidade • N noites" na cor laranja
+        const cidadeNts = [cidade ? escapePreviewHtml(cidade) : '', nts ? escapePreviewHtml(nts) : ''].filter(Boolean).join(' • ');
+        // Categoria/estrelas (ex: "3 estrelas" ou o valor bruto)
+        const catLabel = h.categoria ? escapePreviewHtml(h.categoria) : '';
+        // C3: checkmark items para apto + regime
+        const checks = ([h.apto, h.regime] as (string | undefined)[]).filter(s => String(s || '').trim());
+        const checksHtml = checks.map(s => `<div class="rot3-chk-item">${_chkIco}${escapePreviewHtml(String(s).trim())}</div>`).join('');
         return `<div class="rot3-hotel-row">
           <div class="rot3-hotel-c1">
-            <div class="rot3-hotel-nome">${escapePreviewHtml(h.hotel || '\u2014')}</div>
-            ${h.cidade ? `<div class="rot3-hotel-cidade">${escapePreviewHtml(nomeCidadeNoPdf(h.cidade))}</div>` : ''}
+            <div class="rot3-hotel-nome">${escapePreviewHtml(h.hotel || '—')}</div>
+            ${cidadeNts ? `<div class="rot3-hotel-cidade">${cidadeNts}</div>` : ''}
+            ${catLabel ? `<div class="rot3-hotel-cat">${catLabel}</div>` : ''}
           </div>
           <div class="rot3-hotel-c2">
             ${ci ? `<div class="rot3-hotel-info"><span class="rot3-voo-label">Check-in:</span> ${ci}</div>` : ''}
             ${co ? `<div class="rot3-hotel-info"><span class="rot3-voo-label">Check-out:</span> ${co}</div>` : ''}
-            ${nts ? `<div class="rot3-hotel-info">${escapePreviewHtml(nts)}</div>` : ''}
           </div>
           <div class="rot3-hotel-c3">
-            ${h.apto ? `<div class="rot3-hotel-apto">${escapePreviewHtml(h.apto)}</div>` : ''}
-            ${h.regime ? `<span class="rot3-chip">${escapePreviewHtml(h.regime)}</span>` : ''}
+            ${checksHtml}
           </div>
         </div>`;
       }).join('');
@@ -1809,14 +1817,14 @@
             .rot3-hotel-row:last-child { border-bottom: none; }
             .rot3-hotel-c1 { flex: 2.5; min-width: 0; }
             .rot3-hotel-c2 { flex: 2; min-width: 0; }
-            .rot3-hotel-c3 { flex: 1.5; min-width: 0; }
+            .rot3-hotel-c3 { flex: 1.5; display: flex; flex-direction: column; gap: 2px; justify-content: flex-start; min-width: 0; }
             .rot3-hotel-header-row div:nth-child(1) { flex: 2.5; }
             .rot3-hotel-header-row div:nth-child(2) { flex: 2; }
             .rot3-hotel-header-row div:nth-child(3) { flex: 1.5; }
             .rot3-hotel-nome { font-size: 10pt; font-weight: bold; color: #1B2C80; }
-            .rot3-hotel-cidade { font-size: 8.5pt; color: #6B7280; margin-top: 2px; }
+            .rot3-hotel-cidade { font-size: 8.5pt; color: #E05C1A; font-weight: bold; margin-top: 2px; }
+            .rot3-hotel-cat { font-size: 8pt; color: #6B7280; margin-top: 2px; }
             .rot3-hotel-info { font-size: 8.5pt; color: #374151; margin-top: 2px; }
-            .rot3-hotel-apto { font-size: 9pt; color: #1F2937; }
             .rot3-inv-box { display: flex; border: 1.5px solid #C5CED9; border-radius: 8px 8px 0 0; overflow: hidden; }
             .rot3-inv-col { flex: 1; padding: 14px 16px; text-align: center; }
             .rot3-inv-divider { width: 1.5px; background: #C5CED9; flex-shrink: 0; }
