@@ -9,7 +9,7 @@
   import { toast } from '$lib/stores/ui';
   import { toUserMessage } from '$lib/utils/errors';
   import { monthRangeFromKey, todayISODateLocal } from '$lib/date';
-  import { formatDate } from '$lib/utils/formatters';
+  import { formatCurrency, formatDate } from '$lib/utils/formatters';
   import { MessageCircle, RefreshCw } from '$lib/icons';
 
   type Compra = {
@@ -30,10 +30,6 @@
   type BaseOption = { id: string; nome: string };
 
   const currentMonth = todayISODateLocal().slice(0, 7);
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
   let loading = true;
   let compras: Compra[] = [];
   let total = 0;
@@ -87,9 +83,6 @@
     }
   ];
 
-  function formatCurrency(value: number) {
-    return BRL_CURRENCY_FORMATTER.format(value || 0);
-  }
 
   async function loadBase() {
     try {

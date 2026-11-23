@@ -41,6 +41,7 @@
   import { diffDaysISODate } from '$lib/date';
   import {
     formatDate as formatDateValue,
+    formatCurrency,
     formatDateTime as formatDateTimeValue
   } from '$lib/utils/formatters';
   import {
@@ -208,11 +209,6 @@
     sato_tours: 'Sato Tours'
   };
 
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
-
   onMount(() => {
     loadViagem();
   });
@@ -310,10 +306,6 @@
     return formatDateTimeValue(dateString);
   }
 
-  function formatCurrency(value: number | null): string {
-    if (value === null || value === undefined) return '-';
-    return BRL_CURRENCY_FORMATTER.format(value);
-  }
 
   function getDiasViagem(inicio: string, fim: string): number {
     const diff = diffDaysISODate(inicio, fim);

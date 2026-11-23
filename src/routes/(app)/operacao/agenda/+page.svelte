@@ -15,6 +15,7 @@
   } from '$lib/components/ui';
   import KPICard from '$lib/components/kpis/KPICard.svelte';
   import { diffDaysISODate, formatISODateBR, todayISODateLocal, toISODateLocal } from '$lib/date';
+  import { formatDateTime } from '$lib/utils/formatters';
   import { toast } from '$lib/stores/ui';
   import { confirmAction } from '$lib/stores/confirm';
   import { apiDelete, apiGet, apiPatch, apiPost, isCanceledApiError } from '$lib/services/api';
@@ -121,14 +122,6 @@
     year: 'numeric'
   });
 
-  const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-
   const todayIso = todayISODateLocal();
 
   const defaultEventForm = (): EventForm => ({
@@ -184,7 +177,7 @@
     const parsed = new Date(value);
     if (Number.isNaN(parsed.getTime())) return value;
 
-    return (allDay ? DATE_FORMATTER : DATE_TIME_FORMATTER).format(parsed);
+    return allDay ? DATE_FORMATTER.format(parsed) : formatDateTime(parsed);
   }
 
   function splitDateTime(value?: string | null) {

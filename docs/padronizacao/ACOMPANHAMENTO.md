@@ -79,7 +79,7 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - [x] cadastros
 - [x] clientes
 - [x] financeiro (+ comissoes)
-- [ ] operacao
+- [x] operacao
 - [ ] orcamentos (+ roteiros)
 - [ ] vendas
 - [ ] parametros
@@ -120,3 +120,5 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - `clientes`: `+page` migrou `Intl.NumberFormat` local → `formatCurrency()`; `[id]` removeu formatter local, converteu tabelas HTML de histórico (vendas/orçamentos) para `DataTable` com `onRowClick`, `searchable/filterable/exportable={false}` e `escapeHtml` nos formatters.
 
 - `financeiro`: `Intl.NumberFormat` ad-hoc removido de ajustes-vendas, caixa, comissoes, comissoes/calculo, formas-pagamento e regras — tudo migrado para `formatCurrency`/`formatCurrencyInt`/`formatPercent`/`formatNumber` canônicos. `caixa`: tabela "Movimentações Recentes" virou `DataTable`. `regras`: `SimpleTable` substituído por `<table class="table-mobile-cards">` em `vtur-table-shell` (linhas contêm inputs de formulário — DataTable não hospeda campos editáveis). **Exceção documentada**: `conciliacao` mantém 7 grades `<table>` densas somente-leitura (min-w até 2100px, relatórios de conciliação bancária) — markup de apresentação especializado, migrar exigiria colunas dinâmicas no DataTable; revisar em etapa dedicada.
+
+- `operacao`: `Intl.NumberFormat` removido de viagens, viagens/[id], ultimas-compras → `formatCurrency`/`formatCurrencyInt`. `tarefas`: `DATE_TIME_FORMATTER` local → `formatDateTime` canônico. `agenda`: branch com hora → `formatDateTime` canônico (manteve `DATE_FORMATTER` local para eventos allDay — formatação date-only de `Date` não coberta pelos helpers). **Exceções documentadas**: `passagens` tabela "Passagens salvas" (Card com slot de ações + linhas clicáveis — DataTable não suporta slot de ação no header) e `passagens/comprovante` (markup de impressão do bilhete).

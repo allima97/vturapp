@@ -18,6 +18,7 @@
   import { confirmAction } from '$lib/stores/confirm';
   import { apiDelete, apiGet, apiPatch, apiPost, isCanceledApiError } from '$lib/services/api';
   import { toUserMessage } from '$lib/utils/errors';
+  import { formatDateTime } from '$lib/utils/formatters';
   import {
     Archive,
     FolderKanban,
@@ -108,14 +109,6 @@
     '#1e3a8a'
   ];
 
-  const DATE_TIME_FORMATTER = new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
-
   const listColumns = [
     { key: 'titulo', label: 'Assunto', sortable: true },
     { key: 'categoriaNome', label: 'Categoria', sortable: true },
@@ -185,13 +178,6 @@
     return 'novo';
   }
 
-  function formatDateTime(value?: string | null) {
-    if (!value) return '-';
-    const parsed = new Date(value);
-    if (Number.isNaN(parsed.getTime())) return value;
-
-    return DATE_TIME_FORMATTER.format(parsed);
-  }
 
   function getPriorityLabel(value: TodoPrioridade) {
     return PRIORITY_OPTIONS.find((item) => item.value === value)?.label || 'Media';

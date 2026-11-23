@@ -20,7 +20,7 @@
   import { toast } from '$lib/stores/ui';
   import { compareISODate, diffDaysISODate, todayISODateLocal } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
-  import { formatDate } from '$lib/utils/formatters';
+  import { formatCurrency, formatCurrencyInt, formatDate } from '$lib/utils/formatters';
   import { escapeHtml } from '$lib/utils/html';
   import { formatViagemStatus, resolveViagemStatus, type StatusViagem } from '$lib/viagens/status';
   import { apiGet, isCanceledApiError } from '$lib/services/api';
@@ -87,17 +87,6 @@
     { value: 'retorno_asc', label: 'Retorno mais próximo' },
     { value: 'cadastro_desc', label: 'Cadastro recente' }
   ];
-
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
-
-  const BRL_INTEGER_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    maximumFractionDigits: 0
-  });
 
   async function loadViagens() {
     const requestSeq = ++viagensRequestSeq;
@@ -278,7 +267,7 @@
       sortable: true,
       align: 'right' as const,
       formatter: (value: number) => {
-        return BRL_CURRENCY_FORMATTER.format(value || 0);
+        return formatCurrency(value);
       }
     },
     {
@@ -363,7 +352,7 @@
 
   <KPICard
     title="Valor Total"
-    value={BRL_INTEGER_CURRENCY_FORMATTER.format(resumo.valorTotal)}
+    value={formatCurrencyInt(resumo.valorTotal)}
     color="clientes"
     icon={CreditCard}
   />
