@@ -1429,20 +1429,20 @@
         ${rot2MetaLinha ? `<div class="rot2-meta">${escapePreviewHtml(rot2MetaLinha)}</div>` : ''}
         ${resumoRoteiroHtml}
         ${rot2DiasHtml ? `<section class="rot2-itin"><h2>Itinerário Detalhado</h2>${rot2DiasHtml}</section>` : ''}
-        ${buildRoteiroCardSection('Passagem Aérea', transportesHtml, 'preview-airfare-section')}
-        ${buildRoteiroCardSection('Aluguel de Carro', carrosHtml, 'preview-carros-section')}
-        ${buildRoteiroCardSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
-        ${buildRoteiroCardSection('Trem', trensHtml, 'preview-trens-section')}
-        ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
-        ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
-        ${buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
-        ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
-        ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
-        ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'), 'x')}
-        ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
-        ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}
-        <div class="rot2-doc-footer">Roteiro Personalizado${nome ? ` • ${escapePreviewHtml(nome)}` : ''}</div>
-      </div>`;
+      </div>
+      ${buildRoteiroCardSection('Passagem Aérea', transportesHtml, 'preview-airfare-section')}
+      ${buildRoteiroCardSection('Aluguel de Carro', carrosHtml, 'preview-carros-section')}
+      ${buildRoteiroCardSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
+      ${buildRoteiroCardSection('Trem', trensHtml, 'preview-trens-section')}
+      ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
+      ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
+      ${buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
+      ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
+      ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
+      ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'), 'x')}
+      ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
+      ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}
+      <div class="rot2-doc-footer">Roteiro Personalizado${nome ? ` • ${escapePreviewHtml(nome)}` : ''}</div>`;
 
 
     // ── Modelo Moderno ────────────────────────────────────────────────────
@@ -1502,20 +1502,20 @@
         ${rot3MetaItens.length ? `<div class="rot3-meta">${rot3MetaItens.map((m) => escapePreviewHtml(m)).join(' &nbsp;•&nbsp; ')}</div>` : ''}
         ${rot3CidadesResumo.length ? `<div class="rot3-bloco"><div class="rot3-bloco-label">RESUMO DO ROTEIRO</div><div class="rot3-rota">${escapePreviewHtml(rot3CidadesResumo.join(' → '))}</div></div>` : ''}
         ${rot3DiasHtml ? `<section class="rot3-itin"><h2 class="rot3-itin-titulo">ITINERÁRIO DETALHADO</h2><div class="rot3-dias-lista">${rot3DiasHtml}</div></section>` : ''}
-        ${buildRoteiroCardSection('Passagem Aérea', transportesHtml, 'preview-airfare-section')}
-        ${buildRoteiroCardSection('Aluguel de Carro', carrosHtml, 'preview-carros-section')}
-        ${buildRoteiroCardSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
-        ${buildRoteiroCardSection('Trem', trensHtml, 'preview-trens-section')}
-        ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
-        ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
-        ${buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
-        ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
-        ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
-        ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'), 'x')}
-        ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
-        ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}
-        <div class="rot3-doc-footer">Roteiro Personalizado${nome ? ` · ${escapePreviewHtml(nome)}` : ''}</div>
-      </div>`;
+      </div>
+      ${buildRoteiroCardSection('Passagem Aérea', transportesHtml, 'preview-airfare-section')}
+      ${buildRoteiroCardSection('Aluguel de Carro', carrosHtml, 'preview-carros-section')}
+      ${buildRoteiroCardSection('Hotéis Sugeridos', hoteisHtml, 'preview-hotels-section')}
+      ${buildRoteiroCardSection('Trem', trensHtml, 'preview-trens-section')}
+      ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
+      ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
+      ${buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
+      ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
+      ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
+      ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'), 'x')}
+      ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
+      ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}
+      <div class="rot3-doc-footer">Roteiro Personalizado${nome ? ` · ${escapePreviewHtml(nome)}` : ''}</div>`;
 
     const mostrarModerno = modeloInicial === 'moderno';
     const mostrarItinerario = modeloInicial === 'itinerario';
