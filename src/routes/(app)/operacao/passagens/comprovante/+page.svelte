@@ -306,39 +306,54 @@
       {[...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')} — Reserva: {item.localizador}
     </footer>
     {:else}
+    {@const cias = [...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')}
     <header class="bilhete-top">
-      <div class="bilhete-id">
-        <strong class="bilhete-cia"
-          >{[...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')}</strong
-        >
-        <span class="bilhete-kicker">Comprovante de Viagem</span>
-      </div>
-      <div class="bilhete-pnr">
-        <span class="rotulo">Código de reserva (PNR)</span>
-        <strong class="bilhete-localizador">{item.localizador}</strong>
+      <div>
+        <span class="bilhete-cia-linha">{cias} • Bilhete eletrônico</span>
+        <h1 class="bilhete-titulo">Comprovante de Viagem</h1>
       </div>
     </header>
-    <div class="bilhete-resumo">
-      <p><strong>Rota:</strong> {resumoRotas(item.trechos, aeroporto)}</p>
-      <p><strong>Passageiros:</strong> {resumoPassageiros(item.passageiros)}</p>
-      {#if item.emissao}<p><strong>Emissão:</strong> {data(item.emissao, true)}</p>{/if}
+    <div class="bilhete-meta">
+      <span>Passageiros: {resumoPassageiros(item.passageiros)}</span>
+      {#if item.emissao}<span>• Emissão: {data(item.emissao, true)}</span>{/if}
     </div>
+    {@const primeiro = item.trechos[0]}
+    {@const ultimo = item.trechos[item.trechos.length - 1]}
+    {@const conexoes = [...new Set(item.trechos.slice(0, -1).map((t) => t.destino))]}
+    <section class="bilhete-rota-card">
+      <div class="bilhete-rota-label">Rota da Viagem</div>
+      <div class="bilhete-rota-grande">
+        {primeiro ? `${cidade(primeiro.origem, primeiro.cidadeOrigem) || primeiro.origem} (${primeiro.origem})` : ''}
+        →
+        {ultimo ? `${cidade(ultimo.destino, ultimo.cidadeDestino) || ultimo.destino} (${ultimo.destino})` : ''}
+      </div>
+      {#if conexoes.length || primeiro}
+        <div class="bilhete-rota-sub">
+          {#if conexoes.length}Conexão via {conexoes.map((c) => `${cidade(c) || c} (${c})`).join(', ')} • {/if}
+          {#if primeiro}{data(primeiro.saida, true)}{/if}
+        </div>
+      {/if}
+    </section>
+    <section class="bilhete-pnr-card">
+      <div class="bilhete-pnr-label">Código de Reserva (PNR)</div>
+      <strong class="bilhete-pnr-codigo">{item.localizador}</strong>
+    </section>
     <h2>ITINERÁRIO DE VOO</h2>
     {#each item.trechos as trecho, i}
       <section class="bilhete-trecho">
         <div class="bilhete-trecho-top">
-          <span>{tituloTrecho(item.trechos, i)}</span>
-          <strong>Voo {trecho.voo}</strong>
+          <span>{tituloTrecho(item.trechos, i)}&nbsp;&nbsp;{data(trecho.saida, true)}</span>
+          <strong>{trecho.companhia} • Voo {trecho.voo}</strong>
         </div>
         <div class="bilhete-trajeto">
           <div class="bilhete-local">
             <strong class="bilhete-codigo">{trecho.origem}</strong>
             <span>{cidade(trecho.origem, trecho.cidadeOrigem) || 'Cidade não informada'}</span>
-            <span class="bilhete-quando">{data(trecho.saida)} · {horario(trecho.saida)}</span>
+            <span class="bilhete-quando">{data(trecho.saida)} • {horario(trecho.saida)}</span>
           </div>
           <div class="bilhete-meio">
-            <span class="bilhete-duracao">{trecho.duracao || '—'}</span>
-            <span class="bilhete-seta">→</span>
+            <span class="bilhete-voo-linha">Voo {trecho.voo}</span>
+            <span class="bilhete-duracao">Duração: {trecho.duracao || 'Não informada'}</span>
             {#if avisoChegada(trecho.saida, trecho.chegada)}
               <small class="aviso-chegada">{avisoChegada(trecho.saida, trecho.chegada)}</small>
             {/if}
@@ -346,14 +361,15 @@
           <div class="bilhete-local bilhete-destino">
             <strong class="bilhete-codigo">{trecho.destino}</strong>
             <span>{cidade(trecho.destino, trecho.cidadeDestino) || 'Cidade não informada'}</span>
-            <span class="bilhete-quando">{data(trecho.chegada)} · {horario(trecho.chegada)}</span>
+            <span class="bilhete-quando">{data(trecho.chegada)} • {horario(trecho.chegada)}</span>
           </div>
         </div>
-        <div class="bilhete-detalhes">
-          <span>{trecho.companhia}</span>
-          <span>{trecho.classe || 'Classe não informada'}</span>
-          <span>{trecho.tarifa?.trim() || 'Tarifa não informada'}</span>
-          <span>Assentos: {assentos(i)}</span>
+        <div class="bilhete-grade">
+          <div class="bilhete-campo"><span class="rotulo">COMPANHIA</span><strong>{trecho.companhia}</strong></div>
+          <div class="bilhete-campo"><span class="rotulo">CLASSE</span><strong>{trecho.classe || 'Não informada'}</strong></div>
+          <div class="bilhete-campo"><span class="rotulo">TARIFA</span><strong>{trecho.tarifa?.trim() || '-'}</strong></div>
+          <div class="bilhete-campo"><span class="rotulo">ASSENTOS</span><strong>{assentos(i)}</strong></div>
+          <div class="bilhete-campo"><span class="rotulo">STATUS DO VOO</span><strong>{trecho.status || 'Não informado'}{trecho.status ? ' ✓' : ''}</strong></div>
         </div>
       </section>
     {/each}
@@ -378,7 +394,7 @@
                     ? 'Infant'
                     : 'Não informado'}</td
             ><td>{passageiro.bilhete || 'Não informado'}</td><td
-              >{passageiro.status || 'Não informado'}</td
+              >{passageiro.status || 'Não informado'}{passageiro.status ? ' ✓' : ''}</td
             ></tr
           >
         {/each}
@@ -392,14 +408,12 @@
       </p>
       <p>
         <strong>
-          Para um maior controle, baixe o aplicativo da companhia aérea e acompanhe a situação de
-          seu voo.
+          Para um maior controle, baixe o aplicativo da companhia aérea ({cias}) e acompanhe a
+          situação de seu voo utilizando o código de reserva {item.localizador}.
         </strong>
       </p>
     </aside>
-    <footer>
-      {[...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')} — Reserva: {item.localizador}
-    </footer>
+    <footer>{cias} • Reserva: {item.localizador}</footer>
     {/if}
   {/if}
 </div>
@@ -612,43 +626,79 @@
     color: #1F2937;
   }
   .bilhete-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 16px;
-    border-bottom: 2px solid #1B2C80;
     padding-bottom: 14px;
+    border-bottom: 2px solid #1B2C80;
   }
-  .bilhete-cia {
+  .bilhete-cia-linha {
     display: block;
     color: #1B2C80;
-    font-size: 22px;
-    text-transform: uppercase;
-  }
-  .bilhete-kicker {
-    display: block;
-    color: #6B7280;
     font-size: 13px;
     font-weight: bold;
-    letter-spacing: 1px;
-    margin-top: 2px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
   }
-  .bilhete-pnr {
-    text-align: right;
-  }
-  .bilhete-localizador {
-    display: block;
+  .bilhete-titulo {
+    margin: 4px 0 0;
     color: #1B2C80;
     font-size: 24px;
-    letter-spacing: 2px;
+    font-weight: bold;
   }
-  .bilhete-resumo {
+  .bilhete-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    margin-top: 10px;
+    font-size: 12px;
+    color: #4B5563;
+  }
+  .bilhete-rota-card {
+    border: 1px solid #C5CED9;
+    border-left: 4px solid #1B2C80;
+    border-radius: 6px;
     background: #EEF2F7;
+    padding: 14px 18px;
+    margin-top: 16px;
+    break-inside: avoid;
+  }
+  .bilhete-rota-label {
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #6B7280;
+    margin-bottom: 6px;
+  }
+  .bilhete-rota-grande {
+    font-size: 22px;
+    font-weight: bold;
+    color: #1B2C80;
+  }
+  .bilhete-rota-sub {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #4B5563;
+  }
+  .bilhete-pnr-card {
     border: 1px solid #C5CED9;
     border-radius: 6px;
-    padding: 10px 14px;
-    margin-top: 14px;
-    font-size: 12px;
+    padding: 12px 18px;
+    margin-top: 12px;
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    break-inside: avoid;
+  }
+  .bilhete-pnr-label {
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #6B7280;
+  }
+  .bilhete-pnr-codigo {
+    color: #1B2C80;
+    font-size: 26px;
+    letter-spacing: 2px;
   }
   .bilhete-trecho {
     border: 1px solid #C5CED9;
@@ -660,13 +710,12 @@
   .bilhete-trecho-top {
     display: flex;
     justify-content: space-between;
+    gap: 12px;
     padding: 8px 14px;
     background: #D0DAEA;
     color: #1B2C80;
     font-size: 11px;
     font-weight: bold;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
   }
   .bilhete-trajeto {
     display: grid;
@@ -704,22 +753,25 @@
     font-size: 10px;
     text-align: center;
   }
-  .bilhete-duracao {
+  .bilhete-voo-linha {
     font-weight: bold;
     color: #1B2C80;
   }
-  .bilhete-seta {
-    color: #1B2C80;
-    font-size: 18px;
+  .bilhete-duracao {
+    font-weight: bold;
   }
-  .bilhete-detalhes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 18px;
+  .bilhete-grade {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px;
     border-top: 1px dashed #C5CED9;
     padding: 10px 14px;
-    font-size: 11px;
-    color: #4B5563;
+  }
+  .bilhete-campo strong {
+    display: block;
+    font-size: 12px;
+    color: #1F2937;
+    overflow-wrap: anywhere;
   }
   @media (max-width: 600px) {
     .cabecalho,

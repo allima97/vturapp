@@ -2025,7 +2025,7 @@ describe('modelos de saída do PDF', () => {
     const proposta = html.slice(html.indexOf('data-modelo="proposta"'));
     expect(proposta).toContain('pv-title');
     expect(proposta).toContain('LOS ANGELES');
-    expect(proposta).toContain('Para: Neusa de Fátima Xavier');
+    expect(proposta).toContain('Para: <b>Neusa de Fátima Xavier</b>');
     expect(proposta).toContain('Cidades contempladas na proposta');
     expect(proposta).toContain('Cronograma dos Serviços');
     expect(proposta).toContain('Detalhamento dos Serviços Cotados');

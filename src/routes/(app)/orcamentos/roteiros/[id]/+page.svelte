@@ -1366,21 +1366,33 @@
         ? `<section class="preview-footer-card"><div>${footerLines.map((line) => escapePreviewHtml(line)).join('<br/>')}</div>${assets.complementUrl ? `<div class="preview-complement-img"><img src="${escapePreviewHtml(assets.complementUrl)}" alt="Imagem complementar" /></div>` : ''}</section>`
         : '';
 
+    const cidadesResumo: string[] = [];
+    for (const dia of diasItems) {
+      const cidadeCurta = nomeCidadeNoPdf((dia.cidade || '').trim());
+      if (cidadeCurta && !cidadesResumo.includes(cidadeCurta)) cidadesResumo.push(cidadeCurta);
+    }
+    const resumoRoteiroHtml = cidadesResumo.length
+      ? `<section class="rot2-resumo"><div class="rot2-resumo-label">Resumo do Roteiro</div><div class="rot2-resumo-rota">${escapePreviewHtml(cidadesResumo.join(' → '))}</div></section>`
+      : '';
+
+    let cidadeAnterior = '';
     const rot2DiasHtml = diasItems.length
       ? diasItems
           .map((dia, index) => {
             const cidadeCurta = nomeCidadeNoPdf((dia.cidade || '').trim());
             const percursoTxt = (dia.percurso || '').trim();
-            const rota = [cidadeCurta, percursoTxt].filter(Boolean).join(' · ');
+            let rota = percursoTxt;
+            if (!rota && cidadeCurta) {
+              rota = cidadeAnterior && cidadeAnterior !== cidadeCurta
+                ? `${cidadeAnterior} → ${cidadeCurta}`
+                : cidadeCurta;
+            }
+            if (cidadeCurta) cidadeAnterior = cidadeCurta;
+            const dataTxt = dia.data ? formatPreviewDate(dia.data) : '';
+            const cabecalho = [`Dia ${index + 1}`, dataTxt, rota].filter(Boolean).join(' • ');
             return `<div class="rot2-dia">
-              <div class="rot2-dia-lado">
-                <b>Dia ${index + 1}</b>
-                ${dia.data ? `<span>${escapePreviewHtml(formatPreviewDate(dia.data))}</span>` : ''}
-              </div>
-              <div class="rot2-dia-corpo">
-                ${rota ? `<div class="rot2-dia-rota">${escapePreviewHtml(rota)}</div>` : ''}
-                ${dia.descricao ? `<p>${escapePreviewHtml(dia.descricao).replace(/\n/g, '<br>')}</p>` : ''}
-              </div>
+              <div class="rot2-dia-head">${escapePreviewHtml(cabecalho)}</div>
+              ${dia.descricao ? `<p>${escapePreviewHtml(dia.descricao).replace(/\n/g, '<br>')}</p>` : ''}
             </div>`;
           })
           .join('')
@@ -1391,13 +1403,15 @@
       <section class="rot2-head">
         <div class="rot2-kicker">Roteiro Personalizado</div>
         <h1 class="rot2-title">${escapePreviewHtml(nome || 'Roteiro')}</h1>
+        ${clienteNome ? `<div class="rot2-para">Para: <b>${escapePreviewHtml(clienteNome)}</b></div>` : ''}
         <div class="rot2-meta">
-          ${clienteNome ? `<span>Para: <b>${escapePreviewHtml(clienteNome)}</b></span>` : ''}
-          ${periodText ? `<span>Período: ${escapePreviewHtml(periodText)}</span>` : ''}
-          ${duracao ? `<span>Duração: ${escapePreviewHtml(duracao)} dias</span>` : ''}
-          ${citiesLine ? `<span>Cidades: ${escapePreviewHtml(citiesLine)}</span>` : ''}
+          ${[periodText ? `Período: ${periodText}` : '', duracao ? `Duração: ${duracao} dias` : '']
+            .filter(Boolean)
+            .map((meta) => `<span>${escapePreviewHtml(meta)}</span>`)
+            .join('<span class="rot2-dot">•</span>')}
         </div>
       </section>
+      ${resumoRoteiroHtml}
       ${rot2DiasHtml ? `<section class="rot2-itin"><h2>Itinerário Detalhado</h2>${rot2DiasHtml}</section>` : ''}
       ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}`;
 
@@ -1488,16 +1502,19 @@
             .rot2-modelo select { border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 10px; font-size: 13px; background: #fff; color: #0f172a; }
             .rot2-head { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 16px 18px; margin: 0 0 14px 0; }
             .rot2-kicker { font-size: 8pt; font-weight: bold; letter-spacing: 1.6px; text-transform: uppercase; color: #6B7280; }
-            .rot2-title { font-size: 20pt; color: #1B2C80; margin: 2px 0 8px; line-height: 1.15; }
+            .rot2-title { font-size: 22pt; color: #1B2C80; margin: 2px 0 8px; line-height: 1.15; }
+            .rot2-para { font-size: 10pt; color: #1F2937; margin: 0 0 4px; }
+            .rot2-para b { color: #1B2C80; }
             .rot2-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 9pt; color: #4B5563; }
-            .rot2-meta b { color: #1F2937; }
+            .rot2-dot { color: #C5CED9; }
+            .rot2-resumo { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 14px 18px; margin: 0 0 14px 0; }
+            .rot2-resumo-label { font-size: 7.5pt; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #6B7280; margin-bottom: 5px; }
+            .rot2-resumo-rota { font-size: 13pt; font-weight: bold; color: #1B2C80; }
             .rot2-itin { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 16px 18px; margin: 0 0 14px 0; }
             .rot2-itin h2 { margin: 0 0 10px; font-size: 13pt; color: #1B2C80; }
-            .rot2-dia { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-top: 1px solid #EEF2F7; break-inside: avoid; }
-            .rot2-dia-lado b { display: block; color: #1B2C80; font-size: 9.5pt; }
-            .rot2-dia-lado span { display: block; color: #6B7280; font-size: 8pt; margin-top: 2px; }
-            .rot2-dia-rota { font-weight: bold; color: #1F2937; font-size: 9.5pt; margin-bottom: 3px; }
-            .rot2-dia-corpo p { margin: 0; color: #4B5563; font-size: 9pt; line-height: 1.55; white-space: pre-line; }
+            .rot2-dia { padding: 10px 0; border-top: 1px solid #EEF2F7; break-inside: avoid; }
+            .rot2-dia-head { font-weight: bold; color: #1B2C80; font-size: 10pt; margin-bottom: 3px; }
+            .rot2-dia p { margin: 0; color: #4B5563; font-size: 9pt; line-height: 1.55; white-space: pre-line; }
             @media print {
               .rot2-dia { break-inside: avoid; page-break-inside: avoid; }
               .rot2-head, .rot2-itin { box-shadow: none; }

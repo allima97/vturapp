@@ -1515,12 +1515,23 @@ function propostaTipoLabel(item: QuoteItemForPdf) {
   return propostaTypeLabels[type] || textVal(item.item_type) || 'Serviço';
 }
 
+function propostaChipDuracao(item: QuoteItemForPdf) {
+  const type = normalizeText(item.item_type);
+  const dias = diasItem(type, textVal(item.start_date), textVal(item.end_date));
+  if (dias == null || dias <= 0) return '';
+  if (type === 'hotel' || type === 'hospedagem')
+    return `${dias} ${dias === 1 ? 'NOITE' : 'NOITES'}`;
+  if (type === 'aluguel_carro') return `${dias} ${dias === 1 ? 'DIÁRIA' : 'DIÁRIAS'}`;
+  return `${dias} ${dias === 1 ? 'DIA' : 'DIAS'}`;
+}
+
 function propostaCronogramaHtml(items: QuoteItemForPdf[]) {
   type Entrada = {
     start: string;
     end: string;
     city: string;
     labels: string[];
+    chips: string[];
     descs: string[];
   };
   const grupos = new Map<string, Entrada>();
@@ -1538,13 +1549,18 @@ function propostaCronogramaHtml(items: QuoteItemForPdf[]) {
         end,
         city: nomeCidadeNoPdf(textVal(item.city_name)),
         labels: [],
+        chips: [],
         descs: []
       };
       grupos.set(key, grupo);
     }
     const label = propostaTipoLabel(item);
     if (!grupo.labels.includes(label)) grupo.labels.push(label);
-    const desc = getServiceTitle(item);
+    const chip = propostaChipDuracao(item);
+    if (chip && !grupo.chips.includes(chip)) grupo.chips.push(chip);
+    const desc = [getServiceTitle(item), ...getServiceDetails(item).slice(0, 2)]
+      .filter(Boolean)
+      .join(' — ');
     if (desc && !grupo.descs.includes(desc)) grupo.descs.push(desc);
     if (!grupo.city) grupo.city = nomeCidadeNoPdf(textVal(item.city_name));
   }
@@ -1556,45 +1572,73 @@ function propostaCronogramaHtml(items: QuoteItemForPdf[]) {
     .map((grupo) => {
       const periodo = faixaDatas(grupo.start || null, grupo.end || null) || '—';
       const titulo = [grupo.city, grupo.labels.join(' & ')].filter(Boolean).join(' • ');
-      const desc = grupo.descs.slice(0, 3).join(' · ');
+      const chips = grupo.chips.length
+        ? `<div class="pv-cron-chips">${grupo.chips.map((chip) => `<span class="pv-chip2">${escHtml(chip)}</span>`).join('')}</div>`
+        : '';
+      const desc = grupo.descs.slice(0, 4).join('<br>');
       return `<div class="pv-cron">
         <div class="pv-cron-period">${escHtml(periodo)}</div>
-        <div class="pv-cron-body"><b>${escHtml(titulo)}</b>${desc ? `<p>${escHtml(desc)}</p>` : ''}</div>
+        <div class="pv-cron-body"><b>${escHtml(titulo)}</b>${chips}${desc ? `<p>${desc}</p>` : ''}</div>
       </div>`;
     })
     .join('');
   return `<div class="pv-sec"><div class="pv-sec-title">Cronograma dos Serviços</div><div class="pv-cron-list">${linhas}</div></div>`;
 }
 
-function propostaVoosLinhas(item: QuoteItemForPdf): string[] {
+function propostaGrupoDe(item: QuoteItemForPdf) {
+  const type = normalizeText(item.item_type);
+  if (isFlightQuoteItem(item) && type !== 'trem') return 'Passagens Aéreas';
+  if (type === 'hotel' || type === 'hospedagem') return 'Hospedagens';
+  if (type === 'aluguel_carro') return 'Locação de Veículo';
+  if (type === 'trem') return 'Trem';
+  if (type === 'passeio' || type === 'ingresso' || type === 'show')
+    return 'Passeios, Ingressos & Entretenimento';
+  if (type === 'seguro' || type === 'seguro_viagem') return 'Seguro Viagem';
+  return 'Outros Serviços';
+}
+
+const propostaGrupoOrdem = [
+  'Passagens Aéreas',
+  'Hospedagens',
+  'Locação de Veículo',
+  'Trem',
+  'Passeios, Ingressos & Entretenimento',
+  'Seguro Viagem',
+  'Outros Serviços'
+];
+
+function propostaVoosDetalhe(item: QuoteItemForPdf) {
   return getFlightDataList(item).map((raw) => {
-    const flight = Object.fromEntries(
+    const f = Object.fromEntries(
       Object.entries(raw).map(([key, value]) => [key, String(value ?? '')])
     );
-    const origem = nomeCidadeNoPdf(
-      textVal(flight.aeroporto_saida) ||
-        textVal(flight.cidade_saida) ||
-        textVal(flight.origem)
+    const codigoSaida = textVal(f.aeroporto_saida);
+    const codigoDestino = textVal(f.aeroporto_chegada);
+    const origem = codigoSaida || nomeCidadeNoPdf(textVal(f.cidade_saida) || textVal(f.origem));
+    const destino =
+      codigoDestino || nomeCidadeNoPdf(textVal(f.cidade_chegada) || textVal(f.destino));
+    const cidadeDestino = nomeCidadeNoPdf(
+      textVal(f.cidade_chegada) || textVal(f.destino) || codigoDestino
     );
-    const destino = nomeCidadeNoPdf(
-      textVal(flight.aeroporto_chegada) ||
-        textVal(flight.cidade_chegada) ||
-        textVal(flight.destino)
-    );
-    const saida = textVal(flight.hora_saida);
-    const chegada = textVal(flight.hora_chegada);
+    const dataVoo = textVal(f.data_voo || f.data_inicio);
+    const dataFim = textVal(f.data_fim);
+    const maisUm = dataFim && dataFim !== dataVoo ? ' +1' : '';
+    const cia = textVal(f.cia_aerea);
+    const voo = textVal(f.numero_voo) || textVal(f.voo) || textVal(f.descricao);
     const rota = [origem, destino].some(Boolean)
-      ? `${origem} ${saida} → ${destino} ${chegada}`.replace(/\s+/g, ' ').trim()
+      ? `${origem} ${textVal(f.hora_saida)} → ${destino} ${textVal(f.hora_chegada)}${maisUm}`
+          .replace(/\s+/g, ' ')
+          .trim()
       : '';
-    const meta = [
-      formatDateBR(textVal(flight.data_voo || flight.data_inicio) || null),
-      textVal(flight.cia_aerea),
-      textVal(flight.numero_voo) || textVal(flight.voo) || textVal(flight.descricao),
-      textVal(flight.classe_reserva)
-    ]
-      .filter(Boolean)
-      .join(' · ');
-    return [rota, meta].filter(Boolean).join(' — ');
+    return {
+      titulo: [cia, voo ? `Voo ${voo}` : '', formatDateBR(dataVoo || null)]
+        .filter(Boolean)
+        .join(' • '),
+      rota,
+      chegada: cidadeDestino
+        ? `Chegada em ${cidadeDestino}${formatDateBR(dataFim || dataVoo || null) ? ` em ${formatDateBR(dataFim || dataVoo || null)}` : ''}`
+        : ''
+    };
   });
 }
 
@@ -1620,27 +1664,152 @@ function propostaDetalheCardHtml(
     ? [textVal(details.regime), passageirosSemZero(item)]
     : carro
       ? etiquetasCarro(details.incluidos)
-      : [passageirosSemZero(item)];
+      : [
+          ...distinctSafe(flight ? getFlightTags(item) : []),
+          passageirosSemZero(item)
+        ];
   const amount = Number(item.total_amount ?? 0);
   const currency = item.currency || defaultCurrency;
   const iconType = flight ? 'passagem' : type;
-  const meta = [
-    quantity && quantity !== '-' ? `Qtd: ${quantity}` : '',
-    ...fields
-  ]
-    .filter(Boolean)
-    .join(' · ');
-  const voos = flight ? propostaVoosLinhas(item).filter(Boolean) : [];
-  return `<div class="pv-card">
-    <div class="pv-card-top">
-      <span class="pv-ic">${serviceIconSvg(iconType)}</span>
-      <div class="pv-card-main"><b>${escHtml(`${label}${title ? ` • ${title}` : ''}`)}</b>${periodo ? `<span class="pv-sub">${escHtml(periodo)}</span>` : ''}</div>
+  const qtd = quantity && quantity !== '-' ? `Qtd: ${quantity}` : '';
+  const voos = flight ? propostaVoosDetalhe(item) : [];
+  const city = nomeCidadeNoPdf(textVal(item.city_name));
+
+  let corpo = '';
+  if (flight) {
+    corpo = voos
+      .map(
+        (voo) => `<div class="pv-voo">
+          <div class="pv-voo-linha"><b>${escHtml(voo.titulo)}</b></div>
+          ${voo.rota ? `<div class="pv-voo-rota">${escHtml(voo.rota)}</div>` : ''}
+          ${voo.chegada ? `<div class="pv-voo-meta">${escHtml(voo.chegada)}</div>` : ''}
+        </div>`
+      )
+      .join('');
+  } else {
+    corpo = fields.map((field) => `<div class="pv-meta-line">${escHtml(field)}</div>`).join('');
+  }
+
+  const subtitulo = [city, periodo].filter(Boolean).join(' • ');
+  const tituloVoo = flight
+    ? propostaRotaVoo(item) || title
+    : `${label}${title ? ` • ${title}` : ''}`;
+
+  return `<div class="pv-item">
+    <div class="pv-item-top">
+      <div class="pv-card-main">
+        <b>${escHtml(tituloVoo)}</b>
+        ${flight ? '' : subtitulo ? `<span class="pv-sub">${escHtml(subtitulo)}</span>` : ''}
+      </div>
       ${showItemValues ? `<div class="pv-val">${escHtml(formatCurrency(amount, currency))}</div>` : ''}
     </div>
-    ${voos.map((voo) => `<div class="pv-meta-line pv-voo">${escHtml(voo)}</div>`).join('')}
-    ${meta ? `<div class="pv-meta-line">${escHtml(meta)}</div>` : ''}
+    ${qtd ? `<div class="pv-qtd">${escHtml(qtd)}</div>` : ''}
+    ${corpo}
     ${etiquetas(tags)}
   </div>`;
+}
+
+function distinctSafe(values: string[]) {
+  const seen = new Set<string>();
+  return values.filter((value) => {
+    const key = normalizeText(value);
+    if (!value || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function getFlightTags(item: QuoteItemForPdf): string[] {
+  return getFlightDataList(item).flatMap((raw) => {
+    const f = Object.fromEntries(
+      Object.entries(raw).map(([key, value]) => [key, String(value ?? '')])
+    );
+    return [textVal(f.classe_reserva), textVal(f.tarifa_nome), textVal(f.assentos)].filter(
+      Boolean
+    );
+  });
+}
+
+function propostaRotaVoo(item: QuoteItemForPdf): string {
+  const trechos = getFlightDataList(item);
+  if (!trechos.length) return '';
+  const primeiro = Object.fromEntries(
+    Object.entries(trechos[0]).map(([key, value]) => [key, String(value ?? '')])
+  );
+  const ultimo = Object.fromEntries(
+    Object.entries(trechos[trechos.length - 1]).map(([key, value]) => [key, String(value ?? '')])
+  );
+  const origem = nomeCidadeNoPdf(
+    textVal(primeiro.cidade_saida) || textVal(primeiro.aeroporto_saida) || textVal(primeiro.origem)
+  );
+  const destino = nomeCidadeNoPdf(
+    textVal(ultimo.cidade_chegada) ||
+      textVal(ultimo.aeroporto_chegada) ||
+      textVal(ultimo.destino)
+  );
+  return origem && destino ? `${origem} → ${destino}` : '';
+}
+
+function propostaDetalhamentoHtml(
+  items: QuoteItemForPdf[],
+  showItemValues: boolean,
+  defaultCurrency: string
+) {
+  if (!items.length) return '';
+  const porGrupo = new Map<string, QuoteItemForPdf[]>();
+  for (const item of items) {
+    const grupo = propostaGrupoDe(item);
+    const lista = porGrupo.get(grupo) || [];
+    lista.push(item);
+    porGrupo.set(grupo, lista);
+  }
+  const secoes = propostaGrupoOrdem
+    .filter((titulo) => porGrupo.has(titulo))
+    .map((titulo) => {
+      const lista = porGrupo.get(titulo) || [];
+      const itensHtml = lista
+        .map((item) => propostaDetalheCardHtml(item, showItemValues, defaultCurrency))
+        .join('');
+      const subtitulo =
+        titulo === 'Passagens Aéreas'
+          ? Array.from(
+              new Set(
+                lista.flatMap((item) =>
+                  getFlightDataList(item)
+                    .map((raw) => String(asRecord(raw).cia_aerea ?? ''))
+                    .filter(Boolean)
+                )
+              )
+            ).join(' & ')
+          : '';
+      const subtotal = showItemValues
+        ? (() => {
+            const totais = new Map<string, number>();
+            for (const item of lista) {
+              const code = item.currency || defaultCurrency;
+              totais.set(
+                code,
+                (totais.get(code) || 0) +
+                  Number(item.total_amount ?? 0) +
+                  Number(item.taxes_amount ?? 0)
+              );
+            }
+            const texto = Array.from(totais, ([code, total]) => formatCurrency(total, code)).join(
+              ' · '
+            );
+            return texto
+              ? `<div class="pv-subtotal"><span>Subtotal ${escHtml(titulo)}</span><b>${escHtml(texto)}</b></div>`
+              : '';
+          })()
+        : '';
+      return `<div class="pv-grupo">
+        <div class="pv-grupo-titulo">${escHtml(titulo)}${subtitulo ? `<span class="pv-grupo-sub">${escHtml(subtitulo)}</span>` : ''}</div>
+        ${itensHtml}
+        ${subtotal}
+      </div>`;
+    })
+    .join('');
+  return `<div class="pv-sec"><div class="pv-sec-title">Detalhamento dos Serviços Cotados</div>${secoes}</div>`;
 }
 
 function propostaInvestimentoHtml(
@@ -1712,9 +1881,9 @@ function buildPropostaBodyHtml(params: {
   } = params;
 
   const destino =
-    cities.join(' · ').toUpperCase() || textVal(clientName).toUpperCase() || 'Proposta de Viagem';
+    cities.join(' → ').toUpperCase() || textVal(clientName).toUpperCase() || 'Proposta de Viagem';
+  const rotaCidades = cities.join(' → ');
   const metaItems = [
-    `Para: ${clientName}`,
     period ? `Período: ${period}` : '',
     viajantes ? `Viajantes: ${viajantes}` : '',
     dateLabel ? `Emissão: ${dateLabel}` : '',
@@ -1722,29 +1891,27 @@ function buildPropostaBodyHtml(params: {
   ].filter(Boolean);
 
   const cidadesHtml = cities.length
-    ? `<div class="pv-cidades"><div class="pv-cidades-label">Cidades contempladas na proposta</div><div class="pv-cidades-chips">${cities.map((city) => `<span class="pv-chip">${escHtml(city)}</span>`).join('')}</div></div>`
+    ? `<div class="pv-cidades"><div class="pv-cidades-label">Cidades contempladas na proposta</div><div class="pv-rota-cidades">${escHtml(rotaCidades)}</div></div>`
     : '';
 
   const cronogramaHtml = showDetalhes ? propostaCronogramaHtml(items) : '';
-  const detalhesHtml = !showDetalhes
-    ? ''
-    : items.length
-      ? `<div class="pv-sec"><div class="pv-sec-title">Detalhamento dos Serviços Cotados</div>${items.map((item) => propostaDetalheCardHtml(item, showItemValues, currency)).join('')}</div>`
-      : `<div class="pv-sec"><div class="pv-sec-title">Detalhamento dos Serviços Cotados</div><div class="orc-empty">Sem itens neste orçamento.</div></div>`;
+  const detalhesHtml = showDetalhes
+    ? propostaDetalhamentoHtml(items, showItemValues, currency) ||
+      `<div class="pv-sec"><div class="pv-sec-title">Detalhamento dos Serviços Cotados</div><div class="orc-empty">Sem itens neste orçamento.</div></div>`
+    : '';
   const investimentoHtml = propostaInvestimentoHtml(items, currency, discount);
 
   return `<div class="pv-head">
     <div class="pv-head-main">
       <div class="pv-kicker">Proposta de Viagem</div>
       <h1 class="pv-title">${escHtml(destino)}</h1>
-      <div class="pv-meta">${metaItems.map((meta) => `<span>${escHtml(meta)}</span>`).join('<span class="pv-dot">•</span>')}</div>
+      <div class="pv-para">Para: <b>${escHtml(clientName)}</b></div>
+      ${metaItems.length ? `<div class="pv-meta">${metaItems.map((meta) => `<span>${escHtml(meta)}</span>`).join('<span class="pv-dot">•</span>')}</div>` : ''}
     </div>
     ${showHeader && consultor ? `<div class="pv-cons"><b>${escHtml(consultor)}</b>${contatos ? `<span>${escHtml(contatos)}</span>` : ''}<span>Consultor de viagens</span></div>` : ''}
   </div>
-  <div class="pv-cta-row">
-    <div class="cta">${qrUrl ? `<img src="${escHtml(qrUrl)}" alt="QR Code WhatsApp" />` : ''}<div><b>Reserve com o ${escHtml(primeiroNome || 'consultor')}</b><br><span>Aponte a câmera para o QR Code e fale no WhatsApp.${validity ? ` Tarifas válidas até ${escHtml(validity)}.` : ''}</span></div></div>
-  </div>
   ${cidadesHtml}
+  <div class="pv-cta-linha">Reserve com o ${escHtml(primeiroNome || 'consultor')}${validity ? `: Tarifas válidas até ${escHtml(validity)}` : ''} • Atendimento direto via WhatsApp.${qrUrl ? ` <img class="pv-qr-mini" src="${escHtml(qrUrl)}" alt="QR Code WhatsApp" />` : ''}</div>
   ${cronogramaHtml}
   ${detalhesHtml}
   ${investimentoHtml}`;
@@ -2069,6 +2236,8 @@ export function buildQuotePreviewHtmlSync(params: {
     .pv-head-main { min-width: 0; }
     .pv-kicker { color: #6B7280; font-size: 8pt; font-weight: bold; letter-spacing: 1.6px; text-transform: uppercase; }
     .pv-title { color: #1B2C80; font-size: 20pt; margin: 2px 0 6px; line-height: 1.15; }
+    .pv-para { font-size: 9.5pt; color: #1F2937; margin: 4px 0 2px; }
+    .pv-para b { color: #1B2C80; }
     .pv-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 8px; color: #4B5563; font-size: 8.5pt; }
     .pv-meta b { color: #1F2937; }
     .pv-dot { color: #C5CED9; }
@@ -2077,25 +2246,38 @@ export function buildQuotePreviewHtmlSync(params: {
     .pv-cta-row { margin: 0 0 10px; }
     .pv-cidades { margin: 0 0 10px; }
     .pv-cidades-label { font-size: 7.5pt; color: #6B7280; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
-    .pv-cidades-chips { display: flex; flex-wrap: wrap; gap: 5px; }
-    .pv-chip { border: 1px solid #C5CED9; border-radius: 999px; padding: 3px 10px; font-size: 8pt; color: #1B2C80; background: #fff; }
+    .pv-rota-cidades { font-size: 13pt; font-weight: bold; color: #1B2C80; }
+    .pv-cta-linha { font-size: 9pt; color: #4B5563; margin: 0 0 10px; }
+    .pv-qr-mini { height: 34px; vertical-align: middle; margin-left: 6px; }
     .pv-sec { margin: 0 0 10px; }
     .pv-sec-title { font-size: 11pt; color: #1B2C80; font-weight: bold; margin: 12px 0 6px; }
     .pv-cron { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-top: 1px solid #EEF2F7; break-inside: avoid; }
     .pv-cron-period { color: #1B2C80; font-weight: bold; font-size: 8.5pt; }
     .pv-cron-body b { font-size: 9pt; color: #1F2937; }
-    .pv-cron-body p { margin: 2px 0 0; color: #4B5563; font-size: 8pt; }
-    .pv-card { border: 1.5px solid #C5CED9; border-radius: 10px; padding: 9px 12px; margin-bottom: 7px; break-inside: avoid; background: #fff; }
-    .pv-card-top { display: flex; align-items: flex-start; gap: 9px; }
-    .pv-ic { color: #1B2C80; flex: none; display: inline-flex; }
-    .pv-ic svg { width: 20px; height: 20px; }
+    .pv-cron-body p { margin: 3px 0 0; color: #4B5563; font-size: 8pt; line-height: 1.5; }
+    .pv-cron-chips { display: flex; flex-wrap: wrap; gap: 5px; margin: 4px 0; }
+    .pv-chip2 { border: 1px solid #C5CED9; border-radius: 999px; padding: 2px 8px; font-size: 7.5pt; color: #1B2C80; background: #fff; font-weight: bold; }
+    .pv-grupo { border: 1.5px solid #C5CED9; border-radius: 12px; margin-bottom: 10px; overflow: hidden; break-inside: avoid; background: #fff; }
+    .pv-grupo-titulo { padding: 8px 14px; background: #EEF2F7; color: #1B2C80; font-weight: bold; font-size: 10pt; border-bottom: 1.5px solid #C5CED9; }
+    .pv-grupo-sub { display: block; font-weight: normal; color: #6B7280; font-size: 8pt; margin-top: 1px; }
+    .pv-item { padding: 9px 14px; border-top: 1px solid #EEF2F7; }
+    .pv-item:first-of-type { border-top: 0; }
+    .pv-item-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
     .pv-card-main { flex: 1; min-width: 0; }
     .pv-card-main > b { font-size: 9.5pt; color: #1F2937; }
     .pv-sub { display: block; color: #6B7280; font-size: 8pt; margin-top: 1px; }
+    .pv-qtd { color: #6B7280; font-size: 7.5pt; font-weight: bold; letter-spacing: .05em; margin-top: 4px; }
     .pv-val { font-weight: bold; color: #1B2C80; font-size: 10pt; white-space: nowrap; }
-    .pv-meta-line { color: #4B5563; font-size: 8pt; margin: 5px 0 0; }
+    .pv-meta-line { color: #4B5563; font-size: 8pt; margin: 4px 0 0; }
+    .pv-voo { margin-top: 5px; }
+    .pv-voo-linha b { font-size: 8.5pt; color: #1F2937; }
+    .pv-voo-rota { color: #1B2C80; font-weight: bold; font-size: 9.5pt; margin-top: 2px; }
+    .pv-voo-meta { color: #6B7280; font-size: 8pt; margin-top: 1px; }
+    .pv-subtotal { display: flex; justify-content: space-between; gap: 12px; padding: 8px 14px; background: #EEF2F7; font-weight: bold; color: #1B2C80; border-top: 1.5px solid #C5CED9; }
     .pv-invest { border: 1.5px solid #C5CED9; border-radius: 12px; padding: 11px 14px; margin-bottom: 7px; break-inside: avoid; background: #fff; }
     .pv-invest-head { display: flex; align-items: center; gap: 8px; color: #1B2C80; font-size: 10pt; margin-bottom: 4px; }
+    .pv-ic { color: #1B2C80; flex: none; display: inline-flex; }
+    .pv-ic svg { width: 20px; height: 20px; }
     .pv-inv-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 6px 0; border-top: 1px solid #EEF2F7; }
     .pv-inv-row > div { min-width: 0; }
     .pv-inv-row > div > span { display: block; color: #6B7280; font-size: 7.8pt; margin-top: 1px; }
@@ -2126,9 +2308,11 @@ export function buildQuotePreviewHtmlSync(params: {
         page-break-inside: avoid;
         overflow: visible;
       }
-      .pv-card,
+      .pv-item,
       .pv-invest,
-      .pv-cron {
+      .pv-cron,
+      .pv-grupo,
+      .pv-voo {
         break-inside: avoid;
         page-break-inside: avoid;
       }
