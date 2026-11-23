@@ -416,6 +416,9 @@
     <footer>{cias} • Reserva: {item.localizador}</footer>
     {:else if modeloPdf === 'moderno'}
     {@const cias = [...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')}
+    {@const primeiro3 = item.trechos[0]}
+    {@const ultimo3 = item.trechos[item.trechos.length - 1]}
+    {@const conexoes3 = [...new Set(item.trechos.slice(0, -1).map((t) => t.destino))]}
     <div class="mod-doc">
       <header class="mod-cabecalho">
         <div class="mod-cia-linha">{cias.toUpperCase()} • BILHETE ELETRÔNICO</div>
@@ -425,9 +428,6 @@
           {#if item.emissao}<span>&#128197; Emissão: {data(item.emissao, true)}</span>{/if}
         </div>
       </header>
-      {@const primeiro3 = item.trechos[0]}
-      {@const ultimo3 = item.trechos[item.trechos.length - 1]}
-      {@const conexoes3 = [...new Set(item.trechos.slice(0, -1).map((t) => t.destino))]}
       <div class="mod-cards-row">
         <section class="mod-info-card mod-rota-card">
           <div class="mod-card-label">ROTA DA VIAGEM</div>
