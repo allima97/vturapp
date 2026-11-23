@@ -74,7 +74,7 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 
 ## Checklist da Etapa 4 (marcar `[x]` ao migrar cada seção)
 
-- [ ] admin
+- [x] admin
 - [ ] master
 - [ ] cadastros
 - [ ] clientes
@@ -106,3 +106,8 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - **§1.2 Fontes PDF:** confirmado que todos os PDFs são HTML→impressão (sem jsPDF). Canônico = `Arial, Helvetica, sans-serif` em todo o corpo. Débito registrado: `lib/server/vendas/pdf.ts` usa paleta antiga (#003366/11pt) → convergir na seção Vendas (Etapa 4).
 - **§7 Paginação:** `DataTable` é o canônico (paginação nativa client + serverSide). `PaginationControls` deprecado (1 uso: `dashboard/logs`, migrar junto com `SimpleTable`→`DataTable`). `CursorPagination` deprecado (só em `reescrita/clientes`, morre com a seção legada).
 - **`npm run check`: 0 erros, 0 warnings** — ambiente estável pós-move.
+
+### 2026-11-23 — Etapa 4: seção admin concluída
+- `admin/lgpd` reescrita com componentes canônicos (PageHeader, Tabs, DataTable, Dialog, Field*, AlertMessage, confirmAction na anonimização).
+- `admin/planos` e `admin/financeiro`: `Intl.NumberFormat` ad-hoc → `formatCurrency()`; `formatCurrency` agora aceita `currency` opcional com cache.
+- Demais páginas de admin já estavam conformes. Deploy `fa6d645f`.
