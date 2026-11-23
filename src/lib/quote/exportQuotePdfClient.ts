@@ -1822,25 +1822,42 @@ function propostaInvestimentoHtml(
   );
   if (!totais.length) return '';
   const adultos = Math.max(0, ...items.map((item) => lerDetalhes(item).adultos || 0));
-  const paxTotal = adultos ? `${adultos} ${adultos === 1 ? 'adulto' : 'adultos'}` : '';
+  const criancas = Math.max(0, ...items.map((item) => lerDetalhes(item).criancas || 0));
+  const paxCount = adultos || 0;
+  const paxLabel = paxCount
+    ? `${paxCount} ${paxCount === 1 ? 'pessoa' : 'pessoas'}`
+    : '';
+  const acomodLabel = criancas
+    ? `Considerando ${paxCount} ${paxCount === 1 ? 'pessoa' : 'pessoas'} no mesmo apartamento`
+    : paxCount >= 2
+    ? `Considerando ${paxCount} pessoas no mesmo apartamento (duplo)`
+    : 'Valor total do pacote';
+  const personIcon = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="7" r="4" stroke="#1B2C80" stroke-width="2"/><path d="M4 21c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="#1B2C80" stroke-width="2" stroke-linecap="round"/></svg>`;
+  const groupIcon = `<svg width="26" height="22" viewBox="0 0 32 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="7" r="4" stroke="#1B2C80" stroke-width="2"/><circle cx="22" cy="7" r="4" stroke="#1B2C80" stroke-width="2"/><path d="M2 21c0-4.418 3.582-8 8-8h4c4.418 0 8 3.582 8 8" stroke="#1B2C80" stroke-width="2" stroke-linecap="round"/><path d="M22 13c4.418 0 8 3.582 8 8" stroke="#1B2C80" stroke-width="2" stroke-linecap="round"/></svg>`;
+  const cardIcon = `<svg width="16" height="14" viewBox="0 0 24 20" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="3" width="22" height="14" rx="2" stroke="#6B7280" stroke-width="2"/><path d="M1 8h22" stroke="#6B7280" stroke-width="2"/><path d="M5 13h4" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/></svg>`;
   const blocos = totais
-    .map(({ code, group, total }) => {
+    .map(({ code, total }) => {
       const porPessoa = adultos > 0 ? total / adultos : null;
-      const breakdown = [
-        group.flights ? `Aéreo ${formatCurrency(group.flights, code)}` : '',
-        group.services ? `Serviços ${formatCurrency(group.services, code)}` : '',
-        group.taxes ? `Taxas ${formatCurrency(group.taxes, code)}` : ''
-      ]
-        .filter(Boolean)
-        .join(' + ');
+      const totalLabel = paxLabel ? `VALOR TOTAL (${paxLabel.toUpperCase()})` : 'VALOR TOTAL';
       return `<div class="pv-invest">
-        <div class="pv-invest-head"><span class="pv-ic">${serviceIconSvg('investimento')}</span><b>Investimento</b></div>
-        ${porPessoa != null ? `<div class="pv-inv-row"><div><b>Por pessoa</b><span>Valor médio individual por adulto</span></div><b class="pv-inv-val">${escHtml(formatCurrency(porPessoa, code))}</b></div>` : ''}
-        <div class="pv-inv-row pv-inv-total"><div><b>Total da viagem${paxTotal ? ` (${paxTotal})` : ''}</b>${breakdown ? `<span>${escHtml(breakdown)}</span>` : ''}</div><b class="pv-inv-val">${escHtml(formatCurrency(total, code))}</b></div>
+        <div class="pv-invest-titulo">INVESTIMENTO</div>
+        <div class="pv-invest-cards">
+          ${porPessoa != null ? `<div class="pv-invest-card">
+            <div class="pv-invest-card-head">${personIcon}<span>POR PESSOA</span></div>
+            <div class="pv-invest-card-valor">${escHtml(formatCurrency(porPessoa, code))}</div>
+            <div class="pv-invest-card-sub">Valor individual do pacote completo</div>
+          </div>` : ''}
+          <div class="pv-invest-card">
+            <div class="pv-invest-card-head">${groupIcon}<span>${escHtml(totalLabel)}</span></div>
+            <div class="pv-invest-card-valor">${escHtml(formatCurrency(total, code))}</div>
+            <div class="pv-invest-card-sub">${escHtml(acomodLabel)}</div>
+          </div>
+        </div>
+        <div class="pv-invest-footer">${cardIcon} Formas de pagamento sob consulta</div>
       </div>`;
     })
     .join('');
-  return `<div class="pv-sec"><div class="pv-sec-title">Investimento</div>${blocos}</div>`;
+  return `<div class="pv-sec pv-sec--invest">${blocos}</div>`;
 }
 
 function buildPropostaBodyHtml(params: {
@@ -1917,6 +1934,75 @@ function buildPropostaBodyHtml(params: {
   ${investimentoHtml}`;
 }
 
+
+// ---------------------------------------------------------------------------
+// MODELO MODERNO — buildModernoPropostaBodyHtml
+// ---------------------------------------------------------------------------
+
+function buildModernoPropostaBodyHtml(params: {
+  clientName: string;
+  period: string;
+  cities: string[];
+  validity: string;
+  dateLabel: string;
+  consultor: string;
+  primeiroNome: string;
+  contatos: string;
+  viajantes: string;
+  qrUrl: string | null;
+  items: QuoteItemForPdf[];
+  currency: string;
+  discount: number;
+  showItemValues: boolean;
+  showHeader: boolean;
+  showDetalhes: boolean;
+}): string {
+  const {
+    clientName, period, cities, validity, dateLabel, consultor, primeiroNome,
+    contatos, viajantes, qrUrl, items, currency, discount, showItemValues,
+    showHeader, showDetalhes
+  } = params;
+
+  const destino = cities.join(' → ').toUpperCase() || 'PROPOSTA DE VIAGEM';
+  const rotaCidades = cities.join(' → ');
+  const metaItens = [
+    period ? `📅 Período: ${period}` : '',
+    viajantes ? `👥 Viajantes: ${viajantes}` : '',
+    dateLabel ? `📋 Emissão: ${dateLabel}` : '',
+    validity ? `⏱ Validade: ${validity}` : ''
+  ].filter(Boolean);
+
+  const cidadesHtml = cities.length
+    ? `<div class="pvm-bloco"><div class="pvm-bloco-label">CIDADES CONTEMPLADAS</div><div class="pvm-rota">${escHtml(rotaCidades)}</div></div>`
+    : '';
+
+  const ctaHtml = `<div class="pvm-cta">${qrUrl ? `<img src="${escHtml(qrUrl)}" alt="QR" class="pvm-qr" />` : ''}<div class="pvm-cta-texto"><b>Reserve com ${escHtml(primeiroNome || 'o consultor')}</b><span>Atendimento direto via WhatsApp.${validity ? ` Tarifas válidas até ${escHtml(validity)}.` : ''}</span></div></div>`;
+
+  const cronogramaHtml = showDetalhes ? propostaCronogramaHtml(items) : '';
+  const detalhesHtml = showDetalhes
+    ? propostaDetalhamentoHtml(items, showItemValues, currency) ||
+      `<div class="pvm-sec"><div class="pvm-sec-title">Detalhamento dos Serviços</div><div class="orc-empty">Sem itens neste orçamento.</div></div>`
+    : '';
+  const investimentoHtml = propostaInvestimentoHtml(items, currency, discount);
+
+  return `<div class="pvm-doc">
+  <div class="pvm-head">
+    <div class="pvm-head-main">
+      <div class="pvm-kicker">PROPOSTA DE VIAGEM</div>
+      <h1 class="pvm-title">${escHtml(destino)}</h1>
+      <div class="pvm-para">Para: <b>${escHtml(clientName)}</b></div>
+      ${metaItens.length ? `<div class="pvm-meta">${metaItens.map((m) => `<span>${escHtml(m)}</span>`).join('<span class="pvm-dot">•</span>')}</div>` : ''}
+    </div>
+    ${showHeader && consultor ? `<div class="pvm-cons"><b>${escHtml(consultor)}</b>${contatos ? `<span>${escHtml(contatos)}</span>` : ''}<span>Consultor de viagens</span></div>` : ''}
+  </div>
+  ${cidadesHtml}
+  ${ctaHtml}
+  ${cronogramaHtml}
+  ${detalhesHtml}
+  ${investimentoHtml}
+</div>`;
+}
+
 // ---------------------------------------------------------------------------
 // BUILDER DO HTML
 // ---------------------------------------------------------------------------
@@ -1932,7 +2018,7 @@ export function buildQuotePreviewHtmlSync(params: {
   showItemValues: boolean;
   showHeader?: boolean;
   discount?: number;
-  modeloInicial?: 'classico' | 'proposta';
+  modeloInicial?: 'classico' | 'proposta' | 'moderno';
 }): string {
   const {
     quote,
@@ -1945,7 +2031,7 @@ export function buildQuotePreviewHtmlSync(params: {
     showItemValues,
     showHeader = true,
     discount = 0,
-    modeloInicial = 'classico'
+    modeloInicial = 'classico' as 'classico' | 'proposta' | 'moderno'
   } = params;
 
   const safeDiscount = Math.max(Number.isFinite(discount) ? discount : 0, 0);
@@ -2056,6 +2142,25 @@ export function buildQuotePreviewHtmlSync(params: {
     showDetalhes: showBudgetItems || showBudgetDetails
   });
   const mostrarProposta = modeloInicial === 'proposta';
+  const mostrarModerno = modeloInicial === 'moderno';
+  const modernoBodyHtml = buildModernoPropostaBodyHtml({
+    clientName,
+    period,
+    cities,
+    validity,
+    dateLabel,
+    consultor,
+    primeiroNome,
+    contatos,
+    viajantes,
+    qrUrl,
+    items,
+    currency,
+    discount: safeDiscount,
+    showItemValues,
+    showHeader,
+    showDetalhes: showBudgetItems || showBudgetDetails
+  });
 
   const css = `
     *, *::before, *::after { box-sizing: border-box; }
@@ -2274,7 +2379,15 @@ export function buildQuotePreviewHtmlSync(params: {
     .pv-voo-rota { color: #1B2C80; font-weight: bold; font-size: 9.5pt; margin-top: 2px; }
     .pv-voo-meta { color: #6B7280; font-size: 8pt; margin-top: 1px; }
     .pv-subtotal { display: flex; justify-content: space-between; gap: 12px; padding: 8px 14px; background: #EEF2F7; font-weight: bold; color: #1B2C80; border-top: 1.5px solid #C5CED9; }
-    .pv-invest { border: 1.5px solid #C5CED9; border-radius: 12px; padding: 11px 14px; margin-bottom: 7px; break-inside: avoid; background: #fff; }
+    .pv-invest { border: 1.5px solid #C5CED9; border-radius: 14px; overflow: hidden; margin-bottom: 7px; break-inside: avoid; background: #fff; }
+    .pv-invest-titulo { background: #D6DCF0; color: #1B2C80; font-size: 13pt; font-weight: 800; text-align: center; padding: 10px 14px; letter-spacing: 1px; }
+    .pv-invest-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 14px 14px 10px; gap: 12px; }
+    .pv-invest-card { border: 1.5px solid #C5CED9; border-radius: 10px; padding: 14px 16px; background: #fff; }
+    .pv-invest-card-head { display: flex; align-items: center; gap: 8px; color: #1B2C80; font-weight: 700; font-size: 10pt; margin-bottom: 8px; }
+    .pv-invest-card-head svg { flex-shrink: 0; }
+    .pv-invest-card-valor { font-size: 18pt; font-weight: 800; color: #1a1a2e; margin-bottom: 4px; letter-spacing: -0.5px; }
+    .pv-invest-card-sub { font-size: 8pt; color: #6B7280; line-height: 1.4; }
+    .pv-invest-footer { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 7px 14px; background: #F9FAFB; border-top: 1px solid #E5E7EB; font-size: 8.5pt; color: #6B7280; }
     .pv-invest-head { display: flex; align-items: center; gap: 8px; color: #1B2C80; font-size: 10pt; margin-bottom: 4px; }
     .pv-ic { color: #1B2C80; flex: none; display: inline-flex; }
     .pv-ic svg { width: 20px; height: 20px; }
@@ -2309,7 +2422,7 @@ export function buildQuotePreviewHtmlSync(params: {
         overflow: visible;
       }
       .pv-item,
-      .pv-invest,
+      .pv-invest, .pv-invest-card,
       .pv-cron,
       .pv-grupo,
       .pv-voo {
@@ -2346,12 +2459,13 @@ export function buildQuotePreviewHtmlSync(params: {
     <label class="pv-modelo">Modelo
       <select onchange="pvSwitchModelo(this.value)">
         <option value="classico"${mostrarProposta ? '' : ' selected'}>Clássico</option>
-        <option value="proposta"${mostrarProposta ? ' selected' : ''}>Proposta de Viagem</option>
+        <option value="proposta"${mostrarProposta && !mostrarModerno ? ' selected' : ''}>Proposta de Viagem</option>
+        <option value="moderno"${mostrarModerno ? ' selected' : ''}>Moderno</option>
       </select>
     </label>
     <button onclick="window.print()">Imprimir / Salvar em PDF</button>
   </div>
-  <div class="modelo" data-modelo="classico"${mostrarProposta ? ' hidden' : ''}>
+  <div class="modelo" data-modelo="classico"${mostrarProposta || mostrarModerno ? ' hidden' : ''}>
     <div class="pg">
       ${showHeader ? headerHtml : ''}
       ${titleHtml}
@@ -2361,10 +2475,16 @@ export function buildQuotePreviewHtmlSync(params: {
       ${footerHtml}
     </div>
   </div>
-  <div class="modelo" data-modelo="proposta"${mostrarProposta ? '' : ' hidden'}>
+  <div class="modelo" data-modelo="proposta"${mostrarProposta && !mostrarModerno ? '' : ' hidden'}>
     <div class="pg">
       ${showHeader ? headerHtml : ''}
       ${propostaBodyHtml}
+      ${footerHtml}
+    </div>
+  </div>
+  <div class="modelo" data-modelo="moderno"${mostrarModerno ? '' : ' hidden'}>
+    <div class="pg">
+      ${modernoBodyHtml}
       ${footerHtml}
     </div>
   </div>
@@ -2391,7 +2511,7 @@ export async function openQuotePreview(params: {
   showItemValues?: boolean;
   showHeader?: boolean;
   discount?: number;
-  modeloInicial?: 'classico' | 'proposta';
+  modeloInicial?: 'classico' | 'proposta' | 'moderno';
 }): Promise<void> {
   const {
     quoteId,
@@ -2401,7 +2521,7 @@ export async function openQuotePreview(params: {
     showItemValues = true,
     showHeader = true,
     discount = 0,
-    modeloInicial = 'classico'
+    modeloInicial = 'classico' as 'classico' | 'proposta' | 'moderno'
   } = params;
 
   const quoteRow = await apiFetch<QuotePreviewRow>(

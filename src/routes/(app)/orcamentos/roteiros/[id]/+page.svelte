@@ -237,7 +237,7 @@
   let nome = $state('');
   let revisao = $state<string | undefined>();
   let duracao = $state('');
-  let modeloPdfRoteiro: 'completo' | 'itinerario' = $state('completo');
+  let modeloPdfRoteiro: 'completo' | 'itinerario' | 'moderno' = $state('completo');
   let inicioCidade = $state('');
   let fimCidade = $state('');
   let incluiTexto = $state('');
@@ -1226,7 +1226,7 @@
 
   function buildRoteiroPreviewHtml(
     assets: PreviewPdfAssets = { qrUrl: null, complementUrl: null },
-    modeloInicial: 'completo' | 'itinerario' = 'completo'
+    modeloInicial: 'completo' | 'itinerario' | 'moderno' = 'completo'
   ) {
     const diasItems = dias.filter((dia) => dia.cidade || dia.percurso || dia.data || dia.descricao);
     const diasHtml =
@@ -1432,6 +1432,65 @@
         <div class="rot2-doc-footer">Roteiro Personalizado${nome ? ` • ${escapePreviewHtml(nome)}` : ''}</div>
       </div>`;
 
+
+    // ── Modelo Moderno ────────────────────────────────────────────────────
+    let cidadeAnterior2 = '';
+    const rot3DiasHtml = diasItems.length
+      ? diasItems
+          .map((dia, index) => {
+            const cidadeCurta = nomeCidadeNoPdf((dia.cidade || '').trim());
+            const percursoTxt = (dia.percurso || '').trim();
+            let rota = percursoTxt;
+            if (!rota && cidadeCurta) {
+              rota = cidadeAnterior2 && cidadeAnterior2 !== cidadeCurta
+                ? `${cidadeAnterior2} → ${cidadeCurta}`
+                : cidadeCurta;
+            }
+            if (cidadeCurta) cidadeAnterior2 = cidadeCurta;
+            const dataMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(dia.data || '');
+            const diaDDMM = dataMatch ? `${dataMatch[3]}/${dataMatch[2]}` : '';
+            const pillLabel = [`Dia ${index + 1}`, diaDDMM].filter(Boolean).join(' · ');
+            const rotaSetas = rota.replace(/\s+-\s+/g, ' → ');
+            return `<div class="rot3-dia">
+              <div class="rot3-dia-left">
+                <div class="rot3-dia-pill">${escapePreviewHtml(pillLabel)}</div>
+                <div class="rot3-dia-dot"></div>
+                ${index < diasItems.length - 1 ? '<div class="rot3-dia-line"></div>' : ''}
+              </div>
+              <div class="rot3-dia-body">
+                ${rotaSetas ? `<div class="rot3-dia-rota">${escapePreviewHtml(rotaSetas)}</div>` : ''}
+                ${dia.descricao ? `<p class="rot3-dia-desc">${escapePreviewHtml(dia.descricao).replace(/\n/g, '<br>')}</p>` : ''}
+              </div>
+            </div>`;
+          })
+          .join('')
+      : '';
+
+    const rot3CidadesResumo: string[] = [];
+    let rot3CidadeOrig = nomeCidadeNoPdf((inicioCidade.split('•')[0] || '').trim()).toLowerCase();
+    for (const dia of diasItems) {
+      const c = nomeCidadeNoPdf((dia.cidade || '').trim());
+      if (c && c.toLowerCase() !== rot3CidadeOrig && !rot3CidadesResumo.includes(c))
+        rot3CidadesResumo.push(c);
+    }
+
+    const rot3MetaItens = [
+      periodText ? `📅 Período: ${periodText}` : '',
+      duracao ? `⏱ Duração: ${duracao} dias` : ''
+    ].filter(Boolean);
+
+    const rot3ModernoBodyHtml = `
+      <div class="rot3-doc">
+        <div class="rot3-kicker">ROTEIRO PERSONALIZADO</div>
+        <h1 class="rot3-title">${escapePreviewHtml((nome || 'Roteiro').toUpperCase())}</h1>
+        ${clienteNome ? `<div class="rot3-para">Para: <strong>${escapePreviewHtml(clienteNome)}</strong></div>` : ''}
+        ${rot3MetaItens.length ? `<div class="rot3-meta">${rot3MetaItens.map((m) => escapePreviewHtml(m)).join(' &nbsp;•&nbsp; ')}</div>` : ''}
+        ${rot3CidadesResumo.length ? `<div class="rot3-bloco"><div class="rot3-bloco-label">RESUMO DO ROTEIRO</div><div class="rot3-rota">${escapePreviewHtml(rot3CidadesResumo.join(' → '))}</div></div>` : ''}
+        ${rot3DiasHtml ? `<section class="rot3-itin"><h2 class="rot3-itin-titulo">ITINERÁRIO DETALHADO</h2><div class="rot3-dias-lista">${rot3DiasHtml}</div></section>` : ''}
+        <div class="rot3-doc-footer">Roteiro Personalizado${nome ? ` · ${escapePreviewHtml(nome)}` : ''}</div>
+      </div>`;
+
+    const mostrarModerno = modeloInicial === 'moderno';
     const mostrarItinerario = modeloInicial === 'itinerario';
 
     return `<!doctype html>
@@ -1544,12 +1603,13 @@
               <label class="rot2-modelo">Modelo
                 <select onchange="rvSwitchModelo(this.value)">
                   <option value="completo"${mostrarItinerario ? '' : ' selected'}>Completo</option>
-                  <option value="itinerario"${mostrarItinerario ? ' selected' : ''}>Itinerário</option>
+                  <option value="itinerario"${mostrarItinerario && !mostrarModerno ? ' selected' : ''}>Itinerário</option>
+                  <option value="moderno"${mostrarModerno ? ' selected' : ''}>Moderno</option>
                 </select>
               </label>
               <a class="print-action" href="#" onclick="event.preventDefault(); window.print();">Imprimir / Salvar em PDF</a>
             </div>
-            <div class="modelo" data-modelo="completo"${mostrarItinerario ? ' hidden' : ''}>
+            <div class="modelo" data-modelo="completo"${mostrarItinerario || mostrarModerno ? ' hidden' : ''}>
             ${incluirCabecalhoRodapePdf ? headerCardHtml : ''}
             ${titleCardHtml}
             ${summaryBandHtml}
@@ -1577,8 +1637,11 @@
             ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
             ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}
             </div>
-            <div class="modelo" data-modelo="itinerario"${mostrarItinerario ? '' : ' hidden'}>
+            <div class="modelo" data-modelo="itinerario"${mostrarItinerario && !mostrarModerno ? '' : ' hidden'}>
               ${itinerarioBodyHtml}
+            </div>
+            <div class="modelo" data-modelo="moderno"${mostrarModerno ? '' : ' hidden'}>
+              ${rot3ModernoBodyHtml}
             </div>
             <script>
               function rvSwitchModelo(modelo) {
@@ -2072,6 +2135,7 @@
       >
         <option value="completo">Completo</option>
         <option value="itinerario">Itinerário</option>
+        <option value="moderno">Moderno</option>
       </select>
     </label>
     <Button type="button" variant="secondary" loading={previewingPdf} on:click={handlePreviewPdf}>
