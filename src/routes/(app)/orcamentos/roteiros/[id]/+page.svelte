@@ -1491,8 +1491,8 @@
     const _calIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px;position:relative;top:-1px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
     const _clkIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px;position:relative;top:-1px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
     const rot3MetaItens = [
-      periodText ? `${_calIcon}Período: ${escapePreviewHtml(periodText)}` : '',
-      duracao ? `${_clkIcon}Duração: ${escapePreviewHtml(duracao)} dias` : ''
+      periodText ? `${_calIcon}Período: <span class="rot3-meta-val">${escapePreviewHtml(periodText)}</span>` : '',
+      duracao ? `${_clkIcon}Duração: <span class="rot3-meta-val">${escapePreviewHtml(duracao)} dias</span>` : ''
     ].filter(Boolean);
 
     // ── Moderno: section wrapper helper
@@ -1846,6 +1846,7 @@
             .rot3-para { font-size: 10pt; color: #1F2937; margin: 0 0 2px; text-align: center; }
             .rot3-para strong { color: #1B2C80; }
             .rot3-meta { font-size: 9pt; color: #4B5563; margin: 0 0 20px; text-align: center; }
+            .rot3-meta-val { color: #1B2C80; font-weight: 600; }
             .rot3-bloco { border: 1.5px solid #C5CED9; border-radius: 10px; padding: 10px 14px; margin: 14px 0 20px; background: #EEF2F7; }
             .rot3-bloco-label { font-size: 7.5pt; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; color: #1B2C80; margin-bottom: 6px; }
             .rot3-rota { font-size: 13pt; font-weight: bold; color: #1B2C80; line-height: 1.5; }
