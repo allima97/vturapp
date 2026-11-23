@@ -1790,7 +1790,7 @@
             .rot3-secao { margin: 24px 0 0; }
             .rot3-secao-titulo { font-size: 10pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #1B2C80; border-bottom: 1.5px solid #C5CED9; padding-bottom: 6px; margin: 0 0 14px; text-align: center; }
             .rot3-tabela { border: 1.5px solid #C5CED9; border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
-            .rot3-grupo-header { background: #EEF2F7; color: #1B2C80; font-size: 8.5pt; font-weight: bold; letter-spacing: 1px; padding: 5px 12px; border-bottom: 1px solid #C5CED9; }
+            .rot3-grupo-header { background: #1B2C80; color: #fff; font-size: 8.5pt; font-weight: bold; letter-spacing: 1px; padding: 5px 12px; }
             .rot3-voo-row { display: flex; gap: 10px; padding: 8px 12px; border-bottom: 1px solid #EEF2F7; break-inside: avoid; page-break-inside: avoid; }
             .rot3-voo-row:last-child { border-bottom: none; }
             .rot3-voo-c1 { flex: 2; min-width: 0; }
