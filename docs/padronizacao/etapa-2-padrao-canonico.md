@@ -26,8 +26,9 @@ divergências existentes são débito a remover.
 - **Proibido** `!important` tipográfico novo. Os blocos atuais com `!important` em `.vtur-layout` (`app.css`) serão eliminados na Etapa 3 resolvendo a cascata na origem.
 
 ### 1.2 PDFs
-- Tema único em `src/lib/quote/roteiroPdfTheme.ts` (estender para valores/tabelas) consumido por **ambos** os geradores (`lib/quote/exportQuotePdfClient.ts` e `lib/server/vendas/pdf.ts`).
-- Família: helvetica (jsPDF core) para corpo; times apenas onde já houver identidade consolidada — decisão final de família registrada aqui após Etapa 3. **Interim: manter o que cada gerador usa, mas tamanhos/pesos/cores vêm do tema.**
+- **Decisão (2026-11-23):** todos os geradores de PDF são **HTML→impressão** (`window.print()`); não há jsPDF/embarcamento de fonte. A família canônica é **`Arial, Helvetica, sans-serif`** para todo o corpo — já é o padrão de fato em `exportQuotePdfClient.ts`, `roteiroPdfTheme.ts` e `vendas/pdf.ts`.
+- Tema único de tamanhos/pesos/cores em `src/lib/quote/roteiroPdfTheme.ts` (estender para valores/tabelas) consumido por ambos os fluxos. `Georgia/serif` de `printLayout.ts` é fallback legado — remover quando o caminho antigo morrer.
+- **Divergência registrada (débito Etapa 4):** `lib/server/vendas/pdf.ts` usa paleta própria antiga (`#003366`, 11pt) — convergir para o tema na seção Vendas.
 - Valores monetários em PDF: sempre formatados com `formatCurrency` (nunca concatenação manual de "R$").
 
 ---
@@ -128,7 +129,7 @@ Anatomia implementada:
 ### Unificar (Etapa 3)
 - ~~`FileDropzone` + `FileInput` → `FileUpload`~~ → **`FileDropzone` evoluído** (§6); `FileInput` **removido** (era import morto na conciliação).
 - `Dialog` (padrão para diálogos com título/ações) × `OverlayModal` (**manter** como primitiva sancionada para overlays não-padrão: janela arrastável da `CalculatorModal`, wizard full-screen do `VoucherEditorModal` — migrar quebraria comportamento) × `AccessibleDialog` (só em `reescrita/*` legado — remover com a seção).
-- Paginação: `PaginationControls` + `CursorPagination` → absorver no **`DataTable`** (ou `CursorPagination` único exportado; decisão na Etapa 3 conforme uso real).
+- Paginação: **`DataTable` é o componente canônico** (paginação nativa, client-side e `serverSide`, seletor de pageSize) — **decisão (2026-11-23)**. `PaginationControls` fica **deprecado**: único uso real é `dashboard/logs` (que também usa `SimpleTable` — migrar os dois para `DataTable`). `CursorPagination` fica **deprecado**: só existe em `reescrita/clientes` (seção legada — morre com ela).
 - ~~`BottomSheet`/`BottomSheetImpl` → um só~~ → **manter**: fachada lazy-load intencional.
 - `SimpleTable` → migrar 5 usos para `DataTable` e remover.
 - 20 `<table>` cruas → `DataTable` (ou `SimpleTable` interno onde for markup estático de apresentação).

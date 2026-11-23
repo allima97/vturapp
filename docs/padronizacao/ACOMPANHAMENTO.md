@@ -101,3 +101,8 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - **Correção de registro:** `FileInput.svelte` **NÃO foi removido** — é usado por `parametros/vouchers/+page.svelte` (import em ui/index.ts é obrigatório; sem ele o build quebra). Canônico de upload segue sendo `FileDropzone`; migração de vouchers → FileDropzone fica para a Etapa 4.
 - **confirm() nativo: 0 ocorrências restantes** em `src/` — migração encerrada.
 - **Pendente imediato:** rodar `npm run check` agora que o ambiente está estável.
+
+### 2026-11-23 — Decisões pendentes do canônico resolvidas
+- **§1.2 Fontes PDF:** confirmado que todos os PDFs são HTML→impressão (sem jsPDF). Canônico = `Arial, Helvetica, sans-serif` em todo o corpo. Débito registrado: `lib/server/vendas/pdf.ts` usa paleta antiga (#003366/11pt) → convergir na seção Vendas (Etapa 4).
+- **§7 Paginação:** `DataTable` é o canônico (paginação nativa client + serverSide). `PaginationControls` deprecado (1 uso: `dashboard/logs`, migrar junto com `SimpleTable`→`DataTable`). `CursorPagination` deprecado (só em `reescrita/clientes`, morre com a seção legada).
+- **`npm run check`: 0 erros, 0 warnings** — ambiente estável pós-move.
