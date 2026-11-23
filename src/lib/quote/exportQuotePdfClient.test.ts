@@ -16,6 +16,13 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
+// O HTML da prévia contém os dois modelos de saída (clássico + proposta de
+// viagem); testes do modelo clássico avaliam apenas a seção correspondente.
+function soModeloClassico(html: string) {
+  const idx = html.indexOf('data-modelo="proposta"');
+  return idx === -1 ? html : html.slice(0, idx);
+}
+
 describe('identidade dos orçamentos e circuitos', () => {
   it('mantém a cor do cabeçalho das tabelas igual à do título do orçamento', () => {
     const html = buildQuotePreviewHtmlSync({
@@ -144,11 +151,12 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: false
     });
-    expect(html).not.toMatch(/orc-service-label"><svg/);
+    const htmlClassico = soModeloClassico(html);
+    expect(htmlClassico).not.toMatch(/orc-service-label"><svg/);
     const expected = new Map<string, number>();
     for (const [, icon] of types) expected.set(icon, (expected.get(icon) ?? 0) + 1);
     for (const [icon, count] of expected) {
-      expect(html.match(new RegExp(`orc-service-icon--${icon}`, 'g'))).toHaveLength(count);
+      expect(htmlClassico.match(new RegExp(`orc-service-icon--${icon}`, 'g'))).toHaveLength(count);
     }
   });
 
@@ -1171,7 +1179,7 @@ describe('identidade dos orçamentos e circuitos', () => {
   });
 
   it('apresenta passagens na tabela padrão de serviços sem perder dados e valores', () => {
-    const html = buildQuotePreviewHtmlSync({
+    const html = soModeloClassico(buildQuotePreviewHtmlSync({
       quote: { id: 'quote-1' },
       items: [
         {
@@ -1285,7 +1293,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetItems: false,
       showBudgetDetails: true,
       showItemValues: true
-    });
+    }));
     expect(html).toContain('Passagens aéreas');
     expect(html.indexOf('São Paulo / Roma / São Paulo')).toBeLessThan(html.indexOf('LA 8120'));
     expect(html).toContain('<span class="md"><span>LA 8120</span><span class="lni"');
@@ -1408,7 +1416,7 @@ describe('identidade dos orçamentos e circuitos', () => {
   });
 
   it('formata somente descrições aéreas no resumo e nos detalhes, inclusive sem trechos', () => {
-    const html = buildQuotePreviewHtmlSync({
+    const html = soModeloClassico(buildQuotePreviewHtmlSync({
       quote: { id: 'quote-1' },
       items: [
         {
@@ -1425,7 +1433,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetItems: true,
       showBudgetDetails: true,
       showItemValues: false
-    });
+    }));
     expect(html).toContain('São Paulo / Roma / São Paulo');
     expect(html.match(/Rio de Janeiro \/ Porto/g)).toHaveLength(2);
     expect(html).toContain('HOTEL ROMA');
@@ -1935,5 +1943,108 @@ describe('prévia do orçamento', () => {
       openQuotePreview({ quoteId: 'quote-1', dados: { storage: { from: vi.fn() } } })
     ).rejects.toBe(error);
     expect(mocks.open).not.toHaveBeenCalled();
+  });
+});
+
+describe('modelos de saída do PDF', () => {
+  const base = {
+    quote: {
+      id: 'quote-1',
+      client_name: 'Neusa de Fátima Xavier',
+      created_at: '2027-01-05',
+      valid_until: '2027-01-20',
+      currency: 'BRL'
+    },
+    items: [
+      {
+        item_type: 'hotel',
+        title: 'Hollywood Hotel Inn',
+        city_name: 'Los Angeles',
+        start_date: '2027-01-10',
+        end_date: '2027-01-12',
+        total_amount: 900,
+        raw: {
+          detalhes_orcamento: {
+            categoria: '3 Estrelas',
+            adultos: 2,
+            criancas: 0,
+            tipo_apartamento: 'Duplo',
+            quantidade_apartamentos: 1,
+            regime: 'Café da manhã'
+          }
+        }
+      },
+      {
+        item_type: 'passagem',
+        title: 'SÃO PAULO / LOS ANGELES',
+        city_name: 'Los Angeles',
+        start_date: '2027-01-08',
+        end_date: '2027-01-09',
+        total_amount: 4200,
+        raw: {
+          aereo_import: {
+            segmentos: [
+              {
+                cia_aerea: 'LATAM',
+                numero_voo: 'LA 8080',
+                aeroporto_saida: 'GRU',
+                aeroporto_chegada: 'LAX',
+                data_voo: '2027-01-08',
+                hora_saida: '22:30',
+                hora_chegada: '06:15'
+              }
+            ]
+          }
+        }
+      }
+    ],
+    settings: { consultor_nome: 'André Lima' },
+    qrUrl: null,
+    complementUrl: null,
+    showBudgetItems: false,
+    showBudgetDetails: true,
+    showItemValues: true
+  };
+
+  it('mantém o modelo clássico como padrão e oferece o seletor de modelos na prévia', () => {
+    const html = buildQuotePreviewHtmlSync(base);
+    expect(html).toContain('pvSwitchModelo');
+    expect(html).toContain('value="classico" selected');
+    expect(html).toContain('value="proposta"');
+    expect(html).toContain('data-modelo="classico"');
+    expect(html).toContain('data-modelo="proposta" hidden');
+    const classico = soModeloClassico(html);
+    expect(classico).toContain('Proposta de viagem');
+    expect(classico).toContain('Hollywood Hotel Inn');
+  });
+
+  it('gera o modelo Proposta de Viagem com cronograma, detalhamento e investimento', () => {
+    const html = buildQuotePreviewHtmlSync({ ...base, modeloInicial: 'proposta' });
+    expect(html).toContain('value="proposta" selected');
+    expect(html).toContain('data-modelo="classico" hidden');
+    const proposta = html.slice(html.indexOf('data-modelo="proposta"'));
+    expect(proposta).toContain('pv-title');
+    expect(proposta).toContain('LOS ANGELES');
+    expect(proposta).toContain('Para: Neusa de Fátima Xavier');
+    expect(proposta).toContain('Cidades contempladas na proposta');
+    expect(proposta).toContain('Cronograma dos Serviços');
+    expect(proposta).toContain('Detalhamento dos Serviços Cotados');
+    expect(proposta).toContain('Investimento');
+    expect(proposta).toContain('Total da viagem');
+    expect(proposta).toContain('Hollywood Hotel Inn');
+    expect(proposta).toContain('LA 8080');
+    expect(proposta).not.toContain('data-modelo="classico"');
+  });
+
+  it('omite cronograma e detalhamento da proposta quando as seções estão desativadas', () => {
+    const html = buildQuotePreviewHtmlSync({
+      ...base,
+      modeloInicial: 'proposta',
+      showBudgetDetails: false
+    });
+    const proposta = html.slice(html.indexOf('data-modelo="proposta"'));
+    expect(proposta).not.toContain('Cronograma dos Serviços');
+    expect(proposta).not.toContain('Detalhamento dos Serviços Cotados');
+    expect(proposta).not.toContain('Hollywood Hotel Inn');
   });
 });

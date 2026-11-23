@@ -19,6 +19,7 @@
   } from '$lib/passagens/importacao';
 
   let item: PassagemImportada | null = null;
+  let modeloPdf: 'padrao' | 'bilhete' = 'padrao';
   let cidades: AirportCodeCityLookup = {};
   let cidadesIndisponiveis = false;
   let error = '';
@@ -168,6 +169,15 @@
         >Editar</Button
       >
       <Button color="operacao" on:click={imprimir}>Imprimir / Salvar em PDF</Button>
+      {#if item}
+        <label class="modelo-select"
+          >Modelo
+          <select bind:value={modeloPdf}>
+            <option value="padrao">Padrão</option>
+            <option value="bilhete">Bilhete</option>
+          </select>
+        </label>
+      {/if}
     {/if}
   </div>
   {#if loading}
@@ -183,6 +193,7 @@
         </p>
       {/if}
     </div>
+    {#if modeloPdf === 'padrao'}
     <header class="cabecalho">
       <strong>{[...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')}</strong>
       <span>COMPROVANTE DE VIAGEM</span>
@@ -294,6 +305,102 @@
     <footer>
       {[...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')} — Reserva: {item.localizador}
     </footer>
+    {:else}
+    <header class="bilhete-top">
+      <div class="bilhete-id">
+        <strong class="bilhete-cia"
+          >{[...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')}</strong
+        >
+        <span class="bilhete-kicker">Comprovante de Viagem</span>
+      </div>
+      <div class="bilhete-pnr">
+        <span class="rotulo">Código de reserva (PNR)</span>
+        <strong class="bilhete-localizador">{item.localizador}</strong>
+      </div>
+    </header>
+    <div class="bilhete-resumo">
+      <p><strong>Rota:</strong> {resumoRotas(item.trechos, aeroporto)}</p>
+      <p><strong>Passageiros:</strong> {resumoPassageiros(item.passageiros)}</p>
+      {#if item.emissao}<p><strong>Emissão:</strong> {data(item.emissao, true)}</p>{/if}
+    </div>
+    <h2>ITINERÁRIO DE VOO</h2>
+    {#each item.trechos as trecho, i}
+      <section class="bilhete-trecho">
+        <div class="bilhete-trecho-top">
+          <span>{tituloTrecho(item.trechos, i)}</span>
+          <strong>Voo {trecho.voo}</strong>
+        </div>
+        <div class="bilhete-trajeto">
+          <div class="bilhete-local">
+            <strong class="bilhete-codigo">{trecho.origem}</strong>
+            <span>{cidade(trecho.origem, trecho.cidadeOrigem) || 'Cidade não informada'}</span>
+            <span class="bilhete-quando">{data(trecho.saida)} · {horario(trecho.saida)}</span>
+          </div>
+          <div class="bilhete-meio">
+            <span class="bilhete-duracao">{trecho.duracao || '—'}</span>
+            <span class="bilhete-seta">→</span>
+            {#if avisoChegada(trecho.saida, trecho.chegada)}
+              <small class="aviso-chegada">{avisoChegada(trecho.saida, trecho.chegada)}</small>
+            {/if}
+          </div>
+          <div class="bilhete-local bilhete-destino">
+            <strong class="bilhete-codigo">{trecho.destino}</strong>
+            <span>{cidade(trecho.destino, trecho.cidadeDestino) || 'Cidade não informada'}</span>
+            <span class="bilhete-quando">{data(trecho.chegada)} · {horario(trecho.chegada)}</span>
+          </div>
+        </div>
+        <div class="bilhete-detalhes">
+          <span>{trecho.companhia}</span>
+          <span>{trecho.classe || 'Classe não informada'}</span>
+          <span>{trecho.tarifa?.trim() || 'Tarifa não informada'}</span>
+          <span>Assentos: {assentos(i)}</span>
+        </div>
+      </section>
+    {/each}
+    <h2>PASSAGEIROS E BILHETES ELETRÔNICOS</h2>
+    <table>
+      <thead
+        ><tr
+          ><th>Nome do passageiro</th><th>Tipo</th><th>Número do bilhete</th><th
+            >Status do bilhete</th
+          ></tr
+        ></thead
+      >
+      <tbody>
+        {#each item.passageiros as passageiro}
+          <tr
+            ><td><strong>{nomePassageiroMaiusculo(passageiro.nome)}</strong></td><td
+              >{passageiro.tipo === 'ADT'
+                ? 'Adulto'
+                : passageiro.tipo === 'CHD'
+                  ? 'Criança'
+                  : passageiro.tipo === 'INF'
+                    ? 'Infant'
+                    : 'Não informado'}</td
+            ><td>{passageiro.bilhete || 'Não informado'}</td><td
+              >{passageiro.status || 'Não informado'}</td
+            ></tr
+          >
+        {/each}
+      </tbody>
+    </table>
+    <aside class="aviso-embarque" aria-label="Orientações de embarque">
+      <strong>Atenção ao horário de seu embarque!</strong>
+      <p>
+        Apresente-se no aeroporto indicado com pelo menos 3 horas de antecedência para voos
+        internacionais e 2 horas de antecedência para voos nacionais.
+      </p>
+      <p>
+        <strong>
+          Para um maior controle, baixe o aplicativo da companhia aérea e acompanhe a situação de
+          seu voo.
+        </strong>
+      </p>
+    </aside>
+    <footer>
+      {[...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')} — Reserva: {item.localizador}
+    </footer>
+    {/if}
   {/if}
 </div>
 
@@ -488,6 +595,131 @@
     margin-top: 24px;
     color: #6B7280;
     font-size: 11px;
+  }
+  .modelo-select {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #4B5563;
+  }
+  .modelo-select select {
+    border: 1px solid #C5CED9;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 13px;
+    background: #fff;
+    color: #1F2937;
+  }
+  .bilhete-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    border-bottom: 2px solid #1B2C80;
+    padding-bottom: 14px;
+  }
+  .bilhete-cia {
+    display: block;
+    color: #1B2C80;
+    font-size: 22px;
+    text-transform: uppercase;
+  }
+  .bilhete-kicker {
+    display: block;
+    color: #6B7280;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+  .bilhete-pnr {
+    text-align: right;
+  }
+  .bilhete-localizador {
+    display: block;
+    color: #1B2C80;
+    font-size: 24px;
+    letter-spacing: 2px;
+  }
+  .bilhete-resumo {
+    background: #EEF2F7;
+    border: 1px solid #C5CED9;
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-top: 14px;
+    font-size: 12px;
+  }
+  .bilhete-trecho {
+    border: 1px solid #C5CED9;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    break-inside: avoid;
+  }
+  .bilhete-trecho-top {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: #D0DAEA;
+    color: #1B2C80;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .bilhete-trajeto {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 12px;
+    align-items: center;
+    padding: 14px;
+  }
+  .bilhete-local > strong,
+  .bilhete-local > span {
+    display: block;
+  }
+  .bilhete-codigo {
+    color: #1B2C80;
+    font-size: 24px;
+    letter-spacing: 1px;
+  }
+  .bilhete-local > span {
+    color: #1F2937;
+    font-size: 12px;
+  }
+  .bilhete-quando {
+    color: #6B7280 !important;
+    font-size: 11px !important;
+  }
+  .bilhete-destino {
+    text-align: right;
+  }
+  .bilhete-meio {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    color: #6B7280;
+    font-size: 10px;
+    text-align: center;
+  }
+  .bilhete-duracao {
+    font-weight: bold;
+    color: #1B2C80;
+  }
+  .bilhete-seta {
+    color: #1B2C80;
+    font-size: 18px;
+  }
+  .bilhete-detalhes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    border-top: 1px dashed #C5CED9;
+    padding: 10px 14px;
+    font-size: 11px;
+    color: #4B5563;
   }
   @media (max-width: 600px) {
     .cabecalho,

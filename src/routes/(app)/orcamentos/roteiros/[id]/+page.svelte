@@ -237,6 +237,7 @@
   let nome = $state('');
   let revisao = $state<string | undefined>();
   let duracao = $state('');
+  let modeloPdfRoteiro: 'completo' | 'itinerario' = $state('completo');
   let inicioCidade = $state('');
   let fimCidade = $state('');
   let incluiTexto = $state('');
@@ -1224,7 +1225,8 @@
   }
 
   function buildRoteiroPreviewHtml(
-    assets: PreviewPdfAssets = { qrUrl: null, complementUrl: null }
+    assets: PreviewPdfAssets = { qrUrl: null, complementUrl: null },
+    modeloInicial: 'completo' | 'itinerario' = 'completo'
   ) {
     const diasItems = dias.filter((dia) => dia.cidade || dia.percurso || dia.data || dia.descricao);
     const diasHtml =
@@ -1364,6 +1366,43 @@
         ? `<section class="preview-footer-card"><div>${footerLines.map((line) => escapePreviewHtml(line)).join('<br/>')}</div>${assets.complementUrl ? `<div class="preview-complement-img"><img src="${escapePreviewHtml(assets.complementUrl)}" alt="Imagem complementar" /></div>` : ''}</section>`
         : '';
 
+    const rot2DiasHtml = diasItems.length
+      ? diasItems
+          .map((dia, index) => {
+            const cidadeCurta = nomeCidadeNoPdf((dia.cidade || '').trim());
+            const percursoTxt = (dia.percurso || '').trim();
+            const rota = [cidadeCurta, percursoTxt].filter(Boolean).join(' · ');
+            return `<div class="rot2-dia">
+              <div class="rot2-dia-lado">
+                <b>Dia ${index + 1}</b>
+                ${dia.data ? `<span>${escapePreviewHtml(formatPreviewDate(dia.data))}</span>` : ''}
+              </div>
+              <div class="rot2-dia-corpo">
+                ${rota ? `<div class="rot2-dia-rota">${escapePreviewHtml(rota)}</div>` : ''}
+                ${dia.descricao ? `<p>${escapePreviewHtml(dia.descricao).replace(/\n/g, '<br>')}</p>` : ''}
+              </div>
+            </div>`;
+          })
+          .join('')
+      : '';
+
+    const itinerarioBodyHtml = `
+      ${incluirCabecalhoRodapePdf ? headerCardHtml : ''}
+      <section class="rot2-head">
+        <div class="rot2-kicker">Roteiro Personalizado</div>
+        <h1 class="rot2-title">${escapePreviewHtml(nome || 'Roteiro')}</h1>
+        <div class="rot2-meta">
+          ${clienteNome ? `<span>Para: <b>${escapePreviewHtml(clienteNome)}</b></span>` : ''}
+          ${periodText ? `<span>Período: ${escapePreviewHtml(periodText)}</span>` : ''}
+          ${duracao ? `<span>Duração: ${escapePreviewHtml(duracao)} dias</span>` : ''}
+          ${citiesLine ? `<span>Cidades: ${escapePreviewHtml(citiesLine)}</span>` : ''}
+        </div>
+      </section>
+      ${rot2DiasHtml ? `<section class="rot2-itin"><h2>Itinerário Detalhado</h2>${rot2DiasHtml}</section>` : ''}
+      ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}`;
+
+    const mostrarItinerario = modeloInicial === 'itinerario';
+
     return `<!doctype html>
       <html lang="pt-BR">
         <head>
@@ -1444,12 +1483,40 @@
               }
               .roteiro-card--long, .roteiro-optional-item--long { break-inside: auto; page-break-inside: auto; overflow: visible; }
             }
+            .modelo[hidden] { display: none !important; }
+            .rot2-modelo { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #475569; }
+            .rot2-modelo select { border: 1px solid #cbd5e1; border-radius: 8px; padding: 6px 10px; font-size: 13px; background: #fff; color: #0f172a; }
+            .rot2-head { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 16px 18px; margin: 0 0 14px 0; }
+            .rot2-kicker { font-size: 8pt; font-weight: bold; letter-spacing: 1.6px; text-transform: uppercase; color: #6B7280; }
+            .rot2-title { font-size: 20pt; color: #1B2C80; margin: 2px 0 8px; line-height: 1.15; }
+            .rot2-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 9pt; color: #4B5563; }
+            .rot2-meta b { color: #1F2937; }
+            .rot2-itin { background: white; border: 1px solid #d1d5db; border-radius: 12px; padding: 16px 18px; margin: 0 0 14px 0; }
+            .rot2-itin h2 { margin: 0 0 10px; font-size: 13pt; color: #1B2C80; }
+            .rot2-dia { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 12px; padding: 10px 0; border-top: 1px solid #EEF2F7; break-inside: avoid; }
+            .rot2-dia-lado b { display: block; color: #1B2C80; font-size: 9.5pt; }
+            .rot2-dia-lado span { display: block; color: #6B7280; font-size: 8pt; margin-top: 2px; }
+            .rot2-dia-rota { font-weight: bold; color: #1F2937; font-size: 9.5pt; margin-bottom: 3px; }
+            .rot2-dia-corpo p { margin: 0; color: #4B5563; font-size: 9pt; line-height: 1.55; white-space: pre-line; }
+            @media print {
+              .rot2-dia { break-inside: avoid; page-break-inside: avoid; }
+              .rot2-head, .rot2-itin { box-shadow: none; }
+            }
             ${roteiroPdfThemeCss}
           </style>
         </head>
         <body>
           <div class="shell">
-            <div class="toolbar"><a class="print-action" href="#" onclick="event.preventDefault(); window.print();">Imprimir / Salvar em PDF</a></div>
+            <div class="toolbar">
+              <label class="rot2-modelo">Modelo
+                <select onchange="rvSwitchModelo(this.value)">
+                  <option value="completo"${mostrarItinerario ? '' : ' selected'}>Completo</option>
+                  <option value="itinerario"${mostrarItinerario ? ' selected' : ''}>Itinerário</option>
+                </select>
+              </label>
+              <a class="print-action" href="#" onclick="event.preventDefault(); window.print();">Imprimir / Salvar em PDF</a>
+            </div>
+            <div class="modelo" data-modelo="completo"${mostrarItinerario ? ' hidden' : ''}>
             ${incluirCabecalhoRodapePdf ? headerCardHtml : ''}
             ${titleCardHtml}
             ${summaryBandHtml}
@@ -1476,6 +1543,17 @@
             ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'), 'x')}
             ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
             ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}
+            </div>
+            <div class="modelo" data-modelo="itinerario"${mostrarItinerario ? '' : ' hidden'}>
+              ${itinerarioBodyHtml}
+            </div>
+            <script>
+              function rvSwitchModelo(modelo) {
+                document.querySelectorAll('.modelo').forEach(function (el) {
+                  el.hidden = el.getAttribute('data-modelo') !== modelo;
+                });
+              }
+            </scr${'ipt'}>
           </div>
         </body>
       </html>`;
@@ -1486,7 +1564,7 @@
     previewingPdf = true;
     try {
       const assets = await resolvePreviewPdfAssets();
-      const html = buildRoteiroPreviewHtml(assets);
+      const html = buildRoteiroPreviewHtml(assets, modeloPdfRoteiro);
       const previewUrl = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
       const opened = safeOpenNewTab(previewUrl, ['blob:']);
       if (!opened) {
@@ -1953,6 +2031,16 @@
     <Button type="button" variant="secondary" on:click={() => goto('/orcamentos/roteiros')}
       >Cancelar</Button
     >
+    <label class="flex items-center gap-2 text-sm text-slate-600">
+      Modelo PDF
+      <select
+        bind:value={modeloPdfRoteiro}
+        class="rounded-lg border border-slate-300 bg-white px-2 py-2 text-sm text-slate-700"
+      >
+        <option value="completo">Completo</option>
+        <option value="itinerario">Itinerário</option>
+      </select>
+    </label>
     <Button type="button" variant="secondary" loading={previewingPdf} on:click={handlePreviewPdf}>
       <FileText size={16} class="mr-2" />
       Visualizar PDF

@@ -117,6 +117,7 @@
   let exportDesconto = '';
   let exportShowItemValues: 'sim' | 'nao' = 'nao';
   let exportShowHeader: 'sim' | 'nao' = 'nao';
+  let exportModeloPdf: 'classico' | 'proposta' = 'classico';
   let showPdfOptions = false;
   $: exportDescontoNum = (() => {
     const v = String(exportDesconto).replace(',', '.').trim();
@@ -313,7 +314,8 @@
         showBudgetDetails: true,
         showItemValues: exportShowItemValues === 'sim',
         showHeader: exportShowHeader === 'sim',
-        discount: exportDescontoNum
+        discount: exportDescontoNum,
+        modeloInicial: exportModeloPdf
       });
     } catch (err) {
       toast.error(toUserMessage(err, 'Erro ao gerar prévia do PDF.'));
@@ -918,6 +920,23 @@
                 bind:value={exportDesconto}
                 helper="Aplicado apenas no PDF exportado, não altera o orçamento."
               />
+
+              <div>
+                <label
+                  for="export-modelo-pdf"
+                  class="mb-1 block text-sm font-medium text-slate-700"
+                >
+                  Modelo do PDF
+                </label>
+                <select
+                  id="export-modelo-pdf"
+                  class="focus:border-clientes-400 focus:ring-clientes-100 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:ring-2 focus:outline-hidden"
+                  bind:value={exportModeloPdf}
+                >
+                  <option value="classico">Clássico</option>
+                  <option value="proposta">Proposta de Viagem</option>
+                </select>
+              </div>
 
               <div>
                 <label

@@ -1488,6 +1488,269 @@ function renderFinancialSummary(
 }
 
 // ---------------------------------------------------------------------------
+// MODELO 2 — PROPOSTA DE VIAGEM
+// ---------------------------------------------------------------------------
+
+const propostaTypeLabels: Record<string, string> = {
+  hotel: 'Hospedagem',
+  hospedagem: 'Hospedagem',
+  servico: 'Serviço',
+  pacote: 'Pacote',
+  passagem: 'Passagem Aérea',
+  trem: 'Trem',
+  passeio: 'Passeio',
+  show: 'Show',
+  aluguel_carro: 'Locação de Veículo',
+  ingresso: 'Ingresso',
+  transfer: 'Traslado',
+  seguro: 'Seguro Viagem',
+  seguro_viagem: 'Seguro Viagem',
+  outro: 'Serviço'
+};
+
+function propostaTipoLabel(item: QuoteItemForPdf) {
+  const type = normalizeText(item.item_type);
+  if (type === 'trem') return 'Trem';
+  if (isFlightQuoteItem(item)) return 'Passagem Aérea';
+  return propostaTypeLabels[type] || textVal(item.item_type) || 'Serviço';
+}
+
+function propostaCronogramaHtml(items: QuoteItemForPdf[]) {
+  type Entrada = {
+    start: string;
+    end: string;
+    city: string;
+    labels: string[];
+    descs: string[];
+  };
+  const grupos = new Map<string, Entrada>();
+  const ordenados = [...items].sort((a, b) =>
+    String(a.start_date || '9999').localeCompare(String(b.start_date || '9999'))
+  );
+  for (const item of ordenados) {
+    const start = textVal(item.start_date);
+    const end = textVal(item.end_date);
+    const key = `${start}|${end}`;
+    let grupo = grupos.get(key);
+    if (!grupo) {
+      grupo = {
+        start,
+        end,
+        city: nomeCidadeNoPdf(textVal(item.city_name)),
+        labels: [],
+        descs: []
+      };
+      grupos.set(key, grupo);
+    }
+    const label = propostaTipoLabel(item);
+    if (!grupo.labels.includes(label)) grupo.labels.push(label);
+    const desc = getServiceTitle(item);
+    if (desc && !grupo.descs.includes(desc)) grupo.descs.push(desc);
+    if (!grupo.city) grupo.city = nomeCidadeNoPdf(textVal(item.city_name));
+  }
+  const entradas = Array.from(grupos.values()).sort((a, b) =>
+    (a.start || '9999').localeCompare(b.start || '9999')
+  );
+  if (!entradas.length) return '';
+  const linhas = entradas
+    .map((grupo) => {
+      const periodo = faixaDatas(grupo.start || null, grupo.end || null) || '—';
+      const titulo = [grupo.city, grupo.labels.join(' & ')].filter(Boolean).join(' • ');
+      const desc = grupo.descs.slice(0, 3).join(' · ');
+      return `<div class="pv-cron">
+        <div class="pv-cron-period">${escHtml(periodo)}</div>
+        <div class="pv-cron-body"><b>${escHtml(titulo)}</b>${desc ? `<p>${escHtml(desc)}</p>` : ''}</div>
+      </div>`;
+    })
+    .join('');
+  return `<div class="pv-sec"><div class="pv-sec-title">Cronograma dos Serviços</div><div class="pv-cron-list">${linhas}</div></div>`;
+}
+
+function propostaVoosLinhas(item: QuoteItemForPdf): string[] {
+  return getFlightDataList(item).map((raw) => {
+    const flight = Object.fromEntries(
+      Object.entries(raw).map(([key, value]) => [key, String(value ?? '')])
+    );
+    const origem = nomeCidadeNoPdf(
+      textVal(flight.aeroporto_saida) ||
+        textVal(flight.cidade_saida) ||
+        textVal(flight.origem)
+    );
+    const destino = nomeCidadeNoPdf(
+      textVal(flight.aeroporto_chegada) ||
+        textVal(flight.cidade_chegada) ||
+        textVal(flight.destino)
+    );
+    const saida = textVal(flight.hora_saida);
+    const chegada = textVal(flight.hora_chegada);
+    const rota = [origem, destino].some(Boolean)
+      ? `${origem} ${saida} → ${destino} ${chegada}`.replace(/\s+/g, ' ').trim()
+      : '';
+    const meta = [
+      formatDateBR(textVal(flight.data_voo || flight.data_inicio) || null),
+      textVal(flight.cia_aerea),
+      textVal(flight.numero_voo) || textVal(flight.voo) || textVal(flight.descricao),
+      textVal(flight.classe_reserva)
+    ]
+      .filter(Boolean)
+      .join(' · ');
+    return [rota, meta].filter(Boolean).join(' — ');
+  });
+}
+
+function propostaDetalheCardHtml(
+  item: QuoteItemForPdf,
+  showItemValues: boolean,
+  defaultCurrency: string
+) {
+  const type = normalizeText(item.item_type);
+  const details = lerDetalhes(item);
+  const hospedagem = type === 'hotel' || type === 'hospedagem';
+  const carro = type === 'aluguel_carro';
+  const flight = isFlightQuoteItem(item) && type !== 'trem';
+  const label = propostaTipoLabel(item);
+  const title = getServiceTitle(item);
+  const periodo = formatServicePeriod(item);
+  const fields = getServiceDetails(item);
+  const quantity = flight
+    ? formatFlightQuantity(item)
+    : (formatLodgingOrCarQuantity(item) ??
+      (item.quantity == null ? '-' : String(item.quantity)));
+  const tags = hospedagem
+    ? [textVal(details.regime), passageirosSemZero(item)]
+    : carro
+      ? etiquetasCarro(details.incluidos)
+      : [passageirosSemZero(item)];
+  const amount = Number(item.total_amount ?? 0);
+  const currency = item.currency || defaultCurrency;
+  const iconType = flight ? 'passagem' : type;
+  const meta = [
+    quantity && quantity !== '-' ? `Qtd: ${quantity}` : '',
+    ...fields
+  ]
+    .filter(Boolean)
+    .join(' · ');
+  const voos = flight ? propostaVoosLinhas(item).filter(Boolean) : [];
+  return `<div class="pv-card">
+    <div class="pv-card-top">
+      <span class="pv-ic">${serviceIconSvg(iconType)}</span>
+      <div class="pv-card-main"><b>${escHtml(`${label}${title ? ` • ${title}` : ''}`)}</b>${periodo ? `<span class="pv-sub">${escHtml(periodo)}</span>` : ''}</div>
+      ${showItemValues ? `<div class="pv-val">${escHtml(formatCurrency(amount, currency))}</div>` : ''}
+    </div>
+    ${voos.map((voo) => `<div class="pv-meta-line pv-voo">${escHtml(voo)}</div>`).join('')}
+    ${meta ? `<div class="pv-meta-line">${escHtml(meta)}</div>` : ''}
+    ${etiquetas(tags)}
+  </div>`;
+}
+
+function propostaInvestimentoHtml(
+  items: QuoteItemForPdf[],
+  defaultCurrency: string,
+  discount: number
+) {
+  const totais = totaisDaViagem(items, defaultCurrency, discount).filter(
+    ({ total }) => total > 0
+  );
+  if (!totais.length) return '';
+  const adultos = Math.max(0, ...items.map((item) => lerDetalhes(item).adultos || 0));
+  const paxTotal = adultos ? `${adultos} ${adultos === 1 ? 'adulto' : 'adultos'}` : '';
+  const blocos = totais
+    .map(({ code, group, total }) => {
+      const porPessoa = adultos > 0 ? total / adultos : null;
+      const breakdown = [
+        group.flights ? `Aéreo ${formatCurrency(group.flights, code)}` : '',
+        group.services ? `Serviços ${formatCurrency(group.services, code)}` : '',
+        group.taxes ? `Taxas ${formatCurrency(group.taxes, code)}` : ''
+      ]
+        .filter(Boolean)
+        .join(' + ');
+      return `<div class="pv-invest">
+        <div class="pv-invest-head"><span class="pv-ic">${serviceIconSvg('investimento')}</span><b>Investimento</b></div>
+        ${porPessoa != null ? `<div class="pv-inv-row"><div><b>Por pessoa</b><span>Valor médio individual por adulto</span></div><b class="pv-inv-val">${escHtml(formatCurrency(porPessoa, code))}</b></div>` : ''}
+        <div class="pv-inv-row pv-inv-total"><div><b>Total da viagem${paxTotal ? ` (${paxTotal})` : ''}</b>${breakdown ? `<span>${escHtml(breakdown)}</span>` : ''}</div><b class="pv-inv-val">${escHtml(formatCurrency(total, code))}</b></div>
+      </div>`;
+    })
+    .join('');
+  return `<div class="pv-sec"><div class="pv-sec-title">Investimento</div>${blocos}</div>`;
+}
+
+function buildPropostaBodyHtml(params: {
+  clientName: string;
+  period: string;
+  cities: string[];
+  validity: string;
+  dateLabel: string;
+  consultor: string;
+  primeiroNome: string;
+  contatos: string;
+  viajantes: string;
+  qrUrl: string | null;
+  items: QuoteItemForPdf[];
+  currency: string;
+  discount: number;
+  showItemValues: boolean;
+  showHeader: boolean;
+  showDetalhes: boolean;
+}): string {
+  const {
+    clientName,
+    period,
+    cities,
+    validity,
+    dateLabel,
+    consultor,
+    primeiroNome,
+    contatos,
+    viajantes,
+    qrUrl,
+    items,
+    currency,
+    discount,
+    showItemValues,
+    showHeader,
+    showDetalhes
+  } = params;
+
+  const destino =
+    cities.join(' · ').toUpperCase() || textVal(clientName).toUpperCase() || 'Proposta de Viagem';
+  const metaItems = [
+    `Para: ${clientName}`,
+    period ? `Período: ${period}` : '',
+    viajantes ? `Viajantes: ${viajantes}` : '',
+    dateLabel ? `Emissão: ${dateLabel}` : '',
+    validity ? `Validade: ${validity}` : ''
+  ].filter(Boolean);
+
+  const cidadesHtml = cities.length
+    ? `<div class="pv-cidades"><div class="pv-cidades-label">Cidades contempladas na proposta</div><div class="pv-cidades-chips">${cities.map((city) => `<span class="pv-chip">${escHtml(city)}</span>`).join('')}</div></div>`
+    : '';
+
+  const cronogramaHtml = showDetalhes ? propostaCronogramaHtml(items) : '';
+  const detalhesHtml = !showDetalhes
+    ? ''
+    : items.length
+      ? `<div class="pv-sec"><div class="pv-sec-title">Detalhamento dos Serviços Cotados</div>${items.map((item) => propostaDetalheCardHtml(item, showItemValues, currency)).join('')}</div>`
+      : `<div class="pv-sec"><div class="pv-sec-title">Detalhamento dos Serviços Cotados</div><div class="orc-empty">Sem itens neste orçamento.</div></div>`;
+  const investimentoHtml = propostaInvestimentoHtml(items, currency, discount);
+
+  return `<div class="pv-head">
+    <div class="pv-head-main">
+      <div class="pv-kicker">Proposta de Viagem</div>
+      <h1 class="pv-title">${escHtml(destino)}</h1>
+      <div class="pv-meta">${metaItems.map((meta) => `<span>${escHtml(meta)}</span>`).join('<span class="pv-dot">•</span>')}</div>
+    </div>
+    ${showHeader && consultor ? `<div class="pv-cons"><b>${escHtml(consultor)}</b>${contatos ? `<span>${escHtml(contatos)}</span>` : ''}<span>Consultor de viagens</span></div>` : ''}
+  </div>
+  <div class="pv-cta-row">
+    <div class="cta">${qrUrl ? `<img src="${escHtml(qrUrl)}" alt="QR Code WhatsApp" />` : ''}<div><b>Reserve com o ${escHtml(primeiroNome || 'consultor')}</b><br><span>Aponte a câmera para o QR Code e fale no WhatsApp.${validity ? ` Tarifas válidas até ${escHtml(validity)}.` : ''}</span></div></div>
+  </div>
+  ${cidadesHtml}
+  ${cronogramaHtml}
+  ${detalhesHtml}
+  ${investimentoHtml}`;
+}
+
+// ---------------------------------------------------------------------------
 // BUILDER DO HTML
 // ---------------------------------------------------------------------------
 
@@ -1502,6 +1765,7 @@ export function buildQuotePreviewHtmlSync(params: {
   showItemValues: boolean;
   showHeader?: boolean;
   discount?: number;
+  modeloInicial?: 'classico' | 'proposta';
 }): string {
   const {
     quote,
@@ -1513,7 +1777,8 @@ export function buildQuotePreviewHtmlSync(params: {
     showBudgetDetails,
     showItemValues,
     showHeader = true,
-    discount = 0
+    discount = 0,
+    modeloInicial = 'classico'
   } = params;
 
   const safeDiscount = Math.max(Number.isFinite(discount) ? discount : 0, 0);
@@ -1604,6 +1869,26 @@ export function buildQuotePreviewHtmlSync(params: {
       <ul class="orc-footer-list">${footerLinesHtml}</ul>
       ${complementUrl ? `<div class="orc-complement-img"><img src="${escHtml(complementUrl)}" alt="Imagem complementar" /></div>` : ''}
     </div>`;
+
+  const propostaBodyHtml = buildPropostaBodyHtml({
+    clientName,
+    period,
+    cities,
+    validity,
+    dateLabel,
+    consultor,
+    primeiroNome,
+    contatos,
+    viajantes,
+    qrUrl,
+    items,
+    currency,
+    discount: safeDiscount,
+    showItemValues,
+    showHeader,
+    showDetalhes: showBudgetItems || showBudgetDetails
+  });
+  const mostrarProposta = modeloInicial === 'proposta';
 
   const css = `
     *, *::before, *::after { box-sizing: border-box; }
@@ -1777,6 +2062,46 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-validity-client { font-size: 10px; color: #0f172a; }
     .orc-validity-date { font-size: 10px; color: #dc2626; margin: 3px 0 0 0; }
 
+    .modelo[hidden] { display: none !important; }
+    .pv-modelo { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4B5563; }
+    .pv-modelo select { border: 1px solid #C5CED9; border-radius: 8px; padding: 6px 10px; font-size: 13px; background: #fff; color: #1F2937; }
+    .pv-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 10px; }
+    .pv-head-main { min-width: 0; }
+    .pv-kicker { color: #6B7280; font-size: 8pt; font-weight: bold; letter-spacing: 1.6px; text-transform: uppercase; }
+    .pv-title { color: #1B2C80; font-size: 20pt; margin: 2px 0 6px; line-height: 1.15; }
+    .pv-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 8px; color: #4B5563; font-size: 8.5pt; }
+    .pv-meta b { color: #1F2937; }
+    .pv-dot { color: #C5CED9; }
+    .pv-cons { text-align: right; font-size: 8pt; color: #6B7280; line-height: 1.55; flex: none; }
+    .pv-cons b { color: #1B2C80; display: block; font-size: 9.5pt; }
+    .pv-cta-row { margin: 0 0 10px; }
+    .pv-cidades { margin: 0 0 10px; }
+    .pv-cidades-label { font-size: 7.5pt; color: #6B7280; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+    .pv-cidades-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .pv-chip { border: 1px solid #C5CED9; border-radius: 999px; padding: 3px 10px; font-size: 8pt; color: #1B2C80; background: #fff; }
+    .pv-sec { margin: 0 0 10px; }
+    .pv-sec-title { font-size: 11pt; color: #1B2C80; font-weight: bold; margin: 12px 0 6px; }
+    .pv-cron { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 10px; padding: 7px 0; border-top: 1px solid #EEF2F7; break-inside: avoid; }
+    .pv-cron-period { color: #1B2C80; font-weight: bold; font-size: 8.5pt; }
+    .pv-cron-body b { font-size: 9pt; color: #1F2937; }
+    .pv-cron-body p { margin: 2px 0 0; color: #4B5563; font-size: 8pt; }
+    .pv-card { border: 1.5px solid #C5CED9; border-radius: 10px; padding: 9px 12px; margin-bottom: 7px; break-inside: avoid; background: #fff; }
+    .pv-card-top { display: flex; align-items: flex-start; gap: 9px; }
+    .pv-ic { color: #1B2C80; flex: none; display: inline-flex; }
+    .pv-ic svg { width: 20px; height: 20px; }
+    .pv-card-main { flex: 1; min-width: 0; }
+    .pv-card-main > b { font-size: 9.5pt; color: #1F2937; }
+    .pv-sub { display: block; color: #6B7280; font-size: 8pt; margin-top: 1px; }
+    .pv-val { font-weight: bold; color: #1B2C80; font-size: 10pt; white-space: nowrap; }
+    .pv-meta-line { color: #4B5563; font-size: 8pt; margin: 5px 0 0; }
+    .pv-invest { border: 1.5px solid #C5CED9; border-radius: 12px; padding: 11px 14px; margin-bottom: 7px; break-inside: avoid; background: #fff; }
+    .pv-invest-head { display: flex; align-items: center; gap: 8px; color: #1B2C80; font-size: 10pt; margin-bottom: 4px; }
+    .pv-inv-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 6px 0; border-top: 1px solid #EEF2F7; }
+    .pv-inv-row > div { min-width: 0; }
+    .pv-inv-row > div > span { display: block; color: #6B7280; font-size: 7.8pt; margin-top: 1px; }
+    .pv-inv-val { color: #1B2C80; font-size: 12pt; white-space: nowrap; }
+    .pv-inv-total { background: #EEF2F7; margin: 6px -14px -11px; padding: 9px 14px; border-radius: 0 0 10.5px 10.5px; border-top: 1.5px solid #C5CED9; }
+
     @media screen and (max-width: 640px) {
       .orc-financial-section { overflow-x: auto; }
       .orc-city-table { min-width: 580px; }
@@ -1800,6 +2125,12 @@ export function buildQuotePreviewHtmlSync(params: {
         break-inside: avoid;
         page-break-inside: avoid;
         overflow: visible;
+      }
+      .pv-card,
+      .pv-invest,
+      .pv-cron {
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
       .sh { background: #D0DAEA; color: #1B2C80; }
       .sh small { color: #6B7280; }
@@ -1827,15 +2158,39 @@ export function buildQuotePreviewHtmlSync(params: {
   <style>${css}</style>
 </head>
 <body>
-  <div class="toolbar"><button onclick="window.print()">Imprimir / Salvar em PDF</button></div>
-  <div class="pg">
-    ${showHeader ? headerHtml : ''}
-    ${titleHtml}
-    ${bandHtml}
-    ${itensHtml}
-    ${renderFinancialSummary(items, currency, safeDiscount, showItemValues)}
-    ${footerHtml}
+  <div class="toolbar">
+    <label class="pv-modelo">Modelo
+      <select onchange="pvSwitchModelo(this.value)">
+        <option value="classico"${mostrarProposta ? '' : ' selected'}>Clássico</option>
+        <option value="proposta"${mostrarProposta ? ' selected' : ''}>Proposta de Viagem</option>
+      </select>
+    </label>
+    <button onclick="window.print()">Imprimir / Salvar em PDF</button>
   </div>
+  <div class="modelo" data-modelo="classico"${mostrarProposta ? ' hidden' : ''}>
+    <div class="pg">
+      ${showHeader ? headerHtml : ''}
+      ${titleHtml}
+      ${bandHtml}
+      ${itensHtml}
+      ${renderFinancialSummary(items, currency, safeDiscount, showItemValues)}
+      ${footerHtml}
+    </div>
+  </div>
+  <div class="modelo" data-modelo="proposta"${mostrarProposta ? '' : ' hidden'}>
+    <div class="pg">
+      ${showHeader ? headerHtml : ''}
+      ${propostaBodyHtml}
+      ${footerHtml}
+    </div>
+  </div>
+  <script>
+    function pvSwitchModelo(modelo) {
+      document.querySelectorAll('.modelo').forEach(function (el) {
+        el.hidden = el.getAttribute('data-modelo') !== modelo;
+      });
+    }
+  </script>
 </body>
 </html>`;
 }
@@ -1852,6 +2207,7 @@ export async function openQuotePreview(params: {
   showItemValues?: boolean;
   showHeader?: boolean;
   discount?: number;
+  modeloInicial?: 'classico' | 'proposta';
 }): Promise<void> {
   const {
     quoteId,
@@ -1860,7 +2216,8 @@ export async function openQuotePreview(params: {
     showBudgetDetails = true,
     showItemValues = true,
     showHeader = true,
-    discount = 0
+    discount = 0,
+    modeloInicial = 'classico'
   } = params;
 
   const quoteRow = await apiFetch<QuotePreviewRow>(
@@ -1924,7 +2281,8 @@ export async function openQuotePreview(params: {
     showBudgetDetails,
     showItemValues,
     showHeader,
-    discount
+    discount,
+    modeloInicial
   });
 
   // 9. Abre em nova aba
