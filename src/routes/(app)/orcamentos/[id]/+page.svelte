@@ -40,7 +40,7 @@
   } from '$lib/utils/formatters';
   import { toUserMessage } from '$lib/utils/errors';
   import { ensureServerSessionCookie } from '$lib/services/session';
-  import { renderQuoteItemsForScreen } from '$lib/quote/exportQuotePdfClient';
+  import { renderQuoteItemsForScreen, openQuotePreview } from '$lib/quote/exportQuotePdfClient';
 
   import { confirmAction } from '$lib/stores/confirm';
   import { ApiError, apiDelete, apiFetch, apiPatch, isCanceledApiError } from '$lib/services/api';
@@ -302,10 +302,7 @@
     }
     previewingPdf = true;
     try {
-      const [{ createBrowserDataClient }, { openQuotePreview }] = await Promise.all([
-        import('$lib/db/browserData'),
-        import('$lib/quote/exportQuotePdfClient')
-      ]);
+      const { createBrowserDataClient } = await import('$lib/db/browserData');
       const dadosBrowser = createBrowserDataClient();
       await openQuotePreview({
         quoteId: orcamentoId,

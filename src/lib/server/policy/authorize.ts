@@ -23,6 +23,7 @@ import type { ApiEnv } from '$lib/server/api/types';
 import type { Recurso, Acao } from './matrix';
 import { MATRIZ_RBAC } from './matrix';
 import type { AuthContext } from '$lib/server/auth/context';
+import { resolveAuthContext } from '$lib/server/auth/context';
 import { hasLegacyModuleAccess } from '$lib/server/auth/legacy-scope';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -172,7 +173,7 @@ export function requireCan(recurso: Recurso, acao: Acao): MiddlewareHandler<ApiE
         ? 'https://vturapp.com.br'
         : (PUBLIC_APP_URL ?? 'http://localhost:5173');
 
-    const { resolveAuthContext } = await import('$lib/server/auth/context');
+
     const ctx = await resolveAuthContext(c.req.raw.headers, DB, BETTER_AUTH_SECRET, baseURL);
 
     if (!ctx) {
