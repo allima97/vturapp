@@ -81,7 +81,7 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - [x] financeiro (+ comissoes)
 - [x] operacao
 - [x] orcamentos (+ roteiros)
-- [ ] vendas
+- [x] vendas
 - [ ] parametros
 - [ ] relatorios + dashboards
 - [ ] consultoria-online
@@ -124,3 +124,5 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - `operacao`: `Intl.NumberFormat` removido de viagens, viagens/[id], ultimas-compras → `formatCurrency`/`formatCurrencyInt`. `tarefas`: `DATE_TIME_FORMATTER` local → `formatDateTime` canônico. `agenda`: branch com hora → `formatDateTime` canônico (manteve `DATE_FORMATTER` local para eventos allDay — formatação date-only de `Date` não coberta pelos helpers). **Exceções documentadas**: `passagens` tabela "Passagens salvas" (Card com slot de ações + linhas clicáveis — DataTable não suporta slot de ação no header) e `passagens/comprovante` (markup de impressão do bilhete).
 
 - `orcamentos`: `Intl.NumberFormat` ad-hoc removido de +page, novo, [id] e [id]/editar — multi-moeda agora usa `formatCurrency(value, currency)` canônico (mesmo cache por moeda); `formatBRL` de roteiros delega a `formatNumber(x,2)`; `AbaPasseios` usa `formatCurrency`. **Exceções documentadas**: tabelas `preview-header-*` e `roteiro-print-table` são markup de impressão/PDF.
+
+- `vendas`: `Intl.NumberFormat` local removido de +page e [id] → `formatCurrency` canônico ([id] mantém wrapper local para coerção `Number()` de campos `string|number` do D1). **Exceções documentadas**: tabelas "Recibos" e "Pagamentos" em [id] têm `tfoot` com totais — DataTable não suporta rodapé de agregação. `lib/server/vendas/pdf.ts` segue com paleta antiga (débito conhecido, convergir depois).

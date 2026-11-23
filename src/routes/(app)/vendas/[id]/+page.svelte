@@ -39,7 +39,7 @@
   import { toast } from '$lib/stores/ui';
   import { permissoes } from '$lib/stores/permissoes';
   import { Merge } from '$lib/icons';
-  import { formatDate as formatDateValue } from '$lib/utils/formatters';
+  import { formatCurrency as formatCurrencyValue, formatDate as formatDateValue } from '$lib/utils/formatters';
   import { toUserMessage } from '$lib/utils/errors';
   import { ApiError, apiDelete, apiFetch, apiGet, apiPatch, apiPost } from '$lib/services/api';
   import { ensureServerSessionCookie } from '$lib/services/session';
@@ -48,10 +48,6 @@
   const vendaId = $page.params.id;
   const vendaIdSafe = vendaId ?? '';
   const INITIAL_LOAD_RETRY_STATUSES = new Set([0, 404, 503, 504]);
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
   const PT_BR_COLLATOR = new Intl.Collator('pt-BR');
 
   type CadastroBasePayload = {
@@ -637,12 +633,13 @@
     }
   }
 
-  function formatCurrency(value: number | string | null | undefined): string {
-    return BRL_CURRENCY_FORMATTER.format(Number(value || 0));
-  }
 
   function formatDate(dateString: string | null | undefined): string {
     return formatDateValue(dateString);
+  }
+
+  function formatCurrency(value: number | string | null | undefined): string {
+    return formatCurrencyValue(Number(value || 0));
   }
 
   function getReciboCidade(recibo: VendaReciboResumo): string {

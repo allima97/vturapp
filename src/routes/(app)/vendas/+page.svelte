@@ -15,7 +15,7 @@
   import { permissoes } from '$lib/stores/permissoes';
   import { monthRangeFromKey, todayISODateLocal } from '$lib/date';
   import { toUserMessage } from '$lib/utils/errors';
-  import { formatDate } from '$lib/utils/formatters';
+  import { formatDate, formatCurrency } from '$lib/utils/formatters';
 
   interface Venda {
     id: string;
@@ -61,10 +61,6 @@
     inicio: `${currentMonth}-01`,
     fim: today
   };
-  const BRL_CURRENCY_FORMATTER = new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL'
-  });
   const PT_BR_COLLATOR = new Intl.Collator('pt-BR');
 
   let vendas: Venda[] = [];
@@ -140,7 +136,7 @@
       sortable: true,
       align: 'right' as const,
       formatter: (value: number | null | undefined) =>
-        BRL_CURRENCY_FORMATTER.format(Number(value) || 0)
+        formatCurrency(Number(value) || 0)
     },
     {
       key: 'valor_taxas',
@@ -148,7 +144,7 @@
       sortable: true,
       align: 'right' as const,
       formatter: (value: number | null | undefined) =>
-        BRL_CURRENCY_FORMATTER.format(Number(value) || 0)
+        formatCurrency(Number(value) || 0)
     },
     {
       key: 'status',
@@ -382,9 +378,6 @@
     toast.info('A exportação sera ligada na proxima etapa. Os dados reais ja estao conectados.');
   }
 
-  function formatCurrency(value: number | null | undefined) {
-    return BRL_CURRENCY_FORMATTER.format(Number(value) || 0);
-  }
 </script>
 
 <svelte:head>
