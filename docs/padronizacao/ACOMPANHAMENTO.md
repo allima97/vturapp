@@ -85,7 +85,7 @@ Plano de origem: documento do usuário "Plano de Padronização — App SvelteKi
 - [x] parametros
 - [x] relatorios + dashboards
 - [x] consultoria-online
-- [ ] perfil + auth
+- [x] perfil + auth
 - [x] reescrita (avaliar: legado — migrar ou excluir)
 
 ## Regras de segurança para o agent executor
