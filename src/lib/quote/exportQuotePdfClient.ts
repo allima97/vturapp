@@ -1936,7 +1936,52 @@ function buildPropostaBodyHtml(params: {
 
 
 // ---------------------------------------------------------------------------
-// MODELO MODERNO — buildModernoPropostaBodyHtml
+// Investimento no layout rot3 (usado no Moderno de Orçamentos)
+// ---------------------------------------------------------------------------
+
+function buildRot3InvestimentoOrcamentoHtml(
+  items: QuoteItemForPdf[],
+  defaultCurrency: string,
+  discount: number,
+  validity: string,
+  consultor: string
+): string {
+  const totais = totaisDaViagem(items, defaultCurrency, discount).filter(({ total }) => total > 0);
+  if (!totais.length) return '';
+  const adultos = Math.max(0, ...items.map((item) => lerDetalhes(item).adultos || 0));
+  const priNome = consultor.split(/\s+/)[0] || 'o consultor';
+  const clockIco = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;flex-shrink:0"><circle cx="12" cy="12" r="10" stroke="#1B2C80" stroke-width="2"/><path d="M12 7v5l3 3" stroke="#1B2C80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  const personIco = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;flex-shrink:0"><circle cx="12" cy="7" r="4" stroke="#6B7280" stroke-width="2"/><path d="M4 21c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/></svg>`;
+  const groupIco = `<svg width="18" height="16" viewBox="0 0 32 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;flex-shrink:0"><circle cx="10" cy="7" r="4" stroke="#6B7280" stroke-width="2"/><circle cx="22" cy="7" r="4" stroke="#6B7280" stroke-width="2"/><path d="M2 21c0-4.418 3.582-8 8-8h4c4.418 0 8 3.582 8 8" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/><path d="M22 13c4.418 0 8 3.582 8 8" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/></svg>`;
+  const footerNote = [
+    validity ? `Tarifas válidas até ${escHtml(validity)}` : '',
+    consultor ? `Reserve com ${escHtml(priNome)} via WhatsApp` : ''
+  ].filter(Boolean).join(' • ');
+
+  return totais.map(({ code, total }) => {
+    const porPessoa = adultos > 0 ? total / adultos : null;
+    const paxLabel = adultos > 0 ? `${adultos} ${adultos === 1 ? 'ADULTO' : 'ADULTOS'}` : '';
+    const totalLabel = paxLabel ? `TOTAL DA VIAGEM (${paxLabel})` : 'TOTAL DA VIAGEM';
+    const subTotal = paxLabel ? `Valor total da proposta para ${adultos} adulto${adultos !== 1 ? 's' : ''}` : 'Valor total do pacote';
+    const divider = porPessoa != null ? `<div class="rot3-inv-divider"></div>` : '';
+    const colPessoa = porPessoa != null ? `<div class="rot3-inv-col">
+        <div class="rot3-inv-label">${personIco}POR PESSOA</div>
+        <div class="rot3-inv-valor">${escHtml(formatCurrency(porPessoa, code))}</div>
+        <div class="rot3-inv-sub">Valor médio individual por adulto</div>
+      </div>${divider}` : '';
+    return `<div class="rot3-inv-box">
+      ${colPessoa}
+      <div class="rot3-inv-col">
+        <div class="rot3-inv-label">${groupIco}${escHtml(totalLabel)}</div>
+        <div class="rot3-inv-valor">${escHtml(formatCurrency(total, code))}</div>
+        <div class="rot3-inv-sub">${escHtml(subTotal)}</div>
+      </div>
+    </div>
+    <div class="rot3-inv-footer">${clockIco}${footerNote || 'Formas de pagamento sob consulta'}</div>`;
+  }).join('');
+}
+
+// MODELO MODERNO — buildModernoPropostaBodyHtml (layout rot3)
 // ---------------------------------------------------------------------------
 
 function buildModernoPropostaBodyHtml(params: {
@@ -1960,49 +2005,47 @@ function buildModernoPropostaBodyHtml(params: {
   const {
     clientName, period, cities, validity, dateLabel, consultor, primeiroNome,
     contatos, viajantes, qrUrl, items, currency, discount, showItemValues,
-    showHeader, showDetalhes
+    showDetalhes
   } = params;
 
   const destino = cities.join(' • ').toUpperCase() || 'PROPOSTA DE VIAGEM';
   const rotaCidades = cities.join(' • ');
   const metaItens = [
-    period ? `📅 Período: ${period}` : '',
-    viajantes ? `👥 Viajantes: ${viajantes}` : '',
-    dateLabel ? `📋 Emissão: ${dateLabel}` : '',
-    validity ? `⏱ Validade: ${validity}` : ''
+    period ? `Período: ${period}` : '',
+    viajantes ? `Viajantes: ${viajantes}` : '',
+    dateLabel ? `Emissão: ${dateLabel}` : '',
+    validity ? `Validade: ${validity}` : ''
   ].filter(Boolean);
 
   const cidadesHtml = cities.length
-    ? `<div class="pvm-bloco"><div class="pvm-bloco-label">CIDADES CONTEMPLADAS NA PROPOSTA</div><div class="pvm-rota">${escHtml(rotaCidades)}</div></div>`
+    ? `<div class="rot3-bloco"><div class="rot3-bloco-label">CIDADES CONTEMPLADAS NA PROPOSTA</div><div class="rot3-rota">${escHtml(rotaCidades)}</div></div>`
     : '';
 
-  const ctaHtml = `<div class="pvm-cta">${qrUrl ? `<img src="${escHtml(qrUrl)}" alt="QR" class="pvm-qr" />` : ''}<div class="pvm-cta-texto"><b>Reserve com ${escHtml(primeiroNome || 'o consultor')}</b><span>Atendimento direto via WhatsApp.${validity ? ` Tarifas válidas até ${escHtml(validity)}.` : ''}</span></div></div>`;
+  const ctaHtml = `<div class="rot3-cta">${qrUrl ? `<img src="${escHtml(qrUrl)}" alt="QR" class="rot3-qr" />` : ''}<div class="rot3-cta-texto"><b>Reserve com ${escHtml(primeiroNome || 'o consultor')}</b><span>Atendimento direto via WhatsApp.${validity ? ` Tarifas válidas até ${escHtml(validity)}.` : ''}</span></div></div>`;
 
-  const cronogramaHtml = showDetalhes ? propostaCronogramaHtml(items) : '';
   const detalhesHtml = showDetalhes
     ? propostaDetalhamentoHtml(items, showItemValues, currency) ||
-      `<div class="pvm-sec"><div class="pvm-sec-title">Detalhamento dos Serviços</div><div class="orc-empty">Sem itens neste orçamento.</div></div>`
+      `<section class="rot3-secao"><h2 class="rot3-secao-titulo">DETALHAMENTO DOS SERVIÇOS</h2><div class="orc-empty">Sem itens neste orçamento.</div></section>`
     : '';
-  const investimentoHtml = propostaInvestimentoHtml(items, currency, discount);
+  const investimentoHtml = buildRot3InvestimentoOrcamentoHtml(items, currency, discount, validity, consultor);
 
-  return `<div class="pvm-doc">
-  <div class="pvm-head">
-    <div class="pvm-head-main">
-      <div class="pvm-kicker">PROPOSTA DE VIAGEM</div>
-      <h1 class="pvm-title">${escHtml(destino)}</h1>
-      <div class="pvm-para">Para: <b>${escHtml(clientName)}</b></div>
-      ${metaItens.length ? `<div class="pvm-meta">${metaItens.map((m) => `<span>${escHtml(m)}</span>`).join('<span class="pvm-dot">•</span>')}</div>` : ''}
-    </div>
-    ${showHeader && consultor ? `<div class="pvm-cons"><b>${escHtml(consultor)}</b>${contatos ? `<span>${escHtml(contatos)}</span>` : ''}<span>Consultor de viagens</span></div>` : ''}
-  </div>
+  const consHtml = consultor
+    ? `<div class="rot3-cons"><b>${escHtml(consultor)}</b>${contatos ? `<span>${escHtml(contatos)}</span>` : ''}<span>Consultor de viagens</span></div>`
+    : '';
+
+  return `<div class="rot3-doc">
+  <div class="rot3-kicker-bar"></div>
+  <div class="rot3-kicker">PROPOSTA DE VIAGEM</div>
+  <h1 class="rot3-title">${escHtml(destino)}</h1>
+  <div class="rot3-para">Para: <strong>${escHtml(clientName)}</strong></div>
+  ${metaItens.length ? `<div class="rot3-meta">${metaItens.map((m) => `<span>${escHtml(m)}</span>`).join(' &nbsp;•&nbsp; ')}</div>` : ''}
+  ${consHtml}
   ${cidadesHtml}
   ${ctaHtml}
-  ${cronogramaHtml}
   ${detalhesHtml}
   ${investimentoHtml}
-</div>`;
-}
-
+  <div class="rot3-doc-footer">Proposta de Viagem${clientName ? ` · ${escHtml(clientName)}` : ''}</div>
+</div>
 // ---------------------------------------------------------------------------
 // BUILDER DO HTML
 // ---------------------------------------------------------------------------
@@ -2018,7 +2061,7 @@ export function buildQuotePreviewHtmlSync(params: {
   showItemValues: boolean;
   showHeader?: boolean;
   discount?: number;
-  modeloInicial?: 'classico' | 'proposta' | 'moderno';
+  modeloInicial?: 'classico' | 'moderno';
 }): string {
   const {
     quote,
@@ -2031,7 +2074,7 @@ export function buildQuotePreviewHtmlSync(params: {
     showItemValues,
     showHeader = true,
     discount = 0,
-    modeloInicial = 'classico' as 'classico' | 'proposta' | 'moderno'
+    modeloInicial = 'classico' as 'classico' | 'moderno'
   } = params;
 
   const safeDiscount = Math.max(Number.isFinite(discount) ? discount : 0, 0);
@@ -2141,7 +2184,6 @@ export function buildQuotePreviewHtmlSync(params: {
     showHeader,
     showDetalhes: showBudgetItems || showBudgetDetails
   });
-  const mostrarProposta = modeloInicial === 'proposta';
   const mostrarModerno = modeloInicial === 'moderno';
   const modernoBodyHtml = buildModernoPropostaBodyHtml({
     clientName,
@@ -2335,7 +2377,54 @@ export function buildQuotePreviewHtmlSync(params: {
     .orc-validity-date { font-size: 10px; color: #dc2626; margin: 3px 0 0 0; }
 
     .modelo[hidden] { display: none !important; }
-    .pv-modelo { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4B5563; }
+    /* ─── Modelo Moderno (rot3-*) ─────────────────────────────── */
+    .rot3-doc { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1F2937; max-width: 720px; margin: 0 auto; border-top: 4px solid #1B2C80; padding-top: 20px; }
+    .rot3-kicker-bar { width: 40px; height: 3px; background: #1B2C80; margin: 0 auto 10px; border-radius: 2px; }
+    .rot3-kicker { font-size: 8.5pt; font-weight: bold; letter-spacing: 2.5px; text-transform: uppercase; color: #1B2C80; text-align: center; margin-bottom: 4px; }
+    .rot3-title { font-size: 26pt; font-weight: bold; color: #1B2C80; margin: 2px 0 6px; line-height: 1.1; text-align: center; }
+    .rot3-para { font-size: 10pt; color: #1F2937; margin: 0 0 2px; text-align: center; }
+    .rot3-para strong { color: #1B2C80; }
+    .rot3-meta { font-size: 9pt; color: #4B5563; margin: 0 0 20px; text-align: center; }
+    .rot3-bloco { border: 1.5px solid #C5CED9; border-radius: 10px; padding: 10px 14px; margin: 14px 0 20px; background: #EEF2F7; }
+    .rot3-bloco-label { font-size: 7.5pt; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; color: #1B2C80; margin-bottom: 6px; }
+    .rot3-rota { font-size: 13pt; font-weight: bold; color: #1B2C80; line-height: 1.5; }
+    .rot3-cta { background: #fff; border: 1.5px solid #C5CED9; border-radius: 10px; padding: 8px 12px; display: flex; gap: 10px; align-items: center; margin: 0 0 20px; }
+    .rot3-qr { height: 52px; background: #fff; border-radius: 6px; padding: 2px; }
+    .rot3-cta-texto b { display: block; color: #1B2C80; font-size: 9pt; margin-bottom: 2px; }
+    .rot3-cta-texto span { font-size: 8pt; color: #4B5563; }
+    .rot3-cons { text-align: right; font-size: 8pt; color: #6B7280; line-height: 1.55; margin: 0 0 14px; }
+    .rot3-cons b { color: #1B2C80; display: block; font-size: 9.5pt; }
+    .rot3-secao { margin: 24px 0 0; }
+    .rot3-secao-titulo { font-size: 10pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #1B2C80; border-bottom: 1.5px solid #C5CED9; padding-bottom: 6px; margin: 0 0 14px; text-align: center; }
+    .rot3-inv-box { display: flex; border: 1px solid #9aaac2; border-radius: 18px 18px 0 0; overflow: hidden; background: white; font-family: Georgia, "Times New Roman", serif; color: #1f2430; }
+    .rot3-inv-col { flex: 1; padding: 14px 16px; text-align: center; }
+    .rot3-inv-divider { width: 1px; background: #9aaac2; flex-shrink: 0; }
+    .rot3-inv-label { font-size: 8pt; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; color: #6B7280; margin-bottom: 6px; }
+    .rot3-inv-valor { font-size: 16pt; font-weight: bold; color: #1B2C80; line-height: 1.2; }
+    .rot3-inv-sub { font-size: 8pt; color: #9CA3AF; margin-top: 4px; }
+    .rot3-inv-footer { background: #1B2C80; color: #fff; font-size: 8pt; padding: 7px 14px; text-align: center; border-radius: 0 0 18px 18px; border: 1px solid #9aaac2; border-top: none; }
+    .rot3-pag-tabela { border: 1px solid #9aaac2; border-radius: 18px; overflow: hidden; margin-bottom: 8px; font-family: Georgia, "Times New Roman", serif; }
+    .rot3-pag-header-row { display: flex; gap: 10px; background: #f8f9fb; border-bottom: 1px solid #9aaac2; font-size: 8.5pt; font-weight: 700; color: #1B2C80; padding: 7px 14px; }
+    .rot3-pag-h1 { flex: 2; min-width: 0; }
+    .rot3-pag-h2 { flex: 3; min-width: 0; }
+    .rot3-pag-h3 { flex: 1.5; min-width: 0; text-align: right; }
+    .rot3-pag-row { display: flex; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #EEF2F7; break-inside: avoid; page-break-inside: avoid; }
+    .rot3-pag-row:last-of-type { border-bottom: none; }
+    .rot3-pag-c1 { flex: 2; min-width: 0; }
+    .rot3-pag-c2 { flex: 3; min-width: 0; }
+    .rot3-pag-c3 { flex: 1.5; min-width: 0; text-align: right; display: flex; flex-direction: column; gap: 3px; }
+    .rot3-pag-modal { font-size: 9.5pt; font-weight: 700; color: #1B2C80; }
+    .rot3-pag-cond-titulo { font-size: 8.5pt; font-weight: 700; color: #1a1a1a; margin-bottom: 2px; }
+    .rot3-pag-cond-desc { font-size: 8pt; color: #374151; line-height: 1.45; }
+    .rot3-pag-valor { font-size: 9.5pt; font-weight: 700; color: #1B2C80; }
+    .rot3-pag-pax { font-size: 8pt; color: #6B7280; }
+    .rot3-pag-obs { background: #F8F9FB; border-top: 1px solid #9aaac2; padding: 10px 14px; font-size: 8pt; color: #374151; line-height: 1.5; border-radius: 0 0 18px 18px; }
+    .rot3-pag-obs-label { font-weight: 700; color: #1B2C80; }
+    .rot3-doc-footer { margin-top: 24px; padding-top: 8px; border-top: 1px solid #C5CED9; font-size: 8pt; color: #9CA3AF; display: flex; justify-content: space-between; }
+    @media print {
+      .rot3-bloco { background: #EEF2F7; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+        .pv-modelo { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4B5563; }
     .pv-modelo select { border: 1px solid #C5CED9; border-radius: 8px; padding: 6px 10px; font-size: 13px; background: #fff; color: #1F2937; }
     .pv-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 10px; }
     .pv-head-main { min-width: 0; }
@@ -2483,27 +2572,19 @@ export function buildQuotePreviewHtmlSync(params: {
   <div class="toolbar">
     <label class="pv-modelo">Modelo
       <select onchange="pvSwitchModelo(this.value)">
-        <option value="classico"${mostrarProposta ? '' : ' selected'}>Clássico</option>
-        <option value="proposta"${mostrarProposta && !mostrarModerno ? ' selected' : ''}>Proposta de Viagem</option>
+        <option value="classico"${mostrarModerno ? '' : ' selected'}>Padrão</option>
         <option value="moderno"${mostrarModerno ? ' selected' : ''}>Moderno</option>
       </select>
     </label>
     <button onclick="window.print()">Imprimir / Salvar em PDF</button>
   </div>
-  <div class="modelo" data-modelo="classico"${mostrarProposta || mostrarModerno ? ' hidden' : ''}>
+  <div class="modelo" data-modelo="classico"${mostrarModerno ? ' hidden' : ''}>
     <div class="pg">
       ${showHeader ? headerHtml : ''}
       ${titleHtml}
       ${bandHtml}
       ${itensHtml}
       ${renderFinancialSummary(items, currency, safeDiscount, showItemValues)}
-      ${footerHtml}
-    </div>
-  </div>
-  <div class="modelo" data-modelo="proposta"${mostrarProposta && !mostrarModerno ? '' : ' hidden'}>
-    <div class="pg">
-      ${showHeader ? headerHtml : ''}
-      ${propostaBodyHtml}
       ${footerHtml}
     </div>
   </div>
@@ -2536,7 +2617,7 @@ export async function openQuotePreview(params: {
   showItemValues?: boolean;
   showHeader?: boolean;
   discount?: number;
-  modeloInicial?: 'classico' | 'proposta' | 'moderno';
+  modeloInicial?: 'classico' | 'moderno';
 }): Promise<void> {
   const {
     quoteId,
@@ -2546,7 +2627,7 @@ export async function openQuotePreview(params: {
     showItemValues = true,
     showHeader = true,
     discount = 0,
-    modeloInicial = 'classico' as 'classico' | 'proposta' | 'moderno'
+    modeloInicial = 'classico' as 'classico' | 'moderno'
   } = params;
 
   const quoteRow = await apiFetch<QuotePreviewRow>(
