@@ -1586,107 +1586,18 @@
       return `<div class="rot3-info-box"><ul class="rot3-info-list rot3-info-list--icon">${filtered.map((s) => `<li>${ico}${escapePreviewHtml(s)}</li>`).join('')}</ul></div>`;
     };
 
-    // ── Moderno: Passagem Aérea (grouped flights)
+    // ── Moderno: Passagem Aérea — usa os mesmos cards verticais do Padrão
     let rot3FlightsHtml = '';
     if (transportesItems.length > 0) {
-      const groupsMap = new Map<string, typeof transportesItems>();
-      for (const t of transportesItems) {
-        const gk = [t.tipo_voo || '', t.cia_aerea || ''].filter(Boolean).join(' • ') || 'Voos';
-        if (!groupsMap.has(gk)) groupsMap.set(gk, []);
-        groupsMap.get(gk)!.push(t);
-      }
-      const _chkIco = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:3px;flex-shrink:0"><circle cx="6" cy="6" r="5.5" fill="#1B2C80" opacity="0.13"/><path d="M3.2 6l1.8 1.8L9 4" stroke="#1B2C80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      let inner = '';
-      for (const [gk, grpItems] of groupsMap) {
-        inner += `<div class="rot3-grupo-header">${escapePreviewHtml(gk)}</div>`;
-        for (const t of grpItems) {
-          // Col 1: "CidadeOrigem → CidadeDestino"
-          const trechoPartes = (t.trecho || '').split(/\s*(?:→|->|—|--)\s*/);
-          const cidOrig = nomeCidadeNoPdf((trechoPartes[0] || '').trim());
-          const cidDest = nomeCidadeNoPdf((trechoPartes[1] || '').trim());
-          const trechoDisplay = cidOrig && cidDest
-            ? `${escapePreviewHtml(cidOrig)} → ${escapePreviewHtml(cidDest)}`
-            : escapePreviewHtml(t.trecho || '');
-          // Col 1 subtitle: "Voo LA8120 • 10/08/2027"
-          const descVoo = String(t.descricao || '').trim();
-          const dSaida = formatPreviewDate(t.data_voo || t.data_inicio || '');
-          const c1SubParts: string[] = [];
-          if (descVoo) c1SubParts.push(`Voo ${descVoo}`);
-          else if (t.cia_aerea) c1SubParts.push(escapePreviewHtml(t.cia_aerea));
-          if (dSaida) c1SubParts.push(dSaida);
-          const c1Sub = c1SubParts.join(' • ');
-          // Col 2 line 1: "GRU 17:50 → FCO 10:15 +1"
-          const aeOrig = ((t.aeroporto_saida || '').split(',')[0]).trim().toUpperCase();
-          const aeDest = ((t.aeroporto_chegada || '').split(',')[0]).trim().toUpperCase();
-          const horaSaida = (t.hora_saida || '').replace(/\s*\(\+\d+\)\s*$/, '').trim();
-          const horaCheg = (t.hora_chegada || '').replace(/\s*\(\+\d+\)\s*$/, '').trim();
-          const msOff = new Date(t.data_fim || '').getTime() - new Date(t.data_voo || t.data_inicio || '').getTime();
-          const dOff = (!isNaN(msOff) && msOff > 43200000) ? Math.round(msOff / 86400000) : 0;
-          const plusHtml = dOff > 0 ? `<sup class="rot3-voo-plus">+${dOff}</sup>` : '';
-          const fromPart = [aeOrig, horaSaida].filter(Boolean).join('\u00a0');
-          const toPart = [aeDest, horaCheg].filter(Boolean).join('\u00a0');
-          const rotaLine = (fromPart || toPart) ? `${escapePreviewHtml(fromPart)} → ${escapePreviewHtml(toPart)}${plusHtml}` : '';
-          // Col 2 line 2: "Chegada em Roma em 11/08/2027"
-          const dCheg = formatPreviewDate(t.data_fim || t.data_voo || '');
-          const chegParts: string[] = ['Chegada'];
-          if (cidDest) chegParts.push(`em ${escapePreviewHtml(cidDest)}`);
-          if (dCheg && dCheg !== dSaida) chegParts.push(`em ${dCheg}`);
-          else if (dCheg && !cidDest) chegParts.push(`em ${dCheg}`);
-          const chegLine = chegParts.length > 1 ? chegParts.join(' ') : '';
-          // Col 3: checkmark items for classe_reserva + tarifa_nome
-          const checks = ([t.classe_reserva, t.tarifa_nome] as (string | undefined)[]).filter(s => String(s || '').trim());
-          const checksHtml = checks.map(s => `<div class="rot3-chk-item">${_chkIco}${escapePreviewHtml(String(s).trim())}</div>`).join('');
-          inner += `<div class="rot3-voo-row">
-            <div class="rot3-voo-c1">
-              <div class="rot3-voo-trecho">${trechoDisplay}</div>
-              ${c1Sub ? `<div class="rot3-voo-cia">${c1Sub}</div>` : ''}
-            </div>
-            <div class="rot3-voo-c2">
-              ${rotaLine ? `<div class="rot3-voo-rota">${rotaLine}</div>` : ''}
-              ${chegLine ? `<div class="rot3-voo-info">${chegLine}</div>` : ''}
-            </div>
-            <div class="rot3-voo-c3">
-              ${checksHtml}
-            </div>
-          </div>`;
-        }
-      }
-      rot3FlightsHtml = `<div class="rot3-tabela">${inner}</div>`;
+      const _flightsCardHtml = renderPreviewFlights(transportesItems, formatPreviewDate);
+      rot3FlightsHtml = `<table class="roteiro-print-table"><tbody>${_flightsCardHtml}</tbody></table>`;
     }
 
-    // ── Moderno: Hotéis Sugeridos
+    // ── Moderno: Hotéis Sugeridos — usa os mesmos cards verticais do Padrão
     let rot3HoteisHtml = '';
     if (hoteisItems.length > 0) {
-      const _chkIco = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:3px;flex-shrink:0"><circle cx="6" cy="6" r="5.5" fill="#1B2C80" opacity="0.13"/><path d="M3.2 6l1.8 1.8L9 4" stroke="#1B2C80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      const colHdr = `<div class="rot3-hotel-header-row"><div class="rot3-hotel-c1">Hotel &amp; Destino</div><div class="rot3-hotel-c2">Período de Hospedagem</div><div class="rot3-hotel-c3">Acomodação &amp; Regime</div></div>`;
-      const rows = hoteisItems.map((h) => {
-        const ci = formatPreviewDate(h.data_inicio || '');
-        const co = formatPreviewDate(h.data_fim || '');
-        const nts = h.noites ? `${h.noites} noite${Number(h.noites) !== 1 ? 's' : ''}` : '';
-        const cidade = nomeCidadeNoPdf(h.cidade || '');
-        // C1 subtitle: "Cidade • N noites" na cor laranja
-        const cidadeNts = [cidade ? escapePreviewHtml(cidade) : '', nts ? escapePreviewHtml(nts) : ''].filter(Boolean).join(' • ');
-        // Categoria/estrelas (ex: "3 estrelas" ou o valor bruto)
-        const catLabel = h.categoria ? escapePreviewHtml(h.categoria) : '';
-        // C3: checkmark items para apto + regime
-        const checks = ([h.apto, h.regime] as (string | undefined)[]).filter(s => String(s || '').trim());
-        const checksHtml = checks.map(s => `<div class="rot3-chk-item">${_chkIco}${escapePreviewHtml(String(s).trim())}</div>`).join('');
-        return `<div class="rot3-hotel-row">
-          <div class="rot3-hotel-c1">
-            <div class="rot3-hotel-nome">${escapePreviewHtml(h.hotel || '—')}</div>
-            ${cidadeNts ? `<div class="rot3-hotel-cidade">${cidadeNts}</div>` : ''}
-            ${catLabel ? `<div class="rot3-hotel-cat">${catLabel}</div>` : ''}
-          </div>
-          <div class="rot3-hotel-c2">
-            ${ci ? `<div class="rot3-hotel-info"><span class="rot3-voo-label">Check-in:</span> ${ci}</div>` : ''}
-            ${co ? `<div class="rot3-hotel-info"><span class="rot3-voo-label">Check-out:</span> ${co}</div>` : ''}
-          </div>
-          <div class="rot3-hotel-c3">
-            ${checksHtml}
-          </div>
-        </div>`;
-      }).join('');
-      rot3HoteisHtml = `<div class="rot3-tabela">${colHdr}${rows}</div>`;
+      const _hoteisCardHtml = renderPreviewHotels(hoteisItems, formatPreviewDate);
+      rot3HoteisHtml = `<table class="roteiro-print-table"><tbody>${_hoteisCardHtml}</tbody></table>`;
     }
 
     // ── Moderno: Investimento e Pagamento — reutilizam as variáveis compartilhadas
