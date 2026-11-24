@@ -1278,6 +1278,81 @@
           )
         : '';
 
+    // ── Investimento e Pagamento (compartilhado Padrão + Moderno) ──────────
+    let rot3InvestHtmlShared = '';
+    if (investimentosItems.length > 0) {
+      const qtdAdultos = Number(investimentosItems[0]?.qtd_adultos || investimentosItems[0]?.qtd_apto || 1) || 1;
+      const totalAdultos = totalInvestimento * qtdAdultos;
+      const dtHoje = new Date();
+      const dtAm = new Date(dtHoje); dtAm.setDate(dtAm.getDate() + 1);
+      const fDt = (d: Date) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+      const emis = fDt(dtHoje);
+      const valid = fDt(dtAm);
+      const consultorNome = pdfSettings?.consultor_nome || '';
+      const _icoP = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:inline;vertical-align:middle;margin-right:4px;margin-bottom:1px"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;
+      const _icoG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:inline;vertical-align:middle;margin-right:4px;margin-bottom:1px"><circle cx="8" cy="8" r="3.5"/><circle cx="16" cy="9" r="2.5"/><path d="M1 20c0-3.5 3.1-6 8-6s7.5 2.3 8 5.5"/><path d="M18 15c2.5.5 5 2 5 5" stroke-dasharray="3 2"/></svg>`;
+      const _icoClock = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:5px;margin-bottom:1px;opacity:0.85"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`;
+      rot3InvestHtmlShared = `<div class="rot3-inv-box">
+        <div class="rot3-inv-col">
+          <div class="rot3-inv-label">${_icoP}POR PESSOA</div>
+          <div class="rot3-inv-valor">R$&nbsp;${formatBRL(totalInvestimento)}</div>
+          <div class="rot3-inv-sub">Valor médio individual por adulto</div>
+        </div>
+        <div class="rot3-inv-divider"></div>
+        <div class="rot3-inv-col">
+          <div class="rot3-inv-label">${_icoG}TOTAL DA VIAGEM (${qtdAdultos} ${qtdAdultos !== 1 ? 'ADULTOS' : 'ADULTO'})</div>
+          <div class="rot3-inv-valor">R$&nbsp;${formatBRL(totalAdultos)}</div>
+          <div class="rot3-inv-sub">Valor total da proposta para ${qtdAdultos} adulto${qtdAdultos !== 1 ? 's' : ''}</div>
+        </div>
+      </div>
+      <div class="rot3-inv-footer rot3-inv-footer--padrao">${_icoClock}Emissão em ${emis}&nbsp;•&nbsp;Tarifas válidas até ${valid}${consultorNome ? `&nbsp;•&nbsp;Reserve com ${escapePreviewHtml(consultorNome)} via WhatsApp` : ''}</div>`;
+    }
+
+    let rot3PagamentosHtmlShared = '';
+    if (pagamentosItems.length > 0) {
+      const qtdPaxPag = Number(investimentosItems[0]?.qtd_adultos || investimentosItems[0]?.qtd_apto || 0) || 0;
+      const paxLabel  = qtdPaxPag > 1 ? ` (${qtdPaxPag} Pax${qtdPaxPag > 1 ? 's' : ''})` : '';
+      const colHdrPag = `<div class="rot3-pag-header-row rot3-pag-header-row--padrao">
+        <div class="rot3-pag-h1">Modalidade</div>
+        <div class="rot3-pag-h2">Condição Comercial</div>
+        <div class="rot3-pag-h3">Valor Total${paxLabel}</div>
+      </div>`;
+      const rowsPag = pagamentosItems.map((p) => {
+        const modalidade  = escapePreviewHtml(String(p.forma_pagamento || '—').trim());
+        const servicoRaw  = String(p.servico || '').trim();
+        const nlIdx = servicoRaw.indexOf('\n');
+        const ptIdx = servicoRaw.indexOf('. ');
+        const splitIdx = nlIdx >= 0 ? nlIdx : (ptIdx >= 0 && ptIdx < 80 ? ptIdx + 1 : -1);
+        const condTitulo = splitIdx > 0
+          ? escapePreviewHtml(servicoRaw.slice(0, splitIdx).trim())
+          : escapePreviewHtml(servicoRaw);
+        const condDesc   = splitIdx > 0
+          ? escapePreviewHtml(servicoRaw.slice(splitIdx).trim())
+          : '';
+        const valorTotal = p.valor_total_com_taxas
+          ? `R$&nbsp;${formatBRL(Number(p.valor_total_com_taxas))}`
+          : '—';
+        const valorPax = (p.valor_total_com_taxas && qtdPaxPag > 1)
+          ? `R$&nbsp;${formatBRL(Number(p.valor_total_com_taxas) / qtdPaxPag)}&nbsp;/ pax`
+          : '';
+        return `<div class="rot3-pag-row">
+          <div class="rot3-pag-c1">
+            <div class="rot3-pag-modal">${modalidade}</div>
+          </div>
+          <div class="rot3-pag-c2">
+            ${condTitulo ? `<div class="rot3-pag-cond-titulo">${condTitulo}</div>` : ''}
+            ${condDesc   ? `<div class="rot3-pag-cond-desc">${condDesc}</div>`   : ''}
+          </div>
+          <div class="rot3-pag-c3">
+            <div class="rot3-pag-valor">${valorTotal}</div>
+            ${valorPax ? `<div class="rot3-pag-pax">${valorPax}</div>` : ''}
+          </div>
+        </div>`;
+      }).join('');
+      const obsGerais = `<div class="rot3-pag-obs"><span class="rot3-pag-obs-label">Observações Gerais:</span> Valores sujeitos à disponibilidade e alteração sem aviso prévio até a efetivação da reserva. Os passeios opcionais não estão incluídos no valor total do pacote e podem ser adicionados a qualquer momento conforme preferência dos viajantes.</div>`;
+      rot3PagamentosHtmlShared = `<div class="rot3-pag-tabela">${colHdrPag}${rowsPag}${obsGerais}</div>`;
+    }
+
     const includesSection = buildPreviewListSection('O roteiro inclui', incluiTexto.split('\n'));
     const excludesSection = buildPreviewListSection(
       'O roteiro não inclui',
@@ -1436,8 +1511,8 @@
       ${buildRoteiroCardSection('Trem', trensHtml, 'preview-trens-section')}
       ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
       ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
-      ${buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
-      ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
+      ${rot3InvestHtmlShared ? `<section class="section preview-investimento-section"><h2>Investimento</h2>${rot3InvestHtmlShared}</section>` : buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
+      ${mostrarPagamentoPdf && rot3PagamentosHtmlShared ? `<section class="section preview-pagamento-section"><h2>Pagamento</h2>${rot3PagamentosHtmlShared}</section>` : (mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : '')}
       ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
       ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'), 'x')}
       ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
@@ -1614,81 +1689,17 @@
       rot3HoteisHtml = `<div class="rot3-tabela">${colHdr}${rows}</div>`;
     }
 
-    // ── Moderno: Investimento
+    // ── Moderno: Investimento e Pagamento — reutilizam as variáveis compartilhadas
+    // (rot3InvestHtmlShared e rot3PagamentosHtmlShared calculados acima)
+    // Para o Moderno: re-gerar sem a classe --padrao no footer do investimento
     let rot3InvestHtml = '';
-    if (investimentosItems.length > 0) {
-      const qtdAdultos = Number(investimentosItems[0]?.qtd_adultos || investimentosItems[0]?.qtd_apto || 1) || 1;
-      const totalAdultos = totalInvestimento * qtdAdultos;
-      const dtHoje = new Date();
-      const dtAm = new Date(dtHoje); dtAm.setDate(dtAm.getDate() + 1);
-      const fDt = (d: Date) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
-      const emis = fDt(dtHoje);
-      const valid = fDt(dtAm);
-      const consultorNome = pdfSettings?.consultor_nome || '';
-      const _icoP = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:inline;vertical-align:middle;margin-right:4px;margin-bottom:1px"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`;
-      const _icoG = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:inline;vertical-align:middle;margin-right:4px;margin-bottom:1px"><circle cx="8" cy="8" r="3.5"/><circle cx="16" cy="9" r="2.5"/><path d="M1 20c0-3.5 3.1-6 8-6s7.5 2.3 8 5.5"/><path d="M18 15c2.5.5 5 2 5 5" stroke-dasharray="3 2"/></svg>`;
-      const _icoClock = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:5px;margin-bottom:1px;opacity:0.85"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`;
-      rot3InvestHtml = `<div class="rot3-inv-box">
-        <div class="rot3-inv-col">
-          <div class="rot3-inv-label">${_icoP}POR PESSOA</div>
-          <div class="rot3-inv-valor">R$&nbsp;${formatBRL(totalInvestimento)}</div>
-          <div class="rot3-inv-sub">Valor médio individual por adulto</div>
-        </div>
-        <div class="rot3-inv-divider"></div>
-        <div class="rot3-inv-col">
-          <div class="rot3-inv-label">${_icoG}TOTAL DA VIAGEM (${qtdAdultos} ${qtdAdultos !== 1 ? 'ADULTOS' : 'ADULTO'})</div>
-          <div class="rot3-inv-valor">R$&nbsp;${formatBRL(totalAdultos)}</div>
-          <div class="rot3-inv-sub">Valor total da proposta para ${qtdAdultos} adulto${qtdAdultos !== 1 ? 's' : ''}</div>
-        </div>
-      </div>
-      <div class="rot3-inv-footer">${_icoClock}Emissão em ${emis}&nbsp;•&nbsp;Tarifas válidas até ${valid}${consultorNome ? `&nbsp;•&nbsp;Reserve com ${escapePreviewHtml(consultorNome)} via WhatsApp` : ''}</div>`;
+    if (rot3InvestHtmlShared) {
+      rot3InvestHtml = rot3InvestHtmlShared.replace('rot3-inv-footer rot3-inv-footer--padrao', 'rot3-inv-footer');
     }
-
-    // ── Moderno: Formas de Pagamento
+    // Para o Moderno: re-gerar header da tabela de pagamento sem a classe --padrao
     let rot3PagamentosHtml = '';
-    if (pagamentosItems.length > 0) {
-      const qtdPaxPag = Number(investimentosItems[0]?.qtd_adultos || investimentosItems[0]?.qtd_apto || 0) || 0;
-      const paxLabel  = qtdPaxPag > 1 ? ` (${qtdPaxPag} Pax${qtdPaxPag > 1 ? 's' : ''})` : '';
-      const colHdrPag = `<div class="rot3-pag-header-row">
-        <div class="rot3-pag-h1">Modalidade</div>
-        <div class="rot3-pag-h2">Condição Comercial</div>
-        <div class="rot3-pag-h3">Valor Total${paxLabel}</div>
-      </div>`;
-      const rowsPag = pagamentosItems.map((p) => {
-        const modalidade  = escapePreviewHtml(String(p.forma_pagamento || '—').trim());
-        const servicoRaw  = String(p.servico || '').trim();
-        // Split at first newline or ". " to separate bold title from description
-        const nlIdx = servicoRaw.indexOf('\n');
-        const ptIdx = servicoRaw.indexOf('. ');
-        const splitIdx = nlIdx >= 0 ? nlIdx : (ptIdx >= 0 && ptIdx < 80 ? ptIdx + 1 : -1);
-        const condTitulo = splitIdx > 0
-          ? escapePreviewHtml(servicoRaw.slice(0, splitIdx).trim())
-          : escapePreviewHtml(servicoRaw);
-        const condDesc   = splitIdx > 0
-          ? escapePreviewHtml(servicoRaw.slice(splitIdx).trim())
-          : '';
-        const valorTotal = p.valor_total_com_taxas
-          ? `R$&nbsp;${formatBRL(Number(p.valor_total_com_taxas))}`
-          : '—';
-        const valorPax = (p.valor_total_com_taxas && qtdPaxPag > 1)
-          ? `R$&nbsp;${formatBRL(Number(p.valor_total_com_taxas) / qtdPaxPag)}&nbsp;/ pax`
-          : '';
-        return `<div class="rot3-pag-row">
-          <div class="rot3-pag-c1">
-            <div class="rot3-pag-modal">${modalidade}</div>
-          </div>
-          <div class="rot3-pag-c2">
-            ${condTitulo ? `<div class="rot3-pag-cond-titulo">${condTitulo}</div>` : ''}
-            ${condDesc   ? `<div class="rot3-pag-cond-desc">${condDesc}</div>`   : ''}
-          </div>
-          <div class="rot3-pag-c3">
-            <div class="rot3-pag-valor">${valorTotal}</div>
-            ${valorPax ? `<div class="rot3-pag-pax">${valorPax}</div>` : ''}
-          </div>
-        </div>`;
-      }).join('');
-      const obsGerais = `<div class="rot3-pag-obs"><span class="rot3-pag-obs-label">Observações Gerais:</span> Valores sujeitos à disponibilidade e alteração sem aviso prévio até a efetivação da reserva. Os passeios opcionais não estão incluídos no valor total do pacote e podem ser adicionados a qualquer momento conforme preferência dos viajantes.</div>`;
-      rot3PagamentosHtml = `<div class="rot3-pag-tabela">${colHdrPag}${rowsPag}${obsGerais}</div>`;
+    if (rot3PagamentosHtmlShared) {
+      rot3PagamentosHtml = rot3PagamentosHtmlShared.replace('rot3-pag-header-row rot3-pag-header-row--padrao', 'rot3-pag-header-row');
     }
 
     // ── Moderno: Passeios Opcionais
@@ -1945,6 +1956,8 @@
             .rot3-inv-valor { font-size: 16pt; font-weight: bold; color: #1B2C80; line-height: 1.2; }
             .rot3-inv-sub { font-size: 8pt; color: #9CA3AF; margin-top: 4px; }
             .rot3-inv-footer { background: #1B2C80; color: #fff; font-size: 8pt; padding: 7px 14px; text-align: center; border-radius: 0 0 8px 8px; }
+            .rot3-inv-footer--padrao { background: #D0DAEA !important; color: #1B2C80 !important; }
+            .rot3-pag-header-row--padrao { background: #D0DAEA !important; }
             .rot3-info-box { border: 1.5px solid #C5CED9; border-radius: 8px; padding: 12px 16px; background: #fff; }
             .rot3-info-list { margin: 0; padding-left: 16px; }
             .rot3-info-list li { font-size: 9pt; color: #374151; margin-bottom: 4px; line-height: 1.5; }
@@ -1959,6 +1972,8 @@
               .rot3-pag-header-row { background: #f8f9fb; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
               .rot3-pag-obs { background: #F8F9FB; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
               .rot3-inv-footer { background: #1B2C80; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .rot3-inv-footer--padrao { background: #D0DAEA !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .rot3-pag-header-row--padrao { background: #D0DAEA !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             }
             ${roteiroPdfThemeCss}
           </style>
