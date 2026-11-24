@@ -1511,8 +1511,8 @@
       ${buildRoteiroCardSection('Trem', trensHtml, 'preview-trens-section')}
       ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
       ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
-      ${rot3InvestHtmlShared ? `<section class="roteiro-print-section preview-investimento-section"><table class="roteiro-print-table"><thead><tr><th><h2 class="rot-sh">Investimento</h2></th></tr></thead><tbody><tr><td>${rot3InvestHtmlShared}</td></tr></tbody></table></section>` : buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
-      ${mostrarPagamentoPdf && rot3PagamentosHtmlShared ? `<section class="roteiro-print-section preview-pagamento-section"><table class="roteiro-print-table"><thead><tr><th><h2 class="rot-sh">Pagamento</h2></th></tr></thead><tbody><tr><td>${rot3PagamentosHtmlShared}</td></tr></tbody></table></section>` : (mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : '')}
+      ${rot3InvestHtmlShared ? `<section class="roteiro-print-section preview-investimento-section"><h2 class="rot-sh">Investimento</h2>${rot3InvestHtmlShared}</section>` : buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
+      ${mostrarPagamentoPdf && rot3PagamentosHtmlShared ? `<section class="roteiro-print-section preview-pagamento-section"><h2 class="rot-sh">Pagamento</h2>${rot3PagamentosHtmlShared}</section>` : (mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : '')}
       ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
       ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'), 'x')}
       ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
@@ -2010,8 +2010,8 @@
               'Sugestões sem data marcada, não incluídas no valor do roteiro'
             )}
             ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
-            ${rot3InvestHtmlShared ? `<section class="roteiro-print-section preview-investimento-section"><table class="roteiro-print-table"><thead><tr><th><h2 class="rot-sh">Investimento</h2></th></tr></thead><tbody><tr><td>${rot3InvestHtmlShared}</td></tr></tbody></table></section>` : buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
-            ${mostrarPagamentoPdf && rot3PagamentosHtmlShared ? `<section class="roteiro-print-section preview-pagamento-section"><table class="roteiro-print-table"><thead><tr><th><h2 class="rot-sh">Pagamento</h2></th></tr></thead><tbody><tr><td>${rot3PagamentosHtmlShared}</td></tr></tbody></table></section>` : (mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : '')}
+            ${rot3InvestHtmlShared ? `<section class="roteiro-print-section preview-investimento-section"><h2 class="rot-sh">Investimento</h2>${rot3InvestHtmlShared}</section>` : buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
+            ${mostrarPagamentoPdf && rot3PagamentosHtmlShared ? `<section class="roteiro-print-section preview-pagamento-section"><h2 class="rot-sh">Pagamento</h2>${rot3PagamentosHtmlShared}</section>` : (mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : '')}
             ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
             ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'), 'x')}
             ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
