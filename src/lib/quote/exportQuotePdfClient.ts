@@ -2045,7 +2045,9 @@ function buildModernoPropostaBodyHtml(params: {
   ${detalhesHtml}
   ${investimentoHtml}
   <div class="rot3-doc-footer">Proposta de Viagem${clientName ? ` · ${escHtml(clientName)}` : ''}</div>
-</div>
+</div>`;
+}
+
 // ---------------------------------------------------------------------------
 // BUILDER DO HTML
 // ---------------------------------------------------------------------------
