@@ -1586,18 +1586,89 @@
       return `<div class="rot3-info-box"><ul class="rot3-info-list rot3-info-list--icon">${filtered.map((s) => `<li>${ico}${escapePreviewHtml(s)}</li>`).join('')}</ul></div>`;
     };
 
-    // ── Moderno: Passagem Aérea — usa os mesmos cards verticais do Padrão
+    // ── Moderno: Passagem Aérea — cards verticais com cores rot3
     let rot3FlightsHtml = '';
     if (transportesItems.length > 0) {
-      const _flightsCardHtml = renderPreviewFlights(transportesItems, formatPreviewDate);
-      rot3FlightsHtml = `<table class="roteiro-print-table"><tbody>${_flightsCardHtml}</tbody></table>`;
+      const _chkIco = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:3px;flex-shrink:0"><circle cx="6" cy="6" r="5.5" fill="#1B2C80" opacity="0.13"/><path d="M3.2 6l1.8 1.8L9 4" stroke="#1B2C80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      const groupsMap = new Map<string, typeof transportesItems>();
+      for (const t of transportesItems) {
+        const gk = [t.tipo_voo || '', t.cia_aerea || ''].filter(Boolean).join(' • ') || 'Voos';
+        if (!groupsMap.has(gk)) groupsMap.set(gk, []);
+        groupsMap.get(gk)!.push(t);
+      }
+      let inner = '';
+      for (const [gk, grpItems] of groupsMap) {
+        inner += `<div class="rot3-grupo-header">${escapePreviewHtml(gk)}</div>`;
+        for (const t of grpItems) {
+          const trechoPartes = (t.trecho || '').split(/\s*(?:→|->|—|--)\s*/);
+          const cidOrig = nomeCidadeNoPdf((trechoPartes[0] || '').trim());
+          const cidDest = nomeCidadeNoPdf((trechoPartes[1] || '').trim());
+          const trechoDisplay = cidOrig && cidDest
+            ? `${escapePreviewHtml(cidOrig)} → ${escapePreviewHtml(cidDest)}`
+            : escapePreviewHtml(t.trecho || '');
+          const descVoo = String(t.descricao || '').trim();
+          const dSaida = formatPreviewDate(t.data_voo || t.data_inicio || '');
+          const c1SubParts: string[] = [];
+          if (descVoo) c1SubParts.push(`Voo ${descVoo}`);
+          else if (t.cia_aerea) c1SubParts.push(escapePreviewHtml(t.cia_aerea));
+          if (dSaida) c1SubParts.push(dSaida);
+          const c1Sub = c1SubParts.join(' • ');
+          const aeOrig = ((t.aeroporto_saida || '').split(',')[0]).trim().toUpperCase();
+          const aeDest = ((t.aeroporto_chegada || '').split(',')[0]).trim().toUpperCase();
+          const horaSaida = (t.hora_saida || '').replace(/\s*\(\+\d+\)\s*$/, '').trim();
+          const horaCheg = (t.hora_chegada || '').replace(/\s*\(\+\d+\)\s*$/, '').trim();
+          const msOff = new Date(t.data_fim || '').getTime() - new Date(t.data_voo || t.data_inicio || '').getTime();
+          const dOff = (!isNaN(msOff) && msOff > 43200000) ? Math.round(msOff / 86400000) : 0;
+          const plusHtml = dOff > 0 ? `<sup class="rot3-voo-plus">+${dOff}</sup>` : '';
+          const fromPart = [aeOrig, horaSaida].filter(Boolean).join('\u00a0');
+          const toPart = [aeDest, horaCheg].filter(Boolean).join('\u00a0');
+          const rotaLine = (fromPart || toPart) ? `${escapePreviewHtml(fromPart)} → ${escapePreviewHtml(toPart)}${plusHtml}` : '';
+          const dCheg = formatPreviewDate(t.data_fim || t.data_voo || '');
+          const chegParts: string[] = ['Chegada'];
+          if (cidDest) chegParts.push(`em ${escapePreviewHtml(cidDest)}`);
+          if (dCheg && dCheg !== dSaida) chegParts.push(`em ${dCheg}`);
+          else if (dCheg && !cidDest) chegParts.push(`em ${dCheg}`);
+          const chegLine = chegParts.length > 1 ? chegParts.join(' ') : '';
+          const checks = ([t.classe_reserva, t.tarifa_nome] as (string | undefined)[]).filter(s => String(s || '').trim());
+          const checksHtml = checks.map(s => `<div class="rot3-chk-item">${_chkIco}${escapePreviewHtml(String(s).trim())}</div>`).join('');
+          inner += `<div class="rot3-flight-vcard">
+            ${trechoDisplay ? `<div class="rot3-voo-trecho">${trechoDisplay}</div>` : ''}
+            ${c1Sub ? `<div class="rot3-voo-cia">${c1Sub}</div>` : ''}
+            ${rotaLine ? `<div class="rot3-voo-rota">${rotaLine}</div>` : ''}
+            ${chegLine ? `<div class="rot3-voo-info">${chegLine}</div>` : ''}
+            ${checksHtml ? `<div class="rot3-chks-row">${checksHtml}</div>` : ''}
+          </div>`;
+        }
+      }
+      rot3FlightsHtml = `<div class="rot3-tabela">${inner}</div>`;
     }
 
-    // ── Moderno: Hotéis Sugeridos — usa os mesmos cards verticais do Padrão
+    // ── Moderno: Hotéis Sugeridos — cards verticais com cores rot3
     let rot3HoteisHtml = '';
     if (hoteisItems.length > 0) {
-      const _hoteisCardHtml = renderPreviewHotels(hoteisItems, formatPreviewDate);
-      rot3HoteisHtml = `<table class="roteiro-print-table"><tbody>${_hoteisCardHtml}</tbody></table>`;
+      const _chkIcoH = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:3px;flex-shrink:0"><circle cx="6" cy="6" r="5.5" fill="#1B2C80" opacity="0.13"/><path d="M3.2 6l1.8 1.8L9 4" stroke="#1B2C80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      const rows = hoteisItems.map((h) => {
+        const ci = formatPreviewDate(h.data_inicio || '');
+        const co = formatPreviewDate(h.data_fim || '');
+        const nts = h.noites ? `${h.noites} noite${Number(h.noites) !== 1 ? 's' : ''}` : '';
+        const cidade = nomeCidadeNoPdf(h.cidade || '');
+        const cidadeNts = [cidade ? escapePreviewHtml(cidade) : '', nts ? escapePreviewHtml(nts) : ''].filter(Boolean).join(' • ');
+        const catLabel = h.categoria ? escapePreviewHtml(h.categoria) : '';
+        const checks = ([h.apto, h.regime] as (string | undefined)[]).filter(s => String(s || '').trim());
+        const checksHtml = checks.map(s => `<div class="rot3-chk-item">${_chkIcoH}${escapePreviewHtml(String(s).trim())}</div>`).join('');
+        const datasHtml = [
+          ci ? `<span class="rot3-voo-label">Check-in:</span> ${ci}` : '',
+          co ? `<span class="rot3-voo-label">Check-out:</span> ${co}` : ''
+        ].filter(Boolean).join(' &nbsp;•&nbsp; ');
+        return `<div class="rot3-hotel-vcard">
+          <div class="rot3-hotel-nome">${escapePreviewHtml(h.hotel || '—')}</div>
+          ${cidadeNts ? `<div class="rot3-hotel-cidade">${cidadeNts}</div>` : ''}
+          ${catLabel ? `<div class="rot3-hotel-cat">${catLabel}</div>` : ''}
+          ${datasHtml ? `<div class="rot3-hotel-info">${datasHtml}</div>` : ''}
+          ${checksHtml ? `<div class="rot3-chks-row">${checksHtml}</div>` : ''}
+        </div>`;
+      }).join('');
+      rot3HoteisHtml = `<div class="rot3-tabela">${rows}</div>`;
     }
 
     // ── Moderno: Investimento e Pagamento — reutilizam as variáveis compartilhadas
@@ -1844,6 +1915,11 @@
             .rot3-voo-rota { font-size: 9pt; font-weight: bold; color: #1B2C80; margin-top: 2px; }
             .rot3-voo-plus { font-size: 7pt; vertical-align: super; color: #E05C1A; font-weight: bold; margin-left: 2px; }
             .rot3-chk-item { font-size: 8.5pt; color: #1B2C80; display: flex; align-items: center; margin-bottom: 2px; }
+            .rot3-flight-vcard { padding: 8px 12px; border-bottom: 1px solid #EEF2F7; break-inside: avoid; page-break-inside: avoid; }
+            .rot3-flight-vcard:last-child { border-bottom: none; }
+            .rot3-hotel-vcard { padding: 8px 12px; border-bottom: 1px solid #EEF2F7; break-inside: avoid; page-break-inside: avoid; }
+            .rot3-hotel-vcard:last-child { border-bottom: none; }
+            .rot3-chks-row { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 4px; }
             .rot3-voo-label { font-weight: bold; color: #1B2C80; }
             .rot3-chip { display: inline-block; background: #EEF2F7; color: #1B2C80; border-radius: 999px; font-size: 7.5pt; font-weight: bold; padding: 2px 7px; margin: 1px 0; border: 1px solid #C5CED9; }
             .rot3-hotel-header-row { display: flex; gap: 10px; background: #1B2C80; color: #fff; font-size: 8pt; font-weight: bold; letter-spacing: 0.5px; padding: 5px 12px; }
