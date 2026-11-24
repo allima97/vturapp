@@ -1812,6 +1812,127 @@ function propostaDetalhamentoHtml(
   return `<div class="pv-sec"><div class="pv-sec-title">Detalhamento dos Serviços Cotados</div>${secoes}</div>`;
 }
 
+// MODELO MODERNO — detalhamento com cards verticais rot3 (passagens + hotéis)
+function buildRot3DetalhamentoOrcHtml(
+  items: QuoteItemForPdf[],
+  defaultCurrency: string
+): string {
+  if (!items.length) return '';
+  const chkIco = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:3px;flex-shrink:0"><circle cx="6" cy="6" r="5.5" fill="#1B2C80" opacity="0.13"/><path d="M3.2 6l1.8 1.8L9 4" stroke="#1B2C80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+  const porGrupo = new Map<string, QuoteItemForPdf[]>();
+  for (const item of items) {
+    const grupo = propostaGrupoDe(item);
+    const lista = porGrupo.get(grupo) || [];
+    lista.push(item);
+    porGrupo.set(grupo, lista);
+  }
+
+  const secoes = propostaGrupoOrdem
+    .filter((titulo) => porGrupo.has(titulo))
+    .map((titulo) => {
+      const lista = porGrupo.get(titulo) || [];
+
+      if (titulo === 'Passagens Aéreas') {
+        // Agrupa legs por tipo_voo • cia_aerea
+        const groupsMap = new Map<string, Array<{ trecho: string; cia: string; rota: string; chegada: string; checksHtml: string }>>();
+        for (const item of lista) {
+          const pax = passageirosSemZero(item);
+          for (const raw of getFlightDataList(item)) {
+            const f = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, String(v ?? '')]));
+            const classeTag = textVal(f.classe_reserva);
+            const tarifaTag = textVal(f.tarifa_nome);
+            const gk = [textVal(f.tipo_voo), textVal(f.cia_aerea)].filter(Boolean).join(' • ') || 'Voos';
+            if (!groupsMap.has(gk)) groupsMap.set(gk, []);
+            const origemCode = textVal(f.aeroporto_saida);
+            const destinoCode = textVal(f.aeroporto_chegada);
+            const origemNome = nomeCidadeNoPdf(textVal(f.cidade_saida) || textVal(f.origem));
+            const destinoNome = nomeCidadeNoPdf(textVal(f.cidade_chegada) || textVal(f.destino));
+            const origem = origemCode || origemNome;
+            const destino = destinoCode || destinoNome;
+            const dataVoo = textVal(f.data_voo || f.data_inicio);
+            const dataFim = textVal(f.data_fim);
+            const maisUm = dataFim && dataFim !== dataVoo ? ' <sup>+1</sup>' : '';
+            const cia = textVal(f.cia_aerea);
+            const voo = textVal(f.numero_voo) || textVal(f.voo) || textVal(f.descricao);
+            const trecho = origem && destino ? `${origem} → ${destino}` : '';
+            const c1Sub = [cia, voo ? `Voo ${voo}` : '', formatDateBR(dataVoo || null)].filter(Boolean).join(' • ');
+            const rota = origem && destino
+              ? `${origem} ${textVal(f.hora_saida)} → ${destino} ${textVal(f.hora_chegada)}${maisUm}`.replace(/\s+/g, ' ').trim()
+              : '';
+            const chegada = destinoNome
+              ? `Chegada em ${destinoNome}${formatDateBR(dataFim || dataVoo || null) ? ` em ${formatDateBR(dataFim || dataVoo || null)}` : ''}`
+              : '';
+            const checks = [classeTag, tarifaTag, textVal(f.assentos), pax].filter(Boolean);
+            const checksHtml = [...new Set(checks)].map(s => `<div class="rot3-chk-item">${chkIco}${escHtml(s)}</div>`).join('');
+            groupsMap.get(gk)!.push({ trecho, cia: c1Sub, rota, chegada, checksHtml });
+          }
+        }
+        let inner = '';
+        for (const [gk, legs] of groupsMap) {
+          inner += `<div class="rot3-grupo-header">${escHtml(gk)}</div>`;
+          for (const v of legs) {
+            inner += `<div class="rot3-flight-vcard">
+              ${v.trecho ? `<div class="rot3-voo-trecho">${escHtml(v.trecho)}</div>` : ''}
+              ${v.cia ? `<div class="rot3-voo-cia">${escHtml(v.cia)}</div>` : ''}
+              ${v.rota ? `<div class="rot3-voo-rota">${v.rota}</div>` : ''}
+              ${v.chegada ? `<div class="rot3-voo-info">${escHtml(v.chegada)}</div>` : ''}
+              ${v.checksHtml ? `<div class="rot3-chks-row">${v.checksHtml}</div>` : ''}
+            </div>`;
+          }
+        }
+        return `<section class="rot3-secao"><h2 class="rot3-secao-titulo">PASSAGEM AÉREA</h2><div class="rot3-tabela">${inner}</div></section>`;
+      }
+
+      if (titulo === 'Hospedagens') {
+        // Agrupa por cidade com rot3-grupo-header
+        const groupsMap = new Map<string, QuoteItemForPdf[]>();
+        for (const item of lista) {
+          const cidade = nomeCidadeNoPdf(textVal(item.city_name)) || 'Hotéis';
+          if (!groupsMap.has(cidade)) groupsMap.set(cidade, []);
+          groupsMap.get(cidade)!.push(item);
+        }
+        let inner = '';
+        for (const [cidade, grpItems] of groupsMap) {
+          inner += `<div class="rot3-grupo-header">${escHtml(cidade)}</div>`;
+          for (const item of grpItems) {
+            const details = lerDetalhes(item);
+            const nomeHotel = getServiceTitle(item);
+            const noites = diasItem(textVal(item.item_type), textVal(item.start_date), textVal(item.end_date));
+            const ntsLabel = noites != null && noites > 0 ? `${noites} ${noites === 1 ? 'noite' : 'noites'}` : '';
+            const cidadeItem = nomeCidadeNoPdf(textVal(item.city_name));
+            const cidadeNts = [cidadeItem ? escHtml(cidadeItem) : '', ntsLabel ? escHtml(ntsLabel) : ''].filter(Boolean).join(' • ');
+            const catLabel = textVal(details.categoria) ? escHtml(textVal(details.categoria)) : '';
+            const ci = dataValidaBR(item.start_date);
+            const co = dataValidaBR(item.end_date);
+            const datasHtml = [
+              ci ? `<span class="rot3-voo-label">Check-in:</span> ${escHtml(ci)}` : '',
+              co ? `<span class="rot3-voo-label">Check-out:</span> ${escHtml(co)}` : ''
+            ].filter(Boolean).join(' &nbsp;•&nbsp; ');
+            const checks = [textVal(details.tipo_apartamento), textVal(details.regime)].filter(s => s.trim());
+            const checksHtml = checks.map(s => `<div class="rot3-chk-item">${chkIco}${escHtml(s)}</div>`).join('');
+            inner += `<div class="rot3-hotel-vcard">
+              <div class="rot3-hotel-nome">${escHtml(nomeHotel)}</div>
+              ${cidadeNts ? `<div class="rot3-hotel-cidade">${cidadeNts}</div>` : ''}
+              ${catLabel ? `<div class="rot3-hotel-cat">${catLabel}</div>` : ''}
+              ${datasHtml ? `<div class="rot3-hotel-info">${datasHtml}</div>` : ''}
+              ${checksHtml ? `<div class="rot3-chks-row">${checksHtml}</div>` : ''}
+            </div>`;
+          }
+        }
+        return `<section class="rot3-secao"><h2 class="rot3-secao-titulo">HOSPEDAGENS</h2><div class="rot3-tabela">${inner}</div></section>`;
+      }
+
+      // Demais seções: layout pv-grupo dentro de rot3-secao
+      const tituloSecao = titulo.toUpperCase();
+      const itensHtml = lista.map((item) => propostaDetalheCardHtml(item, false, defaultCurrency)).join('');
+      return `<section class="rot3-secao"><h2 class="rot3-secao-titulo">${escHtml(tituloSecao)}</h2><div class="pv-grupo">${itensHtml}</div></section>`;
+    })
+    .join('');
+
+  return secoes ? `<section class="rot3-secao"><h2 class="rot3-secao-titulo">DETALHAMENTO DOS SERVIÇOS COTADOS</h2>${secoes}</section>` : '';
+}
+
 function propostaInvestimentoHtml(
   items: QuoteItemForPdf[],
   defaultCurrency: string,
@@ -2024,7 +2145,7 @@ function buildModernoPropostaBodyHtml(params: {
   const ctaHtml = `<div class="rot3-cta">${qrUrl ? `<img src="${escHtml(qrUrl)}" alt="QR" class="rot3-qr" />` : ''}<div class="rot3-cta-texto"><b>Reserve com ${escHtml(primeiroNome || 'o consultor')}</b><span>Atendimento direto via WhatsApp.${validity ? ` Tarifas válidas até ${escHtml(validity)}.` : ''}</span></div></div>`;
 
   const detalhesHtml = showDetalhes
-    ? propostaDetalhamentoHtml(items, showItemValues, currency) ||
+    ? buildRot3DetalhamentoOrcHtml(items, currency) ||
       `<section class="rot3-secao"><h2 class="rot3-secao-titulo">DETALHAMENTO DOS SERVIÇOS</h2><div class="orc-empty">Sem itens neste orçamento.</div></section>`
     : '';
   const investimentoHtml = buildRot3InvestimentoOrcamentoHtml(items, currency, discount, validity, consultor);
@@ -2398,6 +2519,23 @@ export function buildQuotePreviewHtmlSync(params: {
     .rot3-cons b { color: #1B2C80; display: block; font-size: 9.5pt; }
     .rot3-secao { margin: 24px 0 0; }
     .rot3-secao-titulo { font-size: 10pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #1B2C80; border-bottom: 1.5px solid #C5CED9; padding-bottom: 6px; margin: 0 0 14px; text-align: center; }
+    .rot3-tabela { border: 1.5px solid #C5CED9; border-radius: 12px; overflow: hidden; background: #fff; margin-bottom: 16px; }
+    .rot3-grupo-header { background: #1B2C80; color: #fff; font-size: 8.5pt; font-weight: bold; letter-spacing: 1px; padding: 5px 12px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .rot3-flight-vcard { padding: 8px 12px; border-bottom: 1px solid #EEF2F7; break-inside: avoid; page-break-inside: avoid; }
+    .rot3-flight-vcard:last-child { border-bottom: none; }
+    .rot3-hotel-vcard { padding: 8px 12px; border-bottom: 1px solid #EEF2F7; break-inside: avoid; page-break-inside: avoid; }
+    .rot3-hotel-vcard:last-child { border-bottom: none; }
+    .rot3-voo-trecho { font-size: 9.5pt; font-weight: bold; color: #1B2C80; }
+    .rot3-voo-cia { font-size: 8pt; color: #6B7280; margin-top: 1px; }
+    .rot3-voo-rota { font-size: 9pt; font-weight: bold; color: #4472C4; margin-top: 2px; }
+    .rot3-voo-info { font-size: 8pt; color: #6B7280; margin-top: 2px; }
+    .rot3-voo-label { font-weight: bold; color: #1F2937; }
+    .rot3-hotel-nome { font-size: 9.5pt; font-weight: bold; color: #1B2C80; }
+    .rot3-hotel-cidade { font-size: 8.5pt; color: #4472C4; font-weight: bold; margin-top: 1px; }
+    .rot3-hotel-cat { font-size: 8pt; color: #6B7280; margin-top: 1px; }
+    .rot3-hotel-info { font-size: 8pt; color: #6B7280; margin-top: 2px; }
+    .rot3-chk-item { display: inline-flex; align-items: center; font-size: 7.5pt; color: #374151; }
+    .rot3-chks-row { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 4px; }
     .rot3-inv-box { display: flex; border: 1px solid #9aaac2; border-radius: 18px 18px 0 0; overflow: hidden; background: white; font-family: Georgia, "Times New Roman", serif; color: #1f2430; }
     .rot3-inv-col { flex: 1; padding: 14px 16px; text-align: center; }
     .rot3-inv-divider { width: 1px; background: #9aaac2; flex-shrink: 0; }

@@ -1647,28 +1647,39 @@
     let rot3HoteisHtml = '';
     if (hoteisItems.length > 0) {
       const _chkIcoH = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:3px;flex-shrink:0"><circle cx="6" cy="6" r="5.5" fill="#1B2C80" opacity="0.13"/><path d="M3.2 6l1.8 1.8L9 4" stroke="#1B2C80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      const rows = hoteisItems.map((h) => {
-        const ci = formatPreviewDate(h.data_inicio || '');
-        const co = formatPreviewDate(h.data_fim || '');
-        const nts = h.noites ? `${h.noites} noite${Number(h.noites) !== 1 ? 's' : ''}` : '';
-        const cidade = nomeCidadeNoPdf(h.cidade || '');
-        const cidadeNts = [cidade ? escapePreviewHtml(cidade) : '', nts ? escapePreviewHtml(nts) : ''].filter(Boolean).join(' • ');
-        const catLabel = h.categoria ? escapePreviewHtml(h.categoria) : '';
-        const checks = ([h.apto, h.regime] as (string | undefined)[]).filter(s => String(s || '').trim());
-        const checksHtml = checks.map(s => `<div class="rot3-chk-item">${_chkIcoH}${escapePreviewHtml(String(s).trim())}</div>`).join('');
-        const datasHtml = [
-          ci ? `<span class="rot3-voo-label">Check-in:</span> ${ci}` : '',
-          co ? `<span class="rot3-voo-label">Check-out:</span> ${co}` : ''
-        ].filter(Boolean).join(' &nbsp;•&nbsp; ');
-        return `<div class="rot3-hotel-vcard">
-          <div class="rot3-hotel-nome">${escapePreviewHtml(h.hotel || '—')}</div>
-          ${cidadeNts ? `<div class="rot3-hotel-cidade">${cidadeNts}</div>` : ''}
-          ${catLabel ? `<div class="rot3-hotel-cat">${catLabel}</div>` : ''}
-          ${datasHtml ? `<div class="rot3-hotel-info">${datasHtml}</div>` : ''}
-          ${checksHtml ? `<div class="rot3-chks-row">${checksHtml}</div>` : ''}
-        </div>`;
-      }).join('');
-      rot3HoteisHtml = `<div class="rot3-tabela">${rows}</div>`;
+      // ── Agrupa por cidade para exibir rot3-grupo-header (fundo azul) por cidade
+      const hoteisGroupsMap = new Map<string, typeof hoteisItems>();
+      for (const h of hoteisItems) {
+        const hCidade = nomeCidadeNoPdf(h.cidade || '') || 'Hotéis';
+        if (!hoteisGroupsMap.has(hCidade)) hoteisGroupsMap.set(hCidade, []);
+        hoteisGroupsMap.get(hCidade)!.push(h);
+      }
+      let hoteisInner = '';
+      for (const [hCidade, grpHoteis] of hoteisGroupsMap) {
+        hoteisInner += `<div class="rot3-grupo-header">${escapePreviewHtml(hCidade)}</div>`;
+        for (const h of grpHoteis) {
+          const ci = formatPreviewDate(h.data_inicio || '');
+          const co = formatPreviewDate(h.data_fim || '');
+          const nts = h.noites ? `${h.noites} noite${Number(h.noites) !== 1 ? 's' : ''}` : '';
+          const cidade = nomeCidadeNoPdf(h.cidade || '');
+          const cidadeNts = [cidade ? escapePreviewHtml(cidade) : '', nts ? escapePreviewHtml(nts) : ''].filter(Boolean).join(' • ');
+          const catLabel = h.categoria ? escapePreviewHtml(h.categoria) : '';
+          const checks = ([h.apto, h.regime] as (string | undefined)[]).filter(s => String(s || '').trim());
+          const checksHtml = checks.map(s => `<div class="rot3-chk-item">${_chkIcoH}${escapePreviewHtml(String(s).trim())}</div>`).join('');
+          const datasHtml = [
+            ci ? `<span class="rot3-voo-label">Check-in:</span> ${ci}` : '',
+            co ? `<span class="rot3-voo-label">Check-out:</span> ${co}` : ''
+          ].filter(Boolean).join(' &nbsp;•&nbsp; ');
+          hoteisInner += `<div class="rot3-hotel-vcard">
+            <div class="rot3-hotel-nome">${escapePreviewHtml(h.hotel || '—')}</div>
+            ${cidadeNts ? `<div class="rot3-hotel-cidade">${cidadeNts}</div>` : ''}
+            ${catLabel ? `<div class="rot3-hotel-cat">${catLabel}</div>` : ''}
+            ${datasHtml ? `<div class="rot3-hotel-info">${datasHtml}</div>` : ''}
+            ${checksHtml ? `<div class="rot3-chks-row">${checksHtml}</div>` : ''}
+          </div>`;
+        }
+      }
+      rot3HoteisHtml = `<div class="rot3-tabela">${hoteisInner}</div>`;
     }
 
     // ── Moderno: Investimento e Pagamento — reutilizam as variáveis compartilhadas
