@@ -1511,8 +1511,8 @@
       ${buildRoteiroCardSection('Trem', trensHtml, 'preview-trens-section')}
       ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
       ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
-      ${rot3InvestHtmlShared ? `<section class="section preview-investimento-section"><h2>Investimento</h2>${rot3InvestHtmlShared}</section>` : buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
-      ${mostrarPagamentoPdf && rot3PagamentosHtmlShared ? `<section class="section preview-pagamento-section"><h2>Pagamento</h2>${rot3PagamentosHtmlShared}</section>` : (mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : '')}
+      ${rot3InvestHtmlShared ? `<section class="roteiro-print-section preview-investimento-section"><table class="roteiro-print-table"><thead><tr><th><h2 class="rot-sh">Investimento</h2></th></tr></thead><tbody><tr><td>${rot3InvestHtmlShared}</td></tr></tbody></table></section>` : buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
+      ${mostrarPagamentoPdf && rot3PagamentosHtmlShared ? `<section class="roteiro-print-section preview-pagamento-section"><table class="roteiro-print-table"><thead><tr><th><h2 class="rot-sh">Pagamento</h2></th></tr></thead><tbody><tr><td>${rot3PagamentosHtmlShared}</td></tr></tbody></table></section>` : (mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : '')}
       ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
       ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'), 'x')}
       ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
@@ -1831,8 +1831,8 @@
             .empty { color: #64748b; font-style: italic; }
             ul { margin: 0; padding-left: 18px; }
             li { margin: 0 0 6px; }
-            .rot3-pag-tabela { border: 1.5px solid #C5CED9; border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
-            .rot3-pag-header-row { display: flex; gap: 10px; background: #f8f9fb; border-bottom: 1.5px solid #C5CED9; font-size: 8.5pt; font-weight: 700; color: #1B2C80; padding: 7px 14px; }
+            .rot3-pag-tabela { border: 1px solid #9aaac2; border-radius: 18px; overflow: hidden; margin-bottom: 8px; font-family: Georgia, "Times New Roman", serif; }
+            .rot3-pag-header-row { display: flex; gap: 10px; background: #f8f9fb; border-bottom: 1px solid #9aaac2; font-size: 8.5pt; font-weight: 700; color: #1B2C80; padding: 7px 14px; }
             .rot3-pag-h1 { flex: 2; min-width: 0; }
             .rot3-pag-h2 { flex: 3; min-width: 0; }
             .rot3-pag-h3 { flex: 1.5; min-width: 0; text-align: right; }
@@ -1846,7 +1846,7 @@
             .rot3-pag-cond-desc { font-size: 8pt; color: #374151; line-height: 1.45; }
             .rot3-pag-valor { font-size: 9.5pt; font-weight: 700; color: #1B2C80; }
             .rot3-pag-pax { font-size: 8pt; color: #6B7280; }
-            .rot3-pag-obs { background: #F8F9FB; border-top: 1.5px solid #C5CED9; padding: 10px 14px; font-size: 8pt; color: #374151; line-height: 1.5; border-radius: 0 0 6px 6px; }
+            .rot3-pag-obs { background: #F8F9FB; border-top: 1px solid #9aaac2; padding: 10px 14px; font-size: 8pt; color: #374151; line-height: 1.5; border-radius: 0 0 18px 18px; }
             .rot3-pag-obs-label { font-weight: 700; color: #1B2C80; }
             @media print {
               @page { size: A4; margin: 13mm; }
@@ -1949,29 +1949,15 @@
             .rot3-hotel-cat { font-size: 8pt; color: #6B7280; margin-top: 2px; }
             .rot3-hotel-info { font-size: 8.5pt; color: #374151; margin-top: 2px; }
             .rot3-opc-desc { font-size: 7.5pt; color: #6B7280; margin-top: 2px; line-height: 1.4; }
-            .rot3-inv-box { display: flex; border: 1.5px solid #C5CED9; border-radius: 8px 8px 0 0; overflow: hidden; }
+            .rot3-inv-box { display: flex; border: 1px solid #9aaac2; border-radius: 18px 18px 0 0; overflow: hidden; background: white; font-family: Georgia, "Times New Roman", serif; color: #1f2430; }
             .rot3-inv-col { flex: 1; padding: 14px 16px; text-align: center; }
-            .rot3-inv-divider { width: 1.5px; background: #C5CED9; flex-shrink: 0; }
+            .rot3-inv-divider { width: 1px; background: #9aaac2; flex-shrink: 0; }
             .rot3-inv-label { font-size: 8pt; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; color: #6B7280; margin-bottom: 6px; }
             .rot3-inv-valor { font-size: 16pt; font-weight: bold; color: #1B2C80; line-height: 1.2; }
             .rot3-inv-sub { font-size: 8pt; color: #9CA3AF; margin-top: 4px; }
-            .rot3-inv-footer { background: #1B2C80; color: #fff; font-size: 8pt; padding: 7px 14px; text-align: center; border-radius: 0 0 8px 8px; }
+            .rot3-inv-footer { background: #1B2C80; color: #fff; font-size: 8pt; padding: 7px 14px; text-align: center; border-radius: 0 0 18px 18px; border: 1px solid #9aaac2; border-top: none; }
             .rot3-inv-footer--padrao { background: #D0DAEA !important; color: #1B2C80 !important; }
             .rot3-pag-header-row--padrao { background: #D0DAEA !important; }
-            .padrao-bloco .rot3-inv-box,
-            .padrao-bloco .rot3-pag-tabela {
-              border: 1px solid #9aaac2;
-              border-radius: 18px;
-              font-family: Georgia, "Times New Roman", serif;
-            }
-            .padrao-bloco .rot3-inv-box { border-radius: 18px 18px 0 0; }
-            .padrao-bloco .rot3-inv-footer { border-radius: 0 0 18px 18px; }
-            .padrao-bloco .rot3-pag-tabela { border-radius: 18px; }
-            .padrao-bloco .rot3-inv-valor { font-size: 15pt; }
-            .padrao-bloco .rot3-pag-modal,
-            .padrao-bloco .rot3-pag-valor { color: #243aa3; }
-            .padrao-bloco .rot3-pag-cond-titulo { color: #1f2430; }
-            .padrao-bloco .rot3-pag-header-row { color: #1B2C80; }
             .rot3-info-box { border: 1.5px solid #C5CED9; border-radius: 8px; padding: 12px 16px; background: #fff; }
             .rot3-info-list { margin: 0; padding-left: 16px; }
             .rot3-info-list li { font-size: 9pt; color: #374151; margin-bottom: 4px; line-height: 1.5; }
@@ -2024,8 +2010,8 @@
               'Sugestões sem data marcada, não incluídas no valor do roteiro'
             )}
             ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
-            ${rot3InvestHtmlShared ? `<section class="section preview-investimento-section padrao-bloco"><h2>Investimento</h2>${rot3InvestHtmlShared}</section>` : buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
-            ${mostrarPagamentoPdf && rot3PagamentosHtmlShared ? `<section class="section preview-pagamento-section padrao-bloco"><h2>Pagamento</h2>${rot3PagamentosHtmlShared}</section>` : (mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : '')}
+            ${rot3InvestHtmlShared ? `<section class="roteiro-print-section preview-investimento-section"><table class="roteiro-print-table"><thead><tr><th><h2 class="rot-sh">Investimento</h2></th></tr></thead><tbody><tr><td>${rot3InvestHtmlShared}</td></tr></tbody></table></section>` : buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
+            ${mostrarPagamentoPdf && rot3PagamentosHtmlShared ? `<section class="roteiro-print-section preview-pagamento-section"><table class="roteiro-print-table"><thead><tr><th><h2 class="rot-sh">Pagamento</h2></th></tr></thead><tbody><tr><td>${rot3PagamentosHtmlShared}</td></tr></tbody></table></section>` : (mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : '')}
             ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
             ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'), 'x')}
             ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
