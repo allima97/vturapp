@@ -2010,8 +2010,8 @@
               'Sugestões sem data marcada, não incluídas no valor do roteiro'
             )}
             ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
-            ${buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
-            ${mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : ''}
+            ${rot3InvestHtmlShared ? `<section class="section preview-investimento-section"><h2>Investimento</h2>${rot3InvestHtmlShared}</section>` : buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
+            ${mostrarPagamentoPdf && rot3PagamentosHtmlShared ? `<section class="section preview-pagamento-section"><h2>Pagamento</h2>${rot3PagamentosHtmlShared}</section>` : (mostrarPagamentoPdf ? buildPreviewSection('Pagamento', pagamentosHtml) : '')}
             ${buildPreviewListSection('O que está incluído', incluiTexto.split('\n'), true)}
             ${buildPreviewListSection('O que não está incluído', naoIncluiTexto.split('\n'), 'x')}
             ${mostrarInformacoesPdf ? buildPreviewListSection('Informações Importantes', informacoesImportantes.split('\n')) : ''}
