@@ -169,7 +169,18 @@ export function buildOpcionaisHtml(
     if (grupo) grupo.passeios.push(...cidade.passeios);
     else grupos.set(chave, { ...cidade, passeios: [...cidade.passeios] });
   }
-  return Array.from(grupos.values(), (grupo) => {
+  const primeiraData = (g: RoteiroOpcionalCidade) =>
+    g.passeios.map((p) => p.data || '').filter(Boolean).sort()[0] || '9999';
+  for (const grupo of grupos.values())
+    grupo.passeios = grupo.passeios
+      .map((p, i) => ({ p, i }))
+      .sort((a, b) => (a.p.data || '9999').localeCompare(b.p.data || '9999') || a.i - b.i)
+      .map(({ p }) => p);
+  const ordenados = [...grupos.values()]
+    .map((g, i) => ({ g, i }))
+    .sort((a, b) => primeiraData(a.g).localeCompare(primeiraData(b.g)) || a.i - b.i)
+    .map(({ g }) => g);
+  return ordenados.map((grupo) => {
     const conteudo = grupo.passeios.map((p) => `${p.nome}\n${p.descricao}`).join('\n');
     const longo = grupo.passeios.length > 6 || requiresPrintContinuation(conteudo);
     return `

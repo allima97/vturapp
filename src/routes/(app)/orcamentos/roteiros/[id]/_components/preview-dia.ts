@@ -1,5 +1,6 @@
 import { escapeHtml } from '$lib/utils/html';
 import { requiresPrintContinuation } from '$lib/utils/printLayout';
+import { nomeCidadeNoPdf } from './preview-cidade';
 import type { RotDia } from './tipos';
 
 export function renderPreviewDia(
@@ -7,7 +8,8 @@ export function renderPreviewDia(
   index: number,
   formatarData: (data: string) => string
 ) {
-  const percurso = dia.percurso.trim();
+  // Sem deslocamento no dia, o título mostra a cidade (nome curto): "Dia 2 - Miami".
+  const percurso = dia.percurso.trim() || nomeCidadeNoPdf(String(dia.cidade || '').trim());
   const longo = requiresPrintContinuation(dia.descricao || '') ? ' roteiro-card--long' : '';
   return `<tr class="${longo.trim()}"><td><article class="card roteiro-card${longo}">
           <h3>Dia ${index + 1}${percurso ? ` - ${escapeHtml(percurso)}` : ''}</h3>

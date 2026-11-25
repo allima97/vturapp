@@ -196,6 +196,10 @@ export const roteiroPdfThemeCss = `
   .md .lni { margin: 2px 0; }
   .p1 { color: #C62828; font-weight: 700; font-size: 6.5pt; vertical-align: super; margin-left: 1px; letter-spacing: 0.2px; }
   .chks { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 14px; margin-top: 6px; }
+  /* Listas de seção (O que está incluído / não incluído): um item por linha. */
+  .section > .chks { flex-direction: column; flex-wrap: nowrap; align-items: flex-start; gap: 4px; }
+  .section > .chks .chk { align-items: flex-start; font-size: 8.5pt; line-height: 1.4; }
+  .section > .chks .chk svg { margin-top: 2px; }
   .chk { display: flex; align-items: center; gap: 6px; color: #1B2C80; font-size: 7.5pt; font-family: Arial, Helvetica, sans-serif; }
   .chk svg { flex: 0 0 auto; }
   .section > .grid, .section > .chks, .section > .preview-table-wrap, .section > ul, .section > p { padding: 8px 12px 12px; }

@@ -1786,9 +1786,16 @@
         const dm = diaMes(dataRef);
         return [idx >= 0 ? `Dia ${idx + 1}` : '', dm].filter(Boolean).join(' • ');
       };
+      // Data de referência: a informada no passeio ou o 1º dia do itinerário na cidade.
+      const dataReferencia = (cidade: string, data?: string) =>
+        data ||
+        (diasItems.find((d) => normCid(d.cidade || '') === normCid(cidade))?.data || '').slice(0, 10);
       const linhas = opcionaisVisiveis
         .flatMap((grupo) => grupo.passeios.map((p) => ({ cidade: grupo.cidade, ...p })))
-        .filter((l) => String(l.nome || '').trim());
+        .filter((l) => String(l.nome || '').trim())
+        .map((l, ordem) => ({ ...l, ordem, ref: dataReferencia(l.cidade, l.data) }))
+        // Em ordem de dia; sem data vão para o fim, mantendo a ordem cadastrada.
+        .sort((a, b) => (a.ref || '9999').localeCompare(b.ref || '9999') || a.ordem - b.ordem);
       if (linhas.length > 0) {
         const colHdrOpc = `<div class="rot3-hotel-header-row"><div>Destino</div><div>Atividade / Experiência Sugerida</div><div>Valor Estimado</div></div>`;
         const rowsOpc = linhas

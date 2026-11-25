@@ -17,7 +17,7 @@ describe('título dos dias no PDF do roteiro', () => {
     expect(dia.cidade).toBe(cidade);
   });
 
-  it('exibe apenas o número quando não há percurso, mesmo com cidade preenchida', () => {
+  it('sem percurso mostra a cidade (nome curto); sem cidade, só o número', () => {
     expect(renderPreviewDia({ ...newDia(0), percurso: 'São Paulo - Roma' }, 0, (v) => v)).toContain(
       '<h3>Dia 1 - São Paulo - Roma</h3>'
     );
@@ -26,8 +26,11 @@ describe('título dos dias no PDF do roteiro', () => {
       0,
       (v) => v
     );
-    expect(html).toContain('<h3>Dia 1</h3>');
-    expect(html).not.toContain('Roma');
+    expect(html).toContain('<h3>Dia 1 - Roma</h3>');
+    expect(html).not.toContain('Itália');
+    expect(renderPreviewDia({ ...newDia(0), percurso: '' }, 0, (v) => v)).toContain(
+      '<h3>Dia 1</h3>'
+    );
   });
 
   it('mantém data, descrição e escape de HTML', () => {
