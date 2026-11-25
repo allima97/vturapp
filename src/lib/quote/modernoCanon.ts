@@ -85,6 +85,9 @@ export const MODERNO_CANON_CSS = `
 .rot3-tabela--pag .rot3-c1, .rot3-tabela--pag .rot3-hotel-header-row > div:nth-child(1) { flex: 1.05; }
 .rot3-tabela--pag .rot3-c2, .rot3-tabela--pag .rot3-hotel-header-row > div:nth-child(2) { flex: 1.5; }
 .rot3-tabela--pag .rot3-c3, .rot3-tabela--pag .rot3-hotel-header-row > div:nth-child(3) { flex: .85; }
+.rot3-tabela--passeios .rot3-c1, .rot3-tabela--passeios .rot3-hotel-header-row > div:nth-child(1) { flex: .7; }
+.rot3-tabela--passeios .rot3-c2, .rot3-tabela--passeios .rot3-hotel-header-row > div:nth-child(2) { flex: 1.6; }
+.rot3-tabela--passeios .rot3-c3, .rot3-tabela--passeios .rot3-hotel-header-row > div:nth-child(3) { flex: .8; }
 .rot3-obs { border: 1px solid #C5CED9; border-radius: 8px; background: #F7F9FC; padding: 10px 14px; font-size: 8.5pt; color: #374151; line-height: 1.55; margin: 0 0 16px; break-inside: avoid; }
 .rot3-obs b { color: #1F2937; }
 

@@ -599,9 +599,21 @@ export function renderRot3Carros(items: RotPasseio[], formatDate: FormatDate) {
   return `<div class="rot3-tabela"><div class="rot3-hotel-header-row"><div>Veículo &amp; Locadora</div><div>Retirada &amp; Devolução</div><div>Inclusos</div></div>${linhas.join('')}</div>`;
 }
 
+/** "Incluído" / "Não incluído" do formulário viram frases claras no PDF. */
+function rotuloIngressos(valor: string) {
+  const norm = valor
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+  if (/^nao inclu/.test(norm)) return 'Ingressos não incluídos';
+  if (/^inclu/.test(norm)) return 'Ingressos incluídos';
+  return valor;
+}
+
 /**
  * Passeios e serviços no estilo Moderno: tabela igual à de Hotéis.
- * "Passeio & Destino | Data | Detalhes".
+ * "Cidade | Descrição & Data | Detalhes".
  */
 export function renderRot3Passeios(items: RotPasseio[], formatDate: FormatDate) {
   const data = (valor?: string | null) => {
@@ -613,13 +625,11 @@ export function renderRot3Passeios(items: RotPasseio[], formatDate: FormatDate) 
   );
   const linhas = ordenados.map((item) => {
     const detalhes = detalhesPasseio(item);
+    const cidade = nomeCidadeNoPdf(text(item.cidade)) || '—';
     const nome = text(item.passeio) || text(item.tipo) || 'Passeio';
-    const cidadeTipo = [nomeCidadeNoPdf(text(item.cidade)), text(item.tipo)]
-      .filter(Boolean)
-      .join(' • ');
     const inicio = data(item.data_inicio);
     const fim = data(item.data_fim);
-    const umDia = !fim || fim === inicio;
+    const periodo = !fim || fim === inicio ? inicio : [inicio, fim].filter(Boolean).join(' a ');
     const passageiros = passageirosChipText(
       Number(item.qtd_adultos) || 0,
       Number(item.qtd_criancas) || 0,
@@ -627,18 +637,14 @@ export function renderRot3Passeios(items: RotPasseio[], formatDate: FormatDate) 
     );
     const ingressos = text(item.ingressos)
       .split(/\n+/)
-      .map((linha) => linha.trim())
+      .map((linha) => rotuloIngressos(linha.trim()))
       .filter(Boolean);
     const checks = [text(detalhes.categoria), ...ingressos, passageiros].filter(Boolean);
-    const c1 = `<div class="rot3-t">${escapeHtml(nome)}</div>${cidadeTipo ? `<div class="rot3-a">${escapeHtml(cidadeTipo)}</div>` : ''}${text(item.fornecedor) ? `<div class="rot3-s">${escapeHtml(text(item.fornecedor))}</div>` : ''}`;
-    const c2 = umDia
-      ? inicio
-        ? `<div class="rot3-s"><b>Data:</b> ${escapeHtml(inicio)}</div>`
-        : ''
-      : `<div class="rot3-s"><b>Início:</b> ${escapeHtml(inicio)}</div><div class="rot3-s"><b>Término:</b> ${escapeHtml(fim)}</div>`;
+    const c1 = `<div class="rot3-t">${escapeHtml(cidade)}</div>`;
+    const c2 = `<div class="rot3-t">${escapeHtml(nome)}</div>${periodo ? `<div class="rot3-s">${escapeHtml(periodo)}</div>` : ''}`;
     const c3 = checks.map((c) => `<div class="rot3-chk">${escapeHtml(c)}</div>`).join('');
     return `<div class="rot3-row"><div class="rot3-c1">${c1}</div><div class="rot3-c2">${c2}</div><div class="rot3-c3">${c3}</div></div>`;
   });
   if (!linhas.length) return '';
-  return `<div class="rot3-tabela"><div class="rot3-hotel-header-row"><div>Passeio &amp; Destino</div><div>Data</div><div>Detalhes</div></div>${linhas.join('')}</div>`;
+  return `<div class="rot3-tabela rot3-tabela--passeios"><div class="rot3-hotel-header-row"><div>Cidade</div><div>Descrição &amp; Data</div><div>Detalhes</div></div>${linhas.join('')}</div>`;
 }
