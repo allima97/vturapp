@@ -2105,7 +2105,7 @@
             .rot3-inv-footer { background: #1B2C80; color: #fff; font-size: 8pt; padding: 7px 14px; text-align: center; border-radius: 0 0 18px 18px; border: 1px solid #9aaac2; border-top: none; }
             .rot3-inv-footer--padrao { background: #D0DAEA !important; color: #1B2C80 !important; }
             .rot3-pag-header-row--padrao { background: #D0DAEA !important; }
-            .rot3-info-box { border: 1.5px solid #C5CED9; border-radius: 8px; padding: 12px 16px; background: #fff; }
+            .rot3-info-box { border: 1.5px solid #C5CED9; border-radius: 8px; padding: 12px 16px; background: #fff; break-inside: avoid; page-break-inside: avoid; }
             .rot3-info-list { margin: 0; padding-left: 16px; }
             .rot3-info-list li { font-size: 9pt; color: #374151; margin-bottom: 4px; line-height: 1.5; }
             .rot3-info-list--icon { padding-left: 0; list-style: none; }
