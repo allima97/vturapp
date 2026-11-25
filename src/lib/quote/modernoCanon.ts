@@ -36,6 +36,11 @@ export const MODERNO_CANON_CSS = `
 .rot3-rota-sep { color: #4472C4; margin: 0 8px; font-weight: normal; }
 .rot3-bloco-cta { border-top: 1px solid #C5CED9; margin-top: 12px; padding-top: 10px; font-size: 8.5pt; color: #374151; text-align: center; }
 .rot3-bloco-cta b { color: #1F2937; }
+.rot3-validade { margin-bottom: 8px; }
+.rot3-qrcta { display: inline-flex; align-items: center; gap: 10px; background: #fff; border: 1px solid #C5CED9; border-radius: 10px; padding: 8px 14px 8px 8px; text-align: left; max-width: 300px; }
+.rot3-qrcta img { display: block; width: 58px; height: 58px; flex-shrink: 0; }
+.rot3-qrcta-texto b { display: block; font-size: 9.5pt; color: #1B2C80; margin-bottom: 2px; }
+.rot3-qrcta-texto span { display: block; font-size: 8.5pt; color: #4B5563; line-height: 1.4; }
 
 /* Títulos de seção */
 .rot3-secao { margin: 26px 0 0; }

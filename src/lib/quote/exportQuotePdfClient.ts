@@ -2508,7 +2508,15 @@ function buildModernoPropostaBodyHtml(params: {
     viajantes ? `${pplIco}<b>Viajantes:</b> ${metaVal(viajantes)}` : ''
   ].filter(Boolean);
 
-  const ctaHtml = `<div class="rot3-bloco-cta"><b>Reserve com o ${escHtml(primeiroNome || 'consultor')}:</b>${validity ? ` Tarifas válidas até <b>${escHtml(validity)}</b> •` : ''} Atendimento direto via WhatsApp.</div>`;
+  // 1ª linha: validade · abaixo: cartão "Reserve com …" com QR Code do WhatsApp
+  const ctaCartao = `<div class="rot3-qrcta">${
+    qrUrl ? `<img src="${escHtml(qrUrl)}" alt="QR Code WhatsApp" />` : ''
+  }<div class="rot3-qrcta-texto"><b>Reserve com o ${escHtml(primeiroNome || 'consultor')}</b><span>${
+    qrUrl ? 'Aponte a câmera para o QR Code e fale no WhatsApp.' : 'Atendimento direto via WhatsApp.'
+  }</span></div></div>`;
+  const ctaHtml = `<div class="rot3-bloco-cta">${
+    validity ? `<div class="rot3-validade">Tarifas válidas até <b>${escHtml(validity)}</b></div>` : ''
+  }${ctaCartao}</div>`;
   const rotaCidades = cities.map(escHtml).join('<span class="rot3-rota-sep">•</span>');
   const blocoHtml = `<div class="rot3-bloco">${
     cities.length
