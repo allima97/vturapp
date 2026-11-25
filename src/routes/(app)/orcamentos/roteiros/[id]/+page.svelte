@@ -1591,7 +1591,14 @@
     if (transportesItems.length > 0) {
       const groupsMap = new Map<string, typeof transportesItems>();
       for (const t of transportesItems) {
-        const gk = [t.tipo_voo || '', t.cia_aerea || ''].filter(Boolean).join(' • ') || 'Voos';
+        const tipoVoo = String(t.tipo_voo || '').trim();
+        const tipoNorm = tipoVoo.toLowerCase();
+        const tipoLabel = tipoNorm.startsWith('internac')
+          ? 'Voos Internacionais'
+          : tipoNorm.startsWith('nacion') || tipoNorm.startsWith('domést') || tipoNorm.startsWith('domest')
+            ? 'Voos Nacionais'
+            : tipoVoo;
+        const gk = [tipoLabel, t.cia_aerea || ''].filter(Boolean).join(' • ') || 'Voos';
         if (!groupsMap.has(gk)) groupsMap.set(gk, []);
         groupsMap.get(gk)!.push(t);
       }
@@ -1599,7 +1606,7 @@
       for (const [gk, grpItems] of groupsMap) {
         inner += `<div class="rot3-grupo-header">${escapePreviewHtml(gk)}</div>`;
         for (const t of grpItems) {
-          const trechoPartes = (t.trecho || '').split(/\s*(?:→|->|—|--)\s*/);
+          const trechoPartes = (t.trecho || '').split(/\s*(?:→|->|—|--)\s*|\s+[-–]\s+/);
           const cidOrig = nomeCidadeNoPdf((trechoPartes[0] || '').trim());
           const cidDest = nomeCidadeNoPdf((trechoPartes[1] || '').trim());
           const trechoDisplay = cidOrig && cidDest
