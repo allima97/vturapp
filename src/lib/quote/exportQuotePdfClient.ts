@@ -1613,10 +1613,13 @@ function rot3Legs(item: QuoteItemForPdf): Rot3Leg[] {
     const trecho = splitTrechoCities(textVal(f.trecho));
     const codOrig = textVal(f.aeroporto_saida).split(',')[0].trim().toUpperCase();
     const codDest = textVal(f.aeroporto_chegada).split(',')[0].trim().toUpperCase();
-    const cidOrig =
-      nomeCidadeNoPdf(textVal(f.cidade_saida) || textVal(f.origem) || trecho.origem) || codOrig;
-    const cidDest =
-      nomeCidadeNoPdf(textVal(f.cidade_chegada) || textVal(f.destino) || trecho.destino) || codDest;
+    const nomeCidade = (informada: string, codigo: string) => {
+      const nome = nomeCidadeNoPdf(informada);
+      if (nome && !/^[A-Z]{3}$/.test(nome)) return nome;
+      return nomeCidadeNoPdf(cityForAirportCode(codigo || nome)) || nome || codigo;
+    };
+    const cidOrig = nomeCidade(textVal(f.cidade_saida) || textVal(f.origem) || trecho.origem, codOrig);
+    const cidDest = nomeCidade(textVal(f.cidade_chegada) || textVal(f.destino) || trecho.destino, codDest);
     const dataSaida = textVal(f.data_voo || f.data_inicio);
     return {
       cidOrig,
@@ -1915,15 +1918,18 @@ function rot3LinhasDetalhe(item: QuoteItemForPdf): string[] {
         const c3 = rot3ChecksHtml([leg.classe, leg.assentos || textVal(details.assentos), pax].filter(Boolean).map(escHtml));
         return rot3Linha(c1, c2, c3);
       }
+      // Linha 1: códigos | horários | ✓ classe…
+      // Linha 2: saída (cidade • data) | chegada (cidade • data)
+      // Linha 3: cia • voo
       const c1 =
-        rot3T(escHtml(`${leg.cidOrig} → ${leg.cidDest}`)) +
-        rot3S(escHtml([leg.cia, leg.numero ? `Voo ${leg.numero}` : '', dataSaida].filter(Boolean).join(' • '))) +
-        rot3Qtd(qtd);
+        rot3T(escHtml(`${leg.codOrig || leg.cidOrig} → ${leg.codDest || leg.cidDest}`)) +
+        rot3S(escHtml([leg.cidOrig ? `Saída de ${leg.cidOrig}` : 'Saída', dataSaida].filter(Boolean).join(' • '))) +
+        rot3S(escHtml([leg.cia, leg.numero ? `Voo ${leg.numero}` : ''].filter(Boolean).join(' • ')));
       const origem = [leg.codOrig || leg.cidOrig, leg.horaSaida].filter(Boolean).join(' ');
       const destino = [leg.codDest || leg.cidDest, leg.horaChegada].filter(Boolean).join(' ');
       const c2 =
         rot3T(escHtml(`${origem} → ${destino}${rot3MaisDias(leg)}`)) +
-        rot3S(escHtml(leg.cidDest ? `Chegada em ${leg.cidDest}${dataCheg ? ` em ${dataCheg}` : ''}` : ''));
+        rot3S(escHtml([leg.cidDest ? `Chegada em ${leg.cidDest}` : 'Chegada', dataCheg].filter(Boolean).join(' • ')));
       const c3 = rot3ChecksHtml(distinctSafe([leg.classe, leg.tarifa, leg.assentos, pax]).map(escHtml));
       return rot3Linha(c1, c2, c3);
     });
@@ -1931,14 +1937,15 @@ function rot3LinhasDetalhe(item: QuoteItemForPdf): string[] {
 
   if (tipo === 'hotel') {
     const nts = dias != null && dias > 0 ? rot3Plural(dias, 'Noite', 'Noites') : '';
-    const qtd = details.quantidade_apartamentos ?? item.quantity;
+    // Linha 1: hotel | check-in | ✓ apto · Linha 2: cidade • noites | check-out | ✓ regime
+    // Linha 3: categoria | — | ✓ passageiros
     const c1 =
-      rot3T(escHtml([city, nts].filter(Boolean).join(' • ') || title)) +
-      rot3S(escHtml(`${title}${textVal(details.categoria) ? ` (${textVal(details.categoria)})` : ''}`)) +
-      rot3Qtd(qtd);
+      rot3T(escHtml(title)) +
+      rot3S(escHtml([city, nts].filter(Boolean).join(' • '))) +
+      rot3S(escHtml(textVal(details.categoria)));
     const ci = rot3DataHora(textVal(item.start_date), textVal(details.hora_checkin));
     const co = rot3DataHora(textVal(item.end_date), textVal(details.hora_checkout));
-    const c2 = rot3T(ci ? `Check-in: ${escHtml(ci)}` : '') + rot3S(co ? `Check-out: ${escHtml(co)}` : '');
+    const c2 = rot3T(ci ? `Check-in: ${escHtml(ci)}` : '') + rot3S(co ? `Check-out: <b>${escHtml(co)}</b>` : '');
     const c3 = rot3ChecksHtml(
       [textVal(details.tipo_apartamento), textVal(details.regime), pax].filter(Boolean).map(escHtml)
     );
