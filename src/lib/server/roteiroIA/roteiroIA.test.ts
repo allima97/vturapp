@@ -107,7 +107,8 @@ describe('chamarFerramentaClaude', () => {
       fetcher: (async (_url: RequestInfo | URL, init?: RequestInit) => {
         const corpo = JSON.parse(String(init?.body));
         expect(corpo.model).toBe('claude-opus-5-5');
-        expect(corpo.tool_choice).toEqual({ type: 'tool', name: 'preencher_roteiro' });
+        expect(corpo.output_config.format.type).toBe('json_schema');
+        expect(corpo).not.toHaveProperty('tool_choice');
         return new Response(JSON.stringify(resposta), { status });
       }) as typeof fetch
     });
@@ -115,7 +116,7 @@ describe('chamarFerramentaClaude', () => {
   it('devolve a entrada da ferramenta e o modelo usado', async () => {
     const r = await chamar({
       model: 'claude-opus-5-5',
-      content: [{ type: 'tool_use', name: 'preencher_roteiro', input: { nome: 'A' } }],
+      content: [{ type: 'text', text: JSON.stringify({ nome: 'A' }) }],
       usage: { input_tokens: 10, output_tokens: 20 }
     });
     expect(r.entrada).toEqual({ nome: 'A' });

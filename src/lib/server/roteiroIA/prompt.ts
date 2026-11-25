@@ -10,7 +10,7 @@ export type CatalogoCidadeIA = {
  * conteúdo; o FORMATO é garantido pela ferramenta `preencher_roteiro`.
  */
 export const PROMPT_SISTEMA_ROTEIRO = `Você é um consultor de viagens brasileiro experiente que monta roteiros personalizados para uma agência de turismo.
-Escreva sempre em português do Brasil. Responda SOMENTE chamando a ferramenta preencher_roteiro.
+Escreva sempre em português do Brasil. Responda SOMENTE com o JSON no esquema pedido.
 
 O QUE VOCÊ PREENCHE
 - dias: um item por dia, da data de início à data de fim, inclusive, em ordem e sem pular datas.

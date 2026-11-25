@@ -36,7 +36,7 @@ export type ResultadoClaude = {
 type RespostaMensagens = {
   model?: string;
   stop_reason?: string;
-  content?: Array<{ type: string; name?: string; input?: unknown }>;
+  content?: Array<{ type: string; text?: string }>;
   usage?: ResultadoClaude['uso'];
   error?: { message?: string };
 };
@@ -55,8 +55,9 @@ export async function chamarFerramentaClaude(params: {
     max_tokens: params.maxTokens ?? 16_000,
     // Regras fixas em cache: chamadas seguintes ficam mais baratas e rápidas.
     system: [{ type: 'text', text: params.sistema, cache_control: { type: 'ephemeral' } }],
-    tools: [params.ferramenta],
-    tool_choice: { type: 'tool', name: params.ferramenta.name },
+    // Saída estruturada: a resposta vem como JSON que segue exatamente o esquema
+    // (funciona em todos os modelos; tool_choice forçado não é aceito por alguns).
+    output_config: { format: { type: 'json_schema', schema: params.ferramenta.input_schema } },
     messages: [{ role: 'user', content: params.mensagem }]
   };
 
@@ -96,8 +97,19 @@ export async function chamarFerramentaClaude(params: {
     throw new ErroClaude('Falha ao chamar a IA.', 502, false);
   }
 
-  const bloco = dados.content?.find((c) => c.type === 'tool_use' && c.name === params.ferramenta.name);
-  if (!bloco || !bloco.input || typeof bloco.input !== 'object' || Array.isArray(bloco.input)) {
+  const textoJson = (dados.content || [])
+    .filter((c) => c.type === 'text' && typeof c.text === 'string')
+    .map((c) => c.text)
+    .join('');
+  let entrada: unknown = null;
+  try {
+    entrada = textoJson ? JSON.parse(textoJson) : null;
+  } catch {
+    entrada = null;
+  }
+  if (dados.stop_reason === 'refusal')
+    throw new ErroClaude('A IA recusou este pedido. Revise as observações e tente de novo.', 422, false);
+  if (!entrada || typeof entrada !== 'object' || Array.isArray(entrada)) {
     const cortado = dados.stop_reason === 'max_tokens';
     throw new ErroClaude(
       cortado
@@ -109,7 +121,7 @@ export async function chamarFerramentaClaude(params: {
   }
 
   return {
-    entrada: bloco.input as Record<string, unknown>,
+    entrada: entrada as Record<string, unknown>,
     modelo: dados.model || params.modelo,
     uso: dados.usage || {}
   };

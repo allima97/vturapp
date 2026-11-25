@@ -1,7 +1,5 @@
-import { ROTEIRO_IA_MAX_DIAS } from '$lib/roteiroIA/tipos';
-
 /**
- * Ferramenta que o Claude é OBRIGADO a chamar (tool_choice). O `input_schema`
+ * Esquema da saída estruturada (output_config.format, json_schema). O `input_schema`
  * é um recorte do formato em que o roteiro já é salvo (RoteiroPayload):
  * só dias, opcionais e inclusões. Valores, voos, hotéis e dados do cliente
  * ficam de fora de propósito (ver docs/especificação da IA de roteiros).
@@ -24,7 +22,6 @@ export const FERRAMENTA_ROTEIRO = {
       },
       dias: {
         type: 'array',
-        maxItems: ROTEIRO_IA_MAX_DIAS,
         description: 'Um item por dia da viagem, do primeiro ao último, em ordem.',
         items: {
           type: 'object',
@@ -59,7 +56,6 @@ export const FERRAMENTA_ROTEIRO = {
             cidade: { type: 'string' },
             passeios: {
               type: 'array',
-              maxItems: 8,
               items: {
                 type: 'object',
                 additionalProperties: false,
@@ -90,6 +86,8 @@ export const FERRAMENTA_ROTEIRO = {
     }
   }
 } as const;
+
+// Limites de quantidade (dias, passeios) são aplicados no pós-processamento.
 
 /** Formato bruto que o Claude devolve (antes da validação). */
 export type SaidaBrutaRoteiro = {
