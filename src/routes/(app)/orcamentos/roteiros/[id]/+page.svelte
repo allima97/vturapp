@@ -1288,8 +1288,24 @@
     // ── Investimento e Pagamento (compartilhado Padrão + Moderno) ──────────
     let rot3InvestHtmlShared = '';
     if (investimentosItems.length > 0) {
-      const qtdAdultos = Number(investimentosItems[0]?.qtd_adultos || investimentosItems[0]?.qtd_apto || 1) || 1;
-      const totalAdultos = totalInvestimento * qtdAdultos;
+      // O Tipo da 1ª linha define o quadro: "Por pessoa" (total da viagem) ou
+      // "Por apto" (valor do apartamento para N pessoas).
+      const porApto = String(investimentosItems[0]?.tipo || '').trim() === 'Por apto';
+      const qtdAdultos = Number(investimentosItems[0]?.qtd_apto || 1) || 1;
+      const somaLinhas = investimentosItems.reduce(
+        (s, i) => s + (Number(i.valor_por_apto || 0) || Number(i.valor_por_pessoa || 0) * (Number(i.qtd_apto || 1) || 1)),
+        0
+      );
+      const totalAdultos = somaLinhas || totalInvestimento * qtdAdultos;
+      const nomeAcomodacao: Record<number, string> = { 1: 'single', 2: 'duplo', 3: 'triplo', 4: 'quádruplo' };
+      const paxTxt = `${qtdAdultos} ${qtdAdultos !== 1 ? 'PAXS' : 'PAX'}`;
+      const rotuloTotal = porApto
+        ? `VALOR POR APTO (${paxTxt})`
+        : `TOTAL DA VIAGEM (${qtdAdultos} ${qtdAdultos !== 1 ? 'PESSOAS' : 'PESSOA'})`;
+      const subTotal = porApto
+        ? `Considerando ${qtdAdultos} pessoa${qtdAdultos !== 1 ? 's' : ''} no mesmo apartamento${nomeAcomodacao[qtdAdultos] ? ` (${nomeAcomodacao[qtdAdultos]})` : ''}`
+        : `Valor total da proposta para ${qtdAdultos} pessoa${qtdAdultos !== 1 ? 's' : ''}`;
+      const subPessoa = porApto ? 'Valor individual no apartamento' : 'Valor individual por pessoa';
       const dtHoje = new Date();
       const dtAm = new Date(dtHoje); dtAm.setDate(dtAm.getDate() + 1);
       const fDt = (d: Date) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
@@ -1303,13 +1319,13 @@
         <div class="rot3-inv-col">
           <div class="rot3-inv-label">${_icoP}POR PESSOA</div>
           <div class="rot3-inv-valor">R$&nbsp;${formatBRL(totalInvestimento)}</div>
-          <div class="rot3-inv-sub">Valor médio individual por adulto</div>
+          <div class="rot3-inv-sub">${subPessoa}</div>
         </div>
         <div class="rot3-inv-divider"></div>
         <div class="rot3-inv-col">
-          <div class="rot3-inv-label">${_icoG}TOTAL DA VIAGEM (${qtdAdultos} ${qtdAdultos !== 1 ? 'ADULTOS' : 'ADULTO'})</div>
+          <div class="rot3-inv-label">${_icoG}${rotuloTotal}</div>
           <div class="rot3-inv-valor">R$&nbsp;${formatBRL(totalAdultos)}</div>
-          <div class="rot3-inv-sub">Valor total da proposta para ${qtdAdultos} adulto${qtdAdultos !== 1 ? 's' : ''}</div>
+          <div class="rot3-inv-sub">${subTotal}</div>
         </div>
       </div>
       <div class="rot3-inv-footer rot3-inv-footer--padrao">${_icoClock}Emissão em ${emis}&nbsp;•&nbsp;Tarifas válidas até ${valid}${consultorNome ? `&nbsp;•&nbsp;Reserve com ${escapePreviewHtml(consultorNome)} via WhatsApp` : ''}</div>`;
