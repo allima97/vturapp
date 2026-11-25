@@ -507,3 +507,36 @@ export function renderRot3Trens(items: RotPasseio[], formatDate: FormatDate) {
   if (!linhas.length) return '';
   return `<div class="rot3-tabela"><div class="rot3-hotel-header-row"><div>Origem</div><div>Destino</div><div>Trem &amp; Classe</div></div>${linhas.join('')}</div>`;
 }
+
+/**
+ * Seguro Viagem no estilo Moderno: tabela igual à de Hotéis.
+ * "Seguradora & Plano | Período de Cobertura | Viajantes".
+ */
+export function renderRot3Seguros(items: RotPasseio[], formatDate: FormatDate) {
+  const data = (valor?: string | null) => {
+    const d = formatDate(valor || '');
+    return d && d !== '-' ? d : '';
+  };
+  const linhas = items.map((item) => {
+    const detalhes = detalhesPasseio(item);
+    const seguradora = text(item.fornecedor);
+    const plano = text(item.passeio);
+    const dias = diasItem('seguro', item.data_inicio, item.data_fim);
+    const inicio = data(item.data_inicio);
+    const termino = data(item.data_fim);
+    const passageiros = passageirosChipText(
+      Number(item.qtd_adultos) || 0,
+      Number(item.qtd_criancas) || 0,
+      Number(detalhes.infant) || 0
+    );
+    const titulo = seguradora || plano || 'Seguro Viagem';
+    const planoTxt = seguradora && plano ? `Plano ${plano}` : '';
+    const cobertura = dias != null && dias > 0 ? `${dias} ${dias === 1 ? 'dia' : 'dias'} de cobertura` : '';
+    const c1 = `<div class="rot3-t">${escapeHtml(titulo)}</div>${planoTxt ? `<div class="rot3-a">${escapeHtml(planoTxt)}</div>` : ''}${cobertura ? `<div class="rot3-s">${escapeHtml(cobertura)}</div>` : ''}`;
+    const c2 = `${inicio ? `<div class="rot3-s"><b>Início:</b> ${escapeHtml(inicio)}</div>` : ''}${termino ? `<div class="rot3-s"><b>Término:</b> ${escapeHtml(termino)}</div>` : ''}`;
+    const c3 = passageiros ? `<div class="rot3-chk">${escapeHtml(passageiros)}</div>` : '';
+    return `<div class="rot3-row"><div class="rot3-c1">${c1}</div><div class="rot3-c2">${c2}</div><div class="rot3-c3">${c3}</div></div>`;
+  });
+  if (!linhas.length) return '';
+  return `<div class="rot3-tabela"><div class="rot3-hotel-header-row"><div>Seguradora &amp; Plano</div><div>Período de Cobertura</div><div>Viajantes</div></div>${linhas.join('')}</div>`;
+}

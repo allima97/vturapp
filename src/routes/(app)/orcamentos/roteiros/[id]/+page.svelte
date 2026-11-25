@@ -89,6 +89,7 @@
     renderPreviewPasseios,
     renderPreviewSeguros,
     renderPreviewTrens,
+    renderRot3Seguros,
     renderRot3Trens
   } from './_components/preview-cards';
   import { nomeCidadeNoPdf } from './_components/preview-cidade';
@@ -1775,7 +1776,7 @@
       ${trensHtml.trim() ? buildRot3Secao('TREM', renderRot3Trens(trensItems, formatPreviewDate) || renderPreviewTrens(trensItems, formatPreviewDate, { moderno: true })) : ''}
       ${passeiosHtml.trim() ? buildRot3Secao('PASSEIOS E SERVIÇOS', passeiosHtml) : ''}
       ${rot3OpcionaisHtml ? buildRot3Secao('Passeios Opcionais', rot3OpcionaisHtml) : ''}
-      ${segurosHtml.trim() ? buildRot3Secao('SEGURO VIAGEM', segurosHtml) : ''}
+      ${segurosHtml.trim() ? buildRot3Secao('SEGURO VIAGEM', renderRot3Seguros(segurosItems, formatPreviewDate) || segurosHtml) : ''}
       ${buildRot3Secao('INVESTIMENTO', rot3InvestHtml)}
       ${incluiTexto.trim() ? buildRot3Secao('O QUE ESTÁ INCLUÍDO', buildRot3InfoBox(incluiTexto.split('\n'), 'inclui')) : ''}
       ${naoIncluiTexto.trim() ? buildRot3Secao('O QUE NÃO ESTÁ INCLUÍDO', buildRot3InfoBox(naoIncluiTexto.split('\n'), 'naoinclui')) : ''}
