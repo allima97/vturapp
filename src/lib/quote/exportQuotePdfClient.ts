@@ -1955,10 +1955,12 @@ function rot3LinhasDetalhe(item: QuoteItemForPdf): string[] {
   if (tipo === 'carro') {
     const locadora = textVal(details.locadora) || textVal(details.fornecedor);
     const diarias = dias != null && dias > 0 ? rot3Plural(dias, 'Diária', 'Diárias') : '';
+    // Linha 1: veículo • câmbio • locadora (diárias) · Linha 2: tipo · Linha 3: características
+    const cabecalho = [title, textVal(details.cambio), locadora].filter(Boolean).join(' • ');
     const c1 =
-      rot3T(escHtml(`Aluguel de Carro${locadora ? ` • ${locadora}` : ''}${diarias ? ` (${diarias})` : ''}`)) +
-      rot3S(escHtml([title, textVal(details.cambio), resumoInformacoesVeiculo(details)].filter(Boolean).join(' • '))) +
-      rot3Qtd(item.quantity);
+      rot3T(escHtml(`${cabecalho}${diarias ? ` (${diarias})` : ''}`)) +
+      rot3S('Aluguel de Carro') +
+      rot3S(escHtml(resumoInformacoesVeiculo(details)));
     const ret = textVal(details.loja_retirada) || city;
     const dev = textVal(details.loja_devolucao) || nomeCidadeNoPdf(textVal(details.cidade_devolucao));
     const c2 =
