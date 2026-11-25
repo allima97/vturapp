@@ -1585,6 +1585,75 @@ function propostaCronogramaHtml(items: QuoteItemForPdf[]) {
   return `<div class="pv-sec"><div class="pv-sec-title">Cronograma dos Serviços</div><div class="pv-cron-list">${linhas}</div></div>`;
 }
 
+function propostaModernoCronogramaHtml(items: QuoteItemForPdf[]) {
+  type Entrada = {
+    start: string;
+    end: string;
+    city: string;
+    labels: string[];
+    chips: string[];
+    descs: string[];
+  };
+  const grupos = new Map<string, Entrada>();
+  const ordenados = [...items].sort((a, b) =>
+    String(a.start_date || '9999').localeCompare(String(b.start_date || '9999'))
+  );
+  for (const item of ordenados) {
+    const start = textVal(item.start_date);
+    const end = textVal(item.end_date);
+    const key = `${start}|${end}`;
+    let grupo = grupos.get(key);
+    if (!grupo) {
+      grupo = {
+        start,
+        end,
+        city: nomeCidadeNoPdf(textVal(item.city_name)),
+        labels: [],
+        chips: [],
+        descs: []
+      };
+      grupos.set(key, grupo);
+    }
+    const label = propostaTipoLabel(item);
+    if (!grupo.labels.includes(label)) grupo.labels.push(label);
+    const chip = propostaChipDuracao(item);
+    if (chip && !grupo.chips.includes(chip)) grupo.chips.push(chip);
+    const desc = [getServiceTitle(item), ...getServiceDetails(item).slice(0, 2)]
+      .filter(Boolean)
+      .join(' — ');
+    if (desc && !grupo.descs.includes(desc)) grupo.descs.push(desc);
+    if (!grupo.city) grupo.city = nomeCidadeNoPdf(textVal(item.city_name));
+  }
+  const entradas = Array.from(grupos.values()).sort((a, b) =>
+    (a.start || '9999').localeCompare(b.start || '9999')
+  );
+  if (!entradas.length) return '';
+  const linhas = entradas
+    .map((grupo, i) => {
+      const isLast = i === entradas.length - 1;
+      const periodo = faixaDatas(grupo.start || null, grupo.end || null) || '—';
+      const titulo = [grupo.city, grupo.labels.join(' & ')].filter(Boolean).join(' • ');
+      const chips = grupo.chips.length
+        ? `<div class="pv-cron-chips">${grupo.chips.map((chip) => `<span class="pv-chip2">${escHtml(chip)}</span>`).join('')}</div>`
+        : '';
+      const desc = grupo.descs.slice(0, 4).join('<br>');
+      return `<div class="rot3-dia">
+        <div class="rot3-dia-pill-col"><div class="rot3-oc-pill">${escHtml(periodo)}</div></div>
+        <div class="rot3-dia-mid">
+          <div class="rot3-dia-dot"></div>
+          ${!isLast ? '<div class="rot3-dia-line"></div>' : ''}
+        </div>
+        <div class="rot3-dia-body">
+          <div class="rot3-dia-rota">${escHtml(titulo)}</div>
+          ${chips}
+          ${desc ? `<p class="rot3-dia-desc">${desc}</p>` : ''}
+        </div>
+      </div>`;
+    })
+    .join('');
+  return `<div class="rot3-cronograma"><div class="rot3-cronograma-titulo">Cronograma dos Serviços</div>${linhas}</div>`;
+}
+
 function propostaGrupoDe(item: QuoteItemForPdf) {
   const type = normalizeText(item.item_type);
   if (isFlightQuoteItem(item) && type !== 'trem') return 'Passagens Aéreas';
@@ -2154,7 +2223,7 @@ function buildModernoPropostaBodyHtml(params: {
     ? `<div class="rot3-cons"><b>${escHtml(consultor)}</b>${contatos ? `<span>${escHtml(contatos)}</span>` : ''}<span>Consultor de viagens</span></div>`
     : '';
 
-  const cronogramaModernoHtml = showDetalhes ? propostaCronogramaHtml(items) : '';
+  const cronogramaModernoHtml = showDetalhes ? propostaModernoCronogramaHtml(items) : '';
   return `<div class="rot3-doc">
   <div class="rot3-kicker-bar"><span></span><span></span></div>
   <div class="rot3-kicker">PROPOSTA DE VIAGEM</div>
@@ -2562,17 +2631,23 @@ export function buildQuotePreviewHtmlSync(params: {
     .rot3-pag-pax { font-size: 8pt; color: #6B7280; }
     .rot3-pag-obs { background: #F8F9FB; border-top: 1px solid #9aaac2; padding: 10px 14px; font-size: 8pt; color: #374151; line-height: 1.5; border-radius: 0 0 18px 18px; }
     .rot3-pag-obs-label { font-weight: 700; color: #1B2C80; }
-    /* Moderno overrides for cronograma (pv-cron classes scoped to rot3-doc) */
-    .rot3-doc .pv-sec { margin: 0 0 20px; }
-    .rot3-doc .pv-sec-title { font-size: 10pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #1B2C80; border-bottom: 1.5px solid #C5CED9; padding-bottom: 6px; margin: 0 0 10px; text-align: center; }
-    .rot3-doc .pv-cron { display: flex; align-items: flex-start; gap: 10px; padding: 7px 10px; border: 1.5px solid #C5CED9; border-radius: 8px; margin-bottom: 6px; break-inside: avoid; background: #fff; }
-    .rot3-doc .pv-cron-period { flex-shrink: 0; min-width: 70px; background: #DBEAFE; color: #1B2C80; font-weight: bold; font-size: 7.5pt; padding: 4px 8px; border-radius: 999px; text-align: center; white-space: nowrap; }
-    .rot3-doc .pv-cron-body { flex: 1; min-width: 0; }
-    .rot3-doc .pv-cron-body b { font-size: 9pt; color: #1F2937; }
-    .rot3-doc .pv-cron-body p { margin: 3px 0 0; color: #4B5563; font-size: 8pt; line-height: 1.5; }
+    /* Moderno cronograma — rot3-dia 3-column layout */
+    .rot3-cronograma { margin: 0 0 20px; }
+    .rot3-cronograma-titulo { font-size: 10pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #1B2C80; border-bottom: 1.5px solid #C5CED9; padding-bottom: 6px; margin: 0 0 14px; text-align: center; }
+    .rot3-dia { display: flex; gap: 0; margin-bottom: 10px; break-inside: avoid; page-break-inside: avoid; }
+    .rot3-dia-pill-col { width: 90px; flex-shrink: 0; padding-top: 2px; }
+    .rot3-oc-pill { border: 1.5px solid #C5CED9; border-radius: 8px; padding: 4px 8px; font-size: 7.5pt; font-weight: bold; color: #1B2C80; text-align: center; white-space: nowrap; background: #fff; }
+    .rot3-dia-mid { display: flex; flex-direction: column; align-items: center; width: 20px; flex-shrink: 0; padding-top: 6px; }
+    .rot3-dia-dot { width: 10px; height: 10px; border-radius: 50%; background: #1B2C80; flex-shrink: 0; }
+    .rot3-dia-line { width: 2px; background: #C5CED9; flex: 1; min-height: 20px; margin-top: 4px; }
+    .rot3-dia-body { flex: 1; border: 1.5px solid #C5CED9; border-radius: 10px; padding: 10px 14px; background: #fff; min-width: 0; }
+    .rot3-dia-rota { font-size: 10.5pt; font-weight: bold; color: #1B2C80; margin-bottom: 4px; }
+    .rot3-dia-desc { margin: 0; font-size: 9pt; color: #374151; line-height: 1.6; }
     .rot3-doc-footer { margin-top: 24px; padding-top: 8px; border-top: 1px solid #C5CED9; font-size: 8pt; color: #9CA3AF; display: flex; justify-content: space-between; }
     @media print {
       .rot3-bloco { background: #EEF2F7; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .rot3-dia-dot { background: #1B2C80; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .rot3-dia-body { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
         .pv-modelo { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #4B5563; }
     .pv-modelo select { border: 1px solid #C5CED9; border-radius: 8px; padding: 6px 10px; font-size: 13px; background: #fff; color: #1F2937; }
