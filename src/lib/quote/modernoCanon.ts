@@ -79,6 +79,17 @@ export const MODERNO_CANON_CSS = `
 .rot3-chk { font-size: 8.5pt; font-weight: bold; color: #1B2C80; line-height: 1.55; }
 .rot3-chk::before { content: '\\2713'; margin-right: 5px; }
 
+/* Passeios opcionais / Formas de pagamento (roteiro) */
+.rot3-t--escuro { color: #1F2937; }
+.rot3-tabela--opc .rot3-c1, .rot3-tabela--opc .rot3-hotel-header-row > div:nth-child(1) { flex: .8; }
+.rot3-tabela--opc .rot3-c2, .rot3-tabela--opc .rot3-hotel-header-row > div:nth-child(2) { flex: 2.1; }
+.rot3-tabela--opc .rot3-c3, .rot3-tabela--opc .rot3-hotel-header-row > div:nth-child(3) { flex: .75; }
+.rot3-tabela--pag .rot3-c1, .rot3-tabela--pag .rot3-hotel-header-row > div:nth-child(1) { flex: 1.05; }
+.rot3-tabela--pag .rot3-c2, .rot3-tabela--pag .rot3-hotel-header-row > div:nth-child(2) { flex: 1.5; }
+.rot3-tabela--pag .rot3-c3, .rot3-tabela--pag .rot3-hotel-header-row > div:nth-child(3) { flex: .85; }
+.rot3-obs { border: 1px solid #C5CED9; border-radius: 8px; background: #F7F9FC; padding: 10px 14px; font-size: 8.5pt; color: #374151; line-height: 1.55; margin: 0 0 16px; break-inside: avoid; }
+.rot3-obs b { color: #1F2937; }
+
 /* Detalhamento do orçamento: faixas de grupo sem moldura lateral */
 .rot3-dgrupo { margin: 0 0 18px; }
 .rot3-dgrupo > .rot3-grupo-header { border: none; border-radius: 8px 8px 0 0; }

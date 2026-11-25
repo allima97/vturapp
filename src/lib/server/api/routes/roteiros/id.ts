@@ -96,7 +96,9 @@ export async function handleRoteirosIdGet(event: RequestEvent) {
 
         client
           .from('roteiro_pagamento')
-          .select('id, roteiro_id, servico, valor_total_com_taxas, taxas, forma_pagamento, ordem')
+          .select(
+            'id, roteiro_id, servico, valor_total_com_taxas, taxas, forma_pagamento, forma_detalhe, condicao, condicao_detalhe, valor_detalhe, ordem'
+          )
           .eq('roteiro_id', id)
           .order('ordem')
           .limit(LIMITES_ROTEIRO.pagamentos.limite + (revisaoRoteiroAtiva ? 1 : 0))

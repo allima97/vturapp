@@ -10,8 +10,22 @@ export type RoteiroOpcionalCidade = {
   registro_id?: string;
   cidade_pendente?: boolean;
   cidade_modo_geografico?: boolean;
-  passeios: { nome: string; descricao: string }[];
+  passeios: RoteiroOpcionalPasseio[];
 };
+
+/** Passeio opcional. data/valor/valor_unidade são opcionais (PDF Moderno). */
+export type RoteiroOpcionalPasseio = {
+  nome: string;
+  descricao: string;
+  /** Data sugerida (AAAA-MM-DD). */
+  data?: string;
+  /** Valor estimado em R$. */
+  valor?: number | null;
+  /** Ex.: "Por pessoa", "Por grupo". */
+  valor_unidade?: string;
+};
+
+const DATA_ISO = /^\d{4}-\d{2}-\d{2}$/;
 
 export type RoteiroPasseioIncorporado = {
   cidade: string;
@@ -114,7 +128,24 @@ export function parseRoteiroOpcionais(value: unknown): RoteiroOpcionalCidade[] {
         throw new Error(
           'Informe o nome do passeio (até 300 caracteres) e uma descrição de até 20.000 caracteres.'
         );
-      return { nome, descricao };
+      const extra = p as { data?: unknown; valor?: unknown; valor_unidade?: unknown };
+      const data = typeof extra.data === 'string' ? extra.data.trim() : '';
+      if (data && !DATA_ISO.test(data)) throw new Error('Data do passeio opcional inválida.');
+      const valor =
+        extra.valor === null || extra.valor === undefined || extra.valor === ''
+          ? null
+          : Number(extra.valor);
+      if (valor !== null && (!Number.isFinite(valor) || valor < 0 || valor > 1e9))
+        throw new Error('Valor do passeio opcional inválido.');
+      const unidade =
+        typeof extra.valor_unidade === 'string' ? extra.valor_unidade.trim().slice(0, 60) : '';
+      return {
+        nome,
+        descricao,
+        ...(data ? { data } : {}),
+        ...(valor !== null ? { valor } : {}),
+        ...(unidade ? { valor_unidade: unidade } : {})
+      };
     });
     return {
       cidade,

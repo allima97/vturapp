@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { FieldInput, FieldTextarea } from '$lib/components/ui';
+  import { FieldDatalistInput, FieldInput, FieldTextarea } from '$lib/components/ui';
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import {
@@ -384,6 +384,31 @@
                     rows={4}
                     placeholder="Descreva a experiência e as recomendações para o viajante."
                   />
+                  <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                    <FieldInput
+                      label="Data sugerida"
+                      type="date"
+                      bind:value={passeio.data}
+                      helper="Vazio: usa o 1º dia do itinerário nesta cidade."
+                    />
+                    <FieldInput
+                      money
+                      label="Valor estimado (R$)"
+                      type="number"
+                      value={passeio.valor ?? ''}
+                      helper="Vazio: “Sob consulta”."
+                      on:moneyInput={(e) => {
+                        const valor = Number(e.detail);
+                        passeio.valor = e.detail === '' || !Number.isFinite(valor) || valor <= 0 ? null : valor;
+                      }}
+                    />
+                    <FieldDatalistInput
+                      label="Unidade do valor"
+                      bind:value={passeio.valor_unidade}
+                      placeholder="Por pessoa"
+                      options={['Por pessoa', 'Por adulto', 'Por criança', 'Por grupo', 'Por veículo']}
+                    />
+                  </div>
                   <Button
                     type="button"
                     variant="secondary"

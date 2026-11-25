@@ -1269,7 +1269,9 @@
     const investimentoTotalTexto =
       totalInvestimento > 0 ? `Total por pessoa: R$ ${formatBRL(totalInvestimento)}` : '';
 
-    const pagamentosItems = pagamentos.filter((item) => item.servico || item.valor_total_com_taxas);
+    const pagamentosItems = pagamentos.filter(
+      (item) => item.servico || item.forma_pagamento || item.condicao || item.valor_total_com_taxas
+    );
     const pagamentosHtml =
       pagamentosItems.length > 0
         ? buildPreviewCards(
@@ -1324,21 +1326,28 @@
         const nlIdx = servicoRaw.indexOf('\n');
         const ptIdx = servicoRaw.indexOf('. ');
         const splitIdx = nlIdx >= 0 ? nlIdx : (ptIdx >= 0 && ptIdx < 80 ? ptIdx + 1 : -1);
-        const condTitulo = splitIdx > 0
-          ? escapePreviewHtml(servicoRaw.slice(0, splitIdx).trim())
-          : escapePreviewHtml(servicoRaw);
-        const condDesc   = splitIdx > 0
-          ? escapePreviewHtml(servicoRaw.slice(splitIdx).trim())
-          : '';
+        const condTitulo = String(p.condicao || '').trim()
+          ? escapePreviewHtml(String(p.condicao).trim())
+          : splitIdx > 0
+            ? escapePreviewHtml(servicoRaw.slice(0, splitIdx).trim())
+            : escapePreviewHtml(servicoRaw);
+        const condDesc = String(p.condicao_detalhe || '').trim()
+          ? escapePreviewHtml(String(p.condicao_detalhe).trim())
+          : !String(p.condicao || '').trim() && splitIdx > 0
+            ? escapePreviewHtml(servicoRaw.slice(splitIdx).trim())
+            : '';
         const valorTotal = p.valor_total_com_taxas
           ? `R$&nbsp;${formatBRL(Number(p.valor_total_com_taxas))}`
           : '—';
-        const valorPax = (p.valor_total_com_taxas && qtdPaxPag > 1)
-          ? `R$&nbsp;${formatBRL(Number(p.valor_total_com_taxas) / qtdPaxPag)}&nbsp;/ pax`
-          : '';
+        const valorPax = String(p.valor_detalhe || '').trim()
+          ? escapePreviewHtml(String(p.valor_detalhe).trim())
+          : (p.valor_total_com_taxas && qtdPaxPag > 1)
+            ? `R$&nbsp;${formatBRL(Number(p.valor_total_com_taxas) / qtdPaxPag)}&nbsp;/ pax`
+            : '';
         return `<div class="rot3-pag-row">
           <div class="rot3-pag-c1">
             <div class="rot3-pag-modal">${modalidade}</div>
+            ${String(p.forma_detalhe || '').trim() ? `<div class="rot3-pag-pax">${escapePreviewHtml(String(p.forma_detalhe).trim())}</div>` : ''}
           </div>
           <div class="rot3-pag-c2">
             ${condTitulo ? `<div class="rot3-pag-cond-titulo">${condTitulo}</div>` : ''}
@@ -1674,46 +1683,72 @@
     if (rot3InvestHtmlShared) {
       rot3InvestHtml = rot3InvestHtmlShared.replace('rot3-inv-footer rot3-inv-footer--padrao', 'rot3-inv-footer');
     }
-    // Para o Moderno: re-gerar header da tabela de pagamento sem a classe --padrao
-    let rot3PagamentosHtml = '';
-    if (rot3PagamentosHtmlShared) {
-      rot3PagamentosHtml = rot3PagamentosHtmlShared.replace('rot3-pag-header-row rot3-pag-header-row--padrao', 'rot3-pag-header-row');
-    }
 
     // ── Moderno: Passeios Opcionais
     let rot3OpcionaisHtml = '';
     {
       const opcionaisVisiveis = removerPasseiosIncorporados(opcionais, passeios);
-      const linhas = opcionaisVisiveis.flatMap((grupo) =>
-        grupo.passeios.map((p) => ({ cidade: grupo.cidade, nome: p.nome, descricao: p.descricao }))
-      ).filter((l) => l.nome);
+      const normCid = (s: string) =>
+        nomeCidadeNoPdf(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+      const diaMes = (iso: string) => {
+        const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || '');
+        return m ? `${m[3]}/${m[2]}` : '';
+      };
+      // "Dia N • dd/mm": pela data informada ou pelo 1º dia do itinerário na cidade.
+      const rotuloDia = (cidade: string, data?: string) => {
+        const idx = data
+          ? diasItems.findIndex((d) => (d.data || '').slice(0, 10) === data)
+          : diasItems.findIndex((d) => normCid(d.cidade || '') === normCid(cidade));
+        const dataRef = data || (idx >= 0 ? diasItems[idx].data || '' : '');
+        const dm = diaMes(dataRef);
+        return [idx >= 0 ? `Dia ${idx + 1}` : '', dm].filter(Boolean).join(' • ');
+      };
+      const linhas = opcionaisVisiveis
+        .flatMap((grupo) => grupo.passeios.map((p) => ({ cidade: grupo.cidade, ...p })))
+        .filter((l) => String(l.nome || '').trim());
       if (linhas.length > 0) {
-        const colHdrOpc = `<div class="rot3-hotel-header-row">
-          <div class="rot3-hotel-h1">DESTINO</div>
-          <div class="rot3-hotel-h2">ATIVIDADE / EXPERIÊNCIA SUGERIDA</div>
-          <div class="rot3-hotel-h3">VALOR ESTIMADO</div>
-        </div>`;
-        const rowsOpc = linhas.map((l) => {
-          const cidade = nomeCidadeNoPdf(l.cidade);
-          const descHtml = l.descricao
-            ? `<div class="rot3-opc-desc">${escapePreviewHtml(l.descricao).replace(/\n/g, '<br>')}</div>`
-            : '';
-          return `<div class="rot3-hotel-row">
-            <div class="rot3-hotel-c1">
-              <div class="rot3-hotel-nome">${escapePreviewHtml(cidade || l.cidade)}</div>
-            </div>
-            <div class="rot3-hotel-c2">
-              <div class="rot3-hotel-info" style="font-weight:600;color:#1a1a1a">${escapePreviewHtml(l.nome)}</div>
-              ${descHtml}
-            </div>
-            <div class="rot3-hotel-c3" style="text-align:right">
-              <div style="font-weight:600;color:#1B2C80">[Valor / pax]</div>
-              <div style="font-size:7.5pt;color:#6B7280">Por pessoa</div>
-            </div>
-          </div>`;
-        }).join('');
-        rot3OpcionaisHtml = `<div class="rot3-tabela">${colHdrOpc}${rowsOpc}</div>`;
+        const colHdrOpc = `<div class="rot3-hotel-header-row"><div>Destino</div><div>Atividade / Experiência Sugerida</div><div>Valor Estimado</div></div>`;
+        const rowsOpc = linhas
+          .map((l) => {
+            const cidade = nomeCidadeNoPdf(l.cidade) || l.cidade;
+            const dia = rotuloDia(l.cidade, l.data);
+            const valor = typeof l.valor === 'number' && l.valor > 0 ? `R$ ${formatBRL(l.valor)}` : '';
+            const unidade = String(l.valor_unidade || '').trim() || (valor ? 'Por pessoa' : '');
+            const c1 = `<div class="rot3-t rot3-t--escuro">${escapePreviewHtml(cidade)}</div>${dia ? `<div class="rot3-s">${escapePreviewHtml(dia)}</div>` : ''}`;
+            const c2 = `<div class="rot3-t rot3-t--escuro">${escapePreviewHtml(l.nome)}</div>${l.descricao ? `<div class="rot3-s">${escapePreviewHtml(l.descricao).replace(/\n/g, '<br>')}</div>` : ''}`;
+            const c3 = `<div class="rot3-t rot3-t--escuro">${valor || 'Sob consulta'}</div>${unidade ? `<div class="rot3-s">${escapePreviewHtml(unidade)}</div>` : ''}`;
+            return `<div class="rot3-row"><div class="rot3-c1">${c1}</div><div class="rot3-c2">${c2}</div><div class="rot3-c3">${c3}</div></div>`;
+          })
+          .join('');
+        rot3OpcionaisHtml = `<div class="rot3-tabela rot3-tabela--opc">${colHdrOpc}${rowsOpc}</div>`;
       }
+    }
+
+    // ── Moderno: Formas de Pagamento (mesma estrutura de 3 colunas)
+    let rot3PagModernoHtml = '';
+    if (pagamentosItems.length > 0) {
+      const qtdPax = Number(investimentosItems[0]?.qtd_apto || 0) || 0;
+      const valorHdr = qtdPax > 0 ? `Valor Total (${qtdPax} ${qtdPax === 1 ? 'Pax' : 'Paxs'})` : 'Valor Total';
+      const hdr = `<div class="rot3-hotel-header-row"><div>Modalidade</div><div>Condição Comercial</div><div>${valorHdr}</div></div>`;
+      const linhasPag = pagamentosItems
+        .map((pg) => {
+          const modalidade = String(pg.forma_pagamento || '').trim() || '—';
+          const servico = String(pg.servico || '').trim();
+          const condTitulo = String(pg.condicao || '').trim() || servico;
+          const condDesc = String(pg.condicao_detalhe || '').trim();
+          const total = Number(pg.valor_total_com_taxas || 0);
+          const valor = total > 0 ? `R$ ${formatBRL(total)}` : '—';
+          const valorSub =
+            String(pg.valor_detalhe || '').trim() ||
+            (total > 0 && qtdPax > 1 ? `R$ ${formatBRL(total / qtdPax)} / pax` : '');
+          const c1 = `<div class="rot3-t rot3-t--escuro">${escapePreviewHtml(modalidade)}</div>${String(pg.forma_detalhe || '').trim() ? `<div class="rot3-s">${escapePreviewHtml(String(pg.forma_detalhe).trim())}</div>` : ''}`;
+          const c2 = `${condTitulo ? `<div class="rot3-t rot3-t--escuro">${escapePreviewHtml(condTitulo)}</div>` : ''}${condDesc ? `<div class="rot3-s">${escapePreviewHtml(condDesc).replace(/\n/g, '<br>')}</div>` : ''}`;
+          const c3 = `<div class="rot3-t rot3-t--escuro">${valor}</div>${valorSub ? `<div class="rot3-s">${escapePreviewHtml(valorSub)}</div>` : ''}`;
+          return `<div class="rot3-row"><div class="rot3-c1">${c1}</div><div class="rot3-c2">${c2}</div><div class="rot3-c3">${c3}</div></div>`;
+        })
+        .join('');
+      const obs = `<div class="rot3-obs"><b>Observações Gerais:</b> Valores sujeitos à disponibilidade e alteração sem aviso prévio até a efetivação da reserva. Os passeios opcionais não estão incluídos no valor total do pacote e podem ser adicionados a qualquer momento conforme preferência dos viajantes.</div>`;
+      rot3PagModernoHtml = `<div class="rot3-tabela rot3-tabela--pag">${hdr}${linhasPag}</div>${obs}`;
     }
 
     const rot3InfoTexto = informacoesImportantes.trim() || [
@@ -1738,13 +1773,13 @@
       ${buildRot3Secao('HOTÉIS SUGERIDOS', rot3HoteisHtml)}
       ${trensHtml.trim() ? buildRot3Secao('TREM', trensHtml) : ''}
       ${passeiosHtml.trim() ? buildRot3Secao('PASSEIOS E SERVIÇOS', passeiosHtml) : ''}
-      ${rot3OpcionaisHtml ? buildRot3Secao('PASSEIOS OPCIONAIS', rot3OpcionaisHtml) : ''}
+      ${rot3OpcionaisHtml ? buildRot3Secao('Passeios Opcionais', rot3OpcionaisHtml) : ''}
       ${segurosHtml.trim() ? buildRot3Secao('SEGURO VIAGEM', segurosHtml) : ''}
       ${buildRot3Secao('INVESTIMENTO', rot3InvestHtml)}
       ${incluiTexto.trim() ? buildRot3Secao('O QUE ESTÁ INCLUÍDO', buildRot3InfoBox(incluiTexto.split('\n'), 'inclui')) : ''}
       ${naoIncluiTexto.trim() ? buildRot3Secao('O QUE NÃO ESTÁ INCLUÍDO', buildRot3InfoBox(naoIncluiTexto.split('\n'), 'naoinclui')) : ''}
       ${mostrarInformacoesPdf ? `<div class="rot3-secao"><div class="rot3-infos"><div class="rot3-infos-titulo">Informações Importantes</div><ul>${rot3InfoTexto.split('\n').map((s) => s.trim()).filter(Boolean).map((s) => `<li>${escapePreviewHtml(s)}</li>`).join('')}</ul></div></div>` : ''}
-      ${mostrarPagamentoPdf && rot3PagamentosHtml ? buildRot3Secao('FORMAS DE PAGAMENTO', rot3PagamentosHtml) : ''}
+      ${mostrarPagamentoPdf && rot3PagModernoHtml ? buildRot3Secao('Formas de Pagamento', rot3PagModernoHtml) : ''}
       ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}
       <div class="rot3-doc-footer">Roteiro Personalizado${nome ? ` • ${escapePreviewHtml(nome)}` : ''}</div>`;
 

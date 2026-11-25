@@ -1315,7 +1315,11 @@ export const legadoRoteiroPagamento = sqliteTable('legado_roteiro_pagamento', {
   valorTotalComTaxas: real('valor_total_com_taxas'),
   taxas: real('taxas'),
   formaPagamento: text('forma_pagamento'),
-  ordem: integer('ordem', { mode: 'number' })
+  ordem: integer('ordem', { mode: 'number' }),
+  formaDetalhe: text('forma_detalhe'),
+  condicao: text('condicao'),
+  condicaoDetalhe: text('condicao_detalhe'),
+  valorDetalhe: text('valor_detalhe')
 });
 
 export const legadoRoteiroPasseio = sqliteTable('legado_roteiro_passeio', {

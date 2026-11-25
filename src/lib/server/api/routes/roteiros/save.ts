@@ -211,6 +211,10 @@ type RoteiroPagamentoPayload = {
   valor_total_com_taxas?: unknown;
   taxas?: unknown;
   forma_pagamento?: string | null;
+  forma_detalhe?: string | null;
+  condicao?: string | null;
+  condicao_detalhe?: string | null;
+  valor_detalhe?: string | null;
   ordem?: unknown;
 };
 
@@ -220,8 +224,15 @@ type RoteiroPagamentoDraft = {
   valor_total_com_taxas: number;
   taxas: number;
   forma_pagamento: string | null;
+  forma_detalhe: string | null;
+  condicao: string | null;
+  condicao_detalhe: string | null;
+  valor_detalhe: string | null;
   ordem: number;
 };
+
+const textoPagamento = (value: unknown, max: number) =>
+  String(value ?? '').trim().slice(0, max) || null;
 
 type ScopedRoteiroEq<T> = T & {
   eq: (column: string, value: string | null | undefined) => T;
@@ -898,6 +909,10 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
               valor_total_com_taxas: Number.isFinite(valorTotal) ? valorTotal : 0,
               taxas: Number.isFinite(taxas) ? taxas : 0,
               forma_pagamento: formaPagamento,
+              forma_detalhe: textoPagamento(p.forma_detalhe, 300),
+              condicao: textoPagamento(p.condicao, 300),
+              condicao_detalhe: textoPagamento(p.condicao_detalhe, 2000),
+              valor_detalhe: textoPagamento(p.valor_detalhe, 200),
               ordem: typeof p.ordem === 'number' ? p.ordem : idx
             };
           })
@@ -905,6 +920,7 @@ export async function handleRoteirosSavePost(event: RequestEvent) {
             Boolean(
               p.servico ||
               p.forma_pagamento ||
+              p.condicao ||
               Number(p.valor_total_com_taxas) > 0 ||
               Number(p.taxas) > 0
             )

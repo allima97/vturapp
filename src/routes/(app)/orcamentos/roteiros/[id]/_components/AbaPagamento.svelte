@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { FieldCheckbox, FieldDatalistInput, FieldInput, FieldSelect } from '$lib/components/ui';
+  import {
+    FieldCheckbox,
+    FieldDatalistInput,
+    FieldInput,
+    FieldSelect,
+    FieldTextarea
+  } from '$lib/components/ui';
   import Button from '$lib/components/ui/Button.svelte';
   import Card from '$lib/components/ui/Card.svelte';
   import { formatBRL } from './formatadores';
@@ -129,6 +135,30 @@
                 {#each sugestoes['forma_pagamento'] || [] as s}<option value={s}></option>{/each}
               </datalist>
             </div>
+            <div class="col-span-2">
+              <FieldInput
+                label="Detalhe da modalidade"
+                bind:value={pag.forma_detalhe}
+                placeholder="Ex.: Quitação integral no ato da reserva"
+                class_name="w-full"
+              />
+            </div>
+            <div class="col-span-2">
+              <FieldInput
+                label="Condição comercial"
+                bind:value={pag.condicao}
+                placeholder="Ex.: Entrada + saldo parcelado sem juros"
+                class_name="w-full"
+              />
+            </div>
+            <div class="col-span-2 sm:col-span-4">
+              <FieldTextarea
+                label="Descrição da condição"
+                bind:value={pag.condicao_detalhe}
+                rows={2}
+                placeholder="Ex.: Entrada de R$ 2.000,00 + 10x de R$ 800,00 sem juros no cartão."
+              />
+            </div>
             <div>
               <FieldInput
                 money
@@ -155,6 +185,14 @@
                     taxas: Number(e.detail) || null
                   });
                 }}
+              />
+            </div>
+            <div class="col-span-2">
+              <FieldInput
+                label="Complemento do valor"
+                bind:value={pag.valor_detalhe}
+                placeholder="Ex.: ou R$ 10.000,00 — vazio mostra o valor por pessoa"
+                class_name="w-full"
               />
             </div>
           </div>

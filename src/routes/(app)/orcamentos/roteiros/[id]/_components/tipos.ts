@@ -124,6 +124,14 @@ export type RotPagamento = {
   forma_pagamento: string;
   valor_total_com_taxas: number | null;
   taxas: number | null;
+  /** Subtítulo da modalidade (ex.: "Quitação integral no ato da reserva"). */
+  forma_detalhe?: string;
+  /** Título da condição comercial (ex.: "Entrada + saldo parcelado sem juros"). */
+  condicao?: string;
+  /** Descrição da condição comercial. */
+  condicao_detalhe?: string;
+  /** 2ª linha do valor (ex.: "ou R$ 10.000,00"); vazio = valor por pax automático. */
+  valor_detalhe?: string;
 };
 
 export interface DiaBuscaResult {

@@ -4802,6 +4802,22 @@
         "ordem": {
           "kind": "integer",
           "nullable": true
+        },
+        "forma_detalhe": {
+          "kind": "text",
+          "nullable": true
+        },
+        "condicao": {
+          "kind": "text",
+          "nullable": true
+        },
+        "condicao_detalhe": {
+          "kind": "text",
+          "nullable": true
+        },
+        "valor_detalhe": {
+          "kind": "text",
+          "nullable": true
         }
       },
       "primaryKey": [
