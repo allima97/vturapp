@@ -1614,11 +1614,6 @@
             : escapePreviewHtml(t.trecho || '');
           const descVoo = String(t.descricao || '').trim();
           const dSaida = formatPreviewDate(t.data_voo || t.data_inicio || '');
-          const c1SubParts: string[] = [];
-          if (descVoo) c1SubParts.push(`Voo ${descVoo}`);
-          else if (t.cia_aerea) c1SubParts.push(escapePreviewHtml(t.cia_aerea));
-          if (dSaida) c1SubParts.push(dSaida);
-          const c1Sub = c1SubParts.join(' • ');
           const aeOrig = ((t.aeroporto_saida || '').split(',')[0]).trim().toUpperCase();
           const aeDest = ((t.aeroporto_chegada || '').split(',')[0]).trim().toUpperCase();
           const horaSaida = (t.hora_saida || '').replace(/\s*\(\+\d+\)\s*$/, '').trim();
@@ -1630,12 +1625,17 @@
           const toPart = [aeDest, horaCheg].filter(Boolean).join('\u00a0');
           const rotaLine = (fromPart || toPart) ? `${escapePreviewHtml(fromPart)} → ${escapePreviewHtml(toPart)}${plusHtml}` : '';
           const dCheg = formatPreviewDate(t.data_fim || t.data_voo || '');
-          const chegParts: string[] = ['Chegada'];
-          if (cidDest) chegParts.push(`em ${escapePreviewHtml(cidDest)}`);
-          if (dCheg) chegParts.push(`em ${dCheg}`);
-          const chegLine = chegParts.length > 1 ? chegParts.join(' ') : '';
+          // Mesma disposição do orçamento:
+          // L1 códigos | horários | ✓ · L2 saída cidade • data | chegada cidade • data · L3 cia • voo
+          const codigosLine = aeOrig && aeDest ? `${escapePreviewHtml(aeOrig)} → ${escapePreviewHtml(aeDest)}` : trechoDisplay;
+          const saidaLine = [cidOrig ? `Saída de ${escapePreviewHtml(cidOrig)}` : 'Saída', dSaida].filter(Boolean).join(' • ');
+          const chegLine = [cidDest ? `Chegada em ${escapePreviewHtml(cidDest)}` : 'Chegada', dCheg].filter(Boolean).join(' • ');
+          const ciaVooLine = [
+            t.cia_aerea ? escapePreviewHtml(t.cia_aerea) : '',
+            descVoo ? `Voo ${escapePreviewHtml(descVoo)}` : ''
+          ].filter(Boolean).join(' • ');
           const checks = ([t.classe_reserva, t.tarifa_nome] as (string | undefined)[]).filter(s => String(s || '').trim());
-          const c1 = `<div class="rot3-t">${trechoDisplay}</div>${c1Sub ? `<div class="rot3-s">${c1Sub}</div>` : ''}`;
+          const c1 = `<div class="rot3-t">${codigosLine}</div><div class="rot3-s">${saidaLine}</div>${ciaVooLine ? `<div class="rot3-s">${ciaVooLine}</div>` : ''}`;
           const c2 = `${rotaLine ? `<div class="rot3-t">${rotaLine}</div>` : ''}${chegLine ? `<div class="rot3-s">${chegLine}</div>` : ''}`;
           const c3 = rot3ChecksHtml(checks.map((s) => escapePreviewHtml(String(s).trim())));
           inner += `<div class="rot3-row"><div class="rot3-c1">${c1}</div><div class="rot3-c2">${c2}</div><div class="rot3-c3">${c3}</div></div>`;
