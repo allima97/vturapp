@@ -23,7 +23,8 @@ export type AuditModulo =
   | 'Escalas'
   | 'Admin'
   | 'perfil'
-  | 'LGPD';
+  | 'LGPD'
+  | 'Roteiros';
 
 /** Ações já existentes no histórico da tabela `logs` para o módulo Vendas. */
 export type AuditAcaoVendas =
@@ -59,7 +60,8 @@ export type AuditAcaoOutros =
   | 'modulos_globais_atualizados' // Admin: { disabled_modules: string[] }
   | 'perfil_atualizado' // perfil: payload gravado em users
   | 'lgpd_anonimizacao' // LGPD: anonimização de titular (Art. 18)
-  | 'lgpd_solicitacao_recebida'; // LGPD: nova solicitação de direito (Art. 18)
+  | 'lgpd_solicitacao_recebida' // LGPD: nova solicitação de direito (Art. 18)
+  | 'roteiro_ia_gerado'; // Roteiros: { modelo, destinos, datas, dias, opcionais, uso } — sem dados de cliente
 
 export type AuditAcao = AuditAcaoVendas | AuditAcaoOutros;
 

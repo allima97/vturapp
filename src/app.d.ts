@@ -107,6 +107,12 @@ declare global {
         TURNSTILE_SECRET_KEY?: string;
         CRON_SECRET?: string;
         WORKER_BASE_URL?: string;
+
+        // ── IA de roteiros ───────────────────────────────────────────────
+        /** Chave da API do Claude (wrangler secret put ANTHROPIC_API_KEY). */
+        ANTHROPIC_API_KEY?: string;
+        /** Modelo usado na geração (ex.: claude-sonnet-5-5, claude-opus-5-5). */
+        ROTEIRO_IA_MODELO?: string;
       };
       context?: ExecutionContext;
     }

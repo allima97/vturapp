@@ -100,6 +100,8 @@
   import { roteiroFlightStyles } from '$lib/quote/printFlights';
   import { MODERNO_CANON_CSS, ROT3_META_SEP, rot3ChecksHtml } from '$lib/quote/modernoCanon';
   import AbaItinerario from './_components/AbaItinerario.svelte';
+  import GerarRoteiroIA from './_components/GerarRoteiroIA.svelte';
+  import type { ModoAplicacaoIA, PedidoRoteiroIA, RascunhoRoteiroIA } from '$lib/roteiroIA/tipos';
   import CidadeRoteiro from './_components/CidadeRoteiro.svelte';
   import AbaTransporte from './_components/AbaTransporte.svelte';
   import AbaHoteis from './_components/AbaHoteis.svelte';
@@ -291,6 +293,61 @@
 
   // Sugestões
   let sugestoes: Record<string, string[]> = $state({});
+
+  // ─── Geração com IA ────────────────────────────────────────────────────
+  let showGerarIA = $state(false);
+  let inicialIA: Partial<PedidoRoteiroIA> = $derived.by(() => {
+    const comData = dias.filter((d) => /^\d{4}-\d{2}-\d{2}/.test(d.data || ''));
+    const origem = String(inicioCidade || '').split('•')[0].trim();
+    const destinos = [
+      ...new Set(
+        dias
+          .map((d) => String(d.cidade || '').split(',')[0].trim())
+          .filter((c) => c && c.toLowerCase() !== origem.toLowerCase())
+      )
+    ];
+    return {
+      origem,
+      destinos,
+      data_inicio: comData[0]?.data?.slice(0, 10) || '',
+      data_fim: comData[comData.length - 1]?.data?.slice(0, 10) || ''
+    };
+  });
+
+  /** Aplica o rascunho da IA nos mesmos campos do formulário (nada é salvo aqui). */
+  function aplicarRascunhoIA(rascunho: RascunhoRoteiroIA, modo: ModoAplicacaoIA) {
+    const novosDias: RotDia[] = rascunho.dias.map((d, i) => ({
+      ...newDia(i),
+      cidade: d.cidade,
+      cidade_id: d.cidade_id,
+      cidade_pendente: d.cidade_pendente,
+      ...(d.cidade_modo_geografico ? { cidade_modo_geografico: true } : {}),
+      data: d.data,
+      percurso: d.percurso,
+      descricao: d.descricao
+    }));
+    const novosOpcionais = atribuirIdsGruposOpcionais(
+      rascunho.opcionais.map((g) => ({ ...g, passeios: g.passeios.map((p) => ({ ...p })) }))
+    );
+    const juntarTexto = (atual: string, novo: string) =>
+      [atual.trim(), novo.trim()].filter(Boolean).join('\n');
+    if (modo === 'substituir') {
+      dias = reorder(novosDias);
+      opcionais = novosOpcionais;
+      incluiTexto = rascunho.inclui_texto;
+      naoIncluiTexto = rascunho.nao_inclui_texto;
+    } else {
+      dias = reorder([...dias, ...novosDias]);
+      opcionais = [...opcionais, ...novosOpcionais];
+      incluiTexto = juntarTexto(incluiTexto, rascunho.inclui_texto);
+      naoIncluiTexto = juntarTexto(naoIncluiTexto, rascunho.nao_inclui_texto);
+    }
+    if (!nome.trim()) nome = rascunho.nome;
+    duracao = String(dias.length);
+    const resumo = `${rascunho.dias.length} dia(s) e ${rascunho.opcionais.reduce((s, g) => s + g.passeios.length, 0)} opcional(is) gerados. Revise e clique em Salvar.`;
+    toast.success(resumo);
+    for (const aviso of rascunho.avisos) toast.warning(aviso);
+  }
 
   $effect(() => {
     const restantes = removerPasseiosIncorporados(opcionais, passeios);
@@ -2385,6 +2442,7 @@
         {sugestoes}
         buscarDescricoes={abrirDescricoes}
         {abrirBuscaDias}
+        abrirGeracaoIA={() => (showGerarIA = true)}
       />
 
       <!-- ──────────────────── ABA: HOTÉIS ──────────────────────────────────── -->
@@ -2793,6 +2851,8 @@
     {#if diasImportError}<p class="text-xs text-red-600">{diasImportError}</p>{/if}
   </div>
 </Dialog>
+
+<GerarRoteiroIA bind:open={showGerarIA} inicial={inicialIA} onAplicar={aplicarRascunhoIA} />
 
 <style lang="postcss">
   @reference "tailwindcss";

@@ -4,7 +4,7 @@
   import Card from '$lib/components/ui/Card.svelte';
   import { type RotDia, addItem, moveDown, moveUp, newDia, removeItem } from './tipos';
   import CidadeRoteiro from './CidadeRoteiro.svelte';
-  import { ChevronDown, ChevronUp, FileText, Plus, Trash2 } from '$lib/icons';
+  import { ChevronDown, ChevronUp, FileText, Plus, Star, Trash2 } from '$lib/icons';
   import { formatISODateBR } from '$lib/date';
 
   let {
@@ -15,7 +15,8 @@
     showDiasImport = $bindable(),
     sugestoes,
     buscarDescricoes,
-    abrirBuscaDias
+    abrirBuscaDias,
+    abrirGeracaoIA
   }: {
     dias: RotDia[];
     diasImportError: string | null;
@@ -25,6 +26,7 @@
     sugestoes: Record<string, string[]>;
     buscarDescricoes?: (dia: RotDia) => void;
     abrirBuscaDias?: () => void;
+    abrirGeracaoIA?: () => void;
   } = $props();
 
   function tituloDia(dia: RotDia, index: number) {
@@ -38,6 +40,12 @@
 
 <Card title="Itinerário dia a dia" color="clientes">
   <div class="mb-3 flex flex-wrap gap-2">
+    {#if abrirGeracaoIA}
+      <Button type="button" variant="primary" size="sm" on:click={abrirGeracaoIA}>
+        <Star size={13} class="mr-1" />
+        Gerar com IA
+      </Button>
+    {/if}
     <Button
       type="button"
       variant="secondary"
