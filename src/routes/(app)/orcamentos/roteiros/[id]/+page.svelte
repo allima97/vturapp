@@ -625,7 +625,75 @@
     return false;
   }
 
+  function mensagemConflitoRevisao(err: unknown): boolean {
+    if (!(err instanceof ApiError) || err.status !== 409) return false;
+    const payloadErro =
+      err.payload && typeof err.payload === 'object' ? (err.payload as Record<string, unknown>) : null;
+    const mensagem = typeof payloadErro?.error === 'string' ? payloadErro.error : '';
+    return mensagem.includes('Roteiro alterado ou indisponível');
+  }
+
+  async function buscarRevisaoRemota(): Promise<string | undefined> {
+    try {
+      const payload = await apiFetch<RoteiroResponse>(`/api/v1/roteiros/${roteiroId}`, {
+        noCache: true,
+        redirectOnForbidden: false,
+        redirectOnUnauthorized: false
+      });
+      return payload.roteiro.revisao;
+    } catch {
+      return undefined;
+    }
+  }
+
+  function montarPayloadSalvar() {
+    if (revisaoRoteiroAtiva) {
+      opcionais = atribuirIdsGruposOpcionais(opcionais);
+      dias = atribuirIdsRegistros(dias);
+      hoteis = atribuirIdsRegistros(hoteis);
+      passeios = atribuirIdsRegistros(passeios);
+    }
+    return {
+      ...(roteiroGeograficoAtivo ? { versao_identidade: VERSAO_ROTEIRO_IDENTIDADE } : {}),
+      ...(revisaoRoteiroAtiva ? { revisao } : {}),
+      id: roteiroId,
+      nome: nome.trim(),
+      duracao: duracao ? Number(duracao) : null,
+      inicio_cidade: inicioCidade.trim() || null,
+      fim_cidade: null,
+      inclui_texto: incluiTexto || null,
+      nao_inclui_texto: naoIncluiTexto || null,
+      informacoes_importantes: informacoesImportantes || null,
+      mostrar_pagamento_pdf: mostrarPagamentoPdf,
+      mostrar_informacoes_pdf: mostrarInformacoesPdf,
+      mostrar_rodape_pdf: mostrarRodapePdf,
+      cliente_id: clienteId || null,
+      cliente_nome: clienteNome.trim() || null,
+      cliente_telefone: clienteTelefone.trim() || null,
+      cliente_email: clienteEmail.trim() || null,
+      dias: dias.map((d, i) => ({
+        ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(d) : d),
+        ordem: i
+      })),
+      hoteis: hoteis.map((h, i) => ({
+        ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(h) : h),
+        ordem: i
+      })),
+      opcionais: parseRoteiroOpcionais(removerPasseiosIncorporados(opcionais, passeios)).map(
+        (item) => (revisaoRoteiroAtiva ? explicitarIdentidadeCidade(item) : item)
+      ),
+      passeios: passeios.map((p, i) => ({
+        ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(p) : p),
+        ordem: i
+      })),
+      transportes: transportes.map((t, i) => ({ ...t, ordem: i })),
+      investimentos: investimentos.map((inv, i) => ({ ...inv, ordem: i })),
+      pagamentos: pagamentos.map((p, i) => ({ ...p, ordem: i }))
+    };
+  }
+
   async function save() {
+    if (saving) return;
     if (!nome.trim()) {
       toast.error('Nome obrigatório.');
       return;
@@ -637,59 +705,30 @@
     }
     saving = true;
     try {
-      if (revisaoRoteiroAtiva) {
-        opcionais = atribuirIdsGruposOpcionais(opcionais);
-        dias = atribuirIdsRegistros(dias);
-        hoteis = atribuirIdsRegistros(hoteis);
-        passeios = atribuirIdsRegistros(passeios);
-      }
-      const payload = {
-        ...(roteiroGeograficoAtivo ? { versao_identidade: VERSAO_ROTEIRO_IDENTIDADE } : {}),
-        ...(revisaoRoteiroAtiva ? { revisao } : {}),
-        id: roteiroId,
-        nome: nome.trim(),
-        duracao: duracao ? Number(duracao) : null,
-        inicio_cidade: inicioCidade.trim() || null,
-        fim_cidade: null,
-        inclui_texto: incluiTexto || null,
-        nao_inclui_texto: naoIncluiTexto || null,
-        informacoes_importantes: informacoesImportantes || null,
-        mostrar_pagamento_pdf: mostrarPagamentoPdf,
-        mostrar_informacoes_pdf: mostrarInformacoesPdf,
-        mostrar_rodape_pdf: mostrarRodapePdf,
-        cliente_id: clienteId || null,
-        cliente_nome: clienteNome.trim() || null,
-        cliente_telefone: clienteTelefone.trim() || null,
-        cliente_email: clienteEmail.trim() || null,
-        dias: dias.map((d, i) => ({
-          ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(d) : d),
-          ordem: i
-        })),
-        hoteis: hoteis.map((h, i) => ({
-          ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(h) : h),
-          ordem: i
-        })),
-        opcionais: parseRoteiroOpcionais(removerPasseiosIncorporados(opcionais, passeios)).map(
-          (item) => (revisaoRoteiroAtiva ? explicitarIdentidadeCidade(item) : item)
-        ),
-        passeios: passeios.map((p, i) => ({
-          ...(revisaoRoteiroAtiva ? explicitarIdentidadeCidade(p) : p),
-          ordem: i
-        })),
-        transportes: transportes.map((t, i) => ({ ...t, ordem: i })),
-        investimentos: investimentos.map((inv, i) => ({ ...inv, ordem: i })),
-        pagamentos: pagamentos.map((p, i) => ({ ...p, ordem: i }))
-      };
-      const resultado = await salvarRoteiroComConfirmacao(payload, revisaoRoteiroAtiva);
-      if (!resultado) return;
-      if (revisaoRoteiroAtiva) {
-        if (typeof resultado.revisao !== 'string') {
-          revisao = undefined;
-          throw new Error('Revisão não recebida. Recarregue o roteiro antes de salvar novamente.');
+      let tentativaDeSincronizacao = false;
+      for (;;) {
+        const payload = montarPayloadSalvar();
+        try {
+          const resultado = await salvarRoteiroComConfirmacao(payload, revisaoRoteiroAtiva);
+          if (!resultado) return;
+          if (revisaoRoteiroAtiva) {
+            if (typeof resultado.revisao !== 'string') {
+              revisao = undefined;
+              throw new Error('Revisão não recebida. Recarregue o roteiro antes de salvar novamente.');
+            }
+            revisao = resultado.revisao;
+          }
+          toast.success('Roteiro salvo com sucesso!');
+          return;
+        } catch (err) {
+          if (tentativaDeSincronizacao || !mensagemConflitoRevisao(err)) throw err;
+          tentativaDeSincronizacao = true;
+          const revisaoAtual = await buscarRevisaoRemota();
+          if (!revisaoAtual) throw err;
+          revisao = revisaoAtual;
+          toast.info('O roteiro foi atualizado em outra sessão. Sincronizando e salvando de novo…');
         }
-        revisao = resultado.revisao;
       }
-      toast.success('Roteiro salvo com sucesso!');
     } catch (err) {
       toast.error(toUserMessage(err, 'Erro ao salvar.'));
     } finally {
