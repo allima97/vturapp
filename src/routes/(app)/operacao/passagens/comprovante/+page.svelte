@@ -466,7 +466,6 @@
             <b>Passageiros:</b> {resumoPassageiros(item.passageiros)}
           </span>
           {#if item.emissao}
-            <span class="mod-meta-sep">•</span>
             <span>
               <svg class="mod-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
               <b>Emissão:</b> {data(item.emissao, true)}
@@ -956,7 +955,7 @@
   .mod-cabecalho { text-align: center; margin-bottom: 22px; }
   .mod-cia-linha { font-size: 12px; font-weight: bold; letter-spacing: 3px; color: #4472C4; text-transform: uppercase; margin-bottom: 6px; }
   .mod-titulo { font-size: 32px; font-weight: bold; color: #1B2C80; margin: 0 0 10px; line-height: 1.15; letter-spacing: .3px; }
-  .mod-meta-linha { font-size: 13px; color: #4B5563; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; }
+  .mod-meta-linha { font-size: 13px; color: #4B5563; display: flex; flex-direction: column; gap: 4px; justify-content: center; align-items: center; }
   .mod-meta-linha b { color: #1F2937; }
   .mod-meta-sep { color: #6B7280; }
   .mod-meta-linha > span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
@@ -985,10 +984,10 @@
   .mod-centro { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 10px; padding: 26px 10px 14px; border-left: 1px dashed #C5CED9; border-right: 1px dashed #C5CED9; }
   .mod-voo-pill { background: #EEF2F7; border: 1px solid #9AAAC2; border-radius: 4px; padding: 5px 10px; font-size: 14px; font-weight: bold; color: #1B2C80; }
   .mod-duracao { font-size: 13px; font-weight: bold; color: #4B5563; }
-  .mod-grade { display: grid; grid-template-columns: 1.55fr 1fr 1fr 1.4fr 1.05fr; gap: 0 10px; align-items: center; border-top: 1px solid #C5CED9; padding: 12px 14px; background: #F7F9FC; }
-  .mod-campo { display: flex; flex-direction: column; gap: 6px; }
-  .mod-rotulo { display: block; font-size: 12px; font-weight: bold; letter-spacing: 1px; color: #4B5563; text-transform: uppercase; }
-  .mod-campo strong { font-size: 13px; color: #1F2937; }
+  .mod-grade { display: grid; grid-template-columns: 1.45fr 1.1fr 0.9fr 1.5fr 1.05fr; gap: 0 14px; align-items: start; border-top: 1px solid #C5CED9; padding: 10px 14px; background: #F7F9FC; }
+  .mod-campo { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .mod-rotulo { display: block; font-size: 10px; font-weight: bold; letter-spacing: .8px; color: #4B5563; text-transform: uppercase; white-space: nowrap; }
+  .mod-campo strong { font-size: 11.5px; color: #1F2937; line-height: 1.35; overflow-wrap: anywhere; }
   .mod-tabela { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; margin-bottom: 18px; }
   .mod-tabela thead th { background: #EEF2F7; color: #1B2C80; font-weight: bold; text-align: left; padding: 12px 14px; font-size: 13px; letter-spacing: .5px; text-transform: uppercase; }
   .mod-tabela thead th:first-child { border-top-left-radius: 8px; }
