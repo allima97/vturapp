@@ -468,3 +468,42 @@ export function renderPreviewInvestimentos(items: RotInvestimento[]) {
     })
     .join('');
 }
+
+/**
+ * Trem no estilo Moderno: tabela de 3 colunas igual à de Hotéis.
+ * Cabeçalho "Origem | Destino | Trem & Classe"; cada perna do trecho vira uma linha.
+ */
+export function renderRot3Trens(items: RotPasseio[], formatDate: FormatDate) {
+  const data = (valor?: string | null) => {
+    const d = formatDate(valor || '');
+    return d && d !== '-' ? d : '';
+  };
+  const quando = (dia: string, hora: string) =>
+    [dia, hora ? `às ${hora}` : ''].filter(Boolean).join(' ');
+  const linhas = items.flatMap((item) => {
+    const detalhes = detalhesPasseio(item);
+    const segmentos = Array.isArray(detalhes.segmentos) ? detalhes.segmentos : [];
+    return segmentos.map((seg) => {
+      const [from, to] = pontosTrechoTrem(seg);
+      const dataSaida = data(seg.data_voo);
+      const dataChegada = data(seg.data_fim) || dataSaida;
+      const horaSaida = text(seg.hora_saida).replace(/\s*\(\+\d+\)\s*$/, '');
+      const horaChegada = text(seg.hora_chegada).replace(/\s*\(\+\d+\)\s*$/, '');
+      const operadora = [text(seg.cia_aerea), text(seg.numero_voo)].filter(Boolean).join(' • ');
+      const checks = [
+        text(seg.classe_reserva),
+        text(seg.assentos) ? `Assentos ${text(seg.assentos)}` : ''
+      ].filter(Boolean);
+      const saida = quando(dataSaida, horaSaida);
+      const chegada = quando(dataChegada, horaChegada);
+      const c1 = `<div class="rot3-t">${escapeHtml(from)}</div>${saida ? `<div class="rot3-s">${escapeHtml(saida)}</div>` : ''}`;
+      const c2 = `<div class="rot3-t">${escapeHtml(to)}</div>${chegada ? `<div class="rot3-s">${escapeHtml(chegada)}</div>` : ''}`;
+      const c3 = `${operadora ? `<div class="rot3-t">${escapeHtml(operadora)}</div>` : ''}${checks
+        .map((c) => `<div class="rot3-chk">${escapeHtml(c)}</div>`)
+        .join('')}`;
+      return `<div class="rot3-row"><div class="rot3-c1">${c1}</div><div class="rot3-c2">${c2}</div><div class="rot3-c3">${c3}</div></div>`;
+    });
+  });
+  if (!linhas.length) return '';
+  return `<div class="rot3-tabela"><div class="rot3-hotel-header-row"><div>Origem</div><div>Destino</div><div>Trem &amp; Classe</div></div>${linhas.join('')}</div>`;
+}

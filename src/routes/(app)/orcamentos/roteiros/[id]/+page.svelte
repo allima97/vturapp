@@ -88,7 +88,8 @@
     renderPreviewInvestimentos,
     renderPreviewPasseios,
     renderPreviewSeguros,
-    renderPreviewTrens
+    renderPreviewTrens,
+    renderRot3Trens
   } from './_components/preview-cards';
   import { nomeCidadeNoPdf } from './_components/preview-cidade';
   import { roteiroCardStyles } from '$lib/utils/printLayout';
@@ -1771,7 +1772,7 @@
       ${buildRot3Secao('PASSAGEM AÉREA', rot3FlightsHtml)}
       ${carrosHtml.trim() ? buildRot3Secao('ALUGUEL DE CARRO', carrosHtml) : ''}
       ${buildRot3Secao('HOTÉIS SUGERIDOS', rot3HoteisHtml)}
-      ${trensHtml.trim() ? buildRot3Secao('TREM', renderPreviewTrens(trensItems, formatPreviewDate, { moderno: true })) : ''}
+      ${trensHtml.trim() ? buildRot3Secao('TREM', renderRot3Trens(trensItems, formatPreviewDate) || renderPreviewTrens(trensItems, formatPreviewDate, { moderno: true })) : ''}
       ${passeiosHtml.trim() ? buildRot3Secao('PASSEIOS E SERVIÇOS', passeiosHtml) : ''}
       ${rot3OpcionaisHtml ? buildRot3Secao('Passeios Opcionais', rot3OpcionaisHtml) : ''}
       ${segurosHtml.trim() ? buildRot3Secao('SEGURO VIAGEM', segurosHtml) : ''}
