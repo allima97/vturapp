@@ -540,3 +540,61 @@ export function renderRot3Seguros(items: RotPasseio[], formatDate: FormatDate) {
   if (!linhas.length) return '';
   return `<div class="rot3-tabela"><div class="rot3-hotel-header-row"><div>Seguradora &amp; Plano</div><div>Período de Cobertura</div><div>Viajantes</div></div>${linhas.join('')}</div>`;
 }
+
+/**
+ * Aluguel de carro no estilo Moderno: tabela igual à de Hotéis.
+ * "Veículo & Locadora | Retirada & Devolução | Inclusos".
+ */
+export function renderRot3Carros(items: RotPasseio[], formatDate: FormatDate) {
+  const data = (valor?: string | null) => {
+    const d = formatDate(valor || '');
+    return d && d !== '-' ? d : '';
+  };
+  const quando = (dia: string, hora: string) =>
+    [dia, hora ? `às ${hora}` : ''].filter(Boolean).join(' ');
+  const linhas = items.map((item) => {
+    const detalhes = detalhesPasseio(item);
+    const dias = diasItem('aluguel_carro', item.data_inicio, item.data_fim);
+    const tituloBase = text(item.passeio) || 'Aluguel de carro';
+    const cambio = text(detalhes.cambio);
+    const veiculo =
+      cambio && !tituloBase.toLowerCase().includes(cambio.toLowerCase())
+        ? `${tituloBase} ${cambio.toLowerCase()}`
+        : tituloBase;
+    const locadoraDiarias = [
+      text(detalhes.locadora),
+      dias != null && dias > 0 ? `${dias} ${dias === 1 ? 'diária' : 'diárias'}` : ''
+    ]
+      .filter(Boolean)
+      .join(' • ');
+    const caracteristicas = resumoInformacoesVeiculo({
+      assentos: detalhes.assentos ?? '',
+      portas: detalhes.portas ?? '',
+      malas: detalhes.malas ?? '',
+      combustivel: detalhes.combustivel ?? ''
+    });
+    const retirada = [nomeCidadeNoPdf(text(item.cidade)), text(detalhes.loja_retirada)]
+      .filter(Boolean)
+      .join(' · ');
+    const devolucao = [
+      nomeCidadeNoPdf(text(detalhes.cidade_devolucao)),
+      text(detalhes.loja_devolucao)
+    ]
+      .filter(Boolean)
+      .join(' · ');
+    const quandoRetirada = quando(data(item.data_inicio), text(detalhes.hora_retirada));
+    const quandoDevolucao = quando(data(item.data_fim), text(detalhes.hora_devolucao));
+    const ponto = (rotulo: string, local: string, momento: string) =>
+      local || momento
+        ? `<div class="rot3-s"><b>${rotulo}:</b> ${escapeHtml(local || '—')}</div>${momento ? `<div class="rot3-s">${escapeHtml(momento)}</div>` : ''}`
+        : '';
+    const c1 = `<div class="rot3-t">${escapeHtml(veiculo)}</div>${locadoraDiarias ? `<div class="rot3-a">${escapeHtml(locadoraDiarias)}</div>` : ''}${caracteristicas ? `<div class="rot3-s">${escapeHtml(caracteristicas)}</div>` : ''}`;
+    const c2 = `${ponto('Retirada', retirada, quandoRetirada)}${ponto('Devolução', devolucao, quandoDevolucao)}`;
+    const c3 = etiquetasCarro(detalhes.incluidos ?? [])
+      .map((c) => `<div class="rot3-chk">${escapeHtml(c)}</div>`)
+      .join('');
+    return `<div class="rot3-row"><div class="rot3-c1">${c1}</div><div class="rot3-c2">${c2}</div><div class="rot3-c3">${c3}</div></div>`;
+  });
+  if (!linhas.length) return '';
+  return `<div class="rot3-tabela"><div class="rot3-hotel-header-row"><div>Veículo &amp; Locadora</div><div>Retirada &amp; Devolução</div><div>Inclusos</div></div>${linhas.join('')}</div>`;
+}

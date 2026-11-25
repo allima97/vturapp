@@ -89,6 +89,7 @@
     renderPreviewPasseios,
     renderPreviewSeguros,
     renderPreviewTrens,
+    renderRot3Carros,
     renderRot3Seguros,
     renderRot3Trens
   } from './_components/preview-cards';
@@ -1771,7 +1772,7 @@
         ${rot3DiasHtml ? `<section class="rot3-itin"><h2 class="rot3-itin-titulo">Itinerário Detalhado</h2><div class="rot3-dias-lista">${rot3DiasHtml}</div></section>` : ''}
       </div>
       ${buildRot3Secao('PASSAGEM AÉREA', rot3FlightsHtml)}
-      ${carrosHtml.trim() ? buildRot3Secao('ALUGUEL DE CARRO', carrosHtml) : ''}
+      ${carrosHtml.trim() ? buildRot3Secao('ALUGUEL DE CARRO', renderRot3Carros(carrosItems, formatPreviewDate) || carrosHtml) : ''}
       ${buildRot3Secao('HOTÉIS SUGERIDOS', rot3HoteisHtml)}
       ${trensHtml.trim() ? buildRot3Secao('TREM', renderRot3Trens(trensItems, formatPreviewDate) || renderPreviewTrens(trensItems, formatPreviewDate, { moderno: true })) : ''}
       ${passeiosHtml.trim() ? buildRot3Secao('PASSEIOS E SERVIÇOS', passeiosHtml) : ''}
