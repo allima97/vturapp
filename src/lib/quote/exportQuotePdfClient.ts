@@ -1945,7 +1945,7 @@ function rot3LinhasDetalhe(item: QuoteItemForPdf): string[] {
       rot3S(escHtml(textVal(details.categoria)));
     const ci = rot3DataHora(textVal(item.start_date), textVal(details.hora_checkin));
     const co = rot3DataHora(textVal(item.end_date), textVal(details.hora_checkout));
-    const c2 = rot3T(ci ? `Check-in: ${escHtml(ci)}` : '') + rot3S(co ? `Check-out: <b>${escHtml(co)}</b>` : '');
+    const c2 = rot3S(ci ? `Check-in: <b>${escHtml(ci)}</b>` : '') + rot3S(co ? `Check-out: <b>${escHtml(co)}</b>` : '');
     const c3 = rot3ChecksHtml(
       [textVal(details.tipo_apartamento), textVal(details.regime), pax].filter(Boolean).map(escHtml)
     );
