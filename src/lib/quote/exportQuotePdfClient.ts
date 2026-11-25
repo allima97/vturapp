@@ -1743,6 +1743,20 @@ function rot3FraseCronograma(item: QuoteItemForPdf): string {
   return `<b>${title}</b>${resumo ? ` (${resumo})` : ''}${pax ? ` para ${escHtml(pax)}` : ''}`;
 }
 
+/** Nome de exibição do país no título (siglas e variações → nome por extenso). */
+const rot3NomesPaises: Record<string, string> = {
+  eua: 'Estados Unidos',
+  usa: 'Estados Unidos',
+  'e.u.a.': 'Estados Unidos',
+  'estados unidos da america': 'Estados Unidos',
+  'united states': 'Estados Unidos',
+  'united states of america': 'Estados Unidos'
+};
+
+function rot3NomePais(pais: string) {
+  return rot3NomesPaises[normalizeText(pais)] || pais;
+}
+
 /**
  * Países visitados na ordem da viagem (título do Moderno). O país da cidade de
  * origem (de onde sai o primeiro voo) fica de fora; sem países, retorna [].
@@ -1755,14 +1769,17 @@ function rot3PaisesCronologicos(items: QuoteItemForPdf[]): string[] {
   const origem = normalizeText(primeiroVoo ? rot3Legs(primeiroVoo)[0]?.cidOrig || '' : '');
   const paisOrigem = origem
     ? normalizeText(
-        porData.find((i) => i.pais_nome && normalizeText(nomeCidadeNoPdf(textVal(i.city_name))) === origem)
-          ?.pais_nome || ''
+        rot3NomePais(
+          porData.find(
+            (i) => i.pais_nome && normalizeText(nomeCidadeNoPdf(textVal(i.city_name))) === origem
+          )?.pais_nome || ''
+        )
       )
     : '';
   const vistos = new Set<string>();
   const lista: string[] = [];
   for (const item of porData) {
-    const pais = textVal(item.pais_nome);
+    const pais = rot3NomePais(textVal(item.pais_nome));
     const key = normalizeText(pais);
     if (!pais || vistos.has(key) || (paisOrigem && key === paisOrigem)) continue;
     vistos.add(key);
