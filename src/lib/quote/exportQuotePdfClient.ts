@@ -1941,11 +1941,11 @@ function rot3LinhasDetalhe(item: QuoteItemForPdf): string[] {
         const c3 = rot3ChecksHtml([leg.classe, leg.assentos || textVal(details.assentos), pax].filter(Boolean).map(escHtml));
         return rot3Linha(c1, c2, c3);
       }
-      // Linha 1: códigos | horários | ✓ classe…
+      // Linha 1: cidades | códigos e horários | ✓ classe…
       // Linha 2: saída (cidade • data) | chegada (cidade • data)
       // Linha 3: cia • voo
       const c1 =
-        rot3T(escHtml(`${leg.codOrig || leg.cidOrig} → ${leg.codDest || leg.cidDest}`)) +
+        rot3T(escHtml(`${leg.cidOrig || leg.codOrig} → ${leg.cidDest || leg.codDest}`)) +
         rot3S(escHtml([leg.cidOrig ? `Saída de ${leg.cidOrig}` : 'Saída', dataSaida].filter(Boolean).join(' • '))) +
         rot3S(escHtml([leg.cia, leg.numero ? `Voo ${leg.numero}` : ''].filter(Boolean).join(' • ')));
       const origem = [leg.codOrig || leg.cidOrig, leg.horaSaida].filter(Boolean).join(' ');
@@ -2025,7 +2025,11 @@ function buildRot3DetalhamentoOrcHtml(items: QuoteItemForPdf[], _defaultCurrency
   const porData = [...items].sort((a, b) =>
     String(a.start_date || '9999').localeCompare(String(b.start_date || '9999'))
   );
-  const voos = porData.filter((i) => rot3Tipo(i) === 'voo');
+  const dataPrimeiroTrecho = (i: QuoteItemForPdf) =>
+    rot3Legs(i)[0]?.dataSaida || String(i.start_date || '9999');
+  const voos = porData
+    .filter((i) => rot3Tipo(i) === 'voo')
+    .sort((a, b) => dataPrimeiroTrecho(a).localeCompare(dataPrimeiroTrecho(b)));
   const hoteis = porData.filter((i) => rot3Tipo(i) === 'hotel');
   const diversos = porData.filter((i) => !['voo', 'hotel'].includes(rot3Tipo(i)));
 
