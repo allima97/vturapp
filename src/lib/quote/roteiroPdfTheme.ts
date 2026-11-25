@@ -148,6 +148,8 @@ export const roteiroPdfThemeCss = `
     border-bottom-left-radius: 10.5px;
     border-bottom-right-radius: 10.5px;
   }
+  /* Incluído / não incluído: lista curta e previsível — evita quebrar a caixa ao meio. */
+  .section:has(> .chks) { break-inside: avoid; page-break-inside: avoid; }
   .roteiro-card, .row.rot-row {
     border-radius: 0;
     padding: 6px 12px;
