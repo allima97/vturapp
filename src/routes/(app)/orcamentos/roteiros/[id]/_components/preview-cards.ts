@@ -10,10 +10,6 @@ export { renderPreviewFlights } from '$lib/quote/printFlights';
 
 type FormatDate = (value: string | null | undefined) => string;
 
-function cityTitle(city: string) {
-  return `<div class="roteiro-card-city">${escapeHtml(nomeCidadeNoPdf(city))}</div>`;
-}
-
 function iconeDoPasseio(tipo: string) {
   const nome = tipo
     .normalize('NFD')
@@ -417,26 +413,41 @@ export function renderPreviewSeguros(items: RotPasseio[], formatDate: FormatDate
 
 export function renderPreviewPasseios(items: RotPasseio[], formatDate: FormatDate) {
   return Array.from(groupByCity(items, 'Serviços'), ([city, passeios]) =>
-    passeios
+    [...passeios]
+      .sort((a, b) =>
+        String(a.data_inicio || '9999').localeCompare(String(b.data_inicio || '9999'))
+      )
       .map((item) => {
+        const detalhes = detalhesPasseio(item);
         const start = formatDate(item.data_inicio);
         const end = formatDate(item.data_fim);
-        const date = start && end && start !== end ? `${start} a ${end}` : start || end || '-';
-        const kicker = text(item.tipo) || 'Passeio';
-        return card(
-          [
-            `<div class="rot-hotel"><div>${serviceIconSvg(iconeDoPasseio(kicker))}</div><div>`,
-            cityTitle(city),
-            `<div class="lb">${escapeHtml(kicker)}</div>`,
-            text(item.passeio)
-              ? `<div class="rot-item-title"><b>${escapeHtml(text(item.passeio))}</b></div>`
-              : '',
-            date && date !== '-' ? `<p class="meta">${escapeHtml(date)}</p>` : '',
-            text(item.ingressos) ? `<p>${escapeHtml(text(item.ingressos))}</p>` : '',
-            `</div></div>`
-          ].join(''),
-          [city, item.passeio, item.ingressos].join('\n')
+        const valido = (d: string) => (d && d !== '-' ? d : '');
+        const date =
+          valido(start) && valido(end) && start !== end
+            ? `${start} a ${end}`
+            : valido(start) || valido(end);
+        const tipo = text(item.tipo) || 'Passeio';
+        const titulo = text(item.passeio) || tipo;
+        // Mesmo padrão dos cards de Seguro e Carro: título, rótulo, linha cinza e ✓.
+        const rotulo = [tipo, nomeCidadeNoPdf(city), date].filter(Boolean).join(' · ');
+        const ingressos = text(item.ingressos)
+          .split(/\n+/)
+          .map((linha) => rotuloIngressos(linha.trim()))
+          .filter(Boolean);
+        const passageiros = passageirosChipText(
+          Number(item.qtd_adultos) || 0,
+          Number(item.qtd_criancas) || 0,
+          Number(detalhes.infant) || 0
         );
+        const content = [
+          `<div class="rot-hotel"><div>${serviceIconSvg(iconeDoPasseio(tipo))}</div><div>`,
+          `<div class="rot-item-title"><b>${escapeHtml(titulo)}</b></div>`,
+          `<div class="lb">${escapeHtml(rotulo)}</div>`,
+          text(item.fornecedor) ? `<div class="mu sm">${escapeHtml(text(item.fornecedor))}</div>` : '',
+          chipsHtml([text(detalhes.categoria), ...ingressos, passageiros]),
+          `</div></div>`
+        ].join('');
+        return card(content, [city, item.passeio, item.ingressos].join('\n'));
       })
       .join('')
   ).join('');

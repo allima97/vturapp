@@ -424,7 +424,7 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
   expect(firstHotel.querySelector('.rtf.rota')).toBeTruthy();
   expect(firstHotel.querySelector('.chk')?.textContent).toBe('Café');
   expect(hotels.querySelectorAll('.roteiro-card')[1].textContent).toContain('Outro Hotel');
-  expect(preview.querySelector('.preview-passeios-section .roteiro-card-city')?.textContent).toBe(
+  expect(preview.querySelector('.preview-passeios-section .lb')?.textContent).toContain(
     'Barcelona'
   );
   expect(preview.querySelector('.preview-passeios-section .rot-item-title')?.textContent).toBe(
