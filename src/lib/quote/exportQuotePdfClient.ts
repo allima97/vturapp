@@ -2508,15 +2508,20 @@ function buildModernoPropostaBodyHtml(params: {
     viajantes ? `${pplIco}<b>Viajantes:</b> ${metaVal(viajantes)}` : ''
   ].filter(Boolean);
 
-  // 1ª linha: validade · abaixo: cartão "Reserve com …" com QR Code do WhatsApp
-  const ctaCartao = `<div class="rot3-qrcta">${
-    qrUrl ? `<img src="${escHtml(qrUrl)}" alt="QR Code WhatsApp" />` : ''
-  }<div class="rot3-qrcta-texto"><b>Reserve com o ${escHtml(primeiroNome || 'consultor')}</b><span>${
-    qrUrl ? 'Aponte a câmera para o QR Code e fale no WhatsApp.' : 'Atendimento direto via WhatsApp.'
-  }</span></div></div>`;
-  const ctaHtml = `<div class="rot3-bloco-cta">${
-    validity ? `<div class="rot3-validade">Tarifas válidas até <b>${escHtml(validity)}</b></div>` : ''
-  }${ctaCartao}</div>`;
+  // Faixa "Reserve": convite + validade à esquerda, QR Code do WhatsApp à direita
+  const relogioIco = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+  const ctaHtml = `<div class="rot3-bloco-cta${qrUrl ? '' : ' rot3-bloco-cta--sem-qr'}">
+    <div class="rot3-cta-info">
+      <div class="rot3-cta-titulo">Reserve com o ${escHtml(primeiroNome || 'consultor')}</div>
+      <div class="rot3-cta-texto">${
+        qrUrl
+          ? 'Aponte a câmera do celular para o QR Code e fale direto no WhatsApp.'
+          : 'Atendimento direto via WhatsApp.'
+      }</div>
+      ${validity ? `<div class="rot3-cta-validade">${relogioIco}<span>Tarifas válidas até <b>${escHtml(validity)}</b></span></div>` : ''}
+    </div>
+    ${qrUrl ? `<div class="rot3-cta-qr"><img src="${escHtml(qrUrl)}" alt="QR Code WhatsApp" /><span>WhatsApp</span></div>` : ''}
+  </div>`;
   const rotaCidades = cities.map(escHtml).join('<span class="rot3-rota-sep">•</span>');
   const blocoHtml = `<div class="rot3-bloco">${
     cities.length
