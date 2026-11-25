@@ -959,7 +959,9 @@
   .mod-meta-linha { font-size: 13px; color: #4B5563; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; }
   .mod-meta-linha b { color: #1F2937; }
   .mod-meta-sep { color: #6B7280; }
-  .mod-ico { width: 15px; height: 15px; vertical-align: -3px; margin-right: 3px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .mod-meta-linha > span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .mod-meta-linha > span.mod-meta-sep { gap: 0; }
+  .mod-ico { display: inline-block; flex-shrink: 0; width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .mod-resumo { display: flex; align-items: center; gap: 24px; background: #EEF2F7; border: 1px solid #9AAAC2; border-radius: 10px; padding: 18px 22px; margin-bottom: 16px; break-inside: avoid; }
   .mod-resumo-rota { flex: 1; min-width: 0; }
   .mod-card-label { font-size: 11px; font-weight: bold; letter-spacing: 1.5px; color: #4472C4; text-transform: uppercase; margin-bottom: 6px; }
