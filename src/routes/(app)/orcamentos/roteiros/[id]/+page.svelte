@@ -1626,8 +1626,7 @@
           const rotaLine = (fromPart || toPart) ? `${escapePreviewHtml(fromPart)} → ${escapePreviewHtml(toPart)}${plusHtml}` : '';
           const dCheg = formatPreviewDate(t.data_fim || t.data_voo || '');
           // Mesma disposição do orçamento:
-          // L1 códigos | horários | ✓ · L2 saída cidade • data | chegada cidade • data · L3 cia • voo
-          const codigosLine = aeOrig && aeDest ? `${escapePreviewHtml(aeOrig)} → ${escapePreviewHtml(aeDest)}` : trechoDisplay;
+          // L1 cidades | horários | ✓ · L2 saída cidade • data | chegada cidade • data · L3 cia • voo
           const saidaLine = [cidOrig ? `Saída de ${escapePreviewHtml(cidOrig)}` : 'Saída', dSaida].filter(Boolean).join(' • ');
           const chegLine = [cidDest ? `Chegada em ${escapePreviewHtml(cidDest)}` : 'Chegada', dCheg].filter(Boolean).join(' • ');
           const ciaVooLine = [
@@ -1635,7 +1634,7 @@
             descVoo ? `Voo ${escapePreviewHtml(descVoo)}` : ''
           ].filter(Boolean).join(' • ');
           const checks = ([t.classe_reserva, t.tarifa_nome] as (string | undefined)[]).filter(s => String(s || '').trim());
-          const c1 = `<div class="rot3-t">${codigosLine}</div><div class="rot3-s">${saidaLine}</div>${ciaVooLine ? `<div class="rot3-s">${ciaVooLine}</div>` : ''}`;
+          const c1 = `<div class="rot3-t">${trechoDisplay}</div><div class="rot3-s">${saidaLine}</div>${ciaVooLine ? `<div class="rot3-s">${ciaVooLine}</div>` : ''}`;
           const c2 = `${rotaLine ? `<div class="rot3-t">${rotaLine}</div>` : ''}${chegLine ? `<div class="rot3-s">${chegLine}</div>` : ''}`;
           const c3 = rot3ChecksHtml(checks.map((s) => escapePreviewHtml(String(s).trim())));
           inner += `<div class="rot3-row"><div class="rot3-c1">${c1}</div><div class="rot3-c2">${c2}</div><div class="rot3-c3">${c3}</div></div>`;
