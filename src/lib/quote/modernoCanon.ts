@@ -5,8 +5,8 @@
  * Deve ser injetado no FIM do <style> de cada documento, para prevalecer
  * sobre as regras rot3-* legadas (mesma especificidade, declarado depois).
  * Cores: tokens do sistema (#1B2C80 navy, #4472C4 azul médio, #9AAAC2 borda,
- * #C5CED9 divisória, #D0DAEA faixa/realce — cor única de fundo de blocos,
- * cabeçalhos, etiquetas e chips —, #F7F9FC fundo de caixas de texto).
+ * #C5CED9 divisória, #EEF2F7 cor única de fundo de blocos, cabeçalhos,
+ * etiquetas e chips, #D0DAEA linha sob títulos, #F7F9FC caixas de texto).
  */
 export const MODERNO_CANON_CSS = `
 /* ─── Moderno canônico ─────────────────────────────────────── */
@@ -61,7 +61,7 @@ export const MODERNO_CANON_CSS = `
 
 /* Tabelas de 3 colunas (passagem, hotéis, detalhamento) */
 .rot3-tabela { border: 1px solid #9AAAC2; border-radius: 8px; overflow: hidden; background: #fff; margin-bottom: 16px; }
-.rot3-grupo-header, .rot3-hotel-header-row { background: #D0DAEA; color: #1B2C80; font-size: 9.5pt; font-weight: bold; letter-spacing: 0; text-transform: none; padding: 9px 14px; border-bottom: 1px solid #9AAAC2; }
+.rot3-grupo-header, .rot3-hotel-header-row { background: #EEF2F7; color: #1B2C80; font-size: 9.5pt; font-weight: bold; letter-spacing: 0; text-transform: none; padding: 9px 14px; border-bottom: 1px solid #9AAAC2; }
 .rot3-hotel-header-row { display: flex; gap: 12px; }
 .rot3-row { display: flex; gap: 12px; padding: 10px 14px; border-bottom: 1px solid #C5CED9; break-inside: avoid; page-break-inside: avoid; }
 .rot3-tabela .rot3-row:last-child { border-bottom: none; }
@@ -99,7 +99,7 @@ export const MODERNO_CANON_CSS = `
 
 /* Investimento (orçamento) */
 .rot3-inv { border: 1px solid #9AAAC2; border-radius: 10px; overflow: hidden; background: #fff; margin: 0 0 16px; break-inside: avoid; page-break-inside: avoid; }
-.rot3-inv-head { background: #D0DAEA; color: #1B2C80; text-align: center; font-size: 11pt; font-weight: bold; letter-spacing: 2px; padding: 10px; border-bottom: 1px solid #9AAAC2; }
+.rot3-inv-head { background: #EEF2F7; color: #1B2C80; text-align: center; font-size: 11pt; font-weight: bold; letter-spacing: 2px; padding: 10px; border-bottom: 1px solid #9AAAC2; }
 .rot3-inv-cols { display: flex; }
 .rot3-inv .rot3-inv-col { flex: 1; padding: 18px 16px 16px; text-align: center; }
 .rot3-inv .rot3-inv-divider { width: 1px; background: #C5CED9; flex-shrink: 0; }
@@ -118,9 +118,9 @@ export const MODERNO_CANON_CSS = `
 
 .rot3-doc-footer { margin-top: 24px; padding-top: 8px; border-top: 1px solid #C5CED9; font-size: 8pt; color: #6B7280; }
 
-/* Cor única de realce: bloco de resumo, etiquetas de dia/data e chips usam a
-   mesma faixa dos cabeçalhos das tabelas. */
-.rot3-bloco, .rot3-dia-pill, .rot3-oc-pill, .rot3-dia-chip, .rot3-qtd { background: #D0DAEA; }
+/* Cor única de realce (#EEF2F7): cabeçalhos das tabelas, bloco de resumo,
+   etiquetas de dia/data e chips. */
+.rot3-bloco, .rot3-dia-pill, .rot3-oc-pill, .rot3-dia-chip, .rot3-qtd { background: #EEF2F7; }
 
 /* Impressão: tabela não se parte entre páginas (vai inteira para a próxima,
    levando o título junto). Se for maior que uma página, cada pedaço fecha a
