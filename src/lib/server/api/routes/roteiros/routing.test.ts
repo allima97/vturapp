@@ -31,6 +31,7 @@ vi.mock('./cidades-busca', () => ({
 vi.mock('./gerar-orcamento', () => ({
   handleRoteirosGerarOrcamentoPost: spy('handleRoteirosGerarOrcamentoPost')
 }));
+vi.mock('./gerar-ia', () => ({ handleRoteirosGerarIaPost: spy('handleRoteirosGerarIaPost') }));
 vi.mock('./list', () => ({ handleRoteirosListGet: spy('handleRoteirosListGet') }));
 vi.mock('./save', () => ({ handleRoteirosSavePost: spy('handleRoteirosSavePost') }));
 vi.mock('./sugestoes-busca', () => ({
@@ -56,6 +57,7 @@ const CASES: Array<[string, string, string, Record<string, string>]> = [
   ['GET', '/api/v1/roteiros/dias-busca', 'handleRoteirosDiasBuscaGet', {}],
   ['GET', '/api/v1/roteiros/cidades-busca', 'handleRoteirosCidadesBuscaGet', {}],
   ['POST', '/api/v1/roteiros/gerar-orcamento', 'handleRoteirosGerarOrcamentoPost', {}],
+  ['POST', '/api/v1/roteiros/gerar-ia', 'handleRoteirosGerarIaPost', {}],
   ['GET', '/api/v1/roteiros/list', 'handleRoteirosListGet', {}],
   ['POST', '/api/v1/roteiros/save', 'handleRoteirosSavePost', {}],
   ['GET', '/api/v1/roteiros/sugestoes-busca', 'handleRoteirosSugestoesBuscaGet', {}],
@@ -69,6 +71,7 @@ const SEM_HANDLER: Array<[string, string]> = [
   ['PUT', '/api/v1/roteiros/delete'],
   ['PUT', '/api/v1/roteiros/dias-busca'],
   ['PUT', '/api/v1/roteiros/gerar-orcamento'],
+  ['PUT', '/api/v1/roteiros/gerar-ia'],
   ['PUT', '/api/v1/roteiros/list'],
   ['PUT', '/api/v1/roteiros/save'],
   ['PUT', '/api/v1/roteiros/sugestoes-busca'],
