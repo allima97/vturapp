@@ -116,7 +116,7 @@ export const MODERNO_CANON_CSS = `
 .rot3-infos li { font-size: 8.5pt; color: #1F2937; line-height: 1.5; margin-bottom: 4px; }
 .rot3-infos img { max-width: 100%; margin-top: 8px; border-radius: 6px; }
 
-.rot3-doc-footer { margin-top: 24px; padding-top: 8px; border-top: 1px solid #C5CED9; font-size: 8pt; color: #6B7280; }
+.rot3-doc-footer { margin-top: 24px; padding-top: 8px; border-top: none; font-size: 8pt; color: #6B7280; }
 
 /* Cor única de realce (#EEF2F7): cabeçalhos das tabelas, bloco de resumo,
    etiquetas de dia/data e chips. */
