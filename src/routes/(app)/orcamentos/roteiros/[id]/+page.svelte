@@ -1271,7 +1271,9 @@
     );
     const investimentosHtml = renderPreviewInvestimentos(investimentosItems);
     const investimentoTotalTexto =
-      totalInvestimento > 0 ? `Total por pessoa: R$ ${formatBRL(totalInvestimento)}` : '';
+      totalInvestimento > 0
+        ? `${investimentos[0]?.tipo === 'Por apto' ? 'Total por apto' : 'Total por pessoa'}: R$ ${formatBRL(totalInvestimento)}`
+        : '';
 
     const pagamentosItems = pagamentos.filter(
       (item) => item.servico || item.forma_pagamento || item.condicao || item.valor_total_com_taxas
@@ -1288,8 +1290,8 @@
     // ── Investimento e Pagamento (compartilhado Padrão + Moderno) ──────────
     let rot3InvestHtmlShared = '';
     if (investimentosItems.length > 0) {
-      // O Tipo da 1ª linha define o quadro: "Por pessoa" (total da viagem) ou
-      // "Por apto" (valor do apartamento para N pessoas).
+      // O Tipo da 1ª linha define o quadro: "Por pessoa" (valor × pessoas) ou
+      // "Por apto" (valor × apartamentos).
       const porApto = String(investimentosItems[0]?.tipo || '').trim() === 'Por apto';
       const qtdAdultos = Number(investimentosItems[0]?.qtd_apto || 1) || 1;
       const somaLinhas = investimentosItems.reduce(
@@ -1297,15 +1299,15 @@
         0
       );
       const totalAdultos = somaLinhas || totalInvestimento * qtdAdultos;
-      const nomeAcomodacao: Record<number, string> = { 1: 'single', 2: 'duplo', 3: 'triplo', 4: 'quádruplo' };
-      const paxTxt = `${qtdAdultos} ${qtdAdultos !== 1 ? 'PAXS' : 'PAX'}`;
-      const rotuloTotal = porApto
-        ? `VALOR POR APTO (${paxTxt})`
-        : `TOTAL DA VIAGEM (${qtdAdultos} ${qtdAdultos !== 1 ? 'PESSOAS' : 'PESSOA'})`;
+      const unidade = porApto
+        ? qtdAdultos !== 1 ? 'APTOS' : 'APTO'
+        : qtdAdultos !== 1 ? 'PESSOAS' : 'PESSOA';
+      const rotuloTotal = `TOTAL DA VIAGEM (${qtdAdultos} ${unidade})`;
+      const rotuloUnit = porApto ? 'POR APTO' : 'POR PESSOA';
       const subTotal = porApto
-        ? `Considerando ${qtdAdultos} pessoa${qtdAdultos !== 1 ? 's' : ''} no mesmo apartamento${nomeAcomodacao[qtdAdultos] ? ` (${nomeAcomodacao[qtdAdultos]})` : ''}`
+        ? `Valor total da proposta para ${qtdAdultos} apartamento${qtdAdultos !== 1 ? 's' : ''}`
         : `Valor total da proposta para ${qtdAdultos} pessoa${qtdAdultos !== 1 ? 's' : ''}`;
-      const subPessoa = porApto ? 'Valor individual no apartamento' : 'Valor individual por pessoa';
+      const subPessoa = porApto ? 'Valor por apartamento' : 'Valor individual por pessoa';
       const dtHoje = new Date();
       const dtAm = new Date(dtHoje); dtAm.setDate(dtAm.getDate() + 1);
       const fDt = (d: Date) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
@@ -1317,7 +1319,7 @@
       const _icoClock = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="display:inline;vertical-align:middle;margin-right:5px;margin-bottom:1px;opacity:0.85"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>`;
       rot3InvestHtmlShared = `<div class="rot3-inv-box">
         <div class="rot3-inv-col">
-          <div class="rot3-inv-label">${_icoP}POR PESSOA</div>
+          <div class="rot3-inv-label">${_icoP}${rotuloUnit}</div>
           <div class="rot3-inv-valor">R$&nbsp;${formatBRL(totalInvestimento)}</div>
           <div class="rot3-inv-sub">${subPessoa}</div>
         </div>
@@ -1333,7 +1335,11 @@
 
     let rot3PagamentosHtmlShared = '';
     if (pagamentosItems.length > 0) {
-      const qtdPaxPag = Number(investimentosItems[0]?.qtd_apto || 0) || 0;
+      // "(N Paxs)" no cabeçalho só quando o investimento é por pessoa.
+      const qtdPaxPag =
+        String(investimentosItems[0]?.tipo || '').trim() === 'Por apto'
+          ? 0
+          : Number(investimentosItems[0]?.qtd_apto || 0) || 0;
       const paxLabel  = qtdPaxPag > 1 ? ` (${qtdPaxPag} Pax${qtdPaxPag > 1 ? 's' : ''})` : '';
       const colHdrPag = `<div class="rot3-pag-header-row rot3-pag-header-row--padrao">
         <div class="rot3-pag-h1">Modalidade</div>

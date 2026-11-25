@@ -50,7 +50,7 @@
   {:else}
     <div class="space-y-3">
       {#each investimentos as inv, index}
-        {@const porPessoa = !inv.tipo || inv.tipo === 'Por pessoa'}
+        {@const porApto = inv.tipo === 'Por apto'}
         <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
           <div class="mb-2 flex items-center justify-between">
             <span class="text-xs font-semibold text-slate-500">Linha {index + 1}</span>
@@ -117,7 +117,7 @@
             <div>
               <FieldInput
                 money
-                label="Valor por pessoa (R$)"
+                label={porApto ? 'Valor por apto (R$)' : 'Valor por pessoa (R$)'}
                 type="number"
                 value={inv.valor_por_pessoa ?? ''}
                 class_name="w-full"
@@ -126,7 +126,7 @@
             </div>
             <div>
               <FieldInput
-                label={porPessoa ? 'Qtd. pessoas' : 'Qtd. aptos'}
+                label={porApto ? 'Qtd. aptos' : 'Qtd. pessoas'}
                 type="number"
                 value={inv.qtd_apto ?? ''}
                 class_name="w-full"
@@ -137,7 +137,7 @@
             <div>
               <FieldInput
                 money
-                label={porPessoa ? 'Valor total (R$)' : 'Valor por apto (R$)'}
+                label="Valor total (R$)"
                 type="number"
                 value={inv.valor_por_apto ?? ''}
                 class_name="w-full"
@@ -153,7 +153,7 @@
     <div
       class="mt-4 rounded-lg bg-slate-100 px-4 py-2 text-right text-sm font-medium text-slate-700"
     >
-      Total por pessoa: <span class="text-clientes-700 font-bold"
+      {investimentos[0]?.tipo === 'Por apto' ? 'Total por apto' : 'Total por pessoa'}: <span class="text-clientes-700 font-bold"
         >R$ {formatBRL(totalInvestimento)}</span
       >
     </div>
