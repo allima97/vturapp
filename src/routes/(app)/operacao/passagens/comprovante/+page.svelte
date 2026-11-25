@@ -962,7 +962,7 @@
   .mod-meta-linha > span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
   .mod-meta-linha > span.mod-meta-sep { gap: 0; }
   .mod-ico { display: inline-block; flex-shrink: 0; width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .mod-resumo { display: flex; align-items: center; gap: 24px; background: #EEF2F7; border: 1px solid #9AAAC2; border-radius: 10px; padding: 18px 22px; margin-bottom: 16px; break-inside: avoid; }
+  .mod-resumo { display: flex; align-items: center; gap: 24px; background: #D0DAEA; border: 1px solid #9AAAC2; border-radius: 10px; padding: 18px 22px; margin-bottom: 16px; break-inside: avoid; }
   .mod-resumo-rota { flex: 1; min-width: 0; }
   .mod-card-label { font-size: 11px; font-weight: bold; letter-spacing: 1.5px; color: #4472C4; text-transform: uppercase; margin-bottom: 6px; }
   .mod-rota-valor { font-size: 18px; font-weight: bold; color: #1B2C80; line-height: 1.35; }
@@ -983,7 +983,7 @@
   .mod-cidade-nome { font-size: 14px; color: #4472C4; font-weight: bold; }
   .mod-horario { font-size: 13.5px; color: #1F2937; font-weight: bold; margin-top: 4px; }
   .mod-centro { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 10px; padding: 26px 10px 14px; border-left: 1px dashed #C5CED9; border-right: 1px dashed #C5CED9; }
-  .mod-voo-pill { background: #EEF2F7; border: 1px solid #9AAAC2; border-radius: 4px; padding: 5px 10px; font-size: 14px; font-weight: bold; color: #1B2C80; }
+  .mod-voo-pill { background: #D0DAEA; border: 1px solid #9AAAC2; border-radius: 4px; padding: 5px 10px; font-size: 14px; font-weight: bold; color: #1B2C80; }
   .mod-duracao { font-size: 13px; font-weight: bold; color: #4B5563; }
   .mod-grade { display: grid; grid-template-columns: 1.55fr 1fr 1fr 1.4fr 1.05fr; gap: 0 10px; align-items: center; border-top: 1px solid #C5CED9; padding: 12px 14px; background: #F7F9FC; }
   .mod-campo { display: flex; flex-direction: column; gap: 6px; }

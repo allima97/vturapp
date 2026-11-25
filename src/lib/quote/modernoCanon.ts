@@ -5,7 +5,8 @@
  * Deve ser injetado no FIM do <style> de cada documento, para prevalecer
  * sobre as regras rot3-* legadas (mesma especificidade, declarado depois).
  * Cores: tokens do sistema (#1B2C80 navy, #4472C4 azul médio, #9AAAC2 borda,
- * #C5CED9 divisória, #D0DAEA faixa, #EEF2F7 fundo claro).
+ * #C5CED9 divisória, #D0DAEA faixa/realce — cor única de fundo de blocos,
+ * cabeçalhos, etiquetas e chips —, #F7F9FC fundo de caixas de texto).
  */
 export const MODERNO_CANON_CSS = `
 /* ─── Moderno canônico ─────────────────────────────────────── */
@@ -116,6 +117,16 @@ export const MODERNO_CANON_CSS = `
 .rot3-infos img { max-width: 100%; margin-top: 8px; border-radius: 6px; }
 
 .rot3-doc-footer { margin-top: 24px; padding-top: 8px; border-top: 1px solid #C5CED9; font-size: 8pt; color: #6B7280; }
+
+/* Cor única de realce: bloco de resumo, etiquetas de dia/data e chips usam a
+   mesma faixa dos cabeçalhos das tabelas. */
+.rot3-bloco, .rot3-dia-pill, .rot3-oc-pill, .rot3-dia-chip, .rot3-qtd { background: #D0DAEA; }
+
+/* Impressão: tabela não se parte entre páginas (vai inteira para a próxima,
+   levando o título junto). Se for maior que uma página, cada pedaço fecha a
+   própria moldura em vez de ficar aberto. */
+.rot3-tabela, .rot3-dgrupo { break-inside: avoid; page-break-inside: avoid; }
+.rot3-tabela { -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 `;
 
 /** Lista de itens com ✓ (texto já escapado). */
