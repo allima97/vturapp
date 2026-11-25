@@ -1917,11 +1917,6 @@ function rot3Linha(c1: string, c2: string, c3: string) {
 const rot3T = (s: string) => (s ? `<div class="rot3-t">${s}</div>` : '');
 const rot3S = (s: string) => (s ? `<div class="rot3-s">${s}</div>` : '');
 const rot3A = (s: string) => (s ? `<div class="rot3-a">${s}</div>` : '');
-const rot3Qtd = (n: string | number | null | undefined) =>
-  n != null && String(n) !== '' && String(n) !== '-' && String(n) !== '0'
-    ? `<div class="rot3-qtd">Qtd: ${escHtml(String(n))}</div>`
-    : '';
-
 function rot3LinhasDetalhe(item: QuoteItemForPdf): string[] {
   const tipo = rot3Tipo(item);
   const details = lerDetalhes(item);
@@ -1932,7 +1927,6 @@ function rot3LinhasDetalhe(item: QuoteItemForPdf): string[] {
 
   if (tipo === 'voo' || tipo === 'trem') {
     const legs = rot3Legs(item);
-    const qtd = getFlightPassengerQuantity(item);
     if (!legs.length) return [];
     return legs.map((leg) => {
       const dataSaida = dataValidaBR(leg.dataSaida);
@@ -1940,8 +1934,7 @@ function rot3LinhasDetalhe(item: QuoteItemForPdf): string[] {
       if (tipo === 'trem') {
         const c1 =
           rot3T(escHtml([title, leg.cia].filter(Boolean).join(' • '))) +
-          rot3S(escHtml([leg.numero ? `Trem ${leg.numero}` : '', dataSaida].filter(Boolean).join(' • '))) +
-          rot3Qtd(qtd);
+          rot3S(escHtml([leg.numero ? `Trem ${leg.numero}` : '', dataSaida].filter(Boolean).join(' • ')));
         const c2 =
           rot3T(escHtml(`${[leg.cidOrig, leg.horaSaida].filter(Boolean).join(' ')} → ${[leg.cidDest, leg.horaChegada].filter(Boolean).join(' ')}${rot3MaisDias(leg)}`)) +
           rot3S(escHtml(dataCheg && dataCheg !== dataSaida ? `Chegada em ${leg.cidDest} em ${dataCheg}` : 'Trecho terrestre'));
@@ -2010,8 +2003,7 @@ function rot3LinhasDetalhe(item: QuoteItemForPdf): string[] {
   if (!resumo.length && rotuloLocal[tipo]) resumo.push(`${rotuloLocal[tipo]}${city ? ` em ${city}` : ''}`);
   const c1 =
     rot3T(escHtml([title, city].filter(Boolean).join(' • '))) +
-    rot3S(escHtml([periodo, duracao].filter(Boolean).join(' • '))) +
-    rot3Qtd(item.quantity);
+    rot3S(escHtml([periodo, duracao].filter(Boolean).join(' • ')));
   const c2 = rot3T(escHtml(resumo[0] || '')) + resumo.slice(1, 3).map((r) => rot3S(escHtml(r))).join('');
   const c3 = rot3ChecksHtml([pax].filter(Boolean).map(escHtml));
   return [rot3Linha(c1, c2, c3)];
