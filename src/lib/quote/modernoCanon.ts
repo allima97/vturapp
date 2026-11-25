@@ -127,6 +127,13 @@ export const MODERNO_CANON_CSS = `
    própria moldura em vez de ficar aberto. */
 .rot3-tabela, .rot3-dgrupo { break-inside: avoid; page-break-inside: avoid; }
 .rot3-tabela { -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+
+/* Tabelas sem moldura (mesmo estilo do detalhamento do Orçamento): faixa de
+   cabeçalho arredondada em cima e linhas separadas por um traço embaixo. */
+.rot3-tabela { border: none; border-radius: 0; overflow: visible; background: transparent; }
+.rot3-tabela > .rot3-grupo-header, .rot3-tabela > .rot3-hotel-header-row { border: none; border-radius: 8px 8px 0 0; }
+.rot3-tabela > .rot3-grupo-header ~ .rot3-grupo-header { margin-top: 18px; }
+.rot3-tabela .rot3-row:last-child { border-bottom: 1px solid #C5CED9; }
 `;
 
 /** Lista de itens com ✓ (texto já escapado). */
