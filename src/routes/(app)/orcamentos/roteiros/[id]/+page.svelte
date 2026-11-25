@@ -1740,7 +1740,7 @@
     ].join('\n');
     const rot3ModernoBodyHtml = `
       <div class="rot3-doc">
-        <div class="rot3-kicker-bar"></div>
+        <div class="rot3-kicker-bar"><span></span><span></span></div>
         <div class="rot3-kicker">ROTEIRO PERSONALIZADO</div>
         <h1 class="rot3-title">${escapePreviewHtml((nome || 'Roteiro').toUpperCase())}</h1>
         ${clienteNome ? `<div class="rot3-para">Para: <strong>${escapePreviewHtml(clienteNome)}</strong></div>` : ''}
@@ -1886,7 +1886,7 @@
             }
 
             /* ─── Modelo Moderno do Roteiro (rot3-*) ─────────────────────────────── */
-            .rot3-doc { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1F2937; max-width: 720px; margin: 0 auto; border-top: 4px solid #1B2C80; padding-top: 20px; }
+            .rot3-doc { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1F2937; max-width: 720px; margin: 0 auto; padding-top: 14px; }
             .rot3-kicker { font-size: 8.5pt; font-weight: bold; letter-spacing: 2.5px; text-transform: uppercase; color: #1B2C80; text-align: center; margin-bottom: 4px; }
             .rot3-title { font-size: 26pt; font-weight: bold; color: #1B2C80; margin: 2px 0 6px; line-height: 1.1; text-align: center; }
             .rot3-para { font-size: 10pt; color: #1F2937; margin: 0 0 2px; text-align: center; }
@@ -1899,11 +1899,11 @@
             .rot3-itin { margin: 0 0 20px; }
             .rot3-itin-titulo { font-size: 10pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #1B2C80; border-bottom: 1.5px solid #C5CED9; padding-bottom: 6px; margin: 0 0 14px; text-align: center; }
             .rot3-dias-lista { }
-            .rot3-kicker-bar { width: 40px; height: 3px; background: #1B2C80; margin: 0 auto 10px; border-radius: 2px; }
+            .rot3-kicker-bar { width: 80px; height: 4px; display: flex; overflow: hidden; margin: 0 auto 14px; border-radius: 2px; } .rot3-kicker-bar span:first-child { flex: 1; background: #1B2C80; } .rot3-kicker-bar span:last-child { flex: 1; background: #4472C4; }
             .rot3-dia { display: flex; gap: 0; margin-bottom: 10px; break-inside: avoid; page-break-inside: avoid; }
             .rot3-dia-pill-col { width: 90px; flex-shrink: 0; padding-top: 2px; }
             .rot3-dia-mid { display: flex; flex-direction: column; align-items: center; width: 20px; flex-shrink: 0; padding-top: 6px; }
-            .rot3-dia-pill { background: #1B2C80; color: #fff; font-size: 7.5pt; font-weight: bold; padding: 4px 8px; border-radius: 999px; text-align: center; white-space: nowrap; letter-spacing: 0.3px; }
+            .rot3-dia-pill { background: #DBEAFE; color: #1B2C80; font-size: 7.5pt; font-weight: bold; padding: 4px 8px; border-radius: 999px; text-align: center; white-space: nowrap; letter-spacing: 0.3px; }
             .rot3-dia-dot { width: 10px; height: 10px; border-radius: 50%; background: #1B2C80; flex-shrink: 0; }
             .rot3-dia-line { width: 2px; background: #C5CED9; flex: 1; min-height: 20px; margin-top: 4px; }
             .rot3-dia-body { flex: 1; border: 1.5px solid #C5CED9; border-radius: 10px; padding: 10px 14px; background: #fff; min-width: 0; }
@@ -1914,7 +1914,7 @@
             .rot3-secao { margin: 24px 0 0; }
             .rot3-secao-titulo { font-size: 10pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #1B2C80; border-bottom: 1.5px solid #C5CED9; padding-bottom: 6px; margin: 0 0 14px; text-align: center; }
             .rot3-tabela { border: 1.5px solid #C5CED9; border-radius: 8px; overflow: hidden; margin-bottom: 8px; }
-            .rot3-grupo-header { background: #1B2C80; color: #fff; font-size: 8.5pt; font-weight: bold; letter-spacing: 1px; padding: 5px 12px; }
+            .rot3-grupo-header { background: #EEF2F7; color: #1B2C80; font-size: 8.5pt; font-weight: bold; letter-spacing: 1px; padding: 5px 12px; border-bottom: 1px solid #C5CED9; }
             .rot3-voo-row { display: flex; gap: 10px; padding: 8px 12px; border-bottom: 1px solid #EEF2F7; break-inside: avoid; page-break-inside: avoid; }
             .rot3-voo-row:last-child { border-bottom: none; }
             .rot3-voo-c1 { flex: 2; min-width: 0; }
@@ -1933,7 +1933,7 @@
             .rot3-chks-row { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 4px; }
             .rot3-voo-label { font-weight: bold; color: #1B2C80; }
             .rot3-chip { display: inline-block; background: #EEF2F7; color: #1B2C80; border-radius: 999px; font-size: 7.5pt; font-weight: bold; padding: 2px 7px; margin: 1px 0; border: 1px solid #C5CED9; }
-            .rot3-hotel-header-row { display: flex; gap: 10px; background: #1B2C80; color: #fff; font-size: 8pt; font-weight: bold; letter-spacing: 0.5px; padding: 5px 12px; }
+            .rot3-hotel-header-row { display: flex; gap: 10px; background: #EEF2F7; color: #1B2C80; font-size: 8pt; font-weight: bold; letter-spacing: 0.5px; padding: 5px 12px; border-bottom: 1px solid #C5CED9; }
             .rot3-hotel-row { display: flex; gap: 10px; padding: 8px 12px; border-bottom: 1px solid #EEF2F7; break-inside: avoid; page-break-inside: avoid; }
             .rot3-hotel-row:last-child { border-bottom: none; }
             .rot3-hotel-c1 { flex: 2.5; min-width: 0; }
@@ -1965,8 +1965,8 @@
               .rot3-doc { max-width: none; }
               .rot3-dia { break-inside: avoid; page-break-inside: avoid; }
               .rot3-bloco { background: #EEF2F7; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-              .rot3-grupo-header { background: #1B2C80; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-              .rot3-hotel-header-row { background: #1B2C80; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .rot3-grupo-header { background: #EEF2F7; color: #1B2C80; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .rot3-hotel-header-row { background: #EEF2F7; color: #1B2C80; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
               .rot3-pag-header-row { background: #f8f9fb; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
               .rot3-pag-obs { background: #F8F9FB; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
               .rot3-inv-footer { background: #1B2C80; -webkit-print-color-adjust: exact; print-color-adjust: exact; }

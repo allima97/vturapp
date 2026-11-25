@@ -421,6 +421,7 @@
     {@const ultimo3 = item.trechos[item.trechos.length - 1]}
     {@const conexoes3 = [...new Set(item.trechos.slice(0, -1).map((t) => t.destino))]}
     <div class="mod-doc">
+      <div class="mod-kicker-bar"><span></span><span></span></div>
       <header class="mod-cabecalho">
         <div class="mod-cia-linha">{cias.toUpperCase()} • BILHETE ELETRÔNICO</div>
         <h1 class="mod-titulo">COMPROVANTE DE VIAGEM</h1>
@@ -905,8 +906,17 @@
     font-size: 13px;
     color: #1F2937;
   }
-  .mod-cabecalho {
-    border-top: 4px solid #1B2C80;
+  .mod-kicker-bar {
+    display: flex;
+    width: 80px;
+    height: 4px;
+    margin: 0 auto 14px;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .mod-kicker-bar span:first-child { flex: 1; background: #1B2C80; }
+  .mod-kicker-bar span:last-child { flex: 1; background: #4472C4; }
+    .mod-cabecalho {
     border-bottom: 1px solid #C5CED9;
     padding: 18px 0 14px;
     margin-bottom: 18px;
@@ -933,6 +943,7 @@
     display: flex;
     gap: 18px;
     flex-wrap: wrap;
+    justify-content: center;
   }
   .mod-cards-row {
     display: grid;
@@ -1002,7 +1013,7 @@
     font-weight: bold;
     letter-spacing: 1px;
     padding: 3px 10px;
-    border-radius: 20px;
+    border-radius: 4px;
     text-transform: uppercase;
   }
   .mod-trecho-data {
@@ -1093,8 +1104,8 @@
     margin-bottom: 16px;
   }
   .mod-tabela thead th {
-    background: #1B2C80;
-    color: white;
+    background: #EEF2F7;
+    color: #1B2C80;
     font-weight: bold;
     text-align: left;
     padding: 8px 10px;
@@ -1111,8 +1122,8 @@
     border-bottom: 0;
   }
   .mod-atencao {
-    background: #FEF9C3;
-    border: 1.5px solid #FDE68A;
+    background: #EEF2F7;
+    border: 1.5px solid #C5CED9;
     border-radius: 8px;
     padding: 12px 14px;
     margin: 16px 0;
@@ -1121,7 +1132,7 @@
   }
   .mod-atencao strong {
     display: block;
-    color: #92400E;
+    color: #1B2C80;
     margin-bottom: 6px;
     font-size: 13px;
   }

@@ -2154,8 +2154,9 @@ function buildModernoPropostaBodyHtml(params: {
     ? `<div class="rot3-cons"><b>${escHtml(consultor)}</b>${contatos ? `<span>${escHtml(contatos)}</span>` : ''}<span>Consultor de viagens</span></div>`
     : '';
 
+  const cronogramaModernoHtml = showDetalhes ? propostaCronogramaHtml(items) : '';
   return `<div class="rot3-doc">
-  <div class="rot3-kicker-bar"></div>
+  <div class="rot3-kicker-bar"><span></span><span></span></div>
   <div class="rot3-kicker">PROPOSTA DE VIAGEM</div>
   <h1 class="rot3-title">${escHtml(destino)}</h1>
   <div class="rot3-para">Para: <strong>${escHtml(clientName)}</strong></div>
@@ -2163,6 +2164,7 @@ function buildModernoPropostaBodyHtml(params: {
   ${consHtml}
   ${cidadesHtml}
   ${ctaHtml}
+  ${cronogramaModernoHtml}
   ${detalhesHtml}
   ${investimentoHtml}
   <div class="rot3-doc-footer">Proposta de Viagem${clientName ? ` · ${escHtml(clientName)}` : ''}</div>
@@ -2501,8 +2503,8 @@ export function buildQuotePreviewHtmlSync(params: {
 
     .modelo[hidden] { display: none !important; }
     /* ─── Modelo Moderno (rot3-*) ─────────────────────────────── */
-    .rot3-doc { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1F2937; max-width: 720px; margin: 0 auto; border-top: 4px solid #1B2C80; padding-top: 20px; }
-    .rot3-kicker-bar { width: 40px; height: 3px; background: #1B2C80; margin: 0 auto 10px; border-radius: 2px; }
+    .rot3-doc { font-family: Arial, Helvetica, sans-serif; font-size: 10pt; color: #1F2937; max-width: 720px; margin: 0 auto; padding-top: 14px; }
+    .rot3-kicker-bar { width: 80px; height: 4px; display: flex; overflow: hidden; margin: 0 auto 14px; border-radius: 2px; } .rot3-kicker-bar span:first-child { flex: 1; background: #1B2C80; } .rot3-kicker-bar span:last-child { flex: 1; background: #4472C4; }
     .rot3-kicker { font-size: 8.5pt; font-weight: bold; letter-spacing: 2.5px; text-transform: uppercase; color: #1B2C80; text-align: center; margin-bottom: 4px; }
     .rot3-title { font-size: 26pt; font-weight: bold; color: #1B2C80; margin: 2px 0 6px; line-height: 1.1; text-align: center; }
     .rot3-para { font-size: 10pt; color: #1F2937; margin: 0 0 2px; text-align: center; }
@@ -2520,7 +2522,7 @@ export function buildQuotePreviewHtmlSync(params: {
     .rot3-secao { margin: 24px 0 0; }
     .rot3-secao-titulo { font-size: 10pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #1B2C80; border-bottom: 1.5px solid #C5CED9; padding-bottom: 6px; margin: 0 0 14px; text-align: center; }
     .rot3-tabela { border: 1.5px solid #C5CED9; border-radius: 12px; overflow: hidden; background: #fff; margin-bottom: 16px; }
-    .rot3-grupo-header { background: #1B2C80; color: #fff; font-size: 8.5pt; font-weight: bold; letter-spacing: 1px; padding: 5px 12px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .rot3-grupo-header { background: #EEF2F7; color: #1B2C80; font-size: 8.5pt; font-weight: bold; letter-spacing: 1px; padding: 5px 12px; border-bottom: 1px solid #C5CED9; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .rot3-flight-vcard { padding: 8px 12px; border-bottom: 1px solid #EEF2F7; break-inside: avoid; page-break-inside: avoid; }
     .rot3-flight-vcard:last-child { border-bottom: none; }
     .rot3-hotel-vcard { padding: 8px 12px; border-bottom: 1px solid #EEF2F7; break-inside: avoid; page-break-inside: avoid; }
@@ -2560,6 +2562,14 @@ export function buildQuotePreviewHtmlSync(params: {
     .rot3-pag-pax { font-size: 8pt; color: #6B7280; }
     .rot3-pag-obs { background: #F8F9FB; border-top: 1px solid #9aaac2; padding: 10px 14px; font-size: 8pt; color: #374151; line-height: 1.5; border-radius: 0 0 18px 18px; }
     .rot3-pag-obs-label { font-weight: 700; color: #1B2C80; }
+    /* Moderno overrides for cronograma (pv-cron classes scoped to rot3-doc) */
+    .rot3-doc .pv-sec { margin: 0 0 20px; }
+    .rot3-doc .pv-sec-title { font-size: 10pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #1B2C80; border-bottom: 1.5px solid #C5CED9; padding-bottom: 6px; margin: 0 0 10px; text-align: center; }
+    .rot3-doc .pv-cron { display: flex; align-items: flex-start; gap: 10px; padding: 7px 10px; border: 1.5px solid #C5CED9; border-radius: 8px; margin-bottom: 6px; break-inside: avoid; background: #fff; }
+    .rot3-doc .pv-cron-period { flex-shrink: 0; min-width: 70px; background: #DBEAFE; color: #1B2C80; font-weight: bold; font-size: 7.5pt; padding: 4px 8px; border-radius: 999px; text-align: center; white-space: nowrap; }
+    .rot3-doc .pv-cron-body { flex: 1; min-width: 0; }
+    .rot3-doc .pv-cron-body b { font-size: 9pt; color: #1F2937; }
+    .rot3-doc .pv-cron-body p { margin: 3px 0 0; color: #4B5563; font-size: 8pt; line-height: 1.5; }
     .rot3-doc-footer { margin-top: 24px; padding-top: 8px; border-top: 1px solid #C5CED9; font-size: 8pt; color: #9CA3AF; display: flex; justify-content: space-between; }
     @media print {
       .rot3-bloco { background: #EEF2F7; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
