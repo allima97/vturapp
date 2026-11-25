@@ -19,7 +19,7 @@
   } from '$lib/passagens/importacao';
 
   let item: PassagemImportada | null = null;
-  let modeloPdf: 'padrao' | 'bilhete' | 'moderno' = 'padrao';
+  let modeloPdf: 'padrao' | 'moderno' = 'padrao';
   let cidades: AirportCodeCityLookup = {};
   let cidadesIndisponiveis = false;
   let error = '';
@@ -211,7 +211,6 @@
           >Modelo
           <select bind:value={modeloPdf}>
             <option value="padrao">Padrão</option>
-            <option value="bilhete">Bilhete</option>
             <option value="moderno">Moderno</option>
           </select>
         </label>
@@ -343,115 +342,6 @@
     <footer>
       {[...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')} — Reserva: {item.localizador}
     </footer>
-    {:else if modeloPdf === 'bilhete'}
-    {@const cias = [...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')}
-    <header class="bilhete-top">
-      <div>
-        <span class="bilhete-cia-linha">{cias} • Bilhete eletrônico</span>
-        <h1 class="bilhete-titulo">Comprovante de Viagem</h1>
-      </div>
-    </header>
-    <div class="bilhete-meta">
-      <span>Passageiros: {resumoPassageiros(item.passageiros)}</span>
-      {#if item.emissao}<span>• Emissão: {data(item.emissao, true)}</span>{/if}
-    </div>
-    {@const primeiro = item.trechos[0]}
-    {@const ultimo = item.trechos[item.trechos.length - 1]}
-    {@const conexoes = [...new Set(item.trechos.slice(0, -1).map((t) => t.destino))]}
-    <section class="bilhete-rota-card">
-      <div class="bilhete-rota-label">Rota da Viagem</div>
-      <div class="bilhete-rota-grande">
-        {primeiro ? `${cidade(primeiro.origem, primeiro.cidadeOrigem) || primeiro.origem} (${primeiro.origem})` : ''}
-        →
-        {ultimo ? `${cidade(ultimo.destino, ultimo.cidadeDestino) || ultimo.destino} (${ultimo.destino})` : ''}
-      </div>
-      {#if conexoes.length || primeiro}
-        <div class="bilhete-rota-sub">
-          {#if conexoes.length}Conexão via {conexoes.map((c) => `${cidade(c) || c} (${c})`).join(', ')} • {/if}
-          {#if primeiro}{data(primeiro.saida, true)}{/if}
-        </div>
-      {/if}
-    </section>
-    <section class="bilhete-pnr-card">
-      <div class="bilhete-pnr-label">Código de Reserva (PNR)</div>
-      <strong class="bilhete-pnr-codigo">{item.localizador}</strong>
-    </section>
-    <h2>ITINERÁRIO DE VOO</h2>
-    {#each item.trechos as trecho, i}
-      <section class="bilhete-trecho">
-        <div class="bilhete-trecho-top">
-          <span>{tituloTrecho(item.trechos, i)}&nbsp;&nbsp;{data(trecho.saida, true)}</span>
-          <strong>{trecho.companhia} • Voo {trecho.voo}</strong>
-        </div>
-        <div class="bilhete-trajeto">
-          <div class="bilhete-local">
-            <strong class="bilhete-codigo">{trecho.origem}</strong>
-            <span>{cidade(trecho.origem, trecho.cidadeOrigem) || 'Cidade não informada'}</span>
-            <span class="bilhete-quando">{data(trecho.saida)} • {horario(trecho.saida)}</span>
-          </div>
-          <div class="bilhete-meio">
-            <span class="bilhete-voo-linha">Voo {trecho.voo}</span>
-            <span class="bilhete-duracao">Duração: {trecho.duracao || 'Não informada'}</span>
-            {#if avisoChegada(trecho.saida, trecho.chegada)}
-              <small class="aviso-chegada">{avisoChegada(trecho.saida, trecho.chegada)}</small>
-            {/if}
-          </div>
-          <div class="bilhete-local bilhete-destino">
-            <strong class="bilhete-codigo">{trecho.destino}</strong>
-            <span>{cidade(trecho.destino, trecho.cidadeDestino) || 'Cidade não informada'}</span>
-            <span class="bilhete-quando">{data(trecho.chegada)} • {horario(trecho.chegada)}</span>
-          </div>
-        </div>
-        <div class="bilhete-grade">
-          <div class="bilhete-campo"><span class="rotulo">COMPANHIA</span><strong>{trecho.companhia}</strong></div>
-          <div class="bilhete-campo"><span class="rotulo">CLASSE</span><strong>{trecho.classe || 'Não informada'}</strong></div>
-          <div class="bilhete-campo"><span class="rotulo">TARIFA</span><strong>{trecho.tarifa?.trim() || '-'}</strong></div>
-          <div class="bilhete-campo"><span class="rotulo">ASSENTOS</span><strong>{assentos(i)}</strong></div>
-          <div class="bilhete-campo"><span class="rotulo">STATUS DO VOO</span><strong>{trecho.status || 'Não informado'}{trecho.status ? ' ✓' : ''}</strong></div>
-        </div>
-      </section>
-    {/each}
-    <h2>PASSAGEIROS E BILHETES ELETRÔNICOS</h2>
-    <table>
-      <thead
-        ><tr
-          ><th>Nome do passageiro</th><th>Tipo</th><th>Número do bilhete</th><th
-            >Status do bilhete</th
-          ></tr
-        ></thead
-      >
-      <tbody>
-        {#each item.passageiros as passageiro}
-          <tr
-            ><td><strong>{nomePassageiroMaiusculo(passageiro.nome)}</strong></td><td
-              >{passageiro.tipo === 'ADT'
-                ? 'Adulto'
-                : passageiro.tipo === 'CHD'
-                  ? 'Criança'
-                  : passageiro.tipo === 'INF'
-                    ? 'Infant'
-                    : 'Não informado'}</td
-            ><td>{passageiro.bilhete || 'Não informado'}</td><td
-              >{passageiro.status || 'Não informado'}{passageiro.status ? ' ✓' : ''}</td
-            ></tr
-          >
-        {/each}
-      </tbody>
-    </table>
-    <aside class="aviso-embarque" aria-label="Orientações de embarque">
-      <strong>Atenção ao horário de seu embarque!</strong>
-      <p>
-        Apresente-se no aeroporto indicado com pelo menos 3 horas de antecedência para voos
-        internacionais e 2 horas de antecedência para voos nacionais.
-      </p>
-      <p>
-        <strong>
-          Para um maior controle, baixe o aplicativo da companhia aérea ({cias}) e acompanhe a
-          situação de seu voo utilizando o código de reserva {item.localizador}.
-        </strong>
-      </p>
-    </aside>
-    <footer>{cias} • Reserva: {item.localizador}</footer>
     {:else if modeloPdf === 'moderno'}
     {@const cias = [...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')}
     {@const rotaInfo = rotaModerno(item.trechos)}
@@ -760,154 +650,6 @@
     font-size: 13px;
     background: #fff;
     color: #1F2937;
-  }
-  :global(.bilhete-top) {
-    padding-bottom: 14px;
-    border-bottom: 2px solid #1B2C80;
-  }
-  :global(.bilhete-cia-linha) {
-    display: block;
-    color: #1B2C80;
-    font-size: 13px;
-    font-weight: bold;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-  }
-  :global(.bilhete-titulo) {
-    margin: 4px 0 0;
-    color: #1B2C80;
-    font-size: 24px;
-    font-weight: bold;
-  }
-  :global(.bilhete-meta) {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px 10px;
-    margin-top: 10px;
-    font-size: 12px;
-    color: #4B5563;
-  }
-  :global(.bilhete-rota-card) {
-    border: 1px solid #C5CED9;
-    border-left: 4px solid #1B2C80;
-    border-radius: 6px;
-    background: #EEF2F7;
-    padding: 14px 18px;
-    margin-top: 16px;
-    break-inside: avoid;
-  }
-  :global(.bilhete-rota-label) {
-    font-size: 10px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: #6B7280;
-    margin-bottom: 6px;
-  }
-  :global(.bilhete-rota-grande) {
-    font-size: 22px;
-    font-weight: bold;
-    color: #1B2C80;
-  }
-  :global(.bilhete-rota-sub) {
-    margin-top: 6px;
-    font-size: 12px;
-    color: #4B5563;
-  }
-  :global(.bilhete-pnr-card) {
-    border: 1px solid #C5CED9;
-    border-radius: 6px;
-    padding: 12px 18px;
-    margin-top: 12px;
-    display: flex;
-    align-items: baseline;
-    gap: 14px;
-    break-inside: avoid;
-  }
-  :global(.bilhete-pnr-label) {
-    font-size: 10px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    color: #6B7280;
-  }
-  :global(.bilhete-pnr-codigo) {
-    color: #1B2C80;
-    font-size: 26px;
-    letter-spacing: 2px;
-  }
-  :global(.bilhete-trecho) {
-    border: 1px solid #C5CED9;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    overflow: hidden;
-    break-inside: avoid;
-  }
-  :global(.bilhete-trecho-top) {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 8px 14px;
-    background: #D0DAEA;
-    color: #1B2C80;
-    font-size: 11px;
-    font-weight: bold;
-  }
-  :global(.bilhete-trajeto) {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 12px;
-    align-items: center;
-    padding: 14px;
-  }
-  :global(.bilhete-local > strong),
-  :global(.bilhete-local > span) {
-    display: block;
-  }
-  :global(.bilhete-codigo) {
-    color: #1B2C80;
-    font-size: 24px;
-    letter-spacing: 1px;
-  }
-  :global(.bilhete-local > span) {
-    color: #1F2937;
-    font-size: 12px;
-  }
-  :global(.bilhete-quando) {
-    color: #6B7280 !important;
-    font-size: 11px !important;
-  }
-  :global(.bilhete-destino) {
-    text-align: right;
-  }
-  :global(.bilhete-meio) {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    color: #6B7280;
-    font-size: 10px;
-    text-align: center;
-  }
-  :global(.bilhete-voo-linha) {
-    font-weight: bold;
-    color: #1B2C80;
-  }
-  :global(.bilhete-duracao) {
-    font-weight: bold;
-  }
-  :global(.bilhete-grade) {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-    gap: 10px;
-    border-top: 1px dashed #C5CED9;
-    padding: 10px 14px;
-  }
-  :global(.bilhete-campo strong) {
-    display: block;
-    font-size: 12px;
-    color: #1F2937;
-    overflow-wrap: anywhere;
   }
   @media (max-width: 600px) {
     .cabecalho,
