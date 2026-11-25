@@ -2501,9 +2501,7 @@ function buildModernoPropostaBodyHtml(params: {
   const metaVal = (v: string) => `<span class="rot3-meta-val">${escHtml(v)}</span>`;
   const metaItens = [
     period ? `${calIco}<b>Período:</b> ${metaVal(period)}` : '',
-    viajantes ? `${pplIco}<b>Viajantes:</b> ${metaVal(viajantes)}` : '',
-    dateLabel ? `<b>Emissão:</b> ${metaVal(dateLabel)}` : '',
-    validity ? `<b>Validade:</b> ${metaVal(validity)}` : ''
+    viajantes ? `${pplIco}<b>Viajantes:</b> ${metaVal(viajantes)}` : ''
   ].filter(Boolean);
 
   const ctaHtml = `<div class="rot3-bloco-cta"><b>Reserve com o ${escHtml(primeiroNome || 'consultor')}:</b>${validity ? ` Tarifas válidas até <b>${escHtml(validity)}</b> •` : ''} Atendimento direto via WhatsApp.</div>`;
