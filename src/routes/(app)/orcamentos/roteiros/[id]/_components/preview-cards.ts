@@ -598,3 +598,47 @@ export function renderRot3Carros(items: RotPasseio[], formatDate: FormatDate) {
   if (!linhas.length) return '';
   return `<div class="rot3-tabela"><div class="rot3-hotel-header-row"><div>Veículo &amp; Locadora</div><div>Retirada &amp; Devolução</div><div>Inclusos</div></div>${linhas.join('')}</div>`;
 }
+
+/**
+ * Passeios e serviços no estilo Moderno: tabela igual à de Hotéis.
+ * "Passeio & Destino | Data | Detalhes".
+ */
+export function renderRot3Passeios(items: RotPasseio[], formatDate: FormatDate) {
+  const data = (valor?: string | null) => {
+    const d = formatDate(valor || '');
+    return d && d !== '-' ? d : '';
+  };
+  const ordenados = [...items].sort((a, b) =>
+    String(a.data_inicio || '9999').localeCompare(String(b.data_inicio || '9999'))
+  );
+  const linhas = ordenados.map((item) => {
+    const detalhes = detalhesPasseio(item);
+    const nome = text(item.passeio) || text(item.tipo) || 'Passeio';
+    const cidadeTipo = [nomeCidadeNoPdf(text(item.cidade)), text(item.tipo)]
+      .filter(Boolean)
+      .join(' • ');
+    const inicio = data(item.data_inicio);
+    const fim = data(item.data_fim);
+    const umDia = !fim || fim === inicio;
+    const passageiros = passageirosChipText(
+      Number(item.qtd_adultos) || 0,
+      Number(item.qtd_criancas) || 0,
+      Number(detalhes.infant) || 0
+    );
+    const ingressos = text(item.ingressos)
+      .split(/\n+/)
+      .map((linha) => linha.trim())
+      .filter(Boolean);
+    const checks = [text(detalhes.categoria), ...ingressos, passageiros].filter(Boolean);
+    const c1 = `<div class="rot3-t">${escapeHtml(nome)}</div>${cidadeTipo ? `<div class="rot3-a">${escapeHtml(cidadeTipo)}</div>` : ''}${text(item.fornecedor) ? `<div class="rot3-s">${escapeHtml(text(item.fornecedor))}</div>` : ''}`;
+    const c2 = umDia
+      ? inicio
+        ? `<div class="rot3-s"><b>Data:</b> ${escapeHtml(inicio)}</div>`
+        : ''
+      : `<div class="rot3-s"><b>Início:</b> ${escapeHtml(inicio)}</div><div class="rot3-s"><b>Término:</b> ${escapeHtml(fim)}</div>`;
+    const c3 = checks.map((c) => `<div class="rot3-chk">${escapeHtml(c)}</div>`).join('');
+    return `<div class="rot3-row"><div class="rot3-c1">${c1}</div><div class="rot3-c2">${c2}</div><div class="rot3-c3">${c3}</div></div>`;
+  });
+  if (!linhas.length) return '';
+  return `<div class="rot3-tabela"><div class="rot3-hotel-header-row"><div>Passeio &amp; Destino</div><div>Data</div><div>Detalhes</div></div>${linhas.join('')}</div>`;
+}

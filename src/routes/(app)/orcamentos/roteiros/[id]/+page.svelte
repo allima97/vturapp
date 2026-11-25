@@ -90,6 +90,7 @@
     renderPreviewSeguros,
     renderPreviewTrens,
     renderRot3Carros,
+    renderRot3Passeios,
     renderRot3Seguros,
     renderRot3Trens
   } from './_components/preview-cards';
@@ -1775,7 +1776,7 @@
       ${carrosHtml.trim() ? buildRot3Secao('ALUGUEL DE CARRO', renderRot3Carros(carrosItems, formatPreviewDate) || carrosHtml) : ''}
       ${buildRot3Secao('HOTÉIS SUGERIDOS', rot3HoteisHtml)}
       ${trensHtml.trim() ? buildRot3Secao('TREM', renderRot3Trens(trensItems, formatPreviewDate) || renderPreviewTrens(trensItems, formatPreviewDate, { moderno: true })) : ''}
-      ${passeiosHtml.trim() ? buildRot3Secao('PASSEIOS E SERVIÇOS', passeiosHtml) : ''}
+      ${passeiosHtml.trim() ? buildRot3Secao('PASSEIOS E SERVIÇOS', renderRot3Passeios(passeiosGerais, formatPreviewDate) || passeiosHtml) : ''}
       ${rot3OpcionaisHtml ? buildRot3Secao('Passeios Opcionais', rot3OpcionaisHtml) : ''}
       ${segurosHtml.trim() ? buildRot3Secao('SEGURO VIAGEM', renderRot3Seguros(segurosItems, formatPreviewDate) || segurosHtml) : ''}
       ${buildRot3Secao('INVESTIMENTO', rot3InvestHtml)}
