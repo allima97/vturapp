@@ -94,6 +94,7 @@
   import { roteiroCardStyles } from '$lib/utils/printLayout';
   import { roteiroCheckChips, roteiroPdfThemeCss, roteiroXChips } from '$lib/quote/roteiroPdfTheme';
   import { roteiroFlightStyles } from '$lib/quote/printFlights';
+  import { MODERNO_CANON_CSS, ROT3_META_SEP, rot3ChecksHtml } from '$lib/quote/modernoCanon';
   import AbaItinerario from './_components/AbaItinerario.svelte';
   import CidadeRoteiro from './_components/CidadeRoteiro.svelte';
   import AbaTransporte from './_components/AbaTransporte.svelte';
@@ -1536,7 +1537,7 @@
             if (cidadeCurta) cidadeAnterior2 = cidadeCurta;
             const dataMatch = /^(\d{4})-(\d{2})-(\d{2})/.exec(dia.data || '');
             const diaDDMM = dataMatch ? `${dataMatch[3]}/${dataMatch[2]}` : '';
-            const pillLabel = [`Dia ${index + 1}`, diaDDMM].filter(Boolean).join(' · ');
+            const pillLabel = [`Dia ${index + 1}`, diaDDMM].filter(Boolean).join(' • ');
             const rotaSetas = rota.replace(/\s+-\s+/g, ' → ');
             return `<div class="rot3-dia">
               <div class="rot3-dia-pill-col">
@@ -1544,7 +1545,6 @@
               </div>
               <div class="rot3-dia-mid">
                 <div class="rot3-dia-dot"></div>
-                ${index < diasItems.length - 1 ? '<div class="rot3-dia-line"></div>' : ''}
               </div>
               <div class="rot3-dia-body">
                 ${rotaSetas ? `<div class="rot3-dia-rota">${escapePreviewHtml(rotaSetas)}</div>` : ''}
@@ -1566,8 +1566,8 @@
     const _calIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px;position:relative;top:-1px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`;
     const _clkIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;margin-right:3px;position:relative;top:-1px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
     const rot3MetaItens = [
-      periodText ? `${_calIcon}Período: <span class="rot3-meta-val">${escapePreviewHtml(periodText)}</span>` : '',
-      duracao ? `${_clkIcon}Duração: <span class="rot3-meta-val">${escapePreviewHtml(duracao)} dias</span>` : ''
+      periodText ? `${_calIcon}<b>Período:</b> <span class="rot3-meta-val">${escapePreviewHtml(periodText)}</span>` : '',
+      duracao ? `${_clkIcon}<b>Duração:</b> <span class="rot3-meta-val">${escapePreviewHtml(duracao)} dias</span>` : ''
     ].filter(Boolean);
 
     // ── Moderno: section wrapper helper
@@ -1589,7 +1589,6 @@
     // ── Moderno: Passagem Aérea — cards verticais com cores rot3
     let rot3FlightsHtml = '';
     if (transportesItems.length > 0) {
-      const _chkIco = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:3px;flex-shrink:0"><circle cx="6" cy="6" r="5.5" fill="#1B2C80" opacity="0.13"/><path d="M3.2 6l1.8 1.8L9 4" stroke="#1B2C80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
       const groupsMap = new Map<string, typeof transportesItems>();
       for (const t of transportesItems) {
         const gk = [t.tipo_voo || '', t.cia_aerea || ''].filter(Boolean).join(' • ') || 'Voos';
@@ -1619,67 +1618,47 @@
           const horaCheg = (t.hora_chegada || '').replace(/\s*\(\+\d+\)\s*$/, '').trim();
           const msOff = new Date(t.data_fim || '').getTime() - new Date(t.data_voo || t.data_inicio || '').getTime();
           const dOff = (!isNaN(msOff) && msOff > 43200000) ? Math.round(msOff / 86400000) : 0;
-          const plusHtml = dOff > 0 ? `<sup class="rot3-voo-plus">+${dOff}</sup>` : '';
+          const plusHtml = dOff > 0 ? ` +${dOff}` : '';
           const fromPart = [aeOrig, horaSaida].filter(Boolean).join('\u00a0');
           const toPart = [aeDest, horaCheg].filter(Boolean).join('\u00a0');
           const rotaLine = (fromPart || toPart) ? `${escapePreviewHtml(fromPart)} → ${escapePreviewHtml(toPart)}${plusHtml}` : '';
           const dCheg = formatPreviewDate(t.data_fim || t.data_voo || '');
           const chegParts: string[] = ['Chegada'];
           if (cidDest) chegParts.push(`em ${escapePreviewHtml(cidDest)}`);
-          if (dCheg && dCheg !== dSaida) chegParts.push(`em ${dCheg}`);
-          else if (dCheg && !cidDest) chegParts.push(`em ${dCheg}`);
+          if (dCheg) chegParts.push(`em ${dCheg}`);
           const chegLine = chegParts.length > 1 ? chegParts.join(' ') : '';
           const checks = ([t.classe_reserva, t.tarifa_nome] as (string | undefined)[]).filter(s => String(s || '').trim());
-          const checksHtml = checks.map(s => `<div class="rot3-chk-item">${_chkIco}${escapePreviewHtml(String(s).trim())}</div>`).join('');
-          inner += `<div class="rot3-flight-vcard">
-            ${trechoDisplay ? `<div class="rot3-voo-trecho">${trechoDisplay}</div>` : ''}
-            ${c1Sub ? `<div class="rot3-voo-cia">${c1Sub}</div>` : ''}
-            ${rotaLine ? `<div class="rot3-voo-rota">${rotaLine}</div>` : ''}
-            ${chegLine ? `<div class="rot3-voo-info">${chegLine}</div>` : ''}
-            ${checksHtml ? `<div class="rot3-chks-row">${checksHtml}</div>` : ''}
-          </div>`;
+          const c1 = `<div class="rot3-t">${trechoDisplay}</div>${c1Sub ? `<div class="rot3-s">${c1Sub}</div>` : ''}`;
+          const c2 = `${rotaLine ? `<div class="rot3-t">${rotaLine}</div>` : ''}${chegLine ? `<div class="rot3-s">${chegLine}</div>` : ''}`;
+          const c3 = rot3ChecksHtml(checks.map((s) => escapePreviewHtml(String(s).trim())));
+          inner += `<div class="rot3-row"><div class="rot3-c1">${c1}</div><div class="rot3-c2">${c2}</div><div class="rot3-c3">${c3}</div></div>`;
         }
       }
       rot3FlightsHtml = `<div class="rot3-tabela">${inner}</div>`;
     }
 
-    // ── Moderno: Hotéis Sugeridos — cards verticais com cores rot3
+    // ── Moderno: Hotéis Sugeridos — tabela flat (Hotel & Destino | Período | Acomodação & Regime)
     let rot3HoteisHtml = '';
     if (hoteisItems.length > 0) {
-      const _chkIcoH = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:3px;flex-shrink:0"><circle cx="6" cy="6" r="5.5" fill="#1B2C80" opacity="0.13"/><path d="M3.2 6l1.8 1.8L9 4" stroke="#1B2C80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      // ── Agrupa por cidade para exibir rot3-grupo-header (fundo azul) por cidade
-      const hoteisGroupsMap = new Map<string, typeof hoteisItems>();
+      // Tabela flat com header e uma linha por hotel (sem agrupamento por cidade)
+      const colHdrHotel = `<div class="rot3-hotel-header-row"><div>Hotel &amp; Destino</div><div>Período de Hospedagem</div><div>Acomodação &amp; Regime</div></div>`;
+      let hoteisRows = '';
       for (const h of hoteisItems) {
-        const hCidade = nomeCidadeNoPdf(h.cidade || '') || 'Hotéis';
-        if (!hoteisGroupsMap.has(hCidade)) hoteisGroupsMap.set(hCidade, []);
-        hoteisGroupsMap.get(hCidade)!.push(h);
+        const ci = formatPreviewDate(h.data_inicio || '');
+        const co = formatPreviewDate(h.data_fim || '');
+        const nNoites = Number(h.noites || 0);
+        const nts = nNoites > 0 ? `${nNoites} noite${nNoites !== 1 ? 's' : ''}` : '';
+        const cidade = nomeCidadeNoPdf(h.cidade || '');
+        const cidadeNts = [cidade, nts].filter(Boolean).join(' • ');
+        const acomArr = ([h.apto, h.regime] as (string | undefined)[])
+          .map((s) => String(s || '').trim())
+          .filter(Boolean);
+        const c1 = `<div class="rot3-t">${escapePreviewHtml(h.hotel || '—')}</div>${cidadeNts ? `<div class="rot3-a">${escapePreviewHtml(cidadeNts)}</div>` : ''}${h.categoria ? `<div class="rot3-s">${escapePreviewHtml(h.categoria)}</div>` : ''}`;
+        const c2 = `${ci ? `<div class="rot3-s"><b>Check-in:</b> ${escapePreviewHtml(ci)}</div>` : ''}${co ? `<div class="rot3-s"><b>Check-out:</b> ${escapePreviewHtml(co)}</div>` : ''}`;
+        const c3 = rot3ChecksHtml(acomArr.map((s) => escapePreviewHtml(s)));
+        hoteisRows += `<div class="rot3-row"><div class="rot3-c1">${c1}</div><div class="rot3-c2">${c2}</div><div class="rot3-c3">${c3}</div></div>`;
       }
-      let hoteisInner = '';
-      for (const [hCidade, grpHoteis] of hoteisGroupsMap) {
-        hoteisInner += `<div class="rot3-grupo-header">${escapePreviewHtml(hCidade)}</div>`;
-        for (const h of grpHoteis) {
-          const ci = formatPreviewDate(h.data_inicio || '');
-          const co = formatPreviewDate(h.data_fim || '');
-          const nts = h.noites ? `${h.noites} noite${Number(h.noites) !== 1 ? 's' : ''}` : '';
-          const cidade = nomeCidadeNoPdf(h.cidade || '');
-          const cidadeNts = [cidade ? escapePreviewHtml(cidade) : '', nts ? escapePreviewHtml(nts) : ''].filter(Boolean).join(' • ');
-          const catLabel = h.categoria ? escapePreviewHtml(h.categoria) : '';
-          const checks = ([h.apto, h.regime] as (string | undefined)[]).filter(s => String(s || '').trim());
-          const checksHtml = checks.map(s => `<div class="rot3-chk-item">${_chkIcoH}${escapePreviewHtml(String(s).trim())}</div>`).join('');
-          const datasHtml = [
-            ci ? `<span class="rot3-voo-label">Check-in:</span> ${ci}` : '',
-            co ? `<span class="rot3-voo-label">Check-out:</span> ${co}` : ''
-          ].filter(Boolean).join(' &nbsp;•&nbsp; ');
-          hoteisInner += `<div class="rot3-hotel-vcard">
-            <div class="rot3-hotel-nome">${escapePreviewHtml(h.hotel || '—')}</div>
-            ${cidadeNts ? `<div class="rot3-hotel-cidade">${cidadeNts}</div>` : ''}
-            ${catLabel ? `<div class="rot3-hotel-cat">${catLabel}</div>` : ''}
-            ${datasHtml ? `<div class="rot3-hotel-info">${datasHtml}</div>` : ''}
-            ${checksHtml ? `<div class="rot3-chks-row">${checksHtml}</div>` : ''}
-          </div>`;
-        }
-      }
-      rot3HoteisHtml = `<div class="rot3-tabela">${hoteisInner}</div>`;
+      rot3HoteisHtml = `<div class="rot3-tabela">${colHdrHotel}${hoteisRows}</div>`;
     }
 
     // ── Moderno: Investimento e Pagamento — reutilizam as variáveis compartilhadas
@@ -1740,13 +1719,13 @@
     ].join('\n');
     const rot3ModernoBodyHtml = `
       <div class="rot3-doc">
-        <div class="rot3-kicker-bar"><span></span><span></span></div>
-        <div class="rot3-kicker">ROTEIRO PERSONALIZADO</div>
+        <div class="rot3-kicker-bar"><span></span><span></span><span></span></div>
+        <div class="rot3-kicker">Roteiro Personalizado</div>
         <h1 class="rot3-title">${escapePreviewHtml((nome || 'Roteiro').toUpperCase())}</h1>
-        ${clienteNome ? `<div class="rot3-para">Para: <strong>${escapePreviewHtml(clienteNome)}</strong></div>` : ''}
-        ${rot3MetaItens.length ? `<div class="rot3-meta">${rot3MetaItens.join(' &nbsp;•&nbsp; ')}</div>` : ''}
-        ${rot3CidadesResumo.length ? `<div class="rot3-bloco"><div class="rot3-bloco-label">RESUMO DO ROTEIRO</div><div class="rot3-rota">${escapePreviewHtml(rot3CidadesResumo.join(' → '))}</div></div>` : ''}
-        ${rot3DiasHtml ? `<section class="rot3-itin"><h2 class="rot3-itin-titulo">ITINERÁRIO DETALHADO</h2><div class="rot3-dias-lista">${rot3DiasHtml}</div></section>` : ''}
+        ${clienteNome ? `<div class="rot3-para"><b>Para:</b> ${escapePreviewHtml(clienteNome)}</div>` : ''}
+        ${rot3MetaItens.length ? `<div class="rot3-meta">${rot3MetaItens.join(ROT3_META_SEP)}</div>` : ''}
+        ${rot3CidadesResumo.length ? `<div class="rot3-bloco"><div class="rot3-bloco-label">Resumo do Roteiro</div><div class="rot3-rota">${rot3CidadesResumo.map((cid) => escapePreviewHtml(cid)).join('<span class="rot3-rota-sep">→</span>')}</div></div>` : ''}
+        ${rot3DiasHtml ? `<section class="rot3-itin"><h2 class="rot3-itin-titulo">Itinerário Detalhado</h2><div class="rot3-dias-lista">${rot3DiasHtml}</div></section>` : ''}
       </div>
       ${buildRot3Secao('PASSAGEM AÉREA', rot3FlightsHtml)}
       ${carrosHtml.trim() ? buildRot3Secao('ALUGUEL DE CARRO', carrosHtml) : ''}
@@ -1758,10 +1737,10 @@
       ${buildRot3Secao('INVESTIMENTO', rot3InvestHtml)}
       ${incluiTexto.trim() ? buildRot3Secao('O QUE ESTÁ INCLUÍDO', buildRot3InfoBox(incluiTexto.split('\n'), 'inclui')) : ''}
       ${naoIncluiTexto.trim() ? buildRot3Secao('O QUE NÃO ESTÁ INCLUÍDO', buildRot3InfoBox(naoIncluiTexto.split('\n'), 'naoinclui')) : ''}
-      ${mostrarInformacoesPdf ? buildRot3Secao('INFORMAÇÕES IMPORTANTES', buildRot3InfoBox(rot3InfoTexto.split('\n'))) : ''}
+      ${mostrarInformacoesPdf ? `<div class="rot3-secao"><div class="rot3-infos"><div class="rot3-infos-titulo">Informações Importantes</div><ul>${rot3InfoTexto.split('\n').map((s) => s.trim()).filter(Boolean).map((s) => `<li>${escapePreviewHtml(s)}</li>`).join('')}</ul></div></div>` : ''}
       ${mostrarPagamentoPdf && rot3PagamentosHtml ? buildRot3Secao('FORMAS DE PAGAMENTO', rot3PagamentosHtml) : ''}
       ${incluirCabecalhoRodapePdf && mostrarRodapePdf ? footerHtml : ''}
-      <div class="rot3-doc-footer">Roteiro Personalizado${nome ? ` · ${escapePreviewHtml(nome)}` : ''}</div>`;
+      <div class="rot3-doc-footer">Roteiro Personalizado${nome ? ` • ${escapePreviewHtml(nome)}` : ''}</div>`;
 
     const mostrarModerno = modeloInicial === 'moderno';
     const mostrarItinerario = false; // opção removida do seletor
@@ -1903,7 +1882,7 @@
             .rot3-dia { display: flex; gap: 0; margin-bottom: 10px; break-inside: avoid; page-break-inside: avoid; }
             .rot3-dia-pill-col { width: 90px; flex-shrink: 0; padding-top: 2px; }
             .rot3-dia-mid { display: flex; flex-direction: column; align-items: center; width: 20px; flex-shrink: 0; padding-top: 6px; }
-            .rot3-dia-pill { background: #DBEAFE; color: #1B2C80; font-size: 7.5pt; font-weight: bold; padding: 4px 8px; border-radius: 999px; text-align: center; white-space: nowrap; letter-spacing: 0.3px; }
+            .rot3-dia-pill { border: 1.5px solid #C5CED9; border-radius: 8px; padding: 4px 8px; font-size: 7.5pt; font-weight: bold; color: #1B2C80; text-align: center; white-space: nowrap; background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             .rot3-dia-dot { width: 10px; height: 10px; border-radius: 50%; background: #1B2C80; flex-shrink: 0; }
             .rot3-dia-line { width: 2px; background: #C5CED9; flex: 1; min-height: 20px; margin-top: 4px; }
             .rot3-dia-body { flex: 1; border: 1.5px solid #C5CED9; border-radius: 10px; padding: 10px 14px; background: #fff; min-width: 0; }
@@ -1974,6 +1953,7 @@
               .rot3-pag-header-row--padrao { background: #D0DAEA !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             }
             ${roteiroPdfThemeCss}
+            ${MODERNO_CANON_CSS}
           </style>
         </head>
         <body>

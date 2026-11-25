@@ -90,6 +90,43 @@
     );
   }
 
+  function capitalizar(texto: string) {
+    return texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : texto;
+  }
+
+  function dataHoraCurta(value: string) {
+    const h = horario(value);
+    return [data(value), h].filter(Boolean).join(' • ');
+  }
+
+  function duracaoFormatada(value: string) {
+    const v = (value || '').trim();
+    const m = /^(\d{1,2})\s*[:h]\s*(\d{2})/i.exec(v);
+    return m ? `${m[1].padStart(2, '0')}h${m[2]}` : v;
+  }
+
+  function rotaModerno(trechos: TrechoPassagem[]) {
+    const primeiro = trechos[0];
+    const ultimo = trechos[trechos.length - 1];
+    if (!primeiro || !ultimo) return { rota: '', detalhe: '' };
+    const idaVolta =
+      trechos.length > 1 && ultimo.destino.toUpperCase() === primeiro.origem.toUpperCase();
+    const fimIda = idaVolta ? Math.ceil(trechos.length / 2) - 1 : trechos.length - 1;
+    const destino = trechos[fimIda];
+    const conexoes = [
+      ...new Set(trechos.slice(0, fimIda).map((t) => aeroporto(t.destino, t.cidadeDestino)))
+    ];
+    const rota = `${aeroporto(primeiro.origem, primeiro.cidadeOrigem)} ${idaVolta ? '⇄' : '→'} ${aeroporto(destino.destino, destino.cidadeDestino)}`;
+    const detalhe = [
+      conexoes.length ? `Conexão via ${conexoes.join(', ')}` : idaVolta ? '' : 'Voo direto',
+      idaVolta ? 'Ida e volta' : '',
+      capitalizar(data(primeiro.saida, true))
+    ]
+      .filter(Boolean)
+      .join(' • ');
+    return { rota, detalhe };
+  }
+
   function resumoPassageiros(passageiros: PassageiroPassagem[]) {
     const categorias = [
       {
@@ -306,7 +343,7 @@
     <footer>
       {[...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')} — Reserva: {item.localizador}
     </footer>
-    {:else}
+    {:else if modeloPdf === 'bilhete'}
     {@const cias = [...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')}
     <header class="bilhete-top">
       <div>
@@ -417,71 +454,74 @@
     <footer>{cias} • Reserva: {item.localizador}</footer>
     {:else if modeloPdf === 'moderno'}
     {@const cias = [...new Set(item.trechos.map((trecho) => trecho.companhia))].join(' / ')}
-    {@const primeiro3 = item.trechos[0]}
-    {@const ultimo3 = item.trechos[item.trechos.length - 1]}
-    {@const conexoes3 = [...new Set(item.trechos.slice(0, -1).map((t) => t.destino))]}
+    {@const rotaInfo = rotaModerno(item.trechos)}
     <div class="mod-doc">
-      <div class="mod-kicker-bar"><span></span><span></span></div>
+      <div class="mod-kicker-bar"><span></span><span></span><span></span></div>
       <header class="mod-cabecalho">
-        <div class="mod-cia-linha">{cias.toUpperCase()} • BILHETE ELETRÔNICO</div>
+        <div class="mod-cia-linha">{cias} • Bilhete Eletrônico</div>
         <h1 class="mod-titulo">COMPROVANTE DE VIAGEM</h1>
         <div class="mod-meta-linha">
-          <span>&#128101; {resumoPassageiros(item.passageiros)}</span>
-          {#if item.emissao}<span>&#128197; Emissão: {data(item.emissao, true)}</span>{/if}
+          <span>
+            <svg class="mod-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+            <b>Passageiros:</b> {resumoPassageiros(item.passageiros)}
+          </span>
+          {#if item.emissao}
+            <span class="mod-meta-sep">•</span>
+            <span>
+              <svg class="mod-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+              <b>Emissão:</b> {data(item.emissao, true)}
+            </span>
+          {/if}
         </div>
       </header>
-      <div class="mod-cards-row">
-        <section class="mod-info-card mod-rota-card">
-          <div class="mod-card-label">ROTA DA VIAGEM</div>
-          <div class="mod-rota-valor">
-            {primeiro3 ? primeiro3.origem : ''}
-            {#each conexoes3 as c}{' → ' + c}{/each}
-            {ultimo3 ? ' → ' + ultimo3.destino : ''}
-          </div>
-          {#if primeiro3}<div class="mod-rota-data">{data(primeiro3.saida, true)}</div>{/if}
-        </section>
-        <section class="mod-info-card mod-pnr-card">
-          <div class="mod-card-label">CÓDIGO DE RESERVA (PNR)</div>
+      <section class="mod-resumo">
+        <div class="mod-resumo-rota">
+          <div class="mod-card-label">Rota da Viagem</div>
+          <div class="mod-rota-valor">{rotaInfo.rota}</div>
+          {#if rotaInfo.detalhe}<div class="mod-rota-data">{rotaInfo.detalhe}</div>{/if}
+        </div>
+        <div class="mod-pnr-card">
+          <div class="mod-card-label">Código de Reserva (PNR)</div>
           <strong class="mod-pnr-codigo">{item.localizador}</strong>
-        </section>
-      </div>
-      <h2 class="mod-sec-titulo">ITINERÁRIO DE VOO</h2>
+        </div>
+      </section>
+      <h2 class="mod-sec-titulo">Itinerário de Voo</h2>
       {#each item.trechos as trecho, i}
         <section class="mod-trecho">
           <div class="mod-trecho-header">
             <span class="mod-trecho-badge">{tituloTrecho(item.trechos, i)}</span>
-            <span class="mod-trecho-data">{data(trecho.saida, true)}</span>
+            <span class="mod-trecho-data">{capitalizar(data(trecho.saida, true))}</span>
             <span class="mod-trecho-cia">{trecho.companhia} • Voo {trecho.voo}</span>
           </div>
           <div class="mod-trajeto">
             <div class="mod-local">
               <strong class="mod-iata">{trecho.origem}</strong>
               <span class="mod-cidade-nome">{cidade(trecho.origem, trecho.cidadeOrigem) || 'Cidade não informada'}</span>
-              <span class="mod-horario">{data(trecho.saida)} {horario(trecho.saida)}</span>
+              <span class="mod-horario">{dataHoraCurta(trecho.saida)}</span>
             </div>
-            <div class="mod-seta-col">
-              <div class="mod-linha-h"></div>
-              <span class="mod-aviao">✈</span>
+            <div class="mod-centro">
+              <span class="mod-voo-pill">Voo {trecho.voo}</span>
+              <span class="mod-duracao">Duração: {duracaoFormatada(trecho.duracao) || 'Não informada'}</span>
             </div>
             <div class="mod-local mod-local-destino">
               <strong class="mod-iata">{trecho.destino}</strong>
               <span class="mod-cidade-nome">{cidade(trecho.destino, trecho.cidadeDestino) || 'Cidade não informada'}</span>
-              <span class="mod-horario">{data(trecho.chegada)} {horario(trecho.chegada)}</span>
+              <span class="mod-horario">{dataHoraCurta(trecho.chegada)}</span>
               {#if avisoChegada(trecho.saida, trecho.chegada)}
                 <small class="aviso-chegada">{avisoChegada(trecho.saida, trecho.chegada)}</small>
               {/if}
             </div>
           </div>
           <div class="mod-grade">
-            <div class="mod-campo"><span class="mod-rotulo">COMPANHIA</span><strong>{trecho.companhia} {trecho.voo}</strong></div>
-            <div class="mod-campo"><span class="mod-rotulo">CLASSE</span><strong>{trecho.classe || '—'}</strong></div>
-            <div class="mod-campo"><span class="mod-rotulo">TARIFA</span><strong>{trecho.tarifa || '—'}</strong></div>
-            <div class="mod-campo"><span class="mod-rotulo">ASSENTOS</span><strong>{assentos(i) || '—'}</strong></div>
-            <div class="mod-campo"><span class="mod-rotulo">STATUS DO VOO</span><strong>{trecho.status || '—'}</strong></div>
+            <div class="mod-campo"><span class="mod-rotulo">Companhia</span><strong>{trecho.companhia.toUpperCase()}</strong></div>
+            <div class="mod-campo"><span class="mod-rotulo">Classe</span><strong>{trecho.classe || '—'}</strong></div>
+            <div class="mod-campo"><span class="mod-rotulo">Tarifa</span><strong>{trecho.tarifa || '—'}</strong></div>
+            <div class="mod-campo"><span class="mod-rotulo">Assentos</span><strong>{assentos(i) || '—'}</strong></div>
+            <div class="mod-campo"><span class="mod-rotulo">Status do Voo</span><strong>{trecho.status ? `✓ ${trecho.status}` : '—'}</strong></div>
           </div>
         </section>
       {/each}
-      <h2 class="mod-sec-titulo">PASSAGEIROS E BILHETES ELETRÔNICOS</h2>
+      <h2 class="mod-sec-titulo">Passageiros e Bilhetes Eletrônicos</h2>
       <table class="mod-tabela">
         <thead>
           <tr>
@@ -491,20 +531,25 @@
         <tbody>
           {#each item.passageiros as passageiro}
             <tr>
-              <td><strong>{nomePassageiroMaiusculo(passageiro.nome)}</strong></td>
+              <td class="mod-pax-nome">{nomePassageiroMaiusculo(passageiro.nome)}</td>
               <td>{passageiro.tipo === 'ADT' ? 'Adulto' : passageiro.tipo === 'CHD' ? 'Criança' : passageiro.tipo === 'INF' ? 'Infant' : 'Não informado'}</td>
-              <td>{passageiro.bilhete || 'Não informado'}</td>
-              <td>{passageiro.status || 'Não informado'}{passageiro.status ? ' ✓' : ''}</td>
+              <td class="mod-bilhete">{passageiro.bilhete || 'Não informado'}</td>
+              <td class="mod-pax-status">{passageiro.status ? `✓ ${passageiro.status}` : 'Não informado'}</td>
             </tr>
           {/each}
         </tbody>
       </table>
       <aside class="mod-atencao">
-        <strong>&#9888; Atenção ao horário de seu embarque!</strong>
-        <p>Apresente-se no aeroporto indicado com pelo menos 3 horas de antecedência para voos internacionais e 2 horas de antecedência para voos nacionais.</p>
-        <p><strong>Para um maior controle, baixe o aplicativo da companhia aérea ({cias}) e acompanhe a situação de seu voo utilizando o código de reserva {item.localizador}.</strong></p>
+        <div class="mod-atencao-titulo">
+          <svg class="mod-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+          Atenção ao horário de seu embarque!
+        </div>
+        <ul>
+          <li>Apresente-se no aeroporto indicado com pelo menos <b>3 horas de antecedência</b> para voos internacionais e <b>2 horas de antecedência</b> para voos nacionais.</li>
+          <li>Para um maior controle, baixe o aplicativo da companhia aérea (<b>{cias}</b>) e acompanhe a situação de seu voo utilizando o código de reserva <b>{item.localizador}</b>.</li>
+        </ul>
       </aside>
-      <footer class="mod-rodape"><span>{cias} • Reserva: {item.localizador}</span><span class="mod-rodape-pag"></span></footer>
+      <footer class="mod-rodape"><span>{cias.toUpperCase()} • Reserva: {item.localizador}</span></footer>
     </div>
     {/if}
   {/if}
@@ -900,261 +945,64 @@
     }
   }
 
-  /* ─── Modelo Moderno ───────────────────────────────────────────────────── */
-  .mod-doc {
-    font-family: Arial, Helvetica, sans-serif;
-    font-size: 13px;
-    color: #1F2937;
-  }
-  .mod-kicker-bar {
-    display: flex;
-    width: 80px;
-    height: 4px;
-    margin: 0 auto 14px;
-    border-radius: 2px;
-    overflow: hidden;
-  }
-  .mod-kicker-bar span:first-child { flex: 1; background: #1B2C80; }
-  .mod-kicker-bar span:last-child { flex: 1; background: #4472C4; }
-    .mod-cabecalho {
-    border-bottom: 1px solid #C5CED9;
-    padding: 18px 0 14px;
-    margin-bottom: 18px;
-    text-align: center;
-  }
-  .mod-cia-linha {
-    font-size: 10px;
-    font-weight: bold;
-    letter-spacing: 2px;
-    color: #1B2C80;
-    text-transform: uppercase;
-    margin-bottom: 4px;
-  }
-  .mod-titulo {
-    font-size: 26px;
-    font-weight: bold;
-    color: #1B2C80;
-    margin: 0 0 8px;
-    line-height: 1.1;
-  }
-  .mod-meta-linha {
-    font-size: 12px;
-    color: #4B5563;
-    display: flex;
-    gap: 18px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .mod-cards-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 20px;
-  }
-  .mod-info-card {
-    border: 1.5px solid #C5CED9;
-    border-radius: 8px;
-    padding: 12px 14px;
-  }
-  .mod-card-label {
-    font-size: 9px;
-    font-weight: bold;
-    letter-spacing: 1.5px;
-    color: #6B7280;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-  .mod-rota-valor {
-    font-size: 13px;
-    font-weight: bold;
-    color: #1B2C80;
-    line-height: 1.4;
-  }
-  .mod-rota-data {
-    font-size: 11px;
-    color: #6B7280;
-    margin-top: 4px;
-  }
-  .mod-pnr-codigo {
-    display: block;
-    font-size: 28px;
-    font-weight: bold;
-    color: #1B2C80;
-    letter-spacing: 2px;
-  }
-  .mod-sec-titulo {
-    font-size: 11px;
-    font-weight: bold;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    color: #1B2C80;
-    border-bottom: 1.5px solid #C5CED9;
-    padding-bottom: 6px;
-    margin: 20px 0 12px;
-  }
-  .mod-trecho {
-    border: 1.5px solid #C5CED9;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    overflow: hidden;
-    break-inside: avoid;
-  }
-  .mod-trecho-header {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 14px;
-    background: #EEF2F7;
-  }
-  .mod-trecho-badge {
-    background: #1B2C80;
-    color: white;
-    font-size: 10px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    padding: 3px 10px;
-    border-radius: 4px;
-    text-transform: uppercase;
-  }
-  .mod-trecho-data {
-    font-size: 12px;
-    color: #374151;
-    font-weight: bold;
-  }
-  .mod-trecho-cia {
-    font-size: 12px;
-    color: #6B7280;
-    margin-left: auto;
-  }
-  .mod-trajeto {
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    gap: 10px;
-    align-items: center;
-    padding: 14px 14px 8px;
-  }
-  .mod-local {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-  .mod-local-destino {
-    text-align: right;
-    align-items: flex-end;
-  }
-  .mod-iata {
-    font-size: 30px;
-    font-weight: bold;
-    color: #1B2C80;
-    letter-spacing: 1px;
-    line-height: 1;
-  }
-  .mod-cidade-nome {
-    font-size: 11px;
-    color: #374151;
-    font-weight: 600;
-  }
-  .mod-horario {
-    font-size: 11px;
-    color: #6B7280;
-  }
-  .mod-seta-col {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-  }
-  .mod-linha-h {
-    width: 60px;
-    height: 1.5px;
-    background: #243AA3;
-  }
-  .mod-aviao {
-    font-size: 18px;
-    color: #243AA3;
-  }
-  .mod-grade {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 0;
-    border-top: 1px solid #EEF2F7;
-    padding: 10px 14px;
-    background: #FAFBFD;
-  }
-  .mod-campo {
-    padding: 4px 6px;
-  }
-  .mod-rotulo {
-    display: block;
-    font-size: 9px;
-    font-weight: bold;
-    letter-spacing: 1px;
-    color: #9CA3AF;
-    text-transform: uppercase;
-    margin-bottom: 2px;
-  }
-  .mod-campo strong {
-    font-size: 11px;
-    color: #1F2937;
-  }
-  .mod-tabela {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    margin-bottom: 16px;
-  }
-  .mod-tabela thead th {
-    background: #EEF2F7;
-    color: #1B2C80;
-    font-weight: bold;
-    text-align: left;
-    padding: 8px 10px;
-    font-size: 10px;
-    letter-spacing: 0.5px;
-  }
-  .mod-tabela tbody td {
-    padding: 8px 10px;
-    border-bottom: 1px solid #EEF2F7;
-    color: #374151;
-    vertical-align: top;
-  }
-  .mod-tabela tbody tr:last-child td {
-    border-bottom: 0;
-  }
-  .mod-atencao {
-    background: #EEF2F7;
-    border: 1.5px solid #C5CED9;
-    border-radius: 8px;
-    padding: 12px 14px;
-    margin: 16px 0;
-    font-size: 12px;
-    break-inside: avoid;
-  }
-  .mod-atencao strong {
-    display: block;
-    color: #1B2C80;
-    margin-bottom: 6px;
-    font-size: 13px;
-  }
-  .mod-atencao p {
-    margin: 4px 0;
-    color: #374151;
-  }
-  .mod-rodape {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: #9CA3AF;
-    font-size: 10px;
-    border-top: 1px solid #C5CED9;
-    padding-top: 8px;
-    margin-top: 16px;
-  }
+  /* ─── Modelo Moderno (canônico — mesmos tokens de Orçamento/Roteiro) ───── */
+  .mod-doc { font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #1F2937; }
+  .mod-doc, .mod-doc :global(*) { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .mod-kicker-bar { display: flex; width: 210px; height: 3px; margin: 0 auto 12px; overflow: hidden; }
+  .mod-kicker-bar span { flex: 1; }
+  .mod-kicker-bar span:nth-child(1) { background: #1B2C80; }
+  .mod-kicker-bar span:nth-child(2) { background: #4472C4; }
+  .mod-kicker-bar span:nth-child(3) { background: #9AAAC2; }
+  .mod-cabecalho { text-align: center; margin-bottom: 22px; }
+  .mod-cia-linha { font-size: 12px; font-weight: bold; letter-spacing: 3px; color: #4472C4; text-transform: uppercase; margin-bottom: 6px; }
+  .mod-titulo { font-size: 32px; font-weight: bold; color: #1B2C80; margin: 0 0 10px; line-height: 1.15; letter-spacing: .3px; }
+  .mod-meta-linha { font-size: 13px; color: #4B5563; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; align-items: center; }
+  .mod-meta-linha b { color: #1F2937; }
+  .mod-meta-sep { color: #6B7280; }
+  .mod-ico { width: 15px; height: 15px; vertical-align: -3px; margin-right: 3px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .mod-resumo { display: flex; align-items: center; gap: 24px; background: #EEF2F7; border: 1px solid #9AAAC2; border-radius: 10px; padding: 18px 22px; margin-bottom: 16px; break-inside: avoid; }
+  .mod-resumo-rota { flex: 1; min-width: 0; }
+  .mod-card-label { font-size: 11px; font-weight: bold; letter-spacing: 1.5px; color: #4472C4; text-transform: uppercase; margin-bottom: 6px; }
+  .mod-rota-valor { font-size: 18px; font-weight: bold; color: #1B2C80; line-height: 1.35; }
+  .mod-rota-data { font-size: 12.5px; color: #4B5563; margin-top: 6px; line-height: 1.5; }
+  .mod-pnr-card { flex: 0 0 225px; background: #fff; border: 1.5px solid #4472C4; border-radius: 8px; padding: 12px 14px; text-align: center; }
+  .mod-pnr-card .mod-card-label { margin-bottom: 4px; }
+  .mod-pnr-codigo { display: block; font-size: 28px; font-weight: bold; color: #1B2C80; letter-spacing: 2px; line-height: 1.2; }
+  .mod-sec-titulo { font-size: 18px; font-weight: bold; letter-spacing: 1.5px; text-transform: uppercase; color: #1B2C80; text-align: center; border-bottom: 3px solid #D0DAEA; padding-bottom: 10px; margin: 20px 0 12px; break-after: avoid; page-break-after: avoid; }
+  .mod-trecho { border: 1px solid #9AAAC2; border-radius: 10px; margin-bottom: 18px; overflow: hidden; background: #fff; break-inside: avoid; page-break-inside: avoid; }
+  .mod-trecho-header { display: flex; align-items: center; gap: 14px; padding: 9px 16px; background: #D0DAEA; border-bottom: 1px solid #9AAAC2; }
+  .mod-trecho-badge { background: #1B2C80; color: #fff; font-size: 12px; font-weight: bold; letter-spacing: 1px; padding: 3px 10px; border-radius: 4px; text-transform: uppercase; }
+  .mod-trecho-data { font-size: 13.5px; color: #1B2C80; font-weight: bold; }
+  .mod-trecho-cia { font-size: 13.5px; color: #1B2C80; font-weight: bold; margin-left: auto; }
+  .mod-trajeto { display: grid; grid-template-columns: 1fr 1fr 1fr; align-items: stretch; }
+  .mod-local { display: flex; flex-direction: column; gap: 4px; padding: 14px 16px; }
+  .mod-local-destino { text-align: right; align-items: flex-end; }
+  .mod-iata { font-size: 32px; font-weight: bold; color: #1B2C80; letter-spacing: 1px; line-height: 1.05; }
+  .mod-cidade-nome { font-size: 14px; color: #4472C4; font-weight: bold; }
+  .mod-horario { font-size: 13.5px; color: #1F2937; font-weight: bold; margin-top: 4px; }
+  .mod-centro { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 10px; padding: 26px 10px 14px; border-left: 1px dashed #C5CED9; border-right: 1px dashed #C5CED9; }
+  .mod-voo-pill { background: #EEF2F7; border: 1px solid #9AAAC2; border-radius: 4px; padding: 5px 10px; font-size: 14px; font-weight: bold; color: #1B2C80; }
+  .mod-duracao { font-size: 13px; font-weight: bold; color: #4B5563; }
+  .mod-grade { display: grid; grid-template-columns: 1.55fr 1fr 1fr 1.4fr 1.05fr; gap: 0 10px; align-items: center; border-top: 1px solid #C5CED9; padding: 12px 14px; background: #F7F9FC; }
+  .mod-campo { display: flex; flex-direction: column; gap: 6px; }
+  .mod-rotulo { display: block; font-size: 12px; font-weight: bold; letter-spacing: 1px; color: #4B5563; text-transform: uppercase; }
+  .mod-campo strong { font-size: 13px; color: #1F2937; }
+  .mod-tabela { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14px; margin-bottom: 18px; }
+  .mod-tabela thead th { background: #D0DAEA; color: #1B2C80; font-weight: bold; text-align: left; padding: 12px 14px; font-size: 13px; letter-spacing: .5px; text-transform: uppercase; }
+  .mod-tabela thead th:first-child { border-top-left-radius: 8px; }
+  .mod-tabela thead th:last-child { border-top-right-radius: 8px; }
+  .mod-tabela tbody td { padding: 12px 14px; border-bottom: 1px solid #EEF2F7; color: #1F2937; vertical-align: middle; }
+  .mod-tabela tbody tr:nth-child(even) td { background: #F7F9FC; }
+  .mod-tabela tbody tr { break-inside: avoid; page-break-inside: avoid; }
+  .mod-pax-nome, .mod-pax-status { font-weight: bold; }
+  .mod-bilhete { font-family: 'Courier New', Courier, monospace; font-weight: bold; letter-spacing: .5px; }
+  .mod-atencao { background: #F7F9FC; border: 1px solid #C5CED9; border-left: 4px solid #1B2C80; border-radius: 8px; padding: 14px 18px; margin: 16px 0; font-size: 13.5px; break-inside: avoid; page-break-inside: avoid; }
+  .mod-atencao-titulo { display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: bold; letter-spacing: .8px; color: #1B2C80; text-transform: uppercase; margin-bottom: 8px; }
+  .mod-atencao ul { margin: 0; padding-left: 20px; }
+  .mod-atencao li { color: #1F2937; line-height: 1.55; margin-bottom: 4px; }
+  .mod-atencao b { color: #1F2937; }
+  .mod-rodape { display: flex; justify-content: space-between; align-items: center; color: #6B7280; font-size: 12px; border-top: 1px solid #C5CED9; padding-top: 8px; margin-top: 24px; }
   @media print {
-    .mod-trecho { break-inside: avoid; page-break-inside: avoid; }
-    .mod-atencao { break-inside: avoid; page-break-inside: avoid; }
-    .mod-cards-row { grid-template-columns: 1fr 1fr; }
-    .mod-cabecalho { padding-top: 16px; padding-bottom: 10px; margin-bottom: 14px; }
-    .mod-rodape-pag::after { content: "Pág. " counter(page); }
+    .mod-trecho, .mod-atencao, .mod-resumo { break-inside: avoid; page-break-inside: avoid; }
   }
 </style>

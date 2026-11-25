@@ -30,6 +30,7 @@ import {
   roteiroCardStyles
 } from '$lib/utils/printLayout';
 import { quoteCheckIcon as checkIcon, serviceIconSvg } from '$lib/quote/pdfIcons';
+import { MODERNO_CANON_CSS, ROT3_META_SEP, rot3ChecksHtml } from '$lib/quote/modernoCanon';
 
 // ---------------------------------------------------------------------------
 // TIPOS
@@ -1585,15 +1586,197 @@ function propostaCronogramaHtml(items: QuoteItemForPdf[]) {
   return `<div class="pv-sec"><div class="pv-sec-title">Cronograma dos Serviços</div><div class="pv-cron-list">${linhas}</div></div>`;
 }
 
+// ---------------------------------------------------------------------------
+// MODELO MODERNO (canônico) — helpers de dados
+// ---------------------------------------------------------------------------
+
+type Rot3Leg = {
+  cidOrig: string;
+  cidDest: string;
+  codOrig: string;
+  codDest: string;
+  horaSaida: string;
+  horaChegada: string;
+  dataSaida: string;
+  dataChegada: string;
+  cia: string;
+  numero: string;
+  classe: string;
+  tarifa: string;
+  assentos: string;
+  tipoVoo: string;
+};
+
+function rot3Legs(item: QuoteItemForPdf): Rot3Leg[] {
+  return getFlightDataList(item).map((raw) => {
+    const f = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, String(v ?? '')]));
+    const trecho = splitTrechoCities(textVal(f.trecho));
+    const codOrig = textVal(f.aeroporto_saida).split(',')[0].trim().toUpperCase();
+    const codDest = textVal(f.aeroporto_chegada).split(',')[0].trim().toUpperCase();
+    const cidOrig =
+      nomeCidadeNoPdf(textVal(f.cidade_saida) || textVal(f.origem) || trecho.origem) || codOrig;
+    const cidDest =
+      nomeCidadeNoPdf(textVal(f.cidade_chegada) || textVal(f.destino) || trecho.destino) || codDest;
+    const dataSaida = textVal(f.data_voo || f.data_inicio);
+    return {
+      cidOrig,
+      cidDest,
+      codOrig,
+      codDest,
+      horaSaida: textVal(f.hora_saida).replace(/\s*\(\+\d+\)\s*$/, ''),
+      horaChegada: textVal(f.hora_chegada).replace(/\s*\(\+\d+\)\s*$/, ''),
+      dataSaida,
+      dataChegada: textVal(f.data_fim) || dataSaida,
+      cia: textVal(f.cia_aerea),
+      numero: textVal(f.numero_voo) || textVal(f.voo),
+      classe: textVal(f.classe_reserva),
+      tarifa: textVal(f.tarifa_nome),
+      assentos: textVal(f.assentos),
+      tipoVoo: textVal(f.tipo_voo)
+    };
+  });
+}
+
+function rot3MaisDias(leg: Rot3Leg) {
+  const d = diffDaysISODate(leg.dataSaida, leg.dataChegada);
+  return d != null && d > 0 ? ` +${d}` : '';
+}
+
+function rot3Cadeia(legs: Rot3Leg[]) {
+  const cidades: string[] = [];
+  for (const leg of legs) {
+    if (leg.cidOrig && cidades[cidades.length - 1] !== leg.cidOrig) cidades.push(leg.cidOrig);
+    if (leg.cidDest && cidades[cidades.length - 1] !== leg.cidDest) cidades.push(leg.cidDest);
+  }
+  return cidades.join(' → ');
+}
+
+function rot3Plural(n: number, um: string, varios: string) {
+  return `${n} ${n === 1 ? um : varios}`;
+}
+
+function rot3JuntarE(partes: string[]) {
+  const lista = partes.filter(Boolean);
+  if (lista.length <= 1) return lista.join('');
+  return `${lista.slice(0, -1).join(', ')} & ${lista[lista.length - 1]}`;
+}
+
+function rot3Tipo(item: QuoteItemForPdf) {
+  const type = normalizeText(item.item_type);
+  if (type === 'trem') return 'trem';
+  if (isFlightQuoteItem(item)) return 'voo';
+  if (type === 'hotel' || type === 'hospedagem') return 'hotel';
+  if (type === 'aluguel_carro') return 'carro';
+  if (type === 'seguro' || type === 'seguro_viagem') return 'seguro';
+  if (type === 'show') return 'show';
+  if (type === 'passeio') return 'passeio';
+  if (type === 'ingresso') return 'ingresso';
+  if (type === 'transfer') return 'transfer';
+  return 'outro';
+}
+
+const rot3RotuloCronograma: Record<string, string> = {
+  hotel: 'Hospedagem',
+  carro: 'Locação de Veículo',
+  show: 'Espetáculo',
+  passeio: 'Passeio',
+  ingresso: 'Ingresso',
+  transfer: 'Traslado',
+  seguro: 'Seguro Viagem',
+  outro: 'Serviço'
+};
+
+function rot3DataHora(data: string, hora: string) {
+  const d = dataValidaBR(data);
+  return d ? `${d}${hora ? ` às ${hora}` : ''}` : '';
+}
+
+function rot3DiaMes(data: string) {
+  const p = parseISODateParts(data);
+  return p ? `${String(p.day).padStart(2, '0')}/${String(p.month).padStart(2, '0')}` : '';
+}
+
+/** Frase descritiva de um item no cronograma (HTML já escapado). */
+function rot3FraseCronograma(item: QuoteItemForPdf): string {
+  const tipo = rot3Tipo(item);
+  const details = lerDetalhes(item);
+  const title = escHtml(getServiceTitle(item));
+  const pax = passageirosSemZero(item);
+  if (tipo === 'hotel') {
+    const extras = [textVal(details.categoria), textVal(details.tipo_apartamento), textVal(details.regime)]
+      .filter(Boolean)
+      .map(escHtml)
+      .join(', ');
+    return `Hospedagem no <b>${title}</b>${extras ? ` (${extras})` : ''}`;
+  }
+  if (tipo === 'carro') {
+    const ret = [nomeCidadeNoPdf(textVal(item.city_name)), textVal(details.loja_retirada)]
+      .filter(Boolean)
+      .join(' · ');
+    const dev = [nomeCidadeNoPdf(textVal(details.cidade_devolucao)), textVal(details.loja_devolucao)]
+      .filter(Boolean)
+      .join(' · ');
+    const quando = (data: string, hora: string) =>
+      rot3DiaMes(data) ? ` (${rot3DiaMes(data)}${hora ? ` às ${escHtml(hora)}` : ''})` : '';
+    const locadora = textVal(details.locadora) || textVal(details.fornecedor);
+    return `Retirada de <b>${title}</b>${locadora ? ` na ${escHtml(locadora)}` : ''}${ret ? ` em ${escHtml(ret)}` : ''}${quando(textVal(item.start_date), textVal(details.hora_retirada))}${dev ? ` com devolução em ${escHtml(dev)}` : ''}${dev ? quando(textVal(item.end_date), textVal(details.hora_devolucao)) : ''}`;
+  }
+  if (tipo === 'voo' || tipo === 'trem') {
+    const legs = rot3Legs(item);
+    if (!legs.length) return `<b>${title}</b>`;
+    return legs
+      .map((leg, i) => {
+        const id = escHtml([leg.cia, leg.numero].filter(Boolean).join(' '));
+        const saida = `${escHtml(leg.cidOrig)}${leg.horaSaida ? ` às ${escHtml(leg.horaSaida)}` : ''}`;
+        const chegada = `${escHtml(leg.cidDest)}${leg.horaChegada ? ` às ${escHtml(leg.horaChegada)}` : ''}`;
+        const verbo = i === 0 ? (tipo === 'trem' ? 'Trem' : 'Embarque') : 'conexão';
+        return `${verbo}${id ? ` <b>${id}</b>` : ''} de ${saida} com chegada a ${chegada}`;
+      })
+      .join(', seguido de ');
+  }
+  const resumo = rot3ResumoLimpo(item).slice(0, 2).map(escHtml).join(', ');
+  return `<b>${title}</b>${resumo ? ` (${resumo})` : ''}${pax ? ` para ${escHtml(pax)}` : ''}`;
+}
+
+/** Cidades na ordem da viagem (inclui destinos de voos/trens, sem a cidade de origem). */
+function rot3CidadesCronologicas(items: QuoteItemForPdf[]): string[] {
+  const eventos: Array<{ data: string; cidade: string }> = [];
+  let origem = '';
+  const porData = [...items].sort((a, b) =>
+    String(a.start_date || '9999').localeCompare(String(b.start_date || '9999'))
+  );
+  for (const item of porData) {
+    const tipo = rot3Tipo(item);
+    if (tipo === 'voo' || tipo === 'trem') {
+      const legs = rot3Legs(item);
+      if (tipo === 'voo' && !origem && legs[0]?.cidOrig) origem = legs[0].cidOrig;
+      for (const leg of legs) eventos.push({ data: leg.dataChegada || leg.dataSaida, cidade: leg.cidDest });
+      if (!legs.length) eventos.push({ data: textVal(item.start_date), cidade: nomeCidadeNoPdf(textVal(item.city_name)) });
+    } else {
+      eventos.push({ data: textVal(item.start_date), cidade: nomeCidadeNoPdf(textVal(item.city_name)) });
+    }
+  }
+  eventos.sort((a, b) => (a.data || '9999').localeCompare(b.data || '9999'));
+  const vistos = new Set<string>();
+  const lista: string[] = [];
+  for (const { cidade } of eventos) {
+    const key = normalizeText(cidade);
+    if (!cidade || vistos.has(key) || (origem && key === normalizeText(origem))) continue;
+    vistos.add(key);
+    lista.push(cidade);
+  }
+  return lista;
+}
+
+/** Remove do resumo linhas de contagem (adultos/crianças/totais) — já mostradas como ✓. */
+function rot3ResumoLimpo(item: QuoteItemForPdf): string[] {
+  return resumoDetalhes(item).filter(
+    (linha) => !/^(adultos|crian[çc]as|infants?|seniors?|total de (dias|noites))\b/i.test(linha.trim())
+  );
+}
+
 function propostaModernoCronogramaHtml(items: QuoteItemForPdf[]) {
-  type Entrada = {
-    start: string;
-    end: string;
-    city: string;
-    labels: string[];
-    chips: string[];
-    descs: string[];
-  };
+  type Entrada = { start: string; end: string; items: QuoteItemForPdf[] };
   const grupos = new Map<string, Entrada>();
   const ordenados = [...items].sort((a, b) =>
     String(a.start_date || '9999').localeCompare(String(b.start_date || '9999'))
@@ -1602,56 +1785,237 @@ function propostaModernoCronogramaHtml(items: QuoteItemForPdf[]) {
     const start = textVal(item.start_date);
     const end = textVal(item.end_date);
     const key = `${start}|${end}`;
-    let grupo = grupos.get(key);
-    if (!grupo) {
-      grupo = {
-        start,
-        end,
-        city: nomeCidadeNoPdf(textVal(item.city_name)),
-        labels: [],
-        chips: [],
-        descs: []
-      };
-      grupos.set(key, grupo);
-    }
-    const label = propostaTipoLabel(item);
-    if (!grupo.labels.includes(label)) grupo.labels.push(label);
-    const chip = propostaChipDuracao(item);
-    if (chip && !grupo.chips.includes(chip)) grupo.chips.push(chip);
-    const desc = [getServiceTitle(item), ...getServiceDetails(item).slice(0, 2)]
-      .filter(Boolean)
-      .join(' — ');
-    if (desc && !grupo.descs.includes(desc)) grupo.descs.push(desc);
-    if (!grupo.city) grupo.city = nomeCidadeNoPdf(textVal(item.city_name));
+    const grupo = grupos.get(key) || { start, end, items: [] };
+    grupo.items.push(item);
+    grupos.set(key, grupo);
   }
-  const entradas = Array.from(grupos.values()).sort((a, b) =>
+  let entradas = Array.from(grupos.values()).sort((a, b) =>
     (a.start || '9999').localeCompare(b.start || '9999')
   );
+  // Serviços pontuais (show, passeio, ingresso, traslado) dentro do período de
+  // uma hospedagem na mesma cidade entram no card dessa hospedagem.
+  const cidadeDe = (i: QuoteItemForPdf) => normalizeText(nomeCidadeNoPdf(textVal(i.city_name)));
+  entradas = entradas.filter((entrada) => {
+    if (!entrada.items.every((i) => ['show', 'passeio', 'ingresso', 'transfer'].includes(rot3Tipo(i))))
+      return true;
+    const alvo = entradas.find(
+      (e) =>
+        e !== entrada &&
+        e.items.some((i) => rot3Tipo(i) === 'hotel' && cidadeDe(i) === cidadeDe(entrada.items[0])) &&
+        e.start <= entrada.start &&
+        (entrada.end || entrada.start) <= (e.end || e.start)
+    );
+    if (!alvo) return true;
+    alvo.items.push(...entrada.items);
+    return false;
+  });
   if (!entradas.length) return '';
+  const entradasVoo = entradas.filter((e) => e.items.every((i) => rot3Tipo(i) === 'voo'));
+  const ultimaVoo = entradasVoo.length > 1 ? entradasVoo[entradasVoo.length - 1] : null;
+
   const linhas = entradas
-    .map((grupo, i) => {
-      const isLast = i === entradas.length - 1;
-      const periodo = faixaDatas(grupo.start || null, grupo.end || null) || '—';
-      const titulo = [grupo.city, grupo.labels.join(' & ')].filter(Boolean).join(' • ');
-      const chips = grupo.chips.length
-        ? `<div class="pv-cron-chips">${grupo.chips.map((chip) => `<span class="pv-chip2">${escHtml(chip)}</span>`).join('')}</div>`
-        : '';
-      const desc = grupo.descs.slice(0, 4).join('<br>');
+    .map((entrada) => {
+      const tipos = entrada.items.map(rot3Tipo);
+      const soTransporte = tipos.every((t) => t === 'voo' || t === 'trem');
+      let titulo = '';
+      if (soTransporte) {
+        titulo = rot3Cadeia(entrada.items.flatMap(rot3Legs));
+      }
+      if (!titulo) {
+        const cidade = entrada.items
+          .map((i) => nomeCidadeNoPdf(textVal(i.city_name)))
+          .find(Boolean);
+        const rotulos = distinctSafe(tipos.map((t) => rot3RotuloCronograma[t] || 'Serviço'));
+        titulo = [cidade, rotulos.join(' & ')].filter(Boolean).join(' • ');
+      }
+
+      const chips: string[] = [];
+      for (const item of entrada.items) {
+        const tipo = rot3Tipo(item);
+        const dias = diasItem(textVal(item.item_type), entrada.start, entrada.end);
+        if (tipo === 'hotel' && dias) chips.push(rot3Plural(dias, 'NOITE', 'NOITES'));
+        else if (tipo === 'carro' && dias) chips.push(rot3Plural(dias, 'DIÁRIA', 'DIÁRIAS'));
+        else if (tipo === 'show') chips.push('SHOW');
+        else if (tipo === 'passeio') chips.push('PASSEIO');
+        else if (tipo === 'ingresso') chips.push('INGRESSO');
+        else if (tipo === 'transfer') chips.push('TRASLADO');
+        else if (tipo === 'seguro') chips.push('SEGURO VIAGEM');
+        else if (tipo === 'trem') chips.push('TREM');
+        else if (tipo === 'voo') {
+          if (entrada === ultimaVoo) chips.push('VOO DE RETORNO');
+          else {
+            const legs = rot3Legs(item);
+            const plural = legs.length > 1;
+            const tipoVoo = normalizeText(legs[0]?.tipoVoo || '');
+            const adj = tipoVoo.includes('internac')
+              ? plural ? ' INTERNACIONAIS' : ' INTERNACIONAL'
+              : tipoVoo.includes('nacion') || tipoVoo.includes('domest')
+                ? plural ? ' NACIONAIS' : ' NACIONAL'
+                : '';
+            chips.push(`${plural ? 'VOOS' : 'VOO'}${adj}`);
+          }
+        }
+      }
+      const chip = distinctSafe(chips).join(' • ');
+      const frases = entrada.items.map(rot3FraseCronograma).filter(Boolean);
+      const desc = frases.length ? `${frases.join('. ')}.` : '';
+      const periodo = (faixaDatas(entrada.start || null, entrada.end || null) || '—').replace(
+        ' a ',
+        ' a<br>'
+      );
       return `<div class="rot3-dia">
-        <div class="rot3-dia-pill-col"><div class="rot3-oc-pill">${escHtml(periodo)}</div></div>
-        <div class="rot3-dia-mid">
-          <div class="rot3-dia-dot"></div>
-          ${!isLast ? '<div class="rot3-dia-line"></div>' : ''}
-        </div>
+        <div class="rot3-dia-pill-col"><div class="rot3-oc-pill">${periodo}</div></div>
+        <div class="rot3-dia-mid"><div class="rot3-dia-dot"></div></div>
         <div class="rot3-dia-body">
-          <div class="rot3-dia-rota">${escHtml(titulo)}</div>
-          ${chips}
+          <div class="rot3-dia-head"><div class="rot3-dia-rota">${escHtml(titulo)}</div>${chip ? `<span class="rot3-dia-chip">${escHtml(chip)}</span>` : ''}</div>
           ${desc ? `<p class="rot3-dia-desc">${desc}</p>` : ''}
         </div>
       </div>`;
     })
     .join('');
-  return `<div class="rot3-cronograma"><div class="rot3-cronograma-titulo">Cronograma dos Serviços</div>${linhas}</div>`;
+  return `<section class="rot3-cronograma"><h2 class="rot3-cronograma-titulo">Cronograma dos Serviços</h2><div class="rot3-cron-lista">${linhas}</div></section>`;
+}
+
+/** Linha de 3 colunas (c1/c2/c3 já em HTML). */
+function rot3Linha(c1: string, c2: string, c3: string) {
+  return `<div class="rot3-row"><div class="rot3-c1">${c1}</div><div class="rot3-c2">${c2}</div><div class="rot3-c3">${c3}</div></div>`;
+}
+
+const rot3T = (s: string) => (s ? `<div class="rot3-t">${s}</div>` : '');
+const rot3S = (s: string) => (s ? `<div class="rot3-s">${s}</div>` : '');
+const rot3A = (s: string) => (s ? `<div class="rot3-a">${s}</div>` : '');
+const rot3Qtd = (n: string | number | null | undefined) =>
+  n != null && String(n) !== '' && String(n) !== '-' && String(n) !== '0'
+    ? `<div class="rot3-qtd">Qtd: ${escHtml(String(n))}</div>`
+    : '';
+
+function rot3LinhasDetalhe(item: QuoteItemForPdf): string[] {
+  const tipo = rot3Tipo(item);
+  const details = lerDetalhes(item);
+  const pax = passageirosSemZero(item);
+  const title = getServiceTitle(item);
+  const city = nomeCidadeNoPdf(textVal(item.city_name));
+  const dias = diasItem(textVal(item.item_type), textVal(item.start_date), textVal(item.end_date));
+
+  if (tipo === 'voo' || tipo === 'trem') {
+    const legs = rot3Legs(item);
+    const qtd = getFlightPassengerQuantity(item);
+    if (!legs.length) return [];
+    return legs.map((leg) => {
+      const dataSaida = dataValidaBR(leg.dataSaida);
+      const dataCheg = dataValidaBR(leg.dataChegada);
+      if (tipo === 'trem') {
+        const c1 =
+          rot3T(escHtml([title, leg.cia].filter(Boolean).join(' • '))) +
+          rot3S(escHtml([leg.numero ? `Trem ${leg.numero}` : '', dataSaida].filter(Boolean).join(' • '))) +
+          rot3Qtd(qtd);
+        const c2 =
+          rot3T(escHtml(`${[leg.cidOrig, leg.horaSaida].filter(Boolean).join(' ')} → ${[leg.cidDest, leg.horaChegada].filter(Boolean).join(' ')}${rot3MaisDias(leg)}`)) +
+          rot3S(escHtml(dataCheg && dataCheg !== dataSaida ? `Chegada em ${leg.cidDest} em ${dataCheg}` : 'Trecho terrestre'));
+        const c3 = rot3ChecksHtml([leg.classe, leg.assentos || textVal(details.assentos), pax].filter(Boolean).map(escHtml));
+        return rot3Linha(c1, c2, c3);
+      }
+      const c1 =
+        rot3T(escHtml(`${leg.cidOrig} → ${leg.cidDest}`)) +
+        rot3S(escHtml([leg.cia, leg.numero ? `Voo ${leg.numero}` : '', dataSaida].filter(Boolean).join(' • '))) +
+        rot3Qtd(qtd);
+      const origem = [leg.codOrig || leg.cidOrig, leg.horaSaida].filter(Boolean).join(' ');
+      const destino = [leg.codDest || leg.cidDest, leg.horaChegada].filter(Boolean).join(' ');
+      const c2 =
+        rot3T(escHtml(`${origem} → ${destino}${rot3MaisDias(leg)}`)) +
+        rot3S(escHtml(leg.cidDest ? `Chegada em ${leg.cidDest}${dataCheg ? ` em ${dataCheg}` : ''}` : ''));
+      const c3 = rot3ChecksHtml(distinctSafe([leg.classe, leg.tarifa, leg.assentos, pax]).map(escHtml));
+      return rot3Linha(c1, c2, c3);
+    });
+  }
+
+  if (tipo === 'hotel') {
+    const nts = dias != null && dias > 0 ? rot3Plural(dias, 'Noite', 'Noites') : '';
+    const qtd = details.quantidade_apartamentos ?? item.quantity;
+    const c1 =
+      rot3T(escHtml([city, nts].filter(Boolean).join(' • ') || title)) +
+      rot3S(escHtml(`${title}${textVal(details.categoria) ? ` (${textVal(details.categoria)})` : ''}`)) +
+      rot3Qtd(qtd);
+    const ci = rot3DataHora(textVal(item.start_date), textVal(details.hora_checkin));
+    const co = rot3DataHora(textVal(item.end_date), textVal(details.hora_checkout));
+    const c2 = rot3T(ci ? `Check-in: ${escHtml(ci)}` : '') + rot3S(co ? `Check-out: ${escHtml(co)}` : '');
+    const c3 = rot3ChecksHtml(
+      [textVal(details.tipo_apartamento), textVal(details.regime), pax].filter(Boolean).map(escHtml)
+    );
+    return [rot3Linha(c1, c2, c3)];
+  }
+
+  if (tipo === 'carro') {
+    const locadora = textVal(details.locadora) || textVal(details.fornecedor);
+    const diarias = dias != null && dias > 0 ? rot3Plural(dias, 'Diária', 'Diárias') : '';
+    const c1 =
+      rot3T(escHtml(`Aluguel de Carro${locadora ? ` • ${locadora}` : ''}${diarias ? ` (${diarias})` : ''}`)) +
+      rot3S(escHtml([title, textVal(details.cambio), resumoInformacoesVeiculo(details)].filter(Boolean).join(' • '))) +
+      rot3Qtd(item.quantity);
+    const ret = textVal(details.loja_retirada) || city;
+    const dev = textVal(details.loja_devolucao) || nomeCidadeNoPdf(textVal(details.cidade_devolucao));
+    const c2 =
+      rot3T(ret ? `Retirada: ${escHtml(ret)}` : '') +
+      rot3S(escHtml(rot3DataHora(textVal(item.start_date), textVal(details.hora_retirada)))) +
+      rot3T(dev ? `Devolução: ${escHtml(dev)}` : '') +
+      rot3S(escHtml(rot3DataHora(textVal(item.end_date), textVal(details.hora_devolucao))));
+    const c3 = rot3ChecksHtml(etiquetasCarro(details.incluidos).map(escHtml));
+    return [rot3Linha(c1, c2, c3)];
+  }
+
+  const periodo = faixaDatas(item.start_date, item.end_date);
+  const duracao =
+    dias != null && dias > 0 ? `Duração: ${String(dias).padStart(2, '0')} ${dias === 1 ? 'dia' : 'dias'}` : '';
+  const rotuloLocal: Record<string, string> = { show: 'Apresentação', passeio: 'Passeio', ingresso: 'Ingresso', transfer: 'Traslado' };
+  const resumo = rot3ResumoLimpo(item);
+  if (!resumo.length && rotuloLocal[tipo]) resumo.push(`${rotuloLocal[tipo]}${city ? ` em ${city}` : ''}`);
+  const c1 =
+    rot3T(escHtml([title, city].filter(Boolean).join(' • '))) +
+    rot3S(escHtml([periodo, duracao].filter(Boolean).join(' • '))) +
+    rot3Qtd(item.quantity);
+  const c2 = rot3T(escHtml(resumo[0] || '')) + resumo.slice(1, 3).map((r) => rot3S(escHtml(r))).join('');
+  const c3 = rot3ChecksHtml([pax].filter(Boolean).map(escHtml));
+  return [rot3Linha(c1, c2, c3)];
+}
+
+const rot3RotuloGrupoDiversos: Record<string, string> = {
+  carro: 'Locação de Veículo',
+  trem: 'Trem',
+  passeio: 'Passeios',
+  ingresso: 'Ingressos',
+  show: 'Entretenimento',
+  transfer: 'Traslados',
+  seguro: 'Seguro Viagem',
+  outro: 'Outros Serviços'
+};
+
+function buildRot3DetalhamentoOrcHtml(items: QuoteItemForPdf[], _defaultCurrency: string): string {
+  if (!items.length) return '';
+  const porData = [...items].sort((a, b) =>
+    String(a.start_date || '9999').localeCompare(String(b.start_date || '9999'))
+  );
+  const voos = porData.filter((i) => rot3Tipo(i) === 'voo');
+  const hoteis = porData.filter((i) => rot3Tipo(i) === 'hotel');
+  const diversos = porData.filter((i) => !['voo', 'hotel'].includes(rot3Tipo(i)));
+
+  const grupo = (titulo: string, linhas: string[]) =>
+    linhas.length
+      ? `<div class="rot3-dgrupo"><div class="rot3-grupo-header">${escHtml(titulo)}</div>${linhas.join('')}</div>`
+      : '';
+
+  const cias = distinctSafe(voos.flatMap((i) => rot3Legs(i).map((l) => l.cia)));
+  const cidadesHotel = distinctSafe(hoteis.map((i) => nomeCidadeNoPdf(textVal(i.city_name))));
+  const ordemDiversos = ['carro', 'trem', 'passeio', 'ingresso', 'show', 'transfer', 'seguro', 'outro'];
+  const tiposDiversos = ordemDiversos.filter((t) => diversos.some((i) => rot3Tipo(i) === t));
+
+  const html =
+    grupo(['Passagens Aéreas', rot3JuntarE(cias)].filter(Boolean).join(' • '), voos.flatMap(rot3LinhasDetalhe)) +
+    grupo(['Hospedagens', rot3JuntarE(cidadesHotel)].filter(Boolean).join(' • '), hoteis.flatMap(rot3LinhasDetalhe)) +
+    grupo(rot3JuntarE(tiposDiversos.map((t) => rot3RotuloGrupoDiversos[t])), diversos.flatMap(rot3LinhasDetalhe));
+
+  return html
+    ? `<section class="rot3-secao"><h2 class="rot3-secao-titulo">Detalhamento dos Serviços Cotados</h2>${html}</section>`
+    : '';
 }
 
 function propostaGrupoDe(item: QuoteItemForPdf) {
@@ -1882,126 +2246,6 @@ function propostaDetalhamentoHtml(
 }
 
 // MODELO MODERNO — detalhamento com cards verticais rot3 (passagens + hotéis)
-function buildRot3DetalhamentoOrcHtml(
-  items: QuoteItemForPdf[],
-  defaultCurrency: string
-): string {
-  if (!items.length) return '';
-  const chkIco = `<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline;vertical-align:middle;margin-right:3px;flex-shrink:0"><circle cx="6" cy="6" r="5.5" fill="#1B2C80" opacity="0.13"/><path d="M3.2 6l1.8 1.8L9 4" stroke="#1B2C80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-
-  const porGrupo = new Map<string, QuoteItemForPdf[]>();
-  for (const item of items) {
-    const grupo = propostaGrupoDe(item);
-    const lista = porGrupo.get(grupo) || [];
-    lista.push(item);
-    porGrupo.set(grupo, lista);
-  }
-
-  const secoes = propostaGrupoOrdem
-    .filter((titulo) => porGrupo.has(titulo))
-    .map((titulo) => {
-      const lista = porGrupo.get(titulo) || [];
-
-      if (titulo === 'Passagens Aéreas') {
-        // Agrupa legs por tipo_voo • cia_aerea
-        const groupsMap = new Map<string, Array<{ trecho: string; cia: string; rota: string; chegada: string; checksHtml: string }>>();
-        for (const item of lista) {
-          const pax = passageirosSemZero(item);
-          for (const raw of getFlightDataList(item)) {
-            const f = Object.fromEntries(Object.entries(raw).map(([k, v]) => [k, String(v ?? '')]));
-            const classeTag = textVal(f.classe_reserva);
-            const tarifaTag = textVal(f.tarifa_nome);
-            const gk = [textVal(f.tipo_voo), textVal(f.cia_aerea)].filter(Boolean).join(' • ') || 'Voos';
-            if (!groupsMap.has(gk)) groupsMap.set(gk, []);
-            const origemCode = textVal(f.aeroporto_saida);
-            const destinoCode = textVal(f.aeroporto_chegada);
-            const origemNome = nomeCidadeNoPdf(textVal(f.cidade_saida) || textVal(f.origem));
-            const destinoNome = nomeCidadeNoPdf(textVal(f.cidade_chegada) || textVal(f.destino));
-            const origem = origemCode || origemNome;
-            const destino = destinoCode || destinoNome;
-            const dataVoo = textVal(f.data_voo || f.data_inicio);
-            const dataFim = textVal(f.data_fim);
-            const maisUm = dataFim && dataFim !== dataVoo ? ' <sup>+1</sup>' : '';
-            const cia = textVal(f.cia_aerea);
-            const voo = textVal(f.numero_voo) || textVal(f.voo) || textVal(f.descricao);
-            const trecho = origem && destino ? `${origem} → ${destino}` : '';
-            const c1Sub = [cia, voo ? `Voo ${voo}` : '', formatDateBR(dataVoo || null)].filter(Boolean).join(' • ');
-            const rota = origem && destino
-              ? `${origem} ${textVal(f.hora_saida)} → ${destino} ${textVal(f.hora_chegada)}${maisUm}`.replace(/\s+/g, ' ').trim()
-              : '';
-            const chegada = destinoNome
-              ? `Chegada em ${destinoNome}${formatDateBR(dataFim || dataVoo || null) ? ` em ${formatDateBR(dataFim || dataVoo || null)}` : ''}`
-              : '';
-            const checks = [classeTag, tarifaTag, textVal(f.assentos), pax].filter(Boolean);
-            const checksHtml = [...new Set(checks)].map(s => `<div class="rot3-chk-item">${chkIco}${escHtml(s)}</div>`).join('');
-            groupsMap.get(gk)!.push({ trecho, cia: c1Sub, rota, chegada, checksHtml });
-          }
-        }
-        let inner = '';
-        for (const [gk, legs] of groupsMap) {
-          inner += `<div class="rot3-grupo-header">${escHtml(gk)}</div>`;
-          for (const v of legs) {
-            inner += `<div class="rot3-flight-vcard">
-              ${v.trecho ? `<div class="rot3-voo-trecho">${escHtml(v.trecho)}</div>` : ''}
-              ${v.cia ? `<div class="rot3-voo-cia">${escHtml(v.cia)}</div>` : ''}
-              ${v.rota ? `<div class="rot3-voo-rota">${v.rota}</div>` : ''}
-              ${v.chegada ? `<div class="rot3-voo-info">${escHtml(v.chegada)}</div>` : ''}
-              ${v.checksHtml ? `<div class="rot3-chks-row">${v.checksHtml}</div>` : ''}
-            </div>`;
-          }
-        }
-        return `<section class="rot3-secao"><h2 class="rot3-secao-titulo">PASSAGEM AÉREA</h2><div class="rot3-tabela">${inner}</div></section>`;
-      }
-
-      if (titulo === 'Hospedagens') {
-        // Agrupa por cidade com rot3-grupo-header
-        const groupsMap = new Map<string, QuoteItemForPdf[]>();
-        for (const item of lista) {
-          const cidade = nomeCidadeNoPdf(textVal(item.city_name)) || 'Hotéis';
-          if (!groupsMap.has(cidade)) groupsMap.set(cidade, []);
-          groupsMap.get(cidade)!.push(item);
-        }
-        let inner = '';
-        for (const [cidade, grpItems] of groupsMap) {
-          inner += `<div class="rot3-grupo-header">${escHtml(cidade)}</div>`;
-          for (const item of grpItems) {
-            const details = lerDetalhes(item);
-            const nomeHotel = getServiceTitle(item);
-            const noites = diasItem(textVal(item.item_type), textVal(item.start_date), textVal(item.end_date));
-            const ntsLabel = noites != null && noites > 0 ? `${noites} ${noites === 1 ? 'noite' : 'noites'}` : '';
-            const cidadeItem = nomeCidadeNoPdf(textVal(item.city_name));
-            const cidadeNts = [cidadeItem ? escHtml(cidadeItem) : '', ntsLabel ? escHtml(ntsLabel) : ''].filter(Boolean).join(' • ');
-            const catLabel = textVal(details.categoria) ? escHtml(textVal(details.categoria)) : '';
-            const ci = dataValidaBR(item.start_date);
-            const co = dataValidaBR(item.end_date);
-            const datasHtml = [
-              ci ? `<span class="rot3-voo-label">Check-in:</span> ${escHtml(ci)}` : '',
-              co ? `<span class="rot3-voo-label">Check-out:</span> ${escHtml(co)}` : ''
-            ].filter(Boolean).join(' &nbsp;•&nbsp; ');
-            const checks = [textVal(details.tipo_apartamento), textVal(details.regime)].filter(s => s.trim());
-            const checksHtml = checks.map(s => `<div class="rot3-chk-item">${chkIco}${escHtml(s)}</div>`).join('');
-            inner += `<div class="rot3-hotel-vcard">
-              <div class="rot3-hotel-nome">${escHtml(nomeHotel)}</div>
-              ${cidadeNts ? `<div class="rot3-hotel-cidade">${cidadeNts}</div>` : ''}
-              ${catLabel ? `<div class="rot3-hotel-cat">${catLabel}</div>` : ''}
-              ${datasHtml ? `<div class="rot3-hotel-info">${datasHtml}</div>` : ''}
-              ${checksHtml ? `<div class="rot3-chks-row">${checksHtml}</div>` : ''}
-            </div>`;
-          }
-        }
-        return `<section class="rot3-secao"><h2 class="rot3-secao-titulo">HOSPEDAGENS</h2><div class="rot3-tabela">${inner}</div></section>`;
-      }
-
-      // Demais seções: layout pv-grupo dentro de rot3-secao
-      const tituloSecao = titulo.toUpperCase();
-      const itensHtml = lista.map((item) => propostaDetalheCardHtml(item, false, defaultCurrency)).join('');
-      return `<section class="rot3-secao"><h2 class="rot3-secao-titulo">${escHtml(tituloSecao)}</h2><div class="pv-grupo">${itensHtml}</div></section>`;
-    })
-    .join('');
-
-  return secoes ? `<section class="rot3-secao"><h2 class="rot3-secao-titulo">DETALHAMENTO DOS SERVIÇOS COTADOS</h2>${secoes}</section>` : '';
-}
-
 function propostaInvestimentoHtml(
   items: QuoteItemForPdf[],
   defaultCurrency: string,
@@ -2134,41 +2378,56 @@ function buildRot3InvestimentoOrcamentoHtml(
   defaultCurrency: string,
   discount: number,
   validity: string,
-  consultor: string
+  consultor: string,
+  dateLabel = ''
 ): string {
   const totais = totaisDaViagem(items, defaultCurrency, discount).filter(({ total }) => total > 0);
   if (!totais.length) return '';
   const adultos = Math.max(0, ...items.map((item) => lerDetalhes(item).adultos || 0));
-  const priNome = consultor.split(/\s+/)[0] || 'o consultor';
-  const clockIco = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;flex-shrink:0"><circle cx="12" cy="12" r="10" stroke="#1B2C80" stroke-width="2"/><path d="M12 7v5l3 3" stroke="#1B2C80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-  const personIco = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;flex-shrink:0"><circle cx="12" cy="7" r="4" stroke="#6B7280" stroke-width="2"/><path d="M4 21c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/></svg>`;
-  const groupIco = `<svg width="18" height="16" viewBox="0 0 32 24" fill="none" style="display:inline;vertical-align:middle;margin-right:4px;flex-shrink:0"><circle cx="10" cy="7" r="4" stroke="#6B7280" stroke-width="2"/><circle cx="22" cy="7" r="4" stroke="#6B7280" stroke-width="2"/><path d="M2 21c0-4.418 3.582-8 8-8h4c4.418 0 8 3.582 8 8" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/><path d="M22 13c4.418 0 8 3.582 8 8" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/></svg>`;
-  const footerNote = [
+  const priNome = consultor.split(/\s+/)[0] || '';
+  const ico = (path: string, size = 15) =>
+    `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
+  const personIco = ico('<circle cx="12" cy="7" r="4"/><path d="M5 21v-2a7 7 0 0 1 14 0v2"/>');
+  const groupIco = ico('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>');
+  const clockIco = ico('<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>', 13);
+  const nota = [
+    dateLabel ? `Emissão em ${escHtml(dateLabel)}` : '',
     validity ? `Tarifas válidas até ${escHtml(validity)}` : '',
-    consultor ? `Reserve com ${escHtml(priNome)} via WhatsApp` : ''
-  ].filter(Boolean).join(' • ');
+    priNome ? `Reserve com o ${escHtml(priNome)} via WhatsApp` : ''
+  ]
+    .filter(Boolean)
+    .join(' • ');
 
-  return totais.map(({ code, total }) => {
-    const porPessoa = adultos > 0 ? total / adultos : null;
-    const paxLabel = adultos > 0 ? `${adultos} ${adultos === 1 ? 'ADULTO' : 'ADULTOS'}` : '';
-    const totalLabel = paxLabel ? `TOTAL DA VIAGEM (${paxLabel})` : 'TOTAL DA VIAGEM';
-    const subTotal = paxLabel ? `Valor total da proposta para ${adultos} adulto${adultos !== 1 ? 's' : ''}` : 'Valor total do pacote';
-    const divider = porPessoa != null ? `<div class="rot3-inv-divider"></div>` : '';
-    const colPessoa = porPessoa != null ? `<div class="rot3-inv-col">
-        <div class="rot3-inv-label">${personIco}POR PESSOA</div>
-        <div class="rot3-inv-valor">${escHtml(formatCurrency(porPessoa, code))}</div>
-        <div class="rot3-inv-sub">Valor médio individual por adulto</div>
-      </div>${divider}` : '';
-    return `<div class="rot3-inv-box">
-      ${colPessoa}
-      <div class="rot3-inv-col">
-        <div class="rot3-inv-label">${groupIco}${escHtml(totalLabel)}</div>
-        <div class="rot3-inv-valor">${escHtml(formatCurrency(total, code))}</div>
-        <div class="rot3-inv-sub">${escHtml(subTotal)}</div>
+  return totais
+    .map(({ code, total }) => {
+      const porPessoa = adultos > 0 ? total / adultos : null;
+      const paxLabel = adultos > 0 ? `${adultos} ${adultos === 1 ? 'ADULTO' : 'ADULTOS'}` : '';
+      const totalLabel = paxLabel ? `Total da Viagem (${paxLabel})` : 'Total da Viagem';
+      const subTotal = paxLabel
+        ? `Valor total da proposta para ${adultos} adulto${adultos !== 1 ? 's' : ''}`
+        : 'Valor total da proposta';
+      const colPessoa =
+        porPessoa != null
+          ? `<div class="rot3-inv-col rot3-inv-col--pessoa">
+          <div class="rot3-inv-label">${personIco}Por Pessoa</div>
+          <div class="rot3-inv-valor">${escHtml(formatCurrency(porPessoa, code))}</div>
+          <div class="rot3-inv-sub">Valor médio individual por adulto</div>
+        </div><div class="rot3-inv-divider"></div>`
+          : '';
+      return `<div class="rot3-inv">
+      <div class="rot3-inv-head">INVESTIMENTO</div>
+      <div class="rot3-inv-cols">
+        ${colPessoa}
+        <div class="rot3-inv-col">
+          <div class="rot3-inv-label">${groupIco}${escHtml(totalLabel)}</div>
+          <div class="rot3-inv-valor">${escHtml(formatCurrency(total, code))}</div>
+          <div class="rot3-inv-sub">${escHtml(subTotal)}</div>
+        </div>
       </div>
-    </div>
-    <div class="rot3-inv-footer">${clockIco}${footerNote || 'Formas de pagamento sob consulta'}</div>`;
-  }).join('');
+      ${nota ? `<div class="rot3-inv-foot">${clockIco}<span>${nota}</span></div>` : ''}
+    </div>`;
+    })
+    .join('');
 }
 
 // MODELO MODERNO — buildModernoPropostaBodyHtml (layout rot3)
@@ -2192,52 +2451,70 @@ function buildModernoPropostaBodyHtml(params: {
   showHeader: boolean;
   showDetalhes: boolean;
 }): string {
+  let { cities } = params;
   const {
-    clientName, period, cities, validity, dateLabel, consultor, primeiroNome,
+    clientName, period, validity, dateLabel, consultor, primeiroNome,
     contatos, viajantes, qrUrl, items, currency, discount, showItemValues,
     showDetalhes
   } = params;
 
+  const cidadesCrono = rot3CidadesCronologicas(items);
+  if (cidadesCrono.length) cities = cidadesCrono;
   const destino = cities.join(' • ').toUpperCase() || 'PROPOSTA DE VIAGEM';
-  const rotaCidades = cities.join(' • ');
+  const metaIco = (path: string) =>
+    `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;position:relative;top:-1px">${path}</svg>`;
+  const calIco = metaIco('<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>');
+  const pplIco = metaIco('<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>');
+  const metaVal = (v: string) => `<span class="rot3-meta-val">${escHtml(v)}</span>`;
   const metaItens = [
-    period ? `Período: ${period}` : '',
-    viajantes ? `Viajantes: ${viajantes}` : '',
-    dateLabel ? `Emissão: ${dateLabel}` : '',
-    validity ? `Validade: ${validity}` : ''
+    period ? `${calIco}<b>Período:</b> ${metaVal(period)}` : '',
+    viajantes ? `${pplIco}<b>Viajantes:</b> ${metaVal(viajantes)}` : '',
+    dateLabel ? `<b>Emissão:</b> ${metaVal(dateLabel)}` : '',
+    validity ? `<b>Validade:</b> ${metaVal(validity)}` : ''
   ].filter(Boolean);
 
-  const cidadesHtml = cities.length
-    ? `<div class="rot3-bloco"><div class="rot3-bloco-label">CIDADES CONTEMPLADAS NA PROPOSTA</div><div class="rot3-rota">${escHtml(rotaCidades)}</div></div>`
-    : '';
-
-  const ctaHtml = `<div class="rot3-cta">${qrUrl ? `<img src="${escHtml(qrUrl)}" alt="QR" class="rot3-qr" />` : ''}<div class="rot3-cta-texto"><b>Reserve com ${escHtml(primeiroNome || 'o consultor')}</b><span>Atendimento direto via WhatsApp.${validity ? ` Tarifas válidas até ${escHtml(validity)}.` : ''}</span></div></div>`;
+  const ctaHtml = `<div class="rot3-bloco-cta"><b>Reserve com o ${escHtml(primeiroNome || 'consultor')}:</b>${validity ? ` Tarifas válidas até <b>${escHtml(validity)}</b> •` : ''} Atendimento direto via WhatsApp.</div>`;
+  const rotaCidades = cities.map(escHtml).join('<span class="rot3-rota-sep">•</span>');
+  const blocoHtml = `<div class="rot3-bloco">${
+    cities.length
+      ? `<div class="rot3-bloco-label">Cidades Contempladas na Proposta</div><div class="rot3-rota">${rotaCidades}</div>`
+      : ''
+  }${ctaHtml}</div>`;
 
   const detalhesHtml = showDetalhes
     ? buildRot3DetalhamentoOrcHtml(items, currency) ||
-      `<section class="rot3-secao"><h2 class="rot3-secao-titulo">DETALHAMENTO DOS SERVIÇOS</h2><div class="orc-empty">Sem itens neste orçamento.</div></section>`
+      `<section class="rot3-secao"><h2 class="rot3-secao-titulo">Detalhamento dos Serviços Cotados</h2><div class="orc-empty">Sem itens neste orçamento.</div></section>`
     : '';
-  const investimentoHtml = buildRot3InvestimentoOrcamentoHtml(items, currency, discount, validity, consultor);
-
-  const consHtml = consultor
-    ? `<div class="rot3-cons"><b>${escHtml(consultor)}</b>${contatos ? `<span>${escHtml(contatos)}</span>` : ''}<span>Consultor de viagens</span></div>`
-    : '';
-
+  const investimentoHtml = buildRot3InvestimentoOrcamentoHtml(
+    items,
+    currency,
+    discount,
+    validity,
+    consultor,
+    dateLabel
+  );
   const cronogramaModernoHtml = showDetalhes ? propostaModernoCronogramaHtml(items) : '';
+
   return `<div class="rot3-doc">
-  <div class="rot3-kicker-bar"><span></span><span></span></div>
-  <div class="rot3-kicker">PROPOSTA DE VIAGEM</div>
+  <div class="rot3-kicker-bar"><span></span><span></span><span></span></div>
+  <div class="rot3-kicker">Proposta de Viagem</div>
   <h1 class="rot3-title">${escHtml(destino)}</h1>
-  <div class="rot3-para">Para: <strong>${escHtml(clientName)}</strong></div>
-  ${metaItens.length ? `<div class="rot3-meta">${metaItens.map((m) => `<span>${escHtml(m)}</span>`).join(' &nbsp;•&nbsp; ')}</div>` : ''}
-  ${consHtml}
-  ${cidadesHtml}
-  ${ctaHtml}
+  ${clientName ? `<div class="rot3-para"><b>Para:</b> ${escHtml(clientName)}</div>` : ''}
+  ${metaItens.length ? `<div class="rot3-meta">${metaItens.join(ROT3_META_SEP)}</div>` : ''}
+  ${blocoHtml}
   ${cronogramaModernoHtml}
   ${detalhesHtml}
   ${investimentoHtml}
-  <div class="rot3-doc-footer">Proposta de Viagem${clientName ? ` · ${escHtml(clientName)}` : ''}</div>
 </div>`;
+}
+
+/** Informações importantes no estilo Moderno (texto já em linhas). */
+function buildRot3InfosHtml(linhas: string[], complementUrl: string | null, titulo = 'Informações Importantes') {
+  const lista = linhas.map((l) => l.trim()).filter(Boolean);
+  if (!lista.length && !complementUrl) return '';
+  return `<div class="rot3-infos"><div class="rot3-infos-titulo">${escHtml(titulo)}</div>${
+    lista.length ? `<ul>${lista.map((l) => `<li>${escHtml(l)}</li>`).join('')}</ul>` : ''
+  }${complementUrl ? `<img src="${escHtml(complementUrl)}" alt="Imagem complementar" />` : ''}</div>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -2359,6 +2636,11 @@ export function buildQuotePreviewHtmlSync(params: {
       <ul class="orc-footer-list">${footerLinesHtml}</ul>
       ${complementUrl ? `<div class="orc-complement-img"><img src="${escHtml(complementUrl)}" alt="Imagem complementar" /></div>` : ''}
     </div>`;
+
+  const modernoInfosHtml = buildRot3InfosHtml(
+    footerLines.map((line) => line.text),
+    complementUrl
+  );
 
   const propostaBodyHtml = buildPropostaBodyHtml({
     clientName,
@@ -2586,6 +2868,10 @@ export function buildQuotePreviewHtmlSync(params: {
     .rot3-qr { height: 52px; background: #fff; border-radius: 6px; padding: 2px; }
     .rot3-cta-texto b { display: block; color: #1B2C80; font-size: 9pt; margin-bottom: 2px; }
     .rot3-cta-texto span { font-size: 8pt; color: #4B5563; }
+    .rot3-cta--texto { justify-content: center; }
+    .rot3-cta-linha { font-size: 9pt; color: #1B2C80; text-align: center; }
+    .rot3-meta b { color: #1B2C80; }
+    .rot3-meta-val { color: #1B2C80; font-weight: 600; }
     .rot3-cons { text-align: right; font-size: 8pt; color: #6B7280; line-height: 1.55; margin: 0 0 14px; }
     .rot3-cons b { color: #1B2C80; display: block; font-size: 9.5pt; }
     .rot3-secao { margin: 24px 0 0; }
@@ -2791,7 +3077,7 @@ export function buildQuotePreviewHtmlSync(params: {
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Orçamento ${escHtml(clientName)}</title>
-  <style>${css}</style>
+  <style>${css}${MODERNO_CANON_CSS}</style>
 </head>
 <body>
   <div class="toolbar">
@@ -2816,7 +3102,10 @@ export function buildQuotePreviewHtmlSync(params: {
   <div class="modelo" data-modelo="moderno"${mostrarModerno ? '' : ' hidden'}>
     <div class="pg">
       ${modernoBodyHtml}
-      ${footerHtml}
+      <div class="rot3-doc" style="padding-top:0">
+        ${modernoInfosHtml}
+        <div class="rot3-doc-footer">Proposta de Viagem${clientName ? ` • ${escHtml(clientName)}` : ''}</div>
+      </div>
     </div>
   </div>
   <script>
