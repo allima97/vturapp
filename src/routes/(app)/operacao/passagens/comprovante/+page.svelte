@@ -957,9 +957,7 @@
   .mod-titulo { font-size: 32px; font-weight: bold; color: #1B2C80; margin: 0 0 10px; line-height: 1.15; letter-spacing: .3px; }
   .mod-meta-linha { font-size: 13px; color: #4B5563; display: flex; flex-direction: column; gap: 4px; justify-content: center; align-items: center; }
   .mod-meta-linha b { color: #1F2937; }
-  .mod-meta-sep { color: #6B7280; }
   .mod-meta-linha > span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
-  .mod-meta-linha > span.mod-meta-sep { gap: 0; }
   .mod-ico { display: inline-block; flex-shrink: 0; width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .mod-resumo { display: flex; align-items: center; gap: 24px; background: #EEF2F7; border: 1px solid #9AAAC2; border-radius: 10px; padding: 18px 22px; margin-bottom: 16px; break-inside: avoid; }
   .mod-resumo-rota { flex: 1; min-width: 0; }
