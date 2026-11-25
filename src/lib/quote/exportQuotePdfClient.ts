@@ -2488,8 +2488,8 @@ function buildModernoPropostaBodyHtml(params: {
 }): string {
   let { cities } = params;
   const {
-    clientName, period, validity, dateLabel, consultor, primeiroNome,
-    contatos, viajantes, qrUrl, items, currency, discount, showItemValues,
+    clientName, period, validity, dateLabel, consultor,
+    viajantes, items, currency, discount, showItemValues,
     showDetalhes
   } = params;
 
@@ -2508,26 +2508,10 @@ function buildModernoPropostaBodyHtml(params: {
     viajantes ? `${pplIco}<b>Viajantes:</b> ${metaVal(viajantes)}` : ''
   ].filter(Boolean);
 
-  // Faixa "Reserve": convite + validade à esquerda, QR Code do WhatsApp à direita
-  const relogioIco = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
-  const ctaHtml = `<div class="rot3-bloco-cta${qrUrl ? '' : ' rot3-bloco-cta--sem-qr'}">
-    <div class="rot3-cta-info">
-      <div class="rot3-cta-titulo">Reserve com o ${escHtml(primeiroNome || 'consultor')}</div>
-      <div class="rot3-cta-texto">${
-        qrUrl
-          ? 'Aponte a câmera do celular para o QR Code e fale direto no WhatsApp.'
-          : 'Atendimento direto via WhatsApp.'
-      }</div>
-      ${validity ? `<div class="rot3-cta-validade">${relogioIco}<span>Tarifas válidas até <b>${escHtml(validity)}</b></span></div>` : ''}
-    </div>
-    ${qrUrl ? `<div class="rot3-cta-qr"><img src="${escHtml(qrUrl)}" alt="QR Code WhatsApp" /><span>WhatsApp</span></div>` : ''}
-  </div>`;
   const rotaCidades = cities.map(escHtml).join('<span class="rot3-rota-sep">•</span>');
-  const blocoHtml = `<div class="rot3-bloco">${
-    cities.length
-      ? `<div class="rot3-bloco-label">Cidades Contempladas na Proposta</div><div class="rot3-rota">${rotaCidades}</div>`
-      : ''
-  }${ctaHtml}</div>`;
+  const blocoHtml = cities.length
+    ? `<div class="rot3-bloco"><div class="rot3-bloco-label">Cidades Contempladas na Proposta</div><div class="rot3-rota">${rotaCidades}</div></div>`
+    : '';
 
   const detalhesHtml = showDetalhes
     ? buildRot3DetalhamentoOrcHtml(items, currency) ||

@@ -34,17 +34,6 @@ export const MODERNO_CANON_CSS = `
 .rot3-bloco-label { font-size: 9pt; font-weight: bold; letter-spacing: 2px; text-transform: uppercase; color: #1B2C80; margin-bottom: 10px; text-align: center; }
 .rot3-rota { font-size: 11pt; font-weight: bold; color: #1F2937; line-height: 1.5; text-align: center; }
 .rot3-rota-sep { color: #4472C4; margin: 0 8px; font-weight: normal; }
-.rot3-bloco-cta { display: flex; align-items: center; justify-content: space-between; gap: 20px; border-top: 1px solid #C5CED9; margin-top: 14px; padding-top: 14px; text-align: left; }
-.rot3-bloco-cta--sem-qr { justify-content: center; text-align: center; }
-.rot3-cta-info { flex: 1; min-width: 0; }
-.rot3-cta-titulo { font-size: 11pt; font-weight: bold; color: #1B2C80; margin-bottom: 3px; }
-.rot3-cta-texto { font-size: 9pt; color: #4B5563; line-height: 1.45; margin-bottom: 8px; }
-.rot3-cta-validade { display: inline-flex; align-items: center; gap: 6px; background: #fff; border: 1px solid #9AAAC2; border-radius: 999px; padding: 4px 12px; font-size: 8.5pt; color: #374151; }
-.rot3-cta-validade svg { display: inline-block; flex-shrink: 0; color: #4472C4; }
-.rot3-cta-validade b { color: #1B2C80; }
-.rot3-cta-qr { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; background: #fff; border: 1px solid #C5CED9; border-radius: 8px; padding: 6px 6px 4px; }
-.rot3-cta-qr img { display: block; width: 76px; height: 76px; }
-.rot3-cta-qr span { font-size: 7pt; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; color: #4B5563; }
 
 /* Títulos de seção */
 .rot3-secao { margin: 26px 0 0; }
