@@ -15,6 +15,7 @@ import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateQuoteReadModels } from '$lib/server/readModelCache';
 import { isQuoteCreatorAllowed, resolveQuoteCreatorScope } from '$lib/server/orcamentos';
 import { complementarListaOperacional } from '$lib/server/destinoOperacional';
+import { anexarPaisesAosItens } from '$lib/server/orcamentoPaises';
 import { modulosOperacionaisGeograficosAtivos } from '$lib/config/destinosGeograficos';
 import { prepareWrite } from '$lib/server/data/query';
 import {
@@ -170,10 +171,19 @@ export async function handleOrcamentosIdGet(event: RequestEvent) {
       segmentMap.set(itemId, list);
     }
 
-    const itemsWithSegments = items.map((item) => ({
+    const itemsComSegmentos = items.map((item) => ({
       ...item,
       segments: segmentMap.get(String(item.id || '')) || []
     }));
+    // Prévia de PDF: país de cada item para o título do modelo Moderno.
+    const itemsWithSegments = previewPdf
+      ? await anexarPaisesAosItens(
+          itemsComSegmentos,
+          client,
+          event.platform?.env?.DB,
+          event.platform?.env?.GEO_DB
+        )
+      : itemsComSegmentos;
 
     const cliente = clienteResult.data ?? null;
     const vendedor = vendedorResult.data?.nome_completo || 'Equipe VTUR';

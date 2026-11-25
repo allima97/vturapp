@@ -59,6 +59,8 @@ export type QuoteItemForPdf = {
   city_name?: string | null;
   cidade_id?: string | null;
   destino_geografico_id?: string | null;
+  /** País do destino (anexado pelo servidor na prévia de PDF). */
+  pais_nome?: string | null;
   quantity?: number | null;
   unit_price?: number | null;
   total_amount?: number | null;
@@ -1741,6 +1743,34 @@ function rot3FraseCronograma(item: QuoteItemForPdf): string {
   return `<b>${title}</b>${resumo ? ` (${resumo})` : ''}${pax ? ` para ${escHtml(pax)}` : ''}`;
 }
 
+/**
+ * Países visitados na ordem da viagem (título do Moderno). O país da cidade de
+ * origem (de onde sai o primeiro voo) fica de fora; sem países, retorna [].
+ */
+function rot3PaisesCronologicos(items: QuoteItemForPdf[]): string[] {
+  const porData = [...items].sort((a, b) =>
+    String(a.start_date || '9999').localeCompare(String(b.start_date || '9999'))
+  );
+  const primeiroVoo = porData.find((i) => rot3Tipo(i) === 'voo');
+  const origem = normalizeText(primeiroVoo ? rot3Legs(primeiroVoo)[0]?.cidOrig || '' : '');
+  const paisOrigem = origem
+    ? normalizeText(
+        porData.find((i) => i.pais_nome && normalizeText(nomeCidadeNoPdf(textVal(i.city_name))) === origem)
+          ?.pais_nome || ''
+      )
+    : '';
+  const vistos = new Set<string>();
+  const lista: string[] = [];
+  for (const item of porData) {
+    const pais = textVal(item.pais_nome);
+    const key = normalizeText(pais);
+    if (!pais || vistos.has(key) || (paisOrigem && key === paisOrigem)) continue;
+    vistos.add(key);
+    lista.push(pais);
+  }
+  return lista;
+}
+
 /** Cidades na ordem da viagem (inclui destinos de voos/trens, sem a cidade de origem). */
 function rot3CidadesCronologicas(items: QuoteItemForPdf[]): string[] {
   const eventos: Array<{ data: string; cidade: string }> = [];
@@ -2469,7 +2499,9 @@ function buildModernoPropostaBodyHtml(params: {
 
   const cidadesCrono = rot3CidadesCronologicas(items);
   if (cidadesCrono.length) cities = cidadesCrono;
-  const destino = cities.join(' • ').toUpperCase() || 'PROPOSTA DE VIAGEM';
+  const paises = rot3PaisesCronologicos(items);
+  const destino =
+    (paises.length ? paises : cities).join(' • ').toUpperCase() || 'PROPOSTA DE VIAGEM';
   const metaIco = (path: string) =>
     `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:4px;position:relative;top:-1px">${path}</svg>`;
   const calIco = metaIco('<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>');
