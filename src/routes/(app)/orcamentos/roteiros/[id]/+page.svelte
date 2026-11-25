@@ -211,7 +211,7 @@
   const PASSEIO_TIPO_OPTIONS = ['Passeio', 'Show', 'Ingresso', 'Transfer', 'Serviço', 'Outro'];
   const TRANSPORTE_TIPO_OPTIONS = ['Aéreo', 'Terrestre', 'Marítimo', 'Ferroviário'];
   const TRANSPORTE_TIPO_VOO_OPTIONS = ['Nacional', 'Internacional'];
-  const INVESTIMENTO_TIPO_OPTIONS = ['Por pessoa', 'Por casal', 'Por família', 'Por apto'];
+  const INVESTIMENTO_TIPO_OPTIONS = ['Por pessoa', 'Por apto'];
   const PAGAMENTO_SERVICO_OPTIONS = [
     'Pacote Completo',
     'Passagem Aérea',

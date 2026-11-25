@@ -50,6 +50,7 @@
   {:else}
     <div class="space-y-3">
       {#each investimentos as inv, index}
+        {@const porPessoa = !inv.tipo || inv.tipo === 'Por pessoa'}
         <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
           <div class="mb-2 flex items-center justify-between">
             <span class="text-xs font-semibold text-slate-500">Linha {index + 1}</span>
@@ -103,7 +104,13 @@
               <FieldSelect
                 label="Tipo"
                 bind:value={inv.tipo}
-                options={INVESTIMENTO_TIPO_OPTIONS.map((opt) => ({ value: opt, label: opt }))}
+                options={[
+                  ...INVESTIMENTO_TIPO_OPTIONS.map((opt) => ({ value: opt, label: opt })),
+                  // Linhas antigas ("Por casal", "Por família") continuam visíveis até serem trocadas.
+                  ...(inv.tipo && !INVESTIMENTO_TIPO_OPTIONS.includes(inv.tipo)
+                    ? [{ value: inv.tipo, label: inv.tipo }]
+                    : [])
+                ]}
                 class_name="w-full"
               />
             </div>
@@ -119,7 +126,7 @@
             </div>
             <div>
               <FieldInput
-                label="Qtd. aptos"
+                label={porPessoa ? 'Qtd. pessoas' : 'Qtd. aptos'}
                 type="number"
                 value={inv.qtd_apto ?? ''}
                 class_name="w-full"
@@ -130,7 +137,7 @@
             <div>
               <FieldInput
                 money
-                label="Valor por apto (R$)"
+                label={porPessoa ? 'Valor total (R$)' : 'Valor por apto (R$)'}
                 type="number"
                 value={inv.valor_por_apto ?? ''}
                 class_name="w-full"
