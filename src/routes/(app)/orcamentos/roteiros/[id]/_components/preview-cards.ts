@@ -270,6 +270,28 @@ function pontosTrechoTrem(segmento: QuoteFlightSegment): [string, string] {
   ];
 }
 
+/** Moderno: "Origem • data às hora → Destino • data às hora" e "Operadora · Nº". */
+function pernaTremModerno(segmento: QuoteFlightSegment, formatDate: FormatDate, index: number) {
+  const [from, to] = pontosTrechoTrem(segmento);
+  const data = (valor?: string | null) => {
+    const d = formatDate(valor || '');
+    return d && d !== '-' ? d : '';
+  };
+  const dataSaida = data(segmento.data_voo);
+  const dataChegada = data(segmento.data_fim) || dataSaida;
+  const saida = text(segmento.hora_saida).replace(/\s*\(\+\d+\)\s*$/, '');
+  const chegada = text(segmento.hora_chegada).replace(/\s*\(\+\d+\)\s*$/, '');
+  const ponto = (cidade: string, dia: string, hora: string) =>
+    [escapeHtml(cidade), [dia, hora ? `às ${hora}` : ''].filter(Boolean).join(' ')]
+      .filter(Boolean)
+      .join(' • ');
+  const carrier = [text(segmento.cia_aerea), text(segmento.numero_voo)].filter(Boolean).join(' · ');
+  return [
+    `<div class="rt rota"${index ? ' style="margin-top:8px"' : ''}>${ponto(from, dataSaida, saida)} <span aria-hidden="true">→</span> ${ponto(to, dataChegada, chegada)}</div>`,
+    carrier ? `<div class="mu sm">${escapeHtml(carrier)}</div>` : ''
+  ].join('');
+}
+
 function pernaTrem(segmento: QuoteFlightSegment, formatDate: FormatDate, index: number) {
   const [from, to] = pontosTrechoTrem(segmento);
   const dataSaida = formatDate(segmento.data_voo || segmento.data_fim);
@@ -286,7 +308,11 @@ function pernaTrem(segmento: QuoteFlightSegment, formatDate: FormatDate, index: 
   ].join('');
 }
 
-export function renderPreviewTrens(items: RotPasseio[], formatDate: FormatDate) {
+export function renderPreviewTrens(
+  items: RotPasseio[],
+  formatDate: FormatDate,
+  opcoes: { moderno?: boolean } = {}
+) {
   return Array.from(groupByCity(items, 'Trem'), ([city, trens]) =>
     trens
       .map((item) => {
@@ -319,12 +345,20 @@ export function renderPreviewTrens(items: RotPasseio[], formatDate: FormatDate) 
           passeioNorm !== '' &&
           restoRota === '' &&
           cidadesRota.every((cidade) => passeioNorm.includes(normTxt(cidade)));
+        // Moderno: o título já traz a rota; a descrição livre não se repete.
         const passeioExtra =
+          !opcoes.moderno &&
           passeioTxt && !passeioEhRota && normTxt(passeioTxt) !== normTxt(tituloRota || titulo)
             ? passeioTxt
             : '';
         const periodo = periodoTexto(item, formatDate);
-        const pernas = segmentos.map((seg, index) => pernaTrem(seg, formatDate, index)).join('');
+        const pernas = segmentos
+          .map((seg, index) =>
+            opcoes.moderno
+              ? pernaTremModerno(seg, formatDate, index)
+              : pernaTrem(seg, formatDate, index)
+          )
+          .join('');
         const chips = chipsHtml(
           segmentos.flatMap((seg) => [
             text(seg.classe_reserva),
