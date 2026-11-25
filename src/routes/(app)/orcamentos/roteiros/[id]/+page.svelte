@@ -1333,7 +1333,7 @@
 
     let rot3PagamentosHtmlShared = '';
     if (pagamentosItems.length > 0) {
-      const qtdPaxPag = Number(investimentosItems[0]?.qtd_adultos || investimentosItems[0]?.qtd_apto || 0) || 0;
+      const qtdPaxPag = Number(investimentosItems[0]?.qtd_apto || 0) || 0;
       const paxLabel  = qtdPaxPag > 1 ? ` (${qtdPaxPag} Pax${qtdPaxPag > 1 ? 's' : ''})` : '';
       const colHdrPag = `<div class="rot3-pag-header-row rot3-pag-header-row--padrao">
         <div class="rot3-pag-h1">Modalidade</div>
