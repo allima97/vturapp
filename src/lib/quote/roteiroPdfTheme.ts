@@ -202,6 +202,7 @@ export const roteiroPdfThemeCss = `
   .section > .chks .chk svg { margin-top: 2px; }
   .chk { display: flex; align-items: center; gap: 6px; color: #1B2C80; font-size: 7.5pt; font-family: Arial, Helvetica, sans-serif; }
   .chk svg { flex: 0 0 auto; }
+  .chk svg[stroke="#243AA3"] { stroke: #16A34A; }
   .section > .grid, .section > .chks, .section > .preview-table-wrap, .section > ul, .section > p { padding: 8px 12px 12px; }
   .preview-table-wrap { overflow: visible; border: 0; border-radius: 0; }
   .preview-table { font-family: Arial, Helvetica, sans-serif; font-size: 8pt; }
