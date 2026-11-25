@@ -471,7 +471,7 @@ export function renderPreviewInvestimentos(items: RotInvestimento[]) {
 
 /**
  * Trem no estilo Moderno: tabela de 3 colunas igual à de Hotéis.
- * Cabeçalho "Origem | Destino | Trem & Classe"; cada perna do trecho vira uma linha.
+ * Cabeçalho "Cidade de Origem | Cidade de Destino | Trem & Classe"; cada perna do trecho vira uma linha.
  */
 export function renderRot3Trens(items: RotPasseio[], formatDate: FormatDate) {
   const data = (valor?: string | null) => {
@@ -505,7 +505,7 @@ export function renderRot3Trens(items: RotPasseio[], formatDate: FormatDate) {
     });
   });
   if (!linhas.length) return '';
-  return `<div class="rot3-tabela"><div class="rot3-hotel-header-row"><div>Origem</div><div>Destino</div><div>Trem &amp; Classe</div></div>${linhas.join('')}</div>`;
+  return `<div class="rot3-tabela"><div class="rot3-hotel-header-row"><div>Cidade de Origem</div><div>Cidade de Destino</div><div>Trem &amp; Classe</div></div>${linhas.join('')}</div>`;
 }
 
 /**
