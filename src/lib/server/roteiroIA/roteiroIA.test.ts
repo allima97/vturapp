@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ErroClaude, chamarFerramentaClaude } from './claude';
+import { ErroClaude, chamarFerramentaClaude, configPensamento } from './claude';
 import { chamarGroq, esquemaEstrito } from './groq';
 import {
   MODELOS_IA,
@@ -12,7 +12,7 @@ import {
 import { FERRAMENTA_ROTEIRO, type SaidaNormalizada } from './esquema';
 import { normalizarSaidaIA, posProcessarRoteiroIA, validarPedidoRoteiroIA } from './posProcessar';
 import { PROMPT_SISTEMA_ROTEIRO, montarMensagemPedido } from './prompt';
-import { chaveCacheRoteiro } from './reaproveitamento';
+import { chaveCacheRoteiro, classePerfil, extrairBlocosDias } from './reaproveitamento';
 import type { PedidoRoteiroIA } from '$lib/roteiroIA/tipos';
 
 const pedido: PedidoRoteiroIA = {
@@ -379,5 +379,121 @@ describe('provedores', () => {
   it('todo modelo oferecido tem preço para o log de custo', () => {
     for (const m of MODELOS_IA)
       expect(custoEstimadoUSD(m.id, { output_tokens: 1_000_000 })).toBe(m.preco.saida);
+  });
+});
+
+describe('pensamento do Claude', () => {
+  it('desliga no Haiku e evita o pensamento antecipado no Sonnet', () => {
+    expect(configPensamento('claude-haiku-5-5')).toEqual({ type: 'disabled' });
+    expect(configPensamento('claude-sonnet-5-5')).toEqual({ type: 'between_tools' });
+    expect(configPensamento('openai/gpt-oss-120b')).toBeNull();
+  });
+
+  it('a requisição do Haiku vai sem pensamento e a resposta cortada é marcada', async () => {
+    const erroCortado = await chamarFerramentaClaude({
+      apiKey: 'k',
+      modelo: 'claude-haiku-5-5',
+      sistema: 's',
+      mensagem: 'm',
+      ferramenta: FERRAMENTA_ROTEIRO,
+      fetcher: (async (_u: RequestInfo | URL, init?: RequestInit) => {
+        expect(JSON.parse(String(init?.body)).thinking).toEqual({ type: 'disabled' });
+        return new Response(
+          JSON.stringify({
+            stop_reason: 'max_tokens',
+            content: [{ type: 'text', text: '{"dias":[' }]
+          }),
+          { status: 200 }
+        );
+      }) as typeof fetch
+    }).catch((e) => e);
+    expect(erroCortado).toBeInstanceOf(ErroClaude);
+    expect(erroCortado.cortado).toBe(true);
+  });
+});
+
+describe('biblioteca de dias por cidade', () => {
+  it('classifica o perfil do viajante', () => {
+    expect(classePerfil({ perfil: 'Casal em lua de mel', observacoes: '', criancas: 0 })).toBe(
+      'casal'
+    );
+    expect(classePerfil({ perfil: 'casal', observacoes: '', criancas: 2 })).toBe('familia');
+    expect(classePerfil({ perfil: 'Terceira idade', observacoes: '', criancas: 0 })).toBe('senior');
+    expect(classePerfil({ perfil: '', observacoes: '', criancas: 0 })).toBe('geral');
+  });
+
+  it('extrai só dias de passeio seguidos na mesma cidade, escritos pela IA', () => {
+    const d = (dia: number, cidade: string, percurso = '', bloco = false) => ({
+      dia,
+      cidade,
+      percurso,
+      descricao: `Dia ${dia}.`,
+      ...(bloco ? { bloco: true } : {})
+    });
+    const trechos = extrairBlocosDias(
+      {
+        dias: [
+          d(1, 'Roma', 'São Paulo → Roma'),
+          d(2, 'Roma'),
+          d(3, 'Roma'),
+          d(4, 'Paris', 'Roma → Paris'),
+          d(5, 'Paris', '', true),
+          d(6, 'Paris'),
+          d(7, 'Paris', 'Paris → São Paulo')
+        ],
+        opcionais: [],
+        inclui: [],
+        nao_inclui: []
+      },
+      7
+    );
+    expect(trechos).toEqual([
+      { cidade: 'Roma', descricoes: ['Dia 2.', 'Dia 3.'] },
+      { cidade: 'Paris', descricoes: ['Dia 6.'] }
+    ]);
+  });
+
+  it('expande o bloco pelo código, sem sobrescrever dias escritos pela IA', () => {
+    const blocos = [{ ref: 'd1', cidade: 'Roma', dias: 3, descricoes: ['A.', 'B.', 'C.'] }];
+    const { saida, blocosUsados } = normalizarSaidaIA(
+      {
+        dias: [
+          { dia: 1, cidade: 'Roma', percurso: 'São Paulo → Roma', descricao: 'Chegada.' },
+          { dia: 4, cidade: 'Roma', percurso: '', descricao: 'Escrito pela IA.' },
+          { dia: 5, cidade: 'Roma', percurso: 'Roma → São Paulo', descricao: 'Volta.' }
+        ],
+        blocos_ref: [
+          { ref: 'd1', dia: 2 },
+          { ref: 'x9', dia: 2 }
+        ]
+      },
+      [],
+      5,
+      blocos
+    );
+    expect(saida.dias.map((x) => [x.dia, x.descricao, Boolean(x.bloco)])).toEqual([
+      [1, 'Chegada.', false],
+      [2, 'A.', true],
+      [3, 'B.', true],
+      [4, 'Escrito pela IA.', false],
+      [5, 'Volta.', false]
+    ]);
+    expect(blocosUsados).toEqual(blocos);
+  });
+
+  it('a mensagem lista os blocos com resumo curto', () => {
+    const m = montarMensagemPedido(
+      pedido,
+      [],
+      [
+        {
+          ref: 'd1',
+          cidade: 'Roma',
+          dias: 2,
+          descricoes: ['Café da manhã. Coliseu e Fórum.', 'Vaticano.']
+        }
+      ]
+    );
+    expect(m).toContain('d1 Roma, 2 dia(s) de passeio: Coliseu e Fórum. | Vaticano.');
   });
 });

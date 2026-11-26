@@ -17,11 +17,24 @@ export class ErroClaude extends Error {
   constructor(
     message: string,
     readonly status: number,
-    readonly tentarDeNovo: boolean
+    readonly tentarDeNovo: boolean,
+    /** A resposta parou no teto de max_tokens (vale uma nova tentativa com teto maior). */
+    readonly cortado = false
   ) {
     super(message);
     this.name = 'ErroClaude';
   }
+}
+
+/**
+ * Modelos Claude 5.x pensam por padrão (pensamento adaptativo), e esse
+ * raciocínio é cobrado como saída. Haiku 5.5 aceita desligar; Sonnet 5.5 não
+ * aceita "disabled", mas "between_tools" desliga o pensamento antes da resposta.
+ */
+export function configPensamento(modelo: string): { type: 'disabled' | 'between_tools' } | null {
+  if (modelo.startsWith('claude-haiku-5')) return { type: 'disabled' };
+  if (modelo.startsWith('claude-sonnet-5-5')) return { type: 'between_tools' };
+  return null;
 }
 
 type Ferramenta = { name: string; description: string; input_schema: unknown };
@@ -56,9 +69,13 @@ export async function chamarFerramentaClaude(params: {
   maxTokens?: number;
   fetcher?: typeof fetch;
 }): Promise<ResultadoClaude> {
+  const pensamento = configPensamento(params.modelo);
   const corpo = {
     model: params.modelo,
     max_tokens: params.maxTokens ?? 16_000,
+    // Sem "pensamento" antes da resposta: preencher o roteiro não precisa dele, e
+    // ele é cobrado como saída e consome o max_tokens (era o que cortava o JSON).
+    ...(pensamento ? { thinking: pensamento } : {}),
     // Regras fixas em cache (prefixo estável: nada do pedido entra aqui). Na
     // Sonnet/Haiku/Opus 5.5 o mínimo cacheável é 512 tokens e a leitura custa
     // 0,05× a entrada; TTL padrão de 5 min, renovado a cada acerto. O
@@ -130,7 +147,8 @@ export async function chamarFerramentaClaude(params: {
         ? 'O roteiro ficou longo demais para uma geração. Reduza o período ou os destinos.'
         : 'A IA não devolveu o roteiro no formato esperado.',
       502,
-      !cortado
+      !cortado,
+      cortado
     );
   }
 

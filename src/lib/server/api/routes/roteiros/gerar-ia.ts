@@ -40,7 +40,10 @@ import {
   montarMensagemPedido
 } from '$lib/server/roteiroIA/prompt';
 import {
+  carregarBlocosDias,
   carregarReferencias,
+  classePerfil,
+  gravarBlocosDias,
   chaveCacheRoteiro,
   gravarBibliotecaOpcionais,
   gravarCacheRoteiro,
@@ -65,7 +68,9 @@ const erro = (message: string, status: number) =>
 
 /** Teto de saída proporcional ao roteiro (protege contra respostas que não param). */
 const maxTokensPara = (dias: number, destinos: number) =>
-  Math.min(16_000, 1_500 + dias * 220 + destinos * 350);
+  Math.min(16_000, 2_500 + dias * 300 + destinos * 400);
+/** Teto da nova tentativa quando a primeira resposta parou no limite. */
+const MAX_TOKENS_SEGUNDA_TENTATIVA = 24_000;
 
 export async function handleRoteirosGerarIaPost(event: RequestEvent) {
   try {
@@ -176,13 +181,18 @@ export async function handleRoteirosGerarIaPost(event: RequestEvent) {
 
     // ── 3. Geração ────────────────────────────────────────────────────────
     const totalDias = diasDoPedido(pedido);
+    const perfil = classePerfil(pedido);
+    const blocos = await carregarBlocosDias(env?.DB, destinos, perfil, totalDias);
     const mensagem = montarMensagemPedido(
       { ...pedido, destinos: destinos.map((d) => d.nome) },
-      referencias
+      referencias,
+      blocos
     );
     let rascunho;
     let normalizada: SaidaNormalizada | null = null;
     let usadasBiblioteca: ReturnType<typeof normalizarSaidaIA>['usadasBiblioteca'] = [];
+    let blocosUsados: ReturnType<typeof normalizarSaidaIA>['blocosUsados'] = [];
+    let teto = maxTokensPara(totalDias, destinos.length);
     let ultimaFalha: unknown;
     const usos: UsoClaude[] = [];
     let modeloUsado = modelo;
@@ -197,13 +207,19 @@ export async function handleRoteirosGerarIaPost(event: RequestEvent) {
           sistema: PROMPT_SISTEMA_ROTEIRO,
           mensagem,
           ferramenta: FERRAMENTA_ROTEIRO,
-          maxTokens: maxTokensPara(totalDias, destinos.length)
+          maxTokens: teto
         });
         usos.push(resultado.uso);
         modeloUsado = resultado.modelo;
-        const n = normalizarSaidaIA(resultado.entrada as SaidaBrutaRoteiro, referencias, totalDias);
+        const n = normalizarSaidaIA(
+          resultado.entrada as SaidaBrutaRoteiro,
+          referencias,
+          totalDias,
+          blocos
+        );
         normalizada = n.saida;
         usadasBiblioteca = n.usadasBiblioteca;
+        blocosUsados = n.blocosUsados;
         rascunho = await posProcessarRoteiroIA(
           normalizada,
           pedido,
@@ -212,6 +228,11 @@ export async function handleRoteirosGerarIaPost(event: RequestEvent) {
         );
       } catch (err) {
         ultimaFalha = err;
+        // Resposta cortada no teto: uma nova tentativa com folga bem maior.
+        if (err instanceof ErroClaude && err.cortado && teto < MAX_TOKENS_SEGUNDA_TENTATIVA) {
+          teto = MAX_TOKENS_SEGUNDA_TENTATIVA;
+          continue;
+        }
         if (err instanceof ErroClaude && (!err.tentarDeNovo || err.status === 504)) break;
       }
     }
@@ -240,7 +261,14 @@ export async function handleRoteirosGerarIaPost(event: RequestEvent) {
     // Guarda para os próximos pedidos iguais e alimenta a biblioteca da cidade.
     await Promise.all([
       gravarCacheRoteiro(env?.DB, { chave, modelo: modeloUsado, saida: normalizada, uso }),
-      gravarBibliotecaOpcionais(env?.DB, normalizada, destinos, usadasBiblioteca)
+      gravarBibliotecaOpcionais(env?.DB, normalizada, destinos, usadasBiblioteca),
+      gravarBlocosDias(env?.DB, {
+        saida: normalizada,
+        destinos,
+        perfil,
+        totalDias,
+        usados: blocosUsados
+      })
     ]);
 
     // Auditoria sem dados de cliente: só o pedido de viagem e o consumo.
@@ -257,6 +285,10 @@ export async function handleRoteirosGerarIaPost(event: RequestEvent) {
         dias: rascunho.dias.length,
         opcionais: rascunho.opcionais.reduce((s, g) => s + g.passeios.length, 0),
         referencias: referencias.length,
+        perfil,
+        blocos_oferecidos: blocos.length,
+        blocos_usados: blocosUsados.length,
+        dias_reaproveitados: blocosUsados.reduce((s, b) => s + b.dias, 0),
         tentativas: usos.length,
         nova_versao: Boolean(pedido.nova_versao),
         uso,

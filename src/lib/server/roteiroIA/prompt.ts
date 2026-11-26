@@ -5,7 +5,7 @@ import type { PedidoRoteiroIA } from '$lib/roteiroIA/tipos';
  * altere o resultado: entra na chave do cache de resultados
  * (roteiro_ia_cache), então gerações antigas deixam de ser reaproveitadas.
  */
-export const VERSAO_PROMPT = 2;
+export const VERSAO_PROMPT = 3;
 
 /** Item da lista de referência enviada à IA (catálogo da agência ou biblioteca). */
 export type ReferenciaOpcional = {
@@ -14,6 +14,15 @@ export type ReferenciaOpcional = {
   cidade: string;
   nome: string;
   descricao: string;
+};
+
+/** Bloco de dias de passeio já escritos para uma cidade (biblioteca). */
+export type BlocoDias = {
+  /** Código curto que a IA devolve: "d1", "d2"… */
+  ref: string;
+  cidade: string;
+  dias: number;
+  descricoes: string[];
 };
 
 /**
@@ -25,7 +34,9 @@ export const PROMPT_SISTEMA_ROTEIRO = `Você é um consultor de viagens brasilei
 Escreva sempre em português do Brasil. Responda SOMENTE com o JSON no esquema pedido.
 
 O QUE VOCÊ PREENCHE
-- dias: exatamente um item por dia, do dia 1 ao último dia informado no pedido, em ordem, sem pular números.
+- dias + blocos_ref: juntos cobrem exatamente todos os dias, do dia 1 ao último, sem pular nem repetir números.
+- blocos_ref: blocos de dias prontos da BIBLIOTECA DE DIAS do pedido, só pelo código e o dia em que começam.
+- dias: os demais dias, escritos por você.
 - opcionais_ref: passeios opcionais escolhidos da LISTA DE REFERÊNCIA do pedido, só pelo código (ref).
 - opcionais_novos: passeios opcionais que não estão na lista, agrupados por cidade.
 - inclui / nao_inclui: itens curtos, um por linha.
@@ -45,6 +56,12 @@ O QUE VOCÊ NUNCA ESCREVE (o consultor preenche depois)
 - Companhia aérea, número de voo, horários exatos, localizador ou assentos.
 - Nome de hotel. Pode dizer "check-in no hotel", nunca qual hotel.
 - Dados pessoais de viajantes.
+
+BLOCOS DE DIAS PRONTOS
+- Um bloco são N dias seguidos de passeio na mesma cidade, sem deslocamento. Dias de chegada, troca de cidade e retorno nunca vêm de bloco: escreva-os sempre.
+- Ao decidir quantas noites cada cidade terá, prefira uma divisão em que os dias de passeio de uma cidade tenham exatamente o tamanho de um bloco dela, desde que a divisão continue equilibrada e realista.
+- Use o bloco se ele combinar com o perfil. Se as observações pedem algo específico para a cidade que o bloco não cobre, escreva esses dias você mesmo.
+- O texto do dia de chegada não deve repetir atrações do bloco que vem depois.
 
 OPCIONAIS
 - Se a cidade tem itens na LISTA DE REFERÊNCIA, escolha de 2 a 5 que combinem com o perfil e devolva só o código em opcionais_ref. Não reescreva nome nem descrição desses itens.
@@ -75,12 +92,29 @@ function linhasReferencia(referencias: ReferenciaOpcional[]) {
     .join('\n');
 }
 
+function linhasBlocos(blocos: BlocoDias[]) {
+  if (!blocos.length) return 'Nenhum.';
+  // Resumo curto de cada dia (evita repetir atrações nos dias escritos à parte).
+  return blocos
+    .map(
+      (b) =>
+        `${b.ref} ${b.cidade}, ${b.dias} dia(s) de passeio: ${b.descricoes
+          .map((d) => d.replace(/^Café da manhã\.\s*/i, '').slice(0, 70))
+          .join(' | ')}`
+    )
+    .join('\n');
+}
+
 /**
  * Mensagem do usuário: só o que varia de pedido para pedido. Sem datas
  * (a IA trabalha com dia 1..N e o servidor aplica as datas), para que o
  * mesmo resultado possa ser reaproveitado em outras datas.
  */
-export function montarMensagemPedido(pedido: PedidoRoteiroIA, referencias: ReferenciaOpcional[]) {
+export function montarMensagemPedido(
+  pedido: PedidoRoteiroIA,
+  referencias: ReferenciaOpcional[],
+  blocos: BlocoDias[] = []
+) {
   const pessoas = [
     `${pedido.adultos} adulto${pedido.adultos === 1 ? '' : 's'}`,
     pedido.criancas ? `${pedido.criancas} criança${pedido.criancas === 1 ? '' : 's'}` : ''
@@ -94,6 +128,9 @@ Duração: ${diasDoPedido(pedido)} dias (dia 1 = saída, último dia = retorno)
 Viajantes: ${pessoas}
 Perfil: ${pedido.perfil || 'não informado'}
 Observações: ${pedido.observacoes || 'nenhuma'}
+
+BIBLIOTECA DE DIAS
+${linhasBlocos(blocos)}
 
 LISTA DE REFERÊNCIA DE OPCIONAIS
 ${linhasReferencia(referencias)}`;

@@ -42,10 +42,18 @@ async function resumoReaproveitamento(db: D1Database | undefined) {
     const opc = await db
       .prepare('SELECT COUNT(*) AS total FROM roteiro_ia_opcionais')
       .first<{ total: number }>();
+    const blocos = await db
+      .prepare(
+        'SELECT COUNT(*) AS total, COALESCE(SUM(usos), 0) AS usos FROM roteiro_ia_dias_cidade'
+      )
+      .first<{ total: number; usos: number }>()
+      .catch(() => null);
     return {
       roteiros_guardados: row?.roteiros ?? 0,
       geracoes_reaproveitadas: row?.reaproveitados ?? 0,
-      opcionais_na_biblioteca: opc?.total ?? 0
+      opcionais_na_biblioteca: opc?.total ?? 0,
+      blocos_de_dias: blocos?.total ?? 0,
+      blocos_reaproveitados: blocos?.usos ?? 0
     };
   } catch {
     return null;

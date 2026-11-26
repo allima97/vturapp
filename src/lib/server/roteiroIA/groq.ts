@@ -146,7 +146,8 @@ export async function chamarGroq(params: {
         ? 'O roteiro ficou longo demais para uma geração. Reduza o período ou os destinos.'
         : 'A IA não devolveu o roteiro no formato esperado.',
       502,
-      !cortado
+      !cortado,
+      cortado
     );
   }
 

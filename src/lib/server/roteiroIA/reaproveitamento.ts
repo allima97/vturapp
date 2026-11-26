@@ -8,12 +8,15 @@
 //    A IA escolhe pelo código; nome e descrição vêm daqui.
 // 3. Biblioteca (roteiro_ia_opcionais): opcionais novos escritos pela IA
 //    ficam guardados por cidade para as próximas gerações.
+// 4. Biblioteca de dias (roteiro_ia_dias_cidade): dias de passeio seguidos
+//    numa cidade viram um "bloco" por perfil e tamanho; a IA reaproveita o
+//    bloco pelo código em vez de reescrever os dias.
 import { chaveCidadeOpcional, chaveIdentidadeCidade } from '$lib/catalogoOpcionais';
 import { chaveNomeOpcional } from '$lib/importarOpcionais';
 import type { PedidoRoteiroIA } from '$lib/roteiroIA/tipos';
 import { logServerError } from '$lib/server/v1';
 import type { SaidaNormalizada } from './esquema';
-import { VERSAO_PROMPT, diasDoPedido, type ReferenciaOpcional } from './prompt';
+import { VERSAO_PROMPT, diasDoPedido, type BlocoDias, type ReferenciaOpcional } from './prompt';
 
 /** Resultado guardado deixa de valer depois de tanto tempo sem uso. */
 const VALIDADE_CACHE_DIAS = 180;
@@ -235,5 +238,167 @@ export async function gravarBibliotecaOpcionais(
     await db.batch(comandos);
   } catch (err) {
     logServerError('[roteiro-ia] falha ao gravar biblioteca de opcionais', err);
+  }
+}
+
+// ── Biblioteca de dias por cidade ───────────────────────────────────────
+
+const MAX_BLOCOS_POR_CIDADE = 4;
+const MAX_DIAS_BLOCO = 10;
+
+/**
+ * Perfil do viajante em poucas classes, para que blocos escritos para um
+ * casal não sejam oferecidos a uma família com crianças (e vice-versa).
+ */
+export function classePerfil(pedido: Pick<PedidoRoteiroIA, 'perfil' | 'observacoes' | 'criancas'>) {
+  const t = norm(`${pedido.perfil} ${pedido.observacoes}`);
+  if (pedido.criancas > 0 || /crian|famil|filh|kids|infant/.test(t)) return 'familia';
+  if (/terceira idade|melhor idade|idos|senior|sênior|aposentad|mobilidade/.test(t))
+    return 'senior';
+  if (/casal|lua de mel|romant|namor|bodas/.test(t)) return 'casal';
+  if (/aventur|mochil|jovem|jovens|amigos|balada/.test(t)) return 'jovem';
+  return 'geral';
+}
+
+const identidadeDestino = (destinos: DestinoResolvido[], cidade: string) => {
+  const d = destinos.find((x) => chaveCidadeOpcional(x.nome) === chaveCidadeOpcional(cidade));
+  return d ? chaveIdentidadeCidade(d.nome, d.id) : null;
+};
+
+/** Blocos disponíveis para os destinos do pedido, no perfil do pedido. */
+export async function carregarBlocosDias(
+  db: D1Database | undefined,
+  destinos: DestinoResolvido[],
+  perfil: string,
+  totalDias: number
+): Promise<BlocoDias[]> {
+  if (!db || totalDias < 3) return [];
+  const blocos: BlocoDias[] = [];
+  const vistas = new Set<string>();
+  let n = 0;
+  try {
+    for (const destino of destinos) {
+      const identidade = chaveIdentidadeCidade(destino.nome, destino.id);
+      if (vistas.has(identidade)) continue;
+      vistas.add(identidade);
+      const r = await db
+        .prepare(
+          `SELECT dias, descricoes FROM roteiro_ia_dias_cidade
+           WHERE cidade_chave = ?1 AND perfil = ?2 AND dias <= ?3
+           ORDER BY usos DESC, dias LIMIT ${MAX_BLOCOS_POR_CIDADE}`
+        )
+        .bind(identidade, perfil, totalDias - 2)
+        .all<{ dias: number; descricoes: string }>();
+      for (const row of (r.results || []).sort(
+        (a: { dias: number }, b: { dias: number }) => a.dias - b.dias
+      )) {
+        const descricoes = JSON.parse(row.descricoes) as unknown;
+        if (!Array.isArray(descricoes) || descricoes.length !== row.dias) continue;
+        blocos.push({
+          ref: `d${++n}`,
+          cidade: destino.nome,
+          dias: row.dias,
+          descricoes: descricoes.map(String)
+        });
+      }
+    }
+  } catch (err) {
+    // Tabela ainda não migrada: a IA escreve todos os dias.
+    logServerError('[roteiro-ia] falha ao ler biblioteca de dias', err);
+    return [];
+  }
+  return blocos;
+}
+
+/**
+ * Separa, no roteiro gerado, os trechos de dias de passeio seguidos numa
+ * mesma cidade (sem percurso, fora do primeiro e do último dia) que a IA
+ * escreveu — candidatos a bloco da biblioteca.
+ */
+export function extrairBlocosDias(saida: SaidaNormalizada, totalDias: number) {
+  type Trecho = { cidade: string; descricoes: string[]; ultimo: number };
+  const trechos: { cidade: string; descricoes: string[] }[] = [];
+  const estado: { atual: Trecho | null } = { atual: null };
+  const fechar = () => {
+    const t = estado.atual;
+    if (t && t.descricoes.length <= MAX_DIAS_BLOCO)
+      trechos.push({ cidade: t.cidade, descricoes: t.descricoes });
+    estado.atual = null;
+  };
+  for (const d of [...saida.dias].sort((a, b) => a.dia - b.dia)) {
+    const passeio =
+      d.dia > 1 && d.dia < totalDias && !d.percurso.trim() && !d.bloco && d.descricao.trim();
+    if (!passeio) {
+      fechar();
+      continue;
+    }
+    const t = estado.atual;
+    if (
+      t &&
+      t.ultimo === d.dia - 1 &&
+      chaveCidadeOpcional(t.cidade) === chaveCidadeOpcional(d.cidade)
+    ) {
+      t.descricoes.push(d.descricao);
+      t.ultimo = d.dia;
+    } else {
+      fechar();
+      estado.atual = { cidade: d.cidade, descricoes: [d.descricao], ultimo: d.dia };
+    }
+  }
+  fechar();
+  return trechos;
+}
+
+/** Guarda os blocos novos e conta o uso dos que a IA reaproveitou. */
+export async function gravarBlocosDias(
+  db: D1Database | undefined,
+  params: {
+    saida: SaidaNormalizada;
+    destinos: DestinoResolvido[];
+    perfil: string;
+    totalDias: number;
+    usados: BlocoDias[];
+  }
+) {
+  if (!db) return;
+  const comandos: D1PreparedStatement[] = [];
+  for (const t of extrairBlocosDias(params.saida, params.totalDias)) {
+    const identidade = identidadeDestino(params.destinos, t.cidade);
+    if (!identidade) continue;
+    comandos.push(
+      db
+        .prepare(
+          `INSERT INTO roteiro_ia_dias_cidade (id, cidade_chave, cidade, perfil, dias, descricoes)
+           VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+           ON CONFLICT (cidade_chave, perfil, dias) DO NOTHING`
+        )
+        .bind(
+          crypto.randomUUID(),
+          identidade,
+          t.cidade,
+          params.perfil,
+          t.descricoes.length,
+          JSON.stringify(t.descricoes)
+        )
+    );
+  }
+  for (const b of params.usados) {
+    const identidade = identidadeDestino(params.destinos, b.cidade);
+    if (!identidade) continue;
+    comandos.push(
+      db
+        .prepare(
+          `UPDATE roteiro_ia_dias_cidade SET usos = usos + 1,
+             updated_at = strftime('%Y-%m-%dT%H:%M:%fZ','now')
+           WHERE cidade_chave = ?1 AND perfil = ?2 AND dias = ?3`
+        )
+        .bind(identidade, params.perfil, b.dias)
+    );
+  }
+  if (!comandos.length) return;
+  try {
+    await db.batch(comandos);
+  } catch (err) {
+    logServerError('[roteiro-ia] falha ao gravar biblioteca de dias', err);
   }
 }

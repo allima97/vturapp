@@ -8,7 +8,7 @@ import {
   type RascunhoRoteiroIA
 } from '$lib/roteiroIA/tipos';
 import type { SaidaBrutaRoteiro, SaidaNormalizada } from './esquema';
-import { diasDoPedido, type ReferenciaOpcional } from './prompt';
+import { diasDoPedido, type BlocoDias, type ReferenciaOpcional } from './prompt';
 
 const DATA_ISO = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -124,8 +124,13 @@ export function validarPedidoRoteiroIA(body: unknown): PedidoRoteiroIA | string 
 export function normalizarSaidaIA(
   bruta: SaidaBrutaRoteiro,
   referencias: ReferenciaOpcional[],
-  totalDias: number
-): { saida: SaidaNormalizada; usadasBiblioteca: ReferenciaOpcional[] } {
+  totalDias: number,
+  blocos: BlocoDias[] = []
+): {
+  saida: SaidaNormalizada;
+  usadasBiblioteca: ReferenciaOpcional[];
+  blocosUsados: BlocoDias[];
+} {
   const dias: SaidaNormalizada['dias'] = [];
   const vistos = new Set<number>();
   for (const item of Array.isArray(bruta.dias)
@@ -143,6 +148,26 @@ export function normalizarSaidaIA(
       percurso: texto(d.percurso, 300),
       descricao: texto(d.descricao, 4000)
     });
+  }
+  // Blocos da biblioteca de dias: expandidos a partir do dia indicado. Um dia
+  // já escrito pela IA tem prioridade; dia fora do período é ignorado.
+  const porRefBloco = new Map(blocos.map((b) => [b.ref.toLowerCase(), b]));
+  const blocosUsados: BlocoDias[] = [];
+  for (const item of Array.isArray(bruta.blocos_ref) ? bruta.blocos_ref.slice(0, 30) : []) {
+    if (!item || typeof item !== 'object') continue;
+    const x = item as Record<string, unknown>;
+    const bloco = porRefBloco.get(texto(x.ref, 12).toLowerCase());
+    const inicio = numeroDia(x.dia, totalDias);
+    if (!bloco || !inicio || blocosUsados.includes(bloco)) continue;
+    let aplicou = false;
+    bloco.descricoes.forEach((descricao, i) => {
+      const dia = inicio + i;
+      if (dia > totalDias || vistos.has(dia)) return;
+      vistos.add(dia);
+      aplicou = true;
+      dias.push({ dia, cidade: bloco.cidade, percurso: '', descricao, bloco: true });
+    });
+    if (aplicou) blocosUsados.push(bloco);
   }
   dias.sort((a, b) => a.dia - b.dia);
 
@@ -196,7 +221,8 @@ export function normalizarSaidaIA(
       inclui: lista(bruta.inclui),
       nao_inclui: lista(bruta.nao_inclui)
     },
-    usadasBiblioteca
+    usadasBiblioteca,
+    blocosUsados
   };
 }
 

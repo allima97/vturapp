@@ -18,11 +18,12 @@ export const FERRAMENTA_ROTEIRO = {
   input_schema: {
     type: 'object',
     additionalProperties: false,
-    required: ['dias', 'opcionais_ref', 'opcionais_novos', 'inclui', 'nao_inclui'],
+    required: ['dias', 'blocos_ref', 'opcionais_ref', 'opcionais_novos', 'inclui', 'nao_inclui'],
     properties: {
       dias: {
         type: 'array',
-        description: 'Um item por dia, do dia 1 ao último, em ordem.',
+        description:
+          'Os dias escritos por você, em ordem. Não repita os dias cobertos por blocos_ref.',
         items: {
           type: 'object',
           additionalProperties: false,
@@ -35,6 +36,19 @@ export const FERRAMENTA_ROTEIRO = {
               description: 'Ex.: "Roma → Barcelona". Vazio se não há deslocamento.'
             },
             descricao: { type: 'string', description: '1 a 4 frases.' }
+          }
+        }
+      },
+      blocos_ref: {
+        type: 'array',
+        description: 'Blocos de dias prontos usados, pelo código, com o dia em que começam.',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['ref', 'dia'],
+          properties: {
+            ref: { type: 'string', description: 'Código do bloco, ex.: "d2".' },
+            dia: { type: 'integer', description: 'Número do primeiro dia do bloco.' }
           }
         }
       },
@@ -87,6 +101,7 @@ export const FERRAMENTA_ROTEIRO = {
 /** Formato bruto que o Claude devolve (antes da validação). */
 export type SaidaBrutaRoteiro = {
   dias?: unknown;
+  blocos_ref?: unknown;
   opcionais_ref?: unknown;
   opcionais_novos?: unknown;
   inclui?: unknown;
@@ -98,7 +113,14 @@ export type SaidaBrutaRoteiro = {
  * É o que vai para o cache: independe das datas do pedido.
  */
 export type SaidaNormalizada = {
-  dias: { dia: number; cidade: string; percurso: string; descricao: string }[];
+  dias: {
+    dia: number;
+    cidade: string;
+    percurso: string;
+    descricao: string;
+    /** true quando veio de um bloco da biblioteca (não volta para a biblioteca). */
+    bloco?: boolean;
+  }[];
   opcionais: {
     cidade: string;
     passeios: { nome: string; descricao: string; dia?: number; novo?: boolean }[];

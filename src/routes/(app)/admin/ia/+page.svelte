@@ -27,6 +27,8 @@
       roteiros_guardados: number;
       geracoes_reaproveitadas: number;
       opcionais_na_biblioteca: number;
+      blocos_de_dias: number;
+      blocos_reaproveitados: number;
     } | null;
   };
 
@@ -176,9 +178,13 @@
         <li>
           Opcionais do catálogo e da biblioteca são escolhidos por código, sem reescrever texto.
         </li>
+        <li>
+          Dias de passeio já escritos para uma cidade (por perfil e quantidade de dias) são
+          reaproveitados em outros roteiros que passem por ela.
+        </li>
       </ul>
       {#if dados.reaproveitamento}
-        <div class="mt-4 grid gap-3 sm:grid-cols-3">
+        <div class="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <div class="rounded-xl border border-slate-200 p-3">
             <div class="text-xs text-slate-500">Roteiros guardados</div>
             <div class="text-lg font-semibold">{dados.reaproveitamento.roteiros_guardados}</div>
@@ -194,6 +200,14 @@
             <div class="text-lg font-semibold">
               {dados.reaproveitamento.opcionais_na_biblioteca}
             </div>
+          </div>
+          <div class="rounded-xl border border-slate-200 p-3">
+            <div class="text-xs text-slate-500">Blocos de dias por cidade</div>
+            <div class="text-lg font-semibold">{dados.reaproveitamento.blocos_de_dias}</div>
+          </div>
+          <div class="rounded-xl border border-slate-200 p-3">
+            <div class="text-xs text-slate-500">Blocos reaproveitados</div>
+            <div class="text-lg font-semibold">{dados.reaproveitamento.blocos_reaproveitados}</div>
           </div>
         </div>
       {/if}
