@@ -43,8 +43,15 @@
   let permissions: PermissionEntry[] = [];
   let sections: PermissionSection[] = [];
   let roteiroIaLiberado = false;
-  let roteiroIaLimiteDia = '';
-  let roteiroIaLimiteMes = '';
+  let roteiroIaLimiteDia: string | number = '';
+  let roteiroIaLimiteMes: string | number = '';
+
+  /** FieldInput com type="number" devolve number (bind nativo do Svelte); trata os dois casos. */
+  function limiteParaEnvio(valor: string | number): number | null {
+    if (valor === '' || valor === null || valor === undefined) return null;
+    const n = typeof valor === 'number' ? valor : Number(String(valor).trim());
+    return Number.isFinite(n) && n > 0 ? n : null;
+  }
 
   const levels = [
     { value: 'none', label: 'Nenhum' },
@@ -98,8 +105,8 @@
         permissions,
         roteiro_ia: {
           liberado: roteiroIaLiberado,
-          limite_dia: roteiroIaLimiteDia.trim() ? Number(roteiroIaLimiteDia) : null,
-          limite_mes: roteiroIaLimiteMes.trim() ? Number(roteiroIaLimiteMes) : null
+          limite_dia: limiteParaEnvio(roteiroIaLimiteDia),
+          limite_mes: limiteParaEnvio(roteiroIaLimiteMes)
         }
       });
       toast.success('Permissoes atualizadas com sucesso.');
