@@ -25,3 +25,22 @@ if (typeof window !== 'undefined' && !(window.CSS && window.CSS.escape)) {
 if (typeof window !== 'undefined' && !window.Element.prototype.scrollIntoView) {
   window.Element.prototype.scrollIntoView = () => {};
 }
+
+// DataTransfer não existe no jsdom (FileDropzone monta a FileList dos arquivos aceitos com ele).
+if (typeof window !== 'undefined' && typeof window.DataTransfer === 'undefined') {
+  class DataTransferTeste {
+    private lista: File[] = [];
+    readonly items = {
+      add: (file: File) => {
+        this.lista.push(file);
+        return null;
+      }
+    };
+    get files(): FileList {
+      const lista = [...this.lista];
+      return Object.assign(lista, { item: (i: number) => lista[i] ?? null }) as unknown as FileList;
+    }
+  }
+  (window as unknown as { DataTransfer: unknown }).DataTransfer = DataTransferTeste;
+  (globalThis as unknown as { DataTransfer: unknown }).DataTransfer = DataTransferTeste;
+}

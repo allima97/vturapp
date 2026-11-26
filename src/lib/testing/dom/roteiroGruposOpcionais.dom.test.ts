@@ -5,8 +5,10 @@ const mocks = vi.hoisted(() => ({
   fetch: vi.fn(),
   post: vi.fn(),
   salvar: vi.fn(),
-  error: vi.fn()
+  error: vi.fn(),
+  confirm: vi.fn()
 }));
+vi.mock('$lib/stores/confirm', () => ({ confirmAction: mocks.confirm }));
 vi.mock('$app/stores', async () => {
   const { readable } = await import('svelte/store');
   return {
@@ -63,7 +65,7 @@ it('mantém IDs recebidos na leitura entre salvamentos e duplicação', async ()
     revisao: 'segunda'
   });
   mocks.post.mockResolvedValue({ id: 'copia' });
-  vi.spyOn(window, 'confirm').mockReturnValue(true);
+  mocks.confirm.mockResolvedValue(true);
   const target = document.createElement('div');
   document.body.appendChild(target);
   const app = mount(Page, { target });

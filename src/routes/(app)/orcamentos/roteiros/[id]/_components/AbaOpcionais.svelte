@@ -388,7 +388,13 @@
                     <FieldInput
                       label="Data sugerida"
                       type="date"
-                      bind:value={passeio.data}
+                      bind:value={
+                        () => passeio.data ?? '',
+                        (v) => {
+                          if (v) passeio.data = String(v);
+                          else delete passeio.data;
+                        }
+                      }
                       helper="Vazio: usa o 1º dia do itinerário nesta cidade."
                     />
                     <FieldInput
@@ -404,7 +410,13 @@
                     />
                     <FieldDatalistInput
                       label="Unidade do valor"
-                      bind:value={passeio.valor_unidade}
+                      bind:value={
+                        () => passeio.valor_unidade ?? '',
+                        (v) => {
+                          if (v) passeio.valor_unidade = v;
+                          else delete passeio.valor_unidade;
+                        }
+                      }
                       placeholder="Por pessoa"
                       options={['Por pessoa', 'Por adulto', 'Por criança', 'Por grupo', 'Por veículo']}
                     />

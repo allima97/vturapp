@@ -423,7 +423,7 @@ describe('roteiro: aba Opcionais', () => {
     await unmount(app);
   });
 
-  it('edita cidades e passeios sem datas e mantém o vínculo com a página', () => {
+  it('edita cidades e passeios sem data preenchida e mantém o vínculo com a página', () => {
     const t = montar(OpcionaisHarness);
     t.botao('Adicionar cidade').click();
     flushSync();
@@ -453,7 +453,8 @@ describe('roteiro: aba Opcionais', () => {
       cidade_pendente: true,
       passeios: [{ nome: 'Bairro Gótico', descricao: 'Passeio e jantar' }]
     });
-    expect(t.target.querySelector('input[type="date"]')).toBeNull();
+    // Data sugerida é opcional: o campo existe, mas vazio não grava "data" no passeio.
+    expect(t.target.querySelector<HTMLInputElement>('input[type="date"]')?.value).toBe('');
     expect(passeioPainel.querySelector('summary')!.textContent).toContain('Bairro Gótico');
     passeioPainel.querySelector('summary')!.click();
     expect(passeioPainel.open).toBe(false);

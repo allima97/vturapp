@@ -166,7 +166,7 @@ it('organiza as ações e abre os formulários sem perder as opções do PDF', a
     expect(buttons[0].getAttribute('aria-expanded')).toBe('false');
     buttons[0].click();
     flushSync();
-    const select = target.querySelector('#quote-pdf-options')!.querySelectorAll('select')[0];
+    const select = target.querySelector<HTMLSelectElement>('#export-show-item-values')!;
     select.value = 'sim';
     select.dispatchEvent(new Event('change', { bubbles: true }));
     flushSync();
@@ -182,9 +182,7 @@ it('organiza as ações e abre os formulários sem perder as opções do PDF', a
     );
     buttons[0].click();
     flushSync();
-    expect(target.querySelector('#quote-pdf-options')?.querySelectorAll('select')[0]?.value).toBe(
-      'sim'
-    );
+    expect(target.querySelector<HTMLSelectElement>('#export-show-item-values')?.value).toBe('sim');
     buttons[3].click();
     await vi.waitFor(() => expect(document.body.textContent).toContain('Registrar Nova Interação'));
   } finally {

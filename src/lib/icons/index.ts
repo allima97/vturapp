@@ -114,6 +114,7 @@ export { default as Star } from './Star.svelte';
 export { default as Tag } from './Tag.svelte';
 export { default as TestTube } from './TestTube.svelte';
 export { default as Ticket } from './Ticket.svelte';
+export { default as TicketsPlane } from './TicketsPlane.svelte';
 export { default as Trash2 } from './Trash2.svelte';
 export { default as TrendingDown } from './TrendingDown.svelte';
 export { default as TrendingUp } from './TrendingUp.svelte';

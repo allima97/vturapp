@@ -25,11 +25,7 @@ afterEach(() => {
 });
 
 it('troca as abas próprias de LGPD pelo menu e carrega a seção selecionada', async () => {
-  const fetchMock = vi.fn().mockResolvedValue({
-    ok: true,
-    json: async () => ({ items: [], atividades: [] })
-  });
-  vi.stubGlobal('fetch', fetchMock);
+  api.get.mockResolvedValue({ items: [], atividades: [] });
   const target = document.createElement('div');
   document.body.appendChild(target);
   const app = mount(Lgpd, { target });
@@ -39,7 +35,13 @@ it('troca as abas próprias de LGPD pelo menu e carrega a seção selecionada', 
     select.value = 'atividades';
     select.dispatchEvent(new Event('change', { bubbles: true }));
     flushSync();
-    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledWith('/api/v1/lgpd/admin/atividades'));
+    await vi.waitFor(() =>
+      expect(api.get).toHaveBeenCalledWith(
+        '/api/v1/lgpd/admin/atividades',
+        undefined,
+        expect.any(AbortSignal)
+      )
+    );
     expect(target.textContent).toContain('Atividades de Tratamento');
   } finally {
     await unmount(app);
@@ -48,36 +50,30 @@ it('troca as abas próprias de LGPD pelo menu e carrega a seção selecionada', 
 
 it('abre as ações de solicitações pendentes no mobile sem alterar as concluídas', async () => {
   vi.stubGlobal('innerWidth', 375);
-  vi.stubGlobal(
-    'fetch',
-    vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        items: [
-          {
-            id: '1',
-            titular_nome: 'Pessoa pendente',
-            titular_email: 'pendente@example.com',
-            tipo: 'acesso',
-            status: 'recebida',
-            created_at: '2025-01-01',
-            prazo_legal: '2025-02-01',
-            prazo_vencido: false
-          },
-          {
-            id: '2',
-            titular_nome: 'Pessoa concluída',
-            titular_email: 'concluida@example.com',
-            tipo: 'acesso',
-            status: 'concluida',
-            created_at: '2025-01-01',
-            prazo_legal: '2025-02-01',
-            prazo_vencido: false
-          }
-        ]
-      })
-    })
-  );
+  api.get.mockResolvedValue({
+    items: [
+      {
+        id: '1',
+        titular_nome: 'Pessoa pendente',
+        titular_email: 'pendente@example.com',
+        tipo: 'acesso',
+        status: 'recebida',
+        created_at: '2025-01-01',
+        prazo_legal: '2025-02-01',
+        prazo_vencido: false
+      },
+      {
+        id: '2',
+        titular_nome: 'Pessoa concluída',
+        titular_email: 'concluida@example.com',
+        tipo: 'acesso',
+        status: 'concluida',
+        created_at: '2025-01-01',
+        prazo_legal: '2025-02-01',
+        prazo_vencido: false
+      }
+    ]
+  });
   const target = document.createElement('div');
   document.body.appendChild(target);
   const app = mount(Lgpd, { target });
@@ -87,6 +83,7 @@ it('abre as ações de solicitações pendentes no mobile sem alterar as conclu�
     expect(pending.getAttribute('aria-expanded')).toBe('false');
     expect(completed.hasAttribute('aria-expanded')).toBe(false);
     pending.click();
+    flushSync();
     expect(pending.getAttribute('aria-expanded')).toBe('true');
     pending.querySelector('button')!.click();
     flushSync();

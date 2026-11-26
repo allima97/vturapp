@@ -205,6 +205,7 @@
       type="button"
       variant="danger"
       size="sm"
+      ariaLabel="Excluir roteiro"
       title="Excluir"
       disabled={deletingId === row.id}
       on:click={(event) => {

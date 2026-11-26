@@ -85,6 +85,9 @@
   let anonizando = $state(false);
   let msgAnon = $state('');
 
+  const podeResponder = (row: Solicitacao) =>
+    row.status !== 'concluida' && row.status !== 'recusada';
+
   async function carregarSolicitacoes() {
     const request = loadGuard.next();
     carregando = true;
@@ -307,9 +310,10 @@
       data={solicitacoes}
       emptyMessage="Nenhuma solicitação encontrada."
       rowClass={(row: Solicitacao) => (row.prazo_vencido ? 'bg-orange-50' : '')}
+      rowActionsAvailable={(row: Solicitacao) => podeResponder(row)}
     >
       <svelte:fragment slot="row-actions" let:row>
-        {#if row.status !== 'concluida' && row.status !== 'recusada'}
+        {#if podeResponder(row)}
           <Button variant="outline" size="sm" on:click={() => abrirResponder(row)}>
             <MessageSquare size={14} class="mr-1" />
             Responder

@@ -16,10 +16,10 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-// O HTML da prévia contém os dois modelos de saída (clássico + proposta de
+// O HTML da prévia contém os dois modelos de saída (clássico + moderno/proposta de
 // viagem); testes do modelo clássico avaliam apenas a seção correspondente.
 function soModeloClassico(html: string) {
-  const idx = html.indexOf('data-modelo="proposta"');
+  const idx = html.indexOf('data-modelo="moderno"');
   return idx === -1 ? html : html.slice(0, idx);
 }
 
@@ -396,7 +396,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       'Barcelona → Madrid - OL 2020 - 13-08-2027 - 14:00 / 15:20 - Assentos: 10A,10B'
     );
     expect(screen).toContain('Madrid → Lisboa');
-    expect(pdf).toContain('TREM · 13/08/2027');
+    expect(pdf).toContain('Trem · 13/08/2027');
     expect(pdf).toContain('Barcelona');
     expect(pdf).toContain('Madrid');
     expect(pdf).toContain('Renfe · OL 2020');
@@ -615,9 +615,9 @@ describe('identidade dos orçamentos e circuitos', () => {
       showBudgetDetails: true,
       showItemValues: false
     });
-    expect(html).toContain('HOTEL · 2 NOITES');
+    expect(html).toContain('Hotel · 2 Noites');
     expect(html).toContain('Hollywood Hotel Inn');
-    expect(html.indexOf('>Hollywood Hotel Inn</b>')).toBeLessThan(html.indexOf('HOTEL · 2 NOITES'));
+    expect(html.indexOf('>Hollywood Hotel Inn</b>')).toBeLessThan(html.indexOf('Hotel · 2 Noites'));
     expect(html).toContain('class="rt rota">Check-in: 11/08/2027 às 15:00</span>');
     expect(html).toContain('class="rt rota">Check-out: 13/08/2027 às 11:00</span>');
     expect(html).toContain('class="rtf rota"');
@@ -719,7 +719,7 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
 
-    expect(html).toContain('CARRO · 4 DIÁRIAS');
+    expect(html).toContain('Carro · 4 Diárias');
     expect(html).toContain('>SUV automático</b>');
     expect(html).toContain('class="rtf car rota"');
     expect(html).toContain('class="rt rota">Los Angeles · Loja Aeroporto LAX</span>');
@@ -1622,7 +1622,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     expect(group).toContain('class="q orc-quantity"');
     expect(group).not.toContain('Subtotal');
     expect(group).not.toContain('500,00');
-    expect(html).toContain('<div class="tt"><b>TOTAL</b><span>€ 500,00</span>');
+    expect(html).toContain('<div class="tt"><b>Total</b><span>€ 500,00</span>');
     expect(html).toContain('>Total da viagem</span>');
     expect(html).not.toContain('Produtos');
     expect(html).toContain('€ 500,00</span></div></section>');
@@ -1659,7 +1659,7 @@ describe('identidade dos orçamentos e circuitos', () => {
     );
     expect(items).not.toContain('1.000,00');
     expect(items).not.toContain('200,00');
-    expect(html).toContain('<div class="tt"><b>TOTAL</b><span>R$ 1.000,00 · € 200,00</span>');
+    expect(html).toContain('<div class="tt"><b>Total</b><span>R$ 1.000,00 · € 200,00</span>');
     expect(html).toContain('R$ 1.000,00</span></div>');
     expect(html).toContain('€ 200,00</span></div>');
     expect(html).toContain('>Total da viagem</span>');
@@ -1719,22 +1719,23 @@ describe('identidade dos orçamentos e circuitos', () => {
       showItemValues: false
     });
 
-    expect(html).toContain('SEGURO VIAGEM · 24/11 a 01/12/2026 - 08 dias');
+    expect(html).toContain('Seguro Viagem · 24/11 a 01/12/2026 - 08 dias');
     expect(html).toContain('>Seguro Europa</b>');
     expect(html.indexOf('>Seguro Europa</b>')).toBeLessThan(
-      html.indexOf('SEGURO VIAGEM · 24/11 a 01/12/2026 - 08 dias')
+      html.indexOf('Seguro Viagem · 24/11 a 01/12/2026 - 08 dias')
     );
     expect(html).toContain('>Assist Card</div>');
-    expect(html).toContain('SEGURO VIAGEM · 24/11/2026 - 01 dia');
+    expect(html).toContain('Seguro Viagem · 24/11/2026 - 01 dia');
     expect(html).not.toContain('Total de dias');
     expect(html).not.toContain('Adultos:');
-    expect(html).toContain('INGRESSO · 25/11 a 26/11/2026 - 02 dias');
+    expect(html).toContain('Ingresso · 25/11 a 26/11/2026 - 02 dias');
     expect(html).toContain('>Básico</div>');
-    expect(html).toContain('PASSEIO · 25/11 a 26/11/2026 - 02 dias');
+    expect(html).toContain('Passeio · 25/11 a 26/11/2026 - 02 dias');
     expect(html).toContain('>Serviço Compartilhado</div>');
-    expect(html).toContain('SHOW · 26/11/2026 - 01 dia');
+    expect(html).toContain('Show · 26/11/2026 - 01 dia');
     expect(html).toContain('>Plateia</div>');
-    expect(html).not.toContain('Categoria:');
+    // O Moderno lista "Categoria: …" no cronograma; o clássico mostra só o valor.
+    expect(soModeloClassico(html)).not.toContain('Categoria:');
     expect(html).toContain('>2 adultos</span>');
     expect(html.indexOf('>Assist Card</div>')).toBeGreaterThan(html.indexOf('>Seguro Europa</b>'));
     expect(html).not.toContain('Produtos');
@@ -2010,27 +2011,27 @@ describe('modelos de saída do PDF', () => {
     const html = buildQuotePreviewHtmlSync(base);
     expect(html).toContain('pvSwitchModelo');
     expect(html).toContain('value="classico" selected');
-    expect(html).toContain('value="proposta"');
+    expect(html).toContain('value="moderno"');
     expect(html).toContain('data-modelo="classico"');
-    expect(html).toContain('data-modelo="proposta" hidden');
+    expect(html).toContain('data-modelo="moderno" hidden');
     const classico = soModeloClassico(html);
     expect(classico).toContain('Proposta de viagem');
     expect(classico).toContain('Hollywood Hotel Inn');
   });
 
   it('gera o modelo Proposta de Viagem com cronograma, detalhamento e investimento', () => {
-    const html = buildQuotePreviewHtmlSync({ ...base, modeloInicial: 'proposta' });
-    expect(html).toContain('value="proposta" selected');
+    const html = buildQuotePreviewHtmlSync({ ...base, modeloInicial: 'moderno' });
+    expect(html).toContain('value="moderno" selected');
     expect(html).toContain('data-modelo="classico" hidden');
-    const proposta = html.slice(html.indexOf('data-modelo="proposta"'));
-    expect(proposta).toContain('pv-title');
+    const proposta = html.slice(html.indexOf('data-modelo="moderno"'));
+    expect(proposta).toContain('rot3-title');
     expect(proposta).toContain('LOS ANGELES');
-    expect(proposta).toContain('Para: <b>Neusa de Fátima Xavier</b>');
-    expect(proposta).toContain('Cidades contempladas na proposta');
+    expect(proposta).toContain('<b>Para:</b> Neusa de Fátima Xavier');
+    expect(proposta).toContain('Cidades Contempladas na Proposta');
     expect(proposta).toContain('Cronograma dos Serviços');
     expect(proposta).toContain('Detalhamento dos Serviços Cotados');
-    expect(proposta).toContain('Investimento');
-    expect(proposta).toContain('Total da viagem');
+    expect(proposta).toContain('INVESTIMENTO');
+    expect(proposta).toContain('Total da Viagem');
     expect(proposta).toContain('Hollywood Hotel Inn');
     expect(proposta).toContain('LA 8080');
     expect(proposta).not.toContain('data-modelo="classico"');
@@ -2039,10 +2040,10 @@ describe('modelos de saída do PDF', () => {
   it('omite cronograma e detalhamento da proposta quando as seções estão desativadas', () => {
     const html = buildQuotePreviewHtmlSync({
       ...base,
-      modeloInicial: 'proposta',
+      modeloInicial: 'moderno',
       showBudgetDetails: false
     });
-    const proposta = html.slice(html.indexOf('data-modelo="proposta"'));
+    const proposta = html.slice(html.indexOf('data-modelo="moderno"'));
     expect(proposta).not.toContain('Cronograma dos Serviços');
     expect(proposta).not.toContain('Detalhamento dos Serviços Cotados');
     expect(proposta).not.toContain('Hollywood Hotel Inn');
