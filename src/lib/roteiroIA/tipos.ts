@@ -20,6 +20,11 @@ export type PedidoRoteiroIA = {
   /** Ex.: "Casal em lua de mel", "Família com crianças pequenas". */
   perfil: string;
   observacoes: string;
+  /**
+   * Gera de novo mesmo que já exista um roteiro guardado para um pedido
+   * idêntico (sem isso, o servidor reaproveita o resultado sem chamar a IA).
+   */
+  nova_versao?: boolean;
 };
 
 export type DiaRoteiroIA = {
@@ -52,6 +57,8 @@ export type RascunhoRoteiroIA = {
   avisos: string[];
   /** Modelo que gerou, para referência. */
   modelo: string;
+  /** true quando veio de uma geração anterior idêntica (sem custo de IA). */
+  reaproveitado?: boolean;
 };
 
 /** Como o rascunho entra no formulário. */

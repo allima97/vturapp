@@ -25,6 +25,7 @@
   let perfil = $state('');
   let observacoes = $state('');
   let modo: ModoAplicacaoIA = $state('substituir');
+  let novaVersao = $state(false);
   let gerando = $state(false);
   let erro = $state('');
 
@@ -50,7 +51,8 @@
       adultos: Number(adultos) || 0,
       criancas: Number(criancas) || 0,
       perfil: perfil.trim(),
-      observacoes: observacoes.trim()
+      observacoes: observacoes.trim(),
+      ...(novaVersao ? { nova_versao: true } : {})
     };
     if (!pedido.origem || !pedido.destinos.length || !pedido.data_inicio || !pedido.data_fim) {
       erro = 'Preencha origem, destinos e as datas de início e fim.';
@@ -66,6 +68,7 @@
         180_000
       );
       onAplicar(rascunho, modo);
+      novaVersao = false;
       open = false;
     } catch (err) {
       erro = toUserMessage(err, 'Não foi possível gerar o roteiro com IA.');
@@ -124,6 +127,17 @@
         ]}
       />
     </div>
+    <label class="flex items-start gap-2 text-sm text-slate-700 sm:col-span-2">
+      <input type="checkbox" class="mt-0.5" bind:checked={novaVersao} />
+      <span>
+        Gerar uma versão nova
+        <span class="block text-xs text-slate-500">
+          Sem marcar, se já existir um roteiro gerado com os mesmos destinos, duração, viajantes,
+          perfil e observações, ele é reaproveitado na hora (sem custo de IA), com as datas deste
+          pedido.
+        </span>
+      </span>
+    </label>
   </div>
   {#if erro}
     <p role="alert" class="mt-3 text-sm text-red-700">{erro}</p>

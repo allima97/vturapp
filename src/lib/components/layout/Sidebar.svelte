@@ -73,6 +73,7 @@
     ShieldCheck,
     SlidersHorizontal,
     ShoppingCart,
+    Sparkles,
     SquareCheckBig,
     Star,
     Tag,
@@ -377,6 +378,7 @@
       icon: Database
     },
     { key: 'admin_permissoes', name: 'Permissões', href: '/admin/permissoes', icon: ShieldCheck },
+    { key: 'admin_ia', name: 'IA dos roteiros', href: '/admin/ia', icon: Sparkles },
     {
       key: 'admin_parametros_importacao',
       name: 'Parâmetros importação',

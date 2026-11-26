@@ -108,6 +108,7 @@ export const ROTAS_MODULOS: Record<string, string> = {
   '/admin/avisos': 'Admin',
   '/admin/crm': 'Admin',
   '/admin/email': 'Admin',
+  '/admin/ia': 'Admin',
   '/admin/parametros-importacao': 'Admin',
   '/admin/fix-recibos': 'Admin',
   '/master': 'MasterEmpresas',

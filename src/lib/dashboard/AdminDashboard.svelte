@@ -21,7 +21,8 @@
     Shield,
     UserRoundCog,
     Users,
-    Wrench
+    Wrench,
+    Sparkles
   } from '$lib/icons';
   import { apiGet, isCanceledApiError } from '$lib/services/api';
   import { createLoadGuard } from '$lib/utils/loadGuard';
@@ -173,6 +174,12 @@
       href: '/admin/permissoes',
       icon: Shield,
       description: 'Módulos e níveis de acesso'
+    },
+    {
+      title: 'IA dos roteiros',
+      href: '/admin/ia',
+      icon: Sparkles,
+      description: 'Provedor e modelo (Claude ou Groq)'
     },
     {
       title: 'Parâmetros importação',

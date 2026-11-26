@@ -111,7 +111,12 @@ declare global {
         // ── IA de roteiros ───────────────────────────────────────────────
         /** Chave da API do Claude (wrangler secret put ANTHROPIC_API_KEY). */
         ANTHROPIC_API_KEY?: string;
-        /** Modelo usado na geração (ex.: claude-sonnet-5-5, claude-opus-5-5). */
+        /** Chave da API do Groq (wrangler secret put GROQ_API_KEY). */
+        GROQ_API_KEY?: string;
+        /**
+         * Modelo usado quando o admin ainda não escolheu um em /admin/ia
+         * (ex.: claude-haiku-5-5, claude-sonnet-5-5, openai/gpt-oss-120b).
+         */
         ROTEIRO_IA_MODELO?: string;
       };
       context?: ExecutionContext;

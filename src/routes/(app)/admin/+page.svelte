@@ -22,6 +22,7 @@
     Settings2,
     Shield,
     SlidersHorizontal,
+    Sparkles,
     Users,
     UserRoundCog,
     Wrench,
@@ -115,6 +116,12 @@
       description: 'Controle global de disponibilidade dos módulos.',
       href: '/admin/modulos-sistema',
       icon: SlidersHorizontal
+    },
+    {
+      title: 'IA dos roteiros',
+      description: 'Provedor e modelo de IA (Claude ou Groq) e economia de tokens.',
+      href: '/admin/ia',
+      icon: Sparkles
     },
     {
       title: 'Parametros de importacao',

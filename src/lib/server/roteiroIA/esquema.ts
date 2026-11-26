@@ -1,11 +1,15 @@
 /**
- * Esquema da saída estruturada (output_config.format, json_schema). O `input_schema`
- * é um recorte do formato em que o roteiro já é salvo (RoteiroPayload):
- * só dias, opcionais e inclusões. Valores, voos, hotéis e dados do cliente
- * ficam de fora de propósito (ver docs/especificação da IA de roteiros).
+ * Esquema da saída estruturada (output_config.format, json_schema).
+ *
+ * Pensado para gastar o MÍNIMO de tokens de saída (a parte mais cara da
+ * chamada): a IA não escreve datas (só o número do dia, 1..N), não escreve o
+ * nome do roteiro (o servidor monta) e, para passeios que já estão no
+ * catálogo da agência ou na biblioteca de opcionais, devolve só o código
+ * ("a3", "b7") — nome e descrição são completados pelo servidor.
  *
  * Campo novo no roteiro que a IA deva preencher → entra aqui E no
- * pós-processamento (posProcessar.ts) no mesmo commit.
+ * pós-processamento (posProcessar.ts) no mesmo commit, e VERSAO_PROMPT
+ * (prompt.ts) sobe, para não reaproveitar resultados no formato antigo.
  */
 export const FERRAMENTA_ROTEIRO = {
   name: 'preencher_roteiro',
@@ -14,40 +18,42 @@ export const FERRAMENTA_ROTEIRO = {
   input_schema: {
     type: 'object',
     additionalProperties: false,
-    required: ['nome', 'dias', 'opcionais', 'inclui', 'nao_inclui'],
+    required: ['dias', 'opcionais_ref', 'opcionais_novos', 'inclui', 'nao_inclui'],
     properties: {
-      nome: {
-        type: 'string',
-        description: 'Nome do roteiro, curto. Ex.: "Viagem Europa - Agosto 2027".'
-      },
       dias: {
         type: 'array',
-        description: 'Um item por dia da viagem, do primeiro ao último, em ordem.',
+        description: 'Um item por dia, do dia 1 ao último, em ordem.',
         items: {
           type: 'object',
           additionalProperties: false,
-          required: ['data', 'cidade', 'percurso', 'descricao'],
+          required: ['dia', 'cidade', 'percurso', 'descricao'],
           properties: {
-            data: { type: 'string', description: 'Data do dia, formato AAAA-MM-DD.' },
-            cidade: {
-              type: 'string',
-              description: 'Cidade onde o viajante dorme ou passa o dia. Só o nome da cidade.'
-            },
+            dia: { type: 'integer', description: 'Número do dia (1 = saída).' },
+            cidade: { type: 'string', description: 'Só o nome da cidade.' },
             percurso: {
               type: 'string',
-              description:
-                'Deslocamento do dia com seta, ex.: "Roma → Barcelona". Vazio quando fica na mesma cidade.'
+              description: 'Ex.: "Roma → Barcelona". Vazio se não há deslocamento.'
             },
-            descricao: {
-              type: 'string',
-              description: 'O que acontece no dia, 1 a 4 frases, em português do Brasil.'
-            }
+            descricao: { type: 'string', description: '1 a 4 frases.' }
           }
         }
       },
-      opcionais: {
+      opcionais_ref: {
         type: 'array',
-        description: 'Passeios opcionais sugeridos, agrupados por cidade.',
+        description: 'Opcionais escolhidos da lista de referência, pelo código.',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['ref'],
+          properties: {
+            ref: { type: 'string', description: 'Código da lista, ex.: "a3".' },
+            dia: { type: 'integer', description: 'Dia sugerido. Opcional.' }
+          }
+        }
+      },
+      opcionais_novos: {
+        type: 'array',
+        description: 'Opcionais fora da lista de referência, por cidade.',
         items: {
           type: 'object',
           additionalProperties: false,
@@ -63,26 +69,15 @@ export const FERRAMENTA_ROTEIRO = {
                 properties: {
                   nome: { type: 'string' },
                   descricao: { type: 'string', description: '1 a 2 frases.' },
-                  data: {
-                    type: 'string',
-                    description: 'Data sugerida AAAA-MM-DD, dentro dos dias nessa cidade. Opcional.'
-                  }
+                  dia: { type: 'integer', description: 'Dia sugerido. Opcional.' }
                 }
               }
             }
           }
         }
       },
-      inclui: {
-        type: 'array',
-        description: 'Itens de "O que está incluído", um por linha, sem valores.',
-        items: { type: 'string' }
-      },
-      nao_inclui: {
-        type: 'array',
-        description: 'Itens de "O que não está incluído", um por linha, sem valores.',
-        items: { type: 'string' }
-      }
+      inclui: { type: 'array', items: { type: 'string' } },
+      nao_inclui: { type: 'array', items: { type: 'string' } }
     }
   }
 } as const;
@@ -91,9 +86,23 @@ export const FERRAMENTA_ROTEIRO = {
 
 /** Formato bruto que o Claude devolve (antes da validação). */
 export type SaidaBrutaRoteiro = {
-  nome?: unknown;
   dias?: unknown;
-  opcionais?: unknown;
+  opcionais_ref?: unknown;
+  opcionais_novos?: unknown;
   inclui?: unknown;
   nao_inclui?: unknown;
+};
+
+/**
+ * Saída já com as referências expandidas e ainda SEM datas (dia 1..N).
+ * É o que vai para o cache: independe das datas do pedido.
+ */
+export type SaidaNormalizada = {
+  dias: { dia: number; cidade: string; percurso: string; descricao: string }[];
+  opcionais: {
+    cidade: string;
+    passeios: { nome: string; descricao: string; dia?: number; novo?: boolean }[];
+  }[];
+  inclui: string[];
+  nao_inclui: string[];
 };

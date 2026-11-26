@@ -1,20 +1,33 @@
 import type { PedidoRoteiroIA } from '$lib/roteiroIA/tipos';
 
-export type CatalogoCidadeIA = {
+/**
+ * Sobe a cada mudança no prompt, no esquema ou no pós-processamento que
+ * altere o resultado: entra na chave do cache de resultados
+ * (roteiro_ia_cache), então gerações antigas deixam de ser reaproveitadas.
+ */
+export const VERSAO_PROMPT = 2;
+
+/** Item da lista de referência enviada à IA (catálogo da agência ou biblioteca). */
+export type ReferenciaOpcional = {
+  /** Código curto que a IA devolve: "a1".. (agência) ou "b1".. (biblioteca). */
+  ref: string;
   cidade: string;
-  passeios: { nome: string; descricao: string }[];
+  nome: string;
+  descricao: string;
 };
 
 /**
- * Prompt de sistema: fixo (vai em cache na API). Regras da agência para o
- * conteúdo; o FORMATO é garantido pela ferramenta `preencher_roteiro`.
+ * Prompt de sistema: 100% fixo (vai em cache na API — nunca interpolar nada
+ * do pedido aqui). Regras da agência para o conteúdo; o FORMATO é garantido
+ * pela saída estruturada (esquema.ts).
  */
 export const PROMPT_SISTEMA_ROTEIRO = `Você é um consultor de viagens brasileiro experiente que monta roteiros personalizados para uma agência de turismo.
 Escreva sempre em português do Brasil. Responda SOMENTE com o JSON no esquema pedido.
 
 O QUE VOCÊ PREENCHE
-- dias: um item por dia, da data de início à data de fim, inclusive, em ordem e sem pular datas.
-- opcionais: passeios sugeridos por cidade que NÃO estão incluídos no pacote.
+- dias: exatamente um item por dia, do dia 1 ao último dia informado no pedido, em ordem, sem pular números.
+- opcionais_ref: passeios opcionais escolhidos da LISTA DE REFERÊNCIA do pedido, só pelo código (ref).
+- opcionais_novos: passeios opcionais que não estão na lista, agrupados por cidade.
 - inclui / nao_inclui: itens curtos, um por linha.
 
 REGRAS DO DIA A DIA
@@ -25,6 +38,7 @@ REGRAS DO DIA A DIA
 - 1 a 4 frases por dia, objetivas, com atrações reais e conhecidas da cidade, distribuídas sem repetir.
 - Respeite o perfil (família com crianças, casal, terceira idade etc.) e as observações do consultor.
 - Distribua as noites entre os destinos na ordem pedida, de forma equilibrada e realista para os deslocamentos.
+- Não cite datas, dias da semana nem estações do ano: o mesmo texto pode ser usado em outras datas.
 
 O QUE VOCÊ NUNCA ESCREVE (o consultor preenche depois)
 - Preços, valores, taxas, câmbio, descontos ou formas de pagamento.
@@ -33,43 +47,54 @@ O QUE VOCÊ NUNCA ESCREVE (o consultor preenche depois)
 - Dados pessoais de viajantes.
 
 OPCIONAIS
-- Quando houver catálogo da agência para a cidade, use os nomes do catálogo, exatamente como estão.
-- Fora do catálogo, sugira no máximo 3 por cidade, conhecidos e factíveis.
-- Não repita como opcional o que já está descrito como incluído no dia a dia.
+- Se a cidade tem itens na LISTA DE REFERÊNCIA, escolha de 2 a 5 que combinem com o perfil e devolva só o código em opcionais_ref. Não reescreva nome nem descrição desses itens.
+- Só use opcionais_novos para cidades sem itens na lista: no máximo 3 por cidade, conhecidos e factíveis, descrição de 1 a 2 frases.
+- "dia" do opcional é o número de um dia em que o viajante está nessa cidade. Deixe de fora se não souber.
+- Não repita como opcional o que já está descrito no dia a dia.
 
 INCLUSÕES
 - inclui: o que um roteiro desse tipo normalmente inclui (ex.: "Hospedagem com café da manhã", "Passagem aérea em classe econômica") sem valores e sem nomes de hotel ou companhia.
 - nao_inclui: ex.: "Passeios opcionais", "Seguro viagem", "Refeições não mencionadas", "Despesas pessoais".`;
 
-function linhasCatalogo(catalogo: CatalogoCidadeIA[]) {
-  const comItens = catalogo.filter((c) => c.passeios.length);
-  if (!comItens.length) return 'Sem catálogo cadastrado para estas cidades.';
-  return comItens
-    .map(
-      (c) =>
-        `${c.cidade}:\n${c.passeios
-          .map((p) => `- ${p.nome}${p.descricao ? ` — ${p.descricao.slice(0, 160)}` : ''}`)
-          .join('\n')}`
-    )
-    .join('\n\n');
+export function diasDoPedido(pedido: Pick<PedidoRoteiroIA, 'data_inicio' | 'data_fim'>) {
+  return (
+    Math.round(
+      (Date.parse(`${pedido.data_fim}T00:00:00Z`) - Date.parse(`${pedido.data_inicio}T00:00:00Z`)) /
+        864e5
+    ) + 1
+  );
 }
 
-/** Mensagem do usuário: o pedido do consultor + catálogo da agência. */
-export function montarMensagemPedido(pedido: PedidoRoteiroIA, catalogo: CatalogoCidadeIA[]) {
+function linhasReferencia(referencias: ReferenciaOpcional[]) {
+  if (!referencias.length) return 'Nenhuma.';
+  const porCidade = new Map<string, ReferenciaOpcional[]>();
+  for (const r of referencias) porCidade.set(r.cidade, [...(porCidade.get(r.cidade) || []), r]);
+  // Só o nome: a descrição fica no servidor (economiza tokens de entrada).
+  return [...porCidade]
+    .map(([cidade, itens]) => `${cidade}:\n${itens.map((i) => `${i.ref} ${i.nome}`).join('\n')}`)
+    .join('\n');
+}
+
+/**
+ * Mensagem do usuário: só o que varia de pedido para pedido. Sem datas
+ * (a IA trabalha com dia 1..N e o servidor aplica as datas), para que o
+ * mesmo resultado possa ser reaproveitado em outras datas.
+ */
+export function montarMensagemPedido(pedido: PedidoRoteiroIA, referencias: ReferenciaOpcional[]) {
   const pessoas = [
     `${pedido.adultos} adulto${pedido.adultos === 1 ? '' : 's'}`,
     pedido.criancas ? `${pedido.criancas} criança${pedido.criancas === 1 ? '' : 's'}` : ''
   ]
     .filter(Boolean)
     .join(' e ');
-  return `PEDIDO DO CONSULTOR
+  return `PEDIDO
 Origem: ${pedido.origem}
 Destinos, nesta ordem: ${pedido.destinos.join(' → ')}
-Período: ${pedido.data_inicio} a ${pedido.data_fim} (datas AAAA-MM-DD)
+Duração: ${diasDoPedido(pedido)} dias (dia 1 = saída, último dia = retorno)
 Viajantes: ${pessoas}
 Perfil: ${pedido.perfil || 'não informado'}
 Observações: ${pedido.observacoes || 'nenhuma'}
 
-CATÁLOGO DE OPCIONAIS DA AGÊNCIA
-${linhasCatalogo(catalogo)}`;
+LISTA DE REFERÊNCIA DE OPCIONAIS
+${linhasReferencia(referencias)}`;
 }

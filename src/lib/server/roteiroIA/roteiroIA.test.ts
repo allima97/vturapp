@@ -1,7 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { ErroClaude, chamarFerramentaClaude } from './claude';
-import { FERRAMENTA_ROTEIRO } from './esquema';
-import { posProcessarRoteiroIA, validarPedidoRoteiroIA } from './posProcessar';
+import { chamarGroq, esquemaEstrito } from './groq';
+import {
+  MODELOS_IA,
+  carregarConfigIA,
+  custoEstimadoUSD,
+  gerarComIA,
+  limparMemoriaConfigIA,
+  modeloIA
+} from './provedores';
+import { FERRAMENTA_ROTEIRO, type SaidaNormalizada } from './esquema';
+import { normalizarSaidaIA, posProcessarRoteiroIA, validarPedidoRoteiroIA } from './posProcessar';
+import { PROMPT_SISTEMA_ROTEIRO, montarMensagemPedido } from './prompt';
+import { chaveCacheRoteiro } from './reaproveitamento';
 import type { PedidoRoteiroIA } from '$lib/roteiroIA/tipos';
 
 const pedido: PedidoRoteiroIA = {
@@ -16,7 +27,9 @@ const pedido: PedidoRoteiroIA = {
 };
 
 const resolver = async (nome: string) =>
-  nome === 'Atlantis' ? null : { cidade: nome, cidade_id: `geonames:${nome.length}`, geografica: true };
+  nome === 'Atlantis'
+    ? null
+    : { cidade: nome, cidade_id: `geonames:${nome.length}`, geografica: true };
 
 describe('validarPedidoRoteiroIA', () => {
   it('aceita um pedido completo', () => {
@@ -32,21 +45,63 @@ describe('validarPedidoRoteiroIA', () => {
   });
 });
 
-describe('posProcessarRoteiroIA', () => {
-  it('mantém só datas do período, em ordem, e avisa o que faltou', async () => {
-    const r = await posProcessarRoteiroIA(
+describe('normalizarSaidaIA', () => {
+  const referencias = [
+    { ref: 'a1', cidade: 'Roma', nome: 'Coliseu noturno', descricao: 'Visita guiada à noite.' },
+    { ref: 'b1', cidade: 'Barcelona', nome: 'Tour Gaudí', descricao: 'Obras de Gaudí.' }
+  ];
+
+  it('expande referências, ignora códigos desconhecidos e marca opcionais novos', () => {
+    const { saida, usadasBiblioteca } = normalizarSaidaIA(
       {
-        nome: 'Europa',
         dias: [
-          { data: '2027-08-12', cidade: 'Barcelona', percurso: 'Roma - Barcelona', descricao: 'Trem.' },
-          { data: '2027-08-10', cidade: 'Roma', percurso: 'São Paulo → Roma', descricao: 'Embarque.' },
-          { data: '2027-09-01', cidade: 'Roma', percurso: '', descricao: 'Fora do período.' },
-          { data: '2027-08-10', cidade: 'Roma', percurso: '', descricao: 'Duplicado.' }
+          { dia: 2, cidade: 'Roma', percurso: '', descricao: 'Café da manhã.' },
+          { dia: 1, cidade: 'Roma', percurso: 'São Paulo → Roma', descricao: 'Embarque.' },
+          { dia: 1, cidade: 'Roma', percurso: '', descricao: 'Duplicado.' },
+          { dia: 9, cidade: 'Roma', percurso: '', descricao: 'Fora do período.' }
         ],
-        opcionais: [],
+        opcionais_ref: [{ ref: 'a1', dia: 2 }, { ref: 'A1' }, { ref: 'b1' }, { ref: 'z9' }],
+        opcionais_novos: [
+          { cidade: 'Roma', passeios: [{ nome: 'Vaticano', descricao: 'Museus.' }] }
+        ],
         inclui: ['Hospedagem'],
-        nao_inclui: ['Seguro viagem']
+        nao_inclui: []
       },
+      referencias,
+      4
+    );
+    expect(saida.dias.map((d) => d.dia)).toEqual([1, 2]);
+    expect(saida.opcionais).toEqual([
+      {
+        cidade: 'Roma',
+        passeios: [
+          { nome: 'Coliseu noturno', descricao: 'Visita guiada à noite.', dia: 2 },
+          { nome: 'Vaticano', descricao: 'Museus.', novo: true }
+        ]
+      },
+      { cidade: 'Barcelona', passeios: [{ nome: 'Tour Gaudí', descricao: 'Obras de Gaudí.' }] }
+    ]);
+    expect(usadasBiblioteca.map((r) => r.ref)).toEqual(['b1']);
+  });
+});
+
+describe('posProcessarRoteiroIA', () => {
+  const saida = (
+    dias: SaidaNormalizada['dias'],
+    opcionais: SaidaNormalizada['opcionais'] = []
+  ) => ({
+    dias,
+    opcionais,
+    inclui: ['Hospedagem'],
+    nao_inclui: ['Seguro viagem']
+  });
+
+  it('aplica as datas do pedido aos dias 1..N e avisa o que faltou', async () => {
+    const r = await posProcessarRoteiroIA(
+      saida([
+        { dia: 3, cidade: 'Barcelona', percurso: 'Roma - Barcelona', descricao: 'Trem.' },
+        { dia: 1, cidade: 'Roma', percurso: 'São Paulo → Roma', descricao: 'Embarque.' }
+      ]),
       pedido,
       resolver,
       'claude-sonnet-5-5'
@@ -56,26 +111,43 @@ describe('posProcessarRoteiroIA', () => {
     expect(r.dias[0].cidade_id).toBe('geonames:4');
     expect(r.avisos.join(' ')).toMatch(/2 dia\(s\)/);
     expect(r.inclui_texto).toBe('Hospedagem');
+    expect(r.nome).toBe('Viagem Roma, Barcelona - Agosto 2027');
+  });
+
+  it('o mesmo resultado guardado serve para outras datas', async () => {
+    const guardado = saida(
+      [{ dia: 1, cidade: 'Roma', percurso: '', descricao: 'Embarque.' }],
+      [{ cidade: 'Roma', passeios: [{ nome: 'Coliseu', descricao: 'Visita.', dia: 1 }] }]
+    );
+    const outra = { ...pedido, data_inicio: '2028-03-01', data_fim: '2028-03-04' };
+    const r = await posProcessarRoteiroIA(guardado, outra, resolver, 'm');
+    expect(r.dias[0].data).toBe('2028-03-01');
+    expect(r.opcionais[0].passeios[0]).toEqual({
+      nome: 'Coliseu',
+      descricao: 'Visita.',
+      data: '2028-03-01'
+    });
+    expect(r.nome).toMatch(/Março 2028/);
   });
 
   it('remove valores e números de voo e marca cidade não encontrada', async () => {
     const r = await posProcessarRoteiroIA(
-      {
-        nome: 'X',
-        dias: [
+      saida(
+        [
           {
-            data: '2027-08-10',
+            dia: 1,
             cidade: 'Atlantis',
             percurso: '',
             descricao: 'Embarque no voo LA 8120 por R$ 3.500,00 por pessoa.'
           }
         ],
-        opcionais: [
-          { cidade: 'Atlantis', passeios: [{ nome: 'Tour US$ 80', descricao: 'Passeio.', data: '2030-01-01' }] }
-        ],
-        inclui: [],
-        nao_inclui: []
-      },
+        [
+          {
+            cidade: 'Atlantis',
+            passeios: [{ nome: 'Tour US$ 80', descricao: 'Passeio.', dia: 30 }]
+          }
+        ]
+      ),
       pedido,
       resolver,
       'claude-sonnet-5-5'
@@ -90,9 +162,70 @@ describe('posProcessarRoteiroIA', () => {
   });
 
   it('falha quando nenhum dia é válido', async () => {
-    await expect(
-      posProcessarRoteiroIA({ dias: [] }, pedido, resolver, 'm')
-    ).rejects.toThrow(/nenhum dia/);
+    await expect(posProcessarRoteiroIA(saida([]), pedido, resolver, 'm')).rejects.toThrow(
+      /nenhum dia/
+    );
+  });
+});
+
+describe('mensagem e chave de cache', () => {
+  const referencias = [
+    {
+      ref: 'a1',
+      cidade: 'Roma',
+      nome: 'Coliseu noturno',
+      descricao: 'Descrição longa que fica no servidor.'
+    }
+  ];
+  const destinos = [
+    { nome: 'Roma', id: 'geonames:1' },
+    { nome: 'Barcelona', id: 'geonames:2' }
+  ];
+
+  it('a mensagem não leva datas nem descrições do catálogo', () => {
+    const m = montarMensagemPedido(pedido, referencias);
+    expect(m).toContain('Duração: 4 dias');
+    expect(m).toContain('a1 Coliseu noturno');
+    expect(m).not.toContain('2027');
+    expect(m).not.toContain('Descrição longa');
+  });
+
+  it('mesma chave em outras datas; muda com duração, perfil ou catálogo', async () => {
+    const chave = (p: PedidoRoteiroIA, refs = referencias) =>
+      chaveCacheRoteiro({ pedido: p, destinos, referencias: refs, modelo: 'claude-sonnet-5-5' });
+    const base = await chave(pedido);
+    expect(await chave({ ...pedido, data_inicio: '2028-01-05', data_fim: '2028-01-08' })).toBe(
+      base
+    );
+    expect(await chave({ ...pedido, perfil: '  Casal. ' })).toBe(base);
+    expect(await chave({ ...pedido, data_fim: '2027-08-14' })).not.toBe(base);
+    expect(await chave({ ...pedido, perfil: 'família' })).not.toBe(base);
+    expect(await chave(pedido, [{ ...referencias[0], nome: 'Outro' }])).not.toBe(base);
+    // Biblioteca da IA (b*) não muda a chave.
+    expect(
+      await chave(pedido, [
+        ...referencias,
+        { ref: 'b1', cidade: 'Barcelona', nome: 'X', descricao: '' }
+      ])
+    ).toBe(base);
+  });
+
+  it('o prompt de sistema não depende do pedido', () => {
+    expect(PROMPT_SISTEMA_ROTEIRO).not.toMatch(/\$\{|\d{4}-\d{2}-\d{2}/);
+  });
+});
+
+describe('custoEstimadoUSD', () => {
+  it('soma entrada, gravação e leitura de cache e saída', () => {
+    expect(
+      custoEstimadoUSD('claude-sonnet-5-5', {
+        input_tokens: 1_000_000,
+        cache_creation_input_tokens: 1_000_000,
+        cache_read_input_tokens: 1_000_000,
+        output_tokens: 1_000_000
+      })
+    ).toBe(2 + 2.5 + 0.1 + 10);
+    expect(custoEstimadoUSD('modelo-desconhecido', {})).toBeNull();
   });
 });
 
@@ -128,5 +261,123 @@ describe('chamarFerramentaClaude', () => {
     const ocupado = await chamar({}, 529).catch((e) => e);
     expect(ocupado).toBeInstanceOf(ErroClaude);
     expect(ocupado.tentarDeNovo).toBe(true);
+  });
+});
+
+describe('Groq', () => {
+  it('converte o esquema para o modo strict (tudo obrigatório, opcionais anuláveis)', () => {
+    const estrito = esquemaEstrito(FERRAMENTA_ROTEIRO.input_schema) as {
+      properties: {
+        opcionais_ref: { items: { required: string[]; properties: { dia: { type: unknown } } } };
+      };
+    };
+    const item = estrito.properties.opcionais_ref.items;
+    expect(item.required).toEqual(['ref', 'dia']);
+    expect(item.properties.dia.type).toEqual(['integer', 'null']);
+  });
+
+  it('manda system fixo antes do pedido, raciocínio baixo e mapeia o uso com cache', async () => {
+    const r = await chamarGroq({
+      apiKey: 'g',
+      modelo: 'openai/gpt-oss-120b',
+      sistema: 'regras fixas',
+      mensagem: 'pedido',
+      esquema: { name: 'preencher_roteiro', schema: FERRAMENTA_ROTEIRO.input_schema },
+      fetcher: (async (url: RequestInfo | URL, init?: RequestInit) => {
+        expect(String(url)).toBe('https://api.groq.com/openai/v1/chat/completions');
+        expect((init?.headers as Record<string, string>).authorization).toBe('Bearer g');
+        const corpo = JSON.parse(String(init?.body));
+        expect(corpo.messages.map((m: { role: string }) => m.role)).toEqual(['system', 'user']);
+        expect(corpo.messages[0].content).toBe('regras fixas');
+        expect(corpo.reasoning_effort).toBe('low');
+        expect(corpo.response_format.json_schema.strict).toBe(true);
+        return new Response(
+          JSON.stringify({
+            model: 'openai/gpt-oss-120b',
+            choices: [{ finish_reason: 'stop', message: { content: '{"dias":[]}' } }],
+            usage: {
+              prompt_tokens: 1500,
+              completion_tokens: 900,
+              prompt_tokens_details: { cached_tokens: 1000 }
+            }
+          }),
+          { status: 200 }
+        );
+      }) as typeof fetch
+    });
+    expect(r.entrada).toEqual({ dias: [] });
+    expect(r.uso).toEqual({
+      input_tokens: 500,
+      cache_read_input_tokens: 1000,
+      cache_creation_input_tokens: 0,
+      output_tokens: 900
+    });
+  });
+
+  it('limite do Groq (429) é recuperável; chave inválida não', async () => {
+    const chamar = (status: number) =>
+      chamarGroq({
+        apiKey: 'g',
+        modelo: 'openai/gpt-oss-20b',
+        sistema: 's',
+        mensagem: 'm',
+        esquema: { name: 'x', schema: {} },
+        fetcher: (async () => new Response('{}', { status })) as typeof fetch
+      }).catch((e) => e);
+    expect((await chamar(429)).tentarDeNovo).toBe(true);
+    const chave = await chamar(401);
+    expect(chave).toBeInstanceOf(ErroClaude);
+    expect(chave.message).toMatch(/Groq/);
+  });
+});
+
+describe('provedores', () => {
+  it('direciona para o Groq ou para o Claude conforme o modelo', async () => {
+    const urls: string[] = [];
+    const fetcher = (async (url: RequestInfo | URL) => {
+      urls.push(String(url));
+      return new Response(
+        JSON.stringify({
+          content: [{ type: 'text', text: '{}' }],
+          choices: [{ message: { content: '{}' } }]
+        }),
+        { status: 200 }
+      );
+    }) as typeof fetch;
+    for (const id of ['openai/gpt-oss-120b', 'claude-haiku-5-5'])
+      await gerarComIA({
+        modelo: modeloIA(id)!,
+        apiKey: 'k',
+        sistema: 's',
+        mensagem: 'm',
+        ferramenta: FERRAMENTA_ROTEIRO,
+        fetcher
+      });
+    expect(urls).toEqual([
+      'https://api.groq.com/openai/v1/chat/completions',
+      'https://api.anthropic.com/v1/messages'
+    ]);
+  });
+
+  it('usa painel → variável → Haiku 5.5, nessa ordem', async () => {
+    limparMemoriaConfigIA();
+    expect((await carregarConfigIA(undefined, {}, false)).modelo.id).toBe('claude-haiku-5-5');
+    expect(
+      (await carregarConfigIA(undefined, { ROTEIRO_IA_MODELO: 'openai/gpt-oss-20b' }, false)).origem
+    ).toBe('variavel');
+    const db = {
+      prepare: () => ({
+        first: async () => ({ modelo: 'openai/gpt-oss-120b', updated_at: null, updated_by: null })
+      })
+    } as unknown as D1Database;
+    const painel = await carregarConfigIA(db, { ROTEIRO_IA_MODELO: 'claude-sonnet-5-5' }, false);
+    expect(painel.modelo.provedor).toBe('groq');
+    expect(painel.origem).toBe('painel');
+    limparMemoriaConfigIA();
+  });
+
+  it('todo modelo oferecido tem preço para o log de custo', () => {
+    for (const m of MODELOS_IA)
+      expect(custoEstimadoUSD(m.id, { output_tokens: 1_000_000 })).toBe(m.preco.saida);
   });
 });

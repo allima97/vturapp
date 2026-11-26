@@ -12,6 +12,7 @@ import { handleAdminEmailTestPost } from './email-test';
 import { handleAdminEmpresasGet, handleAdminEmpresasPost } from './empresas';
 import { handleAdminEmpresasIdGet, handleAdminEmpresasIdPatch } from './empresas-id';
 import { handleAdminFixRecibosGet, handleAdminFixRecibosPost } from './fix-recibos';
+import { handleAdminIaGet, handleAdminIaPost } from './ia';
 import { handleAdminLogsGet } from './logs';
 import { handleAdminMaintenanceGet, handleAdminMaintenancePost } from './maintenance';
 import { handleAdminMasterEmpresasGet, handleAdminMasterEmpresasPost } from './master-empresas';
@@ -47,6 +48,8 @@ export const adminRoutes = new Hono<ApiEnv>()
   .post('/empresas', (c) => handleAdminEmpresasPost(c.env.event))
   .get('/fix-recibos', (c) => handleAdminFixRecibosGet(c.env.event))
   .post('/fix-recibos', (c) => handleAdminFixRecibosPost(c.env.event))
+  .get('/ia', (c) => handleAdminIaGet(c.env.event))
+  .post('/ia', (c) => handleAdminIaPost(c.env.event))
   .get('/logs', (c) => handleAdminLogsGet(c.env.event))
   .get('/maintenance', (c) => handleAdminMaintenanceGet(c.env.event))
   .post('/maintenance', (c) => handleAdminMaintenancePost(c.env.event))

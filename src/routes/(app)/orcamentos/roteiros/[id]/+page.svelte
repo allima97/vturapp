@@ -344,7 +344,7 @@
     }
     if (!nome.trim()) nome = rascunho.nome;
     duracao = String(dias.length);
-    const resumo = `${rascunho.dias.length} dia(s) e ${rascunho.opcionais.reduce((s, g) => s + g.passeios.length, 0)} opcional(is) gerados. Revise e clique em Salvar.`;
+    const resumo = `${rascunho.dias.length} dia(s) e ${rascunho.opcionais.reduce((s, g) => s + g.passeios.length, 0)} opcional(is) ${rascunho.reaproveitado ? 'reaproveitados de uma geração anterior igual (sem custo de IA)' : 'gerados'}. Revise e clique em Salvar.`;
     toast.success(resumo);
     for (const aviso of rascunho.avisos) toast.warning(aviso);
   }

@@ -55,9 +55,11 @@ database_id = "bf40654b-8083-4fa1-8424-a923282d9888"
 [vars]
 PUBLIC_DEPLOY_ENV = "production"
 PUBLIC_GEONAMES_ATIVO = "1"
-# Modelo da IA de roteiros (claude-sonnet-5-5 = padrão; claude-opus-5-5 = mais caprichado e mais caro).
-# A chave fica como secret: npx wrangler secret put ANTHROPIC_API_KEY --env <ambiente>
-ROTEIRO_IA_MODELO = "claude-sonnet-5-5"
+# Modelo da IA de roteiros quando o admin ainda não escolheu um em /admin/ia
+# (claude-haiku-5-5 = padrão e mais barato; claude-sonnet-5-5; openai/gpt-oss-120b ou -20b no Groq).
+# Chaves como secret: npx wrangler secret put ANTHROPIC_API_KEY --env <ambiente>
+#                     npx wrangler secret put GROQ_API_KEY --env <ambiente>
+ROTEIRO_IA_MODELO = "claude-haiku-5-5"
 
 # ─── R2 — arquivos privados ───────────────────────────────────────────────────
 # Produção: criar com `wrangler r2 bucket create vturapp-files`.
@@ -107,9 +109,11 @@ database_id = "bf40654b-8083-4fa1-8424-a923282d9888"
 [env.staging.vars]
 PUBLIC_DEPLOY_ENV = "staging"
 PUBLIC_GEONAMES_ATIVO = "1"
-# Modelo da IA de roteiros (claude-sonnet-5-5 = padrão; claude-opus-5-5 = mais caprichado e mais caro).
-# A chave fica como secret: npx wrangler secret put ANTHROPIC_API_KEY --env <ambiente>
-ROTEIRO_IA_MODELO = "claude-sonnet-5-5"
+# Modelo da IA de roteiros quando o admin ainda não escolheu um em /admin/ia
+# (claude-haiku-5-5 = padrão e mais barato; claude-sonnet-5-5; openai/gpt-oss-120b ou -20b no Groq).
+# Chaves como secret: npx wrangler secret put ANTHROPIC_API_KEY --env <ambiente>
+#                     npx wrangler secret put GROQ_API_KEY --env <ambiente>
+ROTEIRO_IA_MODELO = "claude-haiku-5-5"
 
 [[env.staging.r2_buckets]]
 binding = "R2"
@@ -156,9 +160,11 @@ database_id = "bf40654b-8083-4fa1-8424-a923282d9888"
 [env.production.vars]
 PUBLIC_DEPLOY_ENV = "production"
 PUBLIC_GEONAMES_ATIVO = "1"
-# Modelo da IA de roteiros (claude-sonnet-5-5 = padrão; claude-opus-5-5 = mais caprichado e mais caro).
-# A chave fica como secret: npx wrangler secret put ANTHROPIC_API_KEY --env <ambiente>
-ROTEIRO_IA_MODELO = "claude-sonnet-5-5"
+# Modelo da IA de roteiros quando o admin ainda não escolheu um em /admin/ia
+# (claude-haiku-5-5 = padrão e mais barato; claude-sonnet-5-5; openai/gpt-oss-120b ou -20b no Groq).
+# Chaves como secret: npx wrangler secret put ANTHROPIC_API_KEY --env <ambiente>
+#                     npx wrangler secret put GROQ_API_KEY --env <ambiente>
+ROTEIRO_IA_MODELO = "claude-haiku-5-5"
 
 [[env.production.r2_buckets]]
 binding = "R2"

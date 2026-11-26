@@ -61,7 +61,9 @@ export type AuditAcaoOutros =
   | 'perfil_atualizado' // perfil: payload gravado em users
   | 'lgpd_anonimizacao' // LGPD: anonimização de titular (Art. 18)
   | 'lgpd_solicitacao_recebida' // LGPD: nova solicitação de direito (Art. 18)
-  | 'roteiro_ia_gerado' // Roteiros: { modelo, destinos, datas, dias, opcionais, uso } — sem dados de cliente
+  | 'roteiro_ia_gerado' // Roteiros: { modelo, destinos, datas, dias, opcionais, uso, custo_estimado_usd } — sem dados de cliente
+  | 'roteiro_ia_modelo_alterado' // Admin: troca do provedor/modelo de IA { de, para, provedor }
+  | 'roteiro_ia_reaproveitado' // Roteiros: pedido idêntico devolvido do cache, sem chamar a IA { modelo, destinos, dias }
   | 'roteiro_ia_permissao_atualizada'; // Admin: { usuario_alterado_id, liberado, limite_dia, limite_mes }
 
 export type AuditAcao = AuditAcaoVendas | AuditAcaoOutros;
