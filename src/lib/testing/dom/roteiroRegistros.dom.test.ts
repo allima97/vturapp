@@ -5,8 +5,10 @@ const mocks = vi.hoisted(() => ({
   fetch: vi.fn(),
   post: vi.fn(),
   salvar: vi.fn(),
-  error: vi.fn()
+  error: vi.fn(),
+  confirm: vi.fn()
 }));
+vi.mock('$lib/stores/confirm', () => ({ confirmAction: mocks.confirm }));
 vi.mock('$app/stores', async () => {
   const { readable } = await import('svelte/store');
   return {
@@ -82,7 +84,7 @@ it('mantém ids de dias, hotéis e passeios entre salvamentos e renova na duplic
     revisao: 'segunda'
   });
   mocks.post.mockResolvedValue({ id: 'copia' });
-  vi.spyOn(window, 'confirm').mockReturnValue(true);
+  mocks.confirm.mockResolvedValue(true);
   const target = document.createElement('div');
   document.body.appendChild(target);
   const app = mount(Page, { target });
@@ -431,19 +433,18 @@ it('mostra nomes curtos no PDF sem juntar cidades homônimas nem alterar os dado
     'Sagrada Família'
   );
   expect(preview.querySelectorAll('.preview-itinerary-section .roteiro-card')).toHaveLength(2);
-  expect(preview.querySelectorAll('.preview-optionals-section .roteiro-card')).toHaveLength(1);
+  expect(preview.querySelectorAll('.preview-optionals-section tbody tr')).toHaveLength(3);
   const optionalTitle = preview.querySelector('.preview-optionals-section h2')!;
   expect(optionalTitle.textContent).toContain('Passeios Opcionais');
   expect(optionalTitle.querySelector('.roteiro-print-subtitle')?.textContent).toBe(
-    'Sugestões sem data marcada, não incluídas no valor do roteiro'
+    'Sugestões não incluídas no valor do roteiro'
   );
-  expect(preview.querySelector('.preview-optionals-section .roteiro-card-city')?.textContent).toBe(
-    'Roma'
-  );
-  expect(preview.querySelector('.preview-optionals-section .roteiro-card')?.textContent).toContain(
-    'Fórum'
-  );
-  expect(preview.querySelector('.preview-optionals-section .roteiro-card')?.textContent).toContain(
+  const optionalRow = preview.querySelector('.preview-optionals-section .rot3-row')!;
+  expect(optionalRow.querySelector('.rot3-c1')?.textContent).toContain('Roma');
+  expect(optionalRow.querySelector('.rot3-c2')?.textContent).toContain('Fórum');
+  expect(optionalRow.querySelector('.rot3-c3')?.textContent).toContain('Sob consulta');
+  expect(preview.querySelectorAll('.preview-optionals-section .rot3-row')).toHaveLength(2);
+  expect(preview.querySelector('.preview-optionals-section tbody')?.textContent).toContain(
     'Museu'
   );
   const flight = preview.querySelector('.preview-airfare-section .roteiro-card')!;

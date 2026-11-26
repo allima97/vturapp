@@ -108,7 +108,6 @@
   import AbaOpcionais from './_components/AbaOpcionais.svelte';
   import {
     atribuirIdsGruposOpcionais,
-    buildOpcionaisHtml,
     parseRoteiroOpcionais,
     removerPasseiosIncorporados,
     type RoteiroOpcionalCidade
@@ -1809,6 +1808,8 @@
 
     // ── Moderno: Passeios Opcionais
     let rot3OpcionaisHtml = '';
+    // Padrão: mesmas linhas do Moderno, uma <tr> por passeio (cabeçalho repete na quebra de página).
+    let opcionaisPadraoRowsHtml = '';
     {
       const opcionaisVisiveis = removerPasseiosIncorporados(opcionais, passeios);
       const normCid = (s: string) =>
@@ -1848,9 +1849,11 @@
             const c2 = `<div class="rot3-t rot3-t--escuro">${escapePreviewHtml(l.nome)}</div>${l.descricao ? `<div class="rot3-s">${escapePreviewHtml(l.descricao).replace(/\n/g, '<br>')}</div>` : ''}`;
             const c3 = `<div class="rot3-t rot3-t--escuro">${valor || 'Sob consulta'}</div>${unidade ? `<div class="rot3-s">${escapePreviewHtml(unidade)}</div>` : ''}`;
             return `<div class="rot3-row"><div class="rot3-c1">${c1}</div><div class="rot3-c2">${c2}</div><div class="rot3-c3">${c3}</div></div>`;
-          })
+          });
+        rot3OpcionaisHtml = `<div class="rot3-tabela rot3-tabela--opc">${colHdrOpc}${rowsOpc.join('')}</div>`;
+        opcionaisPadraoRowsHtml = [colHdrOpc, ...rowsOpc]
+          .map((linha) => `<tr><td class="roteiro-opc-td"><div class="rot3-tabela--opc">${linha}</div></td></tr>`)
           .join('');
-        rot3OpcionaisHtml = `<div class="rot3-tabela rot3-tabela--opc">${colHdrOpc}${rowsOpc}</div>`;
       }
     }
 
@@ -1956,6 +1959,9 @@
             .roteiro-print-section { margin: 0 0 8px; }
             .roteiro-print-table { width: 100%; border-collapse: separate; border-spacing: 0; }
             .roteiro-print-table thead { display: table-header-group; }
+            .roteiro-print-table tbody td.roteiro-opc-td { padding: 0; }
+            .roteiro-opc-td .rot3-row { border-bottom: 0; }
+            .roteiro-opc-td .rot3-hotel-header-row { border-bottom: 0; }
             .roteiro-print-section h2 { margin: 0; padding: 8px 12px; border: 0; background: transparent; color: #1B2C80; font: bold 11px Arial, Helvetica, sans-serif; text-align: left; }
             .roteiro-print-title-icon { width: 1em; height: 1em; margin-right: 0.35em; vertical-align: -0.15em; }
             .roteiro-print-subtitle { display: block; margin-top: 6px; font-size: 13px; font-weight: normal; }
@@ -2150,13 +2156,9 @@
             ${buildRoteiroCardSection('Passeios e Serviços', passeiosHtml, 'preview-passeios-section')}
             ${buildRoteiroCardSection(
               'Passeios Opcionais',
-              buildOpcionaisHtml(
-                removerPasseiosIncorporados(opcionais, passeios),
-                escapePreviewHtml,
-                nomeCidadeNoPdf
-              ),
+              opcionaisPadraoRowsHtml,
               'preview-optionals-section',
-              'Sugestões sem data marcada, não incluídas no valor do roteiro'
+              'Sugestões não incluídas no valor do roteiro'
             )}
             ${buildRoteiroCardSection('Seguro Viagem', segurosHtml, 'preview-seguros-section')}
             ${rot3InvestHtmlShared ? `<section class="roteiro-print-section preview-investimento-section"><h2 class="rot-sh" style="text-align:center;font-size:14px;justify-content:center;">Investimento</h2>${rot3InvestHtmlShared}</section>` : buildRoteiroCardSection('Investimento', investimentosHtml, 'preview-investimento-section', investimentoTotalTexto)}
