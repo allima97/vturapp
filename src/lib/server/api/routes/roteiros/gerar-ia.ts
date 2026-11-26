@@ -29,6 +29,7 @@ import {
   resolveUserScope,
   toErrorResponse
 } from '$lib/server/v1';
+import { carregarPermissaoRoteiroIA } from '$lib/server/roteiroIA/permissao';
 
 const MAX_BODY_BYTES = 16 * 1024;
 /** Gerações por usuário a cada 24 h. */
@@ -77,17 +78,42 @@ export async function handleRoteirosGerarIaPost(event: RequestEvent) {
       return erro('Geração com IA não configurada (falta ANTHROPIC_API_KEY no servidor).', 503);
     const modelo = env?.ROTEIRO_IA_MODELO?.trim() || MODELO_PADRAO;
 
-    const limite = await checkPersistentRateLimit(
-      'roteiro-ia',
+    // Liberação por usuário: o admin decide quem pode usar a IA. Admins
+    // sempre podem (mesma regra do resto do sistema), os demais precisam de
+    // uma liberação explícita em /admin/permissoes/<usuario>.
+    const permissaoIA = await carregarPermissaoRoteiroIA(env?.DB, user.id);
+    if (!scope.isAdmin && !permissaoIA.liberado)
+      return erro(
+        'A geração de roteiro por IA ainda não está liberada para o seu usuário. Fale com o administrador.',
+        403
+      );
+
+    const limiteDiaEfetivo = permissaoIA.limiteDia ?? LIMITE_DIARIO;
+    const limiteDia = await checkPersistentRateLimit(
+      'roteiro-ia-dia',
       user.id,
-      { max: LIMITE_DIARIO, windowMs: 24 * 60 * 60_000 },
+      { max: limiteDiaEfetivo, windowMs: 24 * 60 * 60_000 },
       env?.DB
     );
-    if (!limite.allowed)
+    if (!limiteDia.allowed)
       return erro(
-        `Limite de ${LIMITE_DIARIO} gerações por dia atingido. Tente novamente mais tarde.`,
+        `Limite de ${limiteDiaEfetivo} geração(ões) por dia atingido. Tente novamente mais tarde.`,
         429
       );
+
+    if (permissaoIA.limiteMes != null) {
+      const limiteMes = await checkPersistentRateLimit(
+        'roteiro-ia-mes',
+        user.id,
+        { max: permissaoIA.limiteMes, windowMs: 30 * 24 * 60 * 60_000 },
+        env?.DB
+      );
+      if (!limiteMes.allowed)
+        return erro(
+          `Limite de ${permissaoIA.limiteMes} geração(ões) por mês atingido. Tente novamente mais tarde.`,
+          429
+        );
+    }
 
     const pedido = validarPedidoRoteiroIA(bodyResult.data);
     if (typeof pedido === 'string') return erro(pedido, 400);

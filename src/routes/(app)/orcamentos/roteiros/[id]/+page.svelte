@@ -296,6 +296,7 @@
 
   // ─── Geração com IA ────────────────────────────────────────────────────
   let showGerarIA = $state(false);
+  let iaLiberada = $state(false);
   let inicialIA: Partial<PedidoRoteiroIA> = $derived.by(() => {
     const comData = dias.filter((d) => /^\d{4}-\d{2}-\d{2}/.test(d.data || ''));
     const origem = String(inicioCidade || '').split('•')[0].trim();
@@ -2207,6 +2208,17 @@
   onMount(async () => {
     await ensureServerSessionCookie();
     await load();
+    apiFetch<{ liberado?: boolean }>('/api/v1/roteiros/gerar-ia/permissao', {
+      noCache: true,
+      redirectOnForbidden: false,
+      redirectOnUnauthorized: false
+    })
+      .then((payload) => {
+        iaLiberada = Boolean(payload?.liberado);
+      })
+      .catch(() => {
+        iaLiberada = false;
+      });
   });
 
   onDestroy(() => {
@@ -2488,7 +2500,7 @@
         {sugestoes}
         buscarDescricoes={abrirDescricoes}
         {abrirBuscaDias}
-        abrirGeracaoIA={() => (showGerarIA = true)}
+        abrirGeracaoIA={iaLiberada ? () => (showGerarIA = true) : undefined}
       />
 
       <!-- ──────────────────── ABA: HOTÉIS ──────────────────────────────────── -->

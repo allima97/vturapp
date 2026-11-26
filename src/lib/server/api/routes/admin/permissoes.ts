@@ -20,6 +20,10 @@ import {
   MODULOS_ADMIN_PERMISSOES
 } from '$lib/admin/modules';
 import { getAdminClient, logServerError, resolveUserScope, toErrorResponse } from '$lib/server/v1';
+import {
+  normalizarLimiteRoteiroIA,
+  salvarPermissaoRoteiroIA
+} from '$lib/server/roteiroIA/permissao';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateUserReadModels } from '$lib/server/readModelCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
@@ -175,6 +179,33 @@ export async function handleAdminPermissoesPost(event: RequestEvent) {
     const permissions = Array.isArray(body.permissions) ? body.permissions : [];
     ensureAssignablePermissionSet(scope, permissions);
     await saveUserPermissions(client, userId, permissions);
+
+    // IA de roteiros: liberação + limites são opcionais no corpo — só quem
+    // já passou por ensureCanManagePermissions chega aqui.
+    if (body.roteiro_ia && typeof body.roteiro_ia === 'object') {
+      const roteiroIaBody = body.roteiro_ia as Record<string, unknown>;
+      const db = event.platform?.env?.DB;
+      if (db) {
+        const roteiroIaInput = {
+          liberado: Boolean(roteiroIaBody.liberado),
+          limiteDia: normalizarLimiteRoteiroIA(roteiroIaBody.limite_dia),
+          limiteMes: normalizarLimiteRoteiroIA(roteiroIaBody.limite_mes)
+        };
+        await salvarPermissaoRoteiroIA(db, userId, user.id, roteiroIaInput);
+        registrarLog(event, {
+          userId: user.id,
+          modulo: 'Roteiros',
+          acao: 'roteiro_ia_permissao_atualizada',
+          detalhes: {
+            usuario_alterado_id: userId,
+            liberado: roteiroIaInput.liberado,
+            limite_dia: roteiroIaInput.limiteDia,
+            limite_mes: roteiroIaInput.limiteMes
+          }
+        });
+      }
+    }
+
     registrarLog(event, {
       userId: user.id,
       modulo: 'Admin',

@@ -12,6 +12,7 @@ import { handleRoteirosDeleteDelete } from './delete';
 import { handleRoteirosDiasBuscaGet } from './dias-busca';
 import { handleRoteirosGerarOrcamentoPost } from './gerar-orcamento';
 import { handleRoteirosGerarIaPost } from './gerar-ia';
+import { handleRoteirosGerarIaPermissaoGet } from './gerar-ia-permissao';
 import { handleRoteirosListGet } from './list';
 import { handleRoteirosSavePost } from './save';
 import { handleRoteirosSugestoesBuscaGet } from './sugestoes-busca';
@@ -30,6 +31,7 @@ export const roteirosRoutes = new Hono<ApiEnv>()
   .get('/dias-busca', (c) => handleRoteirosDiasBuscaGet(c.env.event))
   .post('/gerar-orcamento', (c) => handleRoteirosGerarOrcamentoPost(c.env.event))
   .post('/gerar-ia', (c) => handleRoteirosGerarIaPost(c.env.event))
+  .get('/gerar-ia/permissao', (c) => handleRoteirosGerarIaPermissaoGet(c.env.event))
   .get('/list', (c) => handleRoteirosListGet(c.env.event))
   .post('/save', (c) => handleRoteirosSavePost(c.env.event))
   .get('/sugestoes-busca', (c) => handleRoteirosSugestoesBuscaGet(c.env.event))

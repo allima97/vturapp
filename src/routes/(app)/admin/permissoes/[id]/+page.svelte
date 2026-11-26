@@ -5,7 +5,7 @@
   import Card from '$lib/components/ui/Card.svelte';
   import Button from '$lib/components/ui/Button.svelte';
   import Badge from '$lib/components/ui/Badge.svelte';
-  import { Checkbox, FieldSelect } from '$lib/components/ui';
+  import { Checkbox, FieldInput, FieldSelect } from '$lib/components/ui';
   import { apiGet, apiPost, isCanceledApiError } from '$lib/services/api';
   import { toast } from '$lib/stores/ui';
   import { toUserMessage } from '$lib/utils/errors';
@@ -24,10 +24,17 @@
     modulos: string[];
   };
 
+  type RoteiroIaConfig = {
+    liberado: boolean;
+    limite_dia: number | null;
+    limite_mes: number | null;
+  };
+
   type PermissionDetailResponse = {
     user?: { id: string; nome: string; email: string | null } | null;
     permissions?: PermissionEntry[];
     sections?: PermissionSection[];
+    roteiro_ia?: RoteiroIaConfig | null;
   };
 
   let loading = true;
@@ -35,6 +42,9 @@
   let userInfo: { id: string; nome: string; email: string | null } | null = null;
   let permissions: PermissionEntry[] = [];
   let sections: PermissionSection[] = [];
+  let roteiroIaLiberado = false;
+  let roteiroIaLimiteDia = '';
+  let roteiroIaLimiteMes = '';
 
   const levels = [
     { value: 'none', label: 'Nenhum' },
@@ -65,6 +75,11 @@
       userInfo = payload.user || null;
       permissions = payload.permissions || [];
       sections = payload.sections || [];
+      roteiroIaLiberado = Boolean(payload.roteiro_ia?.liberado);
+      roteiroIaLimiteDia =
+        payload.roteiro_ia?.limite_dia != null ? String(payload.roteiro_ia.limite_dia) : '';
+      roteiroIaLimiteMes =
+        payload.roteiro_ia?.limite_mes != null ? String(payload.roteiro_ia.limite_mes) : '';
     } catch (err) {
       if (isCanceledApiError(err)) return;
       if (dev) console.error(err);
@@ -80,7 +95,12 @@
       await apiPost('/api/v1/admin/permissoes', {
         action: 'user',
         user_id: userInfo?.id,
-        permissions
+        permissions,
+        roteiro_ia: {
+          liberado: roteiroIaLiberado,
+          limite_dia: roteiroIaLimiteDia.trim() ? Number(roteiroIaLimiteDia) : null,
+          limite_mes: roteiroIaLimiteMes.trim() ? Number(roteiroIaLimiteMes) : null
+        }
       });
       toast.success('Permissoes atualizadas com sucesso.');
       await loadPage();
@@ -118,6 +138,38 @@
     <div class="flex flex-wrap items-center gap-3">
       <Badge color="blue">{userInfo?.email || 'Sem e-mail'}</Badge>
       <Badge color="yellow">{activePermissionsCount} modulos ativos</Badge>
+    </div>
+  </Card>
+
+  <Card color="clientes" title="IA de Roteiros">
+    <div class="space-y-4">
+      <p class="text-sm text-slate-500">
+        Libera o botao "Gerar com IA" na tela de Roteiro Personalizado para este usuario e
+        limita quantos roteiros por IA ele pode gerar. Deixe os limites em branco para usar o
+        padrao de seguranca do sistema (hoje, 30 por dia).
+      </p>
+      <label class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 w-fit">
+        <Checkbox bind:checked={roteiroIaLiberado} ariaLabel="Liberar Gerar com IA" />
+        <span class="text-sm text-slate-700">Liberado para este usuario</span>
+      </label>
+      <div class="grid gap-3 sm:grid-cols-2 sm:max-w-md">
+        <FieldInput
+          id="roteiro-ia-limite-dia"
+          label="Limite por dia"
+          type="number"
+          placeholder="Sem limite especifico"
+          bind:value={roteiroIaLimiteDia}
+          disabled={!roteiroIaLiberado}
+        />
+        <FieldInput
+          id="roteiro-ia-limite-mes"
+          label="Limite por mes"
+          type="number"
+          placeholder="Sem limite"
+          bind:value={roteiroIaLimiteMes}
+          disabled={!roteiroIaLiberado}
+        />
+      </div>
     </div>
   </Card>
 

@@ -25,6 +25,7 @@ import {
   resolveUserScope,
   toErrorResponse
 } from '$lib/server/v1';
+import { carregarPermissaoRoteiroIA } from '$lib/server/roteiroIA/permissao';
 import { DYNAMIC_READ_HEADERS, NO_STORE_HEADERS } from '$lib/server/httpCache';
 import { invalidateUserReadModels } from '$lib/server/readModelCache';
 import { readJsonBodyLimited, rejectCrossOriginRequest } from '$lib/server/requestGuards';
@@ -66,6 +67,8 @@ export async function handleAdminPermissoesIdGet(event: RequestEvent) {
       globalModules = [];
     }
 
+    const roteiroIA = await carregarPermissaoRoteiroIA(event.platform?.env?.DB, targetUser.id);
+
     return json(
       {
         user: {
@@ -78,7 +81,12 @@ export async function handleAdminPermissoesIdGet(event: RequestEvent) {
         sections: agruparModulosPorSecao(MODULOS_ADMIN_PERMISSOES),
         system_module_catalog: listSystemModuleCatalog(
           globalModules.map((row) => String(row.module_key || '').trim())
-        )
+        ),
+        roteiro_ia: {
+          liberado: roteiroIA.liberado,
+          limite_dia: roteiroIA.limiteDia,
+          limite_mes: roteiroIA.limiteMes
+        }
       },
       { headers: DYNAMIC_READ_HEADERS }
     );
